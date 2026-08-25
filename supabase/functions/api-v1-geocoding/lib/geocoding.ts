@@ -187,7 +187,9 @@ export async function getLocationFromIP(
   }
 
   if (isIpApiCircuitOpen()) {
-    logger.warn("ip-api circuit breaker open, skipping geolocation", { requestId });
+    logger.warn("ip-api circuit breaker open, skipping geolocation", {
+      requestId,
+    });
     return null;
   }
 
@@ -283,8 +285,14 @@ export function verifySignupWebhook(
       const payload = JSON.parse(rawPayload) as HookPayload;
       return { success: true, payload, shouldAllowSignup: true };
     } catch {
-      logger.warn("Signup webhook payload parse error (no secret configured)", { requestId });
-      return { success: false, error: "Invalid payload format", shouldAllowSignup: true };
+      logger.warn("Signup webhook payload parse error (no secret configured)", {
+        requestId,
+      });
+      return {
+        success: false,
+        error: "Invalid payload format",
+        shouldAllowSignup: true,
+      };
     }
   }
 
@@ -358,7 +366,10 @@ export async function getAuthenticatedUser(
 
   const token = authHeader.replace("Bearer ", "");
   const supabase = getSupabaseClient();
-  const { data: { user }, error } = await supabase.auth.getUser(token);
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(token);
 
   if (error || !user) {
     logger.warn("Map route: auth failed", { requestId, error: error?.message });
@@ -404,9 +415,9 @@ export function generateTileUrls(
   const urls: string[] = [];
   const z = Math.floor(zoom);
   const x = Math.floor(((center.lng + 180) / 360) * Math.pow(2, z));
-  const latRad = center.lat * Math.PI / 180;
+  const latRad = (center.lat * Math.PI) / 180;
   const y = Math.floor(
-    (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * Math.pow(2, z),
+    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * Math.pow(2, z),
   );
 
   for (let dx = -radius; dx <= radius; dx++) {
@@ -451,19 +462,16 @@ export interface UserMatch {
 
 // Safely coerce string coordinates to numbers without z.coerce.number() which
 // silently turns null -> 0 and "" -> 0. Accepts numbers, numeric strings, null, undefined.
-const optionalCoordinate = z.preprocess(
-  (val) => {
-    if (val === undefined) return undefined;
-    if (val === null || val === "") return null;
-    if (typeof val === "number") return val;
-    if (typeof val === "string") {
-      const num = Number(val);
-      return isNaN(num) ? val : num;
-    }
-    return val; // non-number/non-string types fall through for z.number() to reject
-  },
-  z.number().optional().nullable(),
-);
+const optionalCoordinate = z.preprocess((val) => {
+  if (val === undefined) return undefined;
+  if (val === null || val === "") return null;
+  if (typeof val === "number") return val;
+  if (typeof val === "string") {
+    const num = Number(val);
+    return isNaN(num) ? val : num;
+  }
+  return val; // non-number/non-string types fall through for z.number() to reject
+}, z.number().optional().nullable());
 
 const addressSchema = z.object({
   profile_id: z.string(),
@@ -610,7 +618,10 @@ export async function processQueueItem(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    logger.error("Error processing queue item", { queueId: queueItem.id, error: errorMessage });
+    logger.error("Error processing queue item", {
+      queueId: queueItem.id,
+      error: errorMessage,
+    });
 
     try {
       await supabase.rpc("mark_geocode_failed", {

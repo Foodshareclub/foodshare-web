@@ -79,7 +79,11 @@ async function hasModeratorRole(supabase: any, userId: string): Promise<boolean>
   if (!userRoles || userRoles.length === 0) return false;
 
   return userRoles.some((r: { roles: { name: string } | { name: string }[] }) => {
-    const roleData = r.roles as unknown as { name: string } | { name: string }[];
+    const roleData = r.roles as unknown as
+      | { name: string }
+      | {
+        name: string;
+      }[];
     const name = Array.isArray(roleData) ? roleData[0]?.name : roleData?.name;
     return name && MODERATOR_ROLES.includes(name);
   });
@@ -114,7 +118,7 @@ export async function getPostDetail(ctx: HandlerContext<unknown, ForumQuery>): P
   }
 
   const service = new ForumService(supabase, userId || "");
-  const data = await service.getPost(postId, userId);
+  const data = await service.getPost(postId, userId || undefined);
 
   return ok(data, ctx);
 }
@@ -153,7 +157,10 @@ export async function searchPosts(ctx: HandlerContext<unknown, ForumQuery>): Pro
   const limit = Math.min(parseInt(query.limit || "20"), 50);
   const offset = parseInt(query.offset || "0");
   const tags = query.tags
-    ? query.tags.split(",").map((t) => parseInt(t.trim())).filter((t) => !isNaN(t))
+    ? query.tags
+      .split(",")
+      .map((t) => parseInt(t.trim()))
+      .filter((t) => !isNaN(t))
     : undefined;
 
   const service = new ForumService(supabase, "");
@@ -203,11 +210,7 @@ export async function getSeries(ctx: HandlerContext<unknown, ForumQuery>): Promi
   }
 
   const [seriesResult, postsResult] = await Promise.all([
-    supabase
-      .from("forum_series")
-      .select("*")
-      .eq("id", query.id)
-      .single(),
+    supabase.from("forum_series").select("*").eq("id", query.id).single(),
     supabase
       .from("forum_series_posts")
       .select("*")
@@ -219,10 +222,13 @@ export async function getSeries(ctx: HandlerContext<unknown, ForumQuery>): Promi
     throw new NotFoundError("Forum series", query.id);
   }
 
-  return ok({
-    ...seriesResult.data,
-    posts: postsResult.data || [],
-  }, ctx);
+  return ok(
+    {
+      ...seriesResult.data,
+      posts: postsResult.data || [],
+    },
+    ctx,
+  );
 }
 
 // =============================================================================
@@ -260,7 +266,10 @@ export async function recordView(ctx: HandlerContext): Promise<Response> {
   });
 
   if (error) {
-    logger.warn("Record view failed", { error: error.message, forumId: body.forumId });
+    logger.warn("Record view failed", {
+      error: error.message,
+      forumId: body.forumId,
+    });
   }
 
   return ok({ recorded: true }, ctx);
@@ -277,7 +286,7 @@ export async function togglePin(ctx: HandlerContext): Promise<Response> {
   // Verify ownership or mod status
   const { data: post, error: fetchError } = await supabase
     .from("forum")
-    .select("id, profile_id, is_pinned")
+    .select("id,profile_id,is_pinned")
     .eq("id", body.forumId)
     .is("deleted_at", null)
     .single();
@@ -304,7 +313,11 @@ export async function togglePin(ctx: HandlerContext): Promise<Response> {
     throw new ValidationError(`Failed to toggle pin: ${error.message}`);
   }
 
-  logger.info("Pin toggled", { forumId: body.forumId, isPinned: !post.is_pinned, userId });
+  logger.info("Pin toggled", {
+    forumId: body.forumId,
+    isPinned: !post.is_pinned,
+    userId,
+  });
 
   return ok({ forumId: body.forumId, isPinned: !post.is_pinned }, ctx);
 }
@@ -380,7 +393,10 @@ export async function featurePost(ctx: HandlerContext): Promise<Response> {
     throw new ValidationError(`Failed to feature post: ${error.message}`);
   }
 
-  logger.info("Post featured", { forumId: body.forumId, durationHours: body.durationHours });
+  logger.info("Post featured", {
+    forumId: body.forumId,
+    durationHours: body.durationHours,
+  });
 
   return ok({ forumId: body.forumId, featured: data }, ctx);
 }

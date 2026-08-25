@@ -26,15 +26,16 @@ import { ServerError, ValidationError } from "../_shared/errors.ts";
 
 const VERSION = "1.0.0";
 
-const GROQ_KEY = Deno.env.get("GROQ_API_KEY") || "";
-const ZAI_KEY = Deno.env.get("ZAI_API_KEY") || "";
+const getGroqKey = () => Deno.env.get("GROQ_API_KEY") || "";
+const getZaiKey = () => Deno.env.get("ZAI_API_KEY") || "";
+const getHfKey = () => Deno.env.get("HUGGINGFACE_ACCESS_TOKEN") || "";
 
 const healthCheck = createHealthHandler("api-v1-ai", VERSION, {
   extra: () => ({
     providers: {
-      groq: GROQ_KEY ? "configured" : "missing",
-      zai: ZAI_KEY ? "configured" : "missing",
-      huggingface: Deno.env.get("HUGGINGFACE_ACCESS_TOKEN") ? "configured" : "missing",
+      groq: getGroqKey() ? "configured" : "missing",
+      zai: getZaiKey() ? "configured" : "missing",
+      huggingface: getHfKey() ? "configured" : "missing",
     },
   }),
 });
@@ -111,13 +112,17 @@ async function getCachedResult(
 
   const { data } = await supabase
     .from("inference_cache")
-    .select("result, created_at")
+    .select("result,created_at")
     .eq("cache_key", cacheKey)
     .gte("created_at", new Date(Date.now() - HF_CACHE_TTL).toISOString())
     .single();
 
   if (data) {
-    inferenceCache.set(cacheKey, { result: data.result, timestamp: Date.now(), hits: 1 });
+    inferenceCache.set(cacheKey, {
+      result: data.result,
+      timestamp: Date.now(),
+      hits: 1,
+    });
     return { result: data.result, source: "database" };
   }
 
@@ -134,7 +139,11 @@ async function setCachedResult(cacheKey: string, result: unknown, supabase: any)
   inferenceCache.set(cacheKey, { result, timestamp: Date.now(), hits: 1 });
   supabase
     .from("inference_cache")
-    .upsert({ cache_key: cacheKey, result, created_at: new Date().toISOString() })
+    .upsert({
+      cache_key: cacheKey,
+      result,
+      created_at: new Date().toISOString(),
+    })
     .then(() => {})
     .catch((err: Error) => logger.warn("Cache write failed", { error: err.message }));
 }
@@ -143,19 +152,19 @@ async function setCachedResult(cacheKey: string, result: unknown, supabase: any)
 // Groq Chat
 // =============================================================================
 
-async function groqChat(
-  messages: unknown[],
-  model: string,
-  temp: number,
-  maxTokens?: number,
-) {
+async function groqChat(messages: unknown[], model: string, temp: number, maxTokens?: number) {
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${GROQ_KEY}`,
+      Authorization: `Bearer ${getGroqKey()}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ model, messages, temperature: temp, max_tokens: maxTokens }),
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature: temp,
+      max_tokens: maxTokens,
+    }),
   });
 
   if (!res.ok) throw new ServerError(`Groq error: ${res.status}`);
@@ -189,7 +198,7 @@ async function zaiEmbeddings(input: string | string[]) {
   const res = await fetch("https://api.z.ai/api/v2/embeddings", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${ZAI_KEY}`,
+      Authorization: `Bearer ${getZaiKey()}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ input: texts, model: "text-embedding-3-small" }),
@@ -218,7 +227,12 @@ async function runHfInference(
   // deno-lint-ignore no-explicit-any
   supabase: any,
   _requestId: string,
-): Promise<{ result: unknown; contentType: string; cached: boolean; cacheSource?: string }> {
+): Promise<{
+  result: unknown;
+  contentType: string;
+  cached: boolean;
+  cacheSource?: string;
+}> {
   const hfToken = Deno.env.get("HUGGINGFACE_ACCESS_TOKEN");
   if (!hfToken) throw new ServerError("Missing HUGGINGFACE_ACCESS_TOKEN");
 
@@ -289,7 +303,10 @@ async function runHfInference(
     case "questionAnswering":
       result = await hf.questionAnswering({
         model: body?.model || "deepset/roberta-base-squad2",
-        inputs: { question: body?.question || "", context: body?.context || "" },
+        inputs: {
+          question: body?.question || "",
+          context: body?.context || "",
+        },
       });
       break;
 
@@ -379,9 +396,7 @@ async function handlePost(ctx: HandlerContext<PostBody>): Promise<Response> {
     );
   }
 
-  throw new ValidationError(
-    "Unknown endpoint. Use /chat, /embeddings, or /inference/:task",
-  );
+  throw new ValidationError("Unknown endpoint. Use /chat, /embeddings, or /inference/:task");
 }
 
 async function handleGet(ctx: HandlerContext): Promise<Response> {
@@ -403,7 +418,11 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
         ],
         embeddings: [{ id: "text-embedding-3-small", provider: "z.ai" }],
         inference: [
-          { task: "translation", defaultModel: "t5-base", provider: "huggingface" },
+          {
+            task: "translation",
+            defaultModel: "t5-base",
+            provider: "huggingface",
+          },
           {
             task: "textToSpeech",
             defaultModel: "espnet/kan-bayashi_ljspeech_vits",
@@ -457,23 +476,25 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
 // Export Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: "api-v1-ai",
-  version: VERSION,
-  requireAuth: false, // Auth handled per-route: chat/embeddings require JWT, inference/health/models public
-  csrf: false, // API clients
-  rateLimit: {
-    limit: 30,
-    windowMs: 60000,
-    keyBy: "ip",
-  },
-  routes: {
-    GET: {
-      handler: handleGet,
+Deno.serve(
+  createAPIHandler({
+    service: "api-v1-ai",
+    version: VERSION,
+    requireAuth: false, // Auth handled per-route: chat/embeddings require JWT, inference/health/models public
+    csrf: false, // API clients
+    rateLimit: {
+      limit: 30,
+      windowMs: 60000,
+      keyBy: "ip",
     },
-    POST: {
-      schema: postBodySchema,
-      handler: handlePost,
+    routes: {
+      GET: {
+        handler: handleGet,
+      },
+      POST: {
+        schema: postBodySchema,
+        handler: handlePost,
+      },
     },
-  },
-}));
+  }),
+);

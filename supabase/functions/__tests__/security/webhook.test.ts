@@ -24,11 +24,7 @@ async function computeHmacSha256(payload: string, secret: string): Promise<strin
     ["sign"],
   );
 
-  const signatureBuffer = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    encoder.encode(payload),
-  );
+  const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
 
   const hashArray = Array.from(new Uint8Array(signatureBuffer));
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -39,7 +35,10 @@ async function computeHmacSha256(payload: string, secret: string): Promise<strin
 // ============================================================================
 
 Deno.test("WhatsApp - validates correct signature", async () => {
-  const payload = JSON.stringify({ object: "whatsapp_business_account", entry: [] });
+  const payload = JSON.stringify({
+    object: "whatsapp_business_account",
+    entry: [],
+  });
   const secret = "test_app_secret_123";
   const computedHash = await computeHmacSha256(payload, secret);
   const signature = `sha256=${computedHash}`;
@@ -50,7 +49,10 @@ Deno.test("WhatsApp - validates correct signature", async () => {
 });
 
 Deno.test("WhatsApp - rejects wrong signature", async () => {
-  const payload = JSON.stringify({ object: "whatsapp_business_account", entry: [] });
+  const payload = JSON.stringify({
+    object: "whatsapp_business_account",
+    entry: [],
+  });
   const secret = "test_app_secret_123";
   const wrongSecret = "wrong_secret";
 
@@ -61,7 +63,10 @@ Deno.test("WhatsApp - rejects wrong signature", async () => {
 });
 
 Deno.test("WhatsApp - rejects modified payload", async () => {
-  const originalPayload = JSON.stringify({ object: "whatsapp_business_account", entry: [] });
+  const originalPayload = JSON.stringify({
+    object: "whatsapp_business_account",
+    entry: [],
+  });
   const modifiedPayload = JSON.stringify({
     object: "whatsapp_business_account",
     entry: [{ malicious: true }],
@@ -199,8 +204,14 @@ Deno.test("Webhook - handles special characters in secret", async () => {
 Deno.test("Webhook - prevents replay attacks (signature tied to payload)", async () => {
   const secret = "shared_secret";
 
-  const legitimatePayload = JSON.stringify({ message_id: "123", text: "Hello" });
-  const maliciousPayload = JSON.stringify({ message_id: "456", text: "Send money" });
+  const legitimatePayload = JSON.stringify({
+    message_id: "123",
+    text: "Hello",
+  });
+  const maliciousPayload = JSON.stringify({
+    message_id: "456",
+    text: "Send money",
+  });
 
   // Attacker captures legitimate signature
   const legitimateSignature = await computeHmacSha256(legitimatePayload, secret);

@@ -7,7 +7,7 @@
  * @module api-v1-notifications/lib/template-engine
  */
 
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 import { logger } from "../../_shared/logger.ts";
 
 // =============================================================================
@@ -31,10 +31,13 @@ export interface NotificationTemplate {
 
 const TEMPLATE_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-const templateCache = new Map<string, {
-  template: NotificationTemplate;
-  cachedAt: number;
-}>();
+const templateCache = new Map<
+  string,
+  {
+    template: NotificationTemplate;
+    cachedAt: number;
+  }
+>();
 
 // =============================================================================
 // Template Interpolation
@@ -44,10 +47,7 @@ const templateCache = new Map<string, {
  * Replace {{variable}} placeholders in a template string with provided values.
  * Missing variables are left as-is (e.g., `{{var}}`).
  */
-export function interpolateTemplate(
-  template: string,
-  variables: Record<string, unknown>,
-): string {
+export function interpolateTemplate(template: string, variables: Record<string, unknown>): string {
   return template.replace(/\{\{(\s*[\w.]+\s*)\}\}/g, (_match, key) => {
     const trimmedKey = key.trim();
     const value = variables[trimmedKey];
@@ -73,7 +73,7 @@ export async function loadTemplate(
 ): Promise<NotificationTemplate | null> {
   // Check cache
   const cached = templateCache.get(name);
-  if (cached && (Date.now() - cached.cachedAt) < TEMPLATE_CACHE_TTL_MS) {
+  if (cached && Date.now() - cached.cachedAt < TEMPLATE_CACHE_TTL_MS) {
     return cached.template;
   }
 

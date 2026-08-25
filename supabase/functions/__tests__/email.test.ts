@@ -27,7 +27,11 @@ class MockEmailProvider implements EmailProvider {
 
   constructor(
     name: EmailProviderName,
-    options: { configured?: boolean; shouldFail?: boolean; failMessage?: string } = {},
+    options: {
+      configured?: boolean;
+      shouldFail?: boolean;
+      failMessage?: string;
+    } = {},
   ) {
     this.name = name;
     this._configured = options.configured ?? true;
@@ -157,7 +161,10 @@ Deno.test("email: first provider succeeds - no failover needed", async () => {
 
 Deno.test("email: first provider fails, second succeeds (failover logic)", async () => {
   const providers: MockEmailProvider[] = [
-    new MockEmailProvider("resend", { shouldFail: true, failMessage: "API key expired" }),
+    new MockEmailProvider("resend", {
+      shouldFail: true,
+      failMessage: "API key expired",
+    }),
     new MockEmailProvider("brevo"),
     new MockEmailProvider("mailersend"),
   ];
@@ -189,9 +196,18 @@ Deno.test("email: first provider fails, second succeeds (failover logic)", async
 
 Deno.test("email: all providers fail - returns last error", async () => {
   const providers: MockEmailProvider[] = [
-    new MockEmailProvider("resend", { shouldFail: true, failMessage: "Resend down" }),
-    new MockEmailProvider("brevo", { shouldFail: true, failMessage: "Brevo down" }),
-    new MockEmailProvider("mailersend", { shouldFail: true, failMessage: "MailerSend down" }),
+    new MockEmailProvider("resend", {
+      shouldFail: true,
+      failMessage: "Resend down",
+    }),
+    new MockEmailProvider("brevo", {
+      shouldFail: true,
+      failMessage: "Brevo down",
+    }),
+    new MockEmailProvider("mailersend", {
+      shouldFail: true,
+      failMessage: "MailerSend down",
+    }),
   ];
 
   const params: SendEmailParams = {

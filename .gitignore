@@ -39,7 +39,12 @@ tools/target/
 
 # Supabase local config (keep migrations/functions tracked)
 /supabase/*
-supabase
+!/supabase/config.toml
+!/supabase/seed.sql
+!/supabase/migrations/
+!/supabase/functions/
+supabase/functions/node_modules/
+supabase/.temp
 .env*.local
 
 # Build logs and temp files

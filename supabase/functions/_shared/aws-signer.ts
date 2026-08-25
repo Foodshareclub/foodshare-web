@@ -45,11 +45,7 @@ export class AWSV4Signer {
 
     // Create string to sign
     const credentialScope = `${dateStamp}/${this.region}/${this.service}/aws4_request`;
-    const stringToSign = await this.createStringToSign(
-      amzDate,
-      credentialScope,
-      canonicalRequest,
-    );
+    const stringToSign = await this.createStringToSign(amzDate, credentialScope, canonicalRequest);
 
     // Calculate signature
     const signature = await this.calculateSignature(dateStamp, stringToSign);

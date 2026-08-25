@@ -4,7 +4,7 @@
  * Business logic for product/listing operations.
  */
 
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 import { logger } from "../../_shared/logger.ts";
 
 export interface CreateProductInput {
@@ -33,7 +33,10 @@ export interface UpdateProductInput {
 }
 
 export class ProductService {
-  constructor(private supabase: SupabaseClient, private userId: string) {}
+  constructor(
+    private supabase: SupabaseClient,
+    private userId: string,
+  ) {}
 
   async createProduct(input: CreateProductInput) {
     const insertData = {
@@ -71,15 +74,25 @@ export class ProductService {
     const updateData: Record<string, unknown> = {};
 
     if (input.title !== undefined) updateData.product_name = input.title;
-    if (input.description !== undefined) updateData.product_description = input.description;
-    if (input.quantity !== undefined) updateData.product_quantity = input.quantity;
-    if (input.expiryDate !== undefined) updateData.product_expiry_date = input.expiryDate;
+    if (input.description !== undefined) {
+      updateData.product_description = input.description;
+    }
+    if (input.quantity !== undefined) {
+      updateData.product_quantity = input.quantity;
+    }
+    if (input.expiryDate !== undefined) {
+      updateData.product_expiry_date = input.expiryDate;
+    }
     if (input.pickupLocation !== undefined) {
       updateData.product_pickup_lat = input.pickupLocation.lat;
       updateData.product_pickup_lng = input.pickupLocation.lng;
     }
-    if (input.pickupAddress !== undefined) updateData.product_pickup_address = input.pickupAddress;
-    if (input.imageUrls !== undefined) updateData.product_images = input.imageUrls;
+    if (input.pickupAddress !== undefined) {
+      updateData.product_pickup_address = input.pickupAddress;
+    }
+    if (input.imageUrls !== undefined) {
+      updateData.product_images = input.imageUrls;
+    }
     if (input.status !== undefined) updateData.product_status = input.status;
 
     const { data, error } = await this.supabase
@@ -114,11 +127,13 @@ export class ProductService {
   async getProduct(productId: number) {
     const { data, error } = await this.supabase
       .from("products")
-      .select(`
+      .select(
+        `
         *,
         profile:profiles!products_profile_id_fkey(id, nickname, avatar_url, is_verified),
         category:categories(id, name, icon)
-      `)
+      `,
+      )
       .eq("id", productId)
       .single();
 
@@ -137,16 +152,14 @@ export class ProductService {
     limit: number;
     offset: number;
   }) {
-    let query = this.supabase
-      .from("products")
-      .select(
-        `
+    let query = this.supabase.from("products").select(
+      `
         *,
         profile:profiles!products_profile_id_fkey(id, nickname, avatar_url),
         category:categories(id, name, icon)
       `,
-        { count: "exact" },
-      );
+      { count: "exact" },
+    );
 
     if (params.categoryId) {
       query = query.eq("category_id", params.categoryId);

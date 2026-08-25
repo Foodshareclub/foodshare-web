@@ -184,17 +184,7 @@ const GENERIC_USERNAMES = new Set([
 /**
  * Common name prefixes/titles to strip.
  */
-const NAME_PREFIXES = new Set([
-  "mr",
-  "mrs",
-  "ms",
-  "miss",
-  "dr",
-  "prof",
-  "sir",
-  "madam",
-  "mx",
-]);
+const NAME_PREFIXES = new Set(["mr", "mrs", "ms", "miss", "dr", "prof", "sir", "madam", "mx"]);
 
 /**
  * Characters that commonly separate name parts in email usernames.
@@ -414,10 +404,7 @@ function extractNameFromEmail(email: string, minLength: number): string | null {
  * extractDisplayName({ email: "xk7@test.com" }, { fallback: "friend" }) // → "friend"
  * ```
  */
-export function extractDisplayName(
-  profile: ProfileNameData,
-  options: ExtractOptions = {},
-): string {
+export function extractDisplayName(profile: ProfileNameData, options: ExtractOptions = {}): string {
   const {
     preferFirstNameOnly = true,
     minNameLength = 2,
@@ -524,10 +511,7 @@ export function formatGreeting(
  * @param options - Extraction options
  * @returns true if the fallback would be used
  */
-export function isNameFallback(
-  profile: ProfileNameData,
-  options: ExtractOptions = {},
-): boolean {
+export function isNameFallback(profile: ProfileNameData, options: ExtractOptions = {}): boolean {
   const { fallback = "there" } = options;
   return extractDisplayName(profile, options) === fallback;
 }
@@ -550,9 +534,7 @@ export function isNameFallback(
  * const name = extractDisplayName(profile); // → "John"
  * ```
  */
-export function mapDatabaseProfile(
-  row: Record<string, unknown>,
-): ProfileNameData {
+export function mapDatabaseProfile(row: Record<string, unknown>): ProfileNameData {
   return {
     displayName: (row.display_name ?? row.displayName ?? row.name) as string | null,
     firstName: (row.first_name ?? row.firstName) as string | null,

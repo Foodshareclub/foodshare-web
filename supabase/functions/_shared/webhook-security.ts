@@ -304,14 +304,14 @@ export async function verifyGitHubWebhook(
  * }
  * ```
  */
-export function verifyTelegramWebhook(
-  headers: Headers,
-  secret: string,
-): WebhookVerificationResult {
+export function verifyTelegramWebhook(headers: Headers, secret: string): WebhookVerificationResult {
   const token = headers.get(WebhookProviders.telegram.signatureHeader);
 
   if (!token) {
-    return { valid: false, error: "Missing X-Telegram-Bot-Api-Secret-Token header" };
+    return {
+      valid: false,
+      error: "Missing X-Telegram-Bot-Api-Secret-Token header",
+    };
   }
 
   if (!constantTimeCompare(token, secret)) {
@@ -444,10 +444,7 @@ export function createWebhookVerifier(
  * }
  * ```
  */
-export function handleMetaWebhookChallenge(
-  request: Request,
-  verifyToken: string,
-): Response | null {
+export function handleMetaWebhookChallenge(request: Request, verifyToken: string): Response | null {
   const url = new URL(request.url);
   const mode = url.searchParams.get("hub.mode");
   const token = url.searchParams.get("hub.verify_token");

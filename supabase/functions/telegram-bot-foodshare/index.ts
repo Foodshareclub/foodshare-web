@@ -16,12 +16,15 @@
 import { createAPIHandler, type HandlerContext } from "../_shared/api-handler.ts";
 import { logger } from "../_shared/logger.ts";
 import { isDevelopment } from "../_shared/utils.ts";
+import { getAdminClient } from "../_shared/supabase.ts";
 import {
+  deleteMessage,
   disableGroupAutoDelete,
   enableGroupAutoDelete,
   getTelegramApiStatus,
+  setTelegramBotToken,
   setWebhook,
-} from "./services/telegram-api.ts";
+} from "../_shared/telegram-client.ts";
 import { verifyTelegramWebhook as verifyTelegramSignature } from "../_shared/webhook-security.ts";
 import { handleCallbackQuery } from "./handlers/callbacks.ts";
 import {
@@ -31,7 +34,7 @@ import {
   handleTextMessage,
 } from "./handlers/messages.ts";
 import { handleResendCode } from "./handlers/auth.ts";
-import { BOT_USERNAME } from "./config/index.ts";
+import { getBotUsername } from "./config/index.ts";
 import {
   handleFindCommand,
   handleHelpCommand,
@@ -43,6 +46,7 @@ import {
   handleShareCommand,
   handleStartCommand,
   handleStatsCommand,
+  handleUnlinkCommand,
 } from "./handlers/commands.ts";
 import { checkRateLimitDistributed } from "./services/rate-limiter.ts";
 import { cleanupExpiredStates } from "./services/user-state.ts";
@@ -51,9 +55,6 @@ import type { TelegramUpdate } from "./types/index.ts";
 
 const VERSION = "3.5.0";
 const SERVICE = "telegram-bot-foodshare";
-
-// Webhook secret for verifying requests from Telegram
-const WEBHOOK_SECRET = Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
 
 // ============================================================================
 // Metrics Collection
@@ -116,8 +117,10 @@ function getMetrics(): Record<string, unknown> {
 // Security: Webhook Signature Verification
 // ============================================================================
 
-function verifyWebhookSignature(req: Request): boolean {
-  if (!WEBHOOK_SECRET) {
+async function verifyWebhookSignature(ctx: HandlerContext): Promise<boolean> {
+  const secret = (await ctx.getSecret("TELEGRAM_WEBHOOK_SECRET")) ||
+    Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
+  if (!secret) {
     if (isDevelopment()) {
       logger.warn("TELEGRAM_WEBHOOK_SECRET not configured - skipping verification (dev mode)");
       return true;
@@ -126,34 +129,94 @@ function verifyWebhookSignature(req: Request): boolean {
     return false;
   }
 
-  const result = verifyTelegramSignature(req.headers, WEBHOOK_SECRET);
+  const result = verifyTelegramSignature(ctx.request.headers, secret);
   if (!result.valid) {
-    logger.warn("Webhook signature verification failed", { error: result.error });
+    logger.warn("Webhook signature verification failed", {
+      error: result.error,
+    });
   }
   return result.valid;
 }
 
-// ============================================================================
-// Initialization Check
-// ============================================================================
-
 let isInitialized = false;
 let initError: Error | null = null;
 
-try {
-  const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN") || Deno.env.get("BOT_TOKEN");
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+async function ensureInitialized(ctx: HandlerContext): Promise<boolean> {
+  if (isInitialized) return true;
 
-  if (!botToken) throw new Error("Missing BOT_TOKEN or TELEGRAM_BOT_TOKEN environment variable");
-  if (!supabaseUrl) throw new Error("Missing SUPABASE_URL environment variable");
-  if (!supabaseKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY environment variable");
+  try {
+    const botToken = (await ctx.getSecret("TELEGRAM_BOT_TOKEN")) ||
+      (await ctx.getSecret("BOT_TOKEN")) ||
+      Deno.env.get("TELEGRAM_BOT_TOKEN") ||
+      Deno.env.get("BOT_TOKEN");
+    const supabaseUrl = (await ctx.getSecret("SUPABASE_URL")) || Deno.env.get("SUPABASE_URL");
+    const supabaseKey = (await ctx.getSecret("SUPABASE_SERVICE_ROLE_KEY")) ||
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-  isInitialized = true;
-  logger.info("Telegram bot initialized successfully", { version: VERSION });
-} catch (error) {
-  initError = error instanceof Error ? error : new Error(String(error));
-  logger.error("Initialization failed", { error: initError.message });
+    if (!botToken) {
+      throw new Error("Missing BOT_TOKEN or TELEGRAM_BOT_TOKEN environment variable");
+    }
+    if (!supabaseUrl) {
+      throw new Error("Missing SUPABASE_URL environment variable");
+    }
+    if (!supabaseKey) {
+      throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY environment variable");
+    }
+
+    setTelegramBotToken(botToken);
+
+    isInitialized = true;
+    logger.info("Telegram bot initialized successfully", { version: VERSION });
+    return true;
+  } catch (error) {
+    initError = error instanceof Error ? error : new Error(String(error));
+    logger.error("Fatal initialization error:", { error: initError.message });
+    return false;
+  }
+}
+
+async function handleInternalDeleteMessages(ctx: HandlerContext): Promise<Response> {
+  const supabase = getAdminClient();
+  const { data, error } = await supabase
+    .from("group_message_deletions")
+    .select("*")
+    .lte("delete_at", new Date().toISOString())
+    .limit(50);
+
+  if (error) {
+    logger.error("Failed to fetch messages to delete", {
+      error: String(error),
+    });
+    return jsonOk({ error: "Failed to fetch" }, ctx, 500);
+  }
+
+  if (!data || data.length === 0) {
+    return jsonOk({ processed: 0 }, ctx, 200);
+  }
+
+  let successCount = 0;
+  for (const row of data) {
+    try {
+      await deleteMessage(row.chat_id, row.message_id);
+      successCount++;
+    } catch (e) {
+      logger.warn("Failed to delete scheduled message", {
+        chatId: row.chat_id,
+        messageId: row.message_id,
+        error: String(e),
+      });
+    }
+  }
+
+  // Clean up the processed rows regardless of success/failure (so we don't infinitely retry)
+  const ids = data.map((r) => r.id);
+  await supabase.from("group_message_deletions").delete().in("id", ids);
+
+  logger.info("Processed scheduled message deletions", {
+    count: data.length,
+    success: successCount,
+  });
+  return jsonOk({ processed: data.length, success: successCount }, ctx, 200);
 }
 
 // ============================================================================
@@ -172,7 +235,7 @@ function jsonOk(body: unknown, ctx: HandlerContext, status = 200): Response {
 // ============================================================================
 
 async function handleGet(ctx: HandlerContext): Promise<Response> {
-  if (!isInitialized) {
+  if (!(await ensureInitialized(ctx))) {
     return jsonOk(
       { error: "Service temporarily unavailable", details: initError?.message },
       ctx,
@@ -190,12 +253,27 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
       return jsonOk({ error: "Missing webhook URL parameter" }, ctx, 400);
     }
 
-    const success = await setWebhook(webhookUrl);
-    logger.info("Webhook setup", { success, webhookUrl });
+    const webhookSecret = (await ctx.getSecret("TELEGRAM_WEBHOOK_SECRET")) ||
+      Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
+
+    // TEMPORARY DEBUGGING
+    const token = (await ctx.getSecret("TELEGRAM_BOT_TOKEN")) ||
+      (await ctx.getSecret("BOT_TOKEN")) ||
+      Deno.env.get("TELEGRAM_BOT_TOKEN") ||
+      Deno.env.get("BOT_TOKEN");
+    logger.error("DEBUG_TOKEN_IS", {
+      token: String(token),
+      trimmed: String(token?.trim()),
+    });
+
+    const result = await setWebhook(webhookUrl, webhookSecret);
+    const success = result.ok;
+    logger.info("Webhook setup", { success, webhookUrl, result });
     return jsonOk(
       {
         success,
         message: success ? "Webhook set successfully" : "Failed to set webhook",
+        telegram_result: result,
       },
       ctx,
       success ? 200 : 500,
@@ -204,24 +282,28 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
 
   // Metrics endpoint
   if (pathname.endsWith("/metrics")) {
-    return jsonOk({
-      ...getMetrics(),
-      cache: getCacheStats(),
-      timestamp: new Date().toISOString(),
-    }, ctx);
+    return jsonOk(
+      {
+        ...getMetrics(),
+        cache: getCacheStats(),
+        timestamp: new Date().toISOString(),
+      },
+      ctx,
+    );
   }
 
   // Chat ID lookup endpoint
   if (pathname.endsWith("/chat-id")) {
-    const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN") || Deno.env.get("BOT_TOKEN");
+    const botToken = (await ctx.getSecret("TELEGRAM_BOT_TOKEN")) ||
+      (await ctx.getSecret("BOT_TOKEN")) ||
+      Deno.env.get("TELEGRAM_BOT_TOKEN") ||
+      Deno.env.get("BOT_TOKEN");
     if (!botToken) {
       return jsonOk({ error: "Bot token not configured" }, ctx, 500);
     }
 
     try {
-      const tgResponse = await fetch(
-        `https://api.telegram.org/bot${botToken}/getUpdates?limit=10`,
-      );
+      const tgResponse = await fetch(`https://api.telegram.org/bot${botToken}/getUpdates?limit=10`);
       const tgResult = await tgResponse.json();
 
       if (!tgResult.ok) {
@@ -253,13 +335,16 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
         }
       }
 
-      return jsonOk({
-        success: true,
-        instructions:
-          "Send any message to your bot, then call this endpoint again to see your chat_id",
-        unique_chat_ids: Array.from(chatIds),
-        recent_messages: messages,
-      }, ctx);
+      return jsonOk(
+        {
+          success: true,
+          instructions:
+            "Send any message to your bot, then call this endpoint again to see your chat_id",
+          unique_chat_ids: Array.from(chatIds),
+          recent_messages: messages,
+        },
+        ctx,
+      );
     } catch (error) {
       return jsonOk({ error: error instanceof Error ? error.message : String(error) }, ctx, 500);
     }
@@ -304,7 +389,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
 async function handlePost(ctx: HandlerContext): Promise<Response> {
   const startTime = Date.now();
 
-  if (!isInitialized) {
+  if (!(await ensureInitialized(ctx))) {
     return jsonOk(
       { error: "Service temporarily unavailable", details: initError?.message },
       ctx,
@@ -312,8 +397,13 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
     );
   }
 
+  const url = new URL(ctx.request.url);
+  if (url.pathname.endsWith("/_internal/delete-messages")) {
+    return handleInternalDeleteMessages(ctx);
+  }
+
   // Verify webhook signature for security
-  if (!verifyWebhookSignature(ctx.request)) {
+  if (!(await verifyWebhookSignature(ctx))) {
     logger.warn("Invalid webhook signature");
     // CRITICAL: Return 200 to Telegram to prevent retry storms
     return jsonOk({ ok: false, error: "Unauthorized" }, ctx);
@@ -332,13 +422,19 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
       if (!rateLimit.allowed) {
         const latency = Date.now() - startTime;
         recordMetric("ratelimit", latency);
-        logger.warn("Rate limit exceeded", { userId, retryAfter: rateLimit.retryAfterSeconds });
-        // Return 200 to Telegram but include rate limit info
-        return jsonOk({
-          ok: false,
-          error: "Rate limit exceeded",
+        logger.warn("Rate limit exceeded", {
+          userId,
           retryAfter: rateLimit.retryAfterSeconds,
-        }, ctx);
+        });
+        // Return 200 to Telegram but include rate limit info
+        return jsonOk(
+          {
+            ok: false,
+            error: "Rate limit exceeded",
+            retryAfter: rateLimit.retryAfterSeconds,
+          },
+          ctx,
+        );
       }
     }
 
@@ -378,11 +474,12 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
         }
 
         // Check if bot is @mentioned in the message
-        const isBotMentioned = text?.toLowerCase().includes(`@${BOT_USERNAME}`) ||
+        const isBotMentioned = text?.toLowerCase().includes(`@${getBotUsername()}`) ||
           message.entities?.some(
             (e) =>
               e.type === "mention" &&
-              text?.substring(e.offset, e.offset + e.length).toLowerCase() === `@${BOT_USERNAME}`,
+              text?.substring(e.offset, e.offset + e.length).toLowerCase() ===
+                `@${getBotUsername()}`,
           );
 
         // Skip if not a command and not a bot mention
@@ -399,8 +496,12 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
       try {
         // Handle commands
         if (text?.startsWith("/")) {
-          const [command, ...args] = text.split(" ");
+          let [command, ...args] = text.split(" ");
           const commandArg = args.join(" ");
+
+          if (command.includes("@")) {
+            command = command.split("@")[0];
+          }
 
           switch (command) {
             case "/start":
@@ -410,12 +511,25 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
                   msgUserId,
                   message.from,
                   message.from.language_code,
+                  commandArg,
                 );
               }
               break;
-            case "/help":
-              await handleHelpCommand(chatId, message.from?.language_code);
+            case "/unlink":
+              if (msgUserId && message.from) {
+                const { detectLanguage } = await import("./lib/i18n.ts");
+                await handleUnlinkCommand(
+                  message.from,
+                  chatId,
+                  detectLanguage(message.from.language_code),
+                );
+              }
               break;
+            case "/help": {
+              const { detectLanguage } = await import("./lib/i18n.ts");
+              await handleHelpCommand(chatId, detectLanguage(message.from?.language_code));
+              break;
+            }
             case "/share":
               if (msgUserId && message.from) {
                 await handleShareCommand(
@@ -500,13 +614,15 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
 // API Handler
 // ============================================================================
 
-Deno.serve(createAPIHandler({
-  service: SERVICE,
-  version: VERSION,
-  requireAuth: false,
-  csrf: false,
-  routes: {
-    GET: { handler: handleGet, requireAuth: false },
-    POST: { handler: handlePost, requireAuth: false },
-  },
-}));
+Deno.serve(
+  createAPIHandler({
+    service: SERVICE,
+    version: VERSION,
+    requireAuth: false,
+    csrf: false,
+    routes: {
+      GET: { handler: handleGet, requireAuth: false },
+      POST: { handler: handlePost, requireAuth: false },
+    },
+  }),
+);

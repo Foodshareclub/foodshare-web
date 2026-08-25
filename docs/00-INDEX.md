@@ -36,13 +36,12 @@
 ## Reference
 
 - [API Reference](./05-reference/API_REFERENCE.md) - API documentation
-- [Tech Stack](./05-reference/TECH_STACK.md) - Technologies used
+- [Tech Stack](./context/TECH_STACK.md) - Technologies used
 - [Utilities](./05-reference/UTILITIES.md) - Helper functions
 
 ## Monitoring & Operations
 
 - [Sentry Integration](./SENTRY_INTEGRATION.md) - Error tracking and performance monitoring
-- [Sentry Setup](./monitoring/SENTRY_SETUP.md) - Quick setup guide
 
 ## Outreach & Growth
 

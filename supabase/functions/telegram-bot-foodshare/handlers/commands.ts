@@ -2,7 +2,7 @@
  * Command handlers for bot commands
  */
 
-import { sendLocation, sendMessage, sendPhoto } from "../services/telegram-api.ts";
+import { sendLocation, sendMessage, sendPhoto } from "../../_shared/telegram-client.ts";
 import { setUserState } from "../services/user-state.ts";
 import { getProfileByTelegramId, requiresEmailVerification } from "../services/profile.ts";
 import { getBadges, getUserImpactStats } from "../services/impact.ts";
@@ -13,17 +13,31 @@ import { getUserLanguage, type Language, t } from "../lib/i18n.ts";
 import { getMainMenuKeyboard } from "../lib/keyboards.ts";
 import * as emoji from "../lib/emojis.ts";
 import * as msg from "../lib/messages.ts";
-import { APP_URL } from "../config/index.ts";
+import { getAppUrl } from "../config/index.ts";
 import { approximateLocation } from "../../_shared/location-privacy.ts";
+import { handleDeepLinkToken, handleUnlinkCommand } from "./auth.ts";
 import type { TelegramUser } from "../types/index.ts";
+
+export { handleUnlinkCommand };
 
 export async function handleStartCommand(
   chatId: number,
   userId: number,
   telegramUser: TelegramUser,
   languageCode?: string,
+  startParam?: string,
 ): Promise<void> {
   const lang = await getUserLanguage(userId, languageCode);
+
+  // If user opened with a deep link token (e.g. /start link_abc123)
+  if (startParam && startParam.startsWith("link_")) {
+    const token = startParam.replace(/^link_/, "");
+    const linked = await handleDeepLinkToken(token, telegramUser, chatId, lang);
+    if (linked) {
+      return;
+    }
+  }
+
   const profile = await getProfileByTelegramId(telegramUser.id);
 
   // Save language preference if profile exists and language not set
@@ -36,7 +50,9 @@ export async function handleStartCommand(
   if (profile && profile.email_verified) {
     const welcomeBackMsg = msg.boxedHeader(
       `${emoji.WAVE} ${
-        t(lang, "welcome.welcomeBack", { name: profile.first_name || profile.nickname || "" })
+        t(lang, "welcome.welcomeBack", {
+          name: profile.first_name || profile.nickname || "",
+        })
       }`,
     ) +
       "\n\n" +
@@ -68,10 +84,12 @@ export async function handleStartCommand(
       "\n\n" +
       msg.divider("─", 30) +
       "\n\n" +
-      `${emoji.LINK} <a href="${APP_URL}">Open FoodShare Website</a>\n\n` +
+      `${emoji.LINK} <a href="${getAppUrl()}">Open FoodShare Website</a>\n\n` +
       `${emoji.LIGHT_BULB} <i>${t(lang, "welcome.helpHint")}</i>`;
 
-    await sendMessage(chatId, welcomeBackMsg, { reply_markup: getMainMenuKeyboard(lang) });
+    await sendMessage(chatId, welcomeBackMsg, {
+      reply_markup: getMainMenuKeyboard(lang),
+    });
     return;
   }
 
@@ -162,10 +180,12 @@ export async function handleHelpCommand(chatId: number, lang: Language = "en"): 
     "\n\n" +
     msg.divider("─", 25) +
     "\n\n" +
-    `${emoji.LINK} <a href="${APP_URL}">Open FoodShare Website</a>\n\n` +
+    `${emoji.LINK} <a href="${getAppUrl()}">Open FoodShare Website</a>\n\n` +
     `${emoji.LIGHT_BULB} <i>Use the menu buttons below for quick actions!</i>`;
 
-  await sendMessage(chatId, helpMsg, { reply_markup: getMainMenuKeyboard(lang) });
+  await sendMessage(chatId, helpMsg, {
+    reply_markup: getMainMenuKeyboard(lang),
+  });
 }
 
 export async function handleShareCommand(
@@ -195,7 +215,7 @@ export async function handleShareCommand(
     return;
   }
 
-  const webAppUrl = `${APP_URL}/telegram-webapp/share-food.html`;
+  const webAppUrl = `${getAppUrl()}/telegram-webapp/share-food.html`;
 
   const keyboard = {
     inline_keyboard: [
@@ -205,7 +225,12 @@ export async function handleShareCommand(
           web_app: { url: webAppUrl },
         },
       ],
-      [{ text: t(lang, "share.useChatButton"), callback_data: "share_via_chat" }],
+      [
+        {
+          text: t(lang, "share.useChatButton"),
+          callback_data: "share_via_chat",
+        },
+      ],
     ],
   };
 
@@ -277,7 +302,7 @@ export async function handleFindCommand(
 
   let query = supabase
     .from("posts")
-    .select("id, post_name, post_description, post_address, location, images")
+    .select("id,post_name,post_description,post_address,location,images")
     .eq("post_type", "food")
     .eq("is_active", true)
     .order("created_at", { ascending: false })
@@ -304,7 +329,7 @@ export async function handleFindCommand(
       name: food.post_name,
       description: food.post_description || undefined,
       address: food.post_address || undefined,
-    }) + `\n${emoji.LINK} <a href="${APP_URL}/product/${food.id}">View Details</a>`;
+    }) + `\n${emoji.LINK} <a href="${getAppUrl()}/product/${food.id}">View Details</a>`;
 
     if (food.images?.[0]) {
       await sendPhoto(chatId, food.images[0], foodMsg);
@@ -328,7 +353,7 @@ export async function handleNearbyCommand(chatId: number, userId: number): Promi
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("location, search_radius_km")
+    .select("location,search_radius_km")
     .eq("telegram_id", userId)
     .single();
 
@@ -377,7 +402,7 @@ export async function handleNearbyCommand(chatId: number, userId: number): Promi
 📍 ${food.distance_km?.toFixed(1)}km away
 📝 ${food.post_description?.substring(0, 100) || "No description"}
 
-🔗 <a href="${APP_URL}/product/${food.id}">View & Claim</a>
+🔗 <a href="${getAppUrl()}/product/${food.id}">View & Claim</a>
     `.trim();
 
     if (food.images?.[0]) {
@@ -402,7 +427,7 @@ export async function handleProfileCommand(chatId: number, userId: number): Prom
       chatId,
       "👤 <b>Profile Not Found</b>\n\n" +
         "Link your Telegram account on FoodShare:\n" +
-        `🔗 <a href="${APP_URL}/profile">Open Profile Settings</a>`,
+        `🔗 <a href="${getAppUrl()}/profile">Open Profile Settings</a>`,
     );
     return;
   }
@@ -427,10 +452,21 @@ export async function handleProfileCommand(chatId: number, userId: number): Prom
   const keyboard = {
     inline_keyboard: [
       [
-        { text: `${emoji.LOCATION} Update Location`, callback_data: "profile_location" },
-        { text: `${emoji.COMPASS} Set Radius`, callback_data: "profile_radius" },
+        {
+          text: `${emoji.LOCATION} Update Location`,
+          callback_data: "profile_location",
+        },
+        {
+          text: `${emoji.COMPASS} Set Radius`,
+          callback_data: "profile_radius",
+        },
       ],
-      [{ text: `${emoji.LINK} Open Profile`, url: `${APP_URL}/profile/${profile.id}` }],
+      [
+        {
+          text: `${emoji.LINK} Open Profile`,
+          url: `${getAppUrl()}/profile/${profile.id}`,
+        },
+      ],
     ],
   };
 
@@ -512,7 +548,7 @@ export async function handleLeaderboardCommand(
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("telegram_user_activity")
-    .select("first_name, username, message_count")
+    .select("first_name,username,message_count")
     .order("message_count", { ascending: false })
     .limit(10);
 

@@ -5,8 +5,9 @@ This guide covers the deployment of the FoodShare Web application to production 
 ## 🏗️ Architecture Summary
 
 - **App**: Next.js 16 (App Router)
-- **Runtime**: Bun 1.2+
-- **Infrastructure**: Docker Compose + Nginx (Host)
+- **Runtime**: Bun >=1.1 (CI: latest)
+- **Infrastructure**: Docker Compose + Cloudflare Tunnel (`cloudflared` container in compose — no host reverse proxy)
+- **Services**: `foodshare-web` + `cloudflared`
 - **CI/CD**: GitHub Actions (Docker Build → GHCR → Deploy)
 - **Registry**: GitHub Container Registry (ghcr.io)
 - **Monitoring**: Sentry + Structured Logging
@@ -35,40 +36,56 @@ bun run build:check
 We use **"Latest-Wins" Concurrency**. Pushing a new commit to `main` will automatically cancel any in-progress builds for that branch.
 
 ### 1. Build Phase (GitHub Actions)
+
 - Linting & Type-checking
 - Bun:test suite execution
 - Docker image build (multi-stage)
 - Push to `ghcr.io/foodshareclub/foodshare-web:latest`
 
-### 2. Deployment Phase
-- SSH into VPS via `autossh`
-- `docker compose pull`
-- `docker compose up -d`
+### 2. Deployment Phase (Automated)
+
+The `web.yml` workflow connects to the VPS over SSH and:
+
+- Writes `.env.production` from GitHub Secrets
+- `docker compose pull && docker compose up -d --force-recreate` (services: `foodshare-web`, `cloudflared`)
 - `bun run translations:sync` (Updates Edge Function translations)
+
+Public traffic enters through the Cloudflare Tunnel container defined in `docker-compose.yml`.
+
+### 3. Debugging a Failed Deploy
+
+```bash
+# Inspect the failed step logs
+gh run view --log-failed
+
+# Re-trigger after fixing
+git push origin main
+```
+
+SSH into the VPS only for debugging — never to build or deploy manually.
 
 ---
 
-## 🖥️ VPS Management (Manual)
+## 🖥️ VPS Access (Debugging Only)
 
-While deployment is automated, you may need to access the VPS for debugging.
+Deployment is fully automated. Use SSH only to inspect a broken deployment.
 
 ### SSH Access
+
 ```bash
-autossh -M 0 -o ServerAliveInterval=600 -o ServerAliveCountMax=600 -o ConnectTimeout=10 -o ConnectionAttempts=60 -i ~/.ssh/foodshare_id_ed25519 organic@web.foodshare.club
+autossh -M 0 -o ServerAliveInterval=600 -o ServerAliveCountMax=600 -o ConnectTimeout=10 -o ConnectionAttempts=60 -i ~/.ssh/foodshare_id_ed25519 organic@${VPS_HOST:-frontendvps.foodshare.club}
 ```
 
-### Common Operations
+### Common Debug Operations
+
 ```bash
 # Check service health
 docker compose ps
 
 # View production logs
-docker compose logs -f next-app
+docker compose logs -f foodshare-web
 
-# Restart the application
-docker compose restart next-app
-
-# Manual sync of translations
+# Manual sync of translations (debugging only)
 bun run translations:sync
 ```
 
@@ -79,6 +96,7 @@ bun run translations:sync
 We follow a **Vault-First** parity model. Secrets are managed centrally and synchronized during deployment.
 
 ### Production Secret Management
+
 Runtime secrets (API keys, OAuth credentials, etc.) are stored in the **Supabase Vault** on the VPS.
 
 - **Source of Truth**: Supabase Vault.
@@ -87,6 +105,7 @@ Runtime secrets (API keys, OAuth credentials, etc.) are stored in the **Supabase
 - **Initial Seeding**: GitHub Secrets can be used for initial setup; the deployment script automatically promotes missing secrets to the Vault.
 
 ### Required Production Config (Vault)
+
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
@@ -98,6 +117,7 @@ Runtime secrets (API keys, OAuth credentials, etc.) are stored in the **Supabase
 ## ⚡ Performance Optimization
 
 Our production Docker build includes:
+
 1. **Next.js Standalone Mode**: Minimized bundle for containerization.
 2. **Sharp**: Automatic image optimization.
 3. **Multi-stage Build**: Final image contains only production dependencies.
@@ -108,14 +128,17 @@ Our production Docker build includes:
 ## 🛠️ Troubleshooting
 
 ### Issue: Build Hanging
+
 **Cause:** JSR imports or large bundle size.
-**Solution:** Check `next.config.ts` for bundle analyzer and ensure no JSR imports in shared backend symlinks.
+**Solution:** Check `next.config.ts` for bundle analyzer and ensure no JSR imports in the vendored `supabase/` copy.
 
 ### Issue: Translation Sync Failed
+
 **Cause:** Supabase Service Role key expired or network timeout.
 **Solution:** Run `bun run translations:sync` manually on the VPS to identify the error.
 
 ### Issue: 429 Too Many Requests
+
 **Cause:** Rate limit triggered in `proxy.ts`.
 **Solution:** Check Upstash dashboard to verify Redis connection health.
 
@@ -124,46 +147,14 @@ Our production Docker build includes:
 ## 🔄 Rollback Plan
 
 If a deployment fails:
+
 1. **GitHub Action**: Re-run the last successful workflow.
-2. **Manual VPS**:
+2. **Manual VPS** (debugging only):
    ```bash
-   docker compose rollback # If using docker rollout
-   # OR
-   docker compose up -d --build --force-recreate
+   docker compose pull
+   docker compose up -d --force-recreate
    ```
 
 ---
 
 _For more detailed infrastructure info, see `docs/02-development/ARCHITECTURE.md`._
-console
-- [ ] Monitoring active
-- [ ] Team notified
-
-### Follow-up
-
-- [ ] Monitor for 24 hours
-- [ ] Gather user feedback
-- [ ] Document any issues
-- [ ] Plan next improvements
-
----
-
-**Deployment Date:** **\*\***\_**\*\***
-
-**Deployed By:** **\*\***\_**\*\***
-
-**Version:** **\*\***\_**\*\***
-
-**Status:** ⬜ Success ⬜ Issues ⬜ Rollback
-
-**Notes:**
-
----
-
----
-
----
-
----
-
-_This deployment guide ensures a smooth, safe deployment of the modernized storage system._

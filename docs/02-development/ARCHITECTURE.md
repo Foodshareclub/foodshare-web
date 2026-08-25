@@ -94,6 +94,7 @@ All singular routes support standardized location and search parameters:
 | `radius`   | number | Search radius in meters (default: 5000)              |
 
 **Standard Route Transition Policy:**
+
 - Always use the singular form for new features (e.g., `/challenge` not `/challenges`).
 - Plural forms are kept in `LEGACY_TYPE_MAP` in `src/app/food/page.tsx` for 301 redirection.
 
@@ -788,31 +789,31 @@ Mobile First Approach
 
 ## 🌐 Internationalization
 
-### Frontend i18n (Lingui)
+### Frontend i18n (next-intl)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    i18n Architecture                        │
 │                                                             │
 │  Source Code                                               │
-│  ├── <Trans>Hello</Trans>                                  │
-│  └── t`Welcome`                                            │
+│  ├── t('hello')            (useTranslations)               │
+│  └── getTranslations()     (Server Components)             │
 │                                                             │
-│  Extract (bun run extract)                                 │
-│  ├── src/locales/en/messages.po                           │
-│  ├── src/locales/cs/messages.po                           │
-│  ├── src/locales/fr/messages.po                           │
-│  ├── src/locales/ru/messages.po                           │
-│  └── src/locales/uk/messages.po                           │
+│  Message Catalogs                                          │
+│  ├── messages/en.json                                      │
+│  ├── messages/cs.json                                      │
+│  ├── messages/fr.json                                      │
+│  ├── messages/ru.json                                      │
+│  └── messages/{locale}.json  (21 locales)                  │
 │                                                             │
 │  Translate                                                 │
-│  └── Edit .po files                                        │
+│  └── Edit JSON message files                               │
 │                                                             │
-│  Compile (bun run compile)                                 │
-│  ├── src/locales/{locale}/messages.mjs                    │
+│  Sync (bun run translations:sync)                          │
+│  └── Push catalogs to Supabase                             │
 │                                                             │
 │  Runtime                                                   │
-│  └── Load compiled catalogs dynamically                    │
+│  └── next-intl loads messages per locale                   │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```

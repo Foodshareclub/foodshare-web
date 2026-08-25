@@ -31,9 +31,7 @@ export async function handleHealth(
 /**
  * GET /stats - Statistics
  */
-export async function handleStats(
-  context: NotificationContext,
-): Promise<{
+export async function handleStats(context: NotificationContext): Promise<{
   success: boolean;
   data?: Record<string, unknown>;
   error?: string;
@@ -67,9 +65,7 @@ export async function handleStats(
 /**
  * GET /preferences - Get user preferences
  */
-export async function handleGetPreferences(
-  context: NotificationContext,
-): Promise<{
+export async function handleGetPreferences(context: NotificationContext): Promise<{
   success: boolean;
   data?: unknown;
   error?: string;
@@ -125,6 +121,56 @@ export async function handleUpdatePreferences(
 }
 
 /**
+ * PUT /preferences/channel - Update specific category channel preference
+ */
+export async function handleUpdateCategoryChannelPreference(
+  body: unknown,
+  context: NotificationContext,
+): Promise<{
+  success: boolean;
+  data?: unknown;
+  error?: string;
+}> {
+  if (!context.userId) {
+    return { success: false, error: "User ID required" };
+  }
+
+  const {
+    category,
+    channel,
+    enabled,
+    frequency = "instant",
+  } = (body as {
+    category?: string;
+    channel?: string;
+    enabled?: boolean;
+    frequency?: string;
+  }) || {};
+
+  if (!category || !channel || enabled === undefined) {
+    return { success: false, error: "category, channel, and enabled are required" };
+  }
+
+  try {
+    const { data, error } = await context.supabase.rpc("update_notification_preference_channel", {
+      p_user_id: context.userId,
+      p_category: category,
+      p_channel: channel,
+      p_enabled: enabled,
+      p_frequency: frequency,
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
  * POST /preferences/dnd - Enable Do Not Disturb
  */
 export async function handleEnableDnd(
@@ -157,7 +203,10 @@ export async function handleEnableDnd(
       return { success: false, error: error.message };
     }
 
-    return { success: true, data: { dnd_enabled: true, dnd_until: until.toISOString() } };
+    return {
+      success: true,
+      data: { dnd_enabled: true, dnd_until: until.toISOString() },
+    };
   } catch (error) {
     return { success: false, error: (error as Error).message };
   }
@@ -166,9 +215,7 @@ export async function handleEnableDnd(
 /**
  * DELETE /preferences/dnd - Disable Do Not Disturb
  */
-export async function handleDisableDnd(
-  context: NotificationContext,
-): Promise<{
+export async function handleDisableDnd(context: NotificationContext): Promise<{
   success: boolean;
   data?: unknown;
   error?: string;
@@ -310,7 +357,9 @@ function parseWebhookEvents(provider: string, body: unknown): WebhookEvent[] {
         return events;
     }
   } catch (error) {
-    logger.error("Failed to parse webhook events", error as Error, { provider });
+    logger.error("Failed to parse webhook events", error as Error, {
+      provider,
+    });
     return events;
   }
 }
@@ -344,15 +393,17 @@ function parseResendEvents(body: unknown): WebhookEvent[] {
   const status = statusMap[payload.type];
   if (!status) return [];
 
-  return [{
-    messageId: payload.data.email_id,
-    status,
-    metadata: {
-      eventType: payload.type,
-      recipient: payload.data.to?.[0],
-      bounceType: payload.data.bounce?.type,
+  return [
+    {
+      messageId: payload.data.email_id,
+      status,
+      metadata: {
+        eventType: payload.type,
+        recipient: payload.data.to?.[0],
+        bounceType: payload.data.bounce?.type,
+      },
     },
-  }];
+  ];
 }
 
 /**
@@ -385,16 +436,18 @@ function parseBrevoEvents(body: unknown): WebhookEvent[] {
   const status = statusMap[payload.event];
   if (!status) return [];
 
-  return [{
-    messageId: payload["message-id"],
-    status,
-    metadata: {
-      eventType: payload.event,
-      recipient: payload.email,
-      errorMessage: payload.reason,
-      tag: payload.tag,
+  return [
+    {
+      messageId: payload["message-id"],
+      status,
+      metadata: {
+        eventType: payload.event,
+        recipient: payload.email,
+        errorMessage: payload.reason,
+        tag: payload.tag,
+      },
     },
-  }];
+  ];
 }
 
 /**
@@ -458,17 +511,19 @@ function parseSesEvents(body: unknown): WebhookEvent[] {
   const status = statusMap[eventType];
   if (!status) return [];
 
-  return [{
-    messageId,
-    status,
-    metadata: {
-      eventType,
-      recipients: notification.mail?.destination,
-      bounceType: notification.bounce?.bounceType,
-      bounceSubType: notification.bounce?.bounceSubType,
-      complaintType: notification.complaint?.complaintFeedbackType,
+  return [
+    {
+      messageId,
+      status,
+      metadata: {
+        eventType,
+        recipients: notification.mail?.destination,
+        bounceType: notification.bounce?.bounceType,
+        bounceSubType: notification.bounce?.bounceSubType,
+        complaintType: notification.complaint?.complaintFeedbackType,
+      },
     },
-  }];
+  ];
 }
 
 /**
@@ -508,16 +563,18 @@ function parseMailerSendEvents(body: unknown): WebhookEvent[] {
   const status = statusMap[payload.type];
   if (!status) return [];
 
-  return [{
-    messageId: payload.data.email.message.id,
-    status,
-    metadata: {
-      eventType: payload.type,
-      recipient: payload.data.recipient?.email,
-      clickedUrl: payload.data.url,
-      errorMessage: payload.data.reason,
+  return [
+    {
+      messageId: payload.data.email.message.id,
+      status,
+      metadata: {
+        eventType: payload.type,
+        recipient: payload.data.recipient?.email,
+        clickedUrl: payload.data.url,
+        errorMessage: payload.data.reason,
+      },
     },
-  }];
+  ];
 }
 
 /**
@@ -544,14 +601,16 @@ function parseFcmEvents(body: unknown): WebhookEvent[] {
   const status = statusMap[payload.status || "sent"];
   if (!status) return [];
 
-  return [{
-    messageId: payload.messageId,
-    status,
-    metadata: {
-      eventType: payload.status,
-      errorMessage: payload.error,
+  return [
+    {
+      messageId: payload.messageId,
+      status,
+      metadata: {
+        eventType: payload.status,
+        errorMessage: payload.error,
+      },
     },
-  }];
+  ];
 }
 
 /**
@@ -568,7 +627,11 @@ export async function handleDigestProcess(
   const startTime = performance.now();
 
   try {
-    const { frequency = "daily", limit = 100, dryRun = false } = (body as {
+    const {
+      frequency = "daily",
+      limit = 100,
+      dryRun = false,
+    } = (body as {
       frequency?: string;
       limit?: number;
       dryRun?: boolean;
@@ -641,16 +704,20 @@ export async function handleDigestProcess(
       if (frequency !== "hourly") {
         try {
           const { sendToChannel } = await import("../orchestrator.ts");
-          const emailResult = await sendToChannel("email", {
-            userId: userDigest.user_id,
-            type: "digest",
-            title: createDigestTitle(items, frequency),
-            body: createDigestBody(items),
-            data: {
-              frequency,
-              itemCount: String(items.length),
+          const emailResult = await sendToChannel(
+            "email",
+            {
+              userId: userDigest.user_id,
+              type: "digest",
+              title: createDigestTitle(items, frequency),
+              body: createDigestBody(items),
+              data: {
+                frequency,
+                itemCount: String(items.length),
+              },
             },
-          }, context);
+            context,
+          );
 
           if (emailResult.success) {
             emailsSent++;
@@ -666,18 +733,22 @@ export async function handleDigestProcess(
       // Send push notification
       try {
         const { sendToChannel } = await import("../orchestrator.ts");
-        const pushResult = await sendToChannel("push", {
-          userId: userDigest.user_id,
-          type: "digest",
-          title: createDigestTitle(items, frequency),
-          body: createDigestBody(items),
-          data: {
+        const pushResult = await sendToChannel(
+          "push",
+          {
+            userId: userDigest.user_id,
             type: "digest",
-            frequency,
-            itemCount: String(items.length),
+            title: createDigestTitle(items, frequency),
+            body: createDigestBody(items),
+            data: {
+              type: "digest",
+              frequency,
+              itemCount: String(items.length),
+            },
+            collapseKey: `digest-${frequency}`,
           },
-          collapseKey: `digest-${frequency}`,
-        }, context);
+          context,
+        );
 
         if (pushResult.success) {
           pushSent++;
@@ -691,10 +762,9 @@ export async function handleDigestProcess(
 
     // Mark notifications as sent (unless dry run)
     if (!dryRun && allNotificationIds.length > 0) {
-      const { error: markError } = await context.supabase.rpc(
-        "mark_digest_notifications_sent",
-        { p_notification_ids: allNotificationIds },
-      );
+      const { error: markError } = await context.supabase.rpc("mark_digest_notifications_sent", {
+        p_notification_ids: allNotificationIds,
+      });
 
       if (markError) {
         errors.push(`Failed to mark notifications as sent: ${markError.message}`);
@@ -784,9 +854,7 @@ function createDigestBody(items: Array<{ title?: string }>): string {
 /**
  * GET /dashboard - Dashboard statistics
  */
-export async function handleDashboard(
-  context: NotificationContext,
-): Promise<{
+export async function handleDashboard(context: NotificationContext): Promise<{
   success: boolean;
   data?: unknown;
   error?: string;
@@ -797,7 +865,7 @@ export async function handleDashboard(
 
     const { data, error } = await context.supabase
       .from("notification_delivery_log")
-      .select("status, channels")
+      .select("status,channels")
       .gte("created_at", since);
 
     if (error) {
@@ -807,8 +875,8 @@ export async function handleDashboard(
     const stats = {
       period: "24h",
       total: data?.length || 0,
-      delivered: data?.filter((d) => d.status === "delivered").length || 0,
-      failed: data?.filter((d) => d.status === "failed").length || 0,
+      delivered: data?.filter((d: any) => d.status === "delivered").length || 0,
+      failed: data?.filter((d: any) => d.status === "failed").length || 0,
     };
 
     return { success: true, data: stats };

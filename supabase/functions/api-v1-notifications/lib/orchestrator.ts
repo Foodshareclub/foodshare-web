@@ -118,7 +118,7 @@ export async function sendNotification(
       channels.map((channel) =>
         shouldSendNotification(context.supabase, request.userId, {
           category,
-          channel,
+          channel: channel as any,
           bypassPreferences,
         })
       ),
@@ -142,9 +142,7 @@ export async function sendNotification(
     }
 
     // 4. Handle digest batching
-    const firstDigest = preferenceResults.find(
-      (r) => r.frequency && r.frequency !== "instant",
-    );
+    const firstDigest = preferenceResults.find((r) => r.frequency && r.frequency !== "instant");
     if (firstDigest && !bypassPreferences) {
       await queueForDigest(request, firstDigest.frequency!, context);
 
@@ -184,12 +182,7 @@ export async function sendNotification(
     }
 
     // 6. Send to each channel with fallback
-    const channelResults = await sendToChannels(
-      request,
-      allowedChannels,
-      context,
-      notificationId,
-    );
+    const channelResults = await sendToChannels(request, allowedChannels, context, notificationId);
 
     // 7. Track delivery
     await trackDelivery(notificationId, request, channelResults, context);
@@ -205,7 +198,10 @@ export async function sendNotification(
       notificationId,
       userId: request.userId,
       success,
-      channels: channelResults.map((r) => ({ channel: r.channel, success: r.success })),
+      channels: channelResults.map((r) => ({
+        channel: r.channel,
+        success: r.success,
+      })),
       durationMs: Math.round(duration),
     });
 
@@ -275,6 +271,9 @@ async function determineChannels(
     }
     if (data.settings?.sms_enabled && categoryPrefs?.sms?.enabled !== false) {
       channels.push("sms");
+    }
+    if (data.settings?.telegram_enabled !== false && categoryPrefs?.telegram?.enabled !== false) {
+      channels.push("telegram");
     }
 
     // Always include in-app
@@ -363,6 +362,22 @@ async function sendToChannels(
   return results;
 }
 
+export async function sendToChannel(
+  channel: NotificationChannel,
+  request: SendRequest,
+  context: NotificationContext,
+): Promise<ChannelDeliveryResult> {
+  const results = await sendToChannels(request, [channel], context, crypto.randomUUID());
+  return (
+    results[0] || {
+      channel,
+      success: false,
+      error: "Failed to send to channel",
+      attemptedAt: new Date().toISOString(),
+    }
+  );
+}
+
 async function buildChannelPayload(
   request: SendRequest,
   channel: NotificationChannel,
@@ -394,7 +409,7 @@ async function buildChannelPayload(
       // Check for custom HTML content from admin email compose
       const useCustomHtml = request.data?.useHtml === "true" && request.data?.rawMessage;
       const htmlContent = useCustomHtml
-        ? renderTemplateString(request.data.rawMessage, variables)
+        ? renderTemplateString(request.data?.rawMessage as string, variables)
         : formatEmailHtml(request);
 
       return {
@@ -440,6 +455,19 @@ async function buildChannelPayload(
         data: request.data,
         imageUrl: request.imageUrl,
         category: mapTypeToCategory(request.type),
+      };
+    }
+
+    case "telegram": {
+      return {
+        userId: request.userId,
+        title: request.title,
+        body: request.body,
+        imageUrl: request.imageUrl,
+        actionUrl: request.data?.actionUrl || request.data?.url || request.data?.link,
+        actionText: request.data?.actionText,
+        category: mapTypeToCategory(request.type),
+        data: request.data,
       };
     }
 
@@ -602,7 +630,9 @@ async function trackDelivery(
       created_at: new Date().toISOString(),
     });
   } catch (error) {
-    logger.error("Failed to track delivery", error as Error, { notificationId });
+    logger.error("Failed to track delivery", error as Error, {
+      notificationId,
+    });
   }
 }
 

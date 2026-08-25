@@ -61,12 +61,18 @@ function detectPlatform(request: Request): "ios" | "android" | "web" | "unknown"
   // Fall back to User-Agent detection
   const userAgent = request.headers.get("user-agent")?.toLowerCase() || "";
 
-  if (userAgent.includes("foodshare") && userAgent.includes("ios")) return "ios";
-  if (userAgent.includes("foodshare") && userAgent.includes("android")) return "android";
+  if (userAgent.includes("foodshare") && userAgent.includes("ios")) {
+    return "ios";
+  }
+  if (userAgent.includes("foodshare") && userAgent.includes("android")) {
+    return "android";
+  }
   if (userAgent.includes("iphone") || userAgent.includes("ipad")) return "ios";
   if (userAgent.includes("android")) return "android";
   if (
-    userAgent.includes("mozilla") || userAgent.includes("chrome") || userAgent.includes("safari")
+    userAgent.includes("mozilla") ||
+    userAgent.includes("chrome") ||
+    userAgent.includes("safari")
   ) {
     return "web";
   }
@@ -134,11 +140,18 @@ export function updateContext(
   }
 
   if (updates.userId !== undefined) currentContext.userId = updates.userId;
-  if (updates.platform !== undefined) currentContext.platform = updates.platform;
-  if (updates.appVersion !== undefined) currentContext.appVersion = updates.appVersion;
+  if (updates.platform !== undefined) {
+    currentContext.platform = updates.platform;
+  }
+  if (updates.appVersion !== undefined) {
+    currentContext.appVersion = updates.appVersion;
+  }
   if (updates.service !== undefined) currentContext.service = updates.service;
   if (updates.metadata) {
-    currentContext.metadata = { ...currentContext.metadata, ...updates.metadata };
+    currentContext.metadata = {
+      ...currentContext.metadata,
+      ...updates.metadata,
+    };
   }
 }
 
@@ -179,10 +192,7 @@ export function clearContext(): void {
  * Execute a function with a specific context
  * Useful for background tasks or async operations
  */
-export async function withContext<T>(
-  context: RequestContext,
-  fn: () => Promise<T>,
-): Promise<T> {
+export async function withContext<T>(context: RequestContext, fn: () => Promise<T>): Promise<T> {
   const previousContext = currentContext;
   currentContext = context;
 

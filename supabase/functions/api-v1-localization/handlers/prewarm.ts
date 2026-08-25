@@ -1,3 +1,4 @@
+import { logger } from "../../_shared/logger.ts";
 /**
  * Prewarm Translation Cache Handler
  *
@@ -13,11 +14,11 @@
  * }
  */
 
-const TRANSLATE_API = Deno.env.get("LLM_TRANSLATION_ENDPOINT") ||
-  "https://translate.foodshare.club";
-const TRANSLATE_API_KEY = Deno.env.get("LLM_TRANSLATION_API_KEY") || "";
-const CF_ACCESS_CLIENT_ID = Deno.env.get("CF_ACCESS_CLIENT_ID") || "";
-const CF_ACCESS_CLIENT_SECRET = Deno.env.get("CF_ACCESS_CLIENT_SECRET") || "";
+const getTranslateApi = () =>
+  Deno.env.get("LLM_TRANSLATION_ENDPOINT") || "https://translate.foodshare.club";
+const getTranslateApiKey = () => Deno.env.get("LLM_TRANSLATION_API_KEY") || "";
+const getCfAccessClientId = () => Deno.env.get("CF_ACCESS_CLIENT_ID") || "";
+const getCfAccessClientSecret = () => Deno.env.get("CF_ACCESS_CLIENT_SECRET") || "";
 
 interface PrewarmRequest {
   texts: string[];
@@ -82,13 +83,13 @@ export default async function prewarmHandler(
 
     // Fire-and-forget prewarm request to translation server
     // This will queue translations in the background
-    fetch(`${TRANSLATE_API}/api/translate/prewarm`, {
+    fetch(`${getTranslateApi()}/api/translate/prewarm`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-API-Key": TRANSLATE_API_KEY,
-        "CF-Access-Client-Id": CF_ACCESS_CLIENT_ID,
-        "CF-Access-Client-Secret": CF_ACCESS_CLIENT_SECRET,
+        "X-API-Key": getTranslateApiKey(),
+        "CF-Access-Client-Id": getCfAccessClientId(),
+        "CF-Access-Client-Secret": getCfAccessClientSecret(),
       },
       body: JSON.stringify({ texts, languages, domain }),
     }).catch((error) => {

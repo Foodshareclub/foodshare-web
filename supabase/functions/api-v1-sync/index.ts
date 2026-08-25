@@ -103,11 +103,14 @@ async function handleDeltaSync(ctx: HandlerContext<SyncRequest>): Promise<Respon
 
   const dbResponse = data as {
     success: boolean;
-    tables: Record<string, {
-      changes: unknown[];
-      checkpoint: number;
-      hasMore: boolean;
-    }>;
+    tables: Record<
+      string,
+      {
+        changes: unknown[];
+        checkpoint: number;
+        hasMore: boolean;
+      }
+    >;
     meta: {
       totalChanges: number;
       syncedAt: string;
@@ -230,7 +233,7 @@ async function handlePendingOperations(
 
       results.push({
         operationId: op.operationId,
-        status: applyResult.success ? "applied" : (applyResult.status || "rejected"),
+        status: applyResult.success ? "applied" : applyResult.status || "rejected",
         error: applyResult.error,
       });
     } catch (opError) {
@@ -254,11 +257,14 @@ async function handlePendingOperations(
     requestId: requestCtx?.requestId,
   });
 
-  return ok({
-    processed: results.length,
-    summary: { applied, conflicts, rejected },
-    results,
-  }, ctx);
+  return ok(
+    {
+      processed: results.length,
+      summary: { applied, conflicts, rejected },
+      results,
+    },
+    ctx,
+  );
 }
 
 // =============================================================================
@@ -276,7 +282,7 @@ async function handleSyncStatus(ctx: HandlerContext): Promise<Response> {
   // Get sync checkpoints for user
   const { data: checkpoints, error: checkpointError } = await supabase
     .from("sync_checkpoints")
-    .select("table_name, last_sync_version, last_sync_at")
+    .select("table_name,last_sync_version,last_sync_at")
     .eq("user_id", userId);
 
   if (checkpointError) {
@@ -302,16 +308,19 @@ async function handleSyncStatus(ctx: HandlerContext): Promise<Response> {
     };
   }
 
-  return ok({
-    checkpoints: checkpointMap,
-    pendingOperations: pendingCount || 0,
-    lastSyncAt: checkpoints && checkpoints.length > 0
-      ? checkpoints.reduce(
-        (latest, cp) => new Date(cp.last_sync_at) > new Date(latest) ? cp.last_sync_at : latest,
-        checkpoints[0].last_sync_at,
-      )
-      : null,
-  }, ctx);
+  return ok(
+    {
+      checkpoints: checkpointMap,
+      pendingOperations: pendingCount || 0,
+      lastSyncAt: checkpoints && checkpoints.length > 0
+        ? checkpoints.reduce(
+          (latest, cp) => new Date(cp.last_sync_at) > new Date(latest) ? cp.last_sync_at : latest,
+          checkpoints[0].last_sync_at,
+        )
+        : null,
+    },
+    ctx,
+  );
 }
 
 // =============================================================================
@@ -367,22 +376,24 @@ async function handleGetSync(ctx: HandlerContext): Promise<Response> {
 // Export Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: "api-v1-sync",
-  version: "2.0.0",
-  requireAuth: true,
-  csrf: true,
-  rateLimit: {
-    limit: 30,
-    windowMs: 60000, // 30 sync requests per minute
-    keyBy: "user",
-  },
-  routes: {
-    GET: {
-      handler: handleGetSync,
+Deno.serve(
+  createAPIHandler({
+    service: "api-v1-sync",
+    version: "2.0.0",
+    requireAuth: true,
+    csrf: true,
+    rateLimit: {
+      limit: 30,
+      windowMs: 60000, // 30 sync requests per minute
+      keyBy: "user",
     },
-    POST: {
-      handler: handlePostSync,
+    routes: {
+      GET: {
+        handler: handleGetSync,
+      },
+      POST: {
+        handler: handlePostSync,
+      },
     },
-  },
-}));
+  }),
+);

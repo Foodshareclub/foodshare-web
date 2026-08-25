@@ -20,7 +20,7 @@ export async function recompressOldImages(
   } = {},
 ): Promise<RecompressionResults> {
   const batchSize = options.batchSize ?? 50;
-  const _cutoffDate = options.cutoffDate ?? "2026-02-06T00:00:00Z";
+  // const _cutoffDate = options.cutoffDate ?? "2026-02-06T00:00:00Z";
 
   const results: RecompressionResults = {
     processed: 0,
@@ -33,12 +33,10 @@ export async function recompressOldImages(
   const buckets = ["food-images", "profiles", "forum", "challenges", "avatars", "posts"];
 
   for (const bucket of buckets) {
-    const { data: files } = await supabase.storage
-      .from(bucket)
-      .list("", {
-        limit: batchSize,
-        sortBy: { column: "created_at", order: "asc" },
-      });
+    const { data: files } = await supabase.storage.from(bucket).list("", {
+      limit: batchSize,
+      sortBy: { column: "created_at", order: "asc" },
+    });
 
     if (!files) continue;
 
@@ -63,16 +61,14 @@ export async function recompressOldImages(
       }
 
       try {
-        const { data: fileData } = await supabase.storage
-          .from(bucket)
-          .download(file.name);
+        const { data: fileData } = await supabase.storage.from(bucket).download(file.name);
 
         if (!fileData) {
           results.failed++;
           continue;
         }
 
-        const _originalSize = fileData.size;
+        // const _originalSize = fileData.size;
         const buffer = await fileData.arrayBuffer();
 
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -86,16 +82,13 @@ export async function recompressOldImages(
         formData.append("extractEXIF", "false");
         formData.append("enableAI", "false");
 
-        const uploadResponse = await fetch(
-          `${supabaseUrl}/functions/v1/api-v1-images/upload`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${serviceKey}`,
-            },
-            body: formData,
+        const uploadResponse = await fetch(`${supabaseUrl}/functions/v1/api-v1-images/upload`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${serviceKey}`,
           },
-        );
+          body: formData,
+        });
 
         if (uploadResponse.ok) {
           const result = await uploadResponse.json();
@@ -109,7 +102,10 @@ export async function recompressOldImages(
           });
         } else {
           results.failed++;
-          logger.error("Failed to recompress image", { bucket, file: file.name });
+          logger.error("Failed to recompress image", {
+            bucket,
+            file: file.name,
+          });
         }
       } catch (error) {
         results.failed++;

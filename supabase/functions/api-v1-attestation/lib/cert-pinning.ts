@@ -124,7 +124,7 @@ const PIN_CONFIG = {
     try {
       return new URL(Deno.env.get("SUPABASE_URL") || "").hostname;
     } catch {
-      return "api.foodshare.club";
+      return Deno.env.get("API_DOMAIN") || "api.foodshare.club";
     }
   })(),
 };
@@ -150,9 +150,13 @@ function detectCertPinPlatform(request: Request): CertPinPlatform {
   }
   if (ua.includes("Android") || ua.includes("okhttp")) return "android";
   if (
-    ua.includes("Mozilla") || ua.includes("Chrome") || ua.includes("Safari") ||
+    ua.includes("Mozilla") ||
+    ua.includes("Chrome") ||
+    ua.includes("Safari") ||
     ua.includes("Firefox")
-  ) return "web";
+  ) {
+    return "web";
+  }
 
   return "unknown";
 }
@@ -180,6 +184,7 @@ function formatAndroidPins(pins: CertificatePin[], validUntil: string): AndroidP
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">${PIN_CONFIG.supabaseHost}</domain>
         <domain includeSubdomains="true">foodshare.app</domain>
+        <domain includeSubdomains="true">foodshare.club</domain>
         <pin-set expiration="${validUntil}">
 ${pinEntries}
         </pin-set>
@@ -198,9 +203,7 @@ ${pinEntries}
 }
 
 function formatWebPins(pins: CertificatePin[]): WebPinFormat {
-  const pinDirectives = pins
-    .map((p) => `pin-sha256="${p.hash.replace("sha256/", "")}"`)
-    .join("; ");
+  const pinDirectives = pins.map((p) => `pin-sha256="${p.hash.replace("sha256/", "")}"`).join("; ");
 
   return {
     sha256: pins.map((p) => p.hash),
@@ -311,7 +314,11 @@ export function handleCertificatePins(req: Request, corsHeaders: Record<string, 
     "application/vnd.foodshare.pins.v1",
   );
 
-  logger.info("Certificate pins requested", { platform, appVersion, legacy: wantsLegacyFormat });
+  logger.info("Certificate pins requested", {
+    platform,
+    appVersion,
+    legacy: wantsLegacyFormat,
+  });
 
   const now = new Date();
   const validPins = CURRENT_PINS.filter((pin) => new Date(pin.expires) > now);
@@ -325,16 +332,23 @@ export function handleCertificatePins(req: Request, corsHeaders: Record<string, 
   const allPins = inGracePeriod ? [...validPins, ...UPCOMING_PINS] : validPins;
   allPins.sort((a, b) => a.priority - b.priority);
 
-  const earliestExpiry = allPins.reduce((earliest, pin) => {
-    const expires = new Date(pin.expires);
-    return !earliest || expires < earliest ? expires : earliest;
-  }, null as Date | null);
+  const earliestExpiry = allPins.reduce(
+    (earliest, pin) => {
+      const expires = new Date(pin.expires);
+      return !earliest || expires < earliest ? expires : earliest;
+    },
+    null as Date | null,
+  );
 
   const validUntil = earliestExpiry?.toISOString().split("T")[0] || "2025-12-31";
 
   const minVersion = PIN_CONFIG.minAppVersions[platform] || PIN_CONFIG.minAppVersion;
   if (isVersionLessThan(appVersion, minVersion)) {
-    logger.warn("App version below minimum", { platform, appVersion, minVersion });
+    logger.warn("App version below minimum", {
+      platform,
+      appVersion,
+      minVersion,
+    });
   }
 
   const rotationWarning = calculateRotationWarning(allPins);
@@ -356,7 +370,7 @@ export function handleCertificatePins(req: Request, corsHeaders: Record<string, 
     ...corsHeaders,
     "Content-Type": "application/json",
     "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
-    "ETag": `"${hashPins(allPins)}"`,
+    ETag: `"${hashPins(allPins)}"`,
     "X-Platform-Detected": platform,
     "X-Pins-Valid-Until": validUntil,
   };
@@ -368,5 +382,8 @@ export function handleCertificatePins(req: Request, corsHeaders: Record<string, 
     }
   }
 
-  return new Response(JSON.stringify(response), { status: 200, headers: responseHeaders });
+  return new Response(JSON.stringify(response), {
+    status: 200,
+    headers: responseHeaders,
+  });
 }

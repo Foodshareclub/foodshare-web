@@ -8,6 +8,7 @@
  */
 
 import { getEmailService } from "../../../_shared/email/index.ts";
+import type { EmailType } from "../../../_shared/email/types.ts";
 import type {
   ChannelAdapter,
   ChannelDeliveryResult,
@@ -22,10 +23,7 @@ export class EmailChannelAdapter implements ChannelAdapter {
 
   private emailService = getEmailService();
 
-  async send(
-    payload: EmailPayload,
-    context: NotificationContext,
-  ): Promise<ChannelDeliveryResult> {
+  async send(payload: EmailPayload, context: NotificationContext): Promise<ChannelDeliveryResult> {
     const startTime = performance.now();
 
     try {
@@ -43,18 +41,17 @@ export class EmailChannelAdapter implements ChannelAdapter {
         {
           to: payload.to,
           subject: payload.subject,
-          html: payload.html,
+          html: payload.html || "",
           text: payload.text,
           from: payload.from,
           replyTo: payload.replyTo,
-          attachments: payload.attachments,
         },
         emailType,
       );
 
       const duration = performance.now() - startTime;
 
-      if (result.sent) {
+      if (result.success) {
         logger.info("Email sent successfully", {
           requestId: context.requestId,
           to: payload.to,
@@ -116,9 +113,7 @@ export class EmailChannelAdapter implements ChannelAdapter {
 
     for (let i = 0; i < payloads.length; i += BATCH_SIZE) {
       const batch = payloads.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(
-        batch.map((payload) => this.send(payload, context)),
-      );
+      const batchResults = await Promise.all(batch.map((payload) => this.send(payload, context)));
       results.push(...batchResults);
     }
 
@@ -146,7 +141,9 @@ export class EmailChannelAdapter implements ChannelAdapter {
       const latencyMs = Math.round(performance.now() - startTime);
 
       // Consider healthy if at least one provider is operational
-      const anyHealthy = Object.values(health).some((p) => p.operational);
+      const anyHealthy = Object.values(health).some(
+        (p) => p.status === "ok" || p.status === "degraded",
+      );
 
       return {
         healthy: anyHealthy,
@@ -163,10 +160,10 @@ export class EmailChannelAdapter implements ChannelAdapter {
   /**
    * Determine email type for provider selection
    */
-  private determineEmailType(payload: EmailPayload): string {
+  private determineEmailType(payload: EmailPayload): EmailType {
     if (payload.template) {
       // Template-based email type detection
-      if (payload.template.includes("welcome")) return "welcome";
+      if (payload.template.includes("welcome")) return "announcement";
       if (payload.template.includes("verify")) return "auth";
       if (payload.template.includes("password")) return "auth";
       if (payload.template.includes("digest")) return "newsletter";
@@ -178,7 +175,7 @@ export class EmailChannelAdapter implements ChannelAdapter {
     if (payload.subject.toLowerCase().includes("message")) return "chat";
     if (payload.subject.toLowerCase().includes("digest")) return "newsletter";
 
-    return "notification";
+    return "announcement";
   }
 }
 
@@ -225,12 +222,17 @@ export async function isEmailSuppressed(
 
     if (error && error.code !== "PGRST116") {
       // Not found error is OK
-      logger.warn("Error checking email suppression", { email, error: error.message });
+      logger.warn("Error checking email suppression", {
+        email,
+        error: error.message,
+      });
     }
 
     return !!data;
   } catch (error) {
-    logger.error("Failed to check email suppression", error as Error, { email });
+    logger.error("Failed to check email suppression", error as Error, {
+      email,
+    });
     return false; // Fail open
   }
 }

@@ -12,7 +12,7 @@ foodshare-web/
 ├── scripts/             # Utility scripts (translation sync, etc.)
 ├── src/                 # 💻 Application source code (Next.js 16)
 ├── messages/            # 🌍 i18n translation files (21 languages)
-├── supabase/ -> ../foodshare-backend  # SYMLINK to shared backend
+├── supabase/           # Vendored copy — canonical source in foodshare-backend/supabase
 ├── .env.example         # Environment variables template
 ├── .dockerignore        # Docker build ignore rules
 ├── .gitignore           # Git ignore rules
@@ -80,7 +80,7 @@ src/
 
 ## 🗄️ Backend Integration (`/supabase`)
 
-The `supabase/` directory is a symlink to `foodshare-backend`. The web repo interacts with:
+The `supabase/` directory is a vendored copy — canonical source lives in `foodshare-backend/supabase`; re-sync after backend schema/function changes. The web repo interacts with:
 
 - **Migrations**: Database schema (RLS, PostGIS, Tables)
 - **Edge Functions**: REST API endpoints (Deno)
@@ -88,15 +88,15 @@ The `supabase/` directory is a symlink to `foodshare-backend`. The web repo inte
 
 ## 🛠️ Key Scripts (`package.json`)
 
-| Command                | Description                                       |
-| ---------------------- | ------------------------------------------------- |
-| `bun run dev`          | Local development with Turbopack                  |
-| `bun run build`        | Production build with bundle analysis             |
-| `bun run test:ci`      | Run full test suite with bun:test                 |
-| `bun run lint:fix`     | Linting with automatic fixing                     |
-| `bun run type-check`   | Global TypeScript checking                        |
-| `bun run translations:sync` | Synchronize local JSON files to Supabase      |
-| `bun run build:check`  | Full project audit (build + size check)           |
+| Command                     | Description                              |
+| --------------------------- | ---------------------------------------- |
+| `bun run dev`               | Local development with Turbopack         |
+| `bun run build`             | Production build with bundle analysis    |
+| `bun run test:ci`           | Run full test suite with bun:test        |
+| `bun run lint:fix`          | Linting with automatic fixing            |
+| `bun run type-check`        | Global TypeScript checking               |
+| `bun run translations:sync` | Synchronize local JSON files to Supabase |
+| `bun run build:check`       | Full project audit (build + size check)  |
 
 ## 🎨 Design System
 
@@ -105,6 +105,7 @@ We use **shadcn/ui** built on top of **Tailwind CSS 4** and **Radix UI**. The de
 ## 🌍 Localization (i18n)
 
 Handled via `next-intl`.
+
 - **Source**: `messages/en.json`
 - **Supported**: 21 languages (including Arabic RTL)
 - **Sync**: `bun run translations:sync` moves local translations to the database for Edge Functions.
@@ -123,10 +124,12 @@ Handled via `next-intl`.
 
 **Architecture Note**: This project prioritizes **singular top-level routes**. Avoid adding query-parameter based navigation for primary categories. See `src/app/food/page.tsx` for how legacy `/food?type=...` URLs are handled.
 r
-bun run type-check       # TypeScript type checking
+bun run type-check # TypeScript type checking
 
 # Testing
-bun test                 # Run tests
+
+bun test # Run tests
+
 ```
 
 ## 🔗 Quick Links
@@ -149,3 +152,4 @@ For questions or issues:
 ---
 
 **This IS a Next.js 16 project** - It uses the App Router, Server Components, and Server Actions for a hybrid SSR/client experience.
+```

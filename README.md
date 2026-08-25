@@ -24,7 +24,7 @@ A modern food sharing platform that connects people to reduce food waste by enab
 - **React 19** with React Compiler
 - **TypeScript 5**
 - **Tailwind CSS 4**
-- **Zustand** + **React Query** for state management
+- **Zustand** for client state (**React Query** deprecated — legacy admin/realtime only; new data fetching = Server Components + Server Actions)
 - **Framer Motion** for animations
 - **Radix UI** primitives with shadcn/ui components
 - **Leaflet** for interactive maps
@@ -38,7 +38,7 @@ A modern food sharing platform that connects people to reduce food waste by enab
 ### Infrastructure
 
 - **Upstash** - Redis caching, Vector search, QStash queues
-- **Self-hosted VPS** - Hosting and deployment (Docker Compose + Caddy)
+- **Self-hosted VPS** - Hosting and deployment (Docker Compose + Cloudflare Tunnel)
 - **Sentry** - Error tracking and performance monitoring
 - **AWS SES / Brevo / Resend** - Email services
 - **Twilio** - Phone verification
@@ -46,7 +46,7 @@ A modern food sharing platform that connects people to reduce food waste by enab
 
 ## Prerequisites
 
-- Bun 1.2+ (Primary runtime and package manager)
+- Bun >=1.1 (Primary runtime and package manager; CI uses latest)
 - Supabase CLI (for local development)
 - Git
 
@@ -131,7 +131,7 @@ foodshare/
 │   ├── types/             # TypeScript type definitions
 │   └── utils/             # Helper functions
 ├── messages/              # Translation files (21 languages)
-├── supabase/ -> ../foodshare-backend  # SYMLINK
+├── supabase/              # Vendored copy — canonical source lives in foodshare-backend/supabase; re-sync after backend schema/function changes
 └── docs/                  # Documentation
 ```
 
@@ -174,19 +174,15 @@ FoodShare supports 21 languages using [next-intl](https://next-intl-docs.vercel.
 
 Translation files are located in `messages/{locale}.json`.
 
-### Adding translations
+### Syncing translations
 
 ```bash
-# Extract new strings
-bunx lingui extract
-
-# Compile translations
-bunx lingui compile
+bun run translations:sync
 ```
 
 ## Supabase Edge Functions
 
-All Edge Functions are maintained in the `foodshare-backend` repository. Locally, the `supabase/` directory is a symlink.
+All Edge Functions are maintained in the `foodshare-backend` repository. Locally, `supabase/` is a vendored copy — canonical source lives in `foodshare-backend/supabase`; re-sync after backend schema/function changes.
 
 | Category | Functions                                                             |
 | -------- | --------------------------------------------------------------------- |
@@ -194,7 +190,7 @@ All Edge Functions are maintained in the `foodshare-backend` repository. Locally
 | Comms    | `api-v1-notifications`, `api-v1-email`                                |
 | Bots     | `telegram-bot-foodshare`, `whatsapp-bot-foodshare`                    |
 
-**Total: 28 functions.** See `foodshare-backend/README.md` for the full list and deployment guides.
+**Total: 28 functions (25 REST api-v1-\* + 2 bots + main router).** See `foodshare-backend/README.md` for the full list and deployment guides.
 
 ## Deployment
 
@@ -280,6 +276,5 @@ This project is proprietary software. All rights reserved.
 To access the self-hosted web VPS:
 
 ```bash
-autossh -M 0 -o ServerAliveInterval=6000 -o ServerAliveCountMax=6000 -o ConnectTimeout=10 -o ConnectionAttempts=6000 -i ~/.ssh/foodshare_id_ed25519 organic@web.foodshare.club
+autossh -M 0 -o ServerAliveInterval=600 -o ServerAliveCountMax=600 -o ConnectTimeout=10 -o ConnectionAttempts=60 -i ~/.ssh/foodshare_id_ed25519 organic@${VPS_HOST:-frontendvps.foodshare.club}
 ```
-// Trigger CI/CD deployment

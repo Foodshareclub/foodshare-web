@@ -95,11 +95,13 @@ export function createMockRequest(config: MockRequest): Request {
 /**
  * Create a mock Supabase client
  */
-export function createMockSupabaseClient(config: {
-  user?: MockUser | null;
-  queryResults?: Map<string, unknown[]>;
-  queryErrors?: Map<string, Error>;
-} = {}): MockSupabaseClient {
+export function createMockSupabaseClient(
+  config: {
+    user?: MockUser | null;
+    queryResults?: Map<string, unknown[]>;
+    queryErrors?: Map<string, Error>;
+  } = {},
+): MockSupabaseClient {
   const { user = createMockUser(), queryResults = new Map(), queryErrors = new Map() } = config;
 
   let currentTable = "";
@@ -265,13 +267,15 @@ export function createMockProfile(
 /**
  * Create a mock Supabase client with `.rpc()` support
  */
-export function createMockSupabaseClientWithRpc(config: {
-  user?: MockUser | null;
-  queryResults?: Map<string, unknown[]>;
-  queryErrors?: Map<string, Error>;
-  rpcResults?: Map<string, unknown>;
-  rpcErrors?: Map<string, Error>;
-} = {}): MockSupabaseClient & {
+export function createMockSupabaseClientWithRpc(
+  config: {
+    user?: MockUser | null;
+    queryResults?: Map<string, unknown[]>;
+    queryErrors?: Map<string, Error>;
+    rpcResults?: Map<string, unknown>;
+    rpcErrors?: Map<string, Error>;
+  } = {},
+): MockSupabaseClient & {
   rpc: (name: string, params?: unknown) => Promise<{ data: unknown; error: unknown }>;
 } {
   const base = createMockSupabaseClient(config);
@@ -291,11 +295,13 @@ export function createMockSupabaseClientWithRpc(config: {
 /**
  * Create a mock NotificationContext for testing notification handlers
  */
-export function createMockNotificationContext(overrides: {
-  user?: MockUser | null;
-  queryResults?: Map<string, unknown[]>;
-  rpcResults?: Map<string, unknown>;
-} = {}): {
+export function createMockNotificationContext(
+  overrides: {
+    user?: MockUser | null;
+    queryResults?: Map<string, unknown[]>;
+    rpcResults?: Map<string, unknown>;
+  } = {},
+): {
   supabase: ReturnType<typeof createMockSupabaseClientWithRpc>;
   requestId: string;
   userId?: string;
@@ -318,9 +324,7 @@ export function createMockNotificationContext(overrides: {
 /**
  * Create a mock chat room
  */
-export function createMockRoom(
-  overrides: Record<string, unknown> = {},
-): Record<string, unknown> {
+export function createMockRoom(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     id: crypto.randomUUID(),
     post_id: Math.floor(Math.random() * 10000),
@@ -560,23 +564,29 @@ export async function createGitHubWebhookRequest(
 export const MOCK_WEBHOOK_PAYLOADS = {
   whatsapp: {
     object: "whatsapp_business_account",
-    entry: [{
-      id: "123456789",
-      changes: [{
-        field: "messages",
-        value: {
-          messaging_product: "whatsapp",
-          metadata: { phone_number_id: "123456789" },
-          messages: [{
-            from: "1234567890",
-            id: "wamid.test123",
-            timestamp: String(Math.floor(Date.now() / 1000)),
-            type: "text",
-            text: { body: "Hello" },
-          }],
-        },
-      }],
-    }],
+    entry: [
+      {
+        id: "123456789",
+        changes: [
+          {
+            field: "messages",
+            value: {
+              messaging_product: "whatsapp",
+              metadata: { phone_number_id: "123456789" },
+              messages: [
+                {
+                  from: "1234567890",
+                  id: "wamid.test123",
+                  timestamp: String(Math.floor(Date.now() / 1000)),
+                  type: "text",
+                  text: { body: "Hello" },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    ],
   },
   telegram: {
     update_id: 123456789,
@@ -676,9 +686,7 @@ export async function measureExecutionTime<T>(
 /**
  * Measure sync operation execution time
  */
-export function measureSyncExecutionTime<T>(
-  fn: () => T,
-): { result: T; durationMs: number } {
+export function measureSyncExecutionTime<T>(fn: () => T): { result: T; durationMs: number } {
   const start = performance.now();
   const result = fn();
   const durationMs = performance.now() - start;

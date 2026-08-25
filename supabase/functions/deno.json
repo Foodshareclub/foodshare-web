@@ -8,12 +8,20 @@
     "noUnusedParameters": true
   },
   "nodeModulesDir": "auto",
-  "imports": {},
+  "lock": false,
+  "imports": {
+    "hono": "npm:hono@^4",
+    "jose": "https://deno.land/x/jose@v5.2.2/index.ts",
+    "zod": "https://deno.land/x/zod@v3.22.4/mod.ts",
+    "@sentry/deno": "npm:@sentry/deno@^8"
+  },
   "tasks": {
     "dev": "deno run --allow-all --watch",
     "test": "deno test --allow-all",
     "check": "deno check **/*.ts",
     "lint": "deno lint",
+    "lint:oxlint": "oxlint",
+    "lint:biome": "biome check .",
     "fmt": "deno fmt"
   },
   "lint": {

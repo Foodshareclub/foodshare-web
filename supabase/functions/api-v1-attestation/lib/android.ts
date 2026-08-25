@@ -20,11 +20,12 @@ import type {
 // Environment Configuration
 // =============================================================================
 
-const GOOGLE_CLOUD_PROJECT_ID = Deno.env.get("GOOGLE_CLOUD_PROJECT_ID") || "";
-const GOOGLE_APPLICATION_CREDENTIALS = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY") || "";
-const ANDROID_PACKAGE_NAME = Deno.env.get("ANDROID_PACKAGE_NAME") || "com.flutterflow.foodshare";
+const getGoogleCloudProjectId = () => Deno.env.get("GOOGLE_CLOUD_PROJECT_ID") || "";
+const getGoogleApplicationCredentials = () => Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY") || "";
+const getAndroidPackageName = () =>
+  Deno.env.get("ANDROID_PACKAGE_NAME") || "com.flutterflow.foodshare";
 
-export { ANDROID_PACKAGE_NAME };
+export { getAndroidPackageName };
 
 // Play Integrity API endpoint
 const PLAY_INTEGRITY_API_URL = "https://playintegrity.googleapis.com/v1";
@@ -40,13 +41,14 @@ async function getGoogleAccessToken(): Promise<string | null> {
     return cachedAccessToken.token;
   }
 
-  if (!GOOGLE_APPLICATION_CREDENTIALS) {
+  const credentialsJson = getGoogleApplicationCredentials();
+  if (!credentialsJson) {
     logger.error("GOOGLE_SERVICE_ACCOUNT_KEY not configured");
     return null;
   }
 
   try {
-    const credentials = JSON.parse(GOOGLE_APPLICATION_CREDENTIALS);
+    const credentials = JSON.parse(credentialsJson);
 
     const header = { alg: "RS256", typ: "JWT" };
     const now = Math.floor(Date.now() / 1000);
@@ -58,18 +60,22 @@ async function getGoogleAccessToken(): Promise<string | null> {
       exp: now + 3600,
     };
 
-    const headerBase64 = btoa(JSON.stringify(header)).replace(/\+/g, "-").replace(/\//g, "_")
+    const headerBase64 = btoa(JSON.stringify(header))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
       .replace(/=/g, "");
-    const payloadBase64 = btoa(JSON.stringify(payload)).replace(/\+/g, "-").replace(/\//g, "_")
+    const payloadBase64 = btoa(JSON.stringify(payload))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
       .replace(/=/g, "");
 
     const signatureInput = `${headerBase64}.${payloadBase64}`;
 
     const privateKeyPem = credentials.private_key;
-    const pemContents = privateKeyPem.replace("-----BEGIN PRIVATE KEY-----", "").replace(
-      "-----END PRIVATE KEY-----",
-      "",
-    ).replace(/\s/g, "");
+    const pemContents = privateKeyPem
+      .replace("-----BEGIN PRIVATE KEY-----", "")
+      .replace("-----END PRIVATE KEY-----", "")
+      .replace(/\s/g, "");
     const binaryKey = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
 
     const cryptoKey = await crypto.subtle.importKey(
@@ -87,7 +93,9 @@ async function getGoogleAccessToken(): Promise<string | null> {
     );
 
     const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)))
-      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=/g, "");
 
     const jwt = `${signatureInput}.${signatureBase64}`;
 
@@ -109,7 +117,7 @@ async function getGoogleAccessToken(): Promise<string | null> {
 
     cachedAccessToken = {
       token: tokenData.access_token,
-      expiresAt: Date.now() + (tokenData.expires_in * 1000),
+      expiresAt: Date.now() + tokenData.expires_in * 1000,
     };
 
     return cachedAccessToken.token;
@@ -136,17 +144,15 @@ async function decodeIntegrityToken(
   }
 
   try {
-    const response = await fetch(
-      `${PLAY_INTEGRITY_API_URL}/${GOOGLE_CLOUD_PROJECT_ID}:decodeIntegrityToken`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ integrityToken }),
+    const projectId = getGoogleCloudProjectId();
+    const response = await fetch(`${PLAY_INTEGRITY_API_URL}/${projectId}:decodeIntegrityToken`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({ integrityToken }),
+    });
 
     if (!response.ok) {
       const error = await response.text();
@@ -178,7 +184,11 @@ export async function verifyPlayIntegrity(
   trustLevel: TrustLevel;
   riskScore: number;
   message?: string;
-  verdicts?: { device: DeviceVerdict[]; app: AppVerdict; account: AccountVerdict };
+  verdicts?: {
+    device: DeviceVerdict[];
+    app: AppVerdict;
+    account: AccountVerdict;
+  };
 }> {
   if (!integrityToken || integrityToken.length < 100) {
     return {
@@ -212,7 +222,12 @@ export async function verifyPlayIntegrity(
   }
 
   if (expectedNonce && payload.requestDetails.nonce !== expectedNonce) {
-    return { verified: false, trustLevel: "suspicious", riskScore: 100, message: "Nonce mismatch" };
+    return {
+      verified: false,
+      trustLevel: "suspicious",
+      riskScore: 100,
+      message: "Nonce mismatch",
+    };
   }
 
   const tokenTimestamp = parseInt(payload.requestDetails.timestampMillis, 10);
@@ -220,7 +235,12 @@ export async function verifyPlayIntegrity(
   const maxAge = 10 * 60 * 1000;
 
   if (now - tokenTimestamp > maxAge) {
-    return { verified: false, trustLevel: "suspicious", riskScore: 80, message: "Token expired" };
+    return {
+      verified: false,
+      trustLevel: "suspicious",
+      riskScore: 80,
+      message: "Token expired",
+    };
   }
 
   let riskScore = 0;
@@ -267,12 +287,11 @@ export async function verifyPlayIntegrity(
     trustLevel = "suspicious";
   }
 
-  const verified = deviceVerdicts.length > 0 && (
-    deviceVerdicts.includes("MEETS_BASIC_INTEGRITY") ||
-    deviceVerdicts.includes("MEETS_DEVICE_INTEGRITY") ||
-    deviceVerdicts.includes("MEETS_STRONG_INTEGRITY") ||
-    deviceVerdicts.includes("MEETS_VIRTUAL_INTEGRITY")
-  );
+  const verified = deviceVerdicts.length > 0 &&
+    (deviceVerdicts.includes("MEETS_BASIC_INTEGRITY") ||
+      deviceVerdicts.includes("MEETS_DEVICE_INTEGRITY") ||
+      deviceVerdicts.includes("MEETS_STRONG_INTEGRITY") ||
+      deviceVerdicts.includes("MEETS_VIRTUAL_INTEGRITY"));
 
   logger.info("Play Integrity verified", {
     verified,
@@ -286,7 +305,11 @@ export async function verifyPlayIntegrity(
     verified,
     trustLevel,
     riskScore,
-    verdicts: { device: deviceVerdicts, app: appVerdict, account: accountVerdict },
+    verdicts: {
+      device: deviceVerdicts,
+      app: appVerdict,
+      account: accountVerdict,
+    },
   };
 }
 
@@ -294,9 +317,12 @@ export async function verifyPlayIntegrity(
 // SafetyNet Verification (Deprecated)
 // =============================================================================
 
-export async function verifySafetyNet(
-  attestation: string,
-): Promise<{ verified: boolean; trustLevel: TrustLevel; riskScore: number; message?: string }> {
+export async function verifySafetyNet(attestation: string): Promise<{
+  verified: boolean;
+  trustLevel: TrustLevel;
+  riskScore: number;
+  message?: string;
+}> {
   if (!attestation || attestation.length < 100) {
     return {
       verified: false,

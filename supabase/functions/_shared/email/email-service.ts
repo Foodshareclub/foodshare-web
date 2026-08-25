@@ -267,8 +267,12 @@ export class EmailService {
     params: SendEmailParams,
     emailType: EmailType = "notification",
   ): Promise<SendEmailResult> {
-    const priority = this.config.providerPriority[emailType] ||
-      ["resend", "brevo", "mailersend", "aws_ses"];
+    const priority = this.config.providerPriority[emailType] || [
+      "resend",
+      "brevo",
+      "mailersend",
+      "aws_ses",
+    ];
 
     // Apply defaults
     const emailParams: SendEmailParams = {
@@ -376,7 +380,7 @@ export class EmailService {
       });
     } catch (error) {
       // Log but don't fail the email send
-      console.warn(`[email-service] Failed to record metrics: ${error}`);
+      logger.warn(`[email-service] Failed to record metrics: ${error}`);
     }
   }
 
@@ -406,8 +410,12 @@ export class EmailService {
    */
   async getBestProvider(emailType: EmailType = "notification"): Promise<EmailProviderName | null> {
     const health = await this.checkAllHealth();
-    const priority = this.config.providerPriority[emailType] ||
-      ["resend", "brevo", "mailersend", "aws_ses"];
+    const priority = this.config.providerPriority[emailType] || [
+      "resend",
+      "brevo",
+      "mailersend",
+      "aws_ses",
+    ];
 
     // Sort by priority, then by health score
     const available = health
@@ -495,13 +503,19 @@ export class EmailService {
         .single();
 
       if (error || !data) {
-        logger.warn("Template not found in database", { slug, error: error?.message });
+        logger.warn("Template not found in database", {
+          slug,
+          error: error?.message,
+        });
         return null;
       }
 
       // Cache the template
       cache.set(cacheKey, data, TEMPLATE_CACHE_TTL_MS);
-      logger.info("Template fetched and cached", { slug, version: data.version });
+      logger.info("Template fetched and cached", {
+        slug,
+        version: data.version,
+      });
 
       return data as EmailTemplate;
     } catch (error) {

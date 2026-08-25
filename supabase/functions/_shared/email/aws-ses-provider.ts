@@ -18,6 +18,7 @@ import {
 } from "./types.ts";
 
 import { AWSV4Signer } from "../aws-signer.ts";
+import { getSecretSync } from "../vault.ts";
 
 const REQUEST_TIMEOUT_MS = 10000;
 
@@ -62,22 +63,23 @@ export class AWSSESProvider implements EmailProvider {
 
   constructor(config: Partial<AWSSESConfig> = {}) {
     this.config = {
-      region: config.region || Deno.env.get("AWS_REGION") || Deno.env.get("AWS_SES_REGION") || "",
+      region: config.region || getSecretSync("AWS_REGION") || getSecretSync("AWS_SES_REGION") || "",
       accessKeyId: config.accessKeyId ||
-        Deno.env.get("AWS_ACCESS_KEY_ID") ||
-        Deno.env.get("AWS_SES_ACCESS_KEY_ID") ||
+        getSecretSync("AWS_ACCESS_KEY_ID") ||
+        getSecretSync("AWS_SES_ACCESS_KEY_ID") ||
         "",
       secretAccessKey: config.secretAccessKey ||
-        Deno.env.get("AWS_SECRET_ACCESS_KEY") ||
-        Deno.env.get("AWS_SES_SECRET_ACCESS_KEY") ||
+        getSecretSync("AWS_SECRET_ACCESS_KEY") ||
+        getSecretSync("AWS_SES_SECRET_ACCESS_KEY") ||
         "",
       fromEmail: config.fromEmail ||
-        Deno.env.get("AWS_SES_FROM_EMAIL") ||
+        getSecretSync("AWS_SES_FROM_EMAIL") ||
+        getSecretSync("EMAIL_FROM") ||
         Deno.env.get("EMAIL_FROM") ||
         "contact@foodshare.club",
       fromName: config.fromName ||
-        Deno.env.get("AWS_SES_FROM_NAME") ||
-        Deno.env.get("EMAIL_FROM_NAME") ||
+        getSecretSync("AWS_SES_FROM_NAME") ||
+        getSecretSync("EMAIL_FROM_NAME") ||
         "FoodShare",
     };
 
@@ -293,7 +295,9 @@ export class AWSSESProvider implements EmailProvider {
         healthScore,
         latencyMs,
         message: `Connected. Region: ${this.config.region}. Quota: ${sentLast24Hours.toFixed(0)}/${
-          max24HourSend.toFixed(0)
+          max24HourSend.toFixed(
+            0,
+          )
         } (24h), Rate: ${maxSendRate}/sec`,
         configured: true,
         lastChecked: Date.now(),
@@ -325,7 +329,12 @@ export class AWSSESProvider implements EmailProvider {
     if (!this.isConfigured() || !this.signer) {
       return {
         provider: this.name,
-        daily: { sent: 0, limit: limits.daily, remaining: limits.daily, percentUsed: 0 },
+        daily: {
+          sent: 0,
+          limit: limits.daily,
+          remaining: limits.daily,
+          percentUsed: 0,
+        },
       };
     }
 
@@ -364,7 +373,12 @@ export class AWSSESProvider implements EmailProvider {
     } catch {
       return {
         provider: this.name,
-        daily: { sent: 0, limit: limits.daily, remaining: limits.daily, percentUsed: 0 },
+        daily: {
+          sent: 0,
+          limit: limits.daily,
+          remaining: limits.daily,
+          percentUsed: 0,
+        },
       };
     }
   }

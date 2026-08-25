@@ -50,7 +50,10 @@ export async function handleStart(phoneNumber: string, contactName?: string): Pr
 
   // New user - ask for email
   const welcomeMsg = `${emoji.WAVE} *${t(lang, "welcome.title")}*\n\n${
-    t(lang, "welcome.subtitle")
+    t(
+      lang,
+      "welcome.subtitle",
+    )
   }\n\n${emoji.EMAIL} ${t(lang, "auth.sendEmailToRegister")}`;
   await sendTextMessage(phoneNumber, welcomeMsg);
   await setUserState(phoneNumber, { action: "awaiting_email", data: {} });
@@ -72,7 +75,10 @@ export async function handleEmailInput(
     await sendTextMessage(
       phoneNumber,
       `${emoji.ERROR} *${t(lang, "auth.invalidEmailTitle")}*\n\n${
-        t(lang, "auth.invalidEmailMessage")
+        t(
+          lang,
+          "auth.invalidEmailMessage",
+        )
       }`,
     );
     return;
@@ -87,7 +93,10 @@ export async function handleEmailInput(
       await sendTextMessage(
         phoneNumber,
         `${emoji.ERROR} *${t(lang, "auth.emailAlreadyLinkedTitle")}*\n\n${
-          t(lang, "auth.emailAlreadyLinkedMessage")
+          t(
+            lang,
+            "auth.emailAlreadyLinkedMessage",
+          )
         }`,
       );
       await setUserState(phoneNumber, null);
@@ -109,7 +118,10 @@ export async function handleEmailInput(
       await sendTextMessage(
         phoneNumber,
         `${emoji.ERROR} *${t(lang, "auth.emailDeliveryFailedTitle")}*\n\n${
-          t(lang, "auth.emailDeliveryFailedMessage")
+          t(
+            lang,
+            "auth.emailDeliveryFailedMessage",
+          )
         }`,
       );
       return;
@@ -118,9 +130,15 @@ export async function handleEmailInput(
     await sendButtonMessage(
       phoneNumber,
       `${emoji.SUCCESS} *${t(lang, "auth.accountFound")}*\n\n${
-        t(lang, "auth.codeEmailSent")
+        t(
+          lang,
+          "auth.codeEmailSent",
+        )
       }\n\n${emoji.EMAIL} ${normalizedEmail}\n\n${
-        t(lang, "auth.enterCodeToSignIn")
+        t(
+          lang,
+          "auth.enterCodeToSignIn",
+        )
       }\n\n${emoji.CLOCK} ${t(lang, "auth.codeExpires")}`,
       getAuthButtons(lang),
       t(lang, "auth.checkInbox"),
@@ -154,7 +172,10 @@ export async function handleEmailInput(
     await sendTextMessage(
       phoneNumber,
       `${emoji.ERROR} *${t(lang, "auth.registrationFailedTitle")}*\n\n${
-        t(lang, "auth.registrationFailedMessage")
+        t(
+          lang,
+          "auth.registrationFailedMessage",
+        )
       }`,
     );
     return;
@@ -166,7 +187,10 @@ export async function handleEmailInput(
     await sendTextMessage(
       phoneNumber,
       `${emoji.ERROR} *${t(lang, "auth.emailDeliveryFailedTitle")}*\n\n${
-        t(lang, "auth.emailDeliveryFailedMessage")
+        t(
+          lang,
+          "auth.emailDeliveryFailedMessage",
+        )
       }`,
     );
     return;
@@ -175,7 +199,10 @@ export async function handleEmailInput(
   await sendButtonMessage(
     phoneNumber,
     `${emoji.SUCCESS} *${t(lang, "auth.accountCreated")}*\n\n${
-      t(lang, "auth.codeSentTo")
+      t(
+        lang,
+        "auth.codeSentTo",
+      )
     }\n${emoji.EMAIL} ${normalizedEmail}\n\n${emoji.CLOCK} ${t(lang, "auth.codeExpires")}`,
     getAuthButtons(lang),
     t(lang, "auth.verifyEmailTitle"),
@@ -297,7 +324,10 @@ export async function handleResendCode(phoneNumber: string): Promise<void> {
     await sendTextMessage(
       phoneNumber,
       `${emoji.SUCCESS} New code sent to ${state.data.email}\n\n${emoji.CLOCK} ${
-        t(lang, "auth.codeExpires")
+        t(
+          lang,
+          "auth.codeExpires",
+        )
       }`,
     );
   } else {
@@ -319,7 +349,10 @@ export async function requireAuth(phoneNumber: string): Promise<boolean> {
     await sendTextMessage(
       phoneNumber,
       `${emoji.LOCK} ${t(lang, "share.linkAccountFirst")}\n\n${emoji.EMAIL} ${
-        t(lang, "auth.sendEmailToRegister")
+        t(
+          lang,
+          "auth.sendEmailToRegister",
+        )
       }`,
     );
     await setUserState(phoneNumber, { action: "awaiting_email", data: {} });

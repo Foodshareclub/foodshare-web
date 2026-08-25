@@ -65,7 +65,7 @@ const querySchema = z.object({
 
 type ToggleBody = z.infer<typeof toggleEngagementSchema>;
 type ShareBody = z.infer<typeof shareSchema>;
-type BatchOperation = z.infer<typeof batchOperationSchema>;
+
 type BatchOperationsBody = z.infer<typeof batchOperationsSchema>;
 type QueryParams = z.infer<typeof querySchema>;
 
@@ -81,9 +81,10 @@ async function getEngagement(ctx: HandlerContext<unknown, QueryParams>): Promise
 
   // Batch request
   if (query.postIds) {
-    const postIds = query.postIds.split(",").map((id) => parseInt(id.trim())).filter((id) =>
-      !isNaN(id)
-    );
+    const postIds = query.postIds
+      .split(",")
+      .map((id) => parseInt(id.trim()))
+      .filter((id) => !isNaN(id));
 
     if (postIds.length === 0 || postIds.length > 100) {
       throw new ValidationError("Invalid postIds (1-100 required)");
@@ -93,7 +94,9 @@ async function getEngagement(ctx: HandlerContext<unknown, QueryParams>): Promise
     const cacheKey = CACHE_KEYS.engagement(postIds, userId);
     const cached = cache.get<
       Record<number, { isLiked: boolean; isBookmarked: boolean; likeCount: number }>
-    >(cacheKey);
+    >(
+      cacheKey,
+    );
     if (cached) {
       return ok(cached, ctx);
     }
@@ -117,7 +120,9 @@ async function getEngagement(ctx: HandlerContext<unknown, QueryParams>): Promise
     }
 
     // Fallback to individual queries if RPC fails
-    logger.warn("Batch engagement RPC failed, falling back", { error: rpcError?.message });
+    logger.warn("Batch engagement RPC failed, falling back", {
+      error: rpcError?.message,
+    });
 
     const { data: likes } = await supabase
       .from("post_likes")
@@ -199,12 +204,15 @@ async function getEngagement(ctx: HandlerContext<unknown, QueryParams>): Promise
       isBookmarked = !!bookmarkResult.data;
     }
 
-    return ok({
-      postId,
-      isLiked,
-      isBookmarked,
-      likeCount: likeCount || 0,
-    }, ctx);
+    return ok(
+      {
+        postId,
+        isLiked,
+        isBookmarked,
+        likeCount: likeCount || 0,
+      },
+      ctx,
+    );
   }
 
   throw new ValidationError("postId or postIds required");
@@ -224,7 +232,7 @@ async function getUserBookmarks(ctx: HandlerContext<unknown, QueryParams>): Prom
 
   const { data, error } = await supabase
     .from("post_bookmarks")
-    .select("post_id, created_at")
+    .select("post_id,created_at")
     .eq("profile_id", userId)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -234,10 +242,13 @@ async function getUserBookmarks(ctx: HandlerContext<unknown, QueryParams>): Prom
     throw error;
   }
 
-  return ok({
-    postIds: (data || []).map((b) => b.post_id),
-    count: data?.length || 0,
-  }, ctx);
+  return ok(
+    {
+      postIds: (data || []).map((b) => b.post_id),
+      count: data?.length || 0,
+    },
+    ctx,
+  );
 }
 
 /**
@@ -272,11 +283,14 @@ async function toggleLike(ctx: HandlerContext<ToggleBody>): Promise<Response> {
 
   logger.info("Like toggled", { postId: body.postId, userId, isLiked });
 
-  return ok({
-    postId: body.postId,
-    isLiked,
-    likeCount: count || 0,
-  }, ctx);
+  return ok(
+    {
+      postId: body.postId,
+      isLiked,
+      likeCount: count || 0,
+    },
+    ctx,
+  );
 }
 
 /**
@@ -303,12 +317,19 @@ async function toggleBookmark(ctx: HandlerContext<ToggleBody>): Promise<Response
   const isBookmarked = result.active;
   await logActivity(supabase, body.postId, userId, isBookmarked ? "bookmarked" : "unbookmarked");
 
-  logger.info("Bookmark toggled", { postId: body.postId, userId, isBookmarked });
-
-  return ok({
+  logger.info("Bookmark toggled", {
     postId: body.postId,
+    userId,
     isBookmarked,
-  }, ctx);
+  });
+
+  return ok(
+    {
+      postId: body.postId,
+      isBookmarked,
+    },
+    ctx,
+  );
 }
 
 /**
@@ -352,7 +373,11 @@ async function toggleFavorite(ctx: HandlerContext<ToggleBody, QueryParams>): Pro
     });
 
     if (error) {
-      logger.error("Toggle favorite failed", { error, postId: body.postId, userId });
+      logger.error("Toggle favorite failed", {
+        error,
+        postId: body.postId,
+        userId,
+      });
       throw new ValidationError(`Failed to toggle favorite: ${error.message}`);
     }
 
@@ -368,7 +393,11 @@ async function toggleFavorite(ctx: HandlerContext<ToggleBody, QueryParams>): Pro
       );
 
     if (error) {
-      logger.error("Add favorite failed", { error, postId: body.postId, userId });
+      logger.error("Add favorite failed", {
+        error,
+        postId: body.postId,
+        userId,
+      });
       throw new ValidationError(`Failed to add favorite: ${error.message}`);
     }
 
@@ -383,7 +412,11 @@ async function toggleFavorite(ctx: HandlerContext<ToggleBody, QueryParams>): Pro
       .eq("post_id", body.postId);
 
     if (error) {
-      logger.error("Remove favorite failed", { error, postId: body.postId, userId });
+      logger.error("Remove favorite failed", {
+        error,
+        postId: body.postId,
+        userId,
+      });
       throw new ValidationError(`Failed to remove favorite: ${error.message}`);
     }
 
@@ -405,12 +438,15 @@ async function toggleFavorite(ctx: HandlerContext<ToggleBody, QueryParams>): Pro
     isFavorited,
   });
 
-  return ok({
-    postId: body.postId,
-    isFavorited,
-    likeCount: post?.post_like_counter ?? 0,
-    action,
-  }, ctx);
+  return ok(
+    {
+      postId: body.postId,
+      isFavorited,
+      likeCount: post?.post_like_counter ?? 0,
+      action,
+    },
+    ctx,
+  );
 }
 
 // =============================================================================
@@ -418,7 +454,7 @@ async function toggleFavorite(ctx: HandlerContext<ToggleBody, QueryParams>): Pro
 // =============================================================================
 
 async function logActivity(
-  supabase: ReturnType<typeof import("../_shared/api-handler.ts").createAPIHandler>,
+  supabase: any,
   postId: number,
   actorId: string | null,
   activityType: string,
@@ -512,7 +548,10 @@ async function handleBatchOperations(
               p_post_id: entityId,
             });
             if (error) throw new ServerError(error.message);
-            data = { isFavorited: result.is_favorited, likeCount: result.like_count };
+            data = {
+              isFavorited: result.is_favorited,
+              likeCount: result.like_count,
+            };
             break;
           }
           case "toggle_like": {
@@ -578,38 +617,43 @@ async function handleBatchOperations(
   const successful = results.filter((r) => r.success).length;
   const failed = results.filter((r) => !r.success).length;
 
-  return ok({
-    totalOperations: operations.length,
-    successful,
-    failed,
-    results,
-  }, ctx);
+  return ok(
+    {
+      totalOperations: operations.length,
+      successful,
+      failed,
+      results,
+    },
+    ctx,
+  );
 }
 
 // =============================================================================
 // Export Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: "api-v1-engagement",
-  version: "1.0.0",
-  requireAuth: false, // GET is public, POST requires auth for most actions
-  csrf: true,
-  rateLimit: {
-    limit: 120,
-    windowMs: 60000,
-    keyBy: "ip",
-  },
-  routes: {
-    GET: {
-      querySchema,
-      handler: handleGet,
-      requireAuth: false,
+Deno.serve(
+  createAPIHandler({
+    service: "api-v1-engagement",
+    version: "1.0.0",
+    requireAuth: false, // GET is public, POST requires auth for most actions
+    csrf: true,
+    rateLimit: {
+      limit: 120,
+      windowMs: 60000,
+      keyBy: "ip",
     },
-    POST: {
-      querySchema,
-      handler: handlePost,
-      requireAuth: true,
+    routes: {
+      GET: {
+        querySchema,
+        handler: handleGet,
+        requireAuth: false,
+      },
+      POST: {
+        querySchema,
+        handler: handlePost,
+        requireAuth: true,
+      },
     },
-  },
-}));
+  }),
+);

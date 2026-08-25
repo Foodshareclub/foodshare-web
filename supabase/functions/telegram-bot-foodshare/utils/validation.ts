@@ -79,12 +79,14 @@ export function validateImageUrl(url: string): boolean {
       try {
         return new URL(Deno.env.get("SUPABASE_URL") || "").hostname;
       } catch {
-        return "api.foodshare.club";
+        return Deno.env.get("API_DOMAIN") || "api.foodshare.club";
       }
     })();
     return (
       parsed.protocol === "https:" &&
-      (parsed.hostname.includes(supabaseHost) || parsed.hostname === "cdn.foodshare.club") &&
+      (parsed.hostname.includes(supabaseHost) ||
+        parsed.hostname === Deno.env.get("CDN_DOMAIN") ||
+        "cdn.foodshare.club") &&
       (parsed.pathname.includes("/storage/v1/object/public/") || parsed.pathname.startsWith("/"))
     );
   } catch {

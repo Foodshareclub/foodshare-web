@@ -694,9 +694,9 @@ All text translated → Preferences saved
 
 **Internationalization:**
 
-- Lingui 5.6.0
-- Compiled message catalogs
-- 18 languages supported (including RTL)
+- next-intl
+- JSON message catalogs (`messages/{locale}.json`)
+- 21 languages supported (including RTL)
 
 ### Backend Stack
 

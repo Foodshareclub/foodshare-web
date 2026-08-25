@@ -11,6 +11,7 @@ import { EmailChannelAdapter } from "./email.ts";
 import { PushChannelAdapter } from "./push.ts";
 import { SmsChannelAdapter } from "./sms.ts";
 import { InAppChannelAdapter } from "./in-app.ts";
+import { TelegramChannelAdapter } from "./telegram.ts";
 import type { ChannelAdapter, NotificationChannel } from "../types.ts";
 
 // =============================================================================
@@ -22,6 +23,7 @@ const channelAdapters = new Map<NotificationChannel, ChannelAdapter>([
   ["push", new PushChannelAdapter()],
   ["sms", new SmsChannelAdapter()],
   ["in_app", new InAppChannelAdapter()],
+  ["telegram", new TelegramChannelAdapter()],
 ]);
 
 /**
@@ -74,4 +76,10 @@ export async function getAllChannelHealth(): Promise<
 }
 
 // Export individual adapters for direct use
-export { EmailChannelAdapter, InAppChannelAdapter, PushChannelAdapter, SmsChannelAdapter };
+export {
+  EmailChannelAdapter,
+  InAppChannelAdapter,
+  PushChannelAdapter,
+  SmsChannelAdapter,
+  TelegramChannelAdapter,
+};

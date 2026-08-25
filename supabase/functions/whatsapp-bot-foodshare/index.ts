@@ -13,7 +13,7 @@
 import { createAPIHandler, type HandlerContext } from "../_shared/api-handler.ts";
 import { logger } from "../_shared/logger.ts";
 import { isDevelopment } from "../_shared/utils.ts";
-import { WHATSAPP_APP_SECRET, WHATSAPP_VERIFY_TOKEN } from "./config/index.ts";
+import { getWhatsappAppSecret, getWhatsappVerifyToken } from "./config/index.ts";
 import { verifyMetaWebhook } from "../_shared/webhook-security.ts";
 import { checkRateLimitDistributed } from "./services/rate-limiter.ts";
 import { cleanupExpiredStates } from "./services/user-state.ts";
@@ -36,42 +36,57 @@ const SERVICE = "whatsapp-bot-foodshare";
 let isInitialized = false;
 let initError: Error | null = null;
 
-try {
-  const accessToken = Deno.env.get("WHATSAPP_ACCESS_TOKEN");
-  const phoneNumberId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
-  const verifyToken = Deno.env.get("WHATSAPP_VERIFY_TOKEN");
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+async function ensureInitialized(ctx: HandlerContext): Promise<boolean> {
+  if (isInitialized) return true;
 
-  if (!accessToken) {
-    throw new Error("Missing WHATSAPP_ACCESS_TOKEN environment variable");
-  }
-  if (!phoneNumberId) {
-    throw new Error("Missing WHATSAPP_PHONE_NUMBER_ID environment variable");
-  }
-  if (!verifyToken) {
-    throw new Error("Missing WHATSAPP_VERIFY_TOKEN environment variable");
-  }
-  if (!supabaseUrl) {
-    throw new Error("Missing SUPABASE_URL environment variable");
-  }
-  if (!supabaseKey) {
-    throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY environment variable");
-  }
+  try {
+    const accessToken = (await ctx.getSecret("WHATSAPP_ACCESS_TOKEN")) ||
+      Deno.env.get("WHATSAPP_ACCESS_TOKEN");
+    const phoneNumberId = (await ctx.getSecret("WHATSAPP_PHONE_NUMBER_ID")) ||
+      Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
+    const verifyToken = (await ctx.getSecret("WHATSAPP_VERIFY_TOKEN")) ||
+      Deno.env.get("WHATSAPP_VERIFY_TOKEN");
+    const supabaseUrl = (await ctx.getSecret("SUPABASE_URL")) || Deno.env.get("SUPABASE_URL");
+    const supabaseKey = (await ctx.getSecret("SUPABASE_SERVICE_ROLE_KEY")) ||
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-  isInitialized = true;
-  logger.info("WhatsApp bot initialized successfully", { version: VERSION });
-} catch (error) {
-  initError = error instanceof Error ? error : new Error(String(error));
-  logger.error("Initialization failed", initError);
+    if (!accessToken) {
+      throw new Error("Missing WHATSAPP_ACCESS_TOKEN environment variable");
+    }
+    if (!phoneNumberId) {
+      throw new Error("Missing WHATSAPP_PHONE_NUMBER_ID environment variable");
+    }
+    if (!verifyToken) {
+      throw new Error("Missing WHATSAPP_VERIFY_TOKEN environment variable");
+    }
+    if (!supabaseUrl) {
+      throw new Error("Missing SUPABASE_URL environment variable");
+    }
+    if (!supabaseKey) {
+      throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY environment variable");
+    }
+
+    isInitialized = true;
+    logger.info("WhatsApp bot initialized successfully", { version: VERSION });
+    return true;
+  } catch (error) {
+    initError = error instanceof Error ? error : new Error(String(error));
+    logger.error("Initialization failed", initError);
+    return false;
+  }
 }
 
 // ============================================================================
 // Security: Webhook Signature Verification
 // ============================================================================
 
-async function verifyWebhookSignature(payload: string, headers: Headers): Promise<boolean> {
-  if (!WHATSAPP_APP_SECRET) {
+async function verifyWebhookSignature(
+  payload: string,
+  headers: Headers,
+  ctx: HandlerContext,
+): Promise<boolean> {
+  const appSecret = (await ctx.getSecret("WHATSAPP_APP_SECRET")) || getWhatsappAppSecret();
+  if (!appSecret) {
     if (isDevelopment()) {
       logger.warn(
         "WHATSAPP_APP_SECRET not configured - skipping signature verification (dev mode)",
@@ -82,9 +97,11 @@ async function verifyWebhookSignature(payload: string, headers: Headers): Promis
     return false;
   }
 
-  const result = await verifyMetaWebhook(payload, headers, WHATSAPP_APP_SECRET);
+  const result = await verifyMetaWebhook(payload, headers, appSecret);
   if (!result.valid) {
-    logger.warn("Webhook signature verification failed", { error: result.error });
+    logger.warn("Webhook signature verification failed", {
+      error: result.error,
+    });
   }
   return result.valid;
 }
@@ -105,7 +122,8 @@ function jsonOk(body: unknown, ctx: HandlerContext, status = 200): Response {
 // ============================================================================
 
 async function handleGet(ctx: HandlerContext): Promise<Response> {
-  if (!isInitialized) {
+  const initialized = await ensureInitialized(ctx);
+  if (!initialized) {
     return jsonOk(
       { error: "Service temporarily unavailable", details: initError?.message },
       ctx,
@@ -121,7 +139,9 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
   const challenge = url.searchParams.get("hub.challenge");
 
   if (mode === "subscribe" && token && challenge) {
-    if (token === WHATSAPP_VERIFY_TOKEN) {
+    const expectedToken = (await ctx.getSecret("WHATSAPP_VERIFY_TOKEN")) ||
+      getWhatsappVerifyToken();
+    if (token === expectedToken) {
       logger.info("Webhook verified successfully");
       return new Response(challenge, {
         status: 200,
@@ -169,7 +189,8 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
   const startTime = Date.now();
   const requestId = ctx.ctx.requestId;
 
-  if (!isInitialized) {
+  const initialized = await ensureInitialized(ctx);
+  if (!initialized) {
     return jsonOk(
       { error: "Service temporarily unavailable", details: initError?.message },
       ctx,
@@ -184,7 +205,7 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
     const rawBody = await ctx.request.text();
 
     // Verify webhook signature
-    const isValidSignature = await verifyWebhookSignature(rawBody, ctx.request.headers);
+    const isValidSignature = await verifyWebhookSignature(rawBody, ctx.request.headers, ctx);
 
     if (!isValidSignature) {
       logger.warn("Invalid webhook signature", { requestId });
@@ -343,13 +364,15 @@ async function routeMessage(
 // API Handler
 // ============================================================================
 
-Deno.serve(createAPIHandler({
-  service: SERVICE,
-  version: VERSION,
-  requireAuth: false,
-  csrf: false,
-  routes: {
-    GET: { handler: handleGet },
-    POST: { handler: handlePost },
-  },
-}));
+Deno.serve(
+  createAPIHandler({
+    service: SERVICE,
+    version: VERSION,
+    requireAuth: false,
+    csrf: false,
+    routes: {
+      GET: { handler: handleGet },
+      POST: { handler: handlePost },
+    },
+  }),
+);

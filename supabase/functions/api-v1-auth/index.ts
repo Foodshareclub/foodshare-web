@@ -32,6 +32,7 @@ import {
 } from "./lib/schemas.ts";
 import { handleRateCheck, handleRateRecord } from "./lib/rate.ts";
 import { handleVerifyConfirm, handleVerifyResend, handleVerifySend } from "./lib/verify.ts";
+import { handleAppleSignIn } from "./lib/apple.ts";
 import type { AuthContext } from "./lib/types.ts";
 
 const VERSION = "1.0.0";
@@ -45,12 +46,15 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
   const route = parseRoute(new URL(ctx.request.url), ctx.request.method, SERVICE);
 
   if (route.resource === "health" || route.resource === "") {
-    return ok({
-      status: "healthy",
-      version: VERSION,
-      service: SERVICE,
-      timestamp: new Date().toISOString(),
-    }, ctx);
+    return ok(
+      {
+        status: "healthy",
+        version: VERSION,
+        service: SERVICE,
+        timestamp: new Date().toISOString(),
+      },
+      ctx,
+    );
   }
 
   throw new AppError("Not found", "NOT_FOUND", 404);
@@ -74,7 +78,12 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
   // Build context (service role — all routes are pre-auth)
   const supabase = getSupabaseClient();
   const requestId = ctx.ctx.requestId;
-  const authCtx: AuthContext = { supabase, requestId, corsHeaders: ctx.corsHeaders, clientIp };
+  const authCtx: AuthContext = {
+    supabase,
+    requestId,
+    corsHeaders: ctx.corsHeaders,
+    clientIp,
+  };
 
   logger.info("Auth request", {
     requestId,
@@ -123,6 +132,11 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
       });
     }
 
+    // Route: /apple
+    if (route.resource === "apple") {
+      return await handleAppleSignIn(body, authCtx);
+    }
+
     throw new AppError("Not found", "NOT_FOUND", 404, {
       details: { availableResources: ["rate", "verify", "health"] },
     });
@@ -145,18 +159,20 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
 // API Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: SERVICE,
-  version: VERSION,
-  requireAuth: false,
-  csrf: false,
-  rateLimit: {
-    limit: 100,
-    windowMs: 60_000,
-    keyBy: "ip",
-  },
-  routes: {
-    GET: { handler: handleGet },
-    POST: { handler: handlePost },
-  },
-}));
+Deno.serve(
+  createAPIHandler({
+    service: SERVICE,
+    version: VERSION,
+    requireAuth: false,
+    csrf: false,
+    rateLimit: {
+      limit: 100,
+      windowMs: 60_000,
+      keyBy: "ip",
+    },
+    routes: {
+      GET: { handler: handleGet },
+      POST: { handler: handlePost },
+    },
+  }),
+);

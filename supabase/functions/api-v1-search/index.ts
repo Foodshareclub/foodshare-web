@@ -58,9 +58,7 @@ import {
 // GET Handler
 // =============================================================================
 
-async function handleGet(
-  ctx: HandlerContext,
-): Promise<Response> {
+async function handleGet(ctx: HandlerContext): Promise<Response> {
   const { supabase } = ctx;
   const url = new URL(ctx.request.url);
   const rawParams: Record<string, string> = {};
@@ -92,14 +90,7 @@ async function handleGet(
   }
 
   const response = await deduplicateRequest(cacheKey, async () => {
-    const searchResult = await executeSearch(
-      supabase,
-      sanitizedQ,
-      mode,
-      limit,
-      offset,
-      filters,
-    );
+    const searchResult = await executeSearch(supabase, sanitizedQ, mode, limit, offset, filters);
     const tookMs = Math.round(performance.now() - startTime);
     const resp: SearchResponse = {
       results: searchResult.results,
@@ -121,9 +112,7 @@ async function handleGet(
 // POST Handler
 // =============================================================================
 
-async function handlePost(
-  ctx: HandlerContext,
-): Promise<Response> {
+async function handlePost(ctx: HandlerContext): Promise<Response> {
   const { supabase, request, body } = ctx;
   const url = new URL(request.url);
   const rawParams: Record<string, string> = {};
@@ -142,13 +131,8 @@ async function handlePost(
     if (!isValid) throw new ValidationError("Invalid webhook signature");
 
     const payload = body as WebhookPayload;
-    if (
-      !payload.type ||
-      !["INSERT", "UPDATE", "DELETE"].includes(payload.type)
-    ) {
-      throw new ValidationError(
-        "Invalid webhook payload: missing or invalid type",
-      );
+    if (!payload.type || !["INSERT", "UPDATE", "DELETE"].includes(payload.type)) {
+      throw new ValidationError("Invalid webhook payload: missing or invalid type");
     }
 
     const result = await handleWebhookIndex(supabase, payload);
@@ -176,16 +160,11 @@ async function handlePost(
 
   const sanitizedQ = sanitizeInput(q);
   const mode = (
-    ["semantic", "text", "hybrid", "fuzzy"].includes(
-        searchBody.mode as string,
-      )
+    ["semantic", "text", "hybrid", "fuzzy"].includes(searchBody.mode as string)
       ? searchBody.mode
       : "hybrid"
   ) as SearchMode;
-  const limit = Math.min(
-    Math.max(1, Number(searchBody.limit) || DEFAULT_LIMIT),
-    MAX_LIMIT,
-  );
+  const limit = Math.min(Math.max(1, Number(searchBody.limit) || DEFAULT_LIMIT), MAX_LIMIT);
   const offset = Math.max(0, Number(searchBody.offset) || 0);
 
   const bodyFilters = searchBody.filters as Record<string, unknown> | undefined;
@@ -213,16 +192,10 @@ async function handlePost(
         };
       }
     }
-    if (
-      typeof bodyFilters.maxAgeHours === "number" &&
-      bodyFilters.maxAgeHours > 0
-    ) {
+    if (typeof bodyFilters.maxAgeHours === "number" && bodyFilters.maxAgeHours > 0) {
       filters.maxAgeHours = bodyFilters.maxAgeHours;
     }
-    if (
-      typeof bodyFilters.profileId === "string" &&
-      validateUUID(bodyFilters.profileId)
-    ) {
+    if (typeof bodyFilters.profileId === "string" && validateUUID(bodyFilters.profileId)) {
       filters.profileId = bodyFilters.profileId;
     }
     if (Array.isArray(bodyFilters.categoryIds)) {
@@ -242,14 +215,7 @@ async function handlePost(
   }
 
   const response = await deduplicateRequest(cacheKey, async () => {
-    const searchResult = await executeSearch(
-      supabase,
-      sanitizedQ,
-      mode,
-      limit,
-      offset,
-      filters,
-    );
+    const searchResult = await executeSearch(supabase, sanitizedQ, mode, limit, offset, filters);
     const tookMs = Math.round(performance.now() - startTime);
     const resp: SearchResponse = {
       results: searchResult.results,
@@ -282,9 +248,7 @@ function handleHealth(): Record<string, unknown> {
     vectorHealthy = false;
   }
 
-  const anyEmbeddingHealthy = Object.values(embeddingHealth).some(
-    (e) => e.healthy,
-  );
+  const anyEmbeddingHealthy = Object.values(embeddingHealth).some((e) => e.healthy);
 
   let status: "healthy" | "degraded" | "unhealthy" = "healthy";
   if (!vectorHealthy || !anyEmbeddingHealthy) {
@@ -316,22 +280,24 @@ function handleStats(): Record<string, unknown> {
 // Router
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: "api-v1-search",
-  version: VERSION,
-  requireAuth: false,
-  csrf: false,
-  rateLimit: {
-    limit: 60,
-    windowMs: 60_000,
-    keyBy: "ip",
-  },
-  routes: {
-    GET: {
-      handler: handleGet,
+Deno.serve(
+  createAPIHandler({
+    service: "api-v1-search",
+    version: VERSION,
+    requireAuth: false,
+    csrf: false,
+    rateLimit: {
+      limit: 60,
+      windowMs: 60_000,
+      keyBy: "ip",
     },
-    POST: {
-      handler: handlePost,
+    routes: {
+      GET: {
+        handler: handleGet,
+      },
+      POST: {
+        handler: handlePost,
+      },
     },
-  },
-}));
+  }),
+);

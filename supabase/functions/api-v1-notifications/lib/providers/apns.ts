@@ -8,13 +8,13 @@ import { withOperationTimeout } from "../../../_shared/timeout.ts";
 import type { DeviceToken, Platform, PushPayload, SendResult } from "./types.ts";
 import { generateDeepLink } from "./types.ts";
 
-const env = {
+const getEnv = () => ({
   apnsKeyId: Deno.env.get("APNS_KEY_ID"),
   apnsTeamId: Deno.env.get("APNS_TEAM_ID"),
   apnsBundleId: Deno.env.get("APNS_BUNDLE_ID") || "co.nz.foodshare.FoodShare",
   apnsPrivateKey: Deno.env.get("APNS_PRIVATE_KEY"),
   apnsEnvironment: Deno.env.get("APNS_ENVIRONMENT") || "production",
-};
+});
 
 let apnsJwtCache: { token: string; expires: number } | null = null;
 
@@ -22,6 +22,8 @@ async function getApnsToken(): Promise<string> {
   if (apnsJwtCache && apnsJwtCache.expires > Date.now()) {
     return apnsJwtCache.token;
   }
+
+  const env = getEnv();
 
   if (!env.apnsPrivateKey || !env.apnsKeyId || !env.apnsTeamId) {
     throw new Error("APNs not configured");
@@ -44,6 +46,7 @@ export async function sendApns(device: DeviceToken, payload: PushPayload): Promi
     return await withCircuitBreaker(
       "push-ios",
       async () => {
+        const env = getEnv();
         const jwt = await getApnsToken();
         const host = env.apnsEnvironment === "production"
           ? "api.push.apple.com"
@@ -63,12 +66,12 @@ export async function sendApns(device: DeviceToken, payload: PushPayload): Promi
             },
             sound: iosOptions.interruptionLevel === "passive"
               ? undefined
-              : (payload.sound || "default"),
+              : payload.sound || "default",
             badge: typeof payload.badge === "number" ? payload.badge : undefined,
             "mutable-content": 1,
             "content-available": 1,
             "thread-id": iosOptions.threadId || payload.collapseKey,
-            "category": iosOptions.category,
+            category: iosOptions.category,
             "interruption-level": iosOptions.interruptionLevel || "active",
             "relevance-score": iosOptions.relevanceScore,
             "target-content-id": iosOptions.targetContentId,
@@ -89,7 +92,9 @@ export async function sendApns(device: DeviceToken, payload: PushPayload): Promi
           "apns-push-type": "alert",
           "apns-priority": iosOptions.interruptionLevel === "passive"
             ? "5"
-            : (payload.priority === "normal" ? "5" : "10"),
+            : payload.priority === "normal"
+            ? "5"
+            : "10",
           "apns-expiration": String(Math.floor(Date.now() / 1000) + (payload.ttl || 86400)),
           "Content-Type": "application/json",
         };
@@ -109,7 +114,11 @@ export async function sendApns(device: DeviceToken, payload: PushPayload): Promi
 
         if (response.status === 200) {
           const apnsId = response.headers.get("apns-id");
-          return { success: true, platform: "ios" as Platform, messageId: apnsId || undefined };
+          return {
+            success: true,
+            platform: "ios" as Platform,
+            messageId: apnsId || undefined,
+          };
         }
 
         const errorBody = await response.json().catch(() => ({}));
@@ -131,11 +140,16 @@ export async function sendApns(device: DeviceToken, payload: PushPayload): Promi
 
         throw new Error(reason);
       },
-      { failureThreshold: 5, resetTimeout: 60000, halfOpenRequests: 3 },
+      { failureThreshold: 5, resetTimeoutMs: 60000, halfOpenMaxAttempts: 3 },
     );
   } catch (e) {
     if (e instanceof CircuitBreakerError) {
-      return { success: false, platform: "ios", error: "Circuit open", retryable: true };
+      return {
+        success: false,
+        platform: "ios",
+        error: "Circuit open",
+        retryable: true,
+      };
     }
     return {
       success: false,

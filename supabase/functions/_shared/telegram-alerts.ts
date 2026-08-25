@@ -7,8 +7,8 @@
 
 import { logger } from "./logger.ts";
 
-const TELEGRAM_ALERT_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
-const TELEGRAM_ALERT_CHAT_ID = Deno.env.get("ADMIN_CHAT_ID");
+const getAlertBotToken = () => Deno.env.get("TELEGRAM_BOT_TOKEN");
+const getAlertChatId = () => Deno.env.get("ADMIN_CHAT_ID");
 
 export type AlertSeverity = "low" | "medium" | "high" | "critical";
 
@@ -106,10 +106,7 @@ function formatAlertMessage(
  * Escape HTML for Telegram
  */
 function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 /**
@@ -122,7 +119,10 @@ export async function sendTelegramAlert(
   options: AlertOptions = {},
 ): Promise<boolean> {
   // Check configuration
-  if (!TELEGRAM_ALERT_BOT_TOKEN || !TELEGRAM_ALERT_CHAT_ID) {
+  const botToken = getAlertBotToken();
+  const chatId = getAlertChatId();
+
+  if (!botToken || !chatId) {
     logger.warn("Telegram alerts not configured", { severity, title });
     return false;
   }
@@ -144,19 +144,16 @@ export async function sendTelegramAlert(
   try {
     const message = formatAlertMessage(severity, title, details, options.tags);
 
-    const response = await fetch(
-      `https://api.telegram.org/bot${TELEGRAM_ALERT_BOT_TOKEN}/sendMessage`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: TELEGRAM_ALERT_CHAT_ID,
-          text: message,
-          parse_mode: "HTML",
-          disable_notification: severity === "low",
-        }),
-      },
-    );
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: message,
+        parse_mode: "HTML",
+        disable_notification: severity === "low",
+      }),
+    });
 
     if (!response.ok) {
       const error = await response.text();
@@ -217,10 +214,10 @@ export async function sendSubscriptionAlert(
  */
 export async function sendCircuitBreakerAlert(
   serviceName: string,
-  state: "OPEN" | "HALF_OPEN" | "CLOSED",
+  state: "open" | "half-open" | "closed",
   failures: number,
 ): Promise<boolean> {
-  if (state === "CLOSED") {
+  if (state === "closed") {
     return sendTelegramAlert(
       "low",
       "Circuit Breaker Recovered",
@@ -234,13 +231,13 @@ export async function sendCircuitBreakerAlert(
   }
 
   return sendTelegramAlert(
-    state === "OPEN" ? "critical" : "high",
-    `Circuit Breaker ${state}`,
+    state === "open" ? "critical" : "high",
+    `Circuit Breaker ${state.toUpperCase()}`,
     {
       Service: serviceName,
       State: state,
       Failures: failures,
-      Action: state === "OPEN" ? "All requests blocked" : "Testing recovery",
+      Action: state === "open" ? "All requests blocked" : "Testing recovery",
     },
     { throttleKey: `circuit:${serviceName}:${state}` },
   );

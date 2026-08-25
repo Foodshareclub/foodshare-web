@@ -1,3 +1,4 @@
+import { logger } from "../../_shared/logger.ts";
 /**
  * Batch Translation Handler
  *
@@ -38,7 +39,7 @@ interface BatchTranslateRequest {
   fields: Field[];
 }
 
-interface BatchTranslateResponse {
+type BatchTranslateResponse = {
   accepted: boolean;
   queued: number;
   content_type: string;
@@ -46,7 +47,7 @@ interface BatchTranslateResponse {
   fields_count: number;
   locales_count: number;
   total_translations: number;
-}
+};
 
 export default async function translateBatchHandler(
   req: Request,
@@ -143,13 +144,11 @@ export default async function translateBatchHandler(
     // Insert into queue (upsert to handle duplicates)
     let queuedCount = 0;
     if (queueItems.length > 0) {
-      const { error, count } = await supabase
-        .from("translation_queue")
-        .upsert(queueItems, {
-          onConflict: "content_type,field_name,source_text,target_locale",
-          ignoreDuplicates: true,
-          count: "exact",
-        });
+      const { error, count } = await supabase.from("translation_queue").upsert(queueItems, {
+        onConflict: "content_type,field_name,source_text,target_locale",
+        ignoreDuplicates: true,
+        count: "exact",
+      });
 
       if (error) {
         logger.error("Failed to queue translations", error);

@@ -39,14 +39,14 @@ interface BackfillRequest {
   onlyUntranslated?: boolean; // Only fetch content without existing translations
 }
 
-interface BackfillResponse {
+type BackfillResponse = {
   success: boolean;
   forumPostsProcessed: number;
   totalTranslations: number;
   estimatedTimeMinutes: number;
   dryRun?: boolean;
   mode?: string;
-}
+};
 
 const TARGET_LOCALES_COUNT = 5; // ru, es, de, fr, pt (top 5)
 const FIELDS_PER_FORUM_POST = 2; // title, description
@@ -166,7 +166,11 @@ export default async function backfillForumPostsHandler(
 
     // Fetch forum posts based on mode
     let forumPosts:
-      | Array<{ id: number; forum_post_name: string; forum_post_description: string | null }>
+      | Array<{
+        id: number;
+        forum_post_name: string;
+        forum_post_description: string | null;
+      }>
       | null = null;
     let count: number | null = null;
     let error: Error | null = null;
@@ -189,7 +193,9 @@ export default async function backfillForumPostsHandler(
       // Build query based on mode
       let query = supabase
         .from("forum")
-        .select("id, forum_post_name, forum_post_description", { count: "exact" })
+        .select("id, forum_post_name, forum_post_description", {
+          count: "exact",
+        })
         .eq("forum_published", true)
         .not("forum_post_name", "is", null);
 
@@ -253,9 +259,7 @@ export default async function backfillForumPostsHandler(
     // If dry run, just return counts
     if (dryRun) {
       const totalTranslations = forumPosts.length * FIELDS_PER_FORUM_POST * TARGET_LOCALES_COUNT;
-      const estimatedTimeMinutes = Math.ceil(
-        (totalTranslations * SECONDS_PER_TRANSLATION) / 60,
-      );
+      const estimatedTimeMinutes = Math.ceil((totalTranslations * SECONDS_PER_TRANSLATION) / 60);
 
       return new Response(
         JSON.stringify({
@@ -282,7 +286,10 @@ export default async function backfillForumPostsHandler(
       }
 
       if (forumPost.forum_post_description && forumPost.forum_post_description.trim().length > 0) {
-        fields.push({ name: "description", text: forumPost.forum_post_description });
+        fields.push({
+          name: "description",
+          text: forumPost.forum_post_description,
+        });
       }
 
       if (fields.length === 0) {
@@ -304,7 +311,9 @@ export default async function backfillForumPostsHandler(
             error: response.error,
           });
         } else {
-          logger.info("Triggered translation for forum post", { forumPostId: forumPost.id });
+          logger.info("Triggered translation for forum post", {
+            forumPostId: forumPost.id,
+          });
         }
       } catch (error) {
         logger.warn("Error triggering translation for forum post", {
@@ -316,13 +325,13 @@ export default async function backfillForumPostsHandler(
 
     // Don't await all - fire and forget, but wait a bit to ensure they're queued
     Promise.all(translationPromises).catch((error) => {
-      logger.error("Some translations failed", { error: (error as Error).message });
+      logger.error("Some translations failed", {
+        error: (error as Error).message,
+      });
     });
 
     const totalTranslations = forumPosts.length * FIELDS_PER_FORUM_POST * TARGET_LOCALES_COUNT;
-    const estimatedTimeMinutes = Math.ceil(
-      (totalTranslations * SECONDS_PER_TRANSLATION) / 60,
-    );
+    const estimatedTimeMinutes = Math.ceil((totalTranslations * SECONDS_PER_TRANSLATION) / 60);
 
     const response: BackfillResponse = {
       success: true,
@@ -351,7 +360,9 @@ export default async function backfillForumPostsHandler(
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    logger.error("Forum posts backfill error", { error: (error as Error).message });
+    logger.error("Forum posts backfill error", {
+      error: (error as Error).message,
+    });
 
     // Mark job as failed (best effort - supabase may not be available)
     try {

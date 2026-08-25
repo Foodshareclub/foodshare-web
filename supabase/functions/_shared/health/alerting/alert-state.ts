@@ -31,7 +31,10 @@ export class AlertStateManager {
     if (isRecovery) {
       // Always notify recovery if we previously alerted
       if (existing && existing.consecutiveFailures > 0) {
-        this.state.set(functionName, { lastAlertTime: now, consecutiveFailures: 0 });
+        this.state.set(functionName, {
+          lastAlertTime: now,
+          consecutiveFailures: 0,
+        });
         return true;
       }
       return false;
@@ -39,7 +42,10 @@ export class AlertStateManager {
 
     // New failure or continued failure
     if (!existing) {
-      this.state.set(functionName, { lastAlertTime: now, consecutiveFailures: 1 });
+      this.state.set(functionName, {
+        lastAlertTime: now,
+        consecutiveFailures: 1,
+      });
       return true; // First failure, alert immediately
     }
 
@@ -70,7 +76,10 @@ export class AlertStateManager {
       existing.consecutiveFailures++;
       existing.lastAlertTime = now;
     } else {
-      this.state.set(functionName, { lastAlertTime: now, consecutiveFailures: 1 });
+      this.state.set(functionName, {
+        lastAlertTime: now,
+        consecutiveFailures: 1,
+      });
     }
   }
 

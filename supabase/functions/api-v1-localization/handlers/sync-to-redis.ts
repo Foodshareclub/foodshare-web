@@ -39,7 +39,7 @@ export default async function syncToRedisHandler(
 
   try {
     // Parse request body
-    const body = await req.json() as SyncToRedisRequest;
+    const body = (await req.json()) as SyncToRedisRequest;
     const { userId, locale } = body;
 
     // Validate required fields
@@ -47,7 +47,10 @@ export default async function syncToRedisHandler(
       return new Response(
         JSON.stringify({
           success: false,
-          error: { code: "VALIDATION_ERROR", message: "userId and locale are required" },
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "userId and locale are required",
+          },
         }),
         {
           status: 400,
@@ -85,7 +88,10 @@ export default async function syncToRedisHandler(
       return new Response(
         JSON.stringify({
           success: false,
-          error: { code: "INVALID_LOCALE", message: `Unsupported locale: ${locale}` },
+          error: {
+            code: "INVALID_LOCALE",
+            message: `Unsupported locale: ${locale}`,
+          },
         }),
         {
           status: 400,
@@ -100,7 +106,10 @@ export default async function syncToRedisHandler(
       return new Response(
         JSON.stringify({
           success: false,
-          error: { code: "INVALID_USER_ID", message: "userId must be a valid UUID" },
+          error: {
+            code: "INVALID_USER_ID",
+            message: "userId must be a valid UUID",
+          },
         }),
         {
           status: 400,

@@ -22,11 +22,7 @@ export function checkRateLimitDistributed(
   return rateLimiter.checkDistributed(userId, maxRequests, windowMs);
 }
 
-export function checkRateLimit(
-  userId: number,
-  maxRequests?: number,
-  windowMs?: number,
-): boolean {
+export function checkRateLimit(userId: number, maxRequests?: number, windowMs?: number): boolean {
   return rateLimiter.checkSync(userId, maxRequests, windowMs);
 }
 

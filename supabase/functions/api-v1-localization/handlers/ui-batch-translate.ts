@@ -319,7 +319,7 @@ export default async function uiBatchTranslateHandler(
     if (apply) {
       const { data: current, error: fetchError } = await supabase
         .from("translations")
-        .select("id, messages")
+        .select("id,messages")
         .eq("locale", locale)
         .single();
 
@@ -345,7 +345,10 @@ export default async function uiBatchTranslateHandler(
         (current as any).messages as Record<string, unknown>,
         nestedTranslations,
       );
-      const version = new Date().toISOString().replace(/[-:T.Z]/g, "").slice(0, 14);
+      const version = new Date()
+        .toISOString()
+        .replace(/[-:T.Z]/g, "")
+        .slice(0, 14);
 
       // Update database
       const { error: updateError } = await supabase

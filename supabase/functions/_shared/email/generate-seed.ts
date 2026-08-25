@@ -54,7 +54,12 @@ const TEMPLATE_DEFINITIONS: Omit<TemplateDefinition, "html_content">[] = [
     variables: [
       { name: "name", type: "string", required: true },
       { name: "nearbyMembers", type: "number", required: false, default: 100 },
-      { name: "mealsSharedMonthly", type: "number", required: false, default: 50000 },
+      {
+        name: "mealsSharedMonthly",
+        type: "number",
+        required: false,
+        default: 50000,
+      },
       { name: "latitude", type: "number", required: false },
       { name: "longitude", type: "number", required: false },
     ],
@@ -69,9 +74,7 @@ const TEMPLATE_DEFINITIONS: Omit<TemplateDefinition, "html_content">[] = [
     category: "transactional",
     subject: "Confirm your email to join FoodShare! ✉️",
     text_content: null,
-    variables: [
-      { name: "verifyUrl", type: "url", required: true },
-    ],
+    variables: [{ name: "verifyUrl", type: "url", required: true }],
     metadata: { preheader: "One click to confirm your FoodShare account" },
   },
   {
@@ -125,9 +128,7 @@ const TEMPLATE_DEFINITIONS: Omit<TemplateDefinition, "html_content">[] = [
     category: "transactional",
     subject: "Welcome to the FoodShare Volunteer Team! 🌟",
     text_content: null,
-    variables: [
-      { name: "name", type: "string", required: true },
-    ],
+    variables: [{ name: "name", type: "string", required: true }],
     metadata: { preheader: "You're joining an amazing team" },
   },
   {
@@ -138,7 +139,12 @@ const TEMPLATE_DEFINITIONS: Omit<TemplateDefinition, "html_content">[] = [
     text_content: null,
     variables: [
       { name: "name", type: "string", required: true },
-      { name: "completionPercent", type: "number", required: false, default: 50 },
+      {
+        name: "completionPercent",
+        type: "number",
+        required: false,
+        default: 50,
+      },
     ],
     metadata: { preheader: "Complete your profile to unlock all features" },
   },
@@ -148,9 +154,7 @@ const TEMPLATE_DEFINITIONS: Omit<TemplateDefinition, "html_content">[] = [
     category: "marketing",
     subject: "Tips for your first FoodShare 🍎",
     text_content: null,
-    variables: [
-      { name: "name", type: "string", required: true },
-    ],
+    variables: [{ name: "name", type: "string", required: true }],
     metadata: { preheader: "Tips for a successful first share" },
   },
   {
@@ -163,7 +167,12 @@ const TEMPLATE_DEFINITIONS: Omit<TemplateDefinition, "html_content">[] = [
       { name: "name", type: "string", required: true },
       { name: "milestoneName", type: "string", required: true },
       { name: "milestoneDescription", type: "string", required: true },
-      { name: "milestoneEmoji", type: "string", required: false, default: "🏆" },
+      {
+        name: "milestoneEmoji",
+        type: "string",
+        required: false,
+        default: "🏆",
+      },
       { name: "percentile", type: "number", required: false, default: 10 },
       { name: "nextMilestone", type: "string", required: false },
     ],
@@ -178,8 +187,18 @@ const TEMPLATE_DEFINITIONS: Omit<TemplateDefinition, "html_content">[] = [
     variables: [
       { name: "name", type: "string", required: true },
       { name: "daysSinceLastVisit", type: "number", required: true },
-      { name: "newListingsNearby", type: "number", required: false, default: 12 },
-      { name: "mealsSavedCommunity", type: "number", required: false, default: 234 },
+      {
+        name: "newListingsNearby",
+        type: "number",
+        required: false,
+        default: 12,
+      },
+      {
+        name: "mealsSavedCommunity",
+        type: "number",
+        required: false,
+        default: 234,
+      },
       { name: "newMembersNearby", type: "number", required: false, default: 8 },
       { name: "unsubscribeUrl", type: "url", required: true },
       { name: "latitude", type: "number", required: false },
@@ -213,17 +232,25 @@ const TEMPLATE_DEFINITIONS: Omit<TemplateDefinition, "html_content">[] = [
 // Sample data for rendering templates
 const SAMPLE_DATA: Record<string, Record<string, unknown>> = {
   welcome: { name: "John", nearbyMembers: 127, mealsSharedMonthly: 52000 },
-  "email-verification": { verifyUrl: "https://foodshare.club/verify?token=abc123" },
+  "email-verification": {
+    verifyUrl: `https://${
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+    }/verify?token=abc123`,
+  },
   "password-reset": {
     name: "John",
-    resetUrl: "https://foodshare.club/reset?token=xyz789",
+    resetUrl: `https://${
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+    }/reset?token=xyz789`,
     expiresIn: "1 hour",
   },
   "chat-notification": {
     recipientName: "John",
     senderName: "Sarah",
     messagePreview: "Hey! Is the pasta still available?",
-    chatUrl: "https://foodshare.club/chat/123",
+    chatUrl: `https://${
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+    }/chat/123`,
   },
   "new-listing-nearby": {
     recipientName: "John",
@@ -231,7 +258,9 @@ const SAMPLE_DATA: Record<string, Record<string, unknown>> = {
     listingDescription: "Organic tomatoes and cucumbers from my garden",
     listingAddress: "123 Main St",
     posterName: "Sarah",
-    listingUrl: "https://foodshare.club/food/456",
+    listingUrl: `https://${
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+    }/food/456`,
     listingType: "food",
     listingEmoji: "🍎",
   },
@@ -252,7 +281,9 @@ const SAMPLE_DATA: Record<string, Record<string, unknown>> = {
     newListingsNearby: 8,
     mealsSavedCommunity: 234,
     newMembersNearby: 12,
-    unsubscribeUrl: "https://foodshare.club/unsubscribe?token=abc",
+    unsubscribeUrl: `https://${
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+    }/unsubscribe?token=abc`,
   },
   "feedback-alert": {
     feedbackId: "fb-123",

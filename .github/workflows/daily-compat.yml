@@ -1,0 +1,141 @@
+name: Daily Compatibility & E2E
+
+# Nightly gate for the web layer:
+# 1. Quality matrix (oxlint / biome / eslint / tsc / bun unit tests)
+# 2. Build + Playwright E2E (4 shards)
+# 3. Vendored supabase/ drift check against foodshare-backend main
+# 4. Production health probes + cross-repo CI status
+# 5. AI test-gap analysis of the last 24h of commits (Groq -> Z.AI fallback)
+
+on:
+  schedule:
+    - cron: "10 4 * * *" # 04:10 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-compat-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  BUN_VERSION: "latest"
+  NODE_VERSION: "20"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  quality:
+    name: Quality (${{ matrix.job }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        job: [lint, "lint:oxlint", "lint:biome", type-check, test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: bun-daily-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
+      - run: bun run ${{ matrix.job == 'test' && 'test:ci' || matrix.job }}
+
+  e2e:
+    name: Playwright E2E (${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+    runs-on: ubuntu-latest
+    needs: quality
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4]
+        shardTotal: [4]
+    env:
+      SKIP_ENV_VALIDATION: "true"
+      NEXT_PUBLIC_SUPABASE_URL: https://api.${{ secrets.SITE_DOMAIN }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      NEXT_PUBLIC_APP_URL: https://${{ secrets.SITE_DOMAIN }}
+      NEXT_PUBLIC_SITE_URL: https://${{ secrets.SITE_DOMAIN }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: bun-daily-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
+      - name: Build production bundle
+        run: bun run build
+
+      - name: Run Playwright shard
+        run: bunx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+
+      - name: Upload blob report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.shardIndex }}
+          path: playwright-report/
+          retention-days: 7
+
+  compat-matrix:
+    name: Compatibility matrix (drift + health + CI)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Foodshareclub/foodshare-backend
+          path: backend
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+      - uses: actions/checkout@v4
+        with:
+          repository: Foodshareclub/foodshare-tools
+          path: tools
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+
+      - name: Run compat checks
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WEB_DIR: ${{ github.workspace }}
+          BACKEND_DIR: ${{ github.workspace }}/backend
+        run: bash "$GITHUB_WORKSPACE/tools/scripts/compat-check.sh"
+
+  ai-test-gap:
+    name: AI test-gap analysis (24h commits)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: Foodshareclub/foodshare-tools/.github/actions/ai-review@main
+        with:
+          mode: test-gap
+          since: "24 hours"

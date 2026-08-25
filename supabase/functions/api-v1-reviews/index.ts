@@ -117,21 +117,21 @@ async function getReviews(ctx: HandlerContext<unknown, QueryParams>): Promise<Re
   // Cache user review results (first page only, no cursor)
   if (query.userId && !cursor) {
     const cacheKey = CACHE_KEYS.reviews(query.userId, limit);
-    cache.set(cacheKey, {
-      items: resultItems.map(transformReview),
-      total: count || resultItems.length,
-    }, CACHE_TTLS.reviews);
+    cache.set(
+      cacheKey,
+      {
+        items: resultItems.map(transformReview),
+        total: count || resultItems.length,
+      },
+      CACHE_TTLS.reviews,
+    );
   }
 
-  return paginated(
-    resultItems.map(transformReview),
-    ctx,
-    {
-      offset: 0,
-      limit,
-      total: count || resultItems.length,
-    },
-  );
+  return paginated(resultItems.map(transformReview), ctx, {
+    offset: 0,
+    limit,
+    total: count || resultItems.length,
+  });
 }
 
 /**
@@ -250,28 +250,30 @@ function handleGet(ctx: HandlerContext<unknown, QueryParams>): Promise<Response>
 // Export Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: "api-v1-reviews",
-  version: "1.0.0",
-  requireAuth: false, // GET is public, POST requires auth
-  csrf: true,
-  rateLimit: {
-    limit: 30,
-    windowMs: 60000,
-    keyBy: "user",
-    skip: (ctx) => ctx.request.method === "GET",
-  },
-  routes: {
-    GET: {
-      querySchema,
-      handler: handleGet,
-      requireAuth: false,
+Deno.serve(
+  createAPIHandler({
+    service: "api-v1-reviews",
+    version: "1.0.0",
+    requireAuth: false, // GET is public, POST requires auth
+    csrf: true,
+    rateLimit: {
+      limit: 30,
+      windowMs: 60000,
+      keyBy: "user",
+      skip: (ctx) => ctx.request.method === "GET",
     },
-    POST: {
-      schema: submitReviewSchema,
-      handler: submitReview,
-      requireAuth: true,
-      idempotent: true,
+    routes: {
+      GET: {
+        querySchema,
+        handler: handleGet,
+        requireAuth: false,
+      },
+      POST: {
+        schema: submitReviewSchema,
+        handler: submitReview,
+        requireAuth: true,
+        idempotent: true,
+      },
     },
-  },
-}));
+  }),
+);

@@ -39,14 +39,14 @@ interface BackfillRequest {
   onlyUntranslated?: boolean; // Only fetch content without existing translations
 }
 
-interface BackfillResponse {
+type BackfillResponse = {
   success: boolean;
   challengesProcessed: number;
   totalTranslations: number;
   estimatedTimeMinutes: number;
   dryRun?: boolean;
   mode?: string;
-}
+};
 
 const TARGET_LOCALES_COUNT = 5; // ru, es, de, fr, pt (top 5)
 const FIELDS_PER_CHALLENGE = 2; // title, description
@@ -166,7 +166,11 @@ export default async function backfillChallengesHandler(
 
     // Fetch challenges based on mode
     let challenges:
-      | Array<{ id: number; challenge_title: string; challenge_description: string | null }>
+      | Array<{
+        id: number;
+        challenge_title: string;
+        challenge_description: string | null;
+      }>
       | null = null;
     let count: number | null = null;
     let error: Error | null = null;
@@ -189,7 +193,9 @@ export default async function backfillChallengesHandler(
       // Build query based on mode
       let query = supabase
         .from("challenges")
-        .select("id, challenge_title, challenge_description", { count: "exact" })
+        .select("id, challenge_title, challenge_description", {
+          count: "exact",
+        })
         .not("challenge_title", "is", null);
 
       if (mode === "incremental") {
@@ -252,9 +258,7 @@ export default async function backfillChallengesHandler(
     // If dry run, just return counts
     if (dryRun) {
       const totalTranslations = challenges.length * FIELDS_PER_CHALLENGE * TARGET_LOCALES_COUNT;
-      const estimatedTimeMinutes = Math.ceil(
-        (totalTranslations * SECONDS_PER_TRANSLATION) / 60,
-      );
+      const estimatedTimeMinutes = Math.ceil((totalTranslations * SECONDS_PER_TRANSLATION) / 60);
 
       return new Response(
         JSON.stringify({
@@ -281,7 +285,10 @@ export default async function backfillChallengesHandler(
       }
 
       if (challenge.challenge_description && challenge.challenge_description.trim().length > 0) {
-        fields.push({ name: "description", text: challenge.challenge_description });
+        fields.push({
+          name: "description",
+          text: challenge.challenge_description,
+        });
       }
 
       if (fields.length === 0) {
@@ -303,7 +310,9 @@ export default async function backfillChallengesHandler(
             error: response.error,
           });
         } else {
-          logger.info("Triggered translation for challenge", { challengeId: challenge.id });
+          logger.info("Triggered translation for challenge", {
+            challengeId: challenge.id,
+          });
         }
       } catch (error) {
         logger.warn("Error triggering translation for challenge", {
@@ -315,13 +324,13 @@ export default async function backfillChallengesHandler(
 
     // Don't await all - fire and forget, but wait a bit to ensure they're queued
     Promise.all(translationPromises).catch((error) => {
-      logger.error("Some translations failed", { error: (error as Error).message });
+      logger.error("Some translations failed", {
+        error: (error as Error).message,
+      });
     });
 
     const totalTranslations = challenges.length * FIELDS_PER_CHALLENGE * TARGET_LOCALES_COUNT;
-    const estimatedTimeMinutes = Math.ceil(
-      (totalTranslations * SECONDS_PER_TRANSLATION) / 60,
-    );
+    const estimatedTimeMinutes = Math.ceil((totalTranslations * SECONDS_PER_TRANSLATION) / 60);
 
     const response: BackfillResponse = {
       success: true,
@@ -350,7 +359,9 @@ export default async function backfillChallengesHandler(
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    logger.error("Challenge backfill error", { error: (error as Error).message });
+    logger.error("Challenge backfill error", {
+      error: (error as Error).message,
+    });
 
     // Mark job as failed (best effort - supabase may not be available)
     try {

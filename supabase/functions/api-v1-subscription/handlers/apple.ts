@@ -37,8 +37,8 @@ import { measureAsync, PerformanceTimer } from "../../_shared/performance.ts";
 // Configuration
 // =============================================================================
 
-const APP_BUNDLE_ID = Deno.env.get("APP_BUNDLE_ID") || "com.flutterflow.foodshare";
-const STRICT_VERIFICATION = Deno.env.get("APPLE_STRICT_VERIFICATION") !== "false";
+const getAppBundleId = () => Deno.env.get("APP_BUNDLE_ID") || "com.flutterflow.foodshare";
+const isStrictVerification = () => Deno.env.get("APPLE_STRICT_VERIFICATION") !== "false";
 
 // Cache verified payloads to avoid re-verification in parseEvent
 const verifiedPayloadCache = new Map<string, ResponseBodyV2DecodedPayload>();
@@ -52,28 +52,28 @@ const EVENT_TYPE_MAP: Record<
   NotificationType,
   SubscriptionEventType | ((subtype?: NotificationSubtype) => SubscriptionEventType)
 > = {
-  "SUBSCRIBED": (subtype) =>
+  SUBSCRIBED: (subtype) =>
     subtype === "RESUBSCRIBE" ? "subscription_reactivated" : "subscription_created",
-  "DID_RENEW": (subtype) =>
+  DID_RENEW: (subtype) =>
     subtype === "BILLING_RECOVERY" ? "billing_recovered" : "subscription_renewed",
-  "DID_FAIL_TO_RENEW": () => "billing_issue",
-  "GRACE_PERIOD_EXPIRED": () => "grace_period_expired",
-  "EXPIRED": () => "subscription_expired",
-  "REFUND": () => "refunded",
-  "REVOKE": () => "revoked",
-  "DID_CHANGE_RENEWAL_STATUS": (subtype) =>
+  DID_FAIL_TO_RENEW: () => "billing_issue",
+  GRACE_PERIOD_EXPIRED: () => "grace_period_expired",
+  EXPIRED: () => "subscription_expired",
+  REFUND: () => "refunded",
+  REVOKE: () => "revoked",
+  DID_CHANGE_RENEWAL_STATUS: (subtype) =>
     subtype === "AUTO_RENEW_DISABLED" ? "subscription_canceled" : "subscription_reactivated",
-  "DID_CHANGE_RENEWAL_PREF": () => "plan_changed",
-  "OFFER_REDEEMED": () => "subscription_created",
-  "RENEWAL_EXTENDED": () => "subscription_renewed",
-  "RENEWAL_EXTENSION": () => "subscription_renewed",
-  "PRICE_INCREASE": () => "price_change",
-  "REFUND_DECLINED": () => "subscription_reactivated",
-  "REFUND_REVERSED": () => "subscription_reactivated",
-  "TEST": () => "test",
-  "CONSUMPTION_REQUEST": () => "unknown",
-  "ONE_TIME_CHARGE": () => "unknown",
-  "EXTERNAL_PURCHASE_TOKEN": () => "unknown",
+  DID_CHANGE_RENEWAL_PREF: () => "plan_changed",
+  OFFER_REDEEMED: () => "subscription_created",
+  RENEWAL_EXTENDED: () => "subscription_renewed",
+  RENEWAL_EXTENSION: () => "subscription_renewed",
+  PRICE_INCREASE: () => "price_change",
+  REFUND_DECLINED: () => "subscription_reactivated",
+  REFUND_REVERSED: () => "subscription_reactivated",
+  TEST: () => "test",
+  CONSUMPTION_REQUEST: () => "unknown",
+  // "ONE_TIME_CHARGE": () => "unknown",
+  EXTERNAL_PURCHASE_TOKEN: () => "unknown",
 };
 
 function mapAppleEventType(
@@ -83,7 +83,10 @@ function mapAppleEventType(
   const mapping = EVENT_TYPE_MAP[notificationType];
 
   if (!mapping) {
-    logger.warn("Unknown Apple notification type", { notificationType, subtype });
+    logger.warn("Unknown Apple notification type", {
+      notificationType,
+      subtype,
+    });
     return "unknown";
   }
 
@@ -167,7 +170,7 @@ async function verifyNestedJWS<T>(
     });
 
     // Fall back to unverified decode for data extraction
-    if (!STRICT_VERIFICATION) {
+    if (!isStrictVerification()) {
       try {
         const decoded = decodeJWS<T>(signedData);
         logger.info(`Using unverified ${name} data`, context);
@@ -210,9 +213,10 @@ export const appleHandler: PlatformHandler = {
       const verified = await verifyAndDecodePayload(payload.signedPayload);
 
       // Validate bundle ID
-      if (verified.data.bundleId !== APP_BUNDLE_ID) {
+      const expectedBundleId = getAppBundleId();
+      if (verified.data.bundleId !== expectedBundleId) {
         logger.warn("Apple webhook: Bundle ID mismatch", {
-          expected: APP_BUNDLE_ID,
+          expected: expectedBundleId,
           received: verified.data.bundleId,
         });
         return false;
@@ -224,7 +228,10 @@ export const appleHandler: PlatformHandler = {
       timer.end({ success: true, bundleId: verified.data.bundleId });
       return true;
     } catch (error) {
-      timer.end({ success: false, error: error instanceof Error ? error.message : String(error) });
+      timer.end({
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
       logger.error(
         "Apple webhook verification failed",
         error instanceof Error ? error : new Error(String(error)),
@@ -259,21 +266,21 @@ export const appleHandler: PlatformHandler = {
     // Decode transaction info
     let transactionInfo: JWSTransactionDecodedPayload | undefined;
     if (decodedPayload.data.signedTransactionInfo) {
-      transactionInfo = await verifyNestedJWS<JWSTransactionDecodedPayload>(
+      transactionInfo = (await verifyNestedJWS<JWSTransactionDecodedPayload>(
         decodedPayload.data.signedTransactionInfo,
         "transaction_info",
         context,
-      ) ?? undefined;
+      )) ?? undefined;
     }
 
     // Decode renewal info
     let renewalInfo: JWSRenewalInfoDecodedPayload | undefined;
     if (decodedPayload.data.signedRenewalInfo) {
-      renewalInfo = await verifyNestedJWS<JWSRenewalInfoDecodedPayload>(
+      renewalInfo = (await verifyNestedJWS<JWSRenewalInfoDecodedPayload>(
         decodedPayload.data.signedRenewalInfo,
         "renewal_info",
         context,
-      ) ?? undefined;
+      )) ?? undefined;
     }
 
     // Build normalized subscription data

@@ -1,3 +1,4 @@
+import { logger } from "../../_shared/logger.ts";
 /**
  * UI Strings Handler
  * High-performance translation delivery for static UI strings
@@ -138,19 +139,16 @@ function cleanExpiredCache(): void {
   }
 }
 
-async function checkRateLimit(
-  supabase: SupabaseClient,
-  identifier: string,
-): Promise<boolean> {
+async function checkRateLimit(supabase: SupabaseClient, identifier: string): Promise<boolean> {
   try {
     const { data, error } = await supabase
       .from("rate_limits")
-      .select("request_count, window_start")
+      .select("request_count,window_start")
       .eq("identifier", identifier)
       .single();
 
     if (error && error.code !== "PGRST116") {
-      logger.error("Rate limit check error", error as Error);
+      logger.error("Rate limit check error", error as any);
       return true;
     }
 
@@ -190,7 +188,7 @@ export default async function uiStringsHandler(
   req: Request,
   corsHeaders: Record<string, string>,
 ): Promise<Response> {
-  const _startTime = Date.now();
+  // const _startTime = Date.now();
 
   try {
     const supabase = getSupabaseClient();
@@ -233,7 +231,7 @@ export default async function uiStringsHandler(
         });
       }
 
-      return new Response(cachedEntry.data, {
+      return new Response(cachedEntry.data as any, {
         status: 200,
         headers: {
           ...corsHeaders,
@@ -249,7 +247,7 @@ export default async function uiStringsHandler(
     // Fetch from database
     const { data: translation, error: dbError } = await supabase
       .from("translations")
-      .select("locale, messages, version")
+      .select("locale,messages,version")
       .eq("locale", locale)
       .single();
 
@@ -257,7 +255,7 @@ export default async function uiStringsHandler(
       // Fallback to English
       const { data: fallbackTranslation, error: fallbackError } = await supabase
         .from("translations")
-        .select("locale, messages, version")
+        .select("locale,messages,version")
         .eq("locale", DEFAULT_LOCALE)
         .single();
 
@@ -291,7 +289,7 @@ export default async function uiStringsHandler(
         platform,
       });
 
-      return new Response(compressedData, {
+      return new Response(compressedData as any, {
         status: 200,
         headers: {
           ...corsHeaders,
@@ -339,7 +337,7 @@ export default async function uiStringsHandler(
       platform,
     });
 
-    return new Response(compressedData, {
+    return new Response(compressedData as any, {
       status: 200,
       headers: {
         ...corsHeaders,
@@ -351,7 +349,7 @@ export default async function uiStringsHandler(
       },
     });
   } catch (error) {
-    logger.error("UI strings error", error as Error);
+    logger.error("UI strings error", error as any);
     return new Response(
       JSON.stringify({
         error: "Internal server error",

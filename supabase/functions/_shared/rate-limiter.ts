@@ -79,10 +79,7 @@ function startCleanup() {
  * Check rate limit using in-memory store
  * Fast but not suitable for distributed environments
  */
-export function checkMemoryRateLimit(
-  key: string,
-  config: RateLimitConfig,
-): RateLimitResult {
+export function checkMemoryRateLimit(key: string, config: RateLimitConfig): RateLimitResult {
   startCleanup();
 
   const now = Date.now();

@@ -10,7 +10,7 @@ MotherDuck was originally designed as the analytics layer for FoodShare, syncing
 
 ## Current Status
 
-> **⚠️ Important:** MotherDuck/DuckDB native binaries don't work in Vercel's serverless environment. Core analytics queries (`getAnalyticsSummary`, `getMonthlyGrowth`, `getDailyActiveUsers`) now use **Supabase directly** instead of MotherDuck.
+> **⚠️ Important:** MotherDuck/DuckDB native binaries don't work in Vercel's serverless environment (historical — pre-Vercel migration). Core analytics queries (`getAnalyticsSummary`, `getMonthlyGrowth`, `getDailyActiveUsers`) now use **Supabase directly** instead of MotherDuck.
 
 The sync infrastructure remains in place for:
 
@@ -47,7 +47,7 @@ MotherDuck (DuckDB cloud)
 | AI Analytics Actions | `foodshare-web/src/app/actions/analytics-ai.ts`       | LLM-powered queries and insights              |
 | Vault Integration    | `foodshare-web/src/lib/email/vault.ts`                | Secure token retrieval                        |
 
-> **Note:** The `analytics.ts` server actions now query Supabase directly because DuckDB native binaries are incompatible with Vercel's serverless environment. The MotherDuck service is only used for browser-based WASM queries in the admin panel.
+> **Note:** The `analytics.ts` server actions now query Supabase directly because DuckDB native binaries are incompatible with Vercel's serverless environment (historical — pre-Vercel migration). The MotherDuck service is only used for browser-based WASM queries in the admin panel.
 
 ### MotherDuck Tables
 
@@ -729,13 +729,13 @@ const response = await fetch("https://api.motherduck.com/v1/sql", {
 
 ## Changelog
 
-| Date       | Update                                                                     |
-| ---------- | -------------------------------------------------------------------------- |
-| 2026-01-04 | Expanded `AnalyticsSummary` with engagement metrics and 7-day active users |
-| 2026-01-04 | Migrated `getListingTypeDistribution()` to Supabase direct query           |
-| 2026-01-04 | Migrated core analytics to Supabase direct queries (Vercel compatibility)  |
-| 2026-01-03 | Added browser-based WASM sync page (`/admin/analytics/sync`)               |
-| 2026-01-03 | Added Next.js API route for sync (`/api/admin/sync-analytics`)             |
-| 2026-01-03 | v3.0.0 - Production implementation with incremental sync                   |
-| 2026-01-03 | Added partnership notes from Weyman Cohen conversation                     |
-| 2026-01-02 | Initial research document                                                  |
+| Date       | Update                                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------------------ |
+| 2026-01-04 | Expanded `AnalyticsSummary` with engagement metrics and 7-day active users                                   |
+| 2026-01-04 | Migrated `getListingTypeDistribution()` to Supabase direct query                                             |
+| 2026-01-04 | Migrated core analytics to Supabase direct queries (Vercel compatibility; historical — pre-Vercel migration) |
+| 2026-01-03 | Added browser-based WASM sync page (`/admin/analytics/sync`)                                                 |
+| 2026-01-03 | Added Next.js API route for sync (`/api/admin/sync-analytics`)                                               |
+| 2026-01-03 | v3.0.0 - Production implementation with incremental sync                                                     |
+| 2026-01-03 | Added partnership notes from Weyman Cohen conversation                                                       |
+| 2026-01-02 | Initial research document                                                                                    |

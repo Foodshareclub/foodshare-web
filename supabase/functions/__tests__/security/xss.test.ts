@@ -94,18 +94,10 @@ Deno.test("sanitizeHtml - escapes all XSS payloads", () => {
 
     // Should not contain unescaped < or >
     if (payload.includes("<")) {
-      assertEquals(
-        !sanitized.includes("<"),
-        true,
-        `Payload not sanitized: ${payload}`,
-      );
+      assertEquals(!sanitized.includes("<"), true, `Payload not sanitized: ${payload}`);
     }
     if (payload.includes(">")) {
-      assertEquals(
-        !sanitized.includes(">"),
-        true,
-        `Payload not sanitized: ${payload}`,
-      );
+      assertEquals(!sanitized.includes(">"), true, `Payload not sanitized: ${payload}`);
     }
   }
 });
@@ -124,14 +116,8 @@ Deno.test("sanitizeHtml - handles complex HTML injection", () => {
 // ============================================================================
 
 Deno.test("stripDangerousContent - removes script tags", () => {
-  assertEquals(
-    stripDangerousContent("<script>alert(1)</script>"),
-    "",
-  );
-  assertEquals(
-    stripDangerousContent("Hello<script>evil()</script>World"),
-    "HelloWorld",
-  );
+  assertEquals(stripDangerousContent("<script>alert(1)</script>"), "");
+  assertEquals(stripDangerousContent("Hello<script>evil()</script>World"), "HelloWorld");
 });
 
 Deno.test("stripDangerousContent - removes event handlers", () => {
@@ -150,9 +136,7 @@ Deno.test("stripDangerousContent - removes all HTML tags", () => {
 });
 
 Deno.test("stripDangerousContent - handles nested scripts", () => {
-  const result = stripDangerousContent(
-    "<scr<script>ipt>alert(1)</scr</script>ipt>",
-  );
+  const result = stripDangerousContent("<scr<script>ipt>alert(1)</scr</script>ipt>");
   assertEquals(result.includes("<script"), false);
   assertEquals(result.includes("</script"), false);
 });

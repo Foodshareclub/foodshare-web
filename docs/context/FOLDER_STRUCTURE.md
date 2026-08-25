@@ -68,18 +68,18 @@ foodshare/
 
 ### Directories
 
-| Directory         | Purpose                                           | Git Tracked     |
-| ----------------- | ------------------------------------------------- | --------------- |
-| **src/**          | Application source code                           | Yes             |
-| **messages/**     | next-intl translation JSON files                  | Yes             |
-| **public/**       | Static assets (images, manifest)                  | Yes             |
-| **context/**      | Project documentation                             | Yes             |
-| **docs/**         | Additional documentation                          | Yes             |
-| **scripts/**      | Build and utility scripts                         | Yes             |
-| **supabase/**     | Symlink → `../foodshare-backend` (shared backend) | Yes (symlink)   |
-| **.github/**      | GitHub Actions workflows                          | Yes             |
-| **node_modules/** | Bun dependencies                                  | No (.gitignore) |
-| **.next/**        | Next.js build output                              | No (.gitignore) |
+| Directory         | Purpose                                                          | Git Tracked                         |
+| ----------------- | ---------------------------------------------------------------- | ----------------------------------- |
+| **src/**          | Application source code                                          | Yes                                 |
+| **messages/**     | next-intl translation JSON files                                 | Yes                                 |
+| **public/**       | Static assets (images, manifest)                                 | Yes                                 |
+| **context/**      | Project documentation                                            | Yes                                 |
+| **docs/**         | Additional documentation                                         | Yes                                 |
+| **scripts/**      | Build and utility scripts                                        | Yes                                 |
+| **supabase/**     | Vendored copy → canonical source in `foodshare-backend/supabase` | Yes (re-sync after backend changes) |
+| **.github/**      | GitHub Actions workflows                                         | Yes                                 |
+| **node_modules/** | Bun dependencies                                                 | No (.gitignore)                     |
+| **.next/**        | Next.js build output                                             | No (.gitignore)                     |
 
 ---
 
@@ -543,7 +543,7 @@ useFilterStore.ts
 | **Add category page**    | `src/app/s/[category]/page.tsx` (add to CATEGORY_PATHS) |
 | **Add a Server Action**  | `src/app/actions/[entity].ts`                           |
 | **Add a component**      | `src/components/[category]/ComponentName.tsx`           |
-| **Add shadcn component** | Run `bunx shadcn@latest add [component]`                 |
+| **Add shadcn component** | Run `bunx shadcn@latest add [component]`                |
 | **Add Zustand store**    | `src/store/zustand/use[Name]Store.ts`                   |
 | **Add React Query hook** | `src/hooks/queries/use[Entity]Queries.ts`               |
 | **Add custom hook**      | `src/hooks/use[HookName].ts`                            |
@@ -561,7 +561,7 @@ useFilterStore.ts
 | **Create a mutation**    | Create Server Action in `src/app/actions/[entity].ts`       |
 | **Create a new feature** | 1. Create page 2. Add Server Actions 3. Create components   |
 | **Add a new language**   | Add JSON file to `messages/` → Update i18n config           |
-| **Add shadcn component** | `bunx shadcn@latest add [component-name]`                    |
+| **Add shadcn component** | `bunx shadcn@latest add [component-name]`                   |
 | **Change env vars**      | Update `.env.local` → Restart dev server                    |
 | **Deploy to production** | `bun run build` → Deploy `.next/` to Vercel                 |
 | **Debug client state**   | Install React Query DevTools / use Zustand devtools         |

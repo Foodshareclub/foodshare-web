@@ -158,7 +158,7 @@ export interface EmailServiceConfig {
 // ============================================================================
 
 export const DEFAULT_EMAIL_CONFIG: EmailServiceConfig = {
-  defaultFromEmail: "contact@foodshare.club",
+  defaultFromEmail: Deno.env.get("EMAIL_FROM") || "contact@foodshare.club",
   defaultFromName: "FoodShare",
   providerPriority: {
     auth: ["resend", "brevo", "mailersend", "aws_ses"],

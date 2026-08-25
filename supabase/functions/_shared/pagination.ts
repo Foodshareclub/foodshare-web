@@ -114,12 +114,7 @@ export function applyCursorPagination<
     limit: (n: number) => T;
     or: (filter: string) => T;
   },
->(
-  query: T,
-  options: PaginationOptions,
-  timestampColumn = "created_at",
-  idColumn = "id",
-): T {
+>(query: T, options: PaginationOptions, timestampColumn = "created_at", idColumn = "id"): T {
   const limit = normalizeLimit(options.limit);
   const direction = options.direction ?? "desc";
   const ascending = direction === "asc";
@@ -244,10 +239,7 @@ export function createPaginationHelper(options: PaginationOptions) {
     /**
      * Get SQL WHERE clause for cursor
      */
-    getCursorWhere(
-      timestampColumn = "created_at",
-      idColumn = "id",
-    ): string | null {
+    getCursorWhere(timestampColumn = "created_at", idColumn = "id"): string | null {
       if (!cursor) return null;
 
       const direction = options.direction ?? "desc";
@@ -321,9 +313,7 @@ export function createOffsetPagination<T>(
 /**
  * Parse pagination params from query string
  */
-export function parsePaginationParams(
-  query: Record<string, string>,
-): PaginationOptions {
+export function parsePaginationParams(query: Record<string, string>): PaginationOptions {
   return {
     limit: query.limit ? parseInt(query.limit, 10) : undefined,
     cursor: query.cursor,

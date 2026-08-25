@@ -77,14 +77,14 @@ export function formatPrometheusMetrics(): string {
     }
     lines.push("");
 
-    lines.push(
-      "# HELP foodshare_circuit_breaker_failures_total Total circuit breaker failures.",
-    );
+    lines.push("# HELP foodshare_circuit_breaker_failures_total Total circuit breaker failures.");
     lines.push("# TYPE foodshare_circuit_breaker_failures_total counter");
     for (const [name, cb] of cbEntries) {
       lines.push(
         `foodshare_circuit_breaker_failures_total{name="${
-          sanitizeLabel(name)
+          sanitizeLabel(
+            name,
+          )
         }"} ${cb.totalFailures}`,
       );
     }
@@ -122,8 +122,5 @@ export function formatPrometheusMetrics(): string {
  * Sanitize a label value for Prometheus (escape backslashes, quotes, newlines).
  */
 function sanitizeLabel(value: string): string {
-  return value
-    .replace(/\\/g, "\\\\")
-    .replace(/"/g, '\\"')
-    .replace(/\n/g, "\\n");
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
 }

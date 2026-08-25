@@ -207,10 +207,7 @@ async function getSyncStatus(mdToken: string): Promise<Array<Record<string, unkn
 // Batch Sync Logic
 // =============================================================================
 
-async function syncUsers(
-  mdToken: string,
-  mode: "full" | "incremental",
-): Promise<number> {
+async function syncUsers(mdToken: string, mode: "full" | "incremental"): Promise<number> {
   const supabase = getServiceRoleClient();
 
   if (mode === "full") {
@@ -231,7 +228,9 @@ async function syncUsers(
   }
 
   const { data: profiles, error } = await query;
-  if (error) throw new ServerError(`Failed to fetch profiles: ${error.message}`);
+  if (error) {
+    throw new ServerError(`Failed to fetch profiles: ${error.message}`);
+  }
   if (!profiles || profiles.length === 0) return 0;
 
   // Incremental: delete existing records before re-inserting
@@ -246,11 +245,17 @@ async function syncUsers(
       .map(
         (p) =>
           `(${escapeValue(p.id)}, ${escapeValue(p.created_time)}, ${escapeValue(p.updated_at)}, ${
-            escapeValue(p.email)
+            escapeValue(
+              p.email,
+            )
           }, ${escapeValue(p.nickname)}, ${escapeValue(p.first_name)}, ${
-            escapeValue(p.second_name)
+            escapeValue(
+              p.second_name,
+            )
           }, ${escapeValue(p.is_active)}, ${escapeValue(p.is_verified)}, ${
-            escapeValue(p.last_seen_at)
+            escapeValue(
+              p.last_seen_at,
+            )
           }, CURRENT_TIMESTAMP)`,
       )
       .join(",");
@@ -264,10 +269,7 @@ async function syncUsers(
   return profiles.length;
 }
 
-async function syncListings(
-  mdToken: string,
-  mode: "full" | "incremental",
-): Promise<number> {
+async function syncListings(mdToken: string, mode: "full" | "incremental"): Promise<number> {
   const supabase = getServiceRoleClient();
 
   if (mode === "full") {
@@ -288,7 +290,9 @@ async function syncListings(
   }
 
   const { data: posts, error } = await query;
-  if (error) throw new ServerError(`Failed to fetch listings: ${error.message}`);
+  if (error) {
+    throw new ServerError(`Failed to fetch listings: ${error.message}`);
+  }
   if (!posts || posts.length === 0) return 0;
 
   // Incremental: delete existing records before re-inserting
@@ -303,13 +307,19 @@ async function syncListings(
       .map(
         (p) =>
           `(${p.id}, ${escapeValue(p.created_at)}, ${escapeValue(p.updated_at)}, ${
-            escapeValue(p.post_name)
+            escapeValue(
+              p.post_name,
+            )
           }, ${escapeValue(p.post_type)}, ${escapeValue(p.is_active)}, ${
-            escapeValue(p.is_arranged)
+            escapeValue(
+              p.is_arranged,
+            )
           }, ${escapeValue(p.post_arranged_at)}, ${escapeValue(p.profile_id)}, ${
             p.post_views || 0
           }, ${p.post_like_counter || 0}, ${escapeValue(p.latitude)}, ${
-            escapeValue(p.longitude)
+            escapeValue(
+              p.longitude,
+            )
           }, CURRENT_TIMESTAMP)`,
       )
       .join(",");
@@ -351,10 +361,13 @@ async function handleGetStatus(ctx: HandlerContext): Promise<Response> {
   const mdToken = await getMotherDuckToken();
   const syncStatus = await getSyncStatus(mdToken);
 
-  return ok({
-    version: CONFIG.version,
-    tables: syncStatus,
-  }, ctx);
+  return ok(
+    {
+      version: CONFIG.version,
+      tables: syncStatus,
+    },
+    ctx,
+  );
 }
 
 async function handleSync(ctx: HandlerContext<SyncRequest>): Promise<Response> {
@@ -396,23 +409,25 @@ async function handleSync(ctx: HandlerContext<SyncRequest>): Promise<Response> {
 // Export Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: "api-v1-analytics",
-  version: CONFIG.version,
-  requireAuth: false, // Cron + internal; auth handled at config.toml level
-  csrf: false, // Service-to-service / cron function
-  rateLimit: {
-    limit: 10,
-    windowMs: 60000,
-    keyBy: "ip",
-  },
-  routes: {
-    GET: {
-      handler: handleGetStatus,
+Deno.serve(
+  createAPIHandler({
+    service: "api-v1-analytics",
+    version: CONFIG.version,
+    requireAuth: false, // Cron + internal; auth handled at config.toml level
+    csrf: false, // Service-to-service / cron function
+    rateLimit: {
+      limit: 10,
+      windowMs: 60000,
+      keyBy: "ip",
     },
-    POST: {
-      schema: syncSchema,
-      handler: handleSync,
+    routes: {
+      GET: {
+        handler: handleGetStatus,
+      },
+      POST: {
+        schema: syncSchema,
+        handler: handleSync,
+      },
     },
-  },
-}));
+  }),
+);

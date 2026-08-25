@@ -194,7 +194,7 @@ export async function handleBatchUpload(ctx: HandlerContext): Promise<Response> 
       // Create a sub-context for each file upload
       const subCtx: HandlerContext = { ...ctx, request: mockReq };
       const result = await handleUpload(subCtx);
-      const data = await result.clone().json() as ImageUploadResponse;
+      const data = (await result.clone().json()) as ImageUploadResponse;
 
       results.push(data);
       succeeded++;

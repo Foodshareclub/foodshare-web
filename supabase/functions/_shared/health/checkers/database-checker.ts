@@ -16,11 +16,7 @@ export async function checkDatabase(supabase: SupabaseClient): Promise<ServiceHe
   const start = performance.now();
 
   try {
-    const { error } = await supabase
-      .from("profiles")
-      .select("id")
-      .limit(1)
-      .maybeSingle();
+    const { error } = await supabase.from("profiles").select("id").limit(1).maybeSingle();
 
     const responseTimeMs = Math.round(performance.now() - start);
 

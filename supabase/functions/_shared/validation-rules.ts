@@ -296,8 +296,7 @@ export function evaluatePasswordStrength(password: string): PasswordStrength {
   const hasNumber = /[0-9]/.test(password);
   const hasSpecial = /[^A-Za-z0-9]/.test(password);
 
-  const strengthScore = [hasUppercase, hasLowercase, hasNumber, hasSpecial]
-    .filter(Boolean).length;
+  const strengthScore = [hasUppercase, hasLowercase, hasNumber, hasSpecial].filter(Boolean).length;
 
   switch (strengthScore) {
     case 0:
@@ -438,7 +437,9 @@ export function parseIntSafe(
   defaultValue: number = 0,
 ): number {
   if (value === null || value === undefined) return defaultValue;
-  if (typeof value === "number") return Number.isNaN(value) ? defaultValue : Math.floor(value);
+  if (typeof value === "number") {
+    return Number.isNaN(value) ? defaultValue : Math.floor(value);
+  }
 
   const parsed = parseInt(value, 10);
   return Number.isNaN(parsed) ? defaultValue : parsed;

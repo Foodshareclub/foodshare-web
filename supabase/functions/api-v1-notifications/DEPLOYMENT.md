@@ -23,7 +23,8 @@ Expected tables:
 
 ### 2. Environment Variables
 
-Set all required secrets in Supabase Dashboard → Project Settings → Edge Functions:
+Set all required secrets in Supabase Dashboard → Project Settings → Edge
+Functions:
 
 ```bash
 # Core Supabase (should already exist)
@@ -158,22 +159,27 @@ curl -X POST https://your-project.supabase.co/functions/v1/api-v1-notifications/
 
 1. Go to Resend Dashboard → Webhooks
 2. Click "Add Webhook"
-3. Set URL: `https://your-project.supabase.co/functions/v1/api-v1-notifications/webhook/resend`
+3. Set URL:
+   `https://your-project.supabase.co/functions/v1/api-v1-notifications/webhook/resend`
 4. Select events: `email.delivered`, `email.bounced`, `email.complained`
-5. Copy webhook secret and set: `supabase secrets set RESEND_WEBHOOK_SECRET=whsec_xxxxx`
+5. Copy webhook secret and set:
+   `supabase secrets set RESEND_WEBHOOK_SECRET=whsec_xxxxx`
 
 #### Brevo
 
 1. Go to Brevo Dashboard → Transactional → Settings → Webhooks
-2. Add webhook URL: `https://your-project.supabase.co/functions/v1/api-v1-notifications/webhook/brevo`
+2. Add webhook URL:
+   `https://your-project.supabase.co/functions/v1/api-v1-notifications/webhook/brevo`
 3. Select events: `delivered`, `hard_bounce`, `soft_bounce`, `complaint`
 4. Set secret in env
 
 #### MailerSend
 
 1. Go to MailerSend Dashboard → Webhooks
-2. Add webhook URL: `https://your-project.supabase.co/functions/v1/api-v1-notifications/webhook/mailersend`
-3. Select events: `activity.sent`, `activity.delivered`, `activity.bounced`, `activity.complained`
+2. Add webhook URL:
+   `https://your-project.supabase.co/functions/v1/api-v1-notifications/webhook/mailersend`
+3. Select events: `activity.sent`, `activity.delivered`, `activity.bounced`,
+   `activity.complained`
 4. Set secret in env
 
 ### Step 6: Set Up Cron Jobs

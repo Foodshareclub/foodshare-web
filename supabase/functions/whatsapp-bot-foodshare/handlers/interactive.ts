@@ -19,7 +19,7 @@ import {
   getShareMethodButtons,
 } from "../lib/interactive.ts";
 import * as emoji from "../lib/emojis.ts";
-import { APP_URL } from "../config/index.ts";
+import { getAppUrl } from "../config/index.ts";
 import { handleResendCode, handleStart, requireAuth } from "./auth.ts";
 
 type Language = "en" | "ru" | "de";
@@ -155,7 +155,7 @@ async function handleShareWeb(phoneNumber: string): Promise<void> {
 
   const lang = await getUserLanguage(phoneNumber);
 
-  const shareUrl = `${APP_URL}/share`;
+  const shareUrl = `${getAppUrl()}/share`;
   await sendTextMessage(
     phoneNumber,
     `${emoji.LINK} Open this link to share food:\n\n${shareUrl}\n\n${emoji.LIGHT_BULB} The web form is faster and easier!`,
@@ -256,13 +256,19 @@ async function handleProfile(phoneNumber: string): Promise<void> {
 
   if (!profile) return;
 
-  const profileUrl = `${APP_URL}/profile`;
+  const profileUrl = `${getAppUrl()}/profile`;
   await sendTextMessage(
     phoneNumber,
     `${emoji.USER} *${
-      t(lang, "profile.title")
+      t(
+        lang,
+        "profile.title",
+      )
     }*\n\n${emoji.EMAIL} ${profile.email}\n${emoji.VERIFIED} Verified\n\n${emoji.LINK} ${
-      t(lang, "profile.manageOnWebsite")
+      t(
+        lang,
+        "profile.manageOnWebsite",
+      )
     }\n${profileUrl}`,
   );
 
@@ -319,7 +325,7 @@ async function handleLeaderboard(phoneNumber: string): Promise<void> {
   // Get top contributors
   const { data: leaders, error } = await supabase
     .from("profiles")
-    .select("first_name, nickname")
+    .select("first_name,nickname")
     .limit(10);
 
   if (error || !leaders || leaders.length === 0) {
@@ -370,7 +376,10 @@ async function setLanguage(phoneNumber: string, newLang: Language): Promise<void
   await sendTextMessage(
     phoneNumber,
     `${emoji.SUCCESS} *${t(newLang, "language.changed")}*\n\n${
-      t(newLang, "language.selectedLanguage")
+      t(
+        newLang,
+        "language.selectedLanguage",
+      )
     }: ${langNames[newLang]}`,
   );
 
@@ -397,7 +406,7 @@ async function handleHelp(phoneNumber: string): Promise<void> {
  * Handle view post
  */
 async function handleViewPost(phoneNumber: string, postId: string): Promise<void> {
-  const postUrl = `${APP_URL}/food/${postId}`;
+  const postUrl = `${getAppUrl()}/food/${postId}`;
   await sendTextMessage(phoneNumber, `${emoji.LINK} View post:\n${postUrl}`);
 }
 
@@ -405,7 +414,7 @@ async function handleViewPost(phoneNumber: string, postId: string): Promise<void
  * Handle claim post
  */
 async function handleClaimPost(phoneNumber: string, postId: string): Promise<void> {
-  const postUrl = `${APP_URL}/food/${postId}`;
+  const postUrl = `${getAppUrl()}/food/${postId}`;
 
   await sendTextMessage(
     phoneNumber,

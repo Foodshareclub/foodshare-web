@@ -60,10 +60,7 @@ export class CircuitBreakerError extends Error {
   public readonly retryAfterMs: number;
 
   constructor(service: string, state: CircuitBreakerState, config: CircuitBreakerConfig) {
-    const retryAfterMs = Math.max(
-      0,
-      config.resetTimeoutMs - (Date.now() - state.lastFailureTime),
-    );
+    const retryAfterMs = Math.max(0, config.resetTimeoutMs - (Date.now() - state.lastFailureTime));
     super(`Circuit breaker is OPEN for ${service}. Retry after ${Math.ceil(retryAfterMs / 1000)}s`);
     this.name = "CircuitBreakerError";
     this.service = service;
@@ -204,7 +201,11 @@ export async function withCircuitBreaker<T>(
   // Merge options with defaults
   if (options) {
     const existingConfig = configs.get(serviceName);
-    configs.set(serviceName, { ...DEFAULT_CONFIG, ...existingConfig, ...options });
+    configs.set(serviceName, {
+      ...DEFAULT_CONFIG,
+      ...existingConfig,
+      ...options,
+    });
   }
 
   const config = getConfig(serviceName);
@@ -272,7 +273,11 @@ export function configureCircuit(
   options: Partial<CircuitBreakerConfig>,
 ): void {
   const existingConfig = configs.get(serviceName);
-  configs.set(serviceName, { ...DEFAULT_CONFIG, ...existingConfig, ...options });
+  configs.set(serviceName, {
+    ...DEFAULT_CONFIG,
+    ...existingConfig,
+    ...options,
+  });
 }
 
 /**

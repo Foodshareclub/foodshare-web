@@ -33,9 +33,9 @@ import { tracedFetch } from "../../_shared/traced-fetch.ts";
 // Configuration
 // =============================================================================
 
-const GOOGLE_PLAY_PACKAGE_NAME = Deno.env.get("GOOGLE_PLAY_PACKAGE_NAME") || "";
-const GOOGLE_CLOUD_PROJECT = Deno.env.get("GOOGLE_CLOUD_PROJECT") || "";
-const VERIFY_JWT = Deno.env.get("GOOGLE_PLAY_VERIFY_JWT") === "true";
+const getGooglePlayPackageName = () => Deno.env.get("GOOGLE_PLAY_PACKAGE_NAME") || "";
+const getGoogleCloudProject = () => Deno.env.get("GOOGLE_CLOUD_PROJECT") || "";
+const isVerifyJwt = () => Deno.env.get("GOOGLE_PLAY_VERIFY_JWT") === "true";
 
 // =============================================================================
 // Google Play Notification Types
@@ -174,10 +174,7 @@ function isValidPubSubMessage(parsed: unknown): parsed is GooglePlayPubSubMessag
   if (!msg.message || typeof msg.message !== "object") return false;
   const message = msg.message as Record<string, unknown>;
 
-  return (
-    typeof message.data === "string" &&
-    typeof message.messageId === "string"
-  );
+  return typeof message.data === "string" && typeof message.messageId === "string";
 }
 
 function decodeBase64(data: string): string {
@@ -186,7 +183,7 @@ function decodeBase64(data: string): string {
   } catch {
     // Handle URL-safe base64
     const padded = data.replace(/-/g, "+").replace(/_/g, "/");
-    const paddedLength = padded.length + (4 - (padded.length % 4)) % 4;
+    const paddedLength = padded.length + ((4 - (padded.length % 4)) % 4);
     return atob(padded.padEnd(paddedLength, "="));
   }
 }
@@ -255,7 +252,7 @@ async function getGoogleJWKS(): Promise<JsonWebKey[]> {
  * Verify a Google JWT token from the Authorization header.
  */
 async function verifyGoogleJWT(request: Request): Promise<boolean> {
-  if (!VERIFY_JWT) {
+  if (!isVerifyJwt()) {
     return true; // Skip verification if not configured
   }
 
@@ -288,9 +285,7 @@ async function verifyGoogleJWT(request: Request): Promise<boolean> {
 
     // Fetch JWKS and find matching key
     const keys = await getGoogleJWKS();
-    const matchingKey = keys.find(
-      (k) => (k as Record<string, unknown>).kid === header.kid,
-    );
+    const matchingKey = keys.find((k) => (k as Record<string, unknown>).kid === header.kid);
 
     if (!matchingKey) {
       logger.warn("No matching key found in Google JWKS", { kid: header.kid });
@@ -337,9 +332,10 @@ async function verifyGoogleJWT(request: Request): Promise<boolean> {
     }
 
     // Check audience if configured
-    if (GOOGLE_CLOUD_PROJECT && claims.aud && claims.aud !== GOOGLE_CLOUD_PROJECT) {
+    const gcpProject = getGoogleCloudProject();
+    if (gcpProject && claims.aud && claims.aud !== gcpProject) {
       logger.warn("JWT audience mismatch", {
-        expected: GOOGLE_CLOUD_PROJECT,
+        expected: gcpProject,
         got: claims.aud,
       });
       return false;
@@ -394,7 +390,8 @@ export const googlePlayHandler: PlatformHandler = {
 
     // Also accept requests with specific headers from GCP
     const gcpProject = request.headers.get("x-goog-project-id");
-    if (gcpProject && GOOGLE_CLOUD_PROJECT && gcpProject === GOOGLE_CLOUD_PROJECT) {
+    const configuredGcpProject = getGoogleCloudProject();
+    if (gcpProject && configuredGcpProject && gcpProject === configuredGcpProject) {
       return true;
     }
 
@@ -449,9 +446,10 @@ export const googlePlayHandler: PlatformHandler = {
         return false;
       }
 
+      const configuredPackageName = getGooglePlayPackageName();
       logger.info("Google Play notification decoded", {
         packageName: notification.packageName,
-        configuredPackage: GOOGLE_PLAY_PACKAGE_NAME || "(not configured)",
+        configuredPackage: configuredPackageName || "(not configured)",
         hasTestNotification: !!notification.testNotification,
         hasSubscriptionNotification: !!notification.subscriptionNotification,
       });
@@ -459,15 +457,19 @@ export const googlePlayHandler: PlatformHandler = {
       // For test notifications, always allow through
       if (notification.testNotification) {
         logger.info("Test notification - skipping package validation");
-        timer.end({ success: true, packageName: notification.packageName, isTest: true });
+        timer.end({
+          success: true,
+          packageName: notification.packageName,
+          isTest: true,
+        });
         return true;
       }
 
       // Validate package name for real notifications
-      if (GOOGLE_PLAY_PACKAGE_NAME && notification.packageName !== GOOGLE_PLAY_PACKAGE_NAME) {
+      if (configuredPackageName && notification.packageName !== configuredPackageName) {
         timer.end({ success: false, reason: "package_mismatch" });
         logger.warn("Google Play package name mismatch", {
-          expected: GOOGLE_PLAY_PACKAGE_NAME,
+          expected: configuredPackageName,
           received: notification.packageName,
         });
         return false;
@@ -476,7 +478,10 @@ export const googlePlayHandler: PlatformHandler = {
       timer.end({ success: true, packageName: notification.packageName });
       return true;
     } catch (error) {
-      timer.end({ success: false, error: error instanceof Error ? error.message : String(error) });
+      timer.end({
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
       logger.error(
         "Google Play webhook verification failed",
         error instanceof Error ? error : new Error(String(error)),

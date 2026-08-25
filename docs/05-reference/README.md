@@ -101,7 +101,7 @@ Vite 7.2.2           - Build tool
 Chakra UI 3.29.0     - Component library
 Redux Toolkit 2.10.1  - State management
 React Router 7.9.5    - Routing
-Lingui 5.6.0         - i18n
+next-intl           - i18n
 Framer Motion 12.23   - Animations
 ```
 
@@ -216,7 +216,6 @@ const url = createPhotoUrl(imagePath);
 ```typescript
 import React from 'react';
 import { Box, Text } from '@chakra-ui/react';
-import { Trans } from '@lingui/macro';
 
 type Props = {
   title: string;
@@ -225,7 +224,7 @@ type Props = {
 export const Component: React.FC<Props> = React.memo(({ title }) => {
   return (
     <Box>
-      <Text><Trans>{title}</Trans></Text>
+      <Text>{title}</Text>
     </Box>
   );
 });

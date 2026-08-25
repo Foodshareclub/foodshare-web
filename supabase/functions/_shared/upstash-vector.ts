@@ -19,6 +19,7 @@
 import { logger } from "./logger.ts";
 import { getCircuitStatus, withCircuitBreaker } from "./circuit-breaker.ts";
 import { RETRY_PRESETS, withRetry } from "./retry.ts";
+import { getSecretSync } from "./vault.ts";
 
 // =============================================================================
 // Configuration
@@ -139,11 +140,7 @@ export class UpstashVectorClient {
   /**
    * Execute a request to Upstash Vector
    */
-  private async request<T>(
-    method: string,
-    path: string,
-    body?: unknown,
-  ): Promise<T> {
+  private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.config.timeoutMs);
 
@@ -191,24 +188,17 @@ export class UpstashVectorClient {
   /**
    * Execute request with circuit breaker and retry
    */
-  private async safeRequest<T>(
-    method: string,
-    path: string,
-    body?: unknown,
-  ): Promise<T> {
+  private async safeRequest<T>(method: string, path: string, body?: unknown): Promise<T> {
     return withCircuitBreaker(
       "upstash-vector",
       async () => {
-        return withRetry(
-          () => this.request<T>(method, path, body),
-          {
-            ...RETRY_PRESETS.quick,
-            maxRetries: 2,
-            shouldRetry: (error) => {
-              return error instanceof VectorClientError && error.retryable;
-            },
+        return withRetry(() => this.request<T>(method, path, body), {
+          ...RETRY_PRESETS.quick,
+          maxRetries: 2,
+          shouldRetry: (error) => {
+            return error instanceof VectorClientError && error.retryable;
           },
-        );
+        });
       },
       {
         failureThreshold: this.config.circuitBreakerThreshold,
@@ -268,10 +258,7 @@ export class UpstashVectorClient {
   /**
    * Query vectors by similarity
    */
-  async query(
-    vector: number[],
-    options: VectorQueryOptions = {},
-  ): Promise<VectorQueryResult[]> {
+  async query(vector: number[], options: VectorQueryOptions = {}): Promise<VectorQueryResult[]> {
     const startTime = performance.now();
 
     const { topK = 10, includeMetadata = true, includeVectors = false, filter } = options;
@@ -397,8 +384,8 @@ let clientInstance: UpstashVectorClient | null = null;
  */
 export function getVectorClient(config?: Partial<VectorClientConfig>): UpstashVectorClient {
   if (!clientInstance) {
-    const url = config?.url || Deno.env.get("UPSTASH_VECTOR_REST_URL");
-    const token = config?.token || Deno.env.get("UPSTASH_VECTOR_REST_TOKEN");
+    const url = config?.url || getSecretSync("UPSTASH_VECTOR_REST_URL");
+    const token = config?.token || getSecretSync("UPSTASH_VECTOR_REST_TOKEN");
 
     if (!url || !token) {
       throw new VectorClientError(

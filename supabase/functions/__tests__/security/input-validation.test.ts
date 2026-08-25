@@ -202,7 +202,10 @@ Deno.test("validateEmailEnhanced - rejects invalid formats", () => {
 Deno.test("validateEmailEnhanced - rejects consecutive dots", () => {
   const result = validateEmailEnhanced("user..name@example.com");
   assertEquals(result.isValid, false);
-  assertEquals(result.errors.some((e) => e.includes("consecutive")), true);
+  assertEquals(
+    result.errors.some((e) => e.includes("consecutive")),
+    true,
+  );
 });
 
 Deno.test("validateEmailEnhanced - rejects overly long domains", () => {

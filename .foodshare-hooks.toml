@@ -1,0 +1,10 @@
+# foodshare-tools hook configuration (see docs/configuration.md in
+# Foodshareclub/foodshare-tools). Discovery: this file at repo root.
+#
+# supabase/ is a vendored byte-for-byte copy of foodshare-backend/supabase —
+# it must never be edited here, including to appease secret scanners. The
+# canonical copies are scanned authoritatively in foodshare-backend CI.
+
+[secrets]
+# substring-matched against file paths
+exclude_files = ["supabase/"]

@@ -132,32 +132,34 @@ function handleDelete(ctx: HandlerContext<unknown, ListQuery>): Promise<Response
 // Export Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: "api-v1-chat",
-  version: "2.0.0",
-  requireAuth: true,
-  csrf: true,
-  rateLimit: {
-    limit: 60,
-    windowMs: 60000,
-    keyBy: "user",
-  },
-  routes: {
-    GET: {
-      querySchema: listQuerySchema,
-      handler: handleGet,
+Deno.serve(
+  createAPIHandler({
+    service: "api-v1-chat",
+    version: "2.0.0",
+    requireAuth: true,
+    csrf: true,
+    rateLimit: {
+      limit: 60,
+      windowMs: 60000,
+      keyBy: "user",
     },
-    POST: {
-      handler: handlePost,
-      idempotent: true,
+    routes: {
+      GET: {
+        querySchema: listQuerySchema,
+        handler: handleGet,
+      },
+      POST: {
+        handler: handlePost,
+        idempotent: true,
+      },
+      PUT: {
+        querySchema: listQuerySchema,
+        handler: handlePut,
+      },
+      DELETE: {
+        querySchema: listQuerySchema,
+        handler: handleDelete,
+      },
     },
-    PUT: {
-      querySchema: listQuerySchema,
-      handler: handlePut,
-    },
-    DELETE: {
-      querySchema: listQuerySchema,
-      handler: handleDelete,
-    },
-  },
-}));
+  }),
+);

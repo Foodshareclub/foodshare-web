@@ -2,12 +2,13 @@
 
 ## Consolidation Overview
 
-This unified notification API consolidates **ALL** notification operations from these existing functions:
+This unified notification API consolidates **ALL** notification operations from
+these existing functions:
 
 ### 1. api-v1-email/
 
-**Status**: Can be kept or replaced
-**Migration**: All email operations now available at `/send` endpoint with `channels: ["email"]`
+**Status**: Can be kept or replaced **Migration**: All email operations now
+available at `/send` endpoint with `channels: ["email"]`
 
 ```typescript
 // Old
@@ -21,8 +22,8 @@ POST /api-v1-notifications/send
 
 ### 2. unified-notifications/
 
-**Status**: Can be kept or replaced
-**Migration**: Push notifications now at `/send` with `channels: ["push"]`
+**Status**: Can be kept or replaced **Migration**: Push notifications now at
+`/send` with `channels: ["push"]`
 
 ```typescript
 // Old
@@ -36,27 +37,27 @@ POST /api-v1-notifications/send
 
 ### 3. send-digest-notifications/
 
-**Status**: Replace with new endpoint
-**Migration**: Use `/digest/process` endpoint
+**Status**: Replace with new endpoint **Migration**: Use `/digest/process`
+endpoint
 
 ```typescript
 // Old
 POST / send - digest - notifications;
 {
-  frequency, limit, dryRun;
+  (frequency, limit, dryRun);
 }
 
 // New
 POST / api - v1 - notifications / digest / process;
 {
-  frequency, limit, dryRun;
+  (frequency, limit, dryRun);
 }
 ```
 
 ### 4. api-v1-notification-preferences/
 
-**Status**: Keep or replace
-**Migration**: All preference operations available at `/preferences`
+**Status**: Keep or replace **Migration**: All preference operations available
+at `/preferences`
 
 ```typescript
 // Old
@@ -72,7 +73,8 @@ PUT / api - v1 - notifications / preferences;
 
 ### Strategy 1: Gradual Migration (Recommended)
 
-Keep all existing functions and gradually migrate clients to the new unified API.
+Keep all existing functions and gradually migrate clients to the new unified
+API.
 
 **Advantages**:
 
@@ -139,34 +141,27 @@ export async function sendNotification(params: {
   channels?: string[];
   priority?: string;
 }) {
-  const { data, error } = await supabase.functions.invoke(
-    "api-v1-notifications/send",
-    {
-      body: params,
-    },
-  );
+  const { data, error } = await supabase.functions.invoke("api-v1-notifications/send", {
+    body: params,
+  });
 
   if (error) throw error;
   return data;
 }
 
 export async function getPreferences() {
-  const { data, error } = await supabase.functions.invoke(
-    "api-v1-notifications/preferences",
-    { method: "GET" },
-  );
+  const { data, error } = await supabase.functions.invoke("api-v1-notifications/preferences", {
+    method: "GET",
+  });
 
   if (error) throw error;
   return data;
 }
 
 export async function updatePreferences(settings: any) {
-  const { data, error } = await supabase.functions.invoke(
-    "api-v1-notifications/preferences",
-    {
-      body: settings,
-    },
-  );
+  const { data, error } = await supabase.functions.invoke("api-v1-notifications/preferences", {
+    body: settings,
+  });
 
   if (error) throw error;
   return data;

@@ -98,7 +98,9 @@ export async function verifyAssertion(
       return { verified: true, newCounter: authData.signCount, riskScore: 5 };
     }
 
-    logger.warn("Assertion verified without signature", { keyId: keyId.substring(0, 8) });
+    logger.warn("Assertion verified without signature", {
+      keyId: keyId.substring(0, 8),
+    });
     return {
       verified: true,
       newCounter: authData.signCount,

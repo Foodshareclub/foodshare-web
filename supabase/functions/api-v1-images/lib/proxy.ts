@@ -53,21 +53,24 @@ export async function handleProxy(ctx: HandlerContext): Promise<Response> {
     `image/${format}`,
   );
 
-  return ok({
-    data: {
-      url: publicUrl,
-      path: filename,
-      originalUrl: imageUrl,
+  return ok(
+    {
+      data: {
+        url: publicUrl,
+        path: filename,
+        originalUrl: imageUrl,
+      },
+      metadata: {
+        originalSize: imageData.length,
+        compressedSize: compressed.compressedSize,
+        savedBytes: imageData.length - compressed.compressedSize,
+        savedPercent: compressed.savedPercent,
+        format,
+        storage,
+      },
     },
-    metadata: {
-      originalSize: imageData.length,
-      compressedSize: compressed.compressedSize,
-      savedBytes: imageData.length - compressed.compressedSize,
-      savedPercent: compressed.savedPercent,
-      format,
-      storage,
-    },
-  }, ctx);
+    ctx,
+  );
 }
 
 /**
@@ -108,10 +111,7 @@ export async function handleUploadFromUrl(ctx: HandlerContext): Promise<Response
   );
 
   if (challengeId) {
-    await supabase
-      .from("challenges")
-      .update({ challenge_image: publicUrl })
-      .eq("id", challengeId);
+    await supabase.from("challenges").update({ challenge_image: publicUrl }).eq("id", challengeId);
   }
 
   const processingTime = Date.now() - startTime;
@@ -128,15 +128,18 @@ export async function handleUploadFromUrl(ctx: HandlerContext): Promise<Response
     storage,
   });
 
-  return ok({
-    challengeId,
-    publicUrl,
-    filePath: filename,
-    metadata: {
-      originalSize,
-      compressedSize: compressed.compressedSize,
-      savedBytes: originalSize - compressed.compressedSize,
-      storage,
+  return ok(
+    {
+      challengeId,
+      publicUrl,
+      filePath: filename,
+      metadata: {
+        originalSize,
+        compressedSize: compressed.compressedSize,
+        savedBytes: originalSize - compressed.compressedSize,
+        storage,
+      },
     },
-  }, ctx);
+    ctx,
+  );
 }

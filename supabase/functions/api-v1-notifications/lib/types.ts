@@ -7,8 +7,8 @@
  * @module api-v1-notifications/types
  */
 
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Buffer } from "node:buffer";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 
 // =============================================================================
 // Authentication
@@ -59,14 +59,9 @@ export type NotificationCategory =
   | "system"
   | "marketing";
 
-export type NotificationChannel = "push" | "email" | "sms" | "in_app";
+export type NotificationChannel = "push" | "email" | "sms" | "in_app" | "telegram";
 
-export type NotificationFrequency =
-  | "instant"
-  | "hourly"
-  | "daily"
-  | "weekly"
-  | "never";
+export type NotificationFrequency = "instant" | "hourly" | "daily" | "weekly" | "never";
 
 export type PriorityLevel = "critical" | "high" | "normal" | "low";
 
@@ -220,6 +215,8 @@ export interface ChannelPreferences {
   push?: ChannelPreference;
   email?: ChannelPreference;
   sms?: ChannelPreference;
+  telegram?: ChannelPreference;
+  in_app?: ChannelPreference;
 }
 
 export interface ChannelPreference {
@@ -231,6 +228,7 @@ export interface UpdatePreferencesRequest {
   push_enabled?: boolean;
   email_enabled?: boolean;
   sms_enabled?: boolean;
+  telegram_enabled?: boolean;
   phone_number?: string;
   quiet_hours?: Partial<QuietHours>;
   digest?: Partial<DigestSettings>;
@@ -445,6 +443,19 @@ export interface InAppPayload {
   category?: NotificationCategory;
 }
 
+export interface TelegramPayload {
+  telegramId?: number | string;
+  userId?: string;
+  title: string;
+  body: string;
+  imageUrl?: string;
+  actionUrl?: string;
+  actionText?: string;
+  category?: NotificationCategory;
+  data?: Record<string, unknown>;
+  inlineButtons?: Array<Array<{ text: string; url?: string; callback_data?: string }>>;
+}
+
 // =============================================================================
 // Device Management
 // =============================================================================
@@ -478,10 +489,7 @@ export interface ChannelAdapter {
   name: string;
   channel: NotificationChannel;
   send(payload: unknown, context: NotificationContext): Promise<ChannelDeliveryResult>;
-  sendBatch?(
-    payloads: unknown[],
-    context: NotificationContext,
-  ): Promise<ChannelDeliveryResult[]>;
+  sendBatch?(payloads: unknown[], context: NotificationContext): Promise<ChannelDeliveryResult[]>;
   healthCheck?(): Promise<{ healthy: boolean; latencyMs?: number; error?: string }>;
 }
 
@@ -499,4 +507,81 @@ export interface RateLimitResult {
   allowed: boolean;
   remaining: number;
   resetAt: string;
+}
+
+// =============================================================================
+// Webhook Trigger Payloads
+// =============================================================================
+
+export interface NewUserWebhookRecord {
+  id?: string;
+  email?: string;
+  first_name?: string;
+  second_name?: string;
+  nickname?: string;
+  telegram_id?: number | string;
+  username?: string;
+  avatar_url?: string;
+  email_verified?: boolean;
+  is_verified?: boolean;
+  onboarding_completed?: boolean;
+  created_time?: string;
+  created_at?: string;
+}
+
+export interface NewUserWebhookPayload {
+  record?: NewUserWebhookRecord;
+  type?: string;
+  table?: string;
+  schema?: string;
+}
+
+export interface UserVerifiedWebhookPayload {
+  record?: NewUserWebhookRecord;
+  type?: string;
+}
+
+export interface ForumPostWebhookRecord {
+  id?: string;
+  slug?: string;
+  forum_post_name?: string;
+  forum_post_description?: string;
+  forum_published?: boolean;
+  profile_id?: string;
+  created_at?: string;
+}
+
+export interface NewPostWebhookRecord {
+  id?: string;
+  name?: string;
+  description?: string;
+  category?: string;
+  image_url?: string;
+  profile_id?: string;
+  created_at?: string;
+}
+
+export interface NewReportWebhookRecord {
+  id?: string;
+  reason?: string;
+  details?: string;
+  reporter_id?: string;
+  profile_id?: string;
+  reported_id?: string;
+  target_id?: string;
+  item_type?: string;
+  created_at?: string;
+}
+
+export interface NewListingWebhookRecord {
+  id?: string;
+  title?: string;
+  name?: string;
+  description?: string;
+  location?: unknown;
+  latitude?: number;
+  longitude?: number;
+  category?: string;
+  profile_id?: string;
+  created_at?: string;
 }

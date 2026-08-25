@@ -39,14 +39,14 @@ interface BackfillRequest {
   onlyUntranslated?: boolean; // Only fetch content without existing translations
 }
 
-interface BackfillResponse {
+type BackfillResponse = {
   success: boolean;
   postsProcessed: number;
   totalTranslations: number;
   estimatedTimeMinutes: number;
   dryRun?: boolean;
   mode?: string;
-}
+};
 
 const TARGET_LOCALES_COUNT = 5; // ru, es, de, fr, pt (top 5 priority locales)
 const FIELDS_PER_POST = 2; // title, description
@@ -252,9 +252,7 @@ export default async function backfillPostsHandler(
     // If dry run, just return counts
     if (dryRun) {
       const totalTranslations = posts.length * FIELDS_PER_POST * TARGET_LOCALES_COUNT;
-      const estimatedTimeMinutes = Math.ceil(
-        (totalTranslations * SECONDS_PER_TRANSLATION) / 60,
-      );
+      const estimatedTimeMinutes = Math.ceil((totalTranslations * SECONDS_PER_TRANSLATION) / 60);
 
       return new Response(
         JSON.stringify({
@@ -315,13 +313,13 @@ export default async function backfillPostsHandler(
 
     // Don't await all - fire and forget, but wait a bit to ensure they're queued
     Promise.all(translationPromises).catch((error) => {
-      logger.error("Some translations failed", { error: (error as Error).message });
+      logger.error("Some translations failed", {
+        error: (error as Error).message,
+      });
     });
 
     const totalTranslations = posts.length * FIELDS_PER_POST * TARGET_LOCALES_COUNT;
-    const estimatedTimeMinutes = Math.ceil(
-      (totalTranslations * SECONDS_PER_TRANSLATION) / 60,
-    );
+    const estimatedTimeMinutes = Math.ceil((totalTranslations * SECONDS_PER_TRANSLATION) / 60);
 
     const response: BackfillResponse = {
       success: true,

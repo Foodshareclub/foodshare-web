@@ -32,19 +32,10 @@ Create `/Users/organic/dev/work/foodshare/frontend/vitest.config.ts`:
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
-import { lingui } from "@lingui/vite-plugin";
 import path from "path";
 
 export default defineConfig({
-  plugins: [
-    react({
-      babel: {
-        plugins: ["macros"],
-      },
-    }),
-    lingui(),
-    tsconfigPaths(),
-  ],
+  plugins: [react(), tsconfigPaths()],
   test: {
     globals: true,
     environment: "jsdom",
@@ -218,7 +209,7 @@ import { render, RenderOptions } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { ChakraProvider } from '@chakra-ui/react';
-import { I18nProvider } from '@lingui/react';
+import { NextIntlClientProvider } from 'next-intl';
 import { configureStore, PreloadedState } from '@reduxjs/toolkit';
 import { userReducer, productReducer, chatReducer } from '@/store';
 import { i18n } from '@/utils/i18n';
@@ -652,7 +643,7 @@ describe("userReducer", () => {
         error: null,
       } as any);
 
-      await store.dispatch(loginTC({ email: "test@example.com", password: "password123" }));
+      await store.dispatch(loginTC({ email: "test@example.com", password: TEST_PASSWORD }));
 
       const state = store.getState().user;
       expect(state.isAuth).toBe(true);
@@ -686,7 +677,7 @@ describe("userReducer", () => {
         error: null,
       } as any);
 
-      await store.dispatch(loginTC({ email: "test@example.com", password: "password123" }));
+      await store.dispatch(loginTC({ email: "test@example.com", password: TEST_PASSWORD }));
 
       // Then logout
       vi.mocked(supabase.auth.signOut).mockResolvedValue({ error: null } as any);

@@ -186,11 +186,7 @@ export function calculateDistanceKm(
  * @param radiusKm - Radius in kilometers
  * @returns true if point is within radius
  */
-export function isWithinRadius(
-  point: Coordinates,
-  center: Coordinates,
-  radiusKm: number,
-): boolean {
+export function isWithinRadius(point: Coordinates, center: Coordinates, radiusKm: number): boolean {
   return haversineDistance(point, center) <= radiusKm;
 }
 
@@ -302,11 +298,7 @@ export function milesToKm(miles: number): number {
  * @param to - Target unit
  * @returns Converted distance
  */
-export function convertDistance(
-  value: number,
-  from: DistanceUnit,
-  to: DistanceUnit,
-): number {
+export function convertDistance(value: number, from: DistanceUnit, to: DistanceUnit): number {
   if (from === to) return value;
   return from === "kilometers" ? kmToMiles(value) : milesToKm(value);
 }
@@ -401,7 +393,9 @@ export function detectUnitFromRequest(request: Request): DistanceUnit {
   const url = new URL(request.url);
   const explicitUnit = url.searchParams.get("unit");
   if (explicitUnit === "miles" || explicitUnit === "mi") return "miles";
-  if (explicitUnit === "kilometers" || explicitUnit === "km") return "kilometers";
+  if (explicitUnit === "kilometers" || explicitUnit === "km") {
+    return "kilometers";
+  }
 
   // Check X-User-Country header (set by geolocation middleware)
   const countryHeader = request.headers.get("X-User-Country");

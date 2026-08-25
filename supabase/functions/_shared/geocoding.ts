@@ -91,7 +91,10 @@ async function getFromDbCache(address: string): Promise<Coordinates | null> {
 
     if (data) {
       // Promote to in-memory cache for faster subsequent lookups
-      saveToMemoryCache(normalized, { latitude: data.latitude, longitude: data.longitude });
+      saveToMemoryCache(normalized, {
+        latitude: data.latitude,
+        longitude: data.longitude,
+      });
       return { latitude: data.latitude, longitude: data.longitude };
     }
   } catch (err) {
@@ -107,14 +110,15 @@ async function saveToDbCache(address: string, coordinates: Coordinates): Promise
   const normalized = normalizeAddress(address);
   try {
     const supabase = getSupabaseClient();
-    await supabase
-      .from("geocoding_cache")
-      .upsert({
+    await supabase.from("geocoding_cache").upsert(
+      {
         address: normalized,
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
         cached_at: new Date().toISOString(),
-      }, { onConflict: "address" });
+      },
+      { onConflict: "address" },
+    );
   } catch (err) {
     logger.warn("DB geocode cache write failed", { error: String(err) });
   }
@@ -184,7 +188,11 @@ async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Respo
           const delayMs = retryAfter
             ? parseInt(retryAfter) * 1000
             : RATE_LIMIT_DELAY_MS * Math.pow(2, attempt);
-          logger.warn("Nominatim rate limited", { delayMs, attempt: attempt + 1, retries });
+          logger.warn("Nominatim rate limited", {
+            delayMs,
+            attempt: attempt + 1,
+            retries,
+          });
           await new Promise((resolve) => setTimeout(resolve, delayMs));
           continue;
         }
@@ -199,7 +207,10 @@ async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Respo
       }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
-        logger.error("Nominatim request timeout", { attempt: attempt + 1, retries });
+        logger.error("Nominatim request timeout", {
+          attempt: attempt + 1,
+          retries,
+        });
       } else {
         logger.error("Nominatim fetch error", {
           attempt: attempt + 1,

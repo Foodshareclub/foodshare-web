@@ -98,7 +98,9 @@ async function getErrorRate(
   minutes: number,
 ): Promise<number> {
   try {
-    const { data, error } = await supabase.rpc("get_error_rate", { p_minutes: minutes });
+    const { data, error } = await supabase.rpc("get_error_rate", {
+      p_minutes: minutes,
+    });
     if (error) return 0;
     return data || 0;
   } catch {
@@ -424,7 +426,10 @@ async function handleTrackEvent(ctx: HandlerContext<EventRequest>): Promise<Resp
   });
 
   if (error) {
-    logger.error("Failed to track event", { error: error.message, eventType: body.eventType });
+    logger.error("Failed to track event", {
+      error: error.message,
+      eventType: body.eventType,
+    });
     return ok({ tracked: false, reason: "database_error" }, ctx);
   }
 
@@ -450,7 +455,7 @@ async function handleTrackBatchEvents(ctx: HandlerContext<BatchEventsRequest>): 
   }
 
   const validEvents = body.events.filter((event) =>
-    VALID_EVENT_TYPES.includes(event.eventType as typeof VALID_EVENT_TYPES[number])
+    VALID_EVENT_TYPES.includes(event.eventType as (typeof VALID_EVENT_TYPES)[number])
   );
 
   const results = await Promise.all(
@@ -488,11 +493,14 @@ async function handleTrackBatchEvents(ctx: HandlerContext<BatchEventsRequest>): 
 
   const trackedCount = results.filter((success) => success).length;
 
-  return ok({
-    tracked: trackedCount,
-    total: body.events.length,
-    skipped: body.events.length - trackedCount,
-  }, ctx);
+  return ok(
+    {
+      tracked: trackedCount,
+      total: body.events.length,
+      skipped: body.events.length - trackedCount,
+    },
+    ctx,
+  );
 }
 
 // =============================================================================
@@ -518,23 +526,25 @@ async function handlePost(
 // Export Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: "api-v1-metrics",
-  version: "2.0.0",
-  requireAuth: false, // Allow unauthenticated scraping, but check role if authenticated
-  rateLimit: {
-    limit: 100,
-    windowMs: 60000,
-    keyBy: "ip",
-  },
-  routes: {
-    GET: {
-      querySchema: metricsQuerySchema,
-      handler: handleGetMetrics,
+Deno.serve(
+  createAPIHandler({
+    service: "api-v1-metrics",
+    version: "2.0.0",
+    requireAuth: false, // Allow unauthenticated scraping, but check role if authenticated
+    rateLimit: {
+      limit: 100,
+      windowMs: 60000,
+      keyBy: "ip",
     },
-    POST: {
-      handler: handlePost,
-      requireAuth: true,
+    routes: {
+      GET: {
+        querySchema: metricsQuerySchema,
+        handler: handleGetMetrics,
+      },
+      POST: {
+        handler: handlePost,
+        requireAuth: true,
+      },
     },
-  },
-}));
+  }),
+);

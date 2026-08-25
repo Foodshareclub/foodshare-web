@@ -55,10 +55,10 @@ type HandlerFn = (
 // Lazy handler maps — each handler is loaded only when its route is first accessed
 const postHandlerLoaders: Record<string, () => Promise<HandlerFn>> = {
   "translate-content": lazyImport<HandlerFn>("./handlers/translate-content.ts"),
-  "prewarm": lazyImport<HandlerFn>("./handlers/prewarm.ts"),
+  prewarm: lazyImport<HandlerFn>("./handlers/prewarm.ts"),
   "translate-batch": lazyImport<HandlerFn>("./handlers/translate-batch.ts"),
   "ui-batch-translate": lazyImport<HandlerFn>("./handlers/ui-batch-translate.ts"),
-  "update": lazyImport<HandlerFn>("./handlers/update.ts"),
+  update: lazyImport<HandlerFn>("./handlers/update.ts"),
   "get-translations": lazyImport<HandlerFn>("./handlers/get-translations.ts"),
   "backfill-posts": lazyImport<HandlerFn>("./handlers/backfill-posts.ts"),
   "backfill-challenges": lazyImport<HandlerFn>("./handlers/backfill-challenges.ts"),
@@ -70,9 +70,9 @@ const postHandlerLoaders: Record<string, () => Promise<HandlerFn>> = {
 
 // Lazy handler maps for GET routes
 const getHandlerLoaders: Record<string, () => Promise<HandlerFn>> = {
-  "translations": lazyImport<HandlerFn>("./handlers/translations.ts"),
-  "audit": lazyImport<HandlerFn>("./handlers/audit.ts"),
-  "health": lazyImport<HandlerFn>("./handlers/health.ts"),
+  translations: lazyImport<HandlerFn>("./handlers/translations.ts"),
+  audit: lazyImport<HandlerFn>("./handlers/audit.ts"),
+  health: lazyImport<HandlerFn>("./handlers/health.ts"),
 };
 
 // Cache resolved handlers to avoid re-importing on subsequent requests
@@ -249,18 +249,20 @@ async function routeRequest(ctx: HandlerContext): Promise<Response> {
 // API Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: SERVICE,
-  version: "3",
-  requireAuth: false,
-  csrf: false,
-  rateLimit: {
-    limit: 100,
-    windowMs: 60_000,
-    keyBy: "ip",
-  },
-  routes: {
-    GET: { handler: routeRequest },
-    POST: { handler: routeRequest },
-  },
-}));
+Deno.serve(
+  createAPIHandler({
+    service: SERVICE,
+    version: "3",
+    requireAuth: false,
+    csrf: false,
+    rateLimit: {
+      limit: 100,
+      windowMs: 60_000,
+      keyBy: "ip",
+    },
+    routes: {
+      GET: { handler: routeRequest },
+      POST: { handler: routeRequest },
+    },
+  }),
+);

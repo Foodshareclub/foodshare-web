@@ -271,29 +271,38 @@ async function checkUpstashServices(supabase: any): Promise<{
   results: ServiceCheckResult[];
 }> {
   // All Upstash services for cross-platform FoodShare apps (iOS, Android, Web)
-  const { data: secrets, error: secretsError } = await supabase.rpc("get_secrets", {
+  const { data: secrets } = await supabase.rpc("get_secrets", {
     secret_names: [
       "UPSTASH_REDIS_REST_URL",
+      "UPSTASH_REDIS_URL",
       "UPSTASH_REDIS_REST_TOKEN",
+      "UPSTASH_REDIS_TOKEN",
       "UPSTASH_VECTOR_REST_URL",
+      "UPSTASH_VECTOR_URL",
       "UPSTASH_VECTOR_REST_TOKEN",
+      "UPSTASH_VECTOR_TOKEN",
       "QSTASH_URL",
+      "QSTASH_REST_URL",
       "QSTASH_TOKEN",
+      "QSTASH_REST_TOKEN",
       "UPSTASH_SEARCH_REST_URL",
+      "UPSTASH_SEARCH_URL",
       "UPSTASH_SEARCH_REST_TOKEN",
+      "UPSTASH_SEARCH_TOKEN",
     ],
   });
 
-  if (secretsError) {
-    return {
-      success: false,
-      summary: { total: 0, healthy: 0, unhealthy: 0, skipped: 0, avgResponseTime: 0 },
-      results: [{ service: "secrets", status: "error", message: secretsError.message }],
-    };
-  }
-
-  const getSecret = (name: string): string =>
-    secrets?.find((s: { name: string; value: string }) => s.name === name)?.value || "";
+  const getSecret = (...names: string[]): string => {
+    for (const name of names) {
+      const fromVault = secrets?.find(
+        (s: { name: string; value: string }) => s.name === name,
+      )?.value;
+      if (fromVault) return fromVault;
+      const fromEnv = Deno.env.get(name);
+      if (fromEnv) return fromEnv;
+    }
+    return "";
+  };
 
   // Check a service - returns "skipped" if not configured (vs "error" for failures)
   const checkService = async (
@@ -304,7 +313,12 @@ async function checkUpstashServices(supabase: any): Promise<{
     validateFn: (data: any, response: Response) => { ok: boolean; message: string },
   ): Promise<ServiceCheckResult & { skipped?: boolean }> => {
     if (!url || !token) {
-      return { service, status: "ok", message: "Not configured (skipped)", skipped: true };
+      return {
+        service,
+        status: "ok",
+        message: "Not configured (skipped)",
+        skipped: true,
+      };
     }
     try {
       const startTime = Date.now();
@@ -333,8 +347,8 @@ async function checkUpstashServices(supabase: any): Promise<{
   const results = await Promise.all([
     checkService(
       "Redis",
-      getSecret("UPSTASH_REDIS_REST_URL"),
-      getSecret("UPSTASH_REDIS_REST_TOKEN"),
+      getSecret("UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_URL"),
+      getSecret("UPSTASH_REDIS_REST_TOKEN", "UPSTASH_REDIS_TOKEN"),
       "/ping",
       (data) => ({
         ok: data.result === "PONG",
@@ -343,8 +357,8 @@ async function checkUpstashServices(supabase: any): Promise<{
     ),
     checkService(
       "Vector",
-      getSecret("UPSTASH_VECTOR_REST_URL"),
-      getSecret("UPSTASH_VECTOR_REST_TOKEN"),
+      getSecret("UPSTASH_VECTOR_REST_URL", "UPSTASH_VECTOR_URL"),
+      getSecret("UPSTASH_VECTOR_REST_TOKEN", "UPSTASH_VECTOR_TOKEN"),
       "/info",
       (data, res) => ({
         ok: res.ok && data.result,
@@ -353,8 +367,8 @@ async function checkUpstashServices(supabase: any): Promise<{
     ),
     checkService(
       "QStash",
-      getSecret("QSTASH_URL"),
-      getSecret("QSTASH_TOKEN"),
+      getSecret("QSTASH_URL", "QSTASH_REST_URL"),
+      getSecret("QSTASH_TOKEN", "QSTASH_REST_TOKEN"),
       "/v2/schedules",
       (data, res) => ({
         ok: res.ok,
@@ -363,8 +377,8 @@ async function checkUpstashServices(supabase: any): Promise<{
     ),
     checkService(
       "Search",
-      getSecret("UPSTASH_SEARCH_REST_URL"),
-      getSecret("UPSTASH_SEARCH_REST_TOKEN"),
+      getSecret("UPSTASH_SEARCH_REST_URL", "UPSTASH_SEARCH_URL"),
+      getSecret("UPSTASH_SEARCH_REST_TOKEN", "UPSTASH_SEARCH_TOKEN"),
       "/info",
       (data, res) => ({
         ok: res.ok && data.result,
@@ -398,37 +412,43 @@ async function checkUpstashServices(supabase: any): Promise<{
 // =============================================================================
 
 export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
-  const { supabase, ctx: requestCtx } = ctx;
-  const url = new URL(requestCtx?.url || "http://localhost");
+  const { supabase, request } = ctx;
+  const url = new URL(request.url || "http://localhost");
   const checkType = url.searchParams.get("check") || "ping";
 
   // Get Redis credentials
   const requestMetadata = {
-    ip_address: requestCtx?.ip || "unknown",
-    user_agent: requestCtx?.userAgent || "unknown",
-    request_id: requestCtx?.requestId,
+    ip_address: request.headers.get("x-forwarded-for") || "unknown",
+    user_agent: request.headers.get("user-agent") || "unknown",
+    request_id: request.headers.get("x-request-id") || "unknown",
   };
 
   // Quick ping (no credentials needed for basic status)
   if (checkType === "ping") {
-    return ok({
-      success: true,
-      status: isCircuitBreakerOpen() ? "degraded" : "healthy",
-      version: CONFIG.version,
-      circuitBreaker: circuitBreaker.state,
-      timestamp: new Date().toISOString(),
-    }, ctx);
+    return ok(
+      {
+        success: true,
+        status: isCircuitBreakerOpen() ? "degraded" : "healthy",
+        version: CONFIG.version,
+        circuitBreaker: circuitBreaker.state,
+        timestamp: new Date().toISOString(),
+      },
+      ctx,
+    );
   }
 
   // All Upstash services check
   if (checkType === "services") {
     const servicesHealth = await checkUpstashServices(supabase);
     logger.info("Upstash services check completed", servicesHealth.summary);
-    return ok({
-      ...servicesHealth,
-      version: CONFIG.version,
-      timestamp: new Date().toISOString(),
-    }, ctx);
+    return ok(
+      {
+        ...servicesHealth,
+        version: CONFIG.version,
+        timestamp: new Date().toISOString(),
+      },
+      ctx,
+    );
   }
 
   // Detailed Redis health check
@@ -446,12 +466,15 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
   ]);
 
   if (urlResult.error || tokenResult.error || !urlResult.data || !tokenResult.data) {
-    return ok({
-      status: "unhealthy",
-      error: "Failed to retrieve Redis credentials",
-      version: CONFIG.version,
-      timestamp: new Date().toISOString(),
-    }, ctx);
+    return ok(
+      {
+        status: "unhealthy",
+        error: "Failed to retrieve Redis credentials",
+        version: CONFIG.version,
+        timestamp: new Date().toISOString(),
+      },
+      ctx,
+    );
   }
 
   const healthResult = await performDetailedHealthCheck(urlResult.data, tokenResult.data);
@@ -462,9 +485,12 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
     alerts: healthResult.alerts.length,
   });
 
-  return ok({
-    ...healthResult,
-    version: CONFIG.version,
-    timestamp: new Date().toISOString(),
-  }, ctx);
+  return ok(
+    {
+      ...healthResult,
+      version: CONFIG.version,
+      timestamp: new Date().toISOString(),
+    },
+    ctx,
+  );
 }

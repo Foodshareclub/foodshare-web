@@ -2,6 +2,8 @@
 
 Next.js 16 App Router + React 19 + TypeScript 5 + Tailwind CSS 4 + Self-hosted Supabase + shadcn/ui
 
+Node 20 is the GitHub Actions runtime; Bun latest for local tooling.
+
 **Self-hosted Supabase:**
 
 - Studio (dashboard): https://studio.foodshare.club
@@ -18,15 +20,15 @@ All deployments are **fully automated** via GitHub Actions in full scale. **Neve
 
 ## Commands
 
-| Command                     | Purpose                           |
-| --------------------------- | --------------------------------- |
-| `bun run dev`               | Dev server (Turbopack, port 3000) |
-| `bun run build`             | Production build                  |
-| `bun run type-check`        | TypeScript checking (`bunx tsc`)  |
-| `bun run lint:fix`          | ESLint with auto-fix              |
-| `bun run test:ci`           | Run all tests with bun:test       |
-| `bun run test:build`        | Type-check + lint + build         |
-| `bun run translations:sync` | Sync translations to Supabase     |
+| Command                     | Purpose                                                         |
+| --------------------------- | --------------------------------------------------------------- |
+| `bun run dev`               | Dev server (Turbopack, port 3000)                               |
+| `bun run build`             | Production build                                                |
+| `bun run type-check`        | TypeScript checking (`bunx tsc`)                                |
+| `bun run lint:fix`          | oxlint (primary), biome format, eslint residual; runs all three |
+| `bun run test:ci`           | Run all tests with bun:test                                     |
+| `bun run test:build`        | Type-check + lint + build                                       |
+| `bun run translations:sync` | Sync translations to Supabase                                   |
 
 ## Critical Rules
 
@@ -56,13 +58,13 @@ All deployments are **fully automated** via GitHub Actions in full scale. **Neve
 
 ## State Management
 
-| Pattern           | Use Case                                | Location                |
-| ----------------- | --------------------------------------- | ----------------------- |
-| Server Components | Data fetching, initial page load        | `src/app/**/page.tsx`   |
-| Server Actions    | Mutations, form submissions             | `src/app/actions/*.ts`  |
-| React Query       | Client-side caching, optimistic updates | `src/hooks/queries/`    |
-| Zustand           | Lightweight client state (UI, chat)     | `src/store/zustand/`    |
-| React Context     | Auth session, theme                     | `src/app/providers.tsx` |
+| Pattern           | Use Case                                                                                                                                  | Location                |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| Server Components | Data fetching, initial page load                                                                                                          | `src/app/**/page.tsx`   |
+| Server Actions    | Mutations, form submissions                                                                                                               | `src/app/actions/*.ts`  |
+| React Query       | Client-side caching, optimistic updates (deprecated — legacy admin/realtime only; new data fetching = Server Components + Server Actions) | `src/hooks/queries/`    |
+| Zustand           | Lightweight client state (UI, chat)                                                                                                       | `src/store/zustand/`    |
+| React Context     | Auth session, theme                                                                                                                       | `src/app/providers.tsx` |
 
 ## Project Structure
 
@@ -85,20 +87,18 @@ src/
 
 proxy.ts                # Next.js 16 Proxy (NOT middleware.ts)
 messages/               # next-intl translations (21 languages)
-supabase/ -> ../foodshare-backend  # SYMLINK
+supabase/               # Vendored copy — canonical source lives in foodshare-backend/supabase; re-sync after backend schema/function changes
 ```
 
 ## Key Patterns
 
 **i18n**: `next-intl` with 21 languages. Translations in `/messages/{locale}.json`. Locales: en, cs, de, es, fr, pt, ru, uk, zh, hi, ar (RTL), it, pl, nl, ja, ko, tr, vi, id, th, sv.
 
-**OG Images**: `opengraph-image.tsx` files use edge runtime, fetch live stats via `getOGStats()`, apply seasonal theming.
-
 **Admin check flow**: `checkUserIsAdmin()` (admin-check.ts) -> `createAdminClient()` (service role) -> bypasses RLS on `user_roles`. Used by: proxy.ts, auth.ts (getAuthSession), admin/layout.tsx.
 
 ## Backend Integration
 
-`supabase/` is a **symlink** to `../foodshare-backend`. Changes to Edge Functions, migrations, or RLS policies affect ALL platforms (Web, iOS, Android).
+`supabase/` is a **vendored copy** — canonical source lives in `foodshare-backend/supabase`; re-sync after backend schema/function changes. Changes to Edge Functions, migrations, or RLS policies affect ALL platforms (Web, iOS, Android).
 
 | Task                                                | Where                |
 | --------------------------------------------------- | -------------------- |
@@ -114,7 +114,7 @@ See `foodshare-backend/CLAUDE.md` for Edge Function patterns, security docs, and
 - **Type errors with Supabase** -- Regenerate types: `supabase gen types typescript`
 - **Hydration mismatch** -- Client-only code in Server Components
 - **AuthUser import error** -- Import from `@/lib/data/auth`, NOT `@/app/actions/auth`
-- **Edge Function not found** -- `supabase/` is a symlink; work in `foodshare-backend/` directly
+- **Edge Function not found** -- `supabase/` is a stale vendored copy; work in `foodshare-backend/` directly
 - **Migration conflicts** -- Backend changes affect all platforms; coordinate across iOS/Android
 
 ## Architecture Decision Records

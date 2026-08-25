@@ -84,21 +84,27 @@ Deno.test("Response Format - Custom status code", () => {
 
 Deno.test("Response Format - Cache headers", () => {
   const data = { cached: true };
-  const response = buildSuccessResponse(data, mockCorsHeaders, { cacheTTL: 300 });
+  const response = buildSuccessResponse(data, mockCorsHeaders, {
+    cacheTTL: 300,
+  });
 
   assertEquals(response.headers.get("Cache-Control"), "public, max-age=300");
 });
 
 Deno.test("Response Format - Version header", () => {
   const data = { versioned: true };
-  const response = buildSuccessResponse(data, mockCorsHeaders, { version: "2.0" });
+  const response = buildSuccessResponse(data, mockCorsHeaders, {
+    version: "2.0",
+  });
 
   assertExists(response.headers.get("X-API-Version"));
 });
 
 Deno.test("Response Format - Error with retry-after", () => {
   const error = new AppError("Rate limited", "RATE_LIMITED", 429);
-  const response = buildErrorResponse(error, mockCorsHeaders, { retryAfterMs: 60000 });
+  const response = buildErrorResponse(error, mockCorsHeaders, {
+    retryAfterMs: 60000,
+  });
 
   assertEquals(response.status, 429);
   assertEquals(response.headers.get("Retry-After"), "60");

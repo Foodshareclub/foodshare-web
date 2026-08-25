@@ -3,7 +3,8 @@
  */
 
 import { logger } from "../../_shared/logger.ts";
-import { sendMessage } from "../services/telegram-api.ts";
+import { sendMessage } from "../../_shared/telegram-client.ts";
+import { getAdminClient } from "../../_shared/supabase.ts";
 import { getUserState, setUserState } from "../services/user-state.ts";
 import {
   createProfile,
@@ -17,6 +18,7 @@ import { getUserLanguage, type Language, t } from "../lib/i18n.ts";
 import { getMainMenuKeyboard } from "../lib/keyboards.ts";
 import * as emoji from "../lib/emojis.ts";
 import * as msg from "../lib/messages.ts";
+import { getAppUrl } from "../config/index.ts";
 import type { TelegramUser } from "../types/index.ts";
 
 // Brute-force protection constants
@@ -125,7 +127,12 @@ export async function handleEmailInput(
   if (!emailRegex.test(email)) {
     const keyboard = {
       inline_keyboard: [
-        [{ text: `${emoji.BACK} ${t(lang, "common.back")}`, callback_data: "back_to_start" }],
+        [
+          {
+            text: `${emoji.BACK} ${t(lang, "common.back")}`,
+            callback_data: "back_to_start",
+          },
+        ],
       ],
     };
 
@@ -154,7 +161,12 @@ export async function handleEmailInput(
     if (existingProfile && existingProfile.id !== telegramProfile.id) {
       const keyboard = {
         inline_keyboard: [
-          [{ text: `${emoji.BACK} ${t(lang, "common.back")}`, callback_data: "back_to_start" }],
+          [
+            {
+              text: `${emoji.BACK} ${t(lang, "common.back")}`,
+              callback_data: "back_to_start",
+            },
+          ],
         ],
       };
 
@@ -191,7 +203,12 @@ export async function handleEmailInput(
     if (existingProfile.telegram_id && existingProfile.telegram_id !== telegramUser.id) {
       const keyboard = {
         inline_keyboard: [
-          [{ text: `${emoji.BACK} ${t(lang, "common.back")}`, callback_data: "back_to_start" }],
+          [
+            {
+              text: `${emoji.BACK} ${t(lang, "common.back")}`,
+              callback_data: "back_to_start",
+            },
+          ],
         ],
       };
 
@@ -220,7 +237,12 @@ export async function handleEmailInput(
     if (emailSent) {
       const keyboard = {
         inline_keyboard: [
-          [{ text: `${emoji.BACK} ${t(lang, "common.back")}`, callback_data: "back_to_start" }],
+          [
+            {
+              text: `${emoji.BACK} ${t(lang, "common.back")}`,
+              callback_data: "back_to_start",
+            },
+          ],
         ],
       };
 
@@ -259,7 +281,12 @@ export async function handleEmailInput(
     } else {
       const keyboard = {
         inline_keyboard: [
-          [{ text: `${emoji.BACK} ${t(lang, "common.back")}`, callback_data: "back_to_start" }],
+          [
+            {
+              text: `${emoji.BACK} ${t(lang, "common.back")}`,
+              callback_data: "back_to_start",
+            },
+          ],
         ],
       };
 
@@ -281,7 +308,12 @@ export async function handleEmailInput(
     if (existingProfile.telegram_id && existingProfile.telegram_id !== telegramUser.id) {
       const keyboard = {
         inline_keyboard: [
-          [{ text: `${emoji.BACK} ${t(lang, "common.back")}`, callback_data: "back_to_start" }],
+          [
+            {
+              text: `${emoji.BACK} ${t(lang, "common.back")}`,
+              callback_data: "back_to_start",
+            },
+          ],
         ],
       };
 
@@ -319,7 +351,12 @@ export async function handleEmailInput(
     if (emailSent) {
       const keyboard = {
         inline_keyboard: [
-          [{ text: `${emoji.BACK} ${t(lang, "common.back")}`, callback_data: "back_to_start" }],
+          [
+            {
+              text: `${emoji.BACK} ${t(lang, "common.back")}`,
+              callback_data: "back_to_start",
+            },
+          ],
         ],
       };
 
@@ -355,7 +392,12 @@ export async function handleEmailInput(
     } else {
       const keyboard = {
         inline_keyboard: [
-          [{ text: `${emoji.BACK} ${t(lang, "common.back")}`, callback_data: "back_to_start" }],
+          [
+            {
+              text: `${emoji.BACK} ${t(lang, "common.back")}`,
+              callback_data: "back_to_start",
+            },
+          ],
         ],
       };
 
@@ -387,7 +429,12 @@ export async function handleEmailInput(
     if (emailSent) {
       const keyboard = {
         inline_keyboard: [
-          [{ text: `${emoji.BACK} ${t(lang, "common.back")}`, callback_data: "back_to_start" }],
+          [
+            {
+              text: `${emoji.BACK} ${t(lang, "common.back")}`,
+              callback_data: "back_to_start",
+            },
+          ],
         ],
       };
 
@@ -424,7 +471,12 @@ export async function handleEmailInput(
     } else {
       const keyboard = {
         inline_keyboard: [
-          [{ text: `${emoji.BACK} ${t(lang, "common.back")}`, callback_data: "back_to_start" }],
+          [
+            {
+              text: `${emoji.BACK} ${t(lang, "common.back")}`,
+              callback_data: "back_to_start",
+            },
+          ],
         ],
       };
 
@@ -458,7 +510,12 @@ export async function handleEmailInput(
   if (!newProfile) {
     const keyboard = {
       inline_keyboard: [
-        [{ text: `${emoji.BACK} ${t(lang, "common.back")}`, callback_data: "back_to_start" }],
+        [
+          {
+            text: `${emoji.BACK} ${t(lang, "common.back")}`,
+            callback_data: "back_to_start",
+          },
+        ],
       ],
     };
 
@@ -478,7 +535,12 @@ export async function handleEmailInput(
   if (emailSent) {
     const keyboard = {
       inline_keyboard: [
-        [{ text: `${emoji.BACK} ${t(lang, "common.back")}`, callback_data: "back_to_start" }],
+        [
+          {
+            text: `${emoji.BACK} ${t(lang, "common.back")}`,
+            callback_data: "back_to_start",
+          },
+        ],
       ],
     };
 
@@ -517,7 +579,12 @@ export async function handleEmailInput(
 
     const keyboard = {
       inline_keyboard: [
-        [{ text: `${emoji.BACK} ${t(lang, "common.back")}`, callback_data: "back_to_start" }],
+        [
+          {
+            text: `${emoji.BACK} ${t(lang, "common.back")}`,
+            callback_data: "back_to_start",
+          },
+        ],
       ],
     };
 
@@ -851,6 +918,179 @@ export async function handleResendCode(telegramUser: TelegramUser, chatId: numbe
         "Email Delivery Failed",
         "We couldn't send the verification email.\n\n" +
           `${emoji.INFO} Please try again in a moment.`,
+      ),
+    );
+  }
+}
+
+/**
+ * Handle 1-Click Cryptographic Deep Link Token (e.g. /start link_<token>)
+ */
+export async function handleDeepLinkToken(
+  token: string,
+  telegramUser: TelegramUser,
+  chatId: number,
+  lang: Language = "en",
+): Promise<boolean> {
+  const cleanToken = token.trim();
+  if (!cleanToken) {
+    await sendMessage(
+      chatId,
+      msg.errorMessage("Invalid Link", "The link you provided is invalid."),
+    );
+    return false;
+  }
+
+  logger.info("Claiming Telegram link token", {
+    userId: telegramUser.id,
+    tokenPrefix: cleanToken.substring(0, 8),
+  });
+
+  try {
+    const supabase = getAdminClient();
+    const { data, error } = await supabase.rpc("claim_telegram_link_token", {
+      p_token: cleanToken,
+      p_telegram_id: telegramUser.id,
+      p_username: telegramUser.username || null,
+      p_first_name: telegramUser.first_name || null,
+    });
+
+    if (error || !data || data.success === false) {
+      const errMsg = data?.error || error?.message || "Invalid or expired link token.";
+      logger.warn("Failed to claim Telegram link token", {
+        error: errMsg,
+        userId: telegramUser.id,
+      });
+
+      const keyboard = {
+        inline_keyboard: [
+          [
+            {
+              text: "🔗 Open FoodShare Settings",
+              url: `${getAppUrl()}/settings/login-and-security`,
+            },
+          ],
+        ],
+      };
+
+      await sendMessage(
+        chatId,
+        msg.errorMessage(
+          "Link Expired or Invalid",
+          `We couldn't link your account.\n\n${emoji.INFO} ${errMsg}\n\n` +
+            `Please visit your FoodShare settings to generate a new connection link.`,
+        ),
+        { reply_markup: keyboard },
+      );
+      return false;
+    }
+
+    // Success! Clear any temporary state
+    await setUserState(telegramUser.id, null);
+
+    const userName = data.first_name || telegramUser.first_name || "FoodSharer";
+    const userEmail = data.email || "";
+
+    const successMessage = msg.boxedHeader(`${emoji.CELEBRATE} Account Successfully Linked!`) +
+      "\n\n" +
+      `Hi <b>${userName}</b>! Your Telegram account is now securely linked to FoodShare.\n\n` +
+      msg.divider("─", 30) +
+      "\n\n" +
+      `${emoji.EMAIL} <b>Account:</b> <code>${userEmail}</code>\n` +
+      `${emoji.SUCCESS} <b>Status:</b> Connected & Verified\n\n` +
+      msg.divider("─", 30) +
+      "\n\n" +
+      `${emoji.BELL} <b>Real-time Telegram Notifications:</b>\n` +
+      msg.bulletList([
+        { emoji: emoji.CHAT, text: "Direct messages & inquiries" },
+        { emoji: emoji.FOOD, text: "New food listings nearby" },
+        { emoji: emoji.HEART, text: "Reservation & pickup updates" },
+      ]) +
+      "\n\n" +
+      msg.divider("─", 30) +
+      "\n\n" +
+      `${emoji.ROCKET} Use the menu below or open the app to get started:`;
+
+    const keyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: "🌐 Open FoodShare Web",
+            url: getAppUrl(),
+          },
+        ],
+      ],
+    };
+
+    await sendMessage(chatId, successMessage, {
+      reply_markup: {
+        ...getMainMenuKeyboard(lang),
+        ...keyboard,
+      },
+    });
+
+    return true;
+  } catch (err) {
+    logger.error("Exception in handleDeepLinkToken", err as Error);
+    await sendMessage(
+      chatId,
+      msg.errorMessage(
+        "Linking Error",
+        "An unexpected error occurred while linking your account. Please try again.",
+      ),
+    );
+    return false;
+  }
+}
+
+/**
+ * Handle /unlink command
+ */
+export async function handleUnlinkCommand(
+  telegramUser: TelegramUser,
+  chatId: number,
+  _lang: Language = "en",
+): Promise<void> {
+  const profile = await getProfileByTelegramId(telegramUser.id);
+
+  if (!profile) {
+    await sendMessage(
+      chatId,
+      msg.infoMessage(
+        "Account Not Linked",
+        "Your Telegram account is not currently linked to any FoodShare profile.\n\n" +
+          `Use /start to connect your account.`,
+      ),
+    );
+    return;
+  }
+
+  try {
+    const supabase = getAdminClient();
+    await supabase.rpc("unlink_telegram_account", {
+      p_user_id: profile.id,
+    });
+
+    await setUserState(telegramUser.id, null);
+
+    await sendMessage(
+      chatId,
+      msg.successMessage(
+        "Account Disconnected",
+        `Your Telegram account has been disconnected from <code>${
+          profile.email || "FoodShare"
+        }</code>.\n\n` +
+          `${emoji.INFO} You will no longer receive notifications on Telegram.\n\n` +
+          `You can reconnect at any time using /start or via the FoodShare website.`,
+      ),
+    );
+  } catch (err) {
+    logger.error("Failed to unlink Telegram account", err as Error);
+    await sendMessage(
+      chatId,
+      msg.errorMessage(
+        "Unlink Failed",
+        "Could not disconnect account at this time. Please try again later.",
       ),
     );
   }

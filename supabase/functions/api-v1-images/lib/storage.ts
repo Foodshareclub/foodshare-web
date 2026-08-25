@@ -30,7 +30,7 @@ export async function checkRateLimit(
 ): Promise<boolean> {
   const { data, error } = await supabase
     .from("user_rate_limits")
-    .select("count, reset_at")
+    .select("count,reset_at")
     .eq("user_id", userId)
     .eq("key", RATE_LIMIT_KEY)
     .single();
@@ -46,7 +46,8 @@ export async function checkRateLimit(
   }
 
   if (new Date(data.reset_at) < new Date()) {
-    await supabase.from("user_rate_limits")
+    await supabase
+      .from("user_rate_limits")
       .update({
         count: 1,
         reset_at: new Date(Date.now() + RATE_LIMIT_WINDOW * 1000).toISOString(),
@@ -60,7 +61,8 @@ export async function checkRateLimit(
     return false;
   }
 
-  await supabase.from("user_rate_limits")
+  await supabase
+    .from("user_rate_limits")
     .update({ count: data.count + 1 })
     .eq("user_id", userId)
     .eq("key", RATE_LIMIT_KEY);
@@ -76,7 +78,7 @@ export async function uploadWithFallback(
   buffer: Uint8Array,
   contentType: string,
 ): Promise<{ publicUrl: string; storage: "r2" | "supabase" }> {
-  if (isR2Configured()) {
+  if (await isR2Configured()) {
     const r2Path = `${bucket}/${path}`;
     const result = await uploadToR2(buffer, r2Path, contentType);
     if (result.success) {
@@ -85,13 +87,11 @@ export async function uploadWithFallback(
     logger.error("R2 upload failed, falling back to Supabase", new Error(result.error));
   }
 
-  const { error: uploadError } = await supabase.storage
-    .from(bucket)
-    .upload(path, buffer, {
-      contentType,
-      cacheControl: "31536000",
-      upsert: true,
-    });
+  const { error: uploadError } = await supabase.storage.from(bucket).upload(path, buffer, {
+    contentType,
+    cacheControl: "31536000",
+    upsert: true,
+  });
 
   if (uploadError) {
     throw new ServerError(`Upload failed: ${uploadError.message}`);

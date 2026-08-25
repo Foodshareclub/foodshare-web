@@ -187,13 +187,14 @@ async function handleCheckSubscription(ctx: HandlerContext): Promise<Response> {
     throw new ValidationError("Authentication required");
   }
 
-  const { data: subscription, error } = await supabase.rpc(
-    "billing.get_user_subscription",
-    { p_user_id: userId },
-  );
+  const { data: subscription, error } = await supabase.rpc("billing.get_user_subscription", {
+    p_user_id: userId,
+  });
 
   if (error) {
-    logger.error("Failed to get subscription", new Error(error.message), { userId });
+    logger.error("Failed to get subscription", new Error(error.message), {
+      userId,
+    });
     throw new AppError("Failed to get subscription status", "SUBSCRIPTION_FETCH_FAILED", 500);
   }
 
@@ -201,7 +202,13 @@ async function handleCheckSubscription(ctx: HandlerContext): Promise<Response> {
     p_user_id: userId,
   });
 
-  return ok({ is_premium: isPremium ?? false, subscription: subscription || null }, ctx);
+  return ok(
+    {
+      is_premium: isPremium ?? false,
+      subscription: subscription || null,
+    },
+    ctx,
+  );
 }
 
 // =============================================================================
@@ -227,10 +234,10 @@ async function processDLQ(
     }
 
     const { count } = await supabase
+      .schema("billing")
       .from("subscription_events_dlq")
       .select("*", { count: "exact", head: true })
-      .is("resolved_at", null)
-      .schema("billing");
+      .is("resolved_at", null);
 
     const result = {
       processed: data?.processed || 0,
@@ -240,10 +247,10 @@ async function processDLQ(
 
     if (result.pending > 20) {
       const { data: breakdown } = await supabase
+        .schema("billing")
         .from("subscription_events_dlq")
         .select("platform")
-        .is("resolved_at", null)
-        .schema("billing");
+        .is("resolved_at", null);
 
       const platformCounts: Record<string, number> = {};
       breakdown?.forEach((row: { platform: string }) => {
@@ -341,34 +348,28 @@ async function sendHealthReport(
 
   try {
     const { data: health } = await supabase
+      .schema("billing")
       .from("subscription_health")
-      .select("*")
-      .schema("billing");
+      .select("*");
 
-    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0];
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
     const { data: metrics } = await supabase
+      .schema("billing")
       .from("subscription_metrics")
       .select("*")
-      .eq("metric_date", yesterday)
-      .schema("billing");
+      .eq("metric_date", yesterday);
 
-    const { data: dlq } = await supabase
-      .from("dlq_summary")
-      .select("*")
-      .schema("billing");
+    const { data: dlq } = await supabase.schema("billing").from("dlq_summary").select("*");
 
     await sendTelegramAlert(
       "low",
       "Daily Subscription Health Report",
       {
         Date: yesterday,
-        "Active Subscriptions": health?.reduce(
-          (sum: number, h: { active_count: number }) => sum + h.active_count,
+        "Active Subscriptions": health?.reduce((sum: number, h: { active_count: number }) =>
+          sum + h.active_count, 0) ||
           0,
-        ) || 0,
         "New Yesterday": metrics?.reduce(
           (sum: number, m: { new_subscriptions: number }) => sum + m.new_subscriptions,
           0,
@@ -385,10 +386,7 @@ async function sendHealthReport(
 
     return true;
   } catch (error) {
-    logger.error(
-      "Health report failed",
-      error instanceof Error ? error : new Error(String(error)),
-    );
+    logger.error("Health report failed", error instanceof Error ? error : new Error(String(error)));
     return false;
   }
 }
@@ -411,12 +409,15 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
     if (!verifyCronAuth(ctx.request)) {
       throw new ForbiddenError("Service authentication required");
     }
-    return ok({
-      service: "api-v1-subscription",
-      version: VERSION,
-      timestamp: new Date().toISOString(),
-      ...getWebhookMetricsData(),
-    }, ctx);
+    return ok(
+      {
+        service: "api-v1-subscription",
+        version: VERSION,
+        timestamp: new Date().toISOString(),
+        ...getWebhookMetricsData(),
+      },
+      ctx,
+    );
   }
 
   // GET /cron — trigger cron tasks (for cron triggers)
@@ -482,22 +483,24 @@ async function runCronTasks(ctx: HandlerContext): Promise<Response> {
 // Export Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: "api-v1-subscription",
-  version: VERSION,
-  requireAuth: false, // Auth handled per-route (JWT for sync/status, cron auth for cron)
-  csrf: false, // Mobile clients + cron
-  rateLimit: {
-    limit: 30,
-    windowMs: 60000,
-    keyBy: "ip",
-  },
-  routes: {
-    GET: {
-      handler: handleGet,
+Deno.serve(
+  createAPIHandler({
+    service: "api-v1-subscription",
+    version: VERSION,
+    requireAuth: false, // Auth handled per-route (JWT for sync/status, cron auth for cron)
+    csrf: false, // Mobile clients + cron
+    rateLimit: {
+      limit: 30,
+      windowMs: 60000,
+      keyBy: "ip",
     },
-    POST: {
-      handler: handlePost,
+    routes: {
+      GET: {
+        handler: handleGet,
+      },
+      POST: {
+        handler: handlePost,
+      },
     },
-  },
-}));
+  }),
+);

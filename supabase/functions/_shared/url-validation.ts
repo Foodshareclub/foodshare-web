@@ -103,8 +103,13 @@ function isPrivateIp(ip: string): boolean {
   const ipNum = ipToNumber(ip);
   if (ipNum === -1) {
     // Invalid IPv4, check for IPv6 loopback
-    return ip === "::1" || ip === "[::1]" || ip.startsWith("fe80:") || ip.startsWith("fc00:") ||
-      ip.startsWith("fd00:");
+    return (
+      ip === "::1" ||
+      ip === "[::1]" ||
+      ip.startsWith("fe80:") ||
+      ip.startsWith("fc00:") ||
+      ip.startsWith("fd00:")
+    );
   }
 
   for (const range of PRIVATE_IP_RANGES) {
@@ -178,7 +183,10 @@ export function validateUrl(
 
   // Check URL length
   if (urlString.length > maxLength) {
-    return { valid: false, reason: `URL exceeds maximum length of ${maxLength}` };
+    return {
+      valid: false,
+      reason: `URL exceeds maximum length of ${maxLength}`,
+    };
   }
 
   // Parse URL
@@ -224,10 +232,13 @@ export function validateUrl(
   }
 
   // Check for unusual ports on non-standard schemes
-  const port = url.port ? parseInt(url.port, 10) : (url.protocol === "https:" ? 443 : 80);
+  const port = url.port ? parseInt(url.port, 10) : url.protocol === "https:" ? 443 : 80;
   const suspiciousPorts = [22, 23, 25, 110, 143, 3306, 5432, 6379, 27017];
   if (suspiciousPorts.includes(port)) {
-    return { valid: false, reason: `Port ${port} is not allowed for external requests` };
+    return {
+      valid: false,
+      reason: `Port ${port} is not allowed for external requests`,
+    };
   }
 
   return { valid: true, hostname };
@@ -272,12 +283,12 @@ export function validateImageUrl(
     "supabase.com",
     "googleapis.com",
     "cdn.foodshare.app",
-    "cdn.foodshare.club",
-    "foodshare.club",
+    Deno.env.get("CDN_DOMAIN") || "cdn.foodshare.club",
+    Deno.env.get("SITE_DOMAIN") || "foodshare.club",
     "images.foodshare.app",
   ];
-  const isKnownHost = knownImageHosts.some((host) =>
-    url.hostname.endsWith(host) || url.hostname === host
+  const isKnownHost = knownImageHosts.some(
+    (host) => url.hostname.endsWith(host) || url.hostname === host,
   );
 
   // Must have image extension or be from known host

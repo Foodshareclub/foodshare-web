@@ -46,7 +46,7 @@ const ALL_LOCALES = [
   "sv",
 ] as const;
 
-type Locale = typeof ALL_LOCALES[number];
+type Locale = (typeof ALL_LOCALES)[number];
 
 const TARGET_LOCALES = ALL_LOCALES.filter((l): l is Exclude<Locale, "en"> => l !== "en");
 
@@ -184,12 +184,15 @@ async function cacheTranslations(
 ): Promise<void> {
   try {
     const supabase = getSupabaseClient();
-    await supabase.from(CACHE_TABLE).upsert({
-      content_hash: contentHash,
-      locale,
-      translations,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "content_hash,locale" });
+    await supabase.from(CACHE_TABLE).upsert(
+      {
+        content_hash: contentHash,
+        locale,
+        translations,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "content_hash,locale" },
+    );
   } catch (e) {
     logger.warn("Cache write failed", { locale, error: (e as Error).message });
   }
@@ -300,30 +303,32 @@ async function processLocalesParallel(
   const queue = [...TARGET_LOCALES];
 
   // Process with concurrency limit
-  const workers = Array(CONCURRENCY_LIMIT).fill(null).map(async () => {
-    while (queue.length > 0) {
-      const locale = queue.shift();
-      if (!locale) break;
+  const workers = Array(CONCURRENCY_LIMIT)
+    .fill(null)
+    .map(async () => {
+      while (queue.length > 0) {
+        const locale = queue.shift();
+        if (!locale) break;
 
-      try {
-        const result = await translateLocale(strings, locale, contentHash, skipCache);
-        results.push(result);
-        logger.info("Locale complete", {
-          locale,
-          cached: result.cached,
-          duration: result.duration,
-        });
-      } catch (e) {
-        results.push({
-          locale,
-          translations: { ...strings }, // Fallback
-          cached: false,
-          duration: 0,
-          error: (e as Error).message,
-        });
+        try {
+          const result = await translateLocale(strings, locale, contentHash, skipCache);
+          results.push(result);
+          logger.info("Locale complete", {
+            locale,
+            cached: result.cached,
+            duration: result.duration,
+          });
+        } catch (e) {
+          results.push({
+            locale,
+            translations: { ...strings }, // Fallback
+            cached: false,
+            duration: 0,
+            error: (e as Error).message,
+          });
+        }
       }
-    }
-  });
+    });
 
   await Promise.all(workers);
   return results;
@@ -343,12 +348,15 @@ export default async function generateInfoPlistStringsHandler(
         error: "method_not_allowed",
         message: "Use POST",
       }),
-      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      {
+        status: 405,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   }
 
   try {
-    const body = await req.json() as GenerateRequest;
+    const body = (await req.json()) as GenerateRequest;
     const { strings, skipCache = false } = body;
 
     // Validate input
@@ -359,7 +367,10 @@ export default async function generateInfoPlistStringsHandler(
           error: "invalid_request",
           message: "strings object is required with at least one key",
         }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -375,8 +386,12 @@ export default async function generateInfoPlistStringsHandler(
     });
 
     // Initialize with English (source)
-    const locales: Record<string, Record<string, string>> = { en: { ...strings } };
-    const files: Record<string, string> = { en: formatInfoPlistStrings("en", strings) };
+    const locales: Record<string, Record<string, string>> = {
+      en: { ...strings },
+    };
+    const files: Record<string, string> = {
+      en: formatInfoPlistStrings("en", strings),
+    };
     const errors: string[] = [];
 
     // Translate all other locales in parallel

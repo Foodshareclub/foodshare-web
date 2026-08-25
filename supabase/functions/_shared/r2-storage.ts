@@ -10,6 +10,7 @@
  */
 
 import { AWSV4Signer } from "./aws-signer.ts";
+import { getSecret } from "./vault.ts";
 
 export interface R2Config {
   accountId: string;
@@ -39,30 +40,37 @@ let cachedConfig: R2Config | null | undefined;
  * Load R2 config from environment variables. Returns null if not configured.
  * Result is cached for the lifetime of the function invocation.
  */
-export function getR2Config(): R2Config | null {
+export async function getR2Config(): Promise<R2Config | null> {
   if (cachedConfig !== undefined) return cachedConfig;
 
-  const accountId = Deno.env.get("R2_ACCOUNT_ID");
-  const accessKeyId = Deno.env.get("R2_ACCESS_KEY_ID");
-  const secretAccessKey = Deno.env.get("R2_SECRET_ACCESS_KEY");
-  const bucketName = Deno.env.get("R2_BUCKET_NAME");
-  const publicUrl = Deno.env.get("R2_PUBLIC_URL");
+  const accountId = await getSecret("R2_ACCOUNT_ID");
+  const accessKeyId = await getSecret("R2_ACCESS_KEY_ID");
+  const secretAccessKey = await getSecret("R2_SECRET_ACCESS_KEY");
+  const bucketName = await getSecret("R2_BUCKET_NAME");
+  const publicUrl = await getSecret("R2_PUBLIC_URL");
 
   if (!accountId || !accessKeyId || !secretAccessKey || !bucketName || !publicUrl) {
     cachedConfig = null;
     return null;
   }
 
-  const jurisdiction = (Deno.env.get("R2_JURISDICTION") || "").toLowerCase();
-  cachedConfig = { accountId, accessKeyId, secretAccessKey, bucketName, publicUrl, jurisdiction };
+  const jurisdiction = ((await getSecret("R2_JURISDICTION")) || "").toLowerCase();
+  cachedConfig = {
+    accountId,
+    accessKeyId,
+    secretAccessKey,
+    bucketName,
+    publicUrl,
+    jurisdiction,
+  };
   return cachedConfig;
 }
 
 /**
  * Check if R2 is configured and available.
  */
-export function isR2Configured(): boolean {
-  return getR2Config() !== null;
+export async function isR2Configured(): Promise<boolean> {
+  return (await getR2Config()) !== null;
 }
 
 /**
@@ -77,7 +85,7 @@ export async function uploadToR2(
   path: string,
   contentType: string,
 ): Promise<R2UploadResult> {
-  const config = getR2Config();
+  const config = await getR2Config();
   if (!config) {
     return { success: false, path, publicUrl: "", error: "R2 not configured" };
   }
@@ -98,7 +106,7 @@ export async function uploadToR2(
   const response = await fetch(objectUrl, {
     method: "PUT",
     headers: signedHeaders,
-    body: buffer,
+    body: buffer as any,
     signal: AbortSignal.timeout(30_000),
   });
 
@@ -115,7 +123,7 @@ export async function uploadToR2(
   return {
     success: true,
     path,
-    publicUrl: getR2PublicUrl(path),
+    publicUrl: await getR2PublicUrl(path),
   };
 }
 
@@ -126,7 +134,7 @@ export async function uploadToR2(
  * @returns Result indicating success or failure. 404 is treated as success (already gone).
  */
 export async function deleteFromR2(path: string): Promise<R2DeleteResult> {
-  const config = getR2Config();
+  const config = await getR2Config();
   if (!config) {
     return { success: false, path, error: "R2 not configured" };
   }
@@ -161,8 +169,8 @@ export async function deleteFromR2(path: string): Promise<R2DeleteResult> {
 /**
  * Build the public CDN URL for an R2 object.
  */
-export function getR2PublicUrl(path: string): string {
-  const config = getR2Config();
+export async function getR2PublicUrl(path: string): Promise<string> {
+  const config = await getR2Config();
   if (!config) return "";
   // Trim trailing slash from publicUrl, ensure single slash before path
   const base = config.publicUrl.replace(/\/+$/, "");

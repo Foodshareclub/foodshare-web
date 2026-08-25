@@ -50,7 +50,9 @@ MA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMAoGCCqGSM49BAMDA2gA
 MGUCMQCD6cHEFl4aXTQY2e3v9GwOAEZLuN+yRhHFD/3meoyhpmvOwgPUnPWTxnS4
 at+qIxUCMG1mihDK1A3UT82NQz60imOlM27jbdoXt2QfyFMm+YhidDkLF1vLUagM
 6BgD56KyKA==
-`.trim().replace(/\n/g, "");
+`
+  .trim()
+  .replace(/\n/g, "");
 
 // =============================================================================
 // Base64URL utilities
@@ -97,7 +99,7 @@ async function importCertificate(derBase64: string): Promise<CryptoKey> {
   // For ES256, we need to extract the SubjectPublicKeyInfo
   return await crypto.subtle.importKey(
     "spki",
-    extractPublicKeyFromCert(derBytes),
+    extractPublicKeyFromCert(derBytes) as any,
     {
       name: "ECDSA",
       namedCurve: "P-256",
@@ -226,7 +228,7 @@ async function verifyCertificateChain(x5c: string[]): Promise<CryptoKey> {
   // 4. Certificate extensions (EKU, etc.)
 
   // Verify the root certificate matches Apple Root CA
-  const _rootCert = x5c[x5c.length - 1];
+  // const _rootCert = x5c[x5c.length - 1];
 
   // Simple check: verify the root cert matches our known Apple Root CA
   // In production, you'd want to do a proper comparison
@@ -343,59 +345,63 @@ function jwsSignatureToDer(signature: Uint8Array): Uint8Array {
  * @throws Error if verification fails
  */
 export async function verifyAppleJWS<T>(jws: string): Promise<T> {
-  return await withCircuitBreaker("apple-jws-verify", async () => {
-    const parts = jws.split(".");
-    if (parts.length !== 3) {
-      throw new Error("Invalid JWS format: expected 3 parts");
-    }
+  return await withCircuitBreaker(
+    "apple-jws-verify",
+    async () => {
+      const parts = jws.split(".");
+      if (parts.length !== 3) {
+        throw new Error("Invalid JWS format: expected 3 parts");
+      }
 
-    const [headerB64, payloadB64, signatureB64] = parts;
+      const [headerB64, payloadB64, signatureB64] = parts;
 
-    // Decode header
-    const headerJson = new TextDecoder().decode(base64UrlDecode(headerB64));
-    const header = JSON.parse(headerJson) as JWSHeader;
+      // Decode header
+      const headerJson = new TextDecoder().decode(base64UrlDecode(headerB64));
+      const header = JSON.parse(headerJson) as JWSHeader;
 
-    // Verify algorithm
-    if (header.alg !== "ES256") {
-      throw new Error(`Unsupported algorithm: ${header.alg}, expected ES256`);
-    }
+      // Verify algorithm
+      if (header.alg !== "ES256") {
+        throw new Error(`Unsupported algorithm: ${header.alg}, expected ES256`);
+      }
 
-    // Extract and verify certificate chain
-    if (!header.x5c || header.x5c.length === 0) {
-      throw new Error("Missing x5c certificate chain in JWS header");
-    }
+      // Extract and verify certificate chain
+      if (!header.x5c || header.x5c.length === 0) {
+        throw new Error("Missing x5c certificate chain in JWS header");
+      }
 
-    const publicKey = await verifyCertificateChain(header.x5c);
+      const publicKey = await verifyCertificateChain(header.x5c);
 
-    // Prepare data for verification (header.payload without signature)
-    const signedData = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
+      // Prepare data for verification (header.payload without signature)
+      const signedData = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
 
-    // Decode and convert signature from JWS format (r||s) to DER format
-    const signatureBytes = base64UrlDecode(signatureB64);
-    const derSignature = jwsSignatureToDer(signatureBytes);
+      // Decode and convert signature from JWS format (r||s) to DER format
+      const signatureBytes = base64UrlDecode(signatureB64);
+      const derSignature = jwsSignatureToDer(signatureBytes);
 
-    // Verify signature
-    const isValid = await crypto.subtle.verify(
-      {
-        name: "ECDSA",
-        hash: "SHA-256",
-      },
-      publicKey,
-      derSignature,
-      signedData,
-    );
+      // Verify signature
+      const isValid = await crypto.subtle.verify(
+        {
+          name: "ECDSA",
+          hash: "SHA-256",
+        },
+        publicKey,
+        derSignature as any,
+        signedData as any,
+      );
 
-    if (!isValid) {
-      throw new Error("JWS signature verification failed");
-    }
+      if (!isValid) {
+        throw new Error("JWS signature verification failed");
+      }
 
-    // Decode and return payload
-    const payloadJson = new TextDecoder().decode(base64UrlDecode(payloadB64));
-    return JSON.parse(payloadJson) as T;
-  }, {
-    failureThreshold: 3,
-    resetTimeoutMs: 30000,
-  });
+      // Decode and return payload
+      const payloadJson = new TextDecoder().decode(base64UrlDecode(payloadB64));
+      return JSON.parse(payloadJson) as T;
+    },
+    {
+      failureThreshold: 3,
+      resetTimeoutMs: 30000,
+    },
+  );
 }
 
 /**

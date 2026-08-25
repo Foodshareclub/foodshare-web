@@ -48,13 +48,7 @@ export const notificationCategoryEnum = z.enum([
 
 export const notificationChannelEnum = z.enum(["push", "email", "sms", "in_app"]);
 
-export const notificationFrequencyEnum = z.enum([
-  "instant",
-  "hourly",
-  "daily",
-  "weekly",
-  "never",
-]);
+export const notificationFrequencyEnum = z.enum(["instant", "hourly", "daily", "weekly", "never"]);
 
 export const priorityLevelEnum = z.enum(["critical", "high", "normal", "low"]);
 
@@ -115,14 +109,23 @@ export const digestRequestSchema = z.object({
 
 export const quietHoursSchema = z.object({
   enabled: z.boolean().optional(),
-  start: z.string().regex(/^\d{2}:\d{2}$/).optional(),
-  end: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+  start: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .optional(),
+  end: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .optional(),
   timezone: z.string().max(50).optional(),
 });
 
 export const digestSettingsSchema = z.object({
   daily_enabled: z.boolean().optional(),
-  daily_time: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+  daily_time: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .optional(),
   weekly_enabled: z.boolean().optional(),
   weekly_day: z.number().int().min(0).max(6).optional(),
 });
@@ -212,7 +215,10 @@ export function validateScheduledTime(scheduledFor: string): {
   // Max 90 days in future
   const maxFuture = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
   if (scheduledTime > maxFuture) {
-    return { valid: false, error: "Scheduled time too far in future (max 90 days)" };
+    return {
+      valid: false,
+      error: "Scheduled time too far in future (max 90 days)",
+    };
   }
 
   return { valid: true };

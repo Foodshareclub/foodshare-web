@@ -1,3 +1,4 @@
+import { logger } from "../../_shared/logger.ts";
 /**
  * Get Translations Handler (Simplified)
  *
@@ -186,7 +187,10 @@ export default async function getTranslationsHandler(
     const { data: sourceContent, error: sourceError } = await supabase
       .from(tableName)
       .select(selectColumns)
-      .in("id", limitedIds.map((id) => parseInt(id, 10)));
+      .in(
+        "id",
+        limitedIds.map((id) => parseInt(id, 10)),
+      );
 
     if (sourceError) {
       logger.error("Failed to fetch source content", sourceError);
@@ -205,12 +209,12 @@ export default async function getTranslationsHandler(
     if (sourceContent && sourceContent.length > 0) {
       // For each content item, look up translations by content hash
       for (const item of sourceContent) {
-        const contentId = String(item.id);
+        const contentId = String((item as any).id);
         translations[contentId] = {};
 
         for (const field of fields) {
           const dbColumn = fieldMapping[field];
-          const sourceText = item[dbColumn];
+          const sourceText = (item as any)[dbColumn];
 
           if (!sourceText || sourceText.trim().length === 0) {
             translations[contentId][field] = null;
@@ -250,8 +254,8 @@ export default async function getTranslationsHandler(
       }
     }
 
-    const notFound = Object.values(translations).filter(
-      (t) => Object.values(t).every((v) => v === null),
+    const notFound = Object.values(translations).filter((t) =>
+      Object.values(t).every((v) => v === null)
     ).length;
 
     logger.debug("Get translations completed", {

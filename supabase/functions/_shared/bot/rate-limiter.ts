@@ -73,7 +73,7 @@ export function createBotRateLimiter(config: BotRateLimiterConfig) {
     try {
       const { data: existing } = await supabase
         .from(tableName)
-        .select("request_count, window_start")
+        .select("request_count,window_start")
         .eq(idColumn, id)
         .single();
 
@@ -140,7 +140,9 @@ export function createBotRateLimiter(config: BotRateLimiterConfig) {
       };
     } catch (error) {
       // Fail open for availability
-      logger.error("Bot rate limit check failed, allowing request", { error: String(error) });
+      logger.error("Bot rate limit check failed, allowing request", {
+        error: String(error),
+      });
       return {
         allowed: true,
         remaining: maxRequests,
@@ -206,13 +208,19 @@ export function createBotRateLimiter(config: BotRateLimiterConfig) {
         .select(idColumn);
 
       if (error) {
-        logger.error("Error cleaning up rate limits", { table: tableName, error: String(error) });
+        logger.error("Error cleaning up rate limits", {
+          table: tableName,
+          error: String(error),
+        });
         return 0;
       }
 
       return data?.length || 0;
     } catch (error) {
-      logger.error("Error in rate limit cleanup", { table: tableName, error: String(error) });
+      logger.error("Error in rate limit cleanup", {
+        table: tableName,
+        error: String(error),
+      });
       return 0;
     }
   }

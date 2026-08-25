@@ -217,9 +217,7 @@ export async function handleSendTemplate(
       priority: request.priority || (template.priority as SendRequest["priority"]),
       data: {
         template: request.template,
-        ...Object.fromEntries(
-          Object.entries(request.variables).map(([k, v]) => [k, String(v)]),
-        ),
+        ...Object.fromEntries(Object.entries(request.variables).map(([k, v]) => [k, String(v)])),
       },
     };
 

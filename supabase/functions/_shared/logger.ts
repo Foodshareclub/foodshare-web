@@ -9,6 +9,16 @@
  */
 
 import { getContext, getElapsedMs } from "./context.ts";
+import * as Sentry from "@sentry/deno";
+
+// Initialize Sentry
+// Note: SENTRY_DSN should be set in the Supabase Edge Function Secrets
+if (Deno.env.get("SENTRY_DSN")) {
+  Sentry.init({
+    dsn: Deno.env.get("SENTRY_DSN"),
+    tracesSampleRate: 1.0,
+  });
+}
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -242,10 +252,25 @@ export function error(
   if (!shouldLog("error")) return;
 
   let logData = data || {};
+  let sentryError: Error | undefined;
+
   if (errorOrData instanceof Error) {
     logData = { ...logData, error: formatError(errorOrData) };
+    sentryError = errorOrData;
   } else if (errorOrData) {
     logData = { ...errorOrData, ...logData };
+  }
+
+  // Send to Sentry if available
+  if (sentryError) {
+    Sentry.captureException(sentryError, {
+      extra: logData,
+    });
+  } else {
+    Sentry.captureMessage(message, {
+      level: "error",
+      extra: logData,
+    });
   }
 
   output(createLogEntry("error", message, logData));
@@ -261,10 +286,7 @@ export function logRequest(method: string, path: string, data?: Record<string, u
 /**
  * Log a request completion
  */
-export function logResponse(
-  statusCode: number,
-  data?: Record<string, unknown>,
-): void {
+export function logResponse(statusCode: number, data?: Record<string, unknown>): void {
   const level = statusCode >= 500 ? "error" : statusCode >= 400 ? "warn" : "info";
   const message = statusCode >= 400 ? "Request failed" : "Request completed";
 
@@ -280,7 +302,11 @@ export function logExternalCall(
   operation: string,
   data?: Record<string, unknown>,
 ): void {
-  info(`External call: ${service}`, { externalService: service, operation, ...data });
+  info(`External call: ${service}`, {
+    externalService: service,
+    operation,
+    ...data,
+  });
 }
 
 /**
@@ -298,7 +324,11 @@ export function time(operation: string): (data?: Record<string, unknown>) => voi
 
   return (data?: Record<string, unknown>) => {
     const durationMs = Math.round(performance.now() - start);
-    info(`${operation} completed`, { operation, operationDurationMs: durationMs, ...data });
+    info(`${operation} completed`, {
+      operation,
+      operationDurationMs: durationMs,
+      ...data,
+    });
   };
 }
 

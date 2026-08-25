@@ -13,10 +13,10 @@ import { logger } from "../../_shared/logger.ts";
 // Environment Configuration
 // =============================================================================
 
-const APPLE_TEAM_ID = Deno.env.get("APPLE_TEAM_ID") || "";
-const BUNDLE_ID = Deno.env.get("APP_BUNDLE_ID") || "com.flutterflow.foodshare";
+const getAppleTeamId = () => Deno.env.get("APPLE_TEAM_ID") || "";
+const getBundleId = () => Deno.env.get("APP_BUNDLE_ID") || "com.flutterflow.foodshare";
 
-export { BUNDLE_ID };
+export { getBundleId };
 
 // =============================================================================
 // CBOR Decoder
@@ -119,8 +119,10 @@ export function parseAuthData(authData: Uint8Array): {
     offset += 32;
 
     const flags = authData[offset++];
-    const signCount = (authData[offset++] << 24) | (authData[offset++] << 16) |
-      (authData[offset++] << 8) | authData[offset++];
+    const signCount = (authData[offset++] << 24) |
+      (authData[offset++] << 16) |
+      (authData[offset++] << 8) |
+      authData[offset++];
 
     if (!(flags & 0x40)) return null;
 
@@ -144,7 +146,8 @@ export function parseAuthData(authData: Uint8Array): {
 // =============================================================================
 
 export async function verifyAppIdHash(rpIdHash: Uint8Array, bundleId: string): Promise<boolean> {
-  const appId = `${APPLE_TEAM_ID}.${bundleId}`;
+  const teamId = getAppleTeamId();
+  const appId = `${teamId}.${bundleId}`;
   const encoder = new TextEncoder();
   const appIdData = encoder.encode(appId);
   const expectedHash = await crypto.subtle.digest("SHA-256", appIdData);
@@ -234,7 +237,7 @@ export async function verifySignature(
     return await crypto.subtle.verify(
       { name: "ECDSA", hash: "SHA-256" },
       publicKey,
-      rawSignature,
+      rawSignature as any,
       signedData,
     );
   } catch {
@@ -257,43 +260,72 @@ export async function verifyAppAttest(
     try {
       attestationData = Uint8Array.from(atob(attestation), (c) => c.charCodeAt(0));
     } catch {
-      return { verified: false, message: "Invalid attestation encoding", riskScore: 100 };
+      return {
+        verified: false,
+        message: "Invalid attestation encoding",
+        riskScore: 100,
+      };
     }
 
     if (attestationData.length < 500) {
-      return { verified: false, message: "Attestation data too short", riskScore: 100 };
+      return {
+        verified: false,
+        message: "Attestation data too short",
+        riskScore: 100,
+      };
     }
 
     const cbor = decodeCBOR(attestationData);
     if (!cbor) {
-      return { verified: false, message: "Invalid CBOR format", riskScore: 100 };
+      return {
+        verified: false,
+        message: "Invalid CBOR format",
+        riskScore: 100,
+      };
     }
 
     if (cbor.fmt !== "apple-appattest") {
-      return { verified: false, message: `Unexpected format: ${cbor.fmt}`, riskScore: 100 };
+      return {
+        verified: false,
+        message: `Unexpected format: ${cbor.fmt}`,
+        riskScore: 100,
+      };
     }
 
     const authData = parseAuthData(cbor.authData);
     if (!authData) {
-      return { verified: false, message: "Invalid authenticator data", riskScore: 100 };
+      return {
+        verified: false,
+        message: "Invalid authenticator data",
+        riskScore: 100,
+      };
     }
 
-    if (APPLE_TEAM_ID) {
+    const teamId = getAppleTeamId();
+    if (teamId) {
       const appIdValid = await verifyAppIdHash(authData.rpIdHash, bundleId);
       if (!appIdValid) {
-        return { verified: false, message: "App ID hash mismatch", riskScore: 100 };
+        return {
+          verified: false,
+          message: "App ID hash mismatch",
+          riskScore: 100,
+        };
       }
     }
 
     const publicKeyBase64 = btoa(String.fromCharCode(...authData.publicKey));
 
-    const x5c = cbor.attStmt?.x5c as Uint8Array[] | undefined;
+    const x5c = cbor.attStmt?.x5c as any;
     if (x5c && x5c.length >= 2) {
-      logger.info("App Attest verified with certificate chain", { keyId: keyId.substring(0, 8) });
+      logger.info("App Attest verified with certificate chain", {
+        keyId: keyId.substring(0, 8),
+      });
       return { verified: true, publicKey: publicKeyBase64, riskScore: 10 };
     }
 
-    logger.warn("App Attest verified without certificate chain", { keyId: keyId.substring(0, 8) });
+    logger.warn("App Attest verified without certificate chain", {
+      keyId: keyId.substring(0, 8),
+    });
     return {
       verified: true,
       publicKey: publicKeyBase64,

@@ -25,7 +25,7 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
  */
 export async function getSecret(name: string): Promise<string | undefined> {
   // Check cache first
-  if (cache.has(name) && (Date.now() - lastFetch < CACHE_TTL)) {
+  if (cache.has(name) && Date.now() - lastFetch < CACHE_TTL) {
     return cache.get(name);
   }
 
@@ -33,8 +33,8 @@ export async function getSecret(name: string): Promise<string | undefined> {
     const supabase = getAdminClient();
     const { data, error } = await supabase
       .schema("vault")
-      .from("secrets")
-      .select("secret")
+      .from("decrypted_secrets")
+      .select("decrypted_secret")
       .eq("name", name)
       .single();
 
@@ -51,9 +51,9 @@ export async function getSecret(name: string): Promise<string | undefined> {
       throw error;
     }
 
-    if (data?.secret) {
-      cache.set(name, data.secret);
-      return data.secret;
+    if (data?.decrypted_secret) {
+      cache.set(name, data.decrypted_secret);
+      return data.decrypted_secret;
     }
   } catch (err) {
     logger.error("Failed to fetch secret from Vault", { name, error: err });
@@ -61,6 +61,17 @@ export async function getSecret(name: string): Promise<string | undefined> {
     return Deno.env.get(name);
   }
 
+  return Deno.env.get(name);
+}
+
+/**
+ * Fetch a secret synchronously from cache or Deno.env fallback.
+ * Assumes loadAllSecrets() has been called.
+ */
+export function getSecretSync(name: string): string | undefined {
+  if (cache.has(name)) {
+    return cache.get(name);
+  }
   return Deno.env.get(name);
 }
 
@@ -73,15 +84,15 @@ export async function loadAllSecrets(): Promise<void> {
     const supabase = getAdminClient();
     const { data, error } = await supabase
       .schema("vault")
-      .from("secrets")
-      .select("name, secret");
+      .from("decrypted_secrets")
+      .select("name,decrypted_secret");
 
     if (error) throw error;
 
     if (data) {
       for (const item of data) {
-        if (item.name && item.secret) {
-          cache.set(item.name, item.secret);
+        if (item.name && item.decrypted_secret) {
+          cache.set(item.name, item.decrypted_secret);
         }
       }
       lastFetch = Date.now();

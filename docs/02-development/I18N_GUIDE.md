@@ -35,13 +35,10 @@
 ## Quick Commands
 
 ```bash
-# Extract translatable strings
-bun run extract
+# Sync translation files to Supabase
+bun run translations:sync
 
-# Compile translations
-bun run compile
-
-# Start dev server (requires compiled translations)
+# Start dev server
 bun run dev
 
 # Type check
@@ -55,51 +52,42 @@ bun run type-check
 ### In React Components
 
 ```typescript
-import { Trans } from '@lingui/macro';
+import { useTranslations } from 'next-intl';
+
+const t = useTranslations('common');
 
 // Simple text
-<Text><Trans>Welcome to FoodShare</Trans></Text>
+<Text>{t('welcome')}</Text>
 
 // With variables
-<Trans>Hello, {userName}!</Trans>
+<Text>{t('hello', { name: userName })}</Text>
 
 // Pluralization
-<Trans>{count} {count === 1 ? 'item' : 'items'}</Trans>
+<Text>{t('itemCount', { count })}</Text>
 ```
 
 ### In Attributes
 
 ```typescript
-import { t } from '@lingui/macro';
+import { useTranslations } from 'next-intl';
+
+const t = useTranslations('common');
 
 // Input placeholder
-<Input placeholder={t`Enter your email`} />
+<Input placeholder={t('enterEmail')} />
 
 // Button aria-label
-<Button aria-label={t`Close dialog`} />
+<Button aria-label={t('closeDialog')} />
 ```
 
-### Programmatic
+### Programmatic (Server Components)
 
 ```typescript
-import { i18n } from "@lingui/core";
-import { dynamicActivate, isLocaleLoaded } from "@/utils/i18n";
-
-// Switch language
-await dynamicActivate("es");
-
-// Get current locale
-const currentLocale = i18n.locale; // 'es'
-
-// Check if locale is loaded
-const loaded = isLocaleLoaded("es"); // true/false
-```
-
-### Using next-intl (Recommended)
-
-```typescript
-// Import from centralized config
+import { getTranslations } from "next-intl/server";
 import { locales, localeMetadata, type Locale } from "@/i18n/config";
+
+// In async Server Components
+const t = await getTranslations("common");
 
 // Get all supported locales
 console.log(locales); // ['en', 'cs', 'de', ...]
@@ -114,33 +102,30 @@ const info = localeMetadata["es"];
 ## File Locations
 
 ```
-src/
-├── i18n/
-│   └── config.ts                  # Centralized i18n config (next-intl)
-├── utils/
-│   ├── i18n.ts                    # Legacy i18n utilities (Lingui)
-│   ├── i18n-backend.ts            # Backend integration
-│   ├── i18n-mobile.ts             # Mobile-specific
-│   └── i18n-universal-sdk.ts      # Universal SDK
-├── locales/
-│   ├── en/messages.po             # English (source)
-│   ├── uk/messages.po             # Ukrainian
-│   ├── de/messages.po             # German
-│   ├── es/messages.po             # Spanish
-│   ├── ru/messages.po             # Russian
-│   ├── fr/messages.po             # French
-│   ├── pt/messages.po             # Portuguese
-│   ├── cs/messages.po             # Czech
-│   ├── zh/messages.po             # Chinese (new)
-│   ├── hi/messages.po             # Hindi (new)
-│   ├── ar/messages.po             # Arabic (new)
-│   ├── it/messages.po             # Italian (new)
-│   ├── pl/messages.po             # Polish (new)
-│   ├── nl/messages.po             # Dutch (new)
-│   ├── ja/messages.po             # Japanese (new)
-│   ├── ko/messages.po             # Korean (new)
-│   └── tr/messages.po             # Turkish (new)
-└── lingui.config.js               # Lingui configuration
+messages/
+├── en.json                        # English (source)
+├── uk.json                        # Ukrainian
+├── de.json                        # German
+├── es.json                        # Spanish
+├── ru.json                        # Russian
+├── fr.json                        # French
+├── pt.json                        # Portuguese
+├── cs.json                        # Czech
+├── zh.json                        # Chinese
+├── hi.json                        # Hindi
+├── ar.json                        # Arabic (RTL)
+├── it.json                        # Italian
+├── pl.json                        # Polish
+├── nl.json                        # Dutch
+├── ja.json                        # Japanese
+├── ko.json                        # Korean
+├── tr.json                        # Turkish
+├── vi.json                        # Vietnamese
+├── id.json                        # Indonesian
+├── th.json                        # Thai
+└── sv.json                        # Swedish
+
+i18n.ts                            # next-intl request configuration
 ```
 
 ---
@@ -192,29 +177,31 @@ document.dir = direction;
 
 ## Translation Workflow
 
-1. **Mark strings for translation**
+1. **Add the string to the English source**
+
+   ```json
+   // messages/en.json
+   { "common": { "helloWorld": "Hello World" } }
+   ```
+
+2. **Use it in components**
 
    ```typescript
-   <Trans>Hello World</Trans>
+   const t = useTranslations("common");
+   t("helloWorld");
    ```
 
-2. **Extract strings**
+3. **Translate in locale files**
+
+   ```json
+   // messages/es.json
+   { "common": { "helloWorld": "Hola Mundo" } }
+   ```
+
+4. **Sync to the database**
 
    ```bash
-   bun run extract
-   ```
-
-3. **Translate in .po files**
-
-   ```po
-   msgid "Hello World"
-   msgstr "Hola Mundo"  # Spanish
-   ```
-
-4. **Compile translations**
-
-   ```bash
-   bun run compile
+   bun run translations:sync
    ```
 
 5. **Test in app**
@@ -228,22 +215,22 @@ document.dir = direction;
 
 ### Issue: Translations not showing
 
-**Solution**: Run `bun run compile` before `bun run dev`
+**Solution**: Check the key exists in `messages/{locale}.json` and restart `bun run dev`
 
 ### Issue: New language not appearing
 
 **Solution**:
 
-1. Check `lingui.config.js` includes the locale
-2. Run `bun run extract`
-3. Run `bun run compile`
+1. Create `messages/{locale}.json`
+2. Register the locale in the i18n config
+3. Run `bun run translations:sync`
 
 ### Issue: RTL not working for Arabic
 
 **Solution**:
 
 ```typescript
-import { getLocaleDirection } from "@/utils/i18n";
+import { getLocaleDirection } from "@/i18n/config";
 document.dir = getLocaleDirection("ar");
 ```
 
@@ -251,10 +238,9 @@ document.dir = getLocaleDirection("ar");
 
 ## Performance Tips
 
-- ✅ Use lazy loading: `dynamicActivate(locale)`
-- ✅ Preload common locales: `preloadLocale('es')`
-- ✅ Cache compiled translations
-- ✅ Use code splitting per locale
+- ✅ Use Server Components for translated content (no client JS)
+- ✅ Namespace messages to keep payloads small
+- ✅ Keep translations in `messages/{locale}.json` (statically analyzable)
 
 ---
 
@@ -263,11 +249,11 @@ document.dir = getLocaleDirection("ar");
 - [Full Documentation](./LANGUAGE_EXPANSION_2024.md)
 - [Cross-Platform Guide](./CROSS_PLATFORM_I18N_GUIDE.md)
 - [Translation System v4](./translation-system-v4.md)
-- [Lingui Docs](https://lingui.dev)
+- [next-intl Docs](https://next-intl-docs.vercel.app/)
 
 ---
 
-**Last Updated**: November 30, 2024  
-**Total Languages**: 17  
-**Production Ready**: 8  
-**In Translation**: 9
+**Last Updated**: August 2026  
+**Total Languages**: 21  
+**Production Ready**: 5  
+**In Translation**: 16

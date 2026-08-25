@@ -63,9 +63,12 @@ export class HealthService {
   /**
    * Quick health check - just database status
    */
-  async checkQuickHealth(): Promise<
-    { status: string; timestamp: string; version: string; database: string }
-  > {
+  async checkQuickHealth(): Promise<{
+    status: string;
+    timestamp: string;
+    version: string;
+    database: string;
+  }> {
     const supabase = getSupabaseClient();
     const dbHealth = await checkDatabase(supabase);
 
@@ -87,7 +90,11 @@ export class HealthService {
     uptime: number;
     services: ServiceHealth[];
     circuitBreakers: { name: string; state: string; failureCount: number }[];
-    metrics?: { requestsLast5Min: number; errorRateLast5Min: number; p95LatencyMs: number };
+    metrics?: {
+      requestsLast5Min: number;
+      errorRateLast5Min: number;
+      p95LatencyMs: number;
+    };
   }> {
     const supabase = getSupabaseClient();
 
@@ -120,7 +127,7 @@ export class HealthService {
     for (const service of services) {
       await recordHealthCheckToDB(
         service.service,
-        service.status,
+        service.status as "healthy" | "degraded" | "unhealthy",
         service.responseTimeMs,
         service.details,
         service.error,
@@ -215,7 +222,7 @@ export class HealthService {
     // Record summary to database
     await recordHealthCheckToDB(
       "edge_functions",
-      overallStatus,
+      overallStatus as "healthy" | "degraded" | "unhealthy",
       totalTimeMs,
       {
         functions: summary.functions,

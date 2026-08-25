@@ -130,7 +130,14 @@ export function buildSuccessResponse<T>(
  * clients need field-level error info.
  */
 export function buildErrorResponse(
-  error: AppError | Error | { code: string; message: string; details?: unknown },
+  error:
+    | AppError
+    | Error
+    | {
+      code: string;
+      message: string;
+      details?: unknown;
+    },
   corsHeaders: Record<string, string>,
   options?: {
     status?: number;
@@ -274,10 +281,7 @@ export function detectPlatform(request: Request): Platform {
 /**
  * Get platform-aware UI hints
  */
-export function getPlatformUIHints(
-  platform: Platform,
-  customHints?: Partial<UIHints>,
-): UIHints {
+export function getPlatformUIHints(platform: Platform, customHints?: Partial<UIHints>): UIHints {
   const baseHints = PLATFORM_UI_HINTS[platform] || PLATFORM_UI_HINTS.unknown;
   return {
     ...baseHints,
@@ -307,7 +311,9 @@ export function applyPlatformOptimizations<T extends Record<string, unknown>>(
   platform: Platform,
   options?: PlatformOptimizationOptions,
 ): T & { _platformHints?: Record<string, unknown> } {
-  const result = { ...data } as T & { _platformHints?: Record<string, unknown> };
+  const result = { ...data } as T & {
+    _platformHints?: Record<string, unknown>;
+  };
 
   switch (platform) {
     case "ios": {

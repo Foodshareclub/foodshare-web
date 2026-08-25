@@ -1,14 +1,11 @@
 /**
- * Telegram API service with circuit breaker protection
+ * Telegram API client with circuit breaker protection and timeouts
+ * Shared across the backend (bots, notifications, alerting)
  */
 
-import { logger } from "../../_shared/logger.ts";
-import { TELEGRAM_API } from "../config/index.ts";
-import {
-  CircuitBreakerError,
-  getCircuitStatus,
-  withCircuitBreaker,
-} from "../../_shared/circuit-breaker.ts";
+import { logger } from "./logger.ts";
+import { CircuitBreakerError, getCircuitStatus, withCircuitBreaker } from "./circuit-breaker.ts";
+import { getAdminClient } from "./supabase.ts";
 
 const CIRCUIT_CONFIG = {
   failureThreshold: 5,
@@ -21,12 +18,37 @@ const FETCH_TIMEOUT = 10000; // 10 seconds
 // Set via enableGroupAutoDelete / disableGroupAutoDelete around group message handling.
 let _groupAutoDelete = false;
 
-export function enableGroupAutoDelete(_chatId: number): void {
+export function enableGroupAutoDelete(_chatId?: number): void {
   _groupAutoDelete = true;
 }
 
 export function disableGroupAutoDelete(): void {
   _groupAutoDelete = false;
+}
+
+let _telegramBotToken: string | undefined;
+
+/**
+ * Set the bot token explicitly (useful when loading from Vault)
+ */
+export function setTelegramBotToken(token: string): void {
+  _telegramBotToken = token.trim();
+}
+
+/**
+ * Lazily resolve Telegram API URL to allow loading without env vars
+ * but throw when actually used.
+ */
+function getTelegramApiUrl(): string {
+  let token = _telegramBotToken || Deno.env.get("TELEGRAM_BOT_TOKEN") || Deno.env.get("BOT_TOKEN");
+  token = token?.trim();
+  if (!token) {
+    throw new Error("Missing TELEGRAM_BOT_TOKEN or BOT_TOKEN environment variable");
+  }
+  if (token.toLowerCase().startsWith("bot")) {
+    token = token.substring(3);
+  }
+  return `https://api.telegram.org/bot${token}`;
 }
 
 /**
@@ -63,7 +85,7 @@ export function getTelegramApiStatus(): { status: string; failures: number } {
 }
 
 export async function sendMessage(
-  chatId: number,
+  chatId: number | string,
   text: string,
   options: Record<string, unknown> = {},
 ): Promise<number | null> {
@@ -71,7 +93,7 @@ export async function sendMessage(
     return await withCircuitBreaker(
       "telegram-api",
       async () => {
-        const response = await fetchWithTimeout(`${TELEGRAM_API}/sendMessage`, {
+        const response = await fetchWithTimeout(`${getTelegramApiUrl()}/sendMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -96,7 +118,7 @@ export async function sendMessage(
         const messageId = result.result?.message_id ?? null;
 
         // Auto-delete in group chats
-        if (messageId && _groupAutoDelete) {
+        if (messageId && _groupAutoDelete && typeof chatId === "number") {
           scheduleGroupMessageDeletion(chatId, messageId);
         }
 
@@ -115,7 +137,7 @@ export async function sendMessage(
 }
 
 export async function sendPhoto(
-  chatId: number,
+  chatId: number | string,
   photo: string,
   caption?: string,
   options: Record<string, unknown> = {},
@@ -124,13 +146,15 @@ export async function sendPhoto(
     return await withCircuitBreaker(
       "telegram-api",
       async () => {
-        const response = await fetchWithTimeout(`${TELEGRAM_API}/sendPhoto`, {
+        const response = await fetchWithTimeout(`${getTelegramApiUrl()}/sendPhoto`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             chat_id: chatId,
             photo,
-            caption,
+            caption: caption && caption.length > 1024
+              ? caption.substring(0, 1021) + "..."
+              : caption,
             parse_mode: "HTML",
             ...options,
           }),
@@ -142,7 +166,7 @@ export async function sendPhoto(
           throw new Error(`Telegram API error: ${result.description}`);
         }
 
-        return result.ok;
+        return result.ok === true;
       },
       CIRCUIT_CONFIG,
     );
@@ -157,7 +181,7 @@ export async function sendPhoto(
 }
 
 export async function sendLocation(
-  chatId: number,
+  chatId: number | string,
   latitude: number,
   longitude: number,
 ): Promise<boolean> {
@@ -165,7 +189,7 @@ export async function sendLocation(
     return await withCircuitBreaker(
       "telegram-api",
       async () => {
-        const response = await fetchWithTimeout(`${TELEGRAM_API}/sendLocation`, {
+        const response = await fetchWithTimeout(`${getTelegramApiUrl()}/sendLocation`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -181,7 +205,7 @@ export async function sendLocation(
           throw new Error(`Telegram API error: ${result.description}`);
         }
 
-        return result.ok;
+        return result.ok === true;
       },
       CIRCUIT_CONFIG,
     );
@@ -195,11 +219,11 @@ export async function sendLocation(
   }
 }
 
-export async function setWebhook(url: string): Promise<boolean> {
+export async function setWebhook(
+  url: string,
+  webhookSecret?: string,
+): Promise<{ ok: boolean; description?: string; result?: unknown }> {
   try {
-    // Include secret_token for webhook signature verification
-    const webhookSecret = Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
-
     const webhookConfig: Record<string, unknown> = {
       url,
       allowed_updates: ["message", "callback_query"],
@@ -207,10 +231,10 @@ export async function setWebhook(url: string): Promise<boolean> {
 
     // Add secret_token if configured
     if (webhookSecret) {
-      webhookConfig.secret_token = webhookSecret;
+      webhookConfig.secret_token = webhookSecret.trim();
     }
 
-    const response = await fetch(`${TELEGRAM_API}/setWebhook`, {
+    const response = await fetch(`${getTelegramApiUrl()}/setWebhook`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(webhookConfig),
@@ -219,22 +243,28 @@ export async function setWebhook(url: string): Promise<boolean> {
     const result = await response.json();
 
     if (result.ok) {
-      logger.info("Webhook configured successfully", { hasSecretToken: !!webhookSecret });
+      logger.info("Webhook configured successfully", {
+        hasSecretToken: !!webhookSecret,
+      });
+    } else {
+      logger.error("Failed to configure webhook", {
+        error: result.description,
+      });
     }
 
-    return result.ok;
+    return result;
   } catch (error) {
     logger.error("Set webhook error", { error: String(error) });
-    return false;
+    return { ok: false, description: String(error) };
   }
 }
 
-export async function deleteMessage(chatId: number, messageId: number): Promise<boolean> {
+export async function deleteMessage(chatId: number | string, messageId: number): Promise<boolean> {
   try {
     return await withCircuitBreaker(
       "telegram-api",
       async () => {
-        const response = await fetchWithTimeout(`${TELEGRAM_API}/deleteMessage`, {
+        const response = await fetchWithTimeout(`${getTelegramApiUrl()}/deleteMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -249,7 +279,7 @@ export async function deleteMessage(chatId: number, messageId: number): Promise<
           throw new Error(`Telegram API error: ${result.description}`);
         }
 
-        return result.ok;
+        return result.ok === true;
       },
       CIRCUIT_CONFIG,
     );
@@ -258,24 +288,40 @@ export async function deleteMessage(chatId: number, messageId: number): Promise<
       logger.warn("Telegram API circuit breaker open, message not deleted");
       return false;
     }
-    logger.error("Delete message error", { error: String(error), chatId, messageId });
+    logger.error("Delete message error", {
+      error: String(error),
+      chatId,
+      messageId,
+    });
     return false;
   }
 }
 
-const AUTO_DELETE_DELAY_MS = 5 * 60 * 1000; // 5 minutes
-
 /**
  * Schedule a bot message for auto-deletion in group chats after 5 minutes.
- * Fire-and-forget — failures are logged but don't propagate.
+ *
+ * TODO: Implementing this via setTimeout is an anti-pattern in Edge Functions
+ * because isolates are suspended when idle, meaning the timeout may never fire.
+ * This needs to be moved to a database table (e.g., `group_message_deletions`)
+ * and processed via a pg_cron job that calls a webhook or `pg_net`.
  */
 export function scheduleGroupMessageDeletion(chatId: number, messageId: number): void {
-  setTimeout(async () => {
-    const ok = await deleteMessage(chatId, messageId);
-    if (ok) {
-      logger.info("Auto-deleted group message", { chatId, messageId });
-    }
-  }, AUTO_DELETE_DELAY_MS);
+  const supabase = getAdminClient();
+  // Delete in 5 minutes
+  const deleteAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+
+  supabase
+    .from("group_message_deletions")
+    .insert({ chat_id: chatId, message_id: messageId, delete_at: deleteAt })
+    .then(({ error }) => {
+      if (error) {
+        logger.error("Failed to schedule group message deletion", {
+          error: String(error),
+          chatId,
+          messageId,
+        });
+      }
+    });
 }
 
 export async function answerCallbackQuery(
@@ -286,7 +332,7 @@ export async function answerCallbackQuery(
     return await withCircuitBreaker(
       "telegram-api",
       async () => {
-        const response = await fetchWithTimeout(`${TELEGRAM_API}/answerCallbackQuery`, {
+        const response = await fetchWithTimeout(`${getTelegramApiUrl()}/answerCallbackQuery`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -301,7 +347,7 @@ export async function answerCallbackQuery(
           throw new Error(`Telegram API error: ${result.description}`);
         }
 
-        return result.ok;
+        return result.ok === true;
       },
       CIRCUIT_CONFIG,
     );

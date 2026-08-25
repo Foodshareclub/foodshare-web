@@ -47,6 +47,7 @@ import {
   handleSendTemplate,
   handleStats,
   handleTrigger,
+  handleUpdateCategoryChannelPreference,
   handleUpdatePreferences,
   handleWebhook,
 } from "./lib/handlers/index.ts";
@@ -93,7 +94,7 @@ async function routeRequest(ctx: HandlerContext): Promise<Response> {
     if (triggerType === "new-listing") {
       authMode = "jwt";
     } else {
-      authMode = "none";
+      authMode = "service";
       usePermissiveCors = true;
     }
   } else if (isDigestProcess) {
@@ -117,7 +118,10 @@ async function routeRequest(ctx: HandlerContext): Promise<Response> {
       error: auth.error,
     });
     return new Response(
-      JSON.stringify({ success: false, error: auth.error || "Authentication failed" }),
+      JSON.stringify({
+        success: false,
+        error: auth.error || "Authentication failed",
+      }),
       {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -213,6 +217,11 @@ async function routeRequest(ctx: HandlerContext): Promise<Response> {
     return jsonResponse(result, result.success ? 200 : 400);
   }
 
+  if (segments[0] === "preferences" && segments[1] === "channel" && method === "PUT") {
+    const result = await handleUpdateCategoryChannelPreference(ctx.body, context);
+    return jsonResponse(result, result.success ? 200 : 400);
+  }
+
   if (segments[0] === "preferences" && segments[1] === "dnd" && method === "POST") {
     const result = await handleEnableDnd(ctx.body, context);
     return jsonResponse(result, result.success ? 200 : 400);
@@ -293,20 +302,22 @@ async function routeRequest(ctx: HandlerContext): Promise<Response> {
 // API Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: SERVICE,
-  version: VERSION,
-  requireAuth: false, // Auth handled per-route
-  csrf: false,
-  rateLimit: {
-    limit: 60,
-    windowMs: 60_000,
-    keyBy: "user",
-  },
-  routes: {
-    GET: { handler: routeRequest },
-    POST: { handler: routeRequest },
-    PUT: { handler: routeRequest },
-    DELETE: { handler: routeRequest },
-  },
-}));
+Deno.serve(
+  createAPIHandler({
+    service: SERVICE,
+    version: VERSION,
+    requireAuth: false, // Auth handled per-route
+    csrf: false,
+    rateLimit: {
+      limit: 60,
+      windowMs: 60_000,
+      keyBy: "user",
+    },
+    routes: {
+      GET: { handler: routeRequest },
+      POST: { handler: routeRequest },
+      PUT: { handler: routeRequest },
+      DELETE: { handler: routeRequest },
+    },
+  }),
+);

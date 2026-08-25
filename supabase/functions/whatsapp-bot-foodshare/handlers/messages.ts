@@ -25,7 +25,7 @@ import {
   getShareMethodButtons,
 } from "../lib/interactive.ts";
 import * as emoji from "../lib/emojis.ts";
-import { APP_URL } from "../config/index.ts";
+import { getAppUrl } from "../config/index.ts";
 import { createPostGISPoint, sanitizeText } from "../utils/validation.ts";
 import {
   handleEmailInput,
@@ -224,7 +224,11 @@ async function handleCancel(phoneNumber: string): Promise<void> {
 async function handleSharingFoodText(
   phoneNumber: string,
   text: string,
-  state: { action: string; step?: string; data: Record<string, string | undefined> },
+  state: {
+    action: string;
+    step?: string;
+    data: Record<string, string | undefined>;
+  },
 ): Promise<void> {
   const lang = await getUserLanguage(phoneNumber);
 
@@ -334,7 +338,7 @@ async function createFoodPost(
 
   await setUserState(phoneNumber, null);
 
-  const postUrl = `${APP_URL}/food/${post.id}`;
+  const postUrl = `${getAppUrl()}/food/${post.id}`;
   await sendTextMessage(
     phoneNumber,
     `${emoji.CELEBRATE} *${t(lang, "share.success")}*\n\n${emoji.LINK} ${postUrl}`,

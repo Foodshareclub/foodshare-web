@@ -6,6 +6,7 @@
 
 import { logger } from "../../logger.ts";
 import { FunctionHealthResult, HealthCheckSummary } from "../types.ts";
+import { getSecretSync } from "../../vault.ts";
 
 // =============================================================================
 // Configuration
@@ -153,7 +154,9 @@ All ${summary.functions.total} edge functions are healthy.
     }
 
     message += `\n<b>Time:</b> ${timestamp}`;
-    message += `\n<b>Dashboard:</b> <a href="https://studio.foodshare.club">Supabase Studio</a>`;
+    message += `\n<b>Dashboard:</b> <a href="https://${
+      Deno.env.get("STUDIO_DOMAIN") || "studio.foodshare.club"
+    }">Supabase Studio</a>`;
 
     return message.trim();
   }
@@ -171,8 +174,8 @@ let alerterInstance: TelegramAlerter | null = null;
  */
 export function createTelegramAlerter(config?: Partial<TelegramConfig>): TelegramAlerter | null {
   if (!alerterInstance) {
-    const botToken = config?.botToken ?? Deno.env.get("BOT_TOKEN");
-    const chatId = config?.chatId ?? Deno.env.get("ADMIN_CHAT_ID");
+    const botToken = config?.botToken ?? getSecretSync("BOT_TOKEN");
+    const chatId = config?.chatId ?? getSecretSync("ADMIN_CHAT_ID");
 
     if (!botToken || !chatId) {
       logger.warn("Telegram credentials not configured, alerting disabled");

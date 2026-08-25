@@ -36,32 +36,62 @@ function validateUrl(url: string, name: string): string {
 }
 
 // WhatsApp Cloud API configuration
-export const WHATSAPP_ACCESS_TOKEN = requireEnv("WHATSAPP_ACCESS_TOKEN");
-export const WHATSAPP_PHONE_NUMBER_ID = requireEnv("WHATSAPP_PHONE_NUMBER_ID");
-export const WHATSAPP_VERIFY_TOKEN = requireEnv("WHATSAPP_VERIFY_TOKEN");
-export const WHATSAPP_BUSINESS_ACCOUNT_ID = optionalEnv("WHATSAPP_BUSINESS_ACCOUNT_ID", "");
-export const WHATSAPP_APP_SECRET = optionalEnv("WHATSAPP_APP_SECRET", "");
+export const getWhatsappAccessToken = () => requireEnv("WHATSAPP_ACCESS_TOKEN");
+export const getWhatsappPhoneNumberId = () => requireEnv("WHATSAPP_PHONE_NUMBER_ID");
+export const getWhatsappVerifyToken = () => requireEnv("WHATSAPP_VERIFY_TOKEN");
+export const getWhatsappBusinessAccountId = () => optionalEnv("WHATSAPP_BUSINESS_ACCOUNT_ID", "");
+export const getWhatsappAppSecret = () => optionalEnv("WHATSAPP_APP_SECRET", "");
 
 // WhatsApp API base URL
-export const WHATSAPP_API_URL = `https://graph.facebook.com/v21.0/${WHATSAPP_PHONE_NUMBER_ID}`;
+export const getWhatsappApiUrl = () =>
+  `https://graph.facebook.com/v21.0/${getWhatsappPhoneNumberId()}`;
 
 // Core configuration
-export const APP_URL = validateUrl(optionalEnv("APP_URL", "https://foodshare.club"), "APP_URL");
-export const SUPABASE_URL = validateUrl(requireEnv("SUPABASE_URL"), "SUPABASE_URL");
-export const SUPABASE_SERVICE_ROLE_KEY = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+export const getAppUrl = () =>
+  validateUrl(
+    optionalEnv(
+      "APP_URL",
+      `https://${Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"}`,
+    ),
+    "APP_URL",
+  );
+export const getSupabaseUrl = () => validateUrl(requireEnv("SUPABASE_URL"), "SUPABASE_URL");
+export const getSupabaseServiceRoleKey = () => requireEnv("SUPABASE_SERVICE_ROLE_KEY");
 
 // Configuration object for easy access
 export const config = {
-  whatsapp: {
-    accessToken: WHATSAPP_ACCESS_TOKEN,
-    phoneNumberId: WHATSAPP_PHONE_NUMBER_ID,
-    verifyToken: WHATSAPP_VERIFY_TOKEN,
-    businessAccountId: WHATSAPP_BUSINESS_ACCOUNT_ID,
-    appSecret: WHATSAPP_APP_SECRET,
-    apiUrl: WHATSAPP_API_URL,
+  get whatsapp() {
+    return {
+      get accessToken() {
+        return getWhatsappAccessToken();
+      },
+      get phoneNumberId() {
+        return getWhatsappPhoneNumberId();
+      },
+      get verifyToken() {
+        return getWhatsappVerifyToken();
+      },
+      get businessAccountId() {
+        return getWhatsappBusinessAccountId();
+      },
+      get appSecret() {
+        return getWhatsappAppSecret();
+      },
+      get apiUrl() {
+        return getWhatsappApiUrl();
+      },
+    };
   },
-  appUrl: APP_URL,
-  supabaseUrl: SUPABASE_URL,
-  supabaseKey: SUPABASE_SERVICE_ROLE_KEY,
-  isProduction: Deno.env.get("DENO_ENV") === "production",
-} as const;
+  get appUrl() {
+    return getAppUrl();
+  },
+  get supabaseUrl() {
+    return getSupabaseUrl();
+  },
+  get supabaseKey() {
+    return getSupabaseServiceRoleKey();
+  },
+  get isProduction() {
+    return Deno.env.get("DENO_ENV") === "production";
+  },
+};

@@ -1,3 +1,4 @@
+import { logger } from "../../_shared/logger.ts";
 /**
  * Health Check Handler
  * Returns comprehensive health status for the translation service
@@ -10,10 +11,10 @@ export default async function healthHandler(
   corsHeaders: Record<string, string>,
 ): Promise<Response> {
   if (req.method !== "GET") {
-    return new Response(
-      JSON.stringify({ error: "Method not allowed" }),
-      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
@@ -28,17 +29,14 @@ export default async function healthHandler(
       httpStatus = 200; // Still OK but degraded
     }
 
-    return new Response(
-      JSON.stringify(health, null, 2),
-      {
-        status: httpStatus,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-        },
+    return new Response(JSON.stringify(health, null, 2), {
+      status: httpStatus,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
       },
-    );
+    });
   } catch (error) {
     logger.error("Health check error", error as Error);
     return new Response(

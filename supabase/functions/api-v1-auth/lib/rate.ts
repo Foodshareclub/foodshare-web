@@ -104,10 +104,7 @@ async function sendLockoutAlert(
 // Handlers
 // =============================================================================
 
-export async function handleRateCheck(
-  body: RateCheckBody,
-  ctx: AuthContext,
-): Promise<Response> {
+export async function handleRateCheck(body: RateCheckBody, ctx: AuthContext): Promise<Response> {
   const { supabase, corsHeaders, clientIp } = ctx;
   const email = body.email.toLowerCase().trim();
   const ip = body.ipAddress || clientIp;
@@ -120,18 +117,24 @@ export async function handleRateCheck(
   if (error) {
     logger.error("Error checking lockout status", new Error(error.message));
     return new Response(
-      JSON.stringify({ allowed: true, warning: "Could not verify lockout status" }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      JSON.stringify({
+        allowed: true,
+        warning: "Could not verify lockout status",
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   }
 
   const status = (data as LockoutStatus[])?.[0];
 
   if (!status) {
-    return new Response(
-      JSON.stringify({ allowed: true, isLocked: false, ipBlocked: false }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ allowed: true, isLocked: false, ipBlocked: false }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   return new Response(
@@ -147,11 +150,16 @@ export async function handleRateCheck(
         ? `Account temporarily locked. Try again ${formatTimeRemaining(status.locked_until)}.`
         : status.ip_blocked
         ? `Too many attempts from this IP. Try again ${
-          formatTimeRemaining(status.ip_blocked_until)
+          formatTimeRemaining(
+            status.ip_blocked_until,
+          )
         }.`
         : null,
     }),
-    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    },
   );
 }
 
@@ -178,8 +186,14 @@ export async function handleRateRecord(
   if (error) {
     logger.error("Error recording login attempt", new Error(error.message));
     return new Response(
-      JSON.stringify({ recorded: false, warning: "Could not record login attempt" }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      JSON.stringify({
+        recorded: false,
+        warning: "Could not record login attempt",
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   }
 
@@ -199,10 +213,15 @@ export async function handleRateRecord(
       ipBlocked: result?.ip_blocked || false,
       message: result?.is_locked
         ? `Account locked due to too many failed attempts. Try again ${
-          formatTimeRemaining(result.locked_until)
+          formatTimeRemaining(
+            result.locked_until,
+          )
         }.`
         : null,
     }),
-    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    },
   );
 }

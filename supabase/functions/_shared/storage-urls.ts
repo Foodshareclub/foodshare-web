@@ -12,6 +12,7 @@
 import { validateImageUrl } from "./url-validation.ts";
 import { getR2Config } from "./r2-storage.ts";
 import { STORAGE_BUCKETS } from "./storage-constants.ts";
+import { getSecret } from "./vault.ts";
 
 export interface ParsedStorageUrl {
   provider: "supabase" | "r2";
@@ -19,7 +20,7 @@ export interface ParsedStorageUrl {
   path: string;
 }
 
-const VALID_BUCKETS = new Set(Object.values(STORAGE_BUCKETS));
+const VALID_BUCKETS = new Set<string>(Object.values(STORAGE_BUCKETS));
 
 /**
  * Parse a URL into its storage provider, bucket, and path components.
@@ -28,7 +29,7 @@ const VALID_BUCKETS = new Set(Object.values(STORAGE_BUCKETS));
  * Supabase pattern: {SUPABASE_URL}/storage/v1/object/public/{bucket}/{path}
  * R2 pattern:       {R2_PUBLIC_URL}/{bucket}/{path}
  */
-export function parseStorageUrl(url: string): ParsedStorageUrl | null {
+export async function parseStorageUrl(url: string): Promise<ParsedStorageUrl | null> {
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -37,15 +38,13 @@ export function parseStorageUrl(url: string): ParsedStorageUrl | null {
   }
 
   // Check Supabase Storage pattern
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseUrl = await getSecret("SUPABASE_URL");
   if (supabaseUrl) {
     try {
       const supabaseHost = new URL(supabaseUrl).hostname;
       if (parsed.hostname === supabaseHost) {
         // Pattern: /storage/v1/object/public/{bucket}/{...path}
-        const match = parsed.pathname.match(
-          /^\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/,
-        );
+        const match = parsed.pathname.match(/^\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
         if (match) {
           const [, bucket, path] = match;
           if (VALID_BUCKETS.has(bucket)) {
@@ -59,7 +58,7 @@ export function parseStorageUrl(url: string): ParsedStorageUrl | null {
   }
 
   // Check R2 pattern
-  const r2Config = getR2Config();
+  const r2Config = await getR2Config();
   if (r2Config?.publicUrl) {
     try {
       const r2Host = new URL(r2Config.publicUrl).hostname;
@@ -85,8 +84,8 @@ export function parseStorageUrl(url: string): ParsedStorageUrl | null {
 /**
  * Check whether a URL points to our own Supabase or R2 storage.
  */
-export function isOwnStorageUrl(url: string): boolean {
-  return parseStorageUrl(url) !== null;
+export async function isOwnStorageUrl(url: string): Promise<boolean> {
+  return (await parseStorageUrl(url)) !== null;
 }
 
 /**
@@ -95,9 +94,9 @@ export function isOwnStorageUrl(url: string): boolean {
  * Returns a discriminated union so callers get the list of offending URLs
  * for a meaningful error message.
  */
-export function validateProductImageUrls(
+export async function validateProductImageUrls(
   urls: string[],
-): { valid: true } | { valid: false; invalidUrls: string[] } {
+): Promise<{ valid: true } | { valid: false; invalidUrls: string[] }> {
   const invalidUrls: string[] = [];
 
   for (const url of urls) {
@@ -109,7 +108,7 @@ export function validateProductImageUrls(
     }
 
     // Second: must belong to our storage
-    if (!isOwnStorageUrl(url)) {
+    if (!(await isOwnStorageUrl(url))) {
       invalidUrls.push(url);
     }
   }

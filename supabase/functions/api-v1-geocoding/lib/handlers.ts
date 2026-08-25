@@ -101,9 +101,9 @@ async function handleSignupLocation(
           durationMs: Date.now() - startTime,
         });
         return new Response(
-          JSON.stringify(
-            { error: { message: "Webhook verification failed", http_code: 401 } },
-          ),
+          JSON.stringify({
+            error: { message: "Webhook verification failed", http_code: 401 },
+          }),
           {
             status: 401,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -209,15 +209,21 @@ async function handleMapPreferencesGet(
     .single();
 
   if (error && error.code !== "PGRST116") {
-    logger.error("Failed to get map preferences", { requestId, error: error.message });
+    logger.error("Failed to get map preferences", {
+      requestId,
+      error: error.message,
+    });
     return errorResponse(error.message, corsHeaders, 500, requestId);
   }
 
-  return jsonResponse({
-    success: true,
-    preferences: (data as MapPreferencesRow | null) ?? null,
-    source: "database",
-  }, corsHeaders);
+  return jsonResponse(
+    {
+      success: true,
+      preferences: (data as MapPreferencesRow | null) ?? null,
+      source: "database",
+    },
+    corsHeaders,
+  );
 }
 
 async function handleMapPreferencesSave(
@@ -256,7 +262,10 @@ async function handleMapPreferencesSave(
     .single();
 
   if (error) {
-    logger.error("Failed to save map preferences", { requestId, error: error.message });
+    logger.error("Failed to save map preferences", {
+      requestId,
+      error: error.message,
+    });
     return errorResponse(error.message, corsHeaders, 500, requestId);
   }
 
@@ -301,7 +310,10 @@ async function handleMapAnalyticsTrack(
   const { error } = await supabase.from("map_interaction_events").insert(event);
 
   if (error) {
-    logger.error("Failed to track map analytics", { requestId, error: error.message });
+    logger.error("Failed to track map analytics", {
+      requestId,
+      error: error.message,
+    });
     return jsonResponse({ success: false, error: error.message }, corsHeaders, 500);
   }
 
@@ -326,7 +338,10 @@ async function handleMapAnalyticsHotspots(
   });
 
   if (error) {
-    logger.error("Failed to detect map hotspots", { requestId, error: error.message });
+    logger.error("Failed to detect map hotspots", {
+      requestId,
+      error: error.message,
+    });
     return errorResponse(error.message, corsHeaders, 500, requestId);
   }
 
@@ -341,11 +356,14 @@ async function handleMapAnalyticsHotspots(
     confidenceScore: row.confidence_score,
   }));
 
-  return jsonResponse({
-    success: true,
-    hotspots,
-    predictedCenter: hotspots[0]?.center || null,
-  }, corsHeaders);
+  return jsonResponse(
+    {
+      success: true,
+      hotspots,
+      predictedCenter: hotspots[0]?.center || null,
+    },
+    corsHeaders,
+  );
 }
 
 async function handleMapQualityUpdate(
@@ -366,7 +384,10 @@ async function handleMapQualityUpdate(
   });
 
   if (error) {
-    logger.error("Failed to update network profile", { requestId, error: error.message });
+    logger.error("Failed to update network profile", {
+      requestId,
+      error: error.message,
+    });
     return errorResponse(error.message, corsHeaders, 500, requestId);
   }
 
@@ -387,16 +408,19 @@ async function handleMapQualityGet(
 
   if (error) {
     // Return default settings for new users
-    return jsonResponse({
-      success: true,
-      settings: {
-        quality: "medium",
-        retina: true,
-        vector: true,
-        concurrent_tiles: 6,
-        compression: "medium",
+    return jsonResponse(
+      {
+        success: true,
+        settings: {
+          quality: "medium",
+          retina: true,
+          vector: true,
+          concurrent_tiles: 6,
+          compression: "medium",
+        },
       },
-    }, corsHeaders);
+      corsHeaders,
+    );
   }
 
   const profile = data as {
@@ -407,20 +431,23 @@ async function handleMapQualityGet(
     avg_bandwidth_mbps: number;
   };
 
-  return jsonResponse({
-    success: true,
-    settings: {
-      quality: profile.preferred_tile_quality,
-      retina: profile.enable_retina,
-      vector: profile.enable_vector_tiles,
-      concurrent_tiles: profile.max_concurrent_tiles,
-      compression: profile.avg_bandwidth_mbps < 2
-        ? "high"
-        : profile.avg_bandwidth_mbps < 10
-        ? "medium"
-        : "low",
+  return jsonResponse(
+    {
+      success: true,
+      settings: {
+        quality: profile.preferred_tile_quality,
+        retina: profile.enable_retina,
+        vector: profile.enable_vector_tiles,
+        concurrent_tiles: profile.max_concurrent_tiles,
+        compression: profile.avg_bandwidth_mbps < 2
+          ? "high"
+          : profile.avg_bandwidth_mbps < 10
+          ? "medium"
+          : "low",
+      },
     },
-  }, corsHeaders);
+    corsHeaders,
+  );
 }
 
 async function handleMapPreload(
@@ -476,16 +503,17 @@ async function handleMapPreload(
     }
   }
 
-  const limitedUrls = preloadUrls
-    .sort((a, b) => b.priority - a.priority)
-    .slice(0, maxTiles);
+  const limitedUrls = preloadUrls.sort((a, b) => b.priority - a.priority).slice(0, maxTiles);
 
-  return jsonResponse({
-    success: true,
-    preloadUrls: limitedUrls,
-    quality,
-    maxTiles,
-  }, corsHeaders);
+  return jsonResponse(
+    {
+      success: true,
+      preloadUrls: limitedUrls,
+      quality,
+      maxTiles,
+    },
+    corsHeaders,
+  );
 }
 
 // =============================================================================
@@ -506,17 +534,14 @@ async function handleMatchUsers(
   const { latitude, longitude, dietaryPreferences, radiusKm, limit } = parsed.data;
   const supabase = getSupabaseClient();
 
-  const { data: matches, error: rpcError } = await supabase.rpc(
-    "calculate_user_matches",
-    {
-      p_user_id: userId,
-      p_latitude: latitude,
-      p_longitude: longitude,
-      p_dietary_preferences: dietaryPreferences,
-      p_radius_km: radiusKm,
-      p_limit: limit,
-    },
-  );
+  const { data: matches, error: rpcError } = await supabase.rpc("calculate_user_matches", {
+    p_user_id: userId,
+    p_latitude: latitude,
+    p_longitude: longitude,
+    p_dietary_preferences: dietaryPreferences,
+    p_radius_km: radiusKm,
+    p_limit: limit,
+  });
 
   if (rpcError) {
     logger.error("RPC error calculating user matches", new Error(rpcError.message));
@@ -538,13 +563,16 @@ async function handleMatchUsers(
     commonPreferences: (match.common_preferences as string[]) || [],
   }));
 
-  return jsonResponse({
-    success: true,
-    matches: formattedMatches,
-    totalMatches: formattedMatches.length,
-    userLocation: { latitude, longitude },
-    radiusKm,
-  }, corsHeaders);
+  return jsonResponse(
+    {
+      success: true,
+      matches: formattedMatches,
+      totalMatches: formattedMatches.length,
+      userLocation: { latitude, longitude },
+      radiusKm,
+    },
+    corsHeaders,
+  );
 }
 
 // =============================================================================
@@ -610,7 +638,9 @@ async function handleAddressUpdate(
     .eq("profile_id", address.profile_id);
 
   if (updateError) {
-    logger.error("Failed to update coordinates", { error: updateError.message });
+    logger.error("Failed to update coordinates", {
+      error: updateError.message,
+    });
     const result: AddressUpdateResult = {
       profile_id: address.profile_id,
       status: "error",
@@ -656,10 +686,9 @@ async function handlePostBatch(
 
   logger.info("Starting batch processing", { batchSize, requestId });
 
-  const { data: queueItems, error: fetchError } = await supabase.rpc(
-    "get_pending_geocode_queue",
-    { batch_size: batchSize },
-  );
+  const { data: queueItems, error: fetchError } = await supabase.rpc("get_pending_geocode_queue", {
+    batch_size: batchSize,
+  });
 
   if (fetchError) {
     return errorResponse(
@@ -671,13 +700,16 @@ async function handlePostBatch(
   }
 
   if (!queueItems || queueItems.length === 0) {
-    return jsonResponse({
-      message: "No items to process",
-      processed: 0,
-      successful: 0,
-      failed: 0,
-      results: [],
-    }, corsHeaders);
+    return jsonResponse(
+      {
+        message: "No items to process",
+        processed: 0,
+        successful: 0,
+        failed: 0,
+        results: [],
+      },
+      corsHeaders,
+    );
   }
 
   const results: ProcessResult[] = [];
@@ -704,13 +736,16 @@ async function handlePostBatch(
     }
   }
 
-  return jsonResponse({
-    message: `Processed ${queueItems.length} items: ${successful} successful, ${failed} failed`,
-    processed: queueItems.length,
-    successful,
-    failed,
-    results,
-  }, corsHeaders);
+  return jsonResponse(
+    {
+      message: `Processed ${queueItems.length} items: ${successful} successful, ${failed} failed`,
+      processed: queueItems.length,
+      successful,
+      failed,
+      results,
+    },
+    corsHeaders,
+  );
 }
 
 async function handleSinglePost(
@@ -727,21 +762,27 @@ async function handleSinglePost(
   const supabase = getSupabaseClient();
 
   if (!post_address.trim()) {
-    return jsonResponse({
-      post_id: id,
-      success: false,
-      reason: "No address provided",
-    }, corsHeaders);
+    return jsonResponse(
+      {
+        post_id: id,
+        success: false,
+        reason: "No address provided",
+      },
+      corsHeaders,
+    );
   }
 
   const coordinates = await geocodeAddress(post_address);
 
   if (!coordinates) {
-    return jsonResponse({
-      post_id: id,
-      success: false,
-      reason: "No coordinates found",
-    }, corsHeaders);
+    return jsonResponse(
+      {
+        post_id: id,
+        success: false,
+        reason: "No coordinates found",
+      },
+      corsHeaders,
+    );
   }
 
   const { error } = await supabase
@@ -755,11 +796,14 @@ async function handleSinglePost(
     return errorResponse(error.message, corsHeaders, 500, requestId);
   }
 
-  return jsonResponse({
-    post_id: id,
-    success: true,
-    coordinates,
-  }, corsHeaders);
+  return jsonResponse(
+    {
+      post_id: id,
+      success: true,
+      coordinates,
+    },
+    corsHeaders,
+  );
 }
 
 async function handlePostStats(corsHeaders: Record<string, string>): Promise<Response> {
@@ -767,7 +811,7 @@ async function handlePostStats(corsHeaders: Record<string, string>): Promise<Res
 
   const { data, error } = await supabase
     .from("location_update_queue")
-    .select("status, retry_count, max_retries, completed_at");
+    .select("status,retry_count,max_retries,completed_at");
 
   if (error) {
     return errorResponse(error.message, corsHeaders, 500);
@@ -816,10 +860,13 @@ async function handlePostCleanup(
     return errorResponse(error.message, corsHeaders, 500, requestId);
   }
 
-  return jsonResponse({
-    message: `Cleaned up ${data || 0} old queue entries`,
-    deleted: data || 0,
-  }, corsHeaders);
+  return jsonResponse(
+    {
+      message: `Cleaned up ${data || 0} old queue entries`,
+      deleted: data || 0,
+    },
+    corsHeaders,
+  );
 }
 
 async function handleGeocodeOnly(
@@ -835,18 +882,24 @@ async function handleGeocodeOnly(
   const coordinates = await geocodeAddress(parsed.data.address);
 
   if (!coordinates) {
-    return jsonResponse({
-      success: false,
-      address: parsed.data.address,
-      message: "No coordinates found for this address",
-    }, corsHeaders);
+    return jsonResponse(
+      {
+        success: false,
+        address: parsed.data.address,
+        message: "No coordinates found for this address",
+      },
+      corsHeaders,
+    );
   }
 
-  return jsonResponse({
-    success: true,
-    address: parsed.data.address,
-    coordinates,
-  }, corsHeaders);
+  return jsonResponse(
+    {
+      success: true,
+      address: parsed.data.address,
+      coordinates,
+    },
+    corsHeaders,
+  );
 }
 
 // =============================================================================
@@ -860,32 +913,35 @@ export async function handleGet(ctx: HandlerContext): Promise<Response> {
 
   // Health check
   if (route.resource === "health" || route.resource === "") {
-    return ok({
-      status: "healthy",
-      version: VERSION,
-      service: SERVICE,
-      timestamp: new Date().toISOString(),
-      endpoints: [
-        "address",
-        "post",
-        "post/batch",
-        "post/stats",
-        "post/cleanup",
-        "geocode",
-        "signup-location",
-        "match",
-        "map/preferences",
-        "map/analytics",
-        "map/quality",
-        "map/preload",
-      ],
-      cacheStats: getCacheStats(),
-      signupLocation: {
-        enabled: SIGNUP_LOCATION_CONFIG.enabled,
-        hookSecretConfigured: !!SIGNUP_LOCATION_CONFIG.hookSecret,
-        circuitBreaker: ipApiCircuitBreaker.state,
+    return ok(
+      {
+        status: "healthy",
+        version: VERSION,
+        service: SERVICE,
+        timestamp: new Date().toISOString(),
+        endpoints: [
+          "address",
+          "post",
+          "post/batch",
+          "post/stats",
+          "post/cleanup",
+          "geocode",
+          "signup-location",
+          "match",
+          "map/preferences",
+          "map/analytics",
+          "map/quality",
+          "map/preload",
+        ],
+        cacheStats: getCacheStats(),
+        signupLocation: {
+          enabled: SIGNUP_LOCATION_CONFIG.enabled,
+          hookSecretConfigured: !!SIGNUP_LOCATION_CONFIG.hookSecret,
+          circuitBreaker: ipApiCircuitBreaker.state,
+        },
       },
-    }, ctx);
+      ctx,
+    );
   }
 
   // Signup location health sub-check (GET)

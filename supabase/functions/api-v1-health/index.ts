@@ -25,6 +25,7 @@ import { getErrorStats, getRecentAlerts } from "../_shared/error-tracking.ts";
 import { getAllCircuitStatuses } from "../_shared/circuit-breaker.ts";
 import { getSupabaseClient } from "../_shared/supabase.ts";
 import { formatPrometheusMetrics } from "../_shared/prometheus.ts";
+import { logger } from "../_shared/logger.ts";
 
 const SERVICE = "api-v1-health";
 
@@ -61,11 +62,10 @@ async function handleMetrics(ctx: HandlerContext): Promise<Response> {
     const supabase = getSupabaseClient();
     const { error } = await supabase.from("profiles").select("id").limit(1);
     databaseLatencyMs = Date.now() - dbStart;
-    if (error) console.error("DB_ERROR:", JSON.stringify(error));
+    if (error) logger.error("DB_ERROR:", { error: JSON.stringify(error) });
     databaseHealthy = !error;
-    if (error) console.error("DB_ERROR:", JSON.stringify(error));
   } catch (e) {
-    console.error("DB_EXCEPTION:", e);
+    logger.error("DB_EXCEPTION:", { error: e });
     databaseHealthy = false;
   }
 
@@ -166,15 +166,15 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
           bySeverity: metricsResponse.errorStats.bySeverity,
           topErrors: metricsResponse.errorStats.topErrors.slice(0, 5),
         },
-        circuitBreakersDetailed: Object.entries(metricsResponse.circuitBreakers).map((
-          [name, cb],
-        ) => ({
-          name,
-          state: cb.state,
-          failures: cb.failures,
-          totalRequests: cb.totalRequests,
-          totalFailures: cb.totalFailures,
-        })),
+        circuitBreakersDetailed: Object.entries(metricsResponse.circuitBreakers).map(
+          ([name, cb]) => ({
+            name,
+            state: cb.state,
+            failures: cb.failures,
+            totalRequests: cb.totalRequests,
+            totalFailures: cb.totalFailures,
+          }),
+        ),
       },
       ctx,
       { status: httpStatus },
@@ -244,18 +244,20 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
 // API Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: SERVICE,
-  version: "1",
-  requireAuth: false,
-  csrf: false,
-  rateLimit: {
-    limit: 200,
-    windowMs: 60_000,
-    keyBy: "ip",
-  },
-  routes: {
-    GET: { handler: handleGet },
-    POST: { handler: handlePost },
-  },
-}));
+Deno.serve(
+  createAPIHandler({
+    service: SERVICE,
+    version: "1",
+    requireAuth: false,
+    csrf: false,
+    rateLimit: {
+      limit: 200,
+      windowMs: 60_000,
+      keyBy: "ip",
+    },
+    routes: {
+      GET: { handler: handleGet },
+      POST: { handler: handlePost },
+    },
+  }),
+);

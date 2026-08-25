@@ -56,10 +56,12 @@ export async function getComments(ctx: HandlerContext<unknown, ForumQuery>): Pro
 
   const { data, error } = await supabase
     .from("comments")
-    .select(`
+    .select(
+      `
       *,
       author:profiles!comments_user_id_fkey(id, nickname, avatar_url, is_verified)
-    `)
+    `,
+    )
     .eq("forum_id", forumId)
     .order("comment_created_at", { ascending: true })
     .range(offset, offset + limit - 1);
@@ -126,7 +128,9 @@ export async function updateComment(ctx: HandlerContext<unknown, ForumQuery>): P
   }
 
   const service = new CommentService(supabase, userId);
-  const data = await service.updateComment(commentId, { content: body.content });
+  const data = await service.updateComment(commentId, {
+    content: body.content,
+  });
 
   return ok(data, ctx);
 }

@@ -1,6 +1,7 @@
 # Unified Notification API v1
 
-Enterprise-grade notification system consolidating ALL notification channels into a single, cohesive API.
+Enterprise-grade notification system consolidating ALL notification channels
+into a single, cohesive API.
 
 ## Features
 
@@ -269,7 +270,8 @@ curl -X POST https://your-project.supabase.co/functions/v1/api-v1-notifications/
 
 #### POST /webhook/:provider
 
-Handle delivery events from providers (Resend, Brevo, SES, MailerSend, FCM, APNs).
+Handle delivery events from providers (Resend, Brevo, SES, MailerSend, FCM,
+APNs).
 
 ```bash
 # Called by provider with signature verification

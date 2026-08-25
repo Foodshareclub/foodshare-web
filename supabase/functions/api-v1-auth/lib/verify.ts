@@ -42,11 +42,7 @@ function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-function json(
-  data: unknown,
-  corsHeaders: Record<string, string>,
-  status = 200,
-): Response {
+function json(data: unknown, corsHeaders: Record<string, string>, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -66,7 +62,10 @@ function checkResendRateLimit(email: string): { allowed: boolean; remainingMinut
   const current = resendRateLimitMap.get(key);
 
   if (!current) {
-    resendRateLimitMap.set(key, { count: 1, resetAt: now + RESEND_RATE_LIMIT_WINDOW_MS });
+    resendRateLimitMap.set(key, {
+      count: 1,
+      resetAt: now + RESEND_RATE_LIMIT_WINDOW_MS,
+    });
     return { allowed: true };
   }
 
@@ -83,10 +82,11 @@ function checkResendRateLimit(email: string): { allowed: boolean; remainingMinut
 async function sendVerificationEmail(email: string, code: string): Promise<boolean> {
   try {
     const emailService = getEmailService();
-    const result = await emailService.sendEmail({
-      to: email,
-      subject: "FoodShare - Verify Your Email",
-      html: `
+    const result = await emailService.sendEmail(
+      {
+        to: email,
+        subject: "FoodShare - Verify Your Email",
+        html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #22c55e;">FoodShare Email Verification</h2>
           <p>Your verification code is:</p>
@@ -99,8 +99,10 @@ async function sendVerificationEmail(email: string, code: string): Promise<boole
           <p style="color: #9ca3af; font-size: 12px;">If you didn't request this, please ignore this email.</p>
         </div>
       `,
-      tags: ["verification"],
-    }, "auth");
+        tags: ["verification"],
+      },
+      "auth",
+    );
 
     return result.success;
   } catch (error) {
@@ -120,17 +122,14 @@ async function sendVerificationEmail(email: string, code: string): Promise<boole
  * POST /verify/send
  * Generate a 6-digit code, store it on the profile, and send via email.
  */
-export async function handleVerifySend(
-  body: VerifySendBody,
-  ctx: AuthContext,
-): Promise<Response> {
+export async function handleVerifySend(body: VerifySendBody, ctx: AuthContext): Promise<Response> {
   const { supabase, corsHeaders } = ctx;
   const email = body.email.toLowerCase().trim();
 
   // Look up profile by email
   const { data: profile, error: lookupError } = await supabase
     .from("profiles")
-    .select("id, email_verified, verification_locked_until, verification_attempts")
+    .select("id,email_verified,verification_locked_until,verification_attempts")
     .eq("email", email)
     .maybeSingle();
 
@@ -139,17 +138,24 @@ export async function handleVerifySend(
     return json({ success: false, error: "Internal error" }, corsHeaders, 500);
   }
 
-  if (!profile) {
+  const profileData = profile as {
+    id: string;
+    email_verified: boolean;
+    verification_locked_until: string | null;
+    verification_attempts: number;
+  } | null;
+
+  if (!profileData) {
     return json({ success: false, error: "No account found for this email" }, corsHeaders, 404);
   }
 
-  if (profile.email_verified) {
+  if (profileData.email_verified) {
     return json({ success: false, error: "Email is already verified" }, corsHeaders, 409);
   }
 
   // Check lockout
-  if (profile.verification_locked_until) {
-    const lockedUntil = new Date(profile.verification_locked_until);
+  if (profileData.verification_locked_until) {
+    const lockedUntil = new Date(profileData.verification_locked_until);
     if (lockedUntil > new Date()) {
       const remainingMs = lockedUntil.getTime() - Date.now();
       const remainingMinutes = Math.ceil(remainingMs / 60000);
@@ -157,7 +163,7 @@ export async function handleVerifySend(
         {
           success: false,
           error: "Account temporarily locked due to too many failed attempts",
-          lockedUntil: profile.verification_locked_until,
+          lockedUntil: profileData.verification_locked_until,
           remainingMinutes,
         },
         corsHeaders,
@@ -178,7 +184,7 @@ export async function handleVerifySend(
       verification_attempts: 0,
       verification_locked_until: null,
     })
-    .eq("id", profile.id);
+    .eq("id", profileData.id);
 
   if (updateError) {
     logger.error("Error storing verification code", new Error(updateError.message));
@@ -196,11 +202,14 @@ export async function handleVerifySend(
     requestId: ctx.requestId,
   });
 
-  return json({
-    success: true,
-    message: "Verification code sent",
-    expiresAt: expiresAt.toISOString(),
-  }, corsHeaders);
+  return json(
+    {
+      success: true,
+      message: "Verification code sent",
+      expiresAt: expiresAt.toISOString(),
+    },
+    corsHeaders,
+  );
 }
 
 /**
@@ -228,13 +237,21 @@ export async function handleVerifyConfirm(
     return json({ success: false, error: "Internal error" }, corsHeaders, 500);
   }
 
-  if (!profile) {
+  const profileData = profile as {
+    id: string;
+    verification_code: string | null;
+    verification_code_expires_at: string | null;
+    verification_attempts: number;
+    verification_locked_until: string | null;
+  } | null;
+
+  if (!profileData) {
     return json({ success: false, error: "No account found for this email" }, corsHeaders, 404);
   }
 
   // Check lockout
-  if (profile.verification_locked_until) {
-    const lockedUntil = new Date(profile.verification_locked_until);
+  if (profileData.verification_locked_until) {
+    const lockedUntil = new Date(profileData.verification_locked_until);
     if (lockedUntil > new Date()) {
       const remainingMs = lockedUntil.getTime() - Date.now();
       const remainingMinutes = Math.ceil(remainingMs / 60000);
@@ -242,7 +259,7 @@ export async function handleVerifyConfirm(
         {
           success: false,
           error: "Account temporarily locked due to too many failed attempts",
-          lockedUntil: profile.verification_locked_until,
+          lockedUntil: profileData.verification_locked_until,
           remainingMinutes,
         },
         corsHeaders,
@@ -253,19 +270,22 @@ export async function handleVerifyConfirm(
 
   // Check code expiry
   if (
-    !profile.verification_code_expires_at ||
-    new Date(profile.verification_code_expires_at) < new Date()
+    !profileData.verification_code_expires_at ||
+    new Date(profileData.verification_code_expires_at) < new Date()
   ) {
     return json(
-      { success: false, error: "Verification code has expired. Request a new one." },
+      {
+        success: false,
+        error: "Verification code has expired. Request a new one.",
+      },
       corsHeaders,
       410,
     );
   }
 
   // Check code match
-  if (profile.verification_code !== body.code) {
-    const newAttempts = (profile.verification_attempts || 0) + 1;
+  if (profileData.verification_code !== body.code) {
+    const newAttempts = (profileData.verification_attempts || 0) + 1;
     const attemptsLeft = MAX_VERIFICATION_ATTEMPTS - newAttempts;
 
     if (newAttempts >= MAX_VERIFICATION_ATTEMPTS) {
@@ -277,10 +297,10 @@ export async function handleVerifyConfirm(
           verification_attempts: newAttempts,
           verification_locked_until: lockedUntil.toISOString(),
         })
-        .eq("id", profile.id);
+        .eq("id", profileData.id);
 
       logger.warn("Account locked due to failed verification attempts", {
-        profileId: profile.id,
+        profileId: profileData.id,
         attempts: newAttempts,
         requestId: ctx.requestId,
       });
@@ -300,7 +320,7 @@ export async function handleVerifyConfirm(
     await supabase
       .from("profiles")
       .update({ verification_attempts: newAttempts })
-      .eq("id", profile.id);
+      .eq("id", profileData.id);
 
     return json(
       {
@@ -323,14 +343,17 @@ export async function handleVerifyConfirm(
       verification_attempts: 0,
       verification_locked_until: null,
     })
-    .eq("id", profile.id);
+    .eq("id", profileData.id);
 
   if (verifyError) {
     logger.error("Error marking email verified", new Error(verifyError.message));
     return json({ success: false, error: "Internal error" }, corsHeaders, 500);
   }
 
-  logger.info("Email verified successfully", { profileId: profile.id, requestId: ctx.requestId });
+  logger.info("Email verified successfully", {
+    profileId: profileData.id,
+    requestId: ctx.requestId,
+  });
 
   return json({ success: true, message: "Email verified successfully" }, corsHeaders);
 }
@@ -363,7 +386,7 @@ export async function handleVerifyResend(
   // Look up profile
   const { data: profile, error: lookupError } = await supabase
     .from("profiles")
-    .select("id, email_verified, verification_locked_until")
+    .select("id,email_verified,verification_locked_until")
     .eq("email", email)
     .maybeSingle();
 
@@ -372,17 +395,23 @@ export async function handleVerifyResend(
     return json({ success: false, error: "Internal error" }, corsHeaders, 500);
   }
 
-  if (!profile) {
+  const profileData = profile as {
+    id: string;
+    email_verified: boolean;
+    verification_locked_until: string | null;
+  } | null;
+
+  if (!profileData) {
     return json({ success: false, error: "No account found for this email" }, corsHeaders, 404);
   }
 
-  if (profile.email_verified) {
+  if (profileData.email_verified) {
     return json({ success: false, error: "Email is already verified" }, corsHeaders, 409);
   }
 
   // Check lockout
-  if (profile.verification_locked_until) {
-    const lockedUntil = new Date(profile.verification_locked_until);
+  if (profileData.verification_locked_until) {
+    const lockedUntil = new Date(profileData.verification_locked_until);
     if (lockedUntil > new Date()) {
       const remainingMs = lockedUntil.getTime() - Date.now();
       const remainingMinutes = Math.ceil(remainingMs / 60000);
@@ -390,7 +419,7 @@ export async function handleVerifyResend(
         {
           success: false,
           error: "Account temporarily locked",
-          lockedUntil: profile.verification_locked_until,
+          lockedUntil: profileData.verification_locked_until,
           remainingMinutes,
         },
         corsHeaders,
@@ -409,7 +438,7 @@ export async function handleVerifyResend(
       verification_code: code,
       verification_code_expires_at: expiresAt.toISOString(),
     })
-    .eq("id", profile.id);
+    .eq("id", profileData.id);
 
   if (updateError) {
     logger.error("Error storing verification code", new Error(updateError.message));
@@ -427,9 +456,12 @@ export async function handleVerifyResend(
     requestId: ctx.requestId,
   });
 
-  return json({
-    success: true,
-    message: "New verification code sent",
-    expiresAt: expiresAt.toISOString(),
-  }, corsHeaders);
+  return json(
+    {
+      success: true,
+      message: "New verification code sent",
+      expiresAt: expiresAt.toISOString(),
+    },
+    corsHeaders,
+  );
 }

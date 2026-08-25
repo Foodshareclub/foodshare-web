@@ -60,19 +60,19 @@ import { getSecret, loadAllSecrets } from "./vault.ts";
 interface Schema<T = unknown> {
   // Zod
   parse?: (data: unknown) => T;
-  safeParse?: (
-    data: unknown,
-  ) => { success: true; data: T } | {
-    success: false;
-    error: { errors: Array<{ path: (string | number)[]; message: string }> };
-  };
+  safeParse?: (data: unknown) =>
+    | { success: true; data: T }
+    | {
+      success: false;
+      error: { errors: Array<{ path: (string | number)[]; message: string }> };
+    };
   // Valibot (use `any` for input/output to remain compatible with Zod's internal types)
   // deno-lint-ignore no-explicit-any
   _parse?: (input: any) => any;
 }
 
 /** Handler context with parsed data and auth info */
-export interface HandlerContext<TBody = unknown, TQuery = Record<string, string>> {
+export interface HandlerContext<TBody = unknown, TQuery = Record<string, unknown>> {
   /** The original request */
   request: Request;
   /** Request context (requestId, correlationId, etc.) */
@@ -101,12 +101,12 @@ export interface HandlerContext<TBody = unknown, TQuery = Record<string, string>
 }
 
 /** Route handler function */
-export type RouteHandler<TBody = unknown, TQuery = Record<string, string>> = (
+export type RouteHandler<TBody = unknown, TQuery = Record<string, unknown>> = (
   ctx: HandlerContext<TBody, TQuery>,
 ) => Promise<Response>;
 
 /** Route configuration */
-export interface RouteConfig<TBody = unknown, TQuery = Record<string, string>> {
+export interface RouteConfig<TBody = unknown, TQuery = Record<string, unknown>> {
   /** Zod schema for request body validation (POST/PUT/PATCH) */
   schema?: Schema<TBody>;
   /** Zod schema for query parameters */
@@ -154,7 +154,7 @@ export interface APIHandlerConfig {
   /** URL path pattern for path parameter extraction (e.g., "/products/:productId") */
   pathPattern?: string;
   /** Routes by HTTP method */
-  routes: Partial<Record<HttpMethod, RouteConfig>>;
+  routes: Partial<Record<HttpMethod, RouteConfig<any, any>>>;
   /** Built-in rate limiting configuration */
   rateLimit?: RateLimitConfig;
   /** Custom rate limit check (return error Response to block) */
@@ -199,7 +199,10 @@ async function authenticateRequest(
   supabase: SupabaseClient<any, any, any>,
 ): Promise<string | null> {
   try {
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
     if (error || !user) {
       return null;
@@ -335,12 +338,12 @@ function validateWithSchema<T>(schema: Schema<T>, data: unknown, location: strin
     const result = schema._parse(data);
 
     if ("issues" in result) {
-      const errors = result.issues.map((
-        issue: { path?: Array<{ key: string }>; message: string },
-      ) => ({
-        field: issue.path?.map((p: { key: string }) => p.key).join(".") || "root",
-        message: issue.message,
-      }));
+      const errors = result.issues.map(
+        (issue: { path?: Array<{ key: string }>; message: string }) => ({
+          field: issue.path?.map((p: { key: string }) => p.key).join(".") || "root",
+          message: issue.message,
+        }),
+      );
       throw new ValidationError(`Invalid ${location}`, errors);
     }
 
@@ -442,7 +445,11 @@ function checkInMemoryRateLimit(
   }
 
   existing.count++;
-  return { allowed: true, remaining: limit - existing.count, resetAt: existing.resetAt };
+  return {
+    allowed: true,
+    remaining: limit - existing.count,
+    resetAt: existing.resetAt,
+  };
 }
 
 // Clean up expired entries periodically
@@ -487,9 +494,9 @@ function getRateLimitKey(
 
 function getClientIp(request: Request): string {
   return (
+    request.headers.get("cf-connecting-ip") ||
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     request.headers.get("x-real-ip") ||
-    request.headers.get("cf-connecting-ip") ||
     "unknown"
   );
 }
@@ -633,11 +640,7 @@ export function createAPIHandler(config: APIHandlerConfig) {
         userId = await authenticateRequest(supabase);
 
         if (!userId) {
-          return buildErrorResponse(
-            new AuthenticationError(),
-            corsHeaders,
-            { version },
-          );
+          return buildErrorResponse(new AuthenticationError(), corsHeaders, { version });
         }
 
         setUserId(userId);
@@ -681,7 +684,9 @@ export function createAPIHandler(config: APIHandlerConfig) {
         );
 
         if (idempotencyCheck.cached && idempotencyCheck.response) {
-          logger.info("Returning cached idempotent response", { idempotencyKey });
+          logger.info("Returning cached idempotent response", {
+            idempotencyKey,
+          });
           return buildSuccessResponse(idempotencyCheck.response, corsHeaders, {
             version,
           });
@@ -710,7 +715,11 @@ export function createAPIHandler(config: APIHandlerConfig) {
         if (!shouldSkip) {
           const rateLimitKey = getRateLimitKey(handlerContext, rateLimit.keyBy, service);
 
-          let rateLimitResult: { allowed: boolean; remaining: number; resetAt: number };
+          let rateLimitResult: {
+            allowed: boolean;
+            remaining: number;
+            resetAt: number;
+          };
 
           if (rateLimit.distributed) {
             // Use database-backed distributed rate limiting
@@ -831,11 +840,7 @@ export function createAPIHandler(config: APIHandlerConfig) {
       const statusCode = error instanceof AppError ? error.statusCode : 500;
       perfTracker.end(statusCode);
 
-      const errorResponse = buildErrorResponse(
-        appError,
-        corsHeaders,
-        { version },
-      );
+      const errorResponse = buildErrorResponse(appError, corsHeaders, { version });
       addStandardHeaders(errorResponse, ctx);
       return errorResponse;
     } finally {
@@ -871,11 +876,13 @@ export function createAPIHandler(config: APIHandlerConfig) {
 export function ok<T>(
   data: T,
   ctx: HandlerContext,
-  statusOrOptions?: number | {
-    status?: number;
-    cacheTTL?: number;
-    uiHints?: Record<string, unknown>;
-  },
+  statusOrOptions?:
+    | number
+    | {
+      status?: number;
+      cacheTTL?: number;
+      uiHints?: Record<string, unknown>;
+    },
 ): Response {
   const options = typeof statusOrOptions === "number"
     ? { status: statusOrOptions }

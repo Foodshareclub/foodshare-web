@@ -52,7 +52,7 @@ export async function withTimeout<T>(
   timeoutMs: number,
   operationName: string = "Operation",
 ): Promise<T> {
-  let timeoutId: number | undefined;
+  let timeoutId: any;
 
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(() => {

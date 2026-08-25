@@ -123,12 +123,7 @@ Deno.test("haversineDistance - London to Paris", () => {
 });
 
 Deno.test("calculateDistanceKm - raw coordinates", () => {
-  const distance = calculateDistanceKm(
-    NYC.lat,
-    NYC.lng,
-    LONDON.lat,
-    LONDON.lng,
-  );
+  const distance = calculateDistanceKm(NYC.lat, NYC.lng, LONDON.lat, LONDON.lng);
   assertAlmostEquals(distance, 5570, 10);
 });
 

@@ -18,11 +18,14 @@ import { logger } from "../../_shared/logger.ts";
 import { llmTranslationService } from "../services/llm-translation.ts";
 
 // In-memory cache (L1)
-const memoryCache = new Map<string, {
-  text: string;
-  quality: number;
-  timestamp: number;
-}>();
+const memoryCache = new Map<
+  string,
+  {
+    text: string;
+    quality: number;
+    timestamp: number;
+  }
+>();
 const MEMORY_TTL = 3600000; // 1 hour
 const MAX_MEMORY_SIZE = 10000;
 
@@ -55,16 +58,6 @@ interface TranslateRequest {
   targetLocale: string;
   contentType?: string;
   batch?: { texts: string[] };
-}
-
-interface TranslateResponse {
-  success: boolean;
-  translatedText?: string;
-  translations?: string[];
-  cached: boolean;
-  cacheLayer?: "memory" | "database" | "llm";
-  quality: number;
-  responseTimeMs: number;
 }
 
 export default async function translateContentHandler(
@@ -177,7 +170,9 @@ export default async function translateContentHandler(
       // Promote to memory cache
       updateMemoryCache(cacheKey, translatedText, quality);
 
-      logger.debug("Translation cache hit (database)", { locale: targetLocale });
+      logger.debug("Translation cache hit (database)", {
+        locale: targetLocale,
+      });
       return new Response(
         JSON.stringify({
           success: true,
@@ -194,7 +189,10 @@ export default async function translateContentHandler(
     }
 
     // L3: Call LLM (with fallback chain: LLM → DeepL → Google → Microsoft → Amazon)
-    logger.debug("Translation cache miss, calling LLM", { locale: targetLocale, contentType });
+    logger.debug("Translation cache miss, calling LLM", {
+      locale: targetLocale,
+      contentType,
+    });
     const llmResult = await llmTranslationService.translate(text, "en", targetLocale, contentType);
 
     // Determine cache layer from service used
@@ -217,9 +215,11 @@ export default async function translateContentHandler(
             p_content_type: contentType,
             p_quality_score: llmResult.quality,
           });
-          logger.debug("Translation stored in database cache", { service: llmResult.service });
+          logger.debug("Translation stored in database cache", {
+            service: llmResult.service,
+          });
         } catch (err) {
-          logger.warn("Failed to store translation", err as Error);
+          logger.warn("Failed to store translation", err as any);
         }
       })();
 
@@ -243,7 +243,9 @@ export default async function translateContentHandler(
           tokens_used: llmResult.tokensUsed,
         });
       } catch (err) {
-        logger.warn("Failed to track analytics", { error: (err as Error).message });
+        logger.warn("Failed to track analytics", {
+          error: (err as any).message,
+        });
       }
     })();
 
@@ -287,7 +289,7 @@ function hashText(text: string): string {
   let hash = 0;
   for (let i = 0; i < text.length; i++) {
     const char = text.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash;
   }
   return Math.abs(hash).toString(36);
@@ -312,5 +314,5 @@ async function translateBatch(
   targetLocale: string,
   contentType: string,
 ): Promise<string[]> {
-  return llmTranslationService.batchTranslate(texts, "en", targetLocale, contentType);
+  return llmTranslationService.batchTranslate(texts, "en", targetLocale, contentType) as any;
 }

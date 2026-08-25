@@ -126,10 +126,9 @@ export interface SearchQuery {
 }
 
 export function parseSearchQuery(params: Record<string, string>): SearchQuery {
-  const mode =
-    (["semantic", "text", "hybrid", "fuzzy"].includes(params.mode)
-      ? params.mode
-      : "hybrid") as SearchMode;
+  const mode = (
+    ["semantic", "text", "hybrid", "fuzzy"].includes(params.mode) ? params.mode : "hybrid"
+  ) as SearchMode;
 
   const limit = Math.min(Math.max(1, parseInt(params.limit, 10) || DEFAULT_LIMIT), MAX_LIMIT);
   const offset = Math.max(0, parseInt(params.offset, 10) || 0);
@@ -144,7 +143,10 @@ export function parseSearchQuery(params: Record<string, string>): SearchQuery {
   const lng = params.lng ? Number(params.lng) : undefined;
   const radiusKm = params.radiusKm ? Number(params.radiusKm) : undefined;
   const categoryIds = params.categoryIds
-    ? params.categoryIds.split(",").map(Number).filter((n) => !isNaN(n))
+    ? params.categoryIds
+      .split(",")
+      .map(Number)
+      .filter((n) => !isNaN(n))
     : undefined;
 
   return { q, mode, route, lat, lng, radiusKm, categoryIds, limit, offset };
@@ -234,9 +236,7 @@ export function escapePostgresLike(value: string): string {
 }
 
 export function validateUUID(id: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    id,
-  );
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
 }
 
 // =============================================================================
@@ -251,7 +251,13 @@ export function getCacheKey(
   offset: number,
 ): string {
   return `search:${
-    JSON.stringify({ m: mode, q: normalizeQuery(q), f: filters, l: limit, o: offset })
+    JSON.stringify({
+      m: mode,
+      q: normalizeQuery(q),
+      f: filters,
+      l: limit,
+      o: offset,
+    })
   }`;
 }
 
@@ -298,9 +304,7 @@ export function transformVectorResult(r: VectorQueryResult): SearchResultItem {
   };
 }
 
-export function transformPostsToResults(
-  posts: Record<string, unknown>[],
-): SearchResultItem[] {
+export function transformPostsToResults(posts: Record<string, unknown>[]): SearchResultItem[] {
   return posts.map((row, idx) => ({
     id: String(row.id),
     score: 1 - idx * 0.01,
@@ -332,7 +336,7 @@ export function filterByDistance(
         r.location.lng,
       );
       if (distance > location.radiusKm) return null;
-      return { ...r, distance_km: roundDistance(distance) };
+      return { ...r, distance_km: roundDistance(distance) } as SearchResultItem;
     })
     .filter((r): r is SearchResultItem => r !== null)
     .sort((a, b) => (a.distance_km || 0) - (b.distance_km || 0));
@@ -346,10 +350,7 @@ export function applyRRF(
   semanticResults: SearchResultItem[],
   textResults: SearchResultItem[],
 ): SearchResultItem[] {
-  const scoreMap = new Map<
-    string,
-    { score: number; item: SearchResultItem }
-  >();
+  const scoreMap = new Map<string, { score: number; item: SearchResultItem }>();
 
   semanticResults.forEach((item, rank) => {
     const rrfScore = SEMANTIC_WEIGHT / (RRF_K + rank + 1);

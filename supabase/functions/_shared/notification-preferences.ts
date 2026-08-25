@@ -15,7 +15,7 @@
  * @module notification-preferences
  */
 
-import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 import { logger } from "./logger.ts";
 
 // =============================================================================
@@ -32,14 +32,9 @@ export type NotificationCategory =
   | "system"
   | "marketing";
 
-export type NotificationChannel = "push" | "email" | "sms";
+export type NotificationChannel = "push" | "email" | "sms" | "telegram" | "in_app";
 
-export type NotificationFrequency =
-  | "instant"
-  | "hourly"
-  | "daily"
-  | "weekly"
-  | "never";
+export type NotificationFrequency = "instant" | "hourly" | "daily" | "weekly" | "never";
 
 export interface ShouldSendResult {
   send: boolean;
@@ -291,9 +286,7 @@ export function shouldBypassPreferences(type: string): boolean {
 /**
  * Get default channel for a notification category.
  */
-export function getDefaultChannel(
-  category: NotificationCategory,
-): NotificationChannel {
+export function getDefaultChannel(category: NotificationCategory): NotificationChannel {
   const defaults: Record<NotificationCategory, NotificationChannel> = {
     posts: "push",
     forum: "push",

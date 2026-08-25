@@ -3,15 +3,15 @@
  */
 
 import { logger } from "../../_shared/logger.ts";
-import { SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL } from "../config/index.ts";
+import { getSupabaseServiceRoleKey, getSupabaseUrl } from "../config/index.ts";
 
 export async function sendVerificationEmail(email: string, code: string): Promise<boolean> {
   try {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/resend`, {
+    const response = await fetch(`${getSupabaseUrl()}/functions/v1/resend`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        Authorization: `Bearer ${getSupabaseServiceRoleKey()}`,
       },
       body: JSON.stringify({
         to: email,

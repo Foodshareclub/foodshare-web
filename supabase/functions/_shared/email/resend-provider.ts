@@ -7,6 +7,7 @@
  * API Docs: https://resend.com/docs/api-reference
  */
 
+import { getSecretSync } from "../vault.ts";
 import {
   EmailProvider,
   EmailProviderName,
@@ -69,9 +70,12 @@ export class ResendProvider implements EmailProvider {
 
   constructor(config: Partial<ResendConfig> = {}) {
     this.config = {
-      apiKey: config.apiKey || Deno.env.get("RESEND_API_KEY") || "",
-      fromEmail: config.fromEmail || Deno.env.get("EMAIL_FROM") || "contact@foodshare.club",
-      fromName: config.fromName || Deno.env.get("EMAIL_FROM_NAME") || "FoodShare",
+      apiKey: config.apiKey || getSecretSync("RESEND_API_KEY") || "",
+      fromEmail: config.fromEmail ||
+        getSecretSync("EMAIL_FROM") ||
+        Deno.env.get("EMAIL_FROM") ||
+        "contact@foodshare.club",
+      fromName: config.fromName || getSecretSync("EMAIL_FROM_NAME") || "FoodShare",
     };
   }
 
@@ -245,8 +249,18 @@ export class ResendProvider implements EmailProvider {
     if (!this.isConfigured()) {
       return {
         provider: this.name,
-        daily: { sent: 0, limit: limits.daily, remaining: limits.daily, percentUsed: 0 },
-        monthly: { sent: 0, limit: limits.monthly, remaining: limits.monthly, percentUsed: 0 },
+        daily: {
+          sent: 0,
+          limit: limits.daily,
+          remaining: limits.daily,
+          percentUsed: 0,
+        },
+        monthly: {
+          sent: 0,
+          limit: limits.monthly,
+          remaining: limits.monthly,
+          percentUsed: 0,
+        },
       };
     }
 

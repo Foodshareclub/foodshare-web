@@ -31,9 +31,11 @@ Lefthook configuration in `lefthook.yml` uses these Rust tools automatically.
 ## Database Scripts
 
 ### `database/backup.sh`
+
 Creates a backup of the Supabase database.
 
 ### `database/sync-translations-to-db.ts`
+
 Syncs translation files to database for edge function use.
 
 ```bash
@@ -43,6 +45,7 @@ bunx tsx scripts/database/sync-translations-to-db.ts
 ## Deployment Scripts
 
 ### `deploy/edge-functions/`
+
 Supabase edge function deployment scripts.
 
 ## Foodbank Import
@@ -56,13 +59,14 @@ bunx tsx scripts/foodbank-import/index.ts --country=all --type=fridge
 
 See `scripts/foodbank-import/README.md` for details.
 
-## Vercel Setup
+## Environment Configuration
 
-Environment variable configuration scripts for Vercel projects.
+Deployment environment variables come exclusively via GitHub Actions secrets during deploy.
 
 ## Environment Variables
 
 Required for scripts:
+
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `DOCKER_PASSWORD` (for registry authentication)

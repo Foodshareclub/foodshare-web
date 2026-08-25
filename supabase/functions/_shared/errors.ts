@@ -152,12 +152,10 @@ export class RateLimitError extends AppError {
  */
 export class CircuitOpenError extends AppError {
   constructor(service: string, retryAfterMs?: number) {
-    super(
-      `Service ${service} temporarily unavailable`,
-      "CIRCUIT_OPEN",
-      503,
-      { retryable: true, details: { service, retryAfterMs } },
-    );
+    super(`Service ${service} temporarily unavailable`, "CIRCUIT_OPEN", 503, {
+      retryable: true,
+      details: { service, retryAfterMs },
+    });
   }
 }
 
@@ -166,12 +164,10 @@ export class CircuitOpenError extends AppError {
  */
 export class ExternalServiceError extends AppError {
   constructor(service: string, message: string, retryable: boolean = true) {
-    super(
-      `External service error (${service}): ${message}`,
-      "EXTERNAL_SERVICE_ERROR",
-      502,
-      { retryable, details: { service } },
-    );
+    super(`External service error (${service}): ${message}`, "EXTERNAL_SERVICE_ERROR", 502, {
+      retryable,
+      details: { service },
+    });
   }
 }
 
@@ -180,12 +176,10 @@ export class ExternalServiceError extends AppError {
  */
 export class TimeoutError extends AppError {
   constructor(operation: string, timeoutMs: number) {
-    super(
-      `Operation '${operation}' timed out after ${timeoutMs}ms`,
-      "TIMEOUT",
-      504,
-      { retryable: true, details: { operation, timeoutMs } },
-    );
+    super(`Operation '${operation}' timed out after ${timeoutMs}ms`, "TIMEOUT", 504, {
+      retryable: true,
+      details: { operation, timeoutMs },
+    });
   }
 }
 

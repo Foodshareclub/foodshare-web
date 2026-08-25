@@ -78,20 +78,34 @@ Deno.test("canHandle: detects CloudPubSub user-agent", () => {
 });
 
 Deno.test("canHandle: detects Google-Cloud-Pub/Sub user-agent", () => {
-  const request = createPubSubRequest({}, { userAgent: "Google-Cloud-Pub/Sub" });
+  const request = createPubSubRequest(
+    {},
+    {
+      userAgent: "Google-Cloud-Pub/Sub",
+    },
+  );
   assertEquals(googlePlayHandler.canHandle(request), true);
 });
 
 Deno.test("canHandle: rejects non-POST requests", () => {
-  const request = createPubSubRequest({}, { method: "GET", userAgent: "CloudPubSub-Google" });
+  const request = createPubSubRequest(
+    {},
+    {
+      method: "GET",
+      userAgent: "CloudPubSub-Google",
+    },
+  );
   assertEquals(googlePlayHandler.canHandle(request), false);
 });
 
 Deno.test("canHandle: rejects non-JSON content type", () => {
-  const request = createPubSubRequest({}, {
-    userAgent: "CloudPubSub-Google",
-    contentType: "text/plain",
-  });
+  const request = createPubSubRequest(
+    {},
+    {
+      userAgent: "CloudPubSub-Google",
+      contentType: "text/plain",
+    },
+  );
   assertEquals(googlePlayHandler.canHandle(request), false);
 });
 
@@ -154,28 +168,31 @@ Deno.test("verifyWebhook: bad base64 data fails", async () => {
   assertEquals(result, false);
 });
 
-Deno.test("verifyWebhook: package name mismatch passes when GOOGLE_PLAY_PACKAGE_NAME is unconfigured", async () => {
-  // When GOOGLE_PLAY_PACKAGE_NAME is empty (module-level default),
-  // the package check is skipped and any package is accepted.
-  const notification = {
-    version: "1.0",
-    packageName: "com.other.app",
-    eventTimeMillis: String(Date.now()),
-    subscriptionNotification: {
+Deno.test(
+  "verifyWebhook: package name mismatch passes when GOOGLE_PLAY_PACKAGE_NAME is unconfigured",
+  async () => {
+    // When GOOGLE_PLAY_PACKAGE_NAME is empty (module-level default),
+    // the package check is skipped and any package is accepted.
+    const notification = {
       version: "1.0",
-      notificationType: 4,
-      purchaseToken: "test-token",
-      subscriptionId: "premium_monthly",
-    },
-  };
+      packageName: "com.other.app",
+      eventTimeMillis: String(Date.now()),
+      subscriptionNotification: {
+        version: "1.0",
+        notificationType: 4,
+        purchaseToken: "test-token",
+        subscriptionId: "premium_monthly",
+      },
+    };
 
-  const pubsubMessage = createValidPubSubMessage(notification);
-  const request = createPubSubRequest(pubsubMessage);
-  const body = JSON.stringify(pubsubMessage);
+    const pubsubMessage = createValidPubSubMessage(notification);
+    const request = createPubSubRequest(pubsubMessage);
+    const body = JSON.stringify(pubsubMessage);
 
-  const result = await googlePlayHandler.verifyWebhook(request, body);
-  assertEquals(result, true);
-});
+    const result = await googlePlayHandler.verifyWebhook(request, body);
+    assertEquals(result, true);
+  },
+);
 
 Deno.test("verifyWebhook: test notification bypasses package validation", async () => {
   const notification = {

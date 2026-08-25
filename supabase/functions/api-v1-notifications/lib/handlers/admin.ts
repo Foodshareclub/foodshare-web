@@ -92,7 +92,10 @@ async function fetchBrevoStats(): Promise<Record<string, unknown>> {
     const [statsRes, accountRes] = await Promise.all([
       fetchWithTimeout(
         `https://api.brevo.com/v3/smtp/statistics/aggregatedReport?startDate=${startDate}&endDate=${endDate}`,
-        { method: "GET", headers: { "api-key": apiKey, Accept: "application/json" } },
+        {
+          method: "GET",
+          headers: { "api-key": apiKey, Accept: "application/json" },
+        },
       ),
       fetchWithTimeout("https://api.brevo.com/v3/account", {
         method: "GET",
@@ -132,7 +135,10 @@ async function fetchMailerSendStats(): Promise<Record<string, unknown>> {
       `https://api.mailersend.com/v1/analytics?date_from=${dateFrom}&date_to=${dateTo}`,
       {
         method: "GET",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
       },
     );
 
@@ -195,7 +201,12 @@ async function syncProvider(providerName: string): Promise<ProviderStats> {
     throw new Error(`Provider ${providerName} not found`);
   }
 
-  const [health, quota] = await Promise.all([provider.checkHealth(), provider.getQuota()]);
+  const [health, quota] = await Promise.all([
+    provider.checkHealth(),
+    provider.getQuota
+      ? provider.getQuota()
+      : Promise.resolve({ daily: { sent: 0, limit: 0, remaining: 0, percentUsed: 0 } } as any),
+  ]);
 
   let externalStats: Record<string, unknown> = {};
   switch (providerName) {
@@ -286,7 +297,7 @@ async function storeProviderStats(
   try {
     const { data: existing } = await context.supabase
       .from("email_provider_health_metrics")
-      .select("daily_quota_used, monthly_quota_used, total_requests, successful_requests")
+      .select("daily_quota_used,monthly_quota_used,total_requests,successful_requests")
       .eq("provider", stats.provider)
       .single();
 
@@ -422,7 +433,7 @@ export async function handleAdminProviderHealth(
     }
 
     // Transform to expected format
-    const providers = (data || []).map((m) => ({
+    const providers = (data || []).map((m: any) => ({
       provider: m.provider,
       healthScore: m.health_score || 100,
       successRate: m.total_requests > 0
@@ -450,10 +461,30 @@ export async function handleAdminProviderHealth(
         success: true,
         data: {
           providers: [
-            { provider: "resend", healthScore: 100, status: "idle", totalRequests: 0 },
-            { provider: "brevo", healthScore: 100, status: "idle", totalRequests: 0 },
-            { provider: "mailersend", healthScore: 100, status: "idle", totalRequests: 0 },
-            { provider: "aws_ses", healthScore: 100, status: "idle", totalRequests: 0 },
+            {
+              provider: "resend",
+              healthScore: 100,
+              status: "idle",
+              totalRequests: 0,
+            },
+            {
+              provider: "brevo",
+              healthScore: 100,
+              status: "idle",
+              totalRequests: 0,
+            },
+            {
+              provider: "mailersend",
+              healthScore: 100,
+              status: "idle",
+              totalRequests: 0,
+            },
+            {
+              provider: "aws_ses",
+              healthScore: 100,
+              status: "idle",
+              totalRequests: 0,
+            },
           ],
         },
       };

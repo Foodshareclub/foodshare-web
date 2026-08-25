@@ -52,7 +52,10 @@ interface WelcomeEmailParams {
 }
 
 export function welcomeEmail(params: WelcomeEmailParams): { subject: string; html: string } {
-  const displayName = extractDisplayName({ firstName: params.name, email: params.email });
+  const displayName = extractDisplayName({
+    firstName: params.name,
+    email: params.email,
+  });
 
   const features: BulletItem[] = [
     {
@@ -105,7 +108,13 @@ export function welcomeEmail(params: WelcomeEmailParams): { subject: string; htm
       title: "Welcome to FoodShare! 🎉",
       subtitle: "Your journey to reducing food waste starts now",
       content,
-      cta: { text: "Get Started", url: "https://foodshare.club/products", emoji: "🚀" },
+      cta: {
+        text: "Get Started",
+        url: `https://${
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+        }/products`,
+        emoji: "🚀",
+      },
     }),
   };
 }
@@ -120,7 +129,10 @@ interface GoodbyeEmailParams {
 }
 
 export function goodbyeEmail(params: GoodbyeEmailParams): { subject: string; html: string } {
-  const displayName = extractDisplayName({ firstName: params.name, email: params.email });
+  const displayName = extractDisplayName({
+    firstName: params.name,
+    email: params.email,
+  });
 
   const content = `
     <p style="margin: 0 0 20px; font-size: 17px; line-height: 1.7; color: ${BRAND.textPrimary};">
@@ -148,7 +160,13 @@ export function goodbyeEmail(params: GoodbyeEmailParams): { subject: string; htm
       title: "We're Sad to See You Go 😢",
       subtitle: "We hope to see you again soon",
       content,
-      cta: { text: "Give Feedback", url: "https://foodshare.club/feedback", emoji: "📝" },
+      cta: {
+        text: "Give Feedback",
+        url: `https://${
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+        }/feedback`,
+        emoji: "📝",
+      },
     }),
   };
 }
@@ -274,7 +292,10 @@ export function feedbackAlertEmail(params: FeedbackAlertParams): {
       dateStyle: "medium",
       timeStyle: "short",
     })
-    : new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+    : new Date().toLocaleString("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
 
   const feedbackBox = `
     <p style="margin: 0 0 12px; font-size: 15px; color: ${BRAND.textSecondary};"><strong style="color: ${BRAND.textPrimary};">Type:</strong> ${emoji} ${params.feedback_type}</p>
@@ -297,7 +318,13 @@ export function feedbackAlertEmail(params: FeedbackAlertParams): {
       title: "New Feedback Received",
       subtitle: `${params.feedback_type} feedback from ${params.submitter_name}`,
       content,
-      cta: { text: "View in Dashboard", url: "https://foodshare.club/admin/feedback", emoji: "📋" },
+      cta: {
+        text: "View in Dashboard",
+        url: `https://${
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+        }/admin/feedback`,
+        emoji: "📋",
+      },
       footer: { minimal: true, showSocialLinks: false },
     }),
   };
@@ -448,7 +475,10 @@ export function notificationEmail(params: NotificationEmailParams): {
     ${
     highlightBox(
       `<p style="margin: 0; font-size: 16px; line-height: 1.7; color: ${BRAND.textSecondary};">${
-        params.body.replace(/\n/g, "<br>")
+        params.body.replace(
+          /\n/g,
+          "<br>",
+        )
       }</p>`,
     )
   }
@@ -465,7 +495,10 @@ export function notificationEmail(params: NotificationEmailParams): {
       content,
       cta: {
         text: params.actionText || "View Details",
-        url: params.actionUrl || "https://foodshare.club",
+        url: params.actionUrl ||
+          `https://${
+            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          }`,
       },
       footer: { showUnsubscribe: true, unsubscribeUrl: params.unsubscribeUrl },
     }),
@@ -586,7 +619,10 @@ export function digestEmail(params: DigestEmailParams): {
     </table>
     <p style="margin: 20px 0 0; font-size: 13px; color: ${BRAND.textLight}; text-align: center;">
       <a href="${
-    params.settingsUrl || "https://foodshare.club/settings/notifications"
+    params.settingsUrl ||
+    `https://${
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+    }/settings/notifications`
   }" style="color: ${BRAND.primaryColor}; text-decoration: none;">Manage Preferences</a>
       &nbsp;|&nbsp;
       <a href="${params.unsubscribeUrl}" style="color: ${BRAND.primaryColor}; text-decoration: none;">Unsubscribe</a>
@@ -603,7 +639,12 @@ export function digestEmail(params: DigestEmailParams): {
         params.items.length !== 1 ? "s" : ""
       } to catch up on`,
       content,
-      cta: { text: "Open FoodShare", url: "https://foodshare.club" },
+      cta: {
+        text: "Open FoodShare",
+        url: `https://${
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+        }`,
+      },
       footer: { showUnsubscribe: true, unsubscribeUrl: params.unsubscribeUrl },
     }),
   };

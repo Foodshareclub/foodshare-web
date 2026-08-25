@@ -25,7 +25,10 @@ export async function generateDeviceId(keyId: string): Promise<string> {
   const data = encoder.encode(`device:${keyId}:foodshare`);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.slice(0, 16).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return hashArray
+    .slice(0, 16)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 // =============================================================================
@@ -54,7 +57,11 @@ export async function updateDeviceRecord(
   counter: number,
   riskScore: number,
   platform: "ios" | "android",
-  verdicts?: { device?: DeviceVerdict[]; app?: AppVerdict; account?: AccountVerdict },
+  verdicts?: {
+    device?: DeviceVerdict[];
+    app?: AppVerdict;
+    account?: AccountVerdict;
+  },
 ): Promise<string> {
   const now = new Date().toISOString();
   const deviceId = await generateDeviceId(keyId);
@@ -75,7 +82,7 @@ export async function updateDeviceRecord(
         risk_score: Math.min(riskScore, existing.risk_score || 100),
         platform,
         flags: {
-          ...(existing.flags || {}),
+          ...existing.flags,
           lastVerdicts: verdicts,
           lastVerifiedAt: now,
         },

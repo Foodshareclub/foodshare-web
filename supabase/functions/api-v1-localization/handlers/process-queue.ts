@@ -62,14 +62,14 @@ interface QueueItem {
   attempts: number;
 }
 
-interface ProcessQueueResponse {
+type ProcessQueueResponse = {
   success: boolean;
   processed: number;
   succeeded: number;
   failed: number;
   skipped: number;
   duration_ms: number;
-}
+};
 
 export default async function processQueueHandler(
   req: Request,
@@ -98,8 +98,9 @@ export default async function processQueueHandler(
     const supabase = getSupabaseClient();
 
     // First, reset any stuck "processing" items older than timeout
-    const timeoutCutoff = new Date(Date.now() - PROCESSING_TIMEOUT_MINUTES * 60 * 1000)
-      .toISOString();
+    const timeoutCutoff = new Date(
+      Date.now() - PROCESSING_TIMEOUT_MINUTES * 60 * 1000,
+    ).toISOString();
     await supabase
       .from("translation_queue")
       .update({ status: "pending" })
@@ -115,7 +116,9 @@ export default async function processQueueHandler(
       .limit(limit);
 
     if (fetchError) {
-      logger.error("Failed to fetch queue items", { error: fetchError.message });
+      logger.error("Failed to fetch queue items", {
+        error: fetchError.message,
+      });
       return new Response(
         JSON.stringify({
           success: false,
@@ -147,8 +150,10 @@ export default async function processQueueHandler(
 
     // Check service health before processing
     const healthCheck = await llmTranslationService.checkHealth();
-    if (!healthCheck.healthy) {
-      logger.warn("Translation service unhealthy", { reason: healthCheck.reason });
+    if (healthCheck.status !== "HEALTHY") {
+      logger.warn("Translation service unhealthy", {
+        reason: healthCheck.alerts,
+      });
       // Continue anyway - DeepL fallback will handle it
     } else {
       logger.info("Translation service health check passed");
@@ -156,10 +161,7 @@ export default async function processQueueHandler(
 
     // Mark items as processing
     const itemIds = pendingItems.map((item: QueueItem) => item.id);
-    await supabase
-      .from("translation_queue")
-      .update({ status: "processing" })
-      .in("id", itemIds);
+    await supabase.from("translation_queue").update({ status: "processing" }).in("id", itemIds);
 
     logger.info("Processing translation tasks", {
       count: pendingItems.length,
@@ -205,7 +207,7 @@ export default async function processQueueHandler(
         // Check translation quality with more specific criteria
         const isHighQuality = result.quality >= 0.5 && result.text !== item.source_text;
         const isLowQuality = result.quality > 0 && result.quality < 0.5;
-        const _isCompleteFailure = result.quality === 0 || result.text === item.source_text;
+        // const _isCompleteFailure = result.quality === 0 || result.text === item.source_text;
 
         if (isHighQuality) {
           // Success: Store in PostgreSQL (only high-quality translations)
@@ -309,7 +311,10 @@ export default async function processQueueHandler(
           })
           .eq("id", item.id);
 
-        logger.error("Error processing queue item", { itemId: item.id, error: errorMsg });
+        logger.error("Error processing queue item", {
+          itemId: item.id,
+          error: errorMsg,
+        });
         return newStatus === "failed" ? "failed" : "retry";
       }
     };

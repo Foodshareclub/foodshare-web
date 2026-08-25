@@ -4,11 +4,14 @@
  * Business logic for likes, bookmarks, reactions, and subscriptions.
  */
 
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 import { logger } from "../../_shared/logger.ts";
 
 export class EngagementService {
-  constructor(private supabase: SupabaseClient, private userId: string) {}
+  constructor(
+    private supabase: SupabaseClient<any, any, any>,
+    private userId: string,
+  ) {}
 
   async toggleLike(forumId: number) {
     const { data: existing } = await this.supabase
@@ -19,10 +22,7 @@ export class EngagementService {
       .maybeSingle();
 
     if (existing) {
-      await this.supabase
-        .from("forum_likes")
-        .delete()
-        .eq("id", existing.id);
+      await this.supabase.from("forum_likes").delete().eq("id", existing.id);
 
       logger.info("Like removed", { forumId });
       return { liked: false };
@@ -45,10 +45,7 @@ export class EngagementService {
       .maybeSingle();
 
     if (existing) {
-      await this.supabase
-        .from("forum_bookmarks")
-        .delete()
-        .eq("id", existing.id);
+      await this.supabase.from("forum_bookmarks").delete().eq("id", existing.id);
 
       logger.info("Bookmark removed", { forumId });
       return { bookmarked: false };
@@ -65,17 +62,14 @@ export class EngagementService {
   async toggleReaction(forumId: number, reactionType: string) {
     const { data: existing } = await this.supabase
       .from("forum_reactions")
-      .select("id, reaction_type")
+      .select("id,reaction_type")
       .eq("forum_id", forumId)
       .eq("profile_id", this.userId)
       .maybeSingle();
 
     if (existing) {
       if (existing.reaction_type === reactionType) {
-        await this.supabase
-          .from("forum_reactions")
-          .delete()
-          .eq("id", existing.id);
+        await this.supabase.from("forum_reactions").delete().eq("id", existing.id);
 
         logger.info("Reaction removed", { forumId, reactionType });
         return { reacted: false, reactionType: null };
@@ -89,9 +83,11 @@ export class EngagementService {
         return { reacted: true, reactionType };
       }
     } else {
-      await this.supabase
-        .from("forum_reactions")
-        .insert({ forum_id: forumId, profile_id: this.userId, reaction_type: reactionType });
+      await this.supabase.from("forum_reactions").insert({
+        forum_id: forumId,
+        profile_id: this.userId,
+        reaction_type: reactionType,
+      });
 
       logger.info("Reaction added", { forumId, reactionType });
       return { reacted: true, reactionType };
@@ -107,10 +103,7 @@ export class EngagementService {
       .maybeSingle();
 
     if (existing) {
-      await this.supabase
-        .from("forum_subscriptions")
-        .delete()
-        .eq("id", existing.id);
+      await this.supabase.from("forum_subscriptions").delete().eq("id", existing.id);
 
       logger.info("Subscription removed", { forumId });
       return { subscribed: false };
@@ -127,11 +120,13 @@ export class EngagementService {
   async getBookmarks(limit: number, offset: number) {
     const { data, error } = await this.supabase
       .from("forum_bookmarks")
-      .select(`
+      .select(
+        `
         forum_id,
         created_at,
         forum:forum(*)
-      `)
+      `,
+      )
       .eq("profile_id", this.userId)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
@@ -183,9 +178,12 @@ export class EngagementService {
     logger.info("Draft deleted", { draftId });
   }
 
-  async submitReport(
-    input: { forumId?: number; commentId?: number; reason: string; details?: string },
-  ) {
+  async submitReport(input: {
+    forumId?: number;
+    commentId?: number;
+    reason: string;
+    details?: string;
+  }) {
     const { data, error } = await this.supabase
       .from("forum_reports")
       .insert({

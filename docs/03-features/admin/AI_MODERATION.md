@@ -74,13 +74,13 @@ This endpoint requires admin authentication:
 
 The AI API key is retrieved using a secure fallback pattern with caching:
 
-1. **Environment Variables** (preferred for local dev/Vercel)
+1. **Environment Variables** (preferred for local dev/Vercel) (historical — pre-Vercel migration)
 
    ```bash
    # Primary - xAI direct API key
    XAI_API_KEY=xai-xxx...
 
-   # Alternative - Vercel AI Gateway key (fallback)
+   # Alternative - Vercel AI Gateway key (fallback) (historical — pre-Vercel migration)
    AI_GATEWAY_API_KEY=your-gateway-key...
    ```
 

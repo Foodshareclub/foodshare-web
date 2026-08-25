@@ -73,10 +73,15 @@ const passwordSchema = z.object({
 });
 
 const batchSchema = z.object({
-  validations: z.array(z.object({
-    type: z.enum(["listing", "profile", "review", "email", "password"]),
-    data: z.record(z.unknown()),
-  })).min(1).max(20),
+  validations: z
+    .array(
+      z.object({
+        type: z.enum(["listing", "profile", "review", "email", "password"]),
+        data: z.record(z.unknown()),
+      }),
+    )
+    .min(1)
+    .max(20),
 });
 
 // =============================================================================
@@ -87,12 +92,7 @@ function handleValidateListing(body: unknown): ValidationResult {
   const data = listingSchema.parse(body);
   const expiresAt = data.expiresAt ? new Date(data.expiresAt) : undefined;
 
-  return validateListing(
-    data.title,
-    data.description || "",
-    data.quantity || 1,
-    expiresAt,
-  );
+  return validateListing(data.title, data.description || "", data.quantity || 1, expiresAt);
 }
 
 function handleValidateProfile(body: unknown): ValidationResult {
@@ -188,13 +188,16 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
   switch (route.resource) {
     case "health":
     case "":
-      return ok({
-        status: "healthy",
-        version: VERSION,
-        service: SERVICE,
-        timestamp: new Date().toISOString(),
-        endpoints: ["listing", "profile", "review", "email", "password", "batch", "rules"],
-      }, ctx);
+      return ok(
+        {
+          status: "healthy",
+          version: VERSION,
+          service: SERVICE,
+          timestamp: new Date().toISOString(),
+          endpoints: ["listing", "profile", "review", "email", "password", "batch", "rules"],
+        },
+        ctx,
+      );
 
     case "rules":
       return ok(
@@ -252,18 +255,20 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
 // API Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: SERVICE,
-  version: VERSION,
-  requireAuth: false,
-  csrf: false,
-  rateLimit: {
-    limit: 60,
-    windowMs: 60_000,
-    keyBy: "ip",
-  },
-  routes: {
-    GET: { handler: handleGet },
-    POST: { handler: handlePost },
-  },
-}));
+Deno.serve(
+  createAPIHandler({
+    service: SERVICE,
+    version: VERSION,
+    requireAuth: false,
+    csrf: false,
+    rateLimit: {
+      limit: 60,
+      windowMs: 60_000,
+      keyBy: "ip",
+    },
+    routes: {
+      GET: { handler: handleGet },
+      POST: { handler: handlePost },
+    },
+  }),
+);

@@ -3,7 +3,7 @@
  */
 
 import { logger } from "../../_shared/logger.ts";
-import { WHATSAPP_ACCESS_TOKEN, WHATSAPP_API_URL } from "../config/index.ts";
+import { getWhatsappAccessToken, getWhatsappApiUrl } from "../config/index.ts";
 import { MAX_RETRIES, RETRY_DELAY_MS, WHATSAPP_API_TIMEOUT_MS } from "../config/constants.ts";
 import { getCircuitStatus, withCircuitBreaker } from "../../_shared/circuit-breaker.ts";
 import type {
@@ -47,14 +47,14 @@ async function makeRequest<T>(
   body: unknown,
   method = "POST",
 ): Promise<{ success: boolean; data?: T; error?: string }> {
-  const url = `${WHATSAPP_API_URL}${endpoint}`;
+  const url = `${getWhatsappApiUrl()}${endpoint}`;
 
   try {
     const response = await fetchWithTimeout(url, {
       method,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+        Authorization: `Bearer ${getWhatsappAccessToken()}`,
       },
       body: JSON.stringify(body),
     });
@@ -74,7 +74,10 @@ async function makeRequest<T>(
     return { success: true, data };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error("WhatsApp API request failed", { endpoint, error: errorMessage });
+    logger.error("WhatsApp API request failed", {
+      endpoint,
+      error: errorMessage,
+    });
     return { success: false, error: errorMessage };
   }
 }
@@ -289,10 +292,10 @@ export async function markAsRead(messageId: string): Promise<boolean> {
  */
 export async function getMediaUrl(mediaId: string): Promise<string | null> {
   try {
-    const response = await fetchWithTimeout(`https://graph.facebook.com/v21.0/${mediaId}`, {
+    const response = await fetchWithTimeout(`${getWhatsappApiUrl()}/${mediaId}`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+        Authorization: `Bearer ${getWhatsappAccessToken()}`,
       },
     });
 
@@ -318,10 +321,10 @@ export async function downloadMedia(mediaUrl: string): Promise<ArrayBuffer | nul
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+          Authorization: `Bearer ${getWhatsappAccessToken()}`,
         },
       },
-      30000, // 30 second timeout for downloads
+      30000,
     );
 
     if (!response.ok) {

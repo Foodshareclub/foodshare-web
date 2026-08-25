@@ -191,9 +191,13 @@ Deno.test("tracedFetch: creates span and forwards context headers", async () => 
   };
 
   try {
-    const response = await tracedFetch("https://example.com/api/test", {
-      method: "GET",
-    }, "test.external.api");
+    const response = await tracedFetch(
+      "https://example.com/api/test",
+      {
+        method: "GET",
+      },
+      "test.external.api",
+    );
 
     assertEquals(response.status, 200);
 

@@ -45,10 +45,7 @@ export class SmsChannelAdapter implements ChannelAdapter {
   name = "sms";
   channel = "sms" as const;
 
-  async send(
-    payload: SmsPayload,
-    context: NotificationContext,
-  ): Promise<ChannelDeliveryResult> {
+  async send(payload: SmsPayload, context: NotificationContext): Promise<ChannelDeliveryResult> {
     try {
       const config = getTwilioConfig();
 
@@ -86,7 +83,7 @@ export class SmsChannelAdapter implements ChannelAdapter {
             {
               method: "POST",
               headers: {
-                "Authorization": `Basic ${btoa(`${config.accountSid}:${config.authToken}`)}`,
+                Authorization: `Basic ${btoa(`${config.accountSid}:${config.authToken}`)}`,
                 "Content-Type": "application/x-www-form-urlencoded",
               },
               body: body.toString(),
@@ -155,7 +152,7 @@ export class SmsChannelAdapter implements ChannelAdapter {
         {
           method: "GET",
           headers: {
-            "Authorization": `Basic ${btoa(`${config.accountSid}:${config.authToken}`)}`,
+            Authorization: `Basic ${btoa(`${config.accountSid}:${config.authToken}`)}`,
           },
         },
         "twilio.healthcheck",
@@ -190,12 +187,9 @@ export async function getUserPhoneNumber(
   userId: string,
 ): Promise<string | null> {
   try {
-    const { data, error } = await context.supabase.rpc(
-      "get_notification_preferences",
-      {
-        p_user_id: userId,
-      },
-    );
+    const { data, error } = await context.supabase.rpc("get_notification_preferences", {
+      p_user_id: userId,
+    });
 
     if (error || !data?.settings?.phone_number) {
       return null;

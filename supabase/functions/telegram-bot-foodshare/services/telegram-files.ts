@@ -4,7 +4,7 @@
 
 import { logger } from "../../_shared/logger.ts";
 
-const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
+const getTelegramBotToken = () => Deno.env.get("TELEGRAM_BOT_TOKEN");
 
 /**
  * Download a file from Telegram and upload to Supabase Storage with retry logic
@@ -22,14 +22,19 @@ export async function downloadAndUploadTelegramFile(
       const fileInfoController = new AbortController();
       const fileInfoTimeout = setTimeout(() => fileInfoController.abort(), 5000);
 
+      const token = getTelegramBotToken();
+      if (!token) throw new Error("Missing TELEGRAM_BOT_TOKEN");
+
       const fileInfoResponse = await fetch(
-        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`,
+        `https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`,
         { signal: fileInfoController.signal },
       );
       clearTimeout(fileInfoTimeout);
 
       if (!fileInfoResponse.ok) {
-        logger.error("Failed to get file info from Telegram", { status: fileInfoResponse.status });
+        logger.error("Failed to get file info from Telegram", {
+          status: fileInfoResponse.status,
+        });
         if (attempt < maxRetries) {
           await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
           continue;
@@ -55,15 +60,20 @@ export async function downloadAndUploadTelegramFile(
       }
 
       // Step 2: Download the file from Telegram with timeout
-      const fileUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
+      const downloadToken = getTelegramBotToken();
+      const fileUrl = `https://api.telegram.org/file/bot${downloadToken}/${filePath}`;
       const fileController = new AbortController();
       const fileTimeout = setTimeout(() => fileController.abort(), 30000);
 
-      const fileResponse = await fetch(fileUrl, { signal: fileController.signal });
+      const fileResponse = await fetch(fileUrl, {
+        signal: fileController.signal,
+      });
       clearTimeout(fileTimeout);
 
       if (!fileResponse.ok) {
-        logger.error("Failed to download file from Telegram", { status: fileResponse.status });
+        logger.error("Failed to download file from Telegram", {
+          status: fileResponse.status,
+        });
         if (attempt < maxRetries) {
           await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
           continue;
@@ -107,16 +117,13 @@ export async function downloadAndUploadTelegramFile(
       let uploadError = null;
       for (let uploadAttempt = 1; uploadAttempt <= 2; uploadAttempt++) {
         try {
-          const uploadResponse = await fetch(
-            `${supabaseUrl}/functions/v1/api-v1-images/upload`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${serviceKey}`,
-              },
-              body: formData,
+          const uploadResponse = await fetch(`${supabaseUrl}/functions/v1/api-v1-images/upload`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${serviceKey}`,
             },
-          );
+            body: formData,
+          });
 
           if (uploadResponse.ok) {
             const result = await uploadResponse.json();
@@ -132,7 +139,11 @@ export async function downloadAndUploadTelegramFile(
           });
         } catch (error) {
           uploadError = error;
-          logger.error("Upload exception", { uploadAttempt, maxAttempts: 2, error: String(error) });
+          logger.error("Upload exception", {
+            uploadAttempt,
+            maxAttempts: 2,
+            error: String(error),
+          });
         }
 
         if (uploadAttempt < 2) {
@@ -150,7 +161,9 @@ export async function downloadAndUploadTelegramFile(
         continue;
       }
 
-      logger.error("All upload attempts failed", { error: String(uploadError) });
+      logger.error("All upload attempts failed", {
+        error: String(uploadError),
+      });
       return null;
     } catch (error) {
       logger.error("Error downloading/uploading file", {

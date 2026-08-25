@@ -144,7 +144,13 @@ export function welcomeTemplate(params: WelcomeParams): { subject: string; html:
       content,
       cta: {
         text: isEarlyStage ? "Share Something" : "Start Exploring",
-        url: isEarlyStage ? "https://foodshare.club/new" : "https://foodshare.club/map",
+        url: isEarlyStage
+          ? `https://${
+            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          }/new`
+          : `https://${
+            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          }/map`,
         emoji: isEarlyStage ? "🍎" : "🗺️",
       },
       footer: { showAppBadges: true, signOffMessage: "Happy sharing!" },
@@ -160,9 +166,10 @@ export interface EmailVerificationParams {
   verifyUrl: string;
 }
 
-export function emailVerificationTemplate(
-  params: EmailVerificationParams,
-): { subject: string; html: string } {
+export function emailVerificationTemplate(params: EmailVerificationParams): {
+  subject: string;
+  html: string;
+} {
   const content = `
     <p style="margin: 0 0 20px; font-size: 17px; line-height: 1.7; color: ${BRAND.textPrimary};">Thanks for signing up for <strong style="color: ${BRAND.primaryColor};">FoodShare</strong>! 🥗</p>
     ${
@@ -205,9 +212,10 @@ export interface PasswordResetParams {
   expiresIn?: string;
 }
 
-export function passwordResetTemplate(
-  params: PasswordResetParams,
-): { subject: string; html: string } {
+export function passwordResetTemplate(params: PasswordResetParams): {
+  subject: string;
+  html: string;
+} {
   const expiresIn = params.expiresIn || "1 hour";
 
   const content = `
@@ -253,9 +261,10 @@ export interface ChatNotificationParams {
   chatUrl: string;
 }
 
-export function chatNotificationTemplate(
-  params: ChatNotificationParams,
-): { subject: string; html: string } {
+export function chatNotificationTemplate(params: ChatNotificationParams): {
+  subject: string;
+  html: string;
+} {
   const preview = params.messagePreview.length > 100
     ? params.messagePreview.substring(0, 100) + "..."
     : params.messagePreview;
@@ -351,9 +360,10 @@ export interface VolunteerWelcomeParams {
   name: string;
 }
 
-export function volunteerWelcomeTemplate(
-  params: VolunteerWelcomeParams,
-): { subject: string; html: string } {
+export function volunteerWelcomeTemplate(params: VolunteerWelcomeParams): {
+  subject: string;
+  html: string;
+} {
   const features: BulletItem[] = [
     {
       emoji: "📦",
@@ -407,7 +417,9 @@ export function volunteerWelcomeTemplate(
       content,
       cta: {
         text: "Start Volunteering",
-        url: "https://foodshare.club/volunteer/dashboard",
+        url: `https://${
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+        }/volunteer/dashboard`,
         emoji: "🚀",
       },
     }),
@@ -423,9 +435,10 @@ export interface CompleteProfileParams {
   completionPercent?: number;
 }
 
-export function completeProfileTemplate(
-  params: CompleteProfileParams,
-): { subject: string; html: string } {
+export function completeProfileTemplate(params: CompleteProfileParams): {
+  subject: string;
+  html: string;
+} {
   const percent = params.completionPercent || 50;
 
   const benefits: BulletItem[] = [
@@ -475,7 +488,9 @@ export function completeProfileTemplate(
       content,
       cta: {
         text: "Complete Profile",
-        url: "https://foodshare.club/settings/profile",
+        url: `https://${
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+        }/settings/profile`,
         emoji: "📝",
       },
     }),
@@ -490,9 +505,10 @@ export interface FirstShareTipsParams {
   name: string;
 }
 
-export function firstShareTipsTemplate(
-  params: FirstShareTipsParams,
-): { subject: string; html: string } {
+export function firstShareTipsTemplate(params: FirstShareTipsParams): {
+  subject: string;
+  html: string;
+} {
   const tips: BulletItem[] = [
     {
       emoji: "📷",
@@ -544,7 +560,13 @@ export function firstShareTipsTemplate(
       title: "Ready to Share? 🍎",
       subtitle: "Tips for a successful first share",
       content,
-      cta: { text: "Create Your First Share", url: "https://foodshare.club/new", emoji: "🍎" },
+      cta: {
+        text: "Create Your First Share",
+        url: `https://${
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+        }/new`,
+        emoji: "🍎",
+      },
     }),
   };
 }
@@ -594,7 +616,9 @@ export function milestoneTemplate(params: MilestoneParams): { subject: string; h
       content,
       cta: {
         text: "View All Achievements",
-        url: "https://foodshare.club/achievements",
+        url: `https://${
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+        }/achievements`,
         emoji: "🏆",
       },
     }),
@@ -615,9 +639,10 @@ export interface ReengagementParams {
   unsubscribeUrl: string;
 }
 
-export function reengagementTemplate(
-  params: ReengagementParams,
-): { subject: string; html: string } {
+export function reengagementTemplate(params: ReengagementParams): {
+  subject: string;
+  html: string;
+} {
   const newListings = params.newListingsNearby ?? 0;
   const mealsSaved = params.mealsSavedCommunity ?? 0;
   const newMembers = params.newMembersNearby ?? 0;
@@ -701,7 +726,13 @@ export function reengagementTemplate(
       content,
       cta: {
         text: hasActivity ? "See What's New" : "Share Something",
-        url: hasActivity ? "https://foodshare.club/map" : "https://foodshare.club/new",
+        url: hasActivity
+          ? `https://${
+            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          }/map`
+          : `https://${
+            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          }/new`,
         emoji: hasActivity ? "🗺️" : "🍎",
       },
       footer: {
@@ -729,9 +760,10 @@ export interface FeedbackAlertParams {
   timestamp?: string;
 }
 
-export function feedbackAlertTemplate(
-  params: FeedbackAlertParams,
-): { subject: string; html: string } {
+export function feedbackAlertTemplate(params: FeedbackAlertParams): {
+  subject: string;
+  html: string;
+} {
   const emoji = params.feedbackEmoji || "📩";
   const timestamp = params.timestamp || new Date().toISOString();
 
@@ -756,7 +788,13 @@ export function feedbackAlertTemplate(
       title: "New Feedback Received",
       subtitle: `${params.feedbackType} feedback from ${params.submitterName}`,
       content,
-      cta: { text: "View in Dashboard", url: "https://foodshare.club/admin/feedback", emoji: "📋" },
+      cta: {
+        text: "View in Dashboard",
+        url: `https://${
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+        }/admin/feedback`,
+        emoji: "📋",
+      },
       footer: { minimal: true, showSocialLinks: false },
     }),
   };
@@ -778,7 +816,7 @@ export function appReleaseTemplate(params: AppLiveParams): { subject: string; ht
   const platformName = platform === "iOS" ? "App Store" : "Google Play";
   const appStoreUrl = platform === "iOS"
     ? "https://apps.apple.com/us/app/foodshare-club/id1573242804"
-    : "https://play.google.com/store/apps/details?id=club.foodshare";
+    : "https://play.google.com/store/apps/details?id=com.flutterflow.foodshare";
 
   const features: BulletItem[] = [
     {
@@ -833,8 +871,16 @@ export function appReleaseTemplate(params: AppLiveParams): { subject: string; ht
       title: `FoodShare is Live! 🍓`,
       subtitle: `Now available on the ${platformName}`,
       content,
-      cta: { text: `Download on ${platformName}`, url: appStoreUrl, emoji: "📲" },
-      footer: { showAppBadges: true, showSocialLinks: true, signOffMessage: "Happy sharing!" },
+      cta: {
+        text: `Download on ${platformName}`,
+        url: appStoreUrl,
+        emoji: "📲",
+      },
+      footer: {
+        showAppBadges: true,
+        showSocialLinks: true,
+        signOffMessage: "Happy sharing!",
+      },
     }),
   };
 }

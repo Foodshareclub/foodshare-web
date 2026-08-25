@@ -142,7 +142,7 @@ CREATE TYPE public.post_activity_type AS ENUM (
 -- Name: acknowledge_alert(bigint, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.acknowledge_alert(p_alert_id bigint, p_user_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.acknowledge_alert(p_alert_id bigint, p_user_id uuid) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -166,7 +166,7 @@ COMMENT ON FUNCTION public.acknowledge_alert(p_alert_id bigint, p_user_id uuid) 
 -- Name: add_bookmark_to_collection(integer, uuid, text, text[], timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.add_bookmark_to_collection(p_forum_id integer, p_collection_id uuid DEFAULT NULL::uuid, p_notes text DEFAULT NULL::text, p_tags text[] DEFAULT NULL::text[], p_reminder_at timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.add_bookmark_to_collection(p_forum_id integer, p_collection_id uuid DEFAULT NULL::uuid, p_notes text DEFAULT NULL::text, p_tags text[] DEFAULT NULL::text[], p_reminder_at timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -225,7 +225,7 @@ COMMENT ON FUNCTION public.add_bookmark_to_collection(p_forum_id integer, p_coll
 -- Name: add_post_to_series(uuid, bigint, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.add_post_to_series(p_series_id uuid, p_forum_id bigint, p_chapter_title text DEFAULT NULL::text, p_chapter_description text DEFAULT NULL::text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.add_post_to_series(p_series_id uuid, p_forum_id bigint, p_chapter_title text DEFAULT NULL::text, p_chapter_description text DEFAULT NULL::text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -287,7 +287,7 @@ $$;
 -- Name: add_to_moderation_queue(text, text, integer, integer, uuid, uuid, uuid, text, numeric, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.add_to_moderation_queue(p_queue_type text, p_content_type text, p_forum_id integer DEFAULT NULL::integer, p_comment_id integer DEFAULT NULL::integer, p_message_id uuid DEFAULT NULL::uuid, p_target_profile_id uuid DEFAULT NULL::uuid, p_report_id uuid DEFAULT NULL::uuid, p_flag_reason text DEFAULT NULL::text, p_flag_score numeric DEFAULT NULL::numeric, p_priority integer DEFAULT 0) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.add_to_moderation_queue(p_queue_type text, p_content_type text, p_forum_id integer DEFAULT NULL::integer, p_comment_id integer DEFAULT NULL::integer, p_message_id uuid DEFAULT NULL::uuid, p_target_profile_id uuid DEFAULT NULL::uuid, p_report_id uuid DEFAULT NULL::uuid, p_flag_reason text DEFAULT NULL::text, p_flag_score numeric DEFAULT NULL::numeric, p_priority integer DEFAULT 0) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -335,7 +335,7 @@ $$;
 -- Name: add_to_suppression_list(text, text, text, text, text, text, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.add_to_suppression_list(p_email text, p_reason text, p_provider text DEFAULT NULL::text, p_bounce_type text DEFAULT NULL::text, p_bounce_subtype text DEFAULT NULL::text, p_message_id text DEFAULT NULL::text, p_expires_at timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.add_to_suppression_list(p_email text, p_reason text, p_provider text DEFAULT NULL::text, p_bounce_type text DEFAULT NULL::text, p_bounce_subtype text DEFAULT NULL::text, p_message_id text DEFAULT NULL::text, p_expires_at timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -367,7 +367,7 @@ $$;
 -- Name: address_in_view(double precision, double precision, double precision, double precision); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.address_in_view(min_lat double precision, min_long double precision, max_lat double precision, max_long double precision) RETURNS SETOF record
+CREATE OR REPLACE FUNCTION public.address_in_view(min_lat double precision, min_long double precision, max_lat double precision, max_long double precision) RETURNS SETOF record
     LANGUAGE sql
     SET search_path TO ''
     AS $$
@@ -381,7 +381,7 @@ $$;
 -- Name: address_in_view(numeric, numeric, numeric, numeric); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.address_in_view(min_lat numeric, min_long numeric, max_lat numeric, max_long numeric) RETURNS SETOF record
+CREATE OR REPLACE FUNCTION public.address_in_view(min_lat numeric, min_long numeric, max_lat numeric, max_long numeric) RETURNS SETOF record
     LANGUAGE plpgsql STABLE
     SET search_path TO ''
     AS $$
@@ -399,7 +399,7 @@ $$;
 -- Name: aggregate_daily_author_analytics(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.aggregate_daily_author_analytics() RETURNS void
+CREATE OR REPLACE FUNCTION public.aggregate_daily_author_analytics() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -453,7 +453,7 @@ $$;
 -- Name: apply_pending_operation(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.apply_pending_operation(p_operation_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.apply_pending_operation(p_operation_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -541,7 +541,7 @@ COMMENT ON FUNCTION public.apply_pending_operation(p_operation_id uuid) IS 'Appl
 -- Name: arrange_post(integer, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.arrange_post(p_post_id integer, p_requester_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.arrange_post(p_post_id integer, p_requester_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -588,7 +588,7 @@ $$;
 -- Name: audit_display_name_override_changes(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.audit_display_name_override_changes() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.audit_display_name_override_changes() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -653,7 +653,7 @@ $$;
 -- Name: auto_subscribe_post_author(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.auto_subscribe_post_author() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.auto_subscribe_post_author() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -670,7 +670,7 @@ $$;
 -- Name: award_reputation(uuid, text, uuid, bigint, bigint, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.award_reputation(p_profile_id uuid, p_action_key text, p_source_profile_id uuid DEFAULT NULL::uuid, p_source_forum_id bigint DEFAULT NULL::bigint, p_source_comment_id bigint DEFAULT NULL::bigint, p_description text DEFAULT NULL::text) RETURNS integer
+CREATE OR REPLACE FUNCTION public.award_reputation(p_profile_id uuid, p_action_key text, p_source_profile_id uuid DEFAULT NULL::uuid, p_source_forum_id bigint DEFAULT NULL::bigint, p_source_comment_id bigint DEFAULT NULL::bigint, p_description text DEFAULT NULL::text) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -713,7 +713,7 @@ $$;
 -- Name: batch_delete_notifications(uuid, bigint[], integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.batch_delete_notifications(p_user_id uuid, p_notification_ids bigint[] DEFAULT NULL::bigint[], p_older_than_days integer DEFAULT NULL::integer) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.batch_delete_notifications(p_user_id uuid, p_notification_ids bigint[] DEFAULT NULL::bigint[], p_older_than_days integer DEFAULT NULL::integer) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -751,7 +751,7 @@ $$;
 -- Name: batch_mark_notifications_read(uuid, bigint[], text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.batch_mark_notifications_read(p_user_id uuid, p_notification_ids bigint[] DEFAULT NULL::bigint[], p_category text DEFAULT NULL::text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.batch_mark_notifications_read(p_user_id uuid, p_notification_ids bigint[] DEFAULT NULL::bigint[], p_category text DEFAULT NULL::text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -800,7 +800,7 @@ $$;
 -- Name: batch_record_email_metrics(jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.batch_record_email_metrics(p_metrics jsonb) RETURNS void
+CREATE OR REPLACE FUNCTION public.batch_record_email_metrics(p_metrics jsonb) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -860,7 +860,7 @@ $$;
 -- Name: billing_cleanup_old_events(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.billing_cleanup_old_events(p_retention_days integer DEFAULT 90) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.billing_cleanup_old_events(p_retention_days integer DEFAULT 90) RETURNS jsonb
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'billing', 'public'
     AS $$
@@ -872,7 +872,7 @@ $$;
 -- Name: billing_find_user_for_transaction(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.billing_find_user_for_transaction(p_app_account_token uuid, p_original_transaction_id text) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.billing_find_user_for_transaction(p_app_account_token uuid, p_original_transaction_id text) RETURNS uuid
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'billing', 'public'
     AS $$
@@ -884,7 +884,7 @@ $$;
 -- Name: billing_get_current_status(text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.billing_get_current_status(p_original_transaction_id text, p_platform text) RETURNS text
+CREATE OR REPLACE FUNCTION public.billing_get_current_status(p_original_transaction_id text, p_platform text) RETURNS text
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'billing', 'public'
     AS $$
@@ -902,7 +902,7 @@ $$;
 -- Name: billing_get_user_subscription(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.billing_get_user_subscription(p_user_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.billing_get_user_subscription(p_user_id uuid) RETURNS jsonb
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'billing', 'public'
     AS $$
@@ -914,7 +914,7 @@ $$;
 -- Name: billing_is_user_premium(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.billing_is_user_premium(p_user_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.billing_is_user_premium(p_user_id uuid) RETURNS boolean
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'billing', 'public'
     AS $$
@@ -926,7 +926,7 @@ $$;
 -- Name: billing_mark_event_processed(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.billing_mark_event_processed(p_event_id uuid, p_subscription_id uuid DEFAULT NULL::uuid, p_error text DEFAULT NULL::text) RETURNS void
+CREATE OR REPLACE FUNCTION public.billing_mark_event_processed(p_event_id uuid, p_subscription_id uuid DEFAULT NULL::uuid, p_error text DEFAULT NULL::text) RETURNS void
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'billing', 'public'
     AS $$
@@ -938,7 +938,7 @@ $$;
 -- Name: billing_process_dlq(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.billing_process_dlq() RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.billing_process_dlq() RETURNS jsonb
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'billing', 'public'
     AS $$
@@ -950,7 +950,7 @@ $$;
 -- Name: billing_process_webhook_atomically(text, text, text, text, text, text, jsonb, timestamp with time zone, uuid, text, text, text, timestamp with time zone, timestamp with time zone, timestamp with time zone, boolean, text, text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.billing_process_webhook_atomically(p_notification_uuid text, p_platform text, p_notification_type text, p_subtype text, p_original_transaction_id text, p_signed_payload text, p_decoded_payload jsonb, p_signed_date timestamp with time zone, p_user_id uuid, p_product_id text, p_bundle_id text, p_status text, p_purchase_date timestamp with time zone, p_original_purchase_date timestamp with time zone, p_expires_date timestamp with time zone, p_auto_renew_status boolean, p_auto_renew_product_id text, p_environment text, p_app_account_token uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.billing_process_webhook_atomically(p_notification_uuid text, p_platform text, p_notification_type text, p_subtype text, p_original_transaction_id text, p_signed_payload text, p_decoded_payload jsonb, p_signed_date timestamp with time zone, p_user_id uuid, p_product_id text, p_bundle_id text, p_status text, p_purchase_date timestamp with time zone, p_original_purchase_date timestamp with time zone, p_expires_date timestamp with time zone, p_auto_renew_status boolean, p_auto_renew_product_id text, p_environment text, p_app_account_token uuid) RETURNS jsonb
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'billing', 'public'
     AS $$
@@ -982,7 +982,7 @@ $$;
 -- Name: billing_record_subscription_event(text, text, text, text, text, text, jsonb, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.billing_record_subscription_event(p_notification_uuid text, p_platform text DEFAULT 'apple'::text, p_notification_type text DEFAULT ''::text, p_subtype text DEFAULT NULL::text, p_original_transaction_id text DEFAULT ''::text, p_signed_payload text DEFAULT ''::text, p_decoded_payload jsonb DEFAULT '{}'::jsonb, p_signed_date timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.billing_record_subscription_event(p_notification_uuid text, p_platform text DEFAULT 'apple'::text, p_notification_type text DEFAULT ''::text, p_subtype text DEFAULT NULL::text, p_original_transaction_id text DEFAULT ''::text, p_signed_payload text DEFAULT ''::text, p_decoded_payload jsonb DEFAULT '{}'::jsonb, p_signed_date timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'billing', 'public'
     AS $$
@@ -1019,7 +1019,7 @@ $$;
 -- Name: billing_update_daily_metrics(date); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.billing_update_daily_metrics(p_date date DEFAULT CURRENT_DATE) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.billing_update_daily_metrics(p_date date DEFAULT CURRENT_DATE) RETURNS jsonb
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'billing', 'public'
     AS $$
@@ -1031,7 +1031,7 @@ $$;
 -- Name: billing_upsert_subscription(uuid, text, text, text, text, text, timestamp with time zone, timestamp with time zone, timestamp with time zone, boolean, text, text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.billing_upsert_subscription(p_user_id uuid, p_platform text DEFAULT 'apple'::text, p_original_transaction_id text DEFAULT ''::text, p_product_id text DEFAULT ''::text, p_bundle_id text DEFAULT ''::text, p_status text DEFAULT 'unknown'::text, p_purchase_date timestamp with time zone DEFAULT NULL::timestamp with time zone, p_original_purchase_date timestamp with time zone DEFAULT NULL::timestamp with time zone, p_expires_date timestamp with time zone DEFAULT NULL::timestamp with time zone, p_auto_renew_status boolean DEFAULT true, p_auto_renew_product_id text DEFAULT NULL::text, p_environment text DEFAULT 'Production'::text, p_app_account_token uuid DEFAULT NULL::uuid) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.billing_upsert_subscription(p_user_id uuid, p_platform text DEFAULT 'apple'::text, p_original_transaction_id text DEFAULT ''::text, p_product_id text DEFAULT ''::text, p_bundle_id text DEFAULT ''::text, p_status text DEFAULT 'unknown'::text, p_purchase_date timestamp with time zone DEFAULT NULL::timestamp with time zone, p_original_purchase_date timestamp with time zone DEFAULT NULL::timestamp with time zone, p_expires_date timestamp with time zone DEFAULT NULL::timestamp with time zone, p_auto_renew_status boolean DEFAULT true, p_auto_renew_product_id text DEFAULT NULL::text, p_environment text DEFAULT 'Production'::text, p_app_account_token uuid DEFAULT NULL::uuid) RETURNS uuid
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'billing', 'public'
     AS $$
@@ -1057,7 +1057,7 @@ $$;
 -- Name: billing_validate_status_transition(text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.billing_validate_status_transition(p_current_status text, p_new_status text, p_event_type text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.billing_validate_status_transition(p_current_status text, p_new_status text, p_event_type text) RETURNS boolean
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'billing', 'public'
     AS $$
@@ -1069,7 +1069,7 @@ $$;
 -- Name: block_user(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.block_user(p_blocked_id uuid, p_reason text DEFAULT NULL::text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.block_user(p_blocked_id uuid, p_reason text DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -1118,7 +1118,7 @@ COMMENT ON FUNCTION public.block_user(p_blocked_id uuid, p_reason text) IS 'Bloc
 -- Name: calculate_hot_score(integer, integer, integer, integer, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.calculate_hot_score(p_likes integer, p_comments integer, p_reactions integer, p_views integer, p_created_at timestamp with time zone) RETURNS numeric
+CREATE OR REPLACE FUNCTION public.calculate_hot_score(p_likes integer, p_comments integer, p_reactions integer, p_views integer, p_created_at timestamp with time zone) RETURNS numeric
     LANGUAGE plpgsql IMMUTABLE
     SET search_path TO 'public'
     AS $$
@@ -1159,7 +1159,7 @@ $$;
 -- Name: calculate_next_occurrence(text, integer, time without time zone, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.calculate_next_occurrence(p_recurrence_type text, p_recurrence_day integer, p_recurrence_time time without time zone, p_timezone text) RETURNS timestamp with time zone
+CREATE OR REPLACE FUNCTION public.calculate_next_occurrence(p_recurrence_type text, p_recurrence_day integer, p_recurrence_time time without time zone, p_timezone text) RETURNS timestamp with time zone
     LANGUAGE plpgsql IMMUTABLE
     SET search_path TO ''
     AS $$
@@ -1218,7 +1218,7 @@ $$;
 -- Name: calculate_provider_health_score(numeric, numeric, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.calculate_provider_health_score(p_success_rate numeric, p_avg_latency_ms numeric, p_consecutive_failures integer) RETURNS integer
+CREATE OR REPLACE FUNCTION public.calculate_provider_health_score(p_success_rate numeric, p_avg_latency_ms numeric, p_consecutive_failures integer) RETURNS integer
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -1269,7 +1269,7 @@ COMMENT ON FUNCTION public.calculate_provider_health_score(p_success_rate numeri
 -- Name: calculate_trust_level(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.calculate_trust_level(p_profile_id uuid) RETURNS integer
+CREATE OR REPLACE FUNCTION public.calculate_trust_level(p_profile_id uuid) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -1342,7 +1342,7 @@ $$;
 -- Name: call_update_locations(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.call_update_locations() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.call_update_locations() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -1357,7 +1357,7 @@ $$;
 -- Name: call_update_post_coordinates(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.call_update_post_coordinates() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.call_update_post_coordinates() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -1372,7 +1372,7 @@ $$;
 -- Name: cancel_arrangement(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cancel_arrangement(p_post_id integer) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.cancel_arrangement(p_post_id integer) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -1414,7 +1414,7 @@ $$;
 -- Name: cancel_scheduled_post(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cancel_scheduled_post(p_scheduled_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.cancel_scheduled_post(p_scheduled_id uuid) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -1447,7 +1447,7 @@ $$;
 -- Name: cast_poll_vote(uuid, uuid[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cast_poll_vote(p_poll_id uuid, p_option_ids uuid[]) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.cast_poll_vote(p_poll_id uuid, p_option_ids uuid[]) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -1554,7 +1554,7 @@ $$;
 -- Name: check_and_award_badges(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.check_and_award_badges(p_profile_id uuid) RETURNS SETOF text
+CREATE OR REPLACE FUNCTION public.check_and_award_badges(p_profile_id uuid) RETURNS SETOF text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -1660,7 +1660,7 @@ $$;
 -- Name: check_client_compatibility(text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.check_client_compatibility(p_platform text, p_version text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.check_client_compatibility(p_platform text, p_version text) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -1716,7 +1716,7 @@ COMMENT ON FUNCTION public.check_client_compatibility(p_platform text, p_version
 -- Name: check_for_duplicate_like(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.check_for_duplicate_like() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.check_for_duplicate_like() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -1737,7 +1737,7 @@ $$;
 -- Name: check_mfa_rate_limit(uuid, inet, text, integer, interval); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.check_mfa_rate_limit(p_profile_id uuid, p_ip_address inet, p_limit_type text, p_max_attempts integer DEFAULT 5, p_window_duration interval DEFAULT '00:15:00'::interval) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.check_mfa_rate_limit(p_profile_id uuid, p_ip_address inet, p_limit_type text, p_max_attempts integer DEFAULT 5, p_window_duration interval DEFAULT '00:15:00'::interval) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -1805,7 +1805,7 @@ $$;
 -- Name: check_platform_rate_limit(character varying, character varying); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.check_platform_rate_limit(p_identifier character varying, p_platform character varying) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.check_platform_rate_limit(p_identifier character varying, p_platform character varying) RETURNS jsonb
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -1888,7 +1888,7 @@ $$;
 -- Name: check_provider_quota(text, date); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.check_provider_quota(p_provider text, p_date date DEFAULT CURRENT_DATE) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.check_provider_quota(p_provider text, p_date date DEFAULT CURRENT_DATE) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -1914,7 +1914,7 @@ $$;
 -- Name: check_provider_rate_limit(text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.check_provider_rate_limit(p_provider text, p_max_per_minute integer DEFAULT 10) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.check_provider_rate_limit(p_provider text, p_max_per_minute integer DEFAULT 10) RETURNS boolean
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -1969,7 +1969,7 @@ COMMENT ON FUNCTION public.check_provider_rate_limit(p_provider text, p_max_per_
 -- Name: check_quiet_hours(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.check_quiet_hours(p_user_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.check_quiet_hours(p_user_id uuid) RETURNS boolean
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -2017,7 +2017,7 @@ COMMENT ON FUNCTION public.check_quiet_hours(p_user_id uuid) IS 'Checks if user 
 -- Name: check_rate_limit(text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.check_rate_limit(p_identifier text, p_max_requests integer DEFAULT 100, p_window_seconds integer DEFAULT 3600) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.check_rate_limit(p_identifier text, p_max_requests integer DEFAULT 100, p_window_seconds integer DEFAULT 3600) RETURNS boolean
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -2068,7 +2068,7 @@ $$;
 -- Name: check_rate_limit(uuid, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.check_rate_limit(user_id uuid, operation text, max_requests integer, time_window_seconds integer) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.check_rate_limit(user_id uuid, operation text, max_requests integer, time_window_seconds integer) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -2130,7 +2130,7 @@ RETURNS:
 -- Name: check_trust_permission(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.check_trust_permission(p_profile_id uuid, p_permission text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.check_trust_permission(p_profile_id uuid, p_permission text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $_$
@@ -2160,7 +2160,7 @@ $_$;
 -- Name: check_vault_secret_exists(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.check_vault_secret_exists(secret_name text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.check_vault_secret_exists(secret_name text) RETURNS boolean
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'vault'
     AS $$
@@ -2198,7 +2198,7 @@ RETURNS:
 -- Name: claim_challenge_reward(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.claim_challenge_reward(p_user_id uuid, p_challenge_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.claim_challenge_reward(p_user_id uuid, p_challenge_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -2267,7 +2267,7 @@ COMMENT ON FUNCTION public.claim_challenge_reward(p_user_id uuid, p_challenge_id
 -- Name: claim_queue_item(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.claim_queue_item(p_queue_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.claim_queue_item(p_queue_id uuid) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -2285,7 +2285,7 @@ $$;
 -- Name: clean_blog_content(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.clean_blog_content(content text) RETURNS text
+CREATE OR REPLACE FUNCTION public.clean_blog_content(content text) RETURNS text
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $_$
@@ -2329,7 +2329,7 @@ $_$;
 -- Name: cleanup_cron_logs(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_cron_logs(retention_days integer DEFAULT 7) RETURNS TABLE(status text, action text, details text)
+CREATE OR REPLACE FUNCTION public.cleanup_cron_logs(retention_days integer DEFAULT 7) RETURNS TABLE(status text, action text, details text)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'cron'
     AS $$
@@ -2353,7 +2353,7 @@ $$;
 -- Name: cleanup_expired_feed_cells(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_expired_feed_cells() RETURNS integer
+CREATE OR REPLACE FUNCTION public.cleanup_expired_feed_cells() RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -2383,7 +2383,7 @@ COMMENT ON FUNCTION public.cleanup_expired_feed_cells() IS 'Cleans up expired fe
 -- Name: cleanup_expired_translations(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_expired_translations() RETURNS integer
+CREATE OR REPLACE FUNCTION public.cleanup_expired_translations() RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -2410,7 +2410,7 @@ COMMENT ON FUNCTION public.cleanup_expired_translations() IS 'Run daily via pg_c
 -- Name: cleanup_forum_rate_limits(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_forum_rate_limits() RETURNS integer
+CREATE OR REPLACE FUNCTION public.cleanup_forum_rate_limits() RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -2431,7 +2431,7 @@ $$;
 -- Name: cleanup_old_analytics(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_old_analytics(p_days integer DEFAULT 90) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.cleanup_old_analytics(p_days integer DEFAULT 90) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -2446,7 +2446,7 @@ $$;
 -- Name: cleanup_old_audit_logs(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_old_audit_logs() RETURNS void
+CREATE OR REPLACE FUNCTION public.cleanup_old_audit_logs() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -2472,7 +2472,7 @@ COMMENT ON FUNCTION public.cleanup_old_audit_logs() IS 'Clean up audit logs olde
 -- Name: cleanup_old_digest_queue(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_old_digest_queue(p_days_old integer DEFAULT 7) RETURNS integer
+CREATE OR REPLACE FUNCTION public.cleanup_old_digest_queue(p_days_old integer DEFAULT 7) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -2501,7 +2501,7 @@ COMMENT ON FUNCTION public.cleanup_old_digest_queue(p_days_old integer) IS 'Remo
 -- Name: cleanup_old_drafts(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_old_drafts() RETURNS integer
+CREATE OR REPLACE FUNCTION public.cleanup_old_drafts() RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -2521,7 +2521,7 @@ $$;
 -- Name: cleanup_old_events(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_old_events(p_days integer DEFAULT 90) RETURNS integer
+CREATE OR REPLACE FUNCTION public.cleanup_old_events(p_days integer DEFAULT 90) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -2549,7 +2549,7 @@ COMMENT ON FUNCTION public.cleanup_old_events(p_days integer) IS 'Removes old us
 -- Name: cleanup_old_geocode_queue(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_old_geocode_queue(days_old integer DEFAULT 30) RETURNS integer
+CREATE OR REPLACE FUNCTION public.cleanup_old_geocode_queue(days_old integer DEFAULT 30) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -2580,7 +2580,7 @@ COMMENT ON FUNCTION public.cleanup_old_geocode_queue(days_old integer) IS 'Delet
 -- Name: cleanup_old_health_events(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_old_health_events() RETURNS void
+CREATE OR REPLACE FUNCTION public.cleanup_old_health_events() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -2595,7 +2595,7 @@ $$;
 -- Name: cleanup_old_image_metrics(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_old_image_metrics() RETURNS void
+CREATE OR REPLACE FUNCTION public.cleanup_old_image_metrics() RETURNS void
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -2609,7 +2609,7 @@ $$;
 -- Name: cleanup_old_metrics(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_old_metrics() RETURNS integer
+CREATE OR REPLACE FUNCTION public.cleanup_old_metrics() RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -2648,7 +2648,7 @@ COMMENT ON FUNCTION public.cleanup_old_metrics() IS 'Removes old metrics data to
 -- Name: cleanup_old_notifications(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_old_notifications() RETURNS void
+CREATE OR REPLACE FUNCTION public.cleanup_old_notifications() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -2695,7 +2695,7 @@ COMMENT ON FUNCTION public.cleanup_old_notifications() IS 'Cleanup old notificat
 -- Name: cleanup_old_queue_items(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_old_queue_items() RETURNS integer
+CREATE OR REPLACE FUNCTION public.cleanup_old_queue_items() RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -2716,7 +2716,7 @@ $$;
 -- Name: cleanup_old_telegram_states(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.cleanup_old_telegram_states() RETURNS void
+CREATE OR REPLACE FUNCTION public.cleanup_old_telegram_states() RETURNS void
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -2731,7 +2731,7 @@ $$;
 -- Name: clear_forum_search_history(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.clear_forum_search_history() RETURNS boolean
+CREATE OR REPLACE FUNCTION public.clear_forum_search_history() RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -2746,7 +2746,7 @@ $$;
 -- Name: clear_reading_history(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.clear_reading_history() RETURNS boolean
+CREATE OR REPLACE FUNCTION public.clear_reading_history() RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -2762,7 +2762,7 @@ $$;
 -- Name: complete_challenge(uuid, bigint, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.complete_challenge(p_user_id uuid, p_challenge_id bigint, p_proof_data jsonb DEFAULT NULL::jsonb) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.complete_challenge(p_user_id uuid, p_challenge_id bigint, p_proof_data jsonb DEFAULT NULL::jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -2821,7 +2821,7 @@ $$;
 -- Name: complete_transaction(bigint, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.complete_transaction(p_post_id bigint, p_sharer_id uuid, p_receiver_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.complete_transaction(p_post_id bigint, p_sharer_id uuid, p_receiver_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -2872,7 +2872,7 @@ $$;
 -- Name: compute_feed_for_cell(text, double precision, double precision, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.compute_feed_for_cell(p_cell_id text, p_lat double precision, p_lng double precision, p_radius_km integer DEFAULT 10, p_limit integer DEFAULT 50) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.compute_feed_for_cell(p_cell_id text, p_lat double precision, p_lng double precision, p_radius_km integer DEFAULT 10, p_limit integer DEFAULT 50) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions'
     AS $$
@@ -2967,7 +2967,7 @@ $$;
 -- Name: count_new_profiles_within_radius(double precision, double precision, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.count_new_profiles_within_radius(lat double precision, lng double precision, radius_meters integer DEFAULT 10000, days_ago integer DEFAULT 30) RETURNS integer
+CREATE OR REPLACE FUNCTION public.count_new_profiles_within_radius(lat double precision, lng double precision, radius_meters integer DEFAULT 10000, days_ago integer DEFAULT 30) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3001,7 +3001,7 @@ COMMENT ON FUNCTION public.count_new_profiles_within_radius(lat double precision
 -- Name: count_posts_within_radius(double precision, double precision, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.count_posts_within_radius(lat double precision, lng double precision, radius_meters integer DEFAULT 10000, days_ago integer DEFAULT 7) RETURNS integer
+CREATE OR REPLACE FUNCTION public.count_posts_within_radius(lat double precision, lng double precision, radius_meters integer DEFAULT 10000, days_ago integer DEFAULT 7) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3036,7 +3036,7 @@ COMMENT ON FUNCTION public.count_posts_within_radius(lat double precision, lng d
 -- Name: count_profiles_within_radius(double precision, double precision, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.count_profiles_within_radius(lat double precision, lng double precision, radius_meters integer DEFAULT 10000) RETURNS integer
+CREATE OR REPLACE FUNCTION public.count_profiles_within_radius(lat double precision, lng double precision, radius_meters integer DEFAULT 10000) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3069,7 +3069,7 @@ COMMENT ON FUNCTION public.count_profiles_within_radius(lat double precision, ln
 -- Name: create_announcement(text, text, text, text, text, boolean, integer, timestamp with time zone, timestamp with time zone, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_announcement(p_title text, p_content text, p_announcement_type text DEFAULT 'info'::text, p_display_location text DEFAULT 'banner'::text, p_target_type text DEFAULT 'all'::text, p_is_dismissible boolean DEFAULT true, p_priority integer DEFAULT 0, p_starts_at timestamp with time zone DEFAULT now(), p_ends_at timestamp with time zone DEFAULT NULL::timestamp with time zone, p_publish_immediately boolean DEFAULT false) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.create_announcement(p_title text, p_content text, p_announcement_type text DEFAULT 'info'::text, p_display_location text DEFAULT 'banner'::text, p_target_type text DEFAULT 'all'::text, p_is_dismissible boolean DEFAULT true, p_priority integer DEFAULT 0, p_starts_at timestamp with time zone DEFAULT now(), p_ends_at timestamp with time zone DEFAULT NULL::timestamp with time zone, p_publish_immediately boolean DEFAULT false) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3100,7 +3100,7 @@ $$;
 -- Name: create_bookmark_collection(text, text, text, text, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_bookmark_collection(p_name text, p_description text DEFAULT NULL::text, p_color text DEFAULT '#6366f1'::text, p_icon_name text DEFAULT 'folder'::text, p_is_private boolean DEFAULT true) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.create_bookmark_collection(p_name text, p_description text DEFAULT NULL::text, p_color text DEFAULT '#6366f1'::text, p_icon_name text DEFAULT 'folder'::text, p_is_private boolean DEFAULT true) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3126,7 +3126,7 @@ $$;
 -- Name: create_default_address(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_default_address() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.create_default_address() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -3154,7 +3154,7 @@ COMMENT ON FUNCTION public.create_default_address() IS 'Automatically creates an
 -- Name: create_default_bookmark_collection(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_default_bookmark_collection() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.create_default_bookmark_collection() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3171,7 +3171,7 @@ $$;
 -- Name: create_default_email_preferences(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_default_email_preferences() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.create_default_email_preferences() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -3188,7 +3188,7 @@ $$;
 -- Name: create_forum_comment(uuid, bigint, text, bigint, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_forum_comment(p_user_id uuid, p_forum_id bigint, p_content text, p_parent_id bigint DEFAULT NULL::bigint, p_rich_content jsonb DEFAULT NULL::jsonb) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.create_forum_comment(p_user_id uuid, p_forum_id bigint, p_content text, p_parent_id bigint DEFAULT NULL::bigint, p_rich_content jsonb DEFAULT NULL::jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3291,7 +3291,7 @@ $$;
 -- Name: create_forum_notification(uuid, uuid, text, bigint, bigint, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_forum_notification(p_recipient_id uuid, p_actor_id uuid, p_type text, p_forum_id bigint DEFAULT NULL::bigint, p_comment_id bigint DEFAULT NULL::bigint, p_data jsonb DEFAULT '{}'::jsonb) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.create_forum_notification(p_recipient_id uuid, p_actor_id uuid, p_type text, p_forum_id bigint DEFAULT NULL::bigint, p_comment_id bigint DEFAULT NULL::bigint, p_data jsonb DEFAULT '{}'::jsonb) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3319,7 +3319,7 @@ $$;
 -- Name: create_forum_poll(bigint, text, text[], text, timestamp with time zone, boolean, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_forum_poll(p_forum_id bigint, p_question text, p_options text[], p_poll_type text DEFAULT 'single'::text, p_ends_at timestamp with time zone DEFAULT NULL::timestamp with time zone, p_is_anonymous boolean DEFAULT false, p_show_results_before_vote boolean DEFAULT false) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.create_forum_poll(p_forum_id bigint, p_question text, p_options text[], p_poll_type text DEFAULT 'single'::text, p_ends_at timestamp with time zone DEFAULT NULL::timestamp with time zone, p_is_anonymous boolean DEFAULT false, p_show_results_before_vote boolean DEFAULT false) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3363,7 +3363,7 @@ $$;
 -- Name: create_forum_series(text, text, integer, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_forum_series(p_title text, p_description text DEFAULT NULL::text, p_category_id integer DEFAULT NULL::integer, p_difficulty_level text DEFAULT 'beginner'::text, p_cover_image text DEFAULT NULL::text) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.create_forum_series(p_title text, p_description text DEFAULT NULL::text, p_category_id integer DEFAULT NULL::integer, p_difficulty_level text DEFAULT 'beginner'::text, p_cover_image text DEFAULT NULL::text) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3412,7 +3412,7 @@ $$;
 -- Name: create_listing_transactional(uuid, text, text, text, text[], double precision, double precision, text, text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_listing_transactional(p_profile_id uuid, p_title text, p_description text DEFAULT NULL::text, p_post_type text DEFAULT 'food'::text, p_images text[] DEFAULT NULL::text[], p_latitude double precision DEFAULT NULL::double precision, p_longitude double precision DEFAULT NULL::double precision, p_pickup_address text DEFAULT NULL::text, p_pickup_time text DEFAULT NULL::text, p_category_id integer DEFAULT NULL::integer) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.create_listing_transactional(p_profile_id uuid, p_title text, p_description text DEFAULT NULL::text, p_post_type text DEFAULT 'food'::text, p_images text[] DEFAULT NULL::text[], p_latitude double precision DEFAULT NULL::double precision, p_longitude double precision DEFAULT NULL::double precision, p_pickup_address text DEFAULT NULL::text, p_pickup_time text DEFAULT NULL::text, p_category_id integer DEFAULT NULL::integer) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -3461,7 +3461,7 @@ $$;
 -- Name: create_mfa_challenge(uuid, text, inet, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_mfa_challenge(p_profile_id uuid, p_method text, p_ip_address inet DEFAULT NULL::inet, p_user_agent text DEFAULT NULL::text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.create_mfa_challenge(p_profile_id uuid, p_method text, p_ip_address inet DEFAULT NULL::inet, p_user_agent text DEFAULT NULL::text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -3518,7 +3518,7 @@ $$;
 -- Name: create_profile_stats(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_profile_stats() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.create_profile_stats() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3542,7 +3542,7 @@ COMMENT ON FUNCTION public.create_profile_stats() IS 'Automatically creates prof
 -- Name: create_profile_stats_on_profile_insert(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_profile_stats_on_profile_insert() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.create_profile_stats_on_profile_insert() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3559,7 +3559,7 @@ $$;
 -- Name: create_recurring_post(text, text, text, time without time zone, integer, integer, text, integer, date); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_recurring_post(p_title_template text, p_description_template text, p_recurrence_type text, p_recurrence_time time without time zone, p_category_id integer DEFAULT NULL::integer, p_recurrence_day integer DEFAULT NULL::integer, p_timezone text DEFAULT 'UTC'::text, p_max_occurrences integer DEFAULT NULL::integer, p_end_date date DEFAULT NULL::date) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.create_recurring_post(p_title_template text, p_description_template text, p_recurrence_type text, p_recurrence_time time without time zone, p_category_id integer DEFAULT NULL::integer, p_recurrence_day integer DEFAULT NULL::integer, p_timezone text DEFAULT 'UTC'::text, p_max_occurrences integer DEFAULT NULL::integer, p_end_date date DEFAULT NULL::date) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3595,7 +3595,7 @@ $$;
 -- Name: create_user_notification(uuid, uuid, text, text, text, integer, uuid, integer, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_user_notification(p_recipient_id uuid, p_actor_id uuid, p_type text, p_title text, p_body text DEFAULT NULL::text, p_post_id integer DEFAULT NULL::integer, p_room_id uuid DEFAULT NULL::uuid, p_review_id integer DEFAULT NULL::integer, p_data jsonb DEFAULT '{}'::jsonb) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.create_user_notification(p_recipient_id uuid, p_actor_id uuid, p_type text, p_title text, p_body text DEFAULT NULL::text, p_post_id integer DEFAULT NULL::integer, p_room_id uuid DEFAULT NULL::uuid, p_review_id integer DEFAULT NULL::integer, p_data jsonb DEFAULT '{}'::jsonb) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -3639,7 +3639,7 @@ $$;
 -- Name: deactivate_expired_posts(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.deactivate_expired_posts(p_days_old integer DEFAULT 30) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.deactivate_expired_posts(p_days_old integer DEFAULT 30) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3654,7 +3654,7 @@ $$;
 -- Name: deactivate_post(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.deactivate_post(p_post_id integer) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.deactivate_post(p_post_id integer) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -3687,7 +3687,7 @@ $$;
 -- Name: decrement_forum_likes(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.decrement_forum_likes(forum_id bigint) RETURNS void
+CREATE OR REPLACE FUNCTION public.decrement_forum_likes(forum_id bigint) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3703,7 +3703,7 @@ $$;
 -- Name: decrypt_pii(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.decrypt_pii(encrypted_data text) RETURNS text
+CREATE OR REPLACE FUNCTION public.decrypt_pii(encrypted_data text) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -3718,7 +3718,7 @@ $$;
 -- Name: deep_merge_jsonb(jsonb, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.deep_merge_jsonb(base_obj jsonb, merge_obj jsonb) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.deep_merge_jsonb(base_obj jsonb, merge_obj jsonb) RETURNS jsonb
     LANGUAGE sql IMMUTABLE
     AS $$
   SELECT
@@ -3745,7 +3745,7 @@ $$;
 -- Name: delete_notification(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.delete_notification(p_user_id uuid, p_notification_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.delete_notification(p_user_id uuid, p_notification_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3774,7 +3774,7 @@ $$;
 -- Name: detect_forum_spam_patterns(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.detect_forum_spam_patterns(p_content text) RETURNS TABLE(is_spam boolean, spam_score numeric, reasons text[])
+CREATE OR REPLACE FUNCTION public.detect_forum_spam_patterns(p_content text) RETURNS TABLE(is_spam boolean, spam_score numeric, reasons text[])
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3824,7 +3824,7 @@ $$;
 -- Name: dismiss_announcement(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.dismiss_announcement(p_announcement_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.dismiss_announcement(p_announcement_id uuid) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3853,7 +3853,7 @@ $$;
 -- Name: email_template_version_trigger(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.email_template_version_trigger() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.email_template_version_trigger() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -3879,7 +3879,7 @@ $$;
 -- Name: encrypt_pii(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.encrypt_pii(data text) RETURNS text
+CREATE OR REPLACE FUNCTION public.encrypt_pii(data text) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -3893,7 +3893,7 @@ $$;
 -- Name: enforce_max_drafts(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.enforce_max_drafts() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.enforce_max_drafts() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3917,7 +3917,7 @@ $$;
 -- Name: enroll_user_in_automation(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.enroll_user_in_automation(p_flow_id uuid, p_profile_id uuid) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.enroll_user_in_automation(p_flow_id uuid, p_profile_id uuid) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3976,7 +3976,7 @@ $$;
 -- Name: ensure_forum_user_stats(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.ensure_forum_user_stats(p_profile_id uuid) RETURNS void
+CREATE OR REPLACE FUNCTION public.ensure_forum_user_stats(p_profile_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3992,7 +3992,7 @@ $$;
 -- Name: execute_readonly_query(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.execute_readonly_query(query_text text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.execute_readonly_query(query_text text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     SET statement_timeout TO '10s'
@@ -4036,7 +4036,7 @@ COMMENT ON FUNCTION public.execute_readonly_query(query_text text) IS 'Executes 
 -- Name: extract_coordinates(extensions.geography); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.extract_coordinates(geog extensions.geography) RETURNS TABLE(latitude numeric, longitude numeric)
+CREATE OR REPLACE FUNCTION public.extract_coordinates(geog extensions.geography) RETURNS TABLE(latitude numeric, longitude numeric)
     LANGUAGE plpgsql STABLE
     SET search_path TO ''
     AS $$
@@ -4053,7 +4053,7 @@ $$;
 -- Name: extract_mentions(text, uuid, bigint, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.extract_mentions(p_text text, p_mentioner_id uuid, p_forum_id bigint DEFAULT NULL::bigint, p_comment_id bigint DEFAULT NULL::bigint) RETURNS SETOF uuid
+CREATE OR REPLACE FUNCTION public.extract_mentions(p_text text, p_mentioner_id uuid, p_forum_id bigint DEFAULT NULL::bigint, p_comment_id bigint DEFAULT NULL::bigint) RETURNS SETOF uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -4102,7 +4102,7 @@ $$;
 -- Name: feature_forum_post(bigint, integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.feature_forum_post(p_forum_id bigint, p_duration_hours integer DEFAULT 24, p_reason text DEFAULT NULL::text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.feature_forum_post(p_forum_id bigint, p_duration_hours integer DEFAULT 24, p_reason text DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -4148,7 +4148,7 @@ $$;
 -- Name: filter_blocked_content(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.filter_blocked_content(p_profile_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.filter_blocked_content(p_profile_id uuid) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -4172,7 +4172,7 @@ $$;
 -- Name: find_nearby_posts_geography(extensions.geography, numeric, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.find_nearby_posts_geography(user_location extensions.geography, radius_km numeric DEFAULT 5, p_post_type text DEFAULT NULL::text) RETURNS TABLE(id bigint, post_name text, post_description text, post_type text, post_address text, post_stripped_address text, location extensions.geography, images text[], distance_km numeric)
+CREATE OR REPLACE FUNCTION public.find_nearby_posts_geography(user_location extensions.geography, radius_km numeric DEFAULT 5, p_post_type text DEFAULT NULL::text) RETURNS TABLE(id bigint, post_name text, post_description text, post_type text, post_address text, post_stripped_address text, location extensions.geography, images text[], distance_km numeric)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions'
     AS $$
@@ -4202,7 +4202,7 @@ $$;
 -- Name: forum_check_rate_limit(text, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.forum_check_rate_limit(p_action_type text, p_consume boolean DEFAULT true) RETURNS TABLE(allowed boolean, remaining integer, reset_at timestamp with time zone, retry_after_seconds integer)
+CREATE OR REPLACE FUNCTION public.forum_check_rate_limit(p_action_type text, p_consume boolean DEFAULT true) RETURNS TABLE(allowed boolean, remaining integer, reset_at timestamp with time zone, retry_after_seconds integer)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -4292,7 +4292,7 @@ COMMENT ON FUNCTION public.forum_check_rate_limit(p_action_type text, p_consume 
 -- Name: generate_backup_codes(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.generate_backup_codes(count integer DEFAULT 10) RETURNS text[]
+CREATE OR REPLACE FUNCTION public.generate_backup_codes(count integer DEFAULT 10) RETURNS text[]
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -4312,7 +4312,7 @@ $$;
 -- Name: generate_forum_slug(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.generate_forum_slug() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.generate_forum_slug() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $_$
@@ -4352,7 +4352,7 @@ COMMENT ON FUNCTION public.generate_forum_slug() IS 'Optimized: skips generation
 -- Name: generate_mfa_code(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.generate_mfa_code() RETURNS text
+CREATE OR REPLACE FUNCTION public.generate_mfa_code() RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -4366,7 +4366,7 @@ $$;
 -- Name: generate_translation_etag(character varying); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.generate_translation_etag(p_locale character varying) RETURNS character varying
+CREATE OR REPLACE FUNCTION public.generate_translation_etag(p_locale character varying) RETURNS character varying
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -4389,7 +4389,7 @@ $$;
 -- Name: geocode_address(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.geocode_address(address text) RETURNS TABLE(latitude numeric, longitude numeric)
+CREATE OR REPLACE FUNCTION public.geocode_address(address text) RETURNS TABLE(latitude numeric, longitude numeric)
     LANGUAGE plpgsql STABLE
     SET search_path TO 'public'
     AS $$
@@ -4405,7 +4405,7 @@ $$;
 -- Name: geocode_and_update_location(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.geocode_and_update_location() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.geocode_and_update_location() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -4457,7 +4457,7 @@ $$;
 -- Name: geocode_and_update_location(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.geocode_and_update_location(post_id integer) RETURNS void
+CREATE OR REPLACE FUNCTION public.geocode_and_update_location(post_id integer) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -4490,7 +4490,7 @@ $$;
 -- Name: get_active_announcements(integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_active_announcements(p_category_id integer DEFAULT NULL::integer, p_location text DEFAULT NULL::text) RETURNS TABLE(id uuid, title text, content text, rich_content jsonb, announcement_type text, icon_name text, background_color text, text_color text, display_location text, is_dismissible boolean, is_pinned boolean, priority integer, cta_text text, cta_url text, cta_style text, starts_at timestamp with time zone, ends_at timestamp with time zone)
+CREATE OR REPLACE FUNCTION public.get_active_announcements(p_category_id integer DEFAULT NULL::integer, p_location text DEFAULT NULL::text) RETURNS TABLE(id uuid, title text, content text, rich_content jsonb, announcement_type text, icon_name text, background_color text, text_color text, display_location text, is_dismissible boolean, is_pinned boolean, priority integer, cta_text text, cta_url text, cta_style text, starts_at timestamp with time zone, ends_at timestamp with time zone)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -4543,7 +4543,7 @@ $$;
 -- Name: get_admin_users(text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_admin_users(p_search_query text DEFAULT NULL::text, p_role_filter text DEFAULT NULL::text, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS TABLE(id uuid, nickname text, email text, avatar_url text, is_verified boolean, is_active boolean, created_time timestamp with time zone, last_seen_at timestamp with time zone, user_roles jsonb)
+CREATE OR REPLACE FUNCTION public.get_admin_users(p_search_query text DEFAULT NULL::text, p_role_filter text DEFAULT NULL::text, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS TABLE(id uuid, nickname text, email text, avatar_url text, is_verified boolean, is_active boolean, created_time timestamp with time zone, last_seen_at timestamp with time zone, user_roles jsonb)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -4599,7 +4599,7 @@ $$;
 -- Name: get_airtable_api_token(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_airtable_api_token() RETURNS text
+CREATE OR REPLACE FUNCTION public.get_airtable_api_token() RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -4613,7 +4613,7 @@ $$;
 -- Name: get_airtable_key(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_airtable_key() RETURNS text
+CREATE OR REPLACE FUNCTION public.get_airtable_key() RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -4627,7 +4627,7 @@ $$;
 -- Name: get_all_provider_health(date); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_all_provider_health(p_date date DEFAULT CURRENT_DATE) RETURNS TABLE(provider text, health_score integer, emails_sent integer, avg_latency_ms numeric, success_rate numeric, circuit_state text, is_available boolean, consecutive_failures integer)
+CREATE OR REPLACE FUNCTION public.get_all_provider_health(p_date date DEFAULT CURRENT_DATE) RETURNS TABLE(provider text, health_score integer, emails_sent integer, avg_latency_ms numeric, success_rate numeric, circuit_state text, is_available boolean, consecutive_failures integer)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -4683,7 +4683,7 @@ $$;
 -- Name: get_app_config(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_app_config(p_platform text DEFAULT 'ios'::text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_app_config(p_platform text DEFAULT 'ios'::text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -4715,7 +4715,7 @@ $$;
 -- Name: get_app_settings(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_app_settings() RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_app_settings() RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -4772,7 +4772,7 @@ COMMENT ON FUNCTION public.get_app_settings() IS 'Returns app-wide configuration
 -- Name: get_audit_stats(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_audit_stats(hours integer DEFAULT 24) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_audit_stats(hours integer DEFAULT 24) RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     AS $$
   SELECT jsonb_build_object(
@@ -4819,7 +4819,7 @@ COMMENT ON FUNCTION public.get_audit_stats(hours integer) IS 'Get aggregated aud
 -- Name: get_author_dashboard(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_author_dashboard(p_days integer DEFAULT 30) RETURNS TABLE(total_views bigint, total_likes bigint, total_comments bigint, total_followers integer, views_trend numeric, likes_trend numeric, top_posts jsonb, daily_stats jsonb, audience_growth jsonb)
+CREATE OR REPLACE FUNCTION public.get_author_dashboard(p_days integer DEFAULT 30) RETURNS TABLE(total_views bigint, total_likes bigint, total_comments bigint, total_followers integer, views_trend numeric, likes_trend numeric, top_posts jsonb, daily_stats jsonb, audience_growth jsonb)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -4929,7 +4929,7 @@ COMMENT ON FUNCTION public.get_author_dashboard(p_days integer) IS 'Get comprehe
 -- Name: get_badge_collection(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_badge_collection(p_profile_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_badge_collection(p_profile_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -5007,7 +5007,7 @@ COMMENT ON FUNCTION public.get_badge_collection(p_profile_id uuid) IS 'Returns a
 -- Name: get_batch_engagement_status(integer[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_batch_engagement_status(p_post_ids integer[]) RETURNS json
+CREATE OR REPLACE FUNCTION public.get_batch_engagement_status(p_post_ids integer[]) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -5082,7 +5082,7 @@ COMMENT ON FUNCTION public.get_batch_engagement_status(p_post_ids integer[]) IS 
 -- Name: get_bff_feed_data(uuid, double precision, double precision, double precision, integer, timestamp with time zone, text, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_bff_feed_data(p_user_id uuid, p_lat double precision, p_lng double precision, p_radius_km double precision DEFAULT 10, p_limit integer DEFAULT 20, p_cursor timestamp with time zone DEFAULT NULL::timestamp with time zone, p_post_type text DEFAULT NULL::text, p_category_id bigint DEFAULT NULL::bigint) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_bff_feed_data(p_user_id uuid, p_lat double precision, p_lng double precision, p_radius_km double precision DEFAULT 10, p_limit integer DEFAULT 20, p_cursor timestamp with time zone DEFAULT NULL::timestamp with time zone, p_post_type text DEFAULT NULL::text, p_category_id bigint DEFAULT NULL::bigint) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -5190,7 +5190,7 @@ COMMENT ON FUNCTION public.get_bff_feed_data(p_user_id uuid, p_lat double precis
 -- Name: get_bff_messages_data(uuid, integer, timestamp with time zone, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_bff_messages_data(p_user_id uuid, p_limit integer DEFAULT 20, p_cursor timestamp with time zone DEFAULT NULL::timestamp with time zone, p_include_archived boolean DEFAULT false) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_bff_messages_data(p_user_id uuid, p_limit integer DEFAULT 20, p_cursor timestamp with time zone DEFAULT NULL::timestamp with time zone, p_include_archived boolean DEFAULT false) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -5281,7 +5281,7 @@ COMMENT ON FUNCTION public.get_bff_messages_data(p_user_id uuid, p_limit integer
 -- Name: get_bff_notifications_data(uuid, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_bff_notifications_data(p_user_id uuid, p_filter text DEFAULT 'all'::text, p_page_limit integer DEFAULT 50, p_page_offset integer DEFAULT 0) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_bff_notifications_data(p_user_id uuid, p_filter text DEFAULT 'all'::text, p_page_limit integer DEFAULT 50, p_page_offset integer DEFAULT 0) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -5372,7 +5372,7 @@ $$;
 -- Name: get_bff_profile_data(uuid, uuid, boolean, boolean, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_bff_profile_data(p_profile_id uuid, p_viewer_id uuid, p_include_listings boolean DEFAULT true, p_include_reviews boolean DEFAULT true, p_listings_limit integer DEFAULT 6, p_reviews_limit integer DEFAULT 5) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_bff_profile_data(p_profile_id uuid, p_viewer_id uuid, p_include_listings boolean DEFAULT true, p_include_reviews boolean DEFAULT true, p_listings_limit integer DEFAULT 6, p_reviews_limit integer DEFAULT 5) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -5513,7 +5513,7 @@ COMMENT ON FUNCTION public.get_bff_profile_data(p_profile_id uuid, p_viewer_id u
 -- Name: get_bff_unread_counts(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_bff_unread_counts(p_user_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_bff_unread_counts(p_user_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -5537,7 +5537,7 @@ $$;
 -- Name: get_blocked_users(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_blocked_users() RETURNS TABLE(blocked_id uuid, blocked_first_name text, blocked_avatar_url text, reason text, blocked_at timestamp with time zone)
+CREATE OR REPLACE FUNCTION public.get_blocked_users() RETURNS TABLE(blocked_id uuid, blocked_first_name text, blocked_avatar_url text, reason text, blocked_at timestamp with time zone)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -5561,7 +5561,7 @@ $$;
 -- Name: get_bookmark_reminders(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_bookmark_reminders() RETURNS TABLE(bookmark_id integer, forum_id integer, forum_title text, notes text, reminder_at timestamp with time zone, collection_name text)
+CREATE OR REPLACE FUNCTION public.get_bookmark_reminders() RETURNS TABLE(bookmark_id integer, forum_id integer, forum_title text, notes text, reminder_at timestamp with time zone, collection_name text)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -5589,7 +5589,7 @@ $$;
 -- Name: get_campaign_fairness_metrics(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_campaign_fairness_metrics(p_campaign_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_campaign_fairness_metrics(p_campaign_id uuid) RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -5658,7 +5658,7 @@ COMMENT ON FUNCTION public.get_campaign_fairness_metrics(p_campaign_id uuid) IS 
 -- Name: get_challenge_detail(bigint, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_challenge_detail(p_challenge_id bigint, p_user_id uuid DEFAULT NULL::uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_challenge_detail(p_challenge_id bigint, p_user_id uuid DEFAULT NULL::uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -5764,7 +5764,7 @@ $$;
 -- Name: get_challenge_leaderboard(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_challenge_leaderboard(limit_count integer DEFAULT 10) RETURNS TABLE(profile_id uuid, nickname text, first_name text, avatar_url text, completed_count bigint, active_count bigint, total_xp numeric, last_completed timestamp with time zone)
+CREATE OR REPLACE FUNCTION public.get_challenge_leaderboard(limit_count integer DEFAULT 10) RETURNS TABLE(profile_id uuid, nickname text, first_name text, avatar_url text, completed_count bigint, active_count bigint, total_xp numeric, last_completed timestamp with time zone)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -5801,7 +5801,7 @@ COMMENT ON FUNCTION public.get_challenge_leaderboard(limit_count integer) IS 'Re
 -- Name: get_challenge_leaderboard(integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_challenge_leaderboard(p_challenge_id integer, p_limit integer DEFAULT 10) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_challenge_leaderboard(p_challenge_id integer, p_limit integer DEFAULT 10) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -5840,7 +5840,7 @@ $$;
 -- Name: get_challenges_data(uuid, boolean, boolean, boolean, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_challenges_data(p_user_id uuid, p_include_completed boolean DEFAULT true, p_include_upcoming boolean DEFAULT true, p_include_leaderboard boolean DEFAULT true, p_leaderboard_limit integer DEFAULT 10, p_completed_limit integer DEFAULT 5) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_challenges_data(p_user_id uuid, p_include_completed boolean DEFAULT true, p_include_upcoming boolean DEFAULT true, p_include_leaderboard boolean DEFAULT true, p_leaderboard_limit integer DEFAULT 10, p_completed_limit integer DEFAULT 5) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -6035,7 +6035,7 @@ COMMENT ON FUNCTION public.get_challenges_data(p_user_id uuid, p_include_complet
 -- Name: get_challenges_screen_data(uuid, text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_challenges_screen_data(p_user_id uuid DEFAULT NULL::uuid, p_difficulty text DEFAULT NULL::text, p_sort_by text DEFAULT 'popular'::text, p_page_limit integer DEFAULT 20, p_page_offset integer DEFAULT 0) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_challenges_screen_data(p_user_id uuid DEFAULT NULL::uuid, p_difficulty text DEFAULT NULL::text, p_sort_by text DEFAULT 'popular'::text, p_page_limit integer DEFAULT 20, p_page_offset integer DEFAULT 0) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -6206,7 +6206,7 @@ $$;
 -- Name: get_chat_screen_data(uuid, uuid, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_chat_screen_data(p_room_id uuid, p_user_id uuid, p_messages_limit integer DEFAULT 50) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_chat_screen_data(p_room_id uuid, p_user_id uuid, p_messages_limit integer DEFAULT 50) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -6303,7 +6303,7 @@ COMMENT ON FUNCTION public.get_chat_screen_data(p_room_id uuid, p_user_id uuid, 
 -- Name: get_chat_thread(uuid, integer, uuid, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_chat_thread(p_room_id uuid, p_limit integer DEFAULT 50, p_before_id uuid DEFAULT NULL::uuid, p_mark_read boolean DEFAULT true) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_chat_thread(p_room_id uuid, p_limit integer DEFAULT 50, p_before_id uuid DEFAULT NULL::uuid, p_mark_read boolean DEFAULT true) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -6423,7 +6423,7 @@ $$;
 -- Name: get_comment_reactions(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_comment_reactions(p_comment_id integer) RETURNS TABLE(reaction_type_id integer, reaction_name text, reaction_emoji text, count bigint, user_reacted boolean, recent_users jsonb)
+CREATE OR REPLACE FUNCTION public.get_comment_reactions(p_comment_id integer) RETURNS TABLE(reaction_type_id integer, reaction_name text, reaction_emoji text, count bigint, user_reacted boolean, recent_users jsonb)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -6456,7 +6456,7 @@ $$;
 -- Name: get_comprehensive_quota_status(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_comprehensive_quota_status(p_organization_id uuid DEFAULT '00000000-0000-0000-0000-000000000001'::uuid) RETURNS TABLE(provider text, daily_sent integer, daily_limit integer, daily_remaining integer, daily_percent_used numeric, monthly_sent integer, monthly_limit integer, monthly_remaining integer, monthly_percent_used numeric, is_available boolean)
+CREATE OR REPLACE FUNCTION public.get_comprehensive_quota_status(p_organization_id uuid DEFAULT '00000000-0000-0000-0000-000000000001'::uuid) RETURNS TABLE(provider text, daily_sent integer, daily_limit integer, daily_remaining integer, daily_percent_used numeric, monthly_sent integer, monthly_limit integer, monthly_remaining integer, monthly_percent_used numeric, is_available boolean)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -6512,7 +6512,7 @@ $$;
 -- Name: get_connection_pool_stats(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_connection_pool_stats() RETURNS TABLE(total_connections integer, active_connections integer, utilization_percent numeric)
+CREATE OR REPLACE FUNCTION public.get_connection_pool_stats() RETURNS TABLE(total_connections integer, active_connections integer, utilization_percent numeric)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -6545,7 +6545,7 @@ COMMENT ON FUNCTION public.get_connection_pool_stats() IS 'Returns database conn
 -- Name: get_crm_customer_summary(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_crm_customer_summary(p_customer_id uuid) RETURNS TABLE(customer_id uuid, profile_id uuid, full_name text, email text, status text, lifetime_value numeric, total_transactions integer, items_shared integer, items_received integer, rating_average numeric, forum_reputation integer, trust_level integer, tags jsonb, last_interaction_at timestamp with time zone, created_at timestamp with time zone)
+CREATE OR REPLACE FUNCTION public.get_crm_customer_summary(p_customer_id uuid) RETURNS TABLE(customer_id uuid, profile_id uuid, full_name text, email text, status text, lifetime_value numeric, total_transactions integer, items_shared integer, items_received integer, rating_average numeric, forum_reputation integer, trust_level integer, tags jsonb, last_interaction_at timestamp with time zone, created_at timestamp with time zone)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -6586,7 +6586,7 @@ $$;
 -- Name: get_current_aal(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_current_aal(p_profile_id uuid) RETURNS text
+CREATE OR REPLACE FUNCTION public.get_current_aal(p_profile_id uuid) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -6614,7 +6614,7 @@ $$;
 -- Name: get_dashboard_stats(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_dashboard_stats() RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_dashboard_stats() RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -6652,7 +6652,7 @@ COMMENT ON FUNCTION public.get_dashboard_stats() IS 'Returns all admin dashboard
 -- Name: get_delta_sync(uuid, text[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_delta_sync(p_user_id uuid, p_tables text[] DEFAULT ARRAY['notifications'::text, 'rooms'::text]) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_delta_sync(p_user_id uuid, p_tables text[] DEFAULT ARRAY['notifications'::text, 'rooms'::text]) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -6788,7 +6788,7 @@ COMMENT ON FUNCTION public.get_delta_sync(p_user_id uuid, p_tables text[]) IS 'R
 -- Name: get_delta_translations(character varying, character varying); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_delta_translations(p_locale character varying, p_from_version character varying) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_delta_translations(p_locale character varying, p_from_version character varying) RETURNS jsonb
     LANGUAGE plpgsql STABLE
     SET search_path TO ''
     AS $$
@@ -6829,7 +6829,7 @@ $$;
 -- Name: get_display_name_data(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_display_name_data(p_user_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_display_name_data(p_user_id uuid) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -6884,7 +6884,7 @@ COMMENT ON FUNCTION public.get_display_name_data(p_user_id uuid) IS 'Get profile
 -- Name: get_display_name_data_batch(uuid[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_display_name_data_batch(p_user_ids uuid[]) RETURNS TABLE(user_id uuid, profile jsonb, override jsonb)
+CREATE OR REPLACE FUNCTION public.get_display_name_data_batch(p_user_ids uuid[]) RETURNS TABLE(user_id uuid, profile jsonb, override jsonb)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -6947,7 +6947,7 @@ COMMENT ON FUNCTION public.get_display_name_data_batch(p_user_ids uuid[]) IS 'Ba
 -- Name: get_draft_count(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_draft_count() RETURNS integer
+CREATE OR REPLACE FUNCTION public.get_draft_count() RETURNS integer
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -6959,7 +6959,7 @@ $$;
 -- Name: get_edge_function_url(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_edge_function_url() RETURNS text
+CREATE OR REPLACE FUNCTION public.get_edge_function_url() RETURNS text
     LANGUAGE plpgsql IMMUTABLE
     AS $$
 BEGIN
@@ -6972,7 +6972,7 @@ $$;
 -- Name: get_email_dashboard_stats_v2(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_email_dashboard_stats_v2() RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_email_dashboard_stats_v2() RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     AS $$
 DECLARE
@@ -7193,7 +7193,7 @@ COMMENT ON FUNCTION public.get_email_dashboard_stats_v2() IS 'Comprehensive emai
 -- Name: get_email_provider_health(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_email_provider_health() RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_email_provider_health() RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     AS $$
 BEGIN
@@ -7276,7 +7276,7 @@ COMMENT ON FUNCTION public.get_email_provider_health() IS 'Provider health and q
 -- Name: get_email_template(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_email_template(p_slug text) RETURNS TABLE(id uuid, slug text, name text, category text, subject text, html_content text, text_content text, variables jsonb, metadata jsonb, version integer)
+CREATE OR REPLACE FUNCTION public.get_email_template(p_slug text) RETURNS TABLE(id uuid, slug text, name text, category text, subject text, html_content text, text_content text, variables jsonb, metadata jsonb, version integer)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     AS $$
 BEGIN
@@ -7290,7 +7290,7 @@ $$;
 -- Name: get_email_template_history(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_email_template_history(p_template_id uuid) RETURNS TABLE(id uuid, version integer, subject text, changed_by uuid, changed_at timestamp with time zone, change_reason text)
+CREATE OR REPLACE FUNCTION public.get_email_template_history(p_template_id uuid) RETURNS TABLE(id uuid, version integer, subject text, changed_by uuid, changed_at timestamp with time zone, change_reason text)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     AS $$
 BEGIN
@@ -7304,7 +7304,7 @@ $$;
 -- Name: get_error_rate(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_error_rate(p_minutes integer DEFAULT 5) RETURNS TABLE(total_requests bigint, error_count bigint, error_rate numeric)
+CREATE OR REPLACE FUNCTION public.get_error_rate(p_minutes integer DEFAULT 5) RETURNS TABLE(total_requests bigint, error_count bigint, error_rate numeric)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -7337,7 +7337,7 @@ COMMENT ON FUNCTION public.get_error_rate(p_minutes integer) IS 'Returns error r
 -- Name: get_experiment_variant(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_experiment_variant(p_user_id uuid, p_experiment_key text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_experiment_variant(p_user_id uuid, p_experiment_key text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -7443,7 +7443,7 @@ COMMENT ON FUNCTION public.get_experiment_variant(p_user_id uuid, p_experiment_k
 -- Name: get_feed_cache_stats(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_feed_cache_stats() RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_feed_cache_stats() RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -7488,7 +7488,7 @@ COMMENT ON FUNCTION public.get_feed_cache_stats() IS 'Returns feed cache statist
 -- Name: get_feed_initial_data(double precision, double precision, double precision, integer, integer, integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_feed_initial_data(p_latitude double precision, p_longitude double precision, p_radius_km double precision DEFAULT 25, p_feed_limit integer DEFAULT 50, p_trending_limit integer DEFAULT 10, p_category_id integer DEFAULT NULL::integer, p_post_type text DEFAULT NULL::text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_feed_initial_data(p_latitude double precision, p_longitude double precision, p_radius_km double precision DEFAULT 25, p_feed_limit integer DEFAULT 50, p_trending_limit integer DEFAULT 10, p_category_id integer DEFAULT NULL::integer, p_post_type text DEFAULT NULL::text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -7644,7 +7644,7 @@ $$;
 -- Name: get_feed_initial_data(double precision, double precision, double precision, integer, integer, text, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_feed_initial_data(p_latitude double precision, p_longitude double precision, p_radius_km double precision DEFAULT 10, p_feed_limit integer DEFAULT 20, p_trending_limit integer DEFAULT 5, p_post_type text DEFAULT NULL::text, p_category_id bigint DEFAULT NULL::bigint) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_feed_initial_data(p_latitude double precision, p_longitude double precision, p_radius_km double precision DEFAULT 10, p_feed_limit integer DEFAULT 20, p_trending_limit integer DEFAULT 5, p_post_type text DEFAULT NULL::text, p_category_id bigint DEFAULT NULL::bigint) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -7798,7 +7798,7 @@ $$;
 -- Name: get_filtered_feed(double precision, double precision, double precision, bigint, text, text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_filtered_feed(p_latitude double precision, p_longitude double precision, p_radius_km double precision DEFAULT 10, p_category_id bigint DEFAULT NULL::bigint, p_post_type text DEFAULT NULL::text, p_search_query text DEFAULT NULL::text, p_sort_by text DEFAULT 'nearest'::text, p_limit integer DEFAULT 50, p_offset integer DEFAULT 0) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_filtered_feed(p_latitude double precision, p_longitude double precision, p_radius_km double precision DEFAULT 10, p_category_id bigint DEFAULT NULL::bigint, p_post_type text DEFAULT NULL::text, p_search_query text DEFAULT NULL::text, p_sort_by text DEFAULT 'nearest'::text, p_limit integer DEFAULT 50, p_offset integer DEFAULT 0) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions'
     AS $$
@@ -7935,7 +7935,7 @@ COMMENT ON FUNCTION public.get_filtered_feed(p_latitude double precision, p_long
 -- Name: get_forum_feed_data(uuid, integer, text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_forum_feed_data(p_user_id uuid DEFAULT NULL::uuid, p_category_id integer DEFAULT NULL::integer, p_post_type text DEFAULT NULL::text, p_sort_by text DEFAULT 'recent'::text, p_page_limit integer DEFAULT 20, p_page_offset integer DEFAULT 0) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_forum_feed_data(p_user_id uuid DEFAULT NULL::uuid, p_category_id integer DEFAULT NULL::integer, p_post_type text DEFAULT NULL::text, p_sort_by text DEFAULT 'recent'::text, p_page_limit integer DEFAULT 20, p_page_offset integer DEFAULT 0) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -8094,7 +8094,7 @@ $$;
 -- Name: get_forum_post_detail(bigint, uuid, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_forum_post_detail(p_post_id bigint, p_user_id uuid DEFAULT NULL::uuid, p_comments_limit integer DEFAULT 50) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_forum_post_detail(p_post_id bigint, p_user_id uuid DEFAULT NULL::uuid, p_comments_limit integer DEFAULT 50) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -8245,7 +8245,7 @@ $$;
 -- Name: get_forum_rate_limits_status(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_forum_rate_limits_status() RETURNS TABLE(action_type text, max_allowed integer, current_count integer, remaining integer, resets_in_seconds integer, description text)
+CREATE OR REPLACE FUNCTION public.get_forum_rate_limits_status() RETURNS TABLE(action_type text, max_allowed integer, current_count integer, remaining integer, resets_in_seconds integer, description text)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -8292,7 +8292,7 @@ $$;
 -- Name: get_global_quota_status(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_global_quota_status() RETURNS TABLE(provider text, daily_sent integer, daily_limit integer, daily_remaining integer, daily_percent_used numeric, monthly_sent integer, monthly_limit integer, monthly_remaining integer, monthly_percent_used numeric)
+CREATE OR REPLACE FUNCTION public.get_global_quota_status() RETURNS TABLE(provider text, daily_sent integer, daily_limit integer, daily_remaining integer, daily_percent_used numeric, monthly_sent integer, monthly_limit integer, monthly_remaining integer, monthly_percent_used numeric)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -8356,7 +8356,7 @@ $$;
 -- Name: get_healthiest_provider(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_healthiest_provider(p_email_type text DEFAULT 'chat'::text) RETURNS TABLE(provider text, health_score integer, quota_remaining integer, recommendation_reason text)
+CREATE OR REPLACE FUNCTION public.get_healthiest_provider(p_email_type text DEFAULT 'chat'::text) RETURNS TABLE(provider text, health_score integer, quota_remaining integer, recommendation_reason text)
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -8404,7 +8404,7 @@ COMMENT ON FUNCTION public.get_healthiest_provider(p_email_type text) IS 'Return
 -- Name: get_home_screen_data(uuid, double precision, double precision, double precision, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_home_screen_data(p_user_id uuid, p_lat double precision, p_lng double precision, p_radius_km double precision DEFAULT 10, p_feed_limit integer DEFAULT 20, p_trending_limit integer DEFAULT 5) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_home_screen_data(p_user_id uuid, p_lat double precision, p_lng double precision, p_radius_km double precision DEFAULT 10, p_feed_limit integer DEFAULT 20, p_trending_limit integer DEFAULT 5) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -8568,7 +8568,7 @@ COMMENT ON FUNCTION public.get_home_screen_data(p_user_id uuid, p_lat double pre
 -- Name: get_large_uncompressed_images(text, bigint, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_large_uncompressed_images(target_bucket text DEFAULT 'posts'::text, size_threshold_bytes bigint DEFAULT 100000, max_results integer DEFAULT 10) RETURNS TABLE(bucket text, path text, size bigint)
+CREATE OR REPLACE FUNCTION public.get_large_uncompressed_images(target_bucket text DEFAULT 'posts'::text, size_threshold_bytes bigint DEFAULT 100000, max_results integer DEFAULT 10) RETURNS TABLE(bucket text, path text, size bigint)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -8605,7 +8605,7 @@ $$;
 -- Name: get_large_uncompressed_images_all_buckets(bigint, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_large_uncompressed_images_all_buckets(size_threshold_bytes bigint DEFAULT 100000, max_results integer DEFAULT 10) RETURNS TABLE(bucket text, path text, size bigint)
+CREATE OR REPLACE FUNCTION public.get_large_uncompressed_images_all_buckets(size_threshold_bytes bigint DEFAULT 100000, max_results integer DEFAULT 10) RETURNS TABLE(bucket text, path text, size bigint)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -8642,7 +8642,7 @@ $$;
 -- Name: get_large_uncompressed_images_multi(text[], bigint, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_large_uncompressed_images_multi(p_buckets text[] DEFAULT ARRAY['posts'::text, 'profiles'::text, 'forum'::text], p_min_size bigint DEFAULT 100000, p_limit integer DEFAULT 3) RETURNS TABLE(name text, bucket_id text, size bigint)
+CREATE OR REPLACE FUNCTION public.get_large_uncompressed_images_multi(p_buckets text[] DEFAULT ARRAY['posts'::text, 'profiles'::text, 'forum'::text], p_min_size bigint DEFAULT 100000, p_limit integer DEFAULT 3) RETURNS TABLE(name text, bucket_id text, size bigint)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -8672,7 +8672,7 @@ $$;
 -- Name: get_latitude(extensions.geography); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_latitude(loc extensions.geography) RETURNS double precision
+CREATE OR REPLACE FUNCTION public.get_latitude(loc extensions.geography) RETURNS double precision
     LANGUAGE sql IMMUTABLE
     SET search_path TO ''
     AS $$
@@ -8684,7 +8684,7 @@ $$;
 -- Name: get_latitude(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_latitude(address text) RETURNS numeric
+CREATE OR REPLACE FUNCTION public.get_latitude(address text) RETURNS numeric
     LANGUAGE plpgsql STABLE
     SET search_path TO ''
     AS $$
@@ -8701,7 +8701,7 @@ $$;
 -- Name: get_leaderboard_user_profile(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_leaderboard_user_profile(user_id uuid) RETURNS TABLE(profile_id uuid, nickname text, first_name text, avatar_url text, joined_at timestamp with time zone, completed_count bigint, active_count bigint, total_xp numeric, completion_rate integer, user_rank integer, recent_challenges jsonb)
+CREATE OR REPLACE FUNCTION public.get_leaderboard_user_profile(user_id uuid) RETURNS TABLE(profile_id uuid, nickname text, first_name text, avatar_url text, joined_at timestamp with time zone, completed_count bigint, active_count bigint, total_xp numeric, completion_rate integer, user_rank integer, recent_challenges jsonb)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -8790,7 +8790,7 @@ COMMENT ON FUNCTION public.get_leaderboard_user_profile(user_id uuid) IS 'Return
 -- Name: get_listing_detail_data(integer, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_listing_detail_data(p_listing_id integer, p_viewer_id uuid DEFAULT NULL::uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_listing_detail_data(p_listing_id integer, p_viewer_id uuid DEFAULT NULL::uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -8911,7 +8911,7 @@ $$;
 -- Name: get_listing_detail_data(bigint, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_listing_detail_data(p_listing_id bigint, p_viewer_id uuid DEFAULT NULL::uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_listing_detail_data(p_listing_id bigint, p_viewer_id uuid DEFAULT NULL::uuid) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -9038,7 +9038,7 @@ COMMENT ON FUNCTION public.get_listing_detail_data(p_listing_id bigint, p_viewer
 -- Name: get_locations_in_viewport(double precision, double precision, double precision, double precision, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_locations_in_viewport(p_north double precision, p_south double precision, p_east double precision, p_west double precision, p_post_type text DEFAULT NULL::text) RETURNS TABLE(id bigint, post_name text, post_type text, images text[], location_json jsonb)
+CREATE OR REPLACE FUNCTION public.get_locations_in_viewport(p_north double precision, p_south double precision, p_east double precision, p_west double precision, p_post_type text DEFAULT NULL::text) RETURNS TABLE(id bigint, post_name text, post_type text, images text[], location_json jsonb)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions'
     AS $$
@@ -9076,7 +9076,7 @@ Pass NULL for p_post_type to fetch all types.';
 -- Name: get_login_spike_stats(integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_login_spike_stats(p_current_window_minutes integer DEFAULT 30, p_baseline_window_hours integer DEFAULT 24) RETURNS TABLE(current_failures bigint, baseline_failures bigint, spike_multiplier numeric)
+CREATE OR REPLACE FUNCTION public.get_login_spike_stats(p_current_window_minutes integer DEFAULT 30, p_baseline_window_hours integer DEFAULT 24) RETURNS TABLE(current_failures bigint, baseline_failures bigint, spike_multiplier numeric)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -9120,7 +9120,7 @@ COMMENT ON FUNCTION public.get_login_spike_stats(p_current_window_minutes intege
 -- Name: get_longitude(extensions.geography); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_longitude(loc extensions.geography) RETURNS double precision
+CREATE OR REPLACE FUNCTION public.get_longitude(loc extensions.geography) RETURNS double precision
     LANGUAGE sql IMMUTABLE
     SET search_path TO ''
     AS $$
@@ -9132,7 +9132,7 @@ $$;
 -- Name: get_longitude(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_longitude(address text) RETURNS numeric
+CREATE OR REPLACE FUNCTION public.get_longitude(address text) RETURNS numeric
     LANGUAGE plpgsql STABLE
     SET search_path TO ''
     AS $$
@@ -9149,7 +9149,7 @@ $$;
 -- Name: get_mixed_activity_feed(integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_mixed_activity_feed(p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_mixed_activity_feed(p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -9223,7 +9223,7 @@ COMMENT ON FUNCTION public.get_mixed_activity_feed(p_limit integer, p_offset int
 -- Name: get_mobile_home_data(double precision, double precision, double precision, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_mobile_home_data(p_latitude double precision DEFAULT NULL::double precision, p_longitude double precision DEFAULT NULL::double precision, p_radius_km double precision DEFAULT 25, p_feed_limit integer DEFAULT 20, p_challenges_limit integer DEFAULT 5) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_mobile_home_data(p_latitude double precision DEFAULT NULL::double precision, p_longitude double precision DEFAULT NULL::double precision, p_radius_km double precision DEFAULT 25, p_feed_limit integer DEFAULT 20, p_challenges_limit integer DEFAULT 5) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -9366,7 +9366,7 @@ $$;
 -- Name: get_moderation_queue(text, text, boolean, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_moderation_queue(p_status text DEFAULT 'pending'::text, p_queue_type text DEFAULT NULL::text, p_assigned_to_me boolean DEFAULT false, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS TABLE(id uuid, queue_type text, content_type text, forum_id integer, comment_id integer, message_id uuid, target_profile_id uuid, priority integer, status text, flag_reason text, flag_score numeric, content_snapshot jsonb, reporter_username text, assigned_to_username text, created_at timestamp with time zone, report_count bigint)
+CREATE OR REPLACE FUNCTION public.get_moderation_queue(p_status text DEFAULT 'pending'::text, p_queue_type text DEFAULT NULL::text, p_assigned_to_me boolean DEFAULT false, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS TABLE(id uuid, queue_type text, content_type text, forum_id integer, comment_id integer, message_id uuid, target_profile_id uuid, priority integer, status text, flag_reason text, flag_score numeric, content_snapshot jsonb, reporter_username text, assigned_to_username text, created_at timestamp with time zone, report_count bigint)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -9414,7 +9414,7 @@ $$;
 -- Name: get_moderation_stats(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_moderation_stats() RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_moderation_stats() RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -9463,7 +9463,7 @@ $$;
 -- Name: get_my_profile(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_my_profile(p_user_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_my_profile(p_user_id uuid) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -9606,7 +9606,7 @@ COMMENT ON FUNCTION public.get_my_profile(p_user_id uuid) IS 'BFF endpoint: Retu
 -- Name: get_my_scheduled_posts(text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_my_scheduled_posts(p_status text DEFAULT NULL::text, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS TABLE(id uuid, title text, description text, category_id integer, category_name text, post_type text, scheduled_for timestamp with time zone, status text, created_at timestamp with time zone)
+CREATE OR REPLACE FUNCTION public.get_my_scheduled_posts(p_status text DEFAULT NULL::text, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS TABLE(id uuid, title text, description text, category_id integer, category_name text, post_type text, scheduled_for timestamp with time zone, status text, created_at timestamp with time zone)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -9637,7 +9637,7 @@ $$;
 -- Name: get_my_user_stats(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_my_user_stats() RETURNS TABLE(user_id uuid, active_listings_count bigint, completed_arrangements_count bigint, unread_messages_count bigint, unread_notifications_count bigint, total_views_count bigint, avg_rating numeric, review_count bigint, last_refreshed timestamp with time zone)
+CREATE OR REPLACE FUNCTION public.get_my_user_stats() RETURNS TABLE(user_id uuid, active_listings_count bigint, completed_arrangements_count bigint, unread_messages_count bigint, unread_notifications_count bigint, total_views_count bigint, avg_rating numeric, review_count bigint, last_refreshed timestamp with time zone)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -9673,7 +9673,7 @@ which was flagged as a security concern.';
 -- Name: get_nearby_posts(double precision, double precision, double precision, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_nearby_posts(user_lat double precision, user_lng double precision, radius_meters double precision DEFAULT 5000, post_type_filter text DEFAULT NULL::text, page_limit integer DEFAULT 50, page_cursor integer DEFAULT 0) RETURNS TABLE(id bigint, profile_id uuid, post_name text, post_description text, post_type text, pickup_time text, available_hours text, post_address text, post_stripped_address text, latitude double precision, longitude double precision, images text[], is_active boolean, is_arranged boolean, post_arranged_to uuid, post_arranged_at timestamp with time zone, post_views integer, post_like_counter integer, has_pantry boolean, condition character varying, network text, website text, donation text, donation_rules text, category_id bigint, created_at timestamp with time zone, updated_at timestamp with time zone, distance_meters double precision)
+CREATE OR REPLACE FUNCTION public.get_nearby_posts(user_lat double precision, user_lng double precision, radius_meters double precision DEFAULT 5000, post_type_filter text DEFAULT NULL::text, page_limit integer DEFAULT 50, page_cursor integer DEFAULT 0) RETURNS TABLE(id bigint, profile_id uuid, post_name text, post_description text, post_type text, pickup_time text, available_hours text, post_address text, post_stripped_address text, latitude double precision, longitude double precision, images text[], is_active boolean, is_arranged boolean, post_arranged_to uuid, post_arranged_at timestamp with time zone, post_views integer, post_like_counter integer, has_pantry boolean, condition character varying, network text, website text, donation text, donation_rules text, category_id bigint, created_at timestamp with time zone, updated_at timestamp with time zone, distance_meters double precision)
     LANGUAGE plpgsql STABLE
     SET search_path TO 'public', 'extensions'
     AS $$
@@ -9732,7 +9732,7 @@ $$;
 -- Name: get_nearby_posts(double precision, double precision, integer, uuid, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_nearby_posts(p_latitude double precision, p_longitude double precision, p_radius_meters integer, p_user_id uuid DEFAULT NULL::uuid, p_post_type text DEFAULT NULL::text, p_limit integer DEFAULT 50, p_offset integer DEFAULT 0) RETURNS TABLE(id bigint, profile_id uuid, post_name text, post_description text, post_type text, pickup_time text, post_address text, post_stripped_address text, latitude double precision, longitude double precision, images text[], is_active boolean, is_arranged boolean, post_views integer, category_id bigint, tags text[], quantity text, created_at timestamp with time zone, updated_at timestamp with time zone, distance_meters double precision)
+CREATE OR REPLACE FUNCTION public.get_nearby_posts(p_latitude double precision, p_longitude double precision, p_radius_meters integer, p_user_id uuid DEFAULT NULL::uuid, p_post_type text DEFAULT NULL::text, p_limit integer DEFAULT 50, p_offset integer DEFAULT 0) RETURNS TABLE(id bigint, profile_id uuid, post_name text, post_description text, post_type text, pickup_time text, post_address text, post_stripped_address text, latitude double precision, longitude double precision, images text[], is_active boolean, is_arranged boolean, post_views integer, category_id bigint, tags text[], quantity text, created_at timestamp with time zone, updated_at timestamp with time zone, distance_meters double precision)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     AS $$
 BEGIN
@@ -9800,7 +9800,7 @@ When p_user_id is provided (authenticated), excludes blocked users.';
 -- Name: get_nearby_posts_count(double precision, double precision, double precision); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_nearby_posts_count(user_lat double precision, user_lng double precision, radius_meters double precision DEFAULT 50000) RETURNS TABLE(post_type text, count bigint)
+CREATE OR REPLACE FUNCTION public.get_nearby_posts_count(user_lat double precision, user_lng double precision, radius_meters double precision DEFAULT 50000) RETURNS TABLE(post_type text, count bigint)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions'
     AS $$
@@ -9832,7 +9832,7 @@ COMMENT ON FUNCTION public.get_nearby_posts_count(user_lat double precision, use
 -- Name: get_notification_preferences(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_notification_preferences(p_user_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_notification_preferences(p_user_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -9902,7 +9902,7 @@ $$;
 -- Name: get_notification_summary(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_notification_summary(p_user_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_notification_summary(p_user_id uuid) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -9952,7 +9952,7 @@ COMMENT ON FUNCTION public.get_notification_summary(p_user_id uuid) IS 'Lightwei
 -- Name: get_notifications_screen(uuid, integer, integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_notifications_screen(p_user_id uuid, p_offset integer DEFAULT 0, p_limit integer DEFAULT 50, p_filter text DEFAULT 'all'::text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_notifications_screen(p_user_id uuid, p_offset integer DEFAULT 0, p_limit integer DEFAULT 50, p_filter text DEFAULT 'all'::text) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -10143,7 +10143,7 @@ COMMENT ON FUNCTION public.get_notifications_screen(p_user_id uuid, p_offset int
 -- Name: get_openai_api_key(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_openai_api_key() RETURNS text
+CREATE OR REPLACE FUNCTION public.get_openai_api_key() RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -10157,7 +10157,7 @@ $$;
 -- Name: get_or_compute_feed_cell(double precision, double precision, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_or_compute_feed_cell(p_lat double precision, p_lng double precision, p_radius_km integer DEFAULT 10, p_limit integer DEFAULT 50) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_or_compute_feed_cell(p_lat double precision, p_lng double precision, p_radius_km integer DEFAULT 10, p_limit integer DEFAULT 50) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -10230,7 +10230,7 @@ COMMENT ON FUNCTION public.get_or_compute_feed_cell(p_lat double precision, p_ln
 -- Name: get_or_create_room(integer, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_or_create_room(p_post_id integer, p_sharer_id uuid, p_requester_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_or_create_room(p_post_id integer, p_sharer_id uuid, p_requester_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -10295,7 +10295,7 @@ COMMENT ON FUNCTION public.get_or_create_room(p_post_id integer, p_sharer_id uui
 -- Name: get_or_create_room(bigint, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_or_create_room(p_post_id bigint, p_sharer_id uuid, p_requester_id uuid) RETURNS TABLE(id uuid, post_id bigint, sharer uuid, requester uuid, last_message text, last_message_time timestamp with time zone, last_message_sent_by uuid, last_message_seen_by uuid, post_arranged_to uuid, email_to text)
+CREATE OR REPLACE FUNCTION public.get_or_create_room(p_post_id bigint, p_sharer_id uuid, p_requester_id uuid) RETURNS TABLE(id uuid, post_id bigint, sharer uuid, requester uuid, last_message text, last_message_time timestamp with time zone, last_message_sent_by uuid, last_message_seen_by uuid, post_arranged_to uuid, email_to text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -10337,7 +10337,7 @@ $$;
 -- Name: get_or_translate(text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_or_translate(p_source_text text, p_target_locale text, p_content_type text DEFAULT 'general'::text) RETURNS TABLE(translated_text text, cache_hit boolean, quality_score numeric, translation_id uuid)
+CREATE OR REPLACE FUNCTION public.get_or_translate(p_source_text text, p_target_locale text, p_content_type text DEFAULT 'general'::text) RETURNS TABLE(translated_text text, cache_hit boolean, quality_score numeric, translation_id uuid)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -10373,7 +10373,7 @@ $$;
 -- Name: get_or_translate(text, text, text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_or_translate(p_content_type text, p_content_id text, p_field_name text, p_source_locale text, p_target_locale text, p_source_text text) RETURNS TABLE(translated_text text, cached boolean, quality_score double precision)
+CREATE OR REPLACE FUNCTION public.get_or_translate(p_content_type text, p_content_id text, p_field_name text, p_source_locale text, p_target_locale text, p_source_text text) RETURNS TABLE(translated_text text, cached boolean, quality_score double precision)
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -10416,7 +10416,7 @@ $$;
 -- Name: get_p95_latency(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_p95_latency(p_minutes integer DEFAULT 5) RETURNS integer
+CREATE OR REPLACE FUNCTION public.get_p95_latency(p_minutes integer DEFAULT 5) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -10444,7 +10444,7 @@ COMMENT ON FUNCTION public.get_p95_latency(p_minutes integer) IS 'Returns P95 la
 -- Name: get_paginated_notifications(uuid, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_paginated_notifications(p_user_id uuid, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_paginated_notifications(p_user_id uuid, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -10523,7 +10523,7 @@ $$;
 -- Name: get_pending_digest_notifications(text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_pending_digest_notifications(p_frequency text, p_limit integer DEFAULT 100) RETURNS TABLE(user_id uuid, items jsonb, item_count integer)
+CREATE OR REPLACE FUNCTION public.get_pending_digest_notifications(p_frequency text, p_limit integer DEFAULT 100) RETURNS TABLE(user_id uuid, items jsonb, item_count integer)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -10563,7 +10563,7 @@ COMMENT ON FUNCTION public.get_pending_digest_notifications(p_frequency text, p_
 -- Name: get_pending_emails_for_processing(integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_pending_emails_for_processing(p_batch_size integer DEFAULT 100, p_provider text DEFAULT NULL::text) RETURNS TABLE(id uuid, user_id uuid, campaign_id uuid, email_type text, template_slug text, user_email text, user_first_name text, retry_count integer, metadata jsonb)
+CREATE OR REPLACE FUNCTION public.get_pending_emails_for_processing(p_batch_size integer DEFAULT 100, p_provider text DEFAULT NULL::text) RETURNS TABLE(id uuid, user_id uuid, campaign_id uuid, email_type text, template_slug text, user_email text, user_first_name text, retry_count integer, metadata jsonb)
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -10599,7 +10599,7 @@ COMMENT ON FUNCTION public.get_pending_emails_for_processing(p_batch_size intege
 -- Name: get_pending_geocode_queue(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_pending_geocode_queue(batch_size integer DEFAULT 10) RETURNS TABLE(id integer, post_id bigint, post_address text, retry_count integer)
+CREATE OR REPLACE FUNCTION public.get_pending_geocode_queue(batch_size integer DEFAULT 10) RETURNS TABLE(id integer, post_id bigint, post_address text, retry_count integer)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -10627,7 +10627,7 @@ $$;
 -- Name: get_personalized_feed(uuid, double precision, double precision, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_personalized_feed(p_user_id uuid, p_latitude double precision, p_longitude double precision, p_offset integer DEFAULT 0, p_limit integer DEFAULT 20) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_personalized_feed(p_user_id uuid, p_latitude double precision, p_longitude double precision, p_offset integer DEFAULT 0, p_limit integer DEFAULT 20) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -10812,7 +10812,7 @@ COMMENT ON FUNCTION public.get_personalized_feed(p_user_id uuid, p_latitude doub
 -- Name: get_platform_stats(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_platform_stats(p_days integer DEFAULT 30) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_platform_stats(p_days integer DEFAULT 30) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -10884,7 +10884,7 @@ COMMENT ON FUNCTION public.get_platform_stats(p_days integer) IS 'Returns platfo
 -- Name: get_poll_results(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_poll_results(p_poll_id uuid, p_profile_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_poll_results(p_poll_id uuid, p_profile_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -10978,7 +10978,7 @@ $$;
 -- Name: get_post_activity_timeline(bigint, integer, integer, public.post_activity_type[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_post_activity_timeline(p_post_id bigint, p_limit integer DEFAULT 50, p_offset integer DEFAULT 0, p_activity_types public.post_activity_type[] DEFAULT NULL::public.post_activity_type[]) RETURNS TABLE(id uuid, activity_type public.post_activity_type, actor_id uuid, actor_nickname text, actor_avatar text, changes jsonb, metadata jsonb, reason text, notes text, created_at timestamp with time zone)
+CREATE OR REPLACE FUNCTION public.get_post_activity_timeline(p_post_id bigint, p_limit integer DEFAULT 50, p_offset integer DEFAULT 0, p_activity_types public.post_activity_type[] DEFAULT NULL::public.post_activity_type[]) RETURNS TABLE(id uuid, activity_type public.post_activity_type, actor_id uuid, actor_nickname text, actor_avatar text, changes jsonb, metadata jsonb, reason text, notes text, created_at timestamp with time zone)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -11010,7 +11010,7 @@ $$;
 -- Name: get_post_analytics(integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_post_analytics(p_post_id integer, p_days integer DEFAULT 7) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_post_analytics(p_post_id integer, p_days integer DEFAULT 7) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -11030,7 +11030,7 @@ $$;
 -- Name: get_post_reactions(integer, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_post_reactions(p_forum_id integer, p_profile_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_post_reactions(p_forum_id integer, p_profile_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -11070,7 +11070,7 @@ COMMENT ON FUNCTION public.get_post_reactions(p_forum_id integer, p_profile_id u
 -- Name: get_posts_in_bounds(double precision, double precision, double precision, double precision, text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_posts_in_bounds(min_lat double precision, min_lng double precision, max_lat double precision, max_lng double precision, post_type_filter text DEFAULT NULL::text, page_limit integer DEFAULT 100) RETURNS TABLE(id bigint, post_name text, post_type text, location_json json, images text[], is_arranged boolean)
+CREATE OR REPLACE FUNCTION public.get_posts_in_bounds(min_lat double precision, min_lng double precision, max_lat double precision, max_lng double precision, post_type_filter text DEFAULT NULL::text, page_limit integer DEFAULT 100) RETURNS TABLE(id bigint, post_name text, post_type text, location_json json, images text[], is_arranged boolean)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions'
     AS $$
@@ -11104,7 +11104,7 @@ Optimized for map pan/zoom interactions.';
 -- Name: get_profile_analytics(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_profile_analytics(p_user_id uuid DEFAULT NULL::uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_profile_analytics(p_user_id uuid DEFAULT NULL::uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -11278,7 +11278,7 @@ COMMENT ON FUNCTION public.get_profile_analytics(p_user_id uuid) IS 'Returns con
 -- Name: get_profile_view(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_profile_view(p_profile_id uuid, p_viewer_id uuid DEFAULT NULL::uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_profile_view(p_profile_id uuid, p_viewer_id uuid DEFAULT NULL::uuid) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -11452,7 +11452,7 @@ COMMENT ON FUNCTION public.get_profile_view(p_profile_id uuid, p_viewer_id uuid)
 -- Name: get_provider_health_summary(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_provider_health_summary() RETURNS TABLE(provider text, circuit_state text, recent_failures integer, is_healthy boolean, today_success_rate numeric, today_avg_latency_ms numeric, quota_used integer, quota_limit integer, quota_remaining integer)
+CREATE OR REPLACE FUNCTION public.get_provider_health_summary() RETURNS TABLE(provider text, circuit_state text, recent_failures integer, is_healthy boolean, today_success_rate numeric, today_avg_latency_ms numeric, quota_used integer, quota_limit integer, quota_remaining integer)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -11482,7 +11482,7 @@ $$;
 -- Name: get_quiet_hours_end(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_quiet_hours_end(p_user_id uuid) RETURNS timestamp with time zone
+CREATE OR REPLACE FUNCTION public.get_quiet_hours_end(p_user_id uuid) RETURNS timestamp with time zone
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -11550,7 +11550,7 @@ COMMENT ON TABLE public.email_queue IS 'Queue for failed emails with retry logic
 -- Name: get_ready_emails(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_ready_emails(p_limit integer DEFAULT 50) RETURNS SETOF public.email_queue
+CREATE OR REPLACE FUNCTION public.get_ready_emails(p_limit integer DEFAULT 50) RETURNS SETOF public.email_queue
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -11578,7 +11578,7 @@ $$;
 -- Name: get_recent_critical_audit_events(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_recent_critical_audit_events(hours integer DEFAULT 24) RETURNS TABLE(event_type text, user_id uuid, target_email text, action text, details jsonb, created_at timestamp with time zone)
+CREATE OR REPLACE FUNCTION public.get_recent_critical_audit_events(hours integer DEFAULT 24) RETURNS TABLE(event_type text, user_id uuid, target_email text, action text, details jsonb, created_at timestamp with time zone)
     LANGUAGE sql STABLE SECURITY DEFINER
     AS $$
   SELECT event_type, user_id, target_email, action, details, created_at
@@ -11600,7 +11600,7 @@ COMMENT ON FUNCTION public.get_recent_critical_audit_events(hours integer) IS 'G
 -- Name: get_reputation_leaderboard(text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_reputation_leaderboard(p_period text DEFAULT 'all_time'::text, p_limit integer DEFAULT 20) RETURNS TABLE(rank bigint, profile_id uuid, username text, avatar_url text, total_points integer, period_points integer, level_title text, level_color text)
+CREATE OR REPLACE FUNCTION public.get_reputation_leaderboard(p_period text DEFAULT 'all_time'::text, p_limit integer DEFAULT 20) RETURNS TABLE(rank bigint, profile_id uuid, username text, avatar_url text, total_points integer, period_points integer, level_title text, level_color text)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -11623,7 +11623,7 @@ $$;
 -- Name: get_resend_api_key(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_resend_api_key() RETURNS text
+CREATE OR REPLACE FUNCTION public.get_resend_api_key() RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -11637,7 +11637,7 @@ $$;
 -- Name: get_reviews_with_average(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_reviews_with_average(p_post_id integer) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_reviews_with_average(p_post_id integer) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -11696,7 +11696,7 @@ $$;
 -- Name: get_search_screen_data(uuid, text, text, double precision, double precision, double precision, bigint, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_search_screen_data(p_user_id uuid DEFAULT NULL::uuid, p_query text DEFAULT NULL::text, p_search_type text DEFAULT 'all'::text, p_latitude double precision DEFAULT NULL::double precision, p_longitude double precision DEFAULT NULL::double precision, p_radius_km double precision DEFAULT 50, p_category_id bigint DEFAULT NULL::bigint, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_search_screen_data(p_user_id uuid DEFAULT NULL::uuid, p_query text DEFAULT NULL::text, p_search_type text DEFAULT 'all'::text, p_latitude double precision DEFAULT NULL::double precision, p_longitude double precision DEFAULT NULL::double precision, p_radius_km double precision DEFAULT 50, p_category_id bigint DEFAULT NULL::bigint, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'extensions'
     AS $$
@@ -11972,7 +11972,7 @@ COMMENT ON FUNCTION public.get_search_screen_data(p_user_id uuid, p_query text, 
 -- Name: get_search_suggestions(text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_search_suggestions(p_partial_query text, p_limit integer DEFAULT 5) RETURNS TABLE(query text, search_count integer)
+CREATE OR REPLACE FUNCTION public.get_search_suggestions(p_partial_query text, p_limit integer DEFAULT 5) RETURNS TABLE(query text, search_count integer)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -11991,7 +11991,7 @@ $$;
 -- Name: get_secret_audited(text, uuid, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_secret_audited(secret_name text, requesting_user_id uuid DEFAULT auth.uid(), request_metadata jsonb DEFAULT '{}'::jsonb) RETURNS text
+CREATE OR REPLACE FUNCTION public.get_secret_audited(secret_name text, requesting_user_id uuid DEFAULT auth.uid(), request_metadata jsonb DEFAULT '{}'::jsonb) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -12071,7 +12071,7 @@ RETURNS:
 -- Name: get_secrets(text[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_secrets(secret_names text[]) RETURNS TABLE(name text, value text)
+CREATE OR REPLACE FUNCTION public.get_secrets(secret_names text[]) RETURNS TABLE(name text, value text)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -12117,7 +12117,7 @@ COMMENT ON FUNCTION public.get_secrets(secret_names text[]) IS 'Batch fetch mult
 -- Name: get_service_config(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_service_config() RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_service_config() RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -12186,7 +12186,7 @@ RETURNS:
 -- Name: get_threaded_comments(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_threaded_comments(p_forum_id bigint) RETURNS TABLE(id bigint, comment text, user_id uuid, parent_id bigint, depth integer, likes_count integer, replies_count integer, created_at timestamp with time zone, path bigint[])
+CREATE OR REPLACE FUNCTION public.get_threaded_comments(p_forum_id bigint) RETURNS TABLE(id bigint, comment text, user_id uuid, parent_id bigint, depth integer, likes_count integer, replies_count integer, created_at timestamp with time zone, path bigint[])
     LANGUAGE plpgsql STABLE
     SET search_path TO ''
     AS $$
@@ -12250,7 +12250,7 @@ COMMENT ON FUNCTION public.get_threaded_comments(p_forum_id bigint) IS 'Returns 
 -- Name: get_translation_changes_since(character varying, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_translation_changes_since(p_locale character varying, p_since timestamp with time zone) RETURNS TABLE(key_path text, new_value text, change_type character varying, changed_at timestamp with time zone)
+CREATE OR REPLACE FUNCTION public.get_translation_changes_since(p_locale character varying, p_since timestamp with time zone) RETURNS TABLE(key_path text, new_value text, change_type character varying, changed_at timestamp with time zone)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -12273,7 +12273,7 @@ $$;
 -- Name: get_translation_stats(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_translation_stats() RETURNS TABLE(locale character varying, message_count integer, version character varying, last_updated timestamp with time zone, size_bytes integer)
+CREATE OR REPLACE FUNCTION public.get_translation_stats() RETURNS TABLE(locale character varying, message_count integer, version character varying, last_updated timestamp with time zone, size_bytes integer)
     LANGUAGE sql STABLE
     SET search_path TO ''
     AS $$
@@ -12292,7 +12292,7 @@ $$;
 -- Name: get_translation_stats(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_translation_stats(p_locale text DEFAULT NULL::text) RETURNS TABLE(target_locale text, total_translations bigint, total_hits bigint, avg_quality numeric, cache_size_mb numeric)
+CREATE OR REPLACE FUNCTION public.get_translation_stats(p_locale text DEFAULT NULL::text) RETURNS TABLE(target_locale text, total_translations bigint, total_hits bigint, avg_quality numeric, cache_size_mb numeric)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -12316,7 +12316,7 @@ $$;
 -- Name: get_translation_usage(text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_translation_usage(p_service text, p_month text) RETURNS TABLE(chars_used bigint, free_limit bigint, remaining bigint)
+CREATE OR REPLACE FUNCTION public.get_translation_usage(p_service text, p_month text) RETURNS TABLE(chars_used bigint, free_limit bigint, remaining bigint)
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -12352,7 +12352,7 @@ $$;
 -- Name: get_translations_batch(text[], text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_translations_batch(p_texts text[], p_target_locale text) RETURNS TABLE(source_text text, translated_text text, quality_score numeric)
+CREATE OR REPLACE FUNCTION public.get_translations_batch(p_texts text[], p_target_locale text) RETURNS TABLE(source_text text, translated_text text, quality_score numeric)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -12395,7 +12395,7 @@ COMMENT ON FUNCTION public.get_translations_batch(p_texts text[], p_target_local
 -- Name: get_trending_items(double precision, double precision, double precision, integer, text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_trending_items(p_latitude double precision, p_longitude double precision, p_radius_km double precision DEFAULT 25, p_limit integer DEFAULT 10, p_post_type text DEFAULT NULL::text, p_urgency_threshold_hours integer DEFAULT 48) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_trending_items(p_latitude double precision, p_longitude double precision, p_radius_km double precision DEFAULT 25, p_limit integer DEFAULT 10, p_post_type text DEFAULT NULL::text, p_urgency_threshold_hours integer DEFAULT 48) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -12491,7 +12491,7 @@ COMMENT ON FUNCTION public.get_trending_items(p_latitude double precision, p_lon
 -- Name: get_trending_posts(integer, integer, integer, double precision, double precision, double precision); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_trending_posts(p_limit integer DEFAULT 20, p_offset integer DEFAULT 0, p_hours_window integer DEFAULT 24, p_latitude double precision DEFAULT NULL::double precision, p_longitude double precision DEFAULT NULL::double precision, p_radius_km double precision DEFAULT NULL::double precision) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_trending_posts(p_limit integer DEFAULT 20, p_offset integer DEFAULT 0, p_hours_window integer DEFAULT 24, p_latitude double precision DEFAULT NULL::double precision, p_longitude double precision DEFAULT NULL::double precision, p_radius_km double precision DEFAULT NULL::double precision) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'extensions'
     AS $$
@@ -12614,7 +12614,7 @@ $$;
 -- Name: get_trending_searches(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_trending_searches(p_limit integer DEFAULT 10) RETURNS TABLE(query text, search_count integer, last_searched_at timestamp with time zone)
+CREATE OR REPLACE FUNCTION public.get_trending_searches(p_limit integer DEFAULT 10) RETURNS TABLE(query text, search_count integer, last_searched_at timestamp with time zone)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -12633,7 +12633,7 @@ $$;
 -- Name: get_trust_limits(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_trust_limits(p_profile_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_trust_limits(p_profile_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -12691,7 +12691,7 @@ $$;
 -- Name: get_uncompressed_large_images(text, bigint, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_uncompressed_large_images(p_bucket text, p_min_size bigint, p_limit integer DEFAULT 10) RETURNS TABLE(name text, bucket_id text, metadata jsonb)
+CREATE OR REPLACE FUNCTION public.get_uncompressed_large_images(p_bucket text, p_min_size bigint, p_limit integer DEFAULT 10) RETURNS TABLE(name text, bucket_id text, metadata jsonb)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -12718,7 +12718,7 @@ $$;
 -- Name: get_underserved_users(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_underserved_users(p_campaign_id uuid, p_limit integer DEFAULT 100) RETURNS TABLE(user_id uuid, last_email_at timestamp with time zone, delivery_rate numeric)
+CREATE OR REPLACE FUNCTION public.get_underserved_users(p_campaign_id uuid, p_limit integer DEFAULT 100) RETURNS TABLE(user_id uuid, last_email_at timestamp with time zone, delivery_rate numeric)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -12750,7 +12750,7 @@ COMMENT ON FUNCTION public.get_underserved_users(p_campaign_id uuid, p_limit int
 -- Name: get_unread_count(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_unread_count() RETURNS json
+CREATE OR REPLACE FUNCTION public.get_unread_count() RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -12775,7 +12775,7 @@ $$;
 -- Name: get_unread_feed_count(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_unread_feed_count() RETURNS integer
+CREATE OR REPLACE FUNCTION public.get_unread_feed_count() RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -12804,7 +12804,7 @@ $$;
 -- Name: get_unread_forum_notification_count(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_unread_forum_notification_count() RETURNS integer
+CREATE OR REPLACE FUNCTION public.get_unread_forum_notification_count() RETURNS integer
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -12819,7 +12819,7 @@ $$;
 -- Name: get_unread_message_count(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_unread_message_count(p_profile_id uuid DEFAULT NULL::uuid) RETURNS integer
+CREATE OR REPLACE FUNCTION public.get_unread_message_count(p_profile_id uuid DEFAULT NULL::uuid) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -12847,7 +12847,7 @@ $$;
 -- Name: get_unread_notification_count(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_unread_notification_count(p_user_id uuid) RETURNS integer
+CREATE OR REPLACE FUNCTION public.get_unread_notification_count(p_user_id uuid) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -12874,7 +12874,7 @@ COMMENT ON FUNCTION public.get_unread_notification_count(p_user_id uuid) IS 'Get
 -- Name: get_unread_posts(integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_unread_posts(p_category_id integer DEFAULT NULL::integer, p_limit integer DEFAULT 20) RETURNS TABLE(forum_id bigint, title text, slug text, category_id integer, new_comments_count bigint, last_activity_at timestamp with time zone)
+CREATE OR REPLACE FUNCTION public.get_unread_posts(p_category_id integer DEFAULT NULL::integer, p_limit integer DEFAULT 20) RETURNS TABLE(forum_id bigint, title text, slug text, category_id integer, new_comments_count bigint, last_activity_at timestamp with time zone)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -12911,7 +12911,7 @@ $$;
 -- Name: get_untranslated_challenges(integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_untranslated_challenges(p_limit integer DEFAULT 100, p_offset integer DEFAULT 0) RETURNS TABLE(id bigint, challenge_title text, challenge_description text)
+CREATE OR REPLACE FUNCTION public.get_untranslated_challenges(p_limit integer DEFAULT 100, p_offset integer DEFAULT 0) RETURNS TABLE(id bigint, challenge_title text, challenge_description text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -12936,7 +12936,7 @@ $$;
 -- Name: get_untranslated_forum_posts(integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_untranslated_forum_posts(p_limit integer DEFAULT 100, p_offset integer DEFAULT 0) RETURNS TABLE(id bigint, forum_post_name text, forum_post_description text)
+CREATE OR REPLACE FUNCTION public.get_untranslated_forum_posts(p_limit integer DEFAULT 100, p_offset integer DEFAULT 0) RETURNS TABLE(id bigint, forum_post_name text, forum_post_description text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -12962,7 +12962,7 @@ $$;
 -- Name: get_untranslated_posts(integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_untranslated_posts(p_limit integer DEFAULT 100, p_offset integer DEFAULT 0) RETURNS TABLE(id bigint, post_name text, post_description text)
+CREATE OR REPLACE FUNCTION public.get_untranslated_posts(p_limit integer DEFAULT 100, p_offset integer DEFAULT 0) RETURNS TABLE(id bigint, post_name text, post_description text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -12988,7 +12988,7 @@ $$;
 -- Name: get_upstash_redis_token(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_upstash_redis_token() RETURNS text
+CREATE OR REPLACE FUNCTION public.get_upstash_redis_token() RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -13002,7 +13002,7 @@ $$;
 -- Name: get_upstash_redis_url(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_upstash_redis_url() RETURNS text
+CREATE OR REPLACE FUNCTION public.get_upstash_redis_url() RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -13016,7 +13016,7 @@ $$;
 -- Name: get_user_bookmarks(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_bookmarks(p_limit integer DEFAULT 50) RETURNS json
+CREATE OR REPLACE FUNCTION public.get_user_bookmarks(p_limit integer DEFAULT 50) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -13068,7 +13068,7 @@ COMMENT ON FUNCTION public.get_user_bookmarks(p_limit integer) IS 'Get user book
 -- Name: get_user_challenges_with_counts(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_challenges_with_counts(p_user_id uuid) RETURNS json
+CREATE OR REPLACE FUNCTION public.get_user_challenges_with_counts(p_user_id uuid) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -13135,7 +13135,7 @@ $$;
 -- Name: get_user_comment_reactions(integer[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_comment_reactions(p_comment_ids integer[]) RETURNS TABLE(comment_id integer, reaction_type_ids integer[])
+CREATE OR REPLACE FUNCTION public.get_user_comment_reactions(p_comment_ids integer[]) RETURNS TABLE(comment_id integer, reaction_type_ids integer[])
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -13156,7 +13156,7 @@ $$;
 -- Name: get_user_dashboard(uuid, boolean, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_dashboard(p_user_id uuid, p_include_listings boolean DEFAULT true, p_listings_limit integer DEFAULT 5) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_user_dashboard(p_user_id uuid, p_include_listings boolean DEFAULT true, p_listings_limit integer DEFAULT 5) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -13304,7 +13304,7 @@ COMMENT ON FUNCTION public.get_user_dashboard(p_user_id uuid, p_include_listings
 -- Name: get_user_dashboard_fast(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_dashboard_fast(p_user_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_user_dashboard_fast(p_user_id uuid) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -13444,7 +13444,7 @@ COMMENT ON FUNCTION public.get_user_dashboard_fast(p_user_id uuid) IS 'Optimized
 -- Name: get_user_email_metrics(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_email_metrics(p_user_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_user_email_metrics(p_user_id uuid) RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -13503,7 +13503,7 @@ COMMENT ON FUNCTION public.get_user_email_metrics(p_user_id uuid) IS 'Gets compr
 -- Name: get_user_feature_flags(uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_feature_flags(p_user_id uuid, p_platform text DEFAULT 'unknown'::text, p_app_version text DEFAULT NULL::text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_user_feature_flags(p_user_id uuid, p_platform text DEFAULT 'unknown'::text, p_app_version text DEFAULT NULL::text) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -13620,7 +13620,7 @@ COMMENT ON FUNCTION public.get_user_feature_flags(p_user_id uuid, p_platform tex
 -- Name: get_user_feed(integer, integer, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_feed(p_limit integer DEFAULT 20, p_offset integer DEFAULT 0, p_include_own boolean DEFAULT true) RETURNS TABLE(activity_id uuid, activity_type text, actor_id uuid, actor_username text, actor_avatar text, target_forum_id integer, target_forum_title text, target_comment_id integer, target_comment_preview text, target_profile_id uuid, target_profile_username text, target_badge_id integer, target_badge_name text, target_series_id uuid, target_series_title text, metadata jsonb, created_at timestamp with time zone, is_read boolean)
+CREATE OR REPLACE FUNCTION public.get_user_feed(p_limit integer DEFAULT 20, p_offset integer DEFAULT 0, p_include_own boolean DEFAULT true) RETURNS TABLE(activity_id uuid, activity_type text, actor_id uuid, actor_username text, actor_avatar text, target_forum_id integer, target_forum_title text, target_comment_id integer, target_comment_preview text, target_profile_id uuid, target_profile_username text, target_badge_id integer, target_badge_name text, target_series_id uuid, target_series_title text, metadata jsonb, created_at timestamp with time zone, is_read boolean)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -13690,7 +13690,7 @@ COMMENT ON FUNCTION public.get_user_feed(p_limit integer, p_offset integer, p_in
 -- Name: get_user_post_activity_summary(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_post_activity_summary(p_user_id uuid, p_days integer DEFAULT 30) RETURNS TABLE(activity_type public.post_activity_type, count bigint, last_activity timestamp with time zone)
+CREATE OR REPLACE FUNCTION public.get_user_post_activity_summary(p_user_id uuid, p_days integer DEFAULT 30) RETURNS TABLE(activity_type public.post_activity_type, count bigint, last_activity timestamp with time zone)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -13713,7 +13713,7 @@ $$;
 -- Name: get_user_preferences(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_preferences(p_user_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_user_preferences(p_user_id uuid) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -13786,7 +13786,7 @@ $$;
 -- Name: get_user_reputation(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_reputation(p_profile_id uuid DEFAULT NULL::uuid) RETURNS TABLE(profile_id uuid, total_points integer, reputation_level integer, level_title text, level_color text, points_this_week integer, points_this_month integer, next_level integer, points_to_next_level integer)
+CREATE OR REPLACE FUNCTION public.get_user_reputation(p_profile_id uuid DEFAULT NULL::uuid) RETURNS TABLE(profile_id uuid, total_points integer, reputation_level integer, level_title text, level_color text, points_this_week integer, points_this_month integer, next_level integer, points_to_next_level integer)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -13814,7 +13814,7 @@ $$;
 -- Name: get_user_reviews_with_average(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_reviews_with_average(p_user_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_user_reviews_with_average(p_user_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -13873,7 +13873,7 @@ $$;
 -- Name: get_user_roles(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_roles(user_id uuid) RETURNS TABLE(role_id integer, role_name text, role_description text, granted_at timestamp with time zone)
+CREATE OR REPLACE FUNCTION public.get_user_roles(user_id uuid) RETURNS TABLE(role_id integer, role_name text, role_description text, granted_at timestamp with time zone)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -13900,7 +13900,7 @@ COMMENT ON FUNCTION public.get_user_roles(user_id uuid) IS 'Get all roles for a 
 -- Name: get_user_rooms(uuid, text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_rooms(p_user_id uuid, p_search_query text DEFAULT NULL::text, p_filter_type text DEFAULT 'all'::text, p_limit integer DEFAULT 50, p_offset integer DEFAULT 0) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_user_rooms(p_user_id uuid, p_search_query text DEFAULT NULL::text, p_filter_type text DEFAULT 'all'::text, p_limit integer DEFAULT 50, p_offset integer DEFAULT 0) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -13981,7 +13981,7 @@ $$;
 -- Name: get_user_settings(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_settings(p_user_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_user_settings(p_user_id uuid) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -14155,7 +14155,7 @@ COMMENT ON FUNCTION public.get_user_settings(p_user_id uuid) IS 'BFF endpoint: R
 -- Name: get_user_stats(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_stats(p_user_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_user_stats(p_user_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -14203,7 +14203,7 @@ COMMENT ON FUNCTION public.get_user_stats(p_user_id uuid) IS 'Returns user shari
 -- Name: get_user_stats_fast(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_stats_fast(p_user_id uuid, p_max_stale_minutes integer DEFAULT 30) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_user_stats_fast(p_user_id uuid, p_max_stale_minutes integer DEFAULT 30) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -14267,7 +14267,7 @@ COMMENT ON FUNCTION public.get_user_stats_fast(p_user_id uuid, p_max_stale_minut
 -- Name: get_user_trust_level(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_trust_level(p_user_id uuid DEFAULT NULL::uuid) RETURNS integer
+CREATE OR REPLACE FUNCTION public.get_user_trust_level(p_user_id uuid DEFAULT NULL::uuid) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -14287,7 +14287,7 @@ $$;
 -- Name: get_user_vault_access_summary(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_user_vault_access_summary(user_uuid uuid DEFAULT auth.uid()) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.get_user_vault_access_summary(user_uuid uuid DEFAULT auth.uid()) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'audit', 'public'
     AS $$
@@ -14369,7 +14369,7 @@ RETURNS:
 -- Name: get_vault_failure_count(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_vault_failure_count(p_hours integer DEFAULT 1) RETURNS integer
+CREATE OR REPLACE FUNCTION public.get_vault_failure_count(p_hours integer DEFAULT 1) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -14399,7 +14399,7 @@ COMMENT ON FUNCTION public.get_vault_failure_count(p_hours integer) IS 'Returns 
 -- Name: get_vault_secret(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_vault_secret(secret_name text) RETURNS text
+CREATE OR REPLACE FUNCTION public.get_vault_secret(secret_name text) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -14419,7 +14419,7 @@ $$;
 -- Name: handle_comment_delete(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.handle_comment_delete() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.handle_comment_delete() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -14447,7 +14447,7 @@ $$;
 -- Name: handle_comment_insert(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.handle_comment_insert() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.handle_comment_insert() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -14491,7 +14491,7 @@ $$;
 -- Name: handle_new_user(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.handle_new_user() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.handle_new_user() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'extensions'
     AS $$
@@ -14536,7 +14536,7 @@ COMMENT ON FUNCTION public.handle_new_user() IS 'Creates a profile when a new us
 -- Name: handle_new_user_notifications(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.handle_new_user_notifications() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.handle_new_user_notifications() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -14551,7 +14551,7 @@ $$;
 -- Name: handle_new_user_to_address(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.handle_new_user_to_address() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.handle_new_user_to_address() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -14568,7 +14568,7 @@ $$;
 -- Name: handle_post_delete(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.handle_post_delete() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.handle_post_delete() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -14585,7 +14585,7 @@ $$;
 -- Name: has_any_role(uuid, text[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.has_any_role(user_id uuid, role_names text[]) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.has_any_role(user_id uuid, role_names text[]) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -14610,7 +14610,7 @@ COMMENT ON FUNCTION public.has_any_role(user_id uuid, role_names text[]) IS 'Che
 -- Name: has_block_relationship(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.has_block_relationship(p_user_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.has_block_relationship(p_user_id uuid) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -14635,7 +14635,7 @@ COMMENT ON FUNCTION public.has_block_relationship(p_user_id uuid) IS 'Check if a
 -- Name: has_role(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.has_role(user_id uuid, role_name text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.has_role(user_id uuid, role_name text) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -14660,7 +14660,7 @@ COMMENT ON FUNCTION public.has_role(user_id uuid, role_name text) IS 'Check if u
 -- Name: hash_mfa_code(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.hash_mfa_code(code text) RETURNS text
+CREATE OR REPLACE FUNCTION public.hash_mfa_code(code text) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -14674,7 +14674,7 @@ $$;
 -- Name: http_wrapper(text, text, text[], text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.http_wrapper(method text, url text, headers text[], body text) RETURNS json
+CREATE OR REPLACE FUNCTION public.http_wrapper(method text, url text, headers text[], body text) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'extensions', 'public', 'pg_temp'
     AS $$
@@ -14692,7 +14692,7 @@ $$;
 -- Name: increment_challenge_views(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.increment_challenge_views(p_challenge_id integer) RETURNS json
+CREATE OR REPLACE FUNCTION public.increment_challenge_views(p_challenge_id integer) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -14716,7 +14716,7 @@ $$;
 -- Name: increment_challenged_people(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.increment_challenged_people(p_challenge_id bigint) RETURNS void
+CREATE OR REPLACE FUNCTION public.increment_challenged_people(p_challenge_id bigint) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -14732,7 +14732,7 @@ $$;
 -- Name: increment_email_provider_stats(text, boolean, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.increment_email_provider_stats(p_provider text, p_success boolean, p_latency_ms integer DEFAULT 0) RETURNS void
+CREATE OR REPLACE FUNCTION public.increment_email_provider_stats(p_provider text, p_success boolean, p_latency_ms integer DEFAULT 0) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -14774,7 +14774,7 @@ COMMENT ON FUNCTION public.increment_email_provider_stats(p_provider text, p_suc
 -- Name: increment_forum_likes(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.increment_forum_likes(forum_id bigint) RETURNS void
+CREATE OR REPLACE FUNCTION public.increment_forum_likes(forum_id bigint) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -14790,7 +14790,7 @@ $$;
 -- Name: increment_forum_view(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.increment_forum_view(p_forum_id bigint) RETURNS void
+CREATE OR REPLACE FUNCTION public.increment_forum_view(p_forum_id bigint) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -14806,7 +14806,7 @@ $$;
 -- Name: increment_forum_views(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.increment_forum_views(p_forum_id integer) RETURNS json
+CREATE OR REPLACE FUNCTION public.increment_forum_views(p_forum_id integer) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -14830,7 +14830,7 @@ $$;
 -- Name: increment_monthly_quota(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.increment_monthly_quota(p_provider text, p_organization_id uuid DEFAULT '00000000-0000-0000-0000-000000000001'::uuid) RETURNS integer
+CREATE OR REPLACE FUNCTION public.increment_monthly_quota(p_provider text, p_organization_id uuid DEFAULT '00000000-0000-0000-0000-000000000001'::uuid) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -14865,7 +14865,7 @@ $$;
 -- Name: increment_post_views(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.increment_post_views(p_post_id integer) RETURNS json
+CREATE OR REPLACE FUNCTION public.increment_post_views(p_post_id integer) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -14926,7 +14926,7 @@ $$;
 -- Name: increment_provider_quota(text, date); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.increment_provider_quota(p_provider text, p_date date DEFAULT CURRENT_DATE) RETURNS integer
+CREATE OR REPLACE FUNCTION public.increment_provider_quota(p_provider text, p_date date DEFAULT CURRENT_DATE) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -14971,7 +14971,7 @@ $$;
 -- Name: increment_provider_quota(text, date, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.increment_provider_quota(p_provider text, p_date date DEFAULT CURRENT_DATE, p_organization_id uuid DEFAULT '00000000-0000-0000-0000-000000000001'::uuid) RETURNS integer
+CREATE OR REPLACE FUNCTION public.increment_provider_quota(p_provider text, p_date date DEFAULT CURRENT_DATE, p_organization_id uuid DEFAULT '00000000-0000-0000-0000-000000000001'::uuid) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -15007,7 +15007,7 @@ $$;
 -- Name: increment_translation_usage(text, text, bigint, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.increment_translation_usage(p_service text, p_month text, p_chars bigint, p_limit bigint) RETURNS TABLE(chars_used bigint, free_limit bigint, remaining bigint)
+CREATE OR REPLACE FUNCTION public.increment_translation_usage(p_service text, p_month text, p_chars bigint, p_limit bigint) RETURNS TABLE(chars_used bigint, free_limit bigint, remaining bigint)
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -15033,7 +15033,7 @@ $$;
 -- Name: increment_view_count(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.increment_view_count(item_id integer) RETURNS void
+CREATE OR REPLACE FUNCTION public.increment_view_count(item_id integer) RETURNS void
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -15049,7 +15049,7 @@ $$;
 -- Name: increment_view_count(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.increment_view_count(item_id bigint) RETURNS void
+CREATE OR REPLACE FUNCTION public.increment_view_count(item_id bigint) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -15074,7 +15074,7 @@ COMMENT ON FUNCTION public.increment_view_count(item_id bigint) IS 'Increment vi
 -- Name: init_notification_preferences(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.init_notification_preferences(p_user_id uuid) RETURNS void
+CREATE OR REPLACE FUNCTION public.init_notification_preferences(p_user_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -15128,7 +15128,7 @@ $$;
 -- Name: insert_creator_into_room(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.insert_creator_into_room() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.insert_creator_into_room() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -15144,7 +15144,7 @@ $$;
 -- Name: invoke_image_compression(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.invoke_image_compression() RETURNS void
+CREATE OR REPLACE FUNCTION public.invoke_image_compression() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -15207,7 +15207,7 @@ COMMENT ON FUNCTION public.invoke_image_compression() IS 'Invokes edge function 
 -- Name: invoke_update_post_coordinates(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.invoke_update_post_coordinates() RETURNS void
+CREATE OR REPLACE FUNCTION public.invoke_update_post_coordinates() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -15223,7 +15223,7 @@ $$;
 -- Name: invoke_upstash_health_check(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.invoke_upstash_health_check() RETURNS void
+CREATE OR REPLACE FUNCTION public.invoke_upstash_health_check() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -15238,7 +15238,7 @@ $$;
 -- Name: is_admin(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.is_admin() RETURNS boolean
+CREATE OR REPLACE FUNCTION public.is_admin() RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     AS $$
   SELECT EXISTS (
@@ -15262,7 +15262,7 @@ COMMENT ON FUNCTION public.is_admin() IS 'Check if current user has admin or sup
 -- Name: is_admin(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.is_admin(user_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.is_admin(user_id uuid) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -15280,7 +15280,7 @@ $$;
 -- Name: is_admin_jsonb(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.is_admin_jsonb() RETURNS boolean
+CREATE OR REPLACE FUNCTION public.is_admin_jsonb() RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -15305,7 +15305,7 @@ COMMENT ON FUNCTION public.is_admin_jsonb() IS 'Check if current user is admin (
 -- Name: is_blocked_by_user(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.is_blocked_by_user(p_user_id uuid, p_target_user_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.is_blocked_by_user(p_user_id uuid, p_target_user_id uuid) RETURNS boolean
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     AS $$
 BEGIN
@@ -15330,7 +15330,7 @@ COMMENT ON FUNCTION public.is_blocked_by_user(p_user_id uuid, p_target_user_id u
 -- Name: is_email_suppressed(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.is_email_suppressed(p_email text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.is_email_suppressed(p_email text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -15348,7 +15348,7 @@ $$;
 -- Name: is_room_participant(bigint, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.is_room_participant(room_id bigint, profile_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.is_room_participant(room_id bigint, profile_id uuid) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO ''
     AS $$select exists (
@@ -15363,7 +15363,7 @@ CREATE FUNCTION public.is_room_participant(room_id bigint, profile_id uuid) RETU
 -- Name: is_room_participant(text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.is_room_participant(profile_id text, room_id integer) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.is_room_participant(profile_id text, room_id integer) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -15385,7 +15385,7 @@ $$;
 -- Name: is_user_blocked(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.is_user_blocked(p_user_id uuid, p_target_user_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.is_user_blocked(p_user_id uuid, p_target_user_id uuid) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -15402,7 +15402,7 @@ $$;
 -- Name: is_valid_locale(character varying); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.is_valid_locale(p_locale character varying) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.is_valid_locale(p_locale character varying) RETURNS boolean
     LANGUAGE sql IMMUTABLE
     SET search_path TO ''
     AS $$
@@ -15417,7 +15417,7 @@ $$;
 -- Name: join_challenge(uuid, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.join_challenge(p_user_id uuid, p_challenge_id bigint) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.join_challenge(p_user_id uuid, p_challenge_id bigint) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -15477,7 +15477,7 @@ $$;
 -- Name: jsonb_add_missing(jsonb, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.jsonb_add_missing(target jsonb, source jsonb) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.jsonb_add_missing(target jsonb, source jsonb) RETURNS jsonb
     LANGUAGE plpgsql IMMUTABLE
     AS $$
 DECLARE
@@ -15518,7 +15518,7 @@ $$;
 -- Name: jsonb_deep_merge(jsonb, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.jsonb_deep_merge(a jsonb, b jsonb) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.jsonb_deep_merge(a jsonb, b jsonb) RETURNS jsonb
     LANGUAGE plpgsql IMMUTABLE
     AS $$
 DECLARE
@@ -15564,7 +15564,7 @@ $$;
 -- Name: jsonb_set(text, text, json); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.jsonb_set(field text, path text, value json) RETURNS void
+CREATE OR REPLACE FUNCTION public.jsonb_set(field text, path text, value json) RETURNS void
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -15579,7 +15579,7 @@ $$;
 -- Name: jsonb_set(text, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.jsonb_set(field text, path text, value jsonb) RETURNS void
+CREATE OR REPLACE FUNCTION public.jsonb_set(field text, path text, value jsonb) RETURNS void
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -15593,7 +15593,7 @@ $$;
 -- Name: lat_lng_to_geohash(double precision, double precision, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.lat_lng_to_geohash(p_lat double precision, p_lng double precision, p_precision integer DEFAULT 5) RETURNS text
+CREATE OR REPLACE FUNCTION public.lat_lng_to_geohash(p_lat double precision, p_lng double precision, p_precision integer DEFAULT 5) RETURNS text
     LANGUAGE plpgsql IMMUTABLE
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -15673,7 +15673,7 @@ COMMENT ON FUNCTION public.lat_lng_to_geohash(p_lat double precision, p_lng doub
 -- Name: list_email_templates(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.list_email_templates(p_category text DEFAULT NULL::text) RETURNS TABLE(id uuid, slug text, name text, category text, subject text, variables jsonb, metadata jsonb, version integer, updated_at timestamp with time zone)
+CREATE OR REPLACE FUNCTION public.list_email_templates(p_category text DEFAULT NULL::text) RETURNS TABLE(id uuid, slug text, name text, category text, subject text, variables jsonb, metadata jsonb, version integer, updated_at timestamp with time zone)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     AS $$
 BEGIN
@@ -15687,7 +15687,7 @@ $$;
 -- Name: list_required_secrets(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.list_required_secrets() RETURNS TABLE(secret_name text, secret_exists boolean, description text, is_whitelisted boolean)
+CREATE OR REPLACE FUNCTION public.list_required_secrets() RETURNS TABLE(secret_name text, secret_exists boolean, description text, is_whitelisted boolean)
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'vault', 'public'
     AS $$
@@ -15743,7 +15743,7 @@ RETURNS:
 -- Name: log_audit_event(uuid, text, text, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.log_audit_event(p_user_id uuid, p_action text, p_resource_type text, p_resource_id text, p_metadata jsonb DEFAULT '{}'::jsonb) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.log_audit_event(p_user_id uuid, p_action text, p_resource_type text, p_resource_id text, p_metadata jsonb DEFAULT '{}'::jsonb) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -15763,7 +15763,7 @@ $$;
 -- Name: log_moderator_action(text, text, text, uuid, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.log_moderator_action(p_action_type text, p_target_type text, p_target_id text, p_target_profile_id uuid DEFAULT NULL::uuid, p_reason text DEFAULT NULL::text, p_details jsonb DEFAULT '{}'::jsonb) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.log_moderator_action(p_action_type text, p_target_type text, p_target_id text, p_target_profile_id uuid DEFAULT NULL::uuid, p_reason text DEFAULT NULL::text, p_details jsonb DEFAULT '{}'::jsonb) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -15811,7 +15811,7 @@ $$;
 -- Name: log_post_activity(bigint, uuid, public.post_activity_type, jsonb, jsonb, jsonb, jsonb, text, text, inet, text, text, bigint, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.log_post_activity(p_post_id bigint, p_actor_id uuid, p_activity_type public.post_activity_type, p_previous_state jsonb DEFAULT '{}'::jsonb, p_new_state jsonb DEFAULT '{}'::jsonb, p_changes jsonb DEFAULT '{}'::jsonb, p_metadata jsonb DEFAULT '{}'::jsonb, p_reason text DEFAULT NULL::text, p_notes text DEFAULT NULL::text, p_ip_address inet DEFAULT NULL::inet, p_user_agent text DEFAULT NULL::text, p_request_id text DEFAULT NULL::text, p_related_post_id bigint DEFAULT NULL::bigint, p_related_profile_id uuid DEFAULT NULL::uuid, p_related_room_id uuid DEFAULT NULL::uuid) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.log_post_activity(p_post_id bigint, p_actor_id uuid, p_activity_type public.post_activity_type, p_previous_state jsonb DEFAULT '{}'::jsonb, p_new_state jsonb DEFAULT '{}'::jsonb, p_changes jsonb DEFAULT '{}'::jsonb, p_metadata jsonb DEFAULT '{}'::jsonb, p_reason text DEFAULT NULL::text, p_notes text DEFAULT NULL::text, p_ip_address inet DEFAULT NULL::inet, p_user_agent text DEFAULT NULL::text, p_request_id text DEFAULT NULL::text, p_related_post_id bigint DEFAULT NULL::bigint, p_related_profile_id uuid DEFAULT NULL::uuid, p_related_room_id uuid DEFAULT NULL::uuid) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -15861,7 +15861,7 @@ $$;
 -- Name: manage_post_like_counter(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.manage_post_like_counter() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.manage_post_like_counter() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -15886,7 +15886,7 @@ $$;
 -- Name: mark_all_notifications_read(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_all_notifications_read(p_user_id uuid) RETURNS void
+CREATE OR REPLACE FUNCTION public.mark_all_notifications_read(p_user_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -15909,7 +15909,7 @@ COMMENT ON FUNCTION public.mark_all_notifications_read(p_user_id uuid) IS 'Mark 
 -- Name: mark_automation_email_sent(uuid, boolean, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_automation_email_sent(p_queue_id uuid, p_success boolean, p_error_message text DEFAULT NULL::text) RETURNS void
+CREATE OR REPLACE FUNCTION public.mark_automation_email_sent(p_queue_id uuid, p_success boolean, p_error_message text DEFAULT NULL::text) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -15977,7 +15977,7 @@ $$;
 -- Name: mark_best_answer(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_best_answer(p_comment_id bigint) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.mark_best_answer(p_comment_id bigint) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -16066,7 +16066,7 @@ $$;
 -- Name: mark_category_as_read(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_category_as_read(p_category_id integer) RETURNS integer
+CREATE OR REPLACE FUNCTION public.mark_category_as_read(p_category_id integer) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -16095,7 +16095,7 @@ $$;
 -- Name: mark_conversation_read(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_conversation_read(p_conversation_id uuid) RETURNS void
+CREATE OR REPLACE FUNCTION public.mark_conversation_read(p_conversation_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -16127,7 +16127,7 @@ $$;
 -- Name: mark_digest_notifications_sent(uuid[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_digest_notifications_sent(p_notification_ids uuid[]) RETURNS void
+CREATE OR REPLACE FUNCTION public.mark_digest_notifications_sent(p_notification_ids uuid[]) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -16151,7 +16151,7 @@ COMMENT ON FUNCTION public.mark_digest_notifications_sent(p_notification_ids uui
 -- Name: mark_email_as_failed(uuid, text, text, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_email_as_failed(p_delivery_id uuid, p_error_code text, p_error_message text, p_should_retry boolean DEFAULT true) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.mark_email_as_failed(p_delivery_id uuid, p_error_code text, p_error_message text, p_should_retry boolean DEFAULT true) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -16174,7 +16174,7 @@ $$;
 -- Name: mark_email_as_sent(uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_email_as_sent(p_delivery_id uuid, p_provider text, p_message_id text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.mark_email_as_sent(p_delivery_id uuid, p_provider text, p_message_id text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -16198,7 +16198,7 @@ $$;
 -- Name: mark_feed_read(uuid[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_feed_read(p_activity_ids uuid[]) RETURNS integer
+CREATE OR REPLACE FUNCTION public.mark_feed_read(p_activity_ids uuid[]) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -16219,7 +16219,7 @@ $$;
 -- Name: mark_forum_notifications_read(uuid[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_forum_notifications_read(p_notification_ids uuid[] DEFAULT NULL::uuid[]) RETURNS integer
+CREATE OR REPLACE FUNCTION public.mark_forum_notifications_read(p_notification_ids uuid[] DEFAULT NULL::uuid[]) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -16251,7 +16251,7 @@ $$;
 -- Name: mark_geocode_completed(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_geocode_completed(queue_id bigint) RETURNS void
+CREATE OR REPLACE FUNCTION public.mark_geocode_completed(queue_id bigint) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -16270,7 +16270,7 @@ $$;
 -- Name: mark_geocode_failed(bigint, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_geocode_failed(queue_id bigint, error_msg text) RETURNS void
+CREATE OR REPLACE FUNCTION public.mark_geocode_failed(queue_id bigint, error_msg text) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -16309,7 +16309,7 @@ COMMENT ON FUNCTION public.mark_geocode_failed(queue_id bigint, error_msg text) 
 -- Name: mark_geocode_processing(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_geocode_processing(queue_id bigint) RETURNS void
+CREATE OR REPLACE FUNCTION public.mark_geocode_processing(queue_id bigint) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -16328,7 +16328,7 @@ $$;
 -- Name: mark_messages_read(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_messages_read(conversation_uuid text) RETURNS json
+CREATE OR REPLACE FUNCTION public.mark_messages_read(conversation_uuid text) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -16350,7 +16350,7 @@ $$;
 -- Name: mark_messages_read(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_messages_read(conversation_uuid uuid) RETURNS json
+CREATE OR REPLACE FUNCTION public.mark_messages_read(conversation_uuid uuid) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -16412,7 +16412,7 @@ COMMENT ON FUNCTION public.mark_messages_read(conversation_uuid uuid) IS 'Mark a
 -- Name: mark_notification_read(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_notification_read(p_user_id uuid, p_notification_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.mark_notification_read(p_user_id uuid, p_notification_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -16451,7 +16451,7 @@ $$;
 -- Name: mark_notifications_read(uuid[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.mark_notifications_read(p_notification_ids uuid[]) RETURNS void
+CREATE OR REPLACE FUNCTION public.mark_notifications_read(p_notification_ids uuid[]) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -16468,7 +16468,7 @@ $$;
 -- Name: moderate_remove_post(bigint, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.moderate_remove_post(p_forum_id bigint, p_reason text DEFAULT NULL::text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.moderate_remove_post(p_forum_id bigint, p_reason text DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -16506,7 +16506,7 @@ $$;
 -- Name: moderate_toggle_post_lock(bigint, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.moderate_toggle_post_lock(p_forum_id bigint, p_reason text DEFAULT NULL::text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.moderate_toggle_post_lock(p_forum_id bigint, p_reason text DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -16542,7 +16542,7 @@ $$;
 -- Name: move_bookmark_to_collection(integer, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.move_bookmark_to_collection(p_bookmark_id integer, p_new_collection_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.move_bookmark_to_collection(p_bookmark_id integer, p_new_collection_id uuid) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -16590,7 +16590,7 @@ $$;
 -- Name: move_failed_email_to_dlq(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.move_failed_email_to_dlq() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.move_failed_email_to_dlq() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -16627,7 +16627,7 @@ $$;
 -- Name: move_to_dead_letter_queue(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.move_to_dead_letter_queue(p_queue_id uuid, p_failure_reason text) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.move_to_dead_letter_queue(p_queue_id uuid, p_failure_reason text) RETURNS uuid
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -16694,7 +16694,7 @@ COMMENT ON FUNCTION public.move_to_dead_letter_queue(p_queue_id uuid, p_failure_
 -- Name: nearby_address(double precision, double precision); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.nearby_address(lat double precision, long double precision) RETURNS SETOF record
+CREATE OR REPLACE FUNCTION public.nearby_address(lat double precision, long double precision) RETURNS SETOF record
     LANGUAGE sql
     SET search_path TO ''
     AS $$
@@ -16708,7 +16708,7 @@ $$;
 -- Name: nearby_address(numeric, numeric); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.nearby_address(lat numeric, long numeric) RETURNS SETOF record
+CREATE OR REPLACE FUNCTION public.nearby_address(lat numeric, long numeric) RETURNS SETOF record
     LANGUAGE plpgsql STABLE
     SET search_path TO ''
     AS $$
@@ -16732,7 +16732,7 @@ $$;
 -- Name: nearby_community_fridges(double precision, double precision, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.nearby_community_fridges(user_lat double precision, user_lng double precision, radius_meters integer DEFAULT 10000, limit_count integer DEFAULT 50) RETURNS TABLE(id uuid, name text, status text, description text, street_address text, city text, state text, zip_code text, full_address text, latitude double precision, longitude double precision, reference_directions text, location_type text, host_company text, company_type text, point_person_name text, point_person_email text, available_hours text, has_pantry boolean, languages text[], latest_food_status text, latest_cleanliness_status text, total_check_ins integer, last_check_in timestamp with time zone, status_last_updated timestamp with time zone, launch_date date, created_date date, age_years double precision, check_in_link text, slack_channel_id text, slack_channel_link text, photo_url text, qr_code_url text, created_at timestamp with time zone, updated_at timestamp with time zone, distance_meters double precision)
+CREATE OR REPLACE FUNCTION public.nearby_community_fridges(user_lat double precision, user_lng double precision, radius_meters integer DEFAULT 10000, limit_count integer DEFAULT 50) RETURNS TABLE(id uuid, name text, status text, description text, street_address text, city text, state text, zip_code text, full_address text, latitude double precision, longitude double precision, reference_directions text, location_type text, host_company text, company_type text, point_person_name text, point_person_email text, available_hours text, has_pantry boolean, languages text[], latest_food_status text, latest_cleanliness_status text, total_check_ins integer, last_check_in timestamp with time zone, status_last_updated timestamp with time zone, launch_date date, created_date date, age_years double precision, check_in_link text, slack_channel_id text, slack_channel_link text, photo_url text, qr_code_url text, created_at timestamp with time zone, updated_at timestamp with time zone, distance_meters double precision)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -16801,7 +16801,7 @@ COMMENT ON FUNCTION public.nearby_community_fridges(user_lat double precision, u
 -- Name: nearby_posts(double precision, double precision, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.nearby_posts(lat double precision, long double precision, p_post_type text) RETURNS SETOF record
+CREATE OR REPLACE FUNCTION public.nearby_posts(lat double precision, long double precision, p_post_type text) RETURNS SETOF record
     LANGUAGE sql
     SET search_path TO ''
     AS $$
@@ -16816,7 +16816,7 @@ $$;
 -- Name: nearby_posts(numeric, numeric, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.nearby_posts(lat numeric, long numeric, p_post_type text) RETURNS SETOF record
+CREATE OR REPLACE FUNCTION public.nearby_posts(lat numeric, long numeric, p_post_type text) RETURNS SETOF record
     LANGUAGE plpgsql STABLE
     SET search_path TO ''
     AS $$
@@ -16842,7 +16842,7 @@ $$;
 -- Name: nearby_posts_full(double precision, double precision, integer, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.nearby_posts_full(user_lat double precision, user_lng double precision, radius_meters integer, post_type_filter text DEFAULT NULL::text, category_filter integer DEFAULT NULL::integer, limit_count integer DEFAULT 50) RETURNS TABLE(id bigint, profile_id uuid, post_name text, post_description text, post_type text, pickup_time text, available_hours text, post_address text, post_stripped_address text, latitude double precision, longitude double precision, images text[], is_active boolean, is_arranged boolean, post_arranged_to uuid, post_arranged_at timestamp with time zone, post_views integer, post_like_counter integer, has_pantry boolean, food_status text, network text, website text, donation text, donation_rules text, category_id integer, created_at timestamp with time zone, updated_at timestamp with time zone, distance_meters double precision)
+CREATE OR REPLACE FUNCTION public.nearby_posts_full(user_lat double precision, user_lng double precision, radius_meters integer, post_type_filter text DEFAULT NULL::text, category_filter integer DEFAULT NULL::integer, limit_count integer DEFAULT 50) RETURNS TABLE(id bigint, profile_id uuid, post_name text, post_description text, post_type text, pickup_time text, available_hours text, post_address text, post_stripped_address text, latitude double precision, longitude double precision, images text[], is_active boolean, is_arranged boolean, post_arranged_to uuid, post_arranged_at timestamp with time zone, post_views integer, post_like_counter integer, has_pantry boolean, food_status text, network text, website text, donation text, donation_rules text, category_id integer, created_at timestamp with time zone, updated_at timestamp with time zone, distance_meters double precision)
     LANGUAGE sql STABLE
     SET search_path TO 'public, extensions'
     AS $$
@@ -16897,7 +16897,7 @@ $$;
 -- Name: notify_forum_post_telegram(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_forum_post_telegram() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_forum_post_telegram() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'extensions'
     AS $$
@@ -16955,7 +16955,7 @@ COMMENT ON FUNCTION public.notify_forum_post_telegram() IS 'Sends Telegram notif
 -- Name: notify_new_chat_message(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_new_chat_message() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_new_chat_message() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -17011,7 +17011,7 @@ COMMENT ON FUNCTION public.notify_new_chat_message() IS 'Automatically queues em
 -- Name: notify_new_feedback(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_new_feedback() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_new_feedback() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -17043,7 +17043,7 @@ $$;
 -- Name: notify_new_interest(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_new_interest() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_new_interest() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -17120,7 +17120,7 @@ COMMENT ON FUNCTION public.notify_new_interest() IS 'Creates notification when s
 -- Name: notify_new_message(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_new_message() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_new_message() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -17167,7 +17167,7 @@ $$;
 -- Name: notify_new_post(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_new_post() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_new_post() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -17209,7 +17209,7 @@ COMMENT ON FUNCTION public.notify_new_post() IS 'Sends Telegram notification whe
 -- Name: notify_new_report(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_new_report() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_new_report() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -17243,7 +17243,7 @@ COMMENT ON FUNCTION public.notify_new_report() IS 'Sends Telegram notification t
 -- Name: notify_new_review(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_new_review() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_new_review() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -17320,7 +17320,7 @@ COMMENT ON FUNCTION public.notify_new_review() IS 'Creates notification when a n
 -- Name: notify_new_room_message(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_new_room_message() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_new_room_message() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -17402,7 +17402,7 @@ COMMENT ON FUNCTION public.notify_new_room_message() IS 'Creates notification wh
 -- Name: notify_new_user(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_new_user() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_new_user() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -17469,7 +17469,7 @@ COMMENT ON FUNCTION public.notify_new_user() IS 'Trigger function to notify edge
 -- Name: notify_on_forum_comment(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_on_forum_comment() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_on_forum_comment() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -17524,7 +17524,7 @@ $$;
 -- Name: notify_on_forum_mention(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_on_forum_mention() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_on_forum_mention() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -17563,7 +17563,7 @@ $$;
 -- Name: notify_on_forum_reaction(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_on_forum_reaction() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_on_forum_reaction() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -17601,7 +17601,7 @@ $$;
 -- Name: notify_post_arranged(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_post_arranged() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_post_arranged() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -17706,7 +17706,7 @@ COMMENT ON FUNCTION public.notify_post_arranged() IS 'Creates notifications when
 -- Name: notify_review_received(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_review_received() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_review_received() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -17746,7 +17746,7 @@ $$;
 -- Name: notify_user_blocked(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.notify_user_blocked() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.notify_user_blocked() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -17782,7 +17782,7 @@ COMMENT ON FUNCTION public.notify_user_blocked() IS 'Notify developers when user
 -- Name: on_email_queued(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.on_email_queued() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.on_email_queued() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -17815,7 +17815,7 @@ $$;
 -- Name: on_post_user_unliked(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.on_post_user_unliked() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.on_post_user_unliked() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -17832,7 +17832,7 @@ $$;
 -- Name: post_views_trigger_func(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.post_views_trigger_func() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.post_views_trigger_func() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -17849,7 +17849,7 @@ $$;
 -- Name: posts_in_view(double precision, double precision, double precision, double precision); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.posts_in_view(min_lat double precision, min_long double precision, max_lat double precision, max_long double precision) RETURNS SETOF record
+CREATE OR REPLACE FUNCTION public.posts_in_view(min_lat double precision, min_long double precision, max_lat double precision, max_long double precision) RETURNS SETOF record
     LANGUAGE sql
     SET search_path TO ''
     AS $$
@@ -17863,7 +17863,7 @@ $$;
 -- Name: posts_in_view(numeric, numeric, numeric, numeric); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.posts_in_view(min_lat numeric, min_long numeric, max_lat numeric, max_long numeric) RETURNS SETOF record
+CREATE OR REPLACE FUNCTION public.posts_in_view(min_lat numeric, min_long numeric, max_lat numeric, max_long numeric) RETURNS SETOF record
     LANGUAGE plpgsql STABLE
     SET search_path TO ''
     AS $$
@@ -18135,7 +18135,7 @@ COMMENT ON COLUMN public.posts.contact_preferences IS 'Array of contact preferen
 -- Name: posts_location_json(public.posts); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.posts_location_json(public.posts) RETURNS json
+CREATE OR REPLACE FUNCTION public.posts_location_json(public.posts) RETURNS json
     LANGUAGE sql STABLE
     SET search_path TO ''
     AS $_$
@@ -18154,7 +18154,7 @@ COMMENT ON FUNCTION public.posts_location_json(public.posts) IS 'Computed column
 -- Name: posts_within_radius(double precision, double precision, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.posts_within_radius(user_lat double precision, user_lng double precision, radius_meters integer DEFAULT 5000) RETURNS TABLE(id integer, post_name text, post_type text, distance_meters double precision, latitude double precision, longitude double precision)
+CREATE OR REPLACE FUNCTION public.posts_within_radius(user_lat double precision, user_lng double precision, radius_meters integer DEFAULT 5000) RETURNS TABLE(id integer, post_name text, post_type text, distance_meters double precision, latitude double precision, longitude double precision)
     LANGUAGE sql STABLE
     SET search_path TO ''
     AS $$
@@ -18183,7 +18183,7 @@ $$;
 -- Name: prevent_duplicate_rooms_insert(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.prevent_duplicate_rooms_insert() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.prevent_duplicate_rooms_insert() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -18205,7 +18205,7 @@ $$;
 -- Name: prevent_duplicate_rooms_insert_function(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.prevent_duplicate_rooms_insert_function() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.prevent_duplicate_rooms_insert_function() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -18227,7 +18227,7 @@ $$;
 -- Name: process_automation_queue_item(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.process_automation_queue_item(p_queue_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.process_automation_queue_item(p_queue_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -18274,7 +18274,7 @@ $$;
 -- Name: process_bounce_event(text, text, text, text, text, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.process_bounce_event(p_email text, p_provider text, p_event_type text, p_bounce_type text DEFAULT NULL::text, p_bounce_category text DEFAULT NULL::text, p_message_id text DEFAULT NULL::text, p_raw_payload jsonb DEFAULT '{}'::jsonb) RETURNS void
+CREATE OR REPLACE FUNCTION public.process_bounce_event(p_email text, p_provider text, p_event_type text, p_bounce_type text DEFAULT NULL::text, p_bounce_category text DEFAULT NULL::text, p_message_id text DEFAULT NULL::text, p_raw_payload jsonb DEFAULT '{}'::jsonb) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -18315,7 +18315,7 @@ $$;
 -- Name: process_location_update_queue(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.process_location_update_queue() RETURNS void
+CREATE OR REPLACE FUNCTION public.process_location_update_queue() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -18338,7 +18338,7 @@ $$;
 -- Name: process_notification_digest(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.process_notification_digest() RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.process_notification_digest() RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -18398,7 +18398,7 @@ $$;
 -- Name: process_notification_queue(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.process_notification_queue(p_batch_size integer DEFAULT 100) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.process_notification_queue(p_batch_size integer DEFAULT 100) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -18552,7 +18552,7 @@ COMMENT ON FUNCTION public.process_notification_queue(p_batch_size integer) IS '
 -- Name: process_publication_queue(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.process_publication_queue() RETURNS integer
+CREATE OR REPLACE FUNCTION public.process_publication_queue() RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -18639,7 +18639,7 @@ $$;
 -- Name: publish_draft(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.publish_draft(p_draft_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.publish_draft(p_draft_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -18719,7 +18719,7 @@ $$;
 -- Name: publish_forum_series(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.publish_forum_series(p_series_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.publish_forum_series(p_series_id uuid) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -18754,7 +18754,7 @@ $$;
 -- Name: queue_email(uuid, text, text, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.queue_email(p_recipient_id uuid, p_recipient_email text, p_email_type text, p_template_name text, p_template_data jsonb DEFAULT '{}'::jsonb) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.queue_email(p_recipient_id uuid, p_recipient_email text, p_email_type text, p_template_name text, p_template_data jsonb DEFAULT '{}'::jsonb) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -18790,7 +18790,7 @@ $$;
 -- Name: queue_location_update(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.queue_location_update() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.queue_location_update() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -18832,7 +18832,7 @@ COMMENT ON FUNCTION public.queue_location_update() IS 'Trigger function to autom
 -- Name: queue_location_update(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.queue_location_update(post_id integer) RETURNS void
+CREATE OR REPLACE FUNCTION public.queue_location_update(post_id integer) RETURNS void
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -18848,7 +18848,7 @@ $$;
 -- Name: queue_nearby_notifications(uuid, uuid, double precision, double precision, text, text, double precision, text, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.queue_nearby_notifications(p_food_item_id uuid, p_sender_id uuid, p_latitude double precision, p_longitude double precision, p_title text, p_notification_type text DEFAULT 'nearby_post'::text, p_radius_km double precision DEFAULT 10, p_consolidation_key text DEFAULT NULL::text, p_bypass_quiet_hours boolean DEFAULT false) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.queue_nearby_notifications(p_food_item_id uuid, p_sender_id uuid, p_latitude double precision, p_longitude double precision, p_title text, p_notification_type text DEFAULT 'nearby_post'::text, p_radius_km double precision DEFAULT 10, p_consolidation_key text DEFAULT NULL::text, p_bypass_quiet_hours boolean DEFAULT false) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'extensions'
     AS $$
@@ -18981,7 +18981,7 @@ COMMENT ON FUNCTION public.queue_nearby_notifications(p_food_item_id uuid, p_sen
 -- Name: queue_newsletter_fair(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.queue_newsletter_fair(p_campaign_id uuid, p_batch_size integer DEFAULT 100) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.queue_newsletter_fair(p_campaign_id uuid, p_batch_size integer DEFAULT 100) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -19036,7 +19036,7 @@ COMMENT ON FUNCTION public.queue_newsletter_fair(p_campaign_id uuid, p_batch_siz
 -- Name: queue_notification(uuid, text, text, jsonb, integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.queue_notification(p_user_id uuid, p_type text, p_title text, p_payload jsonb DEFAULT '{}'::jsonb, p_priority integer DEFAULT NULL::integer, p_consolidation_key text DEFAULT NULL::text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.queue_notification(p_user_id uuid, p_type text, p_title text, p_payload jsonb DEFAULT '{}'::jsonb, p_priority integer DEFAULT NULL::integer, p_consolidation_key text DEFAULT NULL::text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -19119,7 +19119,7 @@ COMMENT ON FUNCTION public.queue_notification(p_user_id uuid, p_type text, p_tit
 -- Name: record_activity(text, integer, integer, uuid, integer, uuid, jsonb, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.record_activity(p_activity_type text, p_target_forum_id integer DEFAULT NULL::integer, p_target_comment_id integer DEFAULT NULL::integer, p_target_profile_id uuid DEFAULT NULL::uuid, p_target_badge_id integer DEFAULT NULL::integer, p_target_series_id uuid DEFAULT NULL::uuid, p_metadata jsonb DEFAULT '{}'::jsonb, p_is_public boolean DEFAULT true) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.record_activity(p_activity_type text, p_target_forum_id integer DEFAULT NULL::integer, p_target_comment_id integer DEFAULT NULL::integer, p_target_profile_id uuid DEFAULT NULL::uuid, p_target_badge_id integer DEFAULT NULL::integer, p_target_series_id uuid DEFAULT NULL::uuid, p_metadata jsonb DEFAULT '{}'::jsonb, p_is_public boolean DEFAULT true) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -19158,7 +19158,7 @@ $$;
 -- Name: record_activity(bigint, text, text, text, date, integer, integer, integer, integer, jsonb, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.record_activity(p_user_id bigint, p_username text, p_first_name text, p_last_name text, p_date date, p_message_count integer, p_characters integer, p_media_count integer, p_reply_count integer, p_emoji_usage jsonb, p_word_usage jsonb) RETURNS void
+CREATE OR REPLACE FUNCTION public.record_activity(p_user_id bigint, p_username text, p_first_name text, p_last_name text, p_date date, p_message_count integer, p_characters integer, p_media_count integer, p_reply_count integer, p_emoji_usage jsonb, p_word_usage jsonb) RETURNS void
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -19219,7 +19219,7 @@ $$;
 -- Name: record_announcement_event(uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.record_announcement_event(p_announcement_id uuid, p_event_type text, p_page_url text DEFAULT NULL::text) RETURNS void
+CREATE OR REPLACE FUNCTION public.record_announcement_event(p_announcement_id uuid, p_event_type text, p_page_url text DEFAULT NULL::text) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -19240,7 +19240,7 @@ $$;
 -- Name: record_circuit_event(text, text, text, integer, integer, integer, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.record_circuit_event(p_circuit_name text, p_state text, p_previous_state text DEFAULT NULL::text, p_failure_count integer DEFAULT 0, p_success_count integer DEFAULT 0, p_consecutive_failures integer DEFAULT 0, p_trigger_reason text DEFAULT NULL::text, p_app_platform text DEFAULT NULL::text) RETURNS void
+CREATE OR REPLACE FUNCTION public.record_circuit_event(p_circuit_name text, p_state text, p_previous_state text DEFAULT NULL::text, p_failure_count integer DEFAULT 0, p_success_count integer DEFAULT 0, p_consecutive_failures integer DEFAULT 0, p_trigger_reason text DEFAULT NULL::text, p_app_platform text DEFAULT NULL::text) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -19267,7 +19267,7 @@ COMMENT ON FUNCTION public.record_circuit_event(p_circuit_name text, p_state tex
 -- Name: record_compressed_image(text, text, bigint, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.record_compressed_image(p_bucket text, p_path text, p_original_size bigint, p_compressed_size bigint) RETURNS void
+CREATE OR REPLACE FUNCTION public.record_compressed_image(p_bucket text, p_path text, p_original_size bigint, p_compressed_size bigint) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -19294,7 +19294,7 @@ $$;
 -- Name: record_compression_result(text, text, text, bigint, bigint, integer, integer, integer, integer, text, text, text, integer, integer, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.record_compression_result(p_bucket text, p_original_path text, p_compressed_path text DEFAULT NULL::text, p_original_size bigint DEFAULT NULL::bigint, p_compressed_size bigint DEFAULT NULL::bigint, p_original_width integer DEFAULT NULL::integer, p_original_height integer DEFAULT NULL::integer, p_compressed_width integer DEFAULT NULL::integer, p_compressed_height integer DEFAULT NULL::integer, p_original_format text DEFAULT NULL::text, p_compressed_format text DEFAULT NULL::text, p_compression_method text DEFAULT NULL::text, p_quality_setting integer DEFAULT NULL::integer, p_processing_time_ms integer DEFAULT NULL::integer, p_status text DEFAULT 'pending'::text, p_error_message text DEFAULT NULL::text) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.record_compression_result(p_bucket text, p_original_path text, p_compressed_path text DEFAULT NULL::text, p_original_size bigint DEFAULT NULL::bigint, p_compressed_size bigint DEFAULT NULL::bigint, p_original_width integer DEFAULT NULL::integer, p_original_height integer DEFAULT NULL::integer, p_compressed_width integer DEFAULT NULL::integer, p_compressed_height integer DEFAULT NULL::integer, p_original_format text DEFAULT NULL::text, p_compressed_format text DEFAULT NULL::text, p_compression_method text DEFAULT NULL::text, p_quality_setting integer DEFAULT NULL::integer, p_processing_time_ms integer DEFAULT NULL::integer, p_status text DEFAULT 'pending'::text, p_error_message text DEFAULT NULL::text) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -19341,7 +19341,7 @@ $$;
 -- Name: record_email_metrics(text, boolean, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.record_email_metrics(p_provider text, p_success boolean, p_latency_ms integer) RETURNS void
+CREATE OR REPLACE FUNCTION public.record_email_metrics(p_provider text, p_success boolean, p_latency_ms integer) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -19375,7 +19375,7 @@ $$;
 -- Name: record_email_send(text, boolean, integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.record_email_send(p_provider text, p_success boolean, p_latency_ms integer DEFAULT 0, p_message_id text DEFAULT NULL::text) RETURNS void
+CREATE OR REPLACE FUNCTION public.record_email_send(p_provider text, p_success boolean, p_latency_ms integer DEFAULT 0, p_message_id text DEFAULT NULL::text) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -19444,7 +19444,7 @@ COMMENT ON FUNCTION public.record_email_send(p_provider text, p_success boolean,
 -- Name: record_forum_search(text, jsonb, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.record_forum_search(p_query text, p_filters jsonb DEFAULT '{}'::jsonb, p_results_count integer DEFAULT 0) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.record_forum_search(p_query text, p_filters jsonb DEFAULT '{}'::jsonb, p_results_count integer DEFAULT 0) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -19490,7 +19490,7 @@ $$;
 -- Name: record_post_view_analytics(integer, text, text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.record_post_view_analytics(p_forum_id integer, p_referrer text DEFAULT NULL::text, p_device_type text DEFAULT 'desktop'::text, p_time_spent_seconds integer DEFAULT 0) RETURNS void
+CREATE OR REPLACE FUNCTION public.record_post_view_analytics(p_forum_id integer, p_referrer text DEFAULT NULL::text, p_device_type text DEFAULT 'desktop'::text, p_time_spent_seconds integer DEFAULT 0) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -19549,7 +19549,7 @@ $$;
 -- Name: record_provider_failure(text, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.record_provider_failure(p_provider text, p_error_message text, p_metadata jsonb DEFAULT NULL::jsonb) RETURNS void
+CREATE OR REPLACE FUNCTION public.record_provider_failure(p_provider text, p_error_message text, p_metadata jsonb DEFAULT NULL::jsonb) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -19603,7 +19603,7 @@ $$;
 -- Name: record_provider_metrics(text, boolean, numeric, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.record_provider_metrics(p_provider text, p_success boolean, p_latency_ms numeric, p_error text DEFAULT NULL::text) RETURNS void
+CREATE OR REPLACE FUNCTION public.record_provider_metrics(p_provider text, p_success boolean, p_latency_ms numeric, p_error text DEFAULT NULL::text) RETURNS void
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -19703,7 +19703,7 @@ COMMENT ON FUNCTION public.record_provider_metrics(p_provider text, p_success bo
 -- Name: record_provider_success(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.record_provider_success(p_provider text) RETURNS void
+CREATE OR REPLACE FUNCTION public.record_provider_success(p_provider text) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -19748,7 +19748,7 @@ $$;
 -- Name: record_request(text, text, integer, text, text, boolean, integer, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.record_request(p_endpoint text, p_method text, p_response_time_ms integer, p_app_platform text, p_app_version text, p_cache_hit boolean DEFAULT false, p_status_code integer DEFAULT NULL::integer, p_error_type text DEFAULT NULL::text, p_request_size integer DEFAULT NULL::integer, p_response_size integer DEFAULT NULL::integer) RETURNS void
+CREATE OR REPLACE FUNCTION public.record_request(p_endpoint text, p_method text, p_response_time_ms integer, p_app_platform text, p_app_version text, p_cache_hit boolean DEFAULT false, p_status_code integer DEFAULT NULL::integer, p_error_type text DEFAULT NULL::text, p_request_size integer DEFAULT NULL::integer, p_response_size integer DEFAULT NULL::integer) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -19842,7 +19842,7 @@ $$;
 -- Name: refresh_user_email_health(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.refresh_user_email_health() RETURNS void
+CREATE OR REPLACE FUNCTION public.refresh_user_email_health() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -19863,7 +19863,7 @@ COMMENT ON FUNCTION public.refresh_user_email_health() IS 'Refreshes user email 
 -- Name: refresh_user_stats_mv(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.refresh_user_stats_mv() RETURNS void
+CREATE OR REPLACE FUNCTION public.refresh_user_stats_mv() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -19884,7 +19884,7 @@ COMMENT ON FUNCTION public.refresh_user_stats_mv() IS 'Refreshes mv_user_stats c
 -- Name: reorder_series_posts(uuid, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.reorder_series_posts(p_series_id uuid, p_post_orders jsonb) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.reorder_series_posts(p_series_id uuid, p_post_orders jsonb) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -19923,7 +19923,7 @@ $$;
 -- Name: request_item(bigint, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.request_item(p_post_id bigint, p_requester_id uuid, p_message text DEFAULT NULL::text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.request_item(p_post_id bigint, p_requester_id uuid, p_message text DEFAULT NULL::text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -19997,7 +19997,7 @@ $$;
 -- Name: requires_mfa(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.requires_mfa(p_profile_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.requires_mfa(p_profile_id uuid) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -20032,7 +20032,7 @@ $$;
 -- Name: reset_circuit_breaker(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.reset_circuit_breaker(p_provider text, p_organization_id uuid DEFAULT NULL::uuid) RETURNS void
+CREATE OR REPLACE FUNCTION public.reset_circuit_breaker(p_provider text, p_organization_id uuid DEFAULT NULL::uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -20079,7 +20079,7 @@ $$;
 -- Name: reset_daily_email_quotas(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.reset_daily_email_quotas() RETURNS void
+CREATE OR REPLACE FUNCTION public.reset_daily_email_quotas() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -20112,7 +20112,7 @@ COMMENT ON FUNCTION public.reset_daily_email_quotas() IS 'Resets daily quota cou
 -- Name: reset_forum_user_rate_limit(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.reset_forum_user_rate_limit(p_profile_id uuid, p_action_type text DEFAULT NULL::text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.reset_forum_user_rate_limit(p_profile_id uuid, p_action_type text DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -20135,7 +20135,7 @@ $$;
 -- Name: resolve_forum_report(uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.resolve_forum_report(p_report_id uuid, p_status text, p_notes text DEFAULT NULL::text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.resolve_forum_report(p_report_id uuid, p_status text, p_notes text DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -20160,7 +20160,7 @@ $$;
 -- Name: resolve_queue_item(uuid, text, text, boolean, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.resolve_queue_item(p_queue_id uuid, p_resolution text, p_notes text DEFAULT NULL::text, p_issue_warning boolean DEFAULT false, p_warning_type text DEFAULT NULL::text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.resolve_queue_item(p_queue_id uuid, p_resolution text, p_notes text DEFAULT NULL::text, p_issue_warning boolean DEFAULT false, p_warning_type text DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -20234,7 +20234,7 @@ $$;
 -- Name: retry_dlq_email(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.retry_dlq_email(p_dlq_id uuid) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.retry_dlq_email(p_dlq_id uuid) RETURNS uuid
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -20300,7 +20300,7 @@ COMMENT ON FUNCTION public.retry_dlq_email(p_dlq_id uuid) IS 'Requeues an email 
 -- Name: retry_queued_email(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.retry_queued_email(p_queue_id uuid, p_error_message text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.retry_queued_email(p_queue_id uuid, p_error_message text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -20357,7 +20357,7 @@ $$;
 -- Name: rollup_hourly_stats(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.rollup_hourly_stats() RETURNS void
+CREATE OR REPLACE FUNCTION public.rollup_hourly_stats() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -20398,7 +20398,7 @@ COMMENT ON FUNCTION public.rollup_hourly_stats() IS 'Aggregates raw API metrics 
 -- Name: save_forum_draft(uuid, text, text, jsonb, integer, text, integer[], text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.save_forum_draft(p_draft_id uuid DEFAULT NULL::uuid, p_title text DEFAULT NULL::text, p_description text DEFAULT NULL::text, p_rich_content jsonb DEFAULT NULL::jsonb, p_category_id integer DEFAULT NULL::integer, p_post_type text DEFAULT 'discussion'::text, p_tags integer[] DEFAULT NULL::integer[], p_image_url text DEFAULT NULL::text, p_poll_data jsonb DEFAULT NULL::jsonb) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.save_forum_draft(p_draft_id uuid DEFAULT NULL::uuid, p_title text DEFAULT NULL::text, p_description text DEFAULT NULL::text, p_rich_content jsonb DEFAULT NULL::jsonb, p_category_id integer DEFAULT NULL::integer, p_post_type text DEFAULT 'discussion'::text, p_tags integer[] DEFAULT NULL::integer[], p_image_url text DEFAULT NULL::text, p_poll_data jsonb DEFAULT NULL::jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -20453,7 +20453,7 @@ $$;
 -- Name: save_forum_search(text, text, jsonb, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.save_forum_search(p_name text, p_query text, p_filters jsonb DEFAULT '{}'::jsonb, p_notify_on_new boolean DEFAULT false) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.save_forum_search(p_name text, p_query text, p_filters jsonb DEFAULT '{}'::jsonb, p_notify_on_new boolean DEFAULT false) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -20481,7 +20481,7 @@ $$;
 -- Name: schedule_post(text, text, timestamp with time zone, integer, text, integer[], jsonb, text, jsonb, uuid, boolean, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.schedule_post(p_title text, p_description text, p_scheduled_for timestamp with time zone, p_category_id integer DEFAULT NULL::integer, p_post_type text DEFAULT 'discussion'::text, p_tags integer[] DEFAULT NULL::integer[], p_rich_content jsonb DEFAULT NULL::jsonb, p_image_url text DEFAULT NULL::text, p_poll_data jsonb DEFAULT NULL::jsonb, p_series_id uuid DEFAULT NULL::uuid, p_notify_followers boolean DEFAULT true, p_timezone text DEFAULT 'UTC'::text) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.schedule_post(p_title text, p_description text, p_scheduled_for timestamp with time zone, p_category_id integer DEFAULT NULL::integer, p_post_type text DEFAULT 'discussion'::text, p_tags integer[] DEFAULT NULL::integer[], p_rich_content jsonb DEFAULT NULL::jsonb, p_image_url text DEFAULT NULL::text, p_poll_data jsonb DEFAULT NULL::jsonb, p_series_id uuid DEFAULT NULL::uuid, p_notify_followers boolean DEFAULT true, p_timezone text DEFAULT 'UTC'::text) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -20520,7 +20520,7 @@ $$;
 -- Name: scheduled_update_locations(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.scheduled_update_locations() RETURNS void
+CREATE OR REPLACE FUNCTION public.scheduled_update_locations() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -20534,7 +20534,7 @@ $$;
 -- Name: search_all_functions(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.search_all_functions(search_string text) RETURNS TABLE(proname text, prosrc text, is_trigger boolean)
+CREATE OR REPLACE FUNCTION public.search_all_functions(search_string text) RETURNS TABLE(proname text, prosrc text, is_trigger boolean)
     LANGUAGE plpgsql STABLE
     SET search_path TO 'public', 'pg_catalog'
     AS $$
@@ -20556,7 +20556,7 @@ $$;
 -- Name: search_food_items(double precision, double precision, double precision, text, integer, text, boolean, boolean, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.search_food_items(p_latitude double precision, p_longitude double precision, p_radius_km double precision DEFAULT 25, p_search_query text DEFAULT NULL::text, p_category_id integer DEFAULT NULL::integer, p_post_type text DEFAULT NULL::text, p_available_only boolean DEFAULT false, p_arranged_only boolean DEFAULT false, p_sort_by text DEFAULT 'distance'::text, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.search_food_items(p_latitude double precision, p_longitude double precision, p_radius_km double precision DEFAULT 25, p_search_query text DEFAULT NULL::text, p_category_id integer DEFAULT NULL::integer, p_post_type text DEFAULT NULL::text, p_available_only boolean DEFAULT false, p_arranged_only boolean DEFAULT false, p_sort_by text DEFAULT 'distance'::text, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -20738,7 +20738,7 @@ $$;
 -- Name: search_forum(text, integer, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.search_forum(p_query text, p_category_id integer DEFAULT NULL::integer, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS TABLE(id bigint, forum_post_name text, forum_post_description text, forum_post_image text, profile_id uuid, category_id integer, slug text, forum_likes_counter integer, forum_comments_counter numeric, views_count integer, forum_post_created_at timestamp with time zone, last_activity_at timestamp with time zone, rank real)
+CREATE OR REPLACE FUNCTION public.search_forum(p_query text, p_category_id integer DEFAULT NULL::integer, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS TABLE(id bigint, forum_post_name text, forum_post_description text, forum_post_image text, profile_id uuid, category_id integer, slug text, forum_likes_counter integer, forum_comments_counter numeric, views_count integer, forum_post_created_at timestamp with time zone, last_activity_at timestamp with time zone, rank real)
     LANGUAGE plpgsql STABLE
     SET search_path TO 'public'
     AS $$
@@ -20781,7 +20781,7 @@ COMMENT ON FUNCTION public.search_forum(p_query text, p_category_id integer, p_l
 -- Name: search_forum(text, integer, integer[], uuid, timestamp with time zone, timestamp with time zone, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.search_forum(p_query text, p_category_id integer DEFAULT NULL::integer, p_tags integer[] DEFAULT NULL::integer[], p_author_id uuid DEFAULT NULL::uuid, p_date_from timestamp with time zone DEFAULT NULL::timestamp with time zone, p_date_to timestamp with time zone DEFAULT NULL::timestamp with time zone, p_sort_by text DEFAULT 'relevance'::text, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS TABLE(forum_id bigint, title text, description text, slug text, category_id integer, category_name text, author_id uuid, author_nickname text, author_avatar text, likes_count integer, comments_count numeric, views_count integer, created_at timestamp with time zone, rank real)
+CREATE OR REPLACE FUNCTION public.search_forum(p_query text, p_category_id integer DEFAULT NULL::integer, p_tags integer[] DEFAULT NULL::integer[], p_author_id uuid DEFAULT NULL::uuid, p_date_from timestamp with time zone DEFAULT NULL::timestamp with time zone, p_date_to timestamp with time zone DEFAULT NULL::timestamp with time zone, p_sort_by text DEFAULT 'relevance'::text, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0) RETURNS TABLE(forum_id bigint, title text, description text, slug text, category_id integer, category_name text, author_id uuid, author_nickname text, author_avatar text, likes_count integer, comments_count numeric, views_count integer, created_at timestamp with time zone, rank real)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -20843,7 +20843,7 @@ $$;
 -- Name: search_functions(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.search_functions(search_string text) RETURNS TABLE(proname text, prosrc text, is_trigger boolean)
+CREATE OR REPLACE FUNCTION public.search_functions(search_string text) RETURNS TABLE(proname text, prosrc text, is_trigger boolean)
     LANGUAGE plpgsql STABLE
     SET search_path TO 'public', 'pg_catalog'
     AS $$
@@ -20866,7 +20866,7 @@ $$;
 -- Name: search_trigger_functions(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.search_trigger_functions(search_string text) RETURNS TABLE(proname text, prosrc text)
+CREATE OR REPLACE FUNCTION public.search_trigger_functions(search_string text) RETURNS TABLE(proname text, prosrc text)
     LANGUAGE plpgsql STABLE
     SET search_path TO 'public', 'pg_catalog'
     AS $$
@@ -20889,7 +20889,7 @@ $$;
 -- Name: send_chat_message(uuid, uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.send_chat_message(p_room_id uuid, p_sender_id uuid, p_text text, p_image text DEFAULT NULL::text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.send_chat_message(p_room_id uuid, p_sender_id uuid, p_text text, p_image text DEFAULT NULL::text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -20934,7 +20934,7 @@ $$;
 -- Name: send_food_listing_notification(uuid, uuid, text, numeric); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.send_food_listing_notification(p_recipient_id uuid, p_food_item_id uuid, p_food_name text, p_distance_km numeric) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.send_food_listing_notification(p_recipient_id uuid, p_food_item_id uuid, p_food_name text, p_distance_km numeric) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -20981,7 +20981,7 @@ COMMENT ON FUNCTION public.send_food_listing_notification(p_recipient_id uuid, p
 -- Name: send_message(uuid, text, text, uuid, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.send_message(p_conversation_id uuid, p_content text, p_message_type text DEFAULT 'text'::text, p_reply_to_id uuid DEFAULT NULL::uuid, p_rich_content jsonb DEFAULT NULL::jsonb) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.send_message(p_conversation_id uuid, p_content text, p_message_type text DEFAULT 'text'::text, p_reply_to_id uuid DEFAULT NULL::uuid, p_rich_content jsonb DEFAULT NULL::jsonb) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -21039,7 +21039,7 @@ $$;
 -- Name: send_review_reminder(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.send_review_reminder(p_recipient_id uuid, p_transaction_id uuid, p_other_user_name text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.send_review_reminder(p_recipient_id uuid, p_transaction_id uuid, p_other_user_name text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -21085,7 +21085,7 @@ COMMENT ON FUNCTION public.send_review_reminder(p_recipient_id uuid, p_transacti
 -- Name: should_send_notification(uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.should_send_notification(p_user_id uuid, p_category text, p_channel text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.should_send_notification(p_user_id uuid, p_category text, p_channel text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -21199,7 +21199,7 @@ $$;
 -- Name: silence_user(uuid, integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.silence_user(p_profile_id uuid, p_duration_hours integer, p_reason text DEFAULT NULL::text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.silence_user(p_profile_id uuid, p_duration_hours integer, p_reason text DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -21242,7 +21242,7 @@ $$;
 -- Name: snapshot_provider_health(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.snapshot_provider_health() RETURNS void
+CREATE OR REPLACE FUNCTION public.snapshot_provider_health() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -21276,7 +21276,7 @@ $$;
 -- Name: start_conversation(uuid[], text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.start_conversation(p_participant_ids uuid[], p_title text DEFAULT NULL::text, p_initial_message text DEFAULT NULL::text) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.start_conversation(p_participant_ids uuid[], p_title text DEFAULT NULL::text, p_initial_message text DEFAULT NULL::text) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -21343,7 +21343,7 @@ $$;
 -- Name: store_translation(text, text, text, text, numeric); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.store_translation(p_source_text text, p_translated_text text, p_target_locale text, p_content_type text DEFAULT 'general'::text, p_quality_score numeric DEFAULT 0.95) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.store_translation(p_source_text text, p_translated_text text, p_target_locale text, p_content_type text DEFAULT 'general'::text, p_quality_score numeric DEFAULT 0.95) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -21376,7 +21376,7 @@ $$;
 -- Name: store_translation(text, text, text, text, text, text, text, double precision); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.store_translation(p_content_type text, p_content_id text, p_field_name text, p_source_locale text, p_target_locale text, p_source_text text, p_translated_text text, p_quality_score double precision DEFAULT 0.95) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.store_translation(p_content_type text, p_content_id text, p_field_name text, p_source_locale text, p_target_locale text, p_source_text text, p_translated_text text, p_quality_score double precision DEFAULT 0.95) RETURNS uuid
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -21422,7 +21422,7 @@ $$;
 -- Name: strip_address(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.strip_address() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.strip_address() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -21456,7 +21456,7 @@ $$;
 -- Name: strip_address(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.strip_address(full_address text) RETURNS text
+CREATE OR REPLACE FUNCTION public.strip_address(full_address text) RETURNS text
     LANGUAGE plpgsql IMMUTABLE
     SET search_path TO ''
     AS $$
@@ -21470,7 +21470,7 @@ $$;
 -- Name: submit_forum_report(bigint, bigint, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.submit_forum_report(p_forum_id bigint DEFAULT NULL::bigint, p_comment_id bigint DEFAULT NULL::bigint, p_reason text DEFAULT 'other'::text, p_description text DEFAULT NULL::text) RETURNS uuid
+CREATE OR REPLACE FUNCTION public.submit_forum_report(p_forum_id bigint DEFAULT NULL::bigint, p_comment_id bigint DEFAULT NULL::bigint, p_reason text DEFAULT 'other'::text, p_description text DEFAULT NULL::text) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -21525,7 +21525,7 @@ $$;
 -- Name: submit_pending_operation(uuid, text, text, uuid, jsonb, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.submit_pending_operation(p_user_id uuid, p_operation_type text, p_table_name text, p_record_id uuid, p_payload jsonb, p_client_timestamp timestamp with time zone) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.submit_pending_operation(p_user_id uuid, p_operation_type text, p_table_name text, p_record_id uuid, p_payload jsonb, p_client_timestamp timestamp with time zone) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -21611,7 +21611,7 @@ COMMENT ON FUNCTION public.submit_pending_operation(p_user_id uuid, p_operation_
 -- Name: submit_review(uuid, bigint, smallint, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.submit_review(p_reviewer_id uuid, p_post_id bigint, p_rating smallint, p_feedback text DEFAULT NULL::text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.submit_review(p_reviewer_id uuid, p_post_id bigint, p_rating smallint, p_feedback text DEFAULT NULL::text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -21674,7 +21674,7 @@ $$;
 -- Name: sync_email_provider_stats_internal(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.sync_email_provider_stats_internal() RETURNS void
+CREATE OR REPLACE FUNCTION public.sync_email_provider_stats_internal() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -21708,7 +21708,7 @@ COMMENT ON FUNCTION public.sync_email_provider_stats_internal() IS 'Internal fun
 -- Name: sync_locale_to_redis(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.sync_locale_to_redis() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.sync_locale_to_redis() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'extensions'
     AS $$
@@ -21784,7 +21784,7 @@ $$;
 -- Name: sync_provider_health(text, integer, integer, integer, integer, integer, integer, integer, integer, integer, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.sync_provider_health(p_provider text, p_health_score integer, p_latency_ms integer, p_daily_used integer DEFAULT 0, p_daily_limit integer DEFAULT 500, p_monthly_used integer DEFAULT 0, p_monthly_limit integer DEFAULT 15000, p_delivered integer DEFAULT 0, p_opened integer DEFAULT 0, p_clicked integer DEFAULT 0, p_bounced integer DEFAULT 0, p_complained integer DEFAULT 0) RETURNS void
+CREATE OR REPLACE FUNCTION public.sync_provider_health(p_provider text, p_health_score integer, p_latency_ms integer, p_daily_used integer DEFAULT 0, p_daily_limit integer DEFAULT 500, p_monthly_used integer DEFAULT 0, p_monthly_limit integer DEFAULT 15000, p_delivered integer DEFAULT 0, p_opened integer DEFAULT 0, p_clicked integer DEFAULT 0, p_bounced integer DEFAULT 0, p_complained integer DEFAULT 0) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -21850,7 +21850,7 @@ COMMENT ON FUNCTION public.sync_provider_health(p_provider text, p_health_score 
 -- Name: toggle_automation_cron(boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.toggle_automation_cron(p_enabled boolean) RETURNS void
+CREATE OR REPLACE FUNCTION public.toggle_automation_cron(p_enabled boolean) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'cron'
     AS $$
@@ -21868,7 +21868,7 @@ $$;
 -- Name: toggle_bookmark(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.toggle_bookmark(p_post_id integer) RETURNS json
+CREATE OR REPLACE FUNCTION public.toggle_bookmark(p_post_id integer) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -21922,7 +21922,7 @@ COMMENT ON FUNCTION public.toggle_bookmark(p_post_id integer) IS 'Toggle bookmar
 -- Name: toggle_challenge_like(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.toggle_challenge_like(p_challenge_id integer) RETURNS json
+CREATE OR REPLACE FUNCTION public.toggle_challenge_like(p_challenge_id integer) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -21976,7 +21976,7 @@ COMMENT ON FUNCTION public.toggle_challenge_like(p_challenge_id integer) IS 'Tog
 -- Name: toggle_comment_like(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.toggle_comment_like(p_comment_id integer) RETURNS json
+CREATE OR REPLACE FUNCTION public.toggle_comment_like(p_comment_id integer) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22057,7 +22057,7 @@ COMMENT ON FUNCTION public.toggle_comment_like(p_comment_id integer) IS 'Toggle 
 -- Name: toggle_comment_reaction(integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.toggle_comment_reaction(p_comment_id integer, p_reaction_type_id integer) RETURNS TABLE(action text, reaction_counts jsonb)
+CREATE OR REPLACE FUNCTION public.toggle_comment_reaction(p_comment_id integer, p_reaction_type_id integer) RETURNS TABLE(action text, reaction_counts jsonb)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22129,7 +22129,7 @@ COMMENT ON FUNCTION public.toggle_comment_reaction(p_comment_id integer, p_react
 -- Name: toggle_featured_badge(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.toggle_featured_badge(p_badge_id integer) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.toggle_featured_badge(p_badge_id integer) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22182,7 +22182,7 @@ $$;
 -- Name: toggle_forum_bookmark(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.toggle_forum_bookmark(p_forum_id integer) RETURNS json
+CREATE OR REPLACE FUNCTION public.toggle_forum_bookmark(p_forum_id integer) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22236,7 +22236,7 @@ COMMENT ON FUNCTION public.toggle_forum_bookmark(p_forum_id integer) IS 'Toggle 
 -- Name: toggle_forum_like(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.toggle_forum_like(p_forum_id integer) RETURNS json
+CREATE OR REPLACE FUNCTION public.toggle_forum_like(p_forum_id integer) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22290,7 +22290,7 @@ COMMENT ON FUNCTION public.toggle_forum_like(p_forum_id integer) IS 'Toggle like
 -- Name: toggle_forum_reaction(bigint, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.toggle_forum_reaction(p_forum_id bigint, p_reaction_type text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.toggle_forum_reaction(p_forum_id bigint, p_reaction_type text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22346,7 +22346,7 @@ $$;
 -- Name: toggle_forum_subscription(bigint, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.toggle_forum_subscription(p_forum_id bigint DEFAULT NULL::bigint, p_category_id integer DEFAULT NULL::integer) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.toggle_forum_subscription(p_forum_id bigint DEFAULT NULL::bigint, p_category_id integer DEFAULT NULL::integer) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22387,7 +22387,7 @@ $$;
 -- Name: toggle_like(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.toggle_like(p_post_id integer) RETURNS json
+CREATE OR REPLACE FUNCTION public.toggle_like(p_post_id integer) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22468,7 +22468,7 @@ COMMENT ON FUNCTION public.toggle_like(p_post_id integer) IS 'Toggle like on a p
 -- Name: toggle_pinned_comment(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.toggle_pinned_comment(p_comment_id bigint) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.toggle_pinned_comment(p_comment_id bigint) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22506,7 +22506,7 @@ $$;
 -- Name: toggle_post_bookmark(bigint, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.toggle_post_bookmark(p_post_id bigint, p_user_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.toggle_post_bookmark(p_post_id bigint, p_user_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22535,7 +22535,7 @@ $$;
 -- Name: toggle_post_like(bigint, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.toggle_post_like(p_post_id bigint, p_user_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.toggle_post_like(p_post_id bigint, p_user_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22595,7 +22595,7 @@ $$;
 -- Name: toggle_user_follow(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.toggle_user_follow(p_user_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.toggle_user_follow(p_user_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22630,7 +22630,7 @@ $$;
 -- Name: track_comment_edit(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.track_comment_edit() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.track_comment_edit() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22655,7 +22655,7 @@ $$;
 -- Name: track_forum_edit(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.track_forum_edit() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.track_forum_edit() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22684,7 +22684,7 @@ $$;
 -- Name: track_reading_progress(bigint, bigint, integer, integer, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.track_reading_progress(p_forum_id bigint, p_last_comment_id bigint DEFAULT NULL::bigint, p_scroll_position integer DEFAULT NULL::integer, p_time_spent integer DEFAULT NULL::integer, p_is_fully_read boolean DEFAULT NULL::boolean) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.track_reading_progress(p_forum_id bigint, p_last_comment_id bigint DEFAULT NULL::bigint, p_scroll_position integer DEFAULT NULL::integer, p_time_spent integer DEFAULT NULL::integer, p_is_fully_read boolean DEFAULT NULL::boolean) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22752,7 +22752,7 @@ $$;
 -- Name: track_translation_changes(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.track_translation_changes() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.track_translation_changes() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22799,7 +22799,7 @@ $$;
 -- Name: track_user_activity(uuid, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.track_user_activity(p_user_id uuid, p_activity_type text, p_data jsonb DEFAULT '{}'::jsonb) RETURNS void
+CREATE OR REPLACE FUNCTION public.track_user_activity(p_user_id uuid, p_activity_type text, p_data jsonb DEFAULT '{}'::jsonb) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -22915,7 +22915,7 @@ COMMENT ON FUNCTION public.track_user_activity(p_user_id uuid, p_activity_type t
 -- Name: track_user_event(uuid, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.track_user_event(p_user_id uuid, p_event_type text, p_data jsonb DEFAULT '{}'::jsonb) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.track_user_event(p_user_id uuid, p_event_type text, p_data jsonb DEFAULT '{}'::jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23023,7 +23023,7 @@ COMMENT ON FUNCTION public.track_user_event(p_user_id uuid, p_event_type text, p
 -- Name: track_view(integer, text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.track_view(p_post_id integer, p_session_id text DEFAULT NULL::text, p_viewer_id uuid DEFAULT NULL::uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.track_view(p_post_id integer, p_session_id text DEFAULT NULL::text, p_viewer_id uuid DEFAULT NULL::uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23046,7 +23046,7 @@ $$;
 -- Name: trending_items(integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trending_items(hours_lookback integer DEFAULT 24, limit_count integer DEFAULT 20) RETURNS TABLE(id bigint, title text, description text, primary_image_url text, user_id uuid, category_id bigint, view_count integer, reservation_count integer, created_at timestamp with time zone, trending_score double precision)
+CREATE OR REPLACE FUNCTION public.trending_items(hours_lookback integer DEFAULT 24, limit_count integer DEFAULT 20) RETURNS TABLE(id bigint, title text, description text, primary_image_url text, user_id uuid, category_id bigint, view_count integer, reservation_count integer, created_at timestamp with time zone, trending_score double precision)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -23090,7 +23090,7 @@ COMMENT ON FUNCTION public.trending_items(hours_lookback integer, limit_count in
 -- Name: trg_add_report_to_queue(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trg_add_report_to_queue() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trg_add_report_to_queue() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23132,7 +23132,7 @@ $$;
 -- Name: trg_award_comment_reputation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trg_award_comment_reputation() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trg_award_comment_reputation() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23149,7 +23149,7 @@ $$;
 -- Name: trg_award_like_reputation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trg_award_like_reputation() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trg_award_like_reputation() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23171,7 +23171,7 @@ $$;
 -- Name: trg_award_post_reputation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trg_award_post_reputation() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trg_award_post_reputation() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23188,7 +23188,7 @@ $$;
 -- Name: trg_record_badge_activity(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trg_record_badge_activity() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trg_record_badge_activity() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23212,7 +23212,7 @@ $$;
 -- Name: trg_record_comment_activity(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trg_record_comment_activity() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trg_record_comment_activity() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23251,7 +23251,7 @@ $$;
 -- Name: trg_record_follow_activity(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trg_record_follow_activity() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trg_record_follow_activity() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23269,7 +23269,7 @@ $$;
 -- Name: trg_record_post_activity(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trg_record_post_activity() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trg_record_post_activity() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23290,7 +23290,7 @@ $$;
 -- Name: trigger_check_badges(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_check_badges() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trigger_check_badges() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23305,7 +23305,7 @@ $$;
 -- Name: trigger_digest_edge_function(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_digest_edge_function(p_frequency text) RETURNS bigint
+CREATE OR REPLACE FUNCTION public.trigger_digest_edge_function(p_frequency text) RETURNS bigint
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23341,7 +23341,7 @@ COMMENT ON FUNCTION public.trigger_digest_edge_function(p_frequency text) IS 'Tr
 -- Name: trigger_email_provider_sync(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_email_provider_sync() RETURNS bigint
+CREATE OR REPLACE FUNCTION public.trigger_email_provider_sync() RETURNS bigint
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'net', 'vault'
     AS $$
@@ -23378,7 +23378,7 @@ $$;
 -- Name: trigger_email_queue_processing(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_email_queue_processing() RETURNS void
+CREATE OR REPLACE FUNCTION public.trigger_email_queue_processing() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -23416,7 +23416,7 @@ $$;
 -- Name: trigger_log_post_changes(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_log_post_changes() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trigger_log_post_changes() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23504,7 +23504,7 @@ $$;
 -- Name: trigger_notify_new_post(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_notify_new_post() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trigger_notify_new_post() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -23547,7 +23547,7 @@ COMMENT ON FUNCTION public.trigger_notify_new_post() IS 'Sends Telegram notifica
 -- Name: trigger_post_translation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_post_translation() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trigger_post_translation() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -23588,7 +23588,7 @@ $$;
 -- Name: trigger_recalculate_trust_level(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_recalculate_trust_level() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trigger_recalculate_trust_level() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23603,7 +23603,7 @@ $$;
 -- Name: trigger_signup_automation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_signup_automation() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trigger_signup_automation() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23627,7 +23627,7 @@ $$;
 -- Name: trigger_sync_post_like_counter(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_sync_post_like_counter() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trigger_sync_post_like_counter() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23659,7 +23659,7 @@ $$;
 -- Name: trigger_translate_challenge(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_translate_challenge() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trigger_translate_challenge() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -23712,7 +23712,7 @@ COMMENT ON FUNCTION public.trigger_translate_challenge() IS 'Triggers async tran
 -- Name: trigger_translate_forum_post(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_translate_forum_post() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trigger_translate_forum_post() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -23765,7 +23765,7 @@ COMMENT ON FUNCTION public.trigger_translate_forum_post() IS 'Triggers async tra
 -- Name: trigger_translate_post(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_translate_post() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trigger_translate_post() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -23821,7 +23821,7 @@ COMMENT ON FUNCTION public.trigger_translate_post() IS 'Triggers async translati
 -- Name: trigger_update_coordinates(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_update_coordinates() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trigger_update_coordinates() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -23838,7 +23838,7 @@ $$;
 -- Name: trigger_update_user_rating(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_update_user_rating() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.trigger_update_user_rating() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -23853,7 +23853,7 @@ $$;
 -- Name: unblock_user(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.unblock_user(p_blocked_id uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.unblock_user(p_blocked_id uuid) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23871,7 +23871,7 @@ $$;
 -- Name: update_all_hot_scores(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_all_hot_scores() RETURNS integer
+CREATE OR REPLACE FUNCTION public.update_all_hot_scores() RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23901,7 +23901,7 @@ $$;
 -- Name: update_app_config_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_app_config_updated_at() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_app_config_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -23916,7 +23916,7 @@ $$;
 -- Name: update_avatar_url_on_storage_upload(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_avatar_url_on_storage_upload() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_avatar_url_on_storage_upload() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -23963,7 +23963,7 @@ Expects file path format: {profile_id}/filename';
 -- Name: update_bookmark_collection_count(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_bookmark_collection_count() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_bookmark_collection_count() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -23998,7 +23998,7 @@ $$;
 -- Name: update_category_posts_count(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_category_posts_count() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_category_posts_count() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -24037,7 +24037,7 @@ $$;
 -- Name: update_circuit_breaker_state(text, text, integer, integer, timestamp with time zone, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_circuit_breaker_state(p_provider text, p_state text, p_failures integer DEFAULT NULL::integer, p_consecutive_successes integer DEFAULT NULL::integer, p_last_failure_time timestamp with time zone DEFAULT NULL::timestamp with time zone, p_next_retry_time timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS void
+CREATE OR REPLACE FUNCTION public.update_circuit_breaker_state(p_provider text, p_state text, p_failures integer DEFAULT NULL::integer, p_consecutive_successes integer DEFAULT NULL::integer, p_last_failure_time timestamp with time zone DEFAULT NULL::timestamp with time zone, p_next_retry_time timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -24059,7 +24059,7 @@ $$;
 -- Name: update_comment_likes_count(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_comment_likes_count() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_comment_likes_count() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -24084,7 +24084,7 @@ $$;
 -- Name: update_comment_reactions_count(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_comment_reactions_count() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_comment_reactions_count() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -24134,7 +24134,7 @@ $$;
 -- Name: update_daily_stats(date); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_daily_stats(p_date date DEFAULT CURRENT_DATE) RETURNS void
+CREATE OR REPLACE FUNCTION public.update_daily_stats(p_date date DEFAULT CURRENT_DATE) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -24204,7 +24204,7 @@ COMMENT ON FUNCTION public.update_daily_stats(p_date date) IS 'Computes daily pl
 -- Name: update_device_attestations_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_device_attestations_updated_at() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_device_attestations_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -24219,7 +24219,7 @@ $$;
 -- Name: update_device_tokens_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_device_tokens_updated_at() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_device_tokens_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -24234,7 +24234,7 @@ $$;
 -- Name: update_display_name_override_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_display_name_override_updated_at() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_display_name_override_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -24248,7 +24248,7 @@ $$;
 -- Name: update_email_delivery_log_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_email_delivery_log_updated_at() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_email_delivery_log_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -24262,7 +24262,7 @@ $$;
 -- Name: update_email_delivery_status(text, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_email_delivery_status(p_message_id text, p_status text, p_metadata jsonb DEFAULT '{}'::jsonb) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.update_email_delivery_status(p_message_id text, p_status text, p_metadata jsonb DEFAULT '{}'::jsonb) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -24304,7 +24304,7 @@ COMMENT ON FUNCTION public.update_email_delivery_status(p_message_id text, p_sta
 -- Name: update_email_preferences_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_email_preferences_updated_at() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_email_preferences_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -24319,7 +24319,7 @@ $$;
 -- Name: update_email_provider_delivery_stats(text, text, date); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_email_provider_delivery_stats(p_provider text, p_status text, p_date date DEFAULT CURRENT_DATE) RETURNS void
+CREATE OR REPLACE FUNCTION public.update_email_provider_delivery_stats(p_provider text, p_status text, p_date date DEFAULT CURRENT_DATE) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -24347,7 +24347,7 @@ COMMENT ON FUNCTION public.update_email_provider_delivery_stats(p_provider text,
 -- Name: update_email_provider_quota_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_email_provider_quota_updated_at() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_email_provider_quota_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -24362,7 +24362,7 @@ $$;
 -- Name: update_email_queue_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_email_queue_updated_at() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_email_queue_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -24377,7 +24377,7 @@ $$;
 -- Name: update_feature_flags_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_feature_flags_updated_at() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_feature_flags_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -24392,7 +24392,7 @@ $$;
 -- Name: update_feedback_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_feedback_updated_at() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_feedback_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -24407,7 +24407,7 @@ $$;
 -- Name: update_follow_counts(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_follow_counts() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_follow_counts() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -24444,7 +24444,7 @@ $$;
 -- Name: update_forum_last_activity(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_forum_last_activity() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_forum_last_activity() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -24461,7 +24461,7 @@ $$;
 -- Name: update_forum_reactions_count(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_forum_reactions_count() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_forum_reactions_count() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -24501,7 +24501,7 @@ $$;
 -- Name: update_forum_search_vector(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_forum_search_vector() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_forum_search_vector() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -24518,7 +24518,7 @@ $$;
 -- Name: update_generated_full_address(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_generated_full_address() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_generated_full_address() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -24541,7 +24541,7 @@ $$;
 -- Name: update_last_seen(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_last_seen() RETURNS void
+CREATE OR REPLACE FUNCTION public.update_last_seen() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -24557,7 +24557,7 @@ $$;
 -- Name: update_lat_lon(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_lat_lon() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_lat_lon() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -24574,7 +24574,7 @@ $$;
 -- Name: update_listing_transactional(integer, text, text, boolean, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_listing_transactional(p_listing_id integer, p_title text DEFAULT NULL::text, p_description text DEFAULT NULL::text, p_is_active boolean DEFAULT NULL::boolean, p_pickup_address text DEFAULT NULL::text, p_pickup_time text DEFAULT NULL::text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.update_listing_transactional(p_listing_id integer, p_title text DEFAULT NULL::text, p_description text DEFAULT NULL::text, p_is_active boolean DEFAULT NULL::boolean, p_pickup_address text DEFAULT NULL::text, p_pickup_time text DEFAULT NULL::text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -24623,7 +24623,7 @@ $$;
 -- Name: update_location_queue_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_location_queue_updated_at() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_location_queue_updated_at() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -24638,7 +24638,7 @@ $$;
 -- Name: update_moderation_queue_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_moderation_queue_updated_at() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_moderation_queue_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -24652,7 +24652,7 @@ $$;
 -- Name: update_my_profile(uuid, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_my_profile(p_user_id uuid, p_updates jsonb) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.update_my_profile(p_user_id uuid, p_updates jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -24704,7 +24704,7 @@ COMMENT ON FUNCTION public.update_my_profile(p_user_id uuid, p_updates jsonb) IS
 -- Name: update_notification_preference(uuid, text, text, boolean, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_notification_preference(p_user_id uuid, p_category text, p_channel text, p_enabled boolean DEFAULT NULL::boolean, p_frequency text DEFAULT NULL::text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.update_notification_preference(p_user_id uuid, p_category text, p_channel text, p_enabled boolean DEFAULT NULL::boolean, p_frequency text DEFAULT NULL::text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -24735,7 +24735,7 @@ $$;
 -- Name: update_notification_settings(uuid, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_notification_settings(p_user_id uuid, p_settings jsonb) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.update_notification_settings(p_user_id uuid, p_settings jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -24772,7 +24772,7 @@ $$;
 -- Name: update_post_hot_score(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_post_hot_score() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_post_hot_score() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -24793,7 +24793,7 @@ $$;
 -- Name: update_post_reports_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_post_reports_updated_at() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_post_reports_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -24808,7 +24808,7 @@ $$;
 -- Name: update_post_views(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_post_views() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_post_views() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -24825,7 +24825,7 @@ $$;
 -- Name: update_report_counts(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_report_counts() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_report_counts() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -24851,7 +24851,7 @@ $$;
 -- Name: update_report_timestamp(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_report_timestamp() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_report_timestamp() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -24866,7 +24866,7 @@ $$;
 -- Name: update_reputation_level(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_reputation_level(p_profile_id uuid) RETURNS void
+CREATE OR REPLACE FUNCTION public.update_reputation_level(p_profile_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -24886,7 +24886,7 @@ $$;
 -- Name: update_room_last_message(uuid, text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_room_last_message(p_room_id uuid, p_message text, p_sent_by uuid) RETURNS void
+CREATE OR REPLACE FUNCTION public.update_room_last_message(p_room_id uuid, p_message text, p_sent_by uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -24905,7 +24905,7 @@ $$;
 -- Name: update_room_on_new_message(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_room_on_new_message() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_room_on_new_message() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
@@ -24925,7 +24925,7 @@ $$;
 -- Name: update_scheduled_post(uuid, text, text, timestamp with time zone, integer, integer[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_scheduled_post(p_scheduled_id uuid, p_title text DEFAULT NULL::text, p_description text DEFAULT NULL::text, p_scheduled_for timestamp with time zone DEFAULT NULL::timestamp with time zone, p_category_id integer DEFAULT NULL::integer, p_tags integer[] DEFAULT NULL::integer[]) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.update_scheduled_post(p_scheduled_id uuid, p_title text DEFAULT NULL::text, p_description text DEFAULT NULL::text, p_scheduled_for timestamp with time zone DEFAULT NULL::timestamp with time zone, p_category_id integer DEFAULT NULL::integer, p_tags integer[] DEFAULT NULL::integer[]) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -24972,7 +24972,7 @@ $$;
 -- Name: update_series_stats(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_series_stats() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_series_stats() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -25010,7 +25010,7 @@ $$;
 -- Name: update_sync_version(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_sync_version() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_sync_version() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -25025,7 +25025,7 @@ $$;
 -- Name: update_tag_usage_count(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_tag_usage_count() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_tag_usage_count() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -25050,7 +25050,7 @@ $$;
 -- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_updated_at_column() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -25064,7 +25064,7 @@ $$;
 -- Name: update_user_location(uuid, double precision, double precision); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_user_location(user_id uuid, lat double precision, lng double precision) RETURNS void
+CREATE OR REPLACE FUNCTION public.update_user_location(user_id uuid, lat double precision, lng double precision) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'extensions'
     AS $$
@@ -25089,7 +25089,7 @@ COMMENT ON FUNCTION public.update_user_location(user_id uuid, lat double precisi
 -- Name: update_user_notifications_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_user_notifications_updated_at() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_user_notifications_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -25104,7 +25104,7 @@ $$;
 -- Name: update_user_preferences(jsonb, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_user_preferences(p_preferences jsonb, p_profile_id uuid DEFAULT NULL::uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.update_user_preferences(p_preferences jsonb, p_profile_id uuid DEFAULT NULL::uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -25123,7 +25123,7 @@ $$;
 -- Name: update_user_rating(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_user_rating(target_user_id text) RETURNS void
+CREATE OR REPLACE FUNCTION public.update_user_rating(target_user_id text) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -25149,7 +25149,7 @@ $$;
 -- Name: update_user_rating(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_user_rating(target_user_id uuid) RETURNS void
+CREATE OR REPLACE FUNCTION public.update_user_rating(target_user_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -25185,7 +25185,7 @@ COMMENT ON FUNCTION public.update_user_rating(target_user_id uuid) IS 'Recalcula
 -- Name: update_user_settings(uuid, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_user_settings(p_user_id uuid, p_section text, p_settings jsonb) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.update_user_settings(p_user_id uuid, p_section text, p_settings jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -25307,7 +25307,7 @@ COMMENT ON FUNCTION public.update_user_settings(p_user_id uuid, p_section text, 
 -- Name: update_user_stats_on_comment(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_user_stats_on_comment() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_user_stats_on_comment() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -25340,7 +25340,7 @@ $$;
 -- Name: update_user_stats_on_post(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_user_stats_on_post() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_user_stats_on_post() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -25373,7 +25373,7 @@ $$;
 -- Name: update_user_stats_on_reaction(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_user_stats_on_reaction() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.update_user_stats_on_reaction() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -25426,7 +25426,7 @@ $$;
 -- Name: user_statistics(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.user_statistics(target_user_id uuid) RETURNS json
+CREATE OR REPLACE FUNCTION public.user_statistics(target_user_id uuid) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -25518,7 +25518,7 @@ COMMENT ON FUNCTION public.user_statistics(target_user_id uuid) IS 'Get comprehe
 -- Name: vacuum_all_tables(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.vacuum_all_tables() RETURNS void
+CREATE OR REPLACE FUNCTION public.vacuum_all_tables() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -25540,7 +25540,7 @@ $$;
 -- Name: validate_listing(text, text, text[], text, double precision, double precision, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.validate_listing(p_title text, p_description text DEFAULT NULL::text, p_images text[] DEFAULT NULL::text[], p_post_type text DEFAULT 'food'::text, p_latitude double precision DEFAULT NULL::double precision, p_longitude double precision DEFAULT NULL::double precision, p_pickup_address text DEFAULT NULL::text, p_pickup_time text DEFAULT NULL::text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.validate_listing(p_title text, p_description text DEFAULT NULL::text, p_images text[] DEFAULT NULL::text[], p_post_type text DEFAULT 'food'::text, p_latitude double precision DEFAULT NULL::double precision, p_longitude double precision DEFAULT NULL::double precision, p_pickup_address text DEFAULT NULL::text, p_pickup_time text DEFAULT NULL::text) RETURNS jsonb
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -25675,7 +25675,7 @@ This is the single source of truth for validation rules.';
 -- Name: validate_listing_update(integer, text, text, boolean, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.validate_listing_update(p_listing_id integer, p_title text DEFAULT NULL::text, p_description text DEFAULT NULL::text, p_is_active boolean DEFAULT NULL::boolean, p_is_arranged boolean DEFAULT NULL::boolean) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.validate_listing_update(p_listing_id integer, p_title text DEFAULT NULL::text, p_description text DEFAULT NULL::text, p_is_active boolean DEFAULT NULL::boolean, p_is_arranged boolean DEFAULT NULL::boolean) RETURNS jsonb
     LANGUAGE plpgsql
     SET search_path TO ''
     AS $$
@@ -25769,7 +25769,7 @@ Returns { valid, errors[], sanitized }.';
 -- Name: verify_mfa_challenge(uuid, text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.verify_mfa_challenge(p_challenge_id uuid, p_code text, p_profile_id uuid) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.verify_mfa_challenge(p_challenge_id uuid, p_code text, p_profile_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -25838,7 +25838,7 @@ $$;
 -- Name: verify_mfa_code(text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.verify_mfa_code(code text, code_hash text) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.verify_mfa_code(code text, code_hash text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -25852,7 +25852,7 @@ $$;
 -- Name: verify_phone_for_sms(uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.verify_phone_for_sms(p_user_id uuid, p_phone_number text, p_verification_code text) RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.verify_phone_for_sms(p_user_id uuid, p_phone_number text, p_verification_code text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$

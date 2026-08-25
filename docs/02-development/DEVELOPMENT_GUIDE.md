@@ -99,9 +99,7 @@ bun run build        # Type check + build for production
 bun run preview      # Preview production build
 
 # i18n (Translations)
-bun run extract      # Extract translatable strings
-bun run compile      # Compile translations
-bun run add-locale   # Add new language
+bun run translations:sync   # Sync translation files to Supabase
 ```
 
 ---
@@ -117,18 +115,17 @@ bun run add-locale   # Add new language
 touch src/components/myFeature/MyFeature.tsx
 ```
 
-```typescript
+```tsx
 // src/components/myFeature/MyFeature.tsx
-import { Box, Text } from '@chakra-ui/react';
-import { Trans } from '@lingui/macro';
+import { useTranslations } from "next-intl";
 
 export const MyFeature = () => {
+  const t = useTranslations("common");
+
   return (
-    <Box>
-      <Text>
-        <Trans>My Feature</Trans>
-      </Text>
-    </Box>
+    <div>
+      <p>{t("myFeature")}</p>
+    </div>
   );
 };
 ```
@@ -220,45 +217,43 @@ import { MyFeaturePage } from './pages/myFeaturePage/MyFeaturePage';
 #### 1. Mark Strings for Translation
 
 ```tsx
-import { Trans, t } from "@lingui/macro";
+import { useTranslations } from "next-intl";
 
-// In JSX
-<Trans>Hello World</Trans>;
+// In JSX (client component)
+const t = useTranslations("common");
+<p>{t("helloWorld")}</p>;
 
 // In strings/attributes
-const placeholder = t`Enter your name`;
+const placeholder = t("enterYourName");
 ```
 
-#### 2. Extract Strings
+#### 2. Add the String to the English Source
+
+Add the key to `messages/en.json`:
+
+```json
+{ "common": { "helloWorld": "Hello World" } }
+```
+
+#### 3. Translate in Locale Files
+
+Open `messages/cs.json` (example for Czech) and add the same key:
+
+```json
+{ "common": { "helloWorld": "Ahoj Světe" } }
+```
+
+#### 4. Sync Translations
 
 ```bash
-bun run extract
+bun run translations:sync
 ```
 
-This creates/updates `.po` files in `src/locales/{locale}/`
-
-#### 3. Translate in .po Files
-
-Open `src/locales/cs/messages.po` (example for Czech):
-
-```po
-msgid "Hello World"
-msgstr "Ahoj Světe"
-```
-
-#### 4. Compile Translations
-
-```bash
-bun run compile
-```
-
-This generates `.js` files that the app uses at runtime.
+This syncs the translation files to Supabase.
 
 #### 5. Add New Language
 
-```bash
-bun run add-locale -- cs  # Example: Czech
-```
+Create `messages/{locale}.json` and register the locale in the i18n config.
 
 ---
 
@@ -806,7 +801,7 @@ bun run dev
 - **Redux Toolkit**: [redux-toolkit.js.org](https://redux-toolkit.js.org)
 - **Supabase**: [supabase.com/docs](https://supabase.com/docs)
 - **Vite**: [vitejs.dev](https://vitejs.dev)
-- **Lingui**: [lingui.dev](https://lingui.dev)
+- **next-intl**: [next-intl.dev](https://next-intl.dev)
 
 ---
 

@@ -61,9 +61,7 @@ function createMockSupabase(options: {
           is: (_field2: string, _value2: unknown) => ({
             single: () => {
               if (table === "profiles") {
-                const profile = profiles.find(
-                  (p) => p.id === value && !p.deleted_at,
-                );
+                const profile = profiles.find((p) => p.id === value && !p.deleted_at);
                 if (!profile) {
                   return {
                     data: null,
@@ -151,9 +149,7 @@ function createMockSupabase(options: {
       if (name === "get_display_name_data_batch") {
         const userIds = params.p_user_ids as string[];
         const results = userIds.map((userId) => {
-          const profile = profiles.find(
-            (p) => p.id === userId && !p.deleted_at,
-          );
+          const profile = profiles.find((p) => p.id === userId && !p.deleted_at);
           const override = overrides.find((o) => o.user_id === userId);
           return {
             user_id: userId,
@@ -360,11 +356,7 @@ Deno.test("DisplayNameService - getDisplayNameBatch returns multiple results", a
   });
 
   const service = new DisplayNameService(mockSupabase);
-  const result = await service.getDisplayNameBatch([
-    "user-1",
-    "user-2",
-    "user-3",
-  ]);
+  const result = await service.getDisplayNameBatch(["user-1", "user-2", "user-3"]);
 
   assertEquals(Object.keys(result.results).length, 3);
   assertEquals(result.results["user-1"].name, "John");
@@ -492,7 +484,13 @@ Deno.test("DisplayNameService - setAdminOverride invalidates cache", async () =>
   setup();
 
   const mockSupabase = createMockSupabase({
-    profiles: [{ id: "user-override-1", first_name: "John", email: "john@example.com" }],
+    profiles: [
+      {
+        id: "user-override-1",
+        first_name: "John",
+        email: "john@example.com",
+      },
+    ],
   });
 
   const service = new DisplayNameService(mockSupabase);

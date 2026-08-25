@@ -104,7 +104,7 @@ export default async function updateHandler(
     // Get current translations
     const { data: current, error: fetchError } = await supabase
       .from("translations")
-      .select("id, messages, version")
+      .select("id,messages,version")
       .eq("locale", locale)
       .single();
 
@@ -123,11 +123,11 @@ export default async function updateHandler(
     }
 
     // Merge updates
-    const mergedMessages = deepMerge(
-      current.messages as Record<string, unknown>,
-      updates,
-    );
-    const newVersion = new Date().toISOString().replace(/[-:T.Z]/g, "").slice(0, 14);
+    const mergedMessages = deepMerge(current.messages as Record<string, unknown>, updates);
+    const newVersion = new Date()
+      .toISOString()
+      .replace(/[-:T.Z]/g, "")
+      .slice(0, 14);
 
     // Update database
     const { error: updateError } = await supabase

@@ -56,3 +56,28 @@ export const automationProcessSchema = z.object({
   concurrency: z.number().int().min(1).max(10).optional().default(3),
   dryRun: z.boolean().optional().default(false),
 });
+
+export const goTrueEmailHookSchema = z.object({
+  user: z.object({
+    id: z.string(),
+    email: z.string().email(),
+    phone: z.string().optional(),
+    app_metadata: z.record(z.unknown()).optional(),
+    user_metadata: z.record(z.unknown()).optional(),
+  }),
+  email_data: z.object({
+    token: z.string().optional(),
+    token_hash: z.string().optional(),
+    redirect_to: z.string().optional(),
+    email_action_type: z.enum([
+      "signup",
+      "invite",
+      "magiclink",
+      "recovery",
+      "email_change_current",
+      "email_change_new",
+      "reauthentication",
+    ]),
+    site_url: z.string().optional(),
+  }),
+});

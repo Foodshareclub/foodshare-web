@@ -26,17 +26,41 @@ export function getExtendedMenuSections(lang: Language): InteractiveListSection[
     {
       title: "Food",
       rows: [
-        { id: "action_share", title: t(lang, "menu.shareFood"), description: "Post surplus food" },
-        { id: "action_find", title: t(lang, "menu.findFood"), description: "Search for food" },
-        { id: "action_nearby", title: t(lang, "menu.nearby"), description: "Food near you" },
+        {
+          id: "action_share",
+          title: t(lang, "menu.shareFood"),
+          description: "Post surplus food",
+        },
+        {
+          id: "action_find",
+          title: t(lang, "menu.findFood"),
+          description: "Search for food",
+        },
+        {
+          id: "action_nearby",
+          title: t(lang, "menu.nearby"),
+          description: "Food near you",
+        },
       ],
     },
     {
       title: "Profile",
       rows: [
-        { id: "action_profile", title: t(lang, "menu.profile"), description: "View your profile" },
-        { id: "action_impact", title: t(lang, "menu.impact"), description: "Environmental impact" },
-        { id: "action_stats", title: t(lang, "menu.stats"), description: "Your statistics" },
+        {
+          id: "action_profile",
+          title: t(lang, "menu.profile"),
+          description: "View your profile",
+        },
+        {
+          id: "action_impact",
+          title: t(lang, "menu.impact"),
+          description: "Environmental impact",
+        },
+        {
+          id: "action_stats",
+          title: t(lang, "menu.stats"),
+          description: "Your statistics",
+        },
       ],
     },
     {
@@ -47,8 +71,16 @@ export function getExtendedMenuSections(lang: Language): InteractiveListSection[
           title: t(lang, "menu.leaderboard"),
           description: "Top contributors",
         },
-        { id: "action_language", title: t(lang, "menu.language"), description: "Change language" },
-        { id: "action_help", title: t(lang, "menu.help"), description: "Get help" },
+        {
+          id: "action_language",
+          title: t(lang, "menu.language"),
+          description: "Change language",
+        },
+        {
+          id: "action_help",
+          title: t(lang, "menu.help"),
+          description: "Get help",
+        },
       ],
     },
   ];

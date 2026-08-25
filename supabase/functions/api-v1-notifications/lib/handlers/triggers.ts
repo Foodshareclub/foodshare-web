@@ -11,18 +11,24 @@
  * @module api-v1-notifications/handlers/triggers
  */
 
-import type { NotificationContext } from "../types.ts";
+import type {
+  ForumPostWebhookRecord,
+  NewUserWebhookRecord,
+  NotificationContext,
+} from "../types.ts";
 import { logger } from "../../../_shared/logger.ts";
+import { sendMessage, sendPhoto } from "../../../_shared/telegram-client.ts";
 
 // =============================================================================
 // Configuration
 // =============================================================================
 
-const botToken = Deno.env.get("BOT_TOKEN") || "";
-const adminChatId = Deno.env.get("ADMIN_CHAT_ID") || "";
+const getAdminChatId = () => Deno.env.get("ADMIN_CHAT_ID") || "";
 const channelUsername = "@foodshare_club";
-const channelThreadId = Deno.env.get("CHANNEL_THREAD_ID");
-const appUrl = Deno.env.get("APP_URL") || "https://foodshare.club";
+const getChannelThreadId = () => Deno.env.get("CHANNEL_THREAD_ID");
+const getAppUrl = () =>
+  Deno.env.get("APP_URL") ||
+  `https://${Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"}`;
 
 // =============================================================================
 // Emoji Mappings
@@ -64,73 +70,6 @@ const reportReasonEmoji: Record<string, string> = {
 };
 
 // =============================================================================
-// Telegram API Helpers
-// =============================================================================
-
-async function sendTelegram(
-  chatId: string,
-  text: string,
-  threadId?: string,
-): Promise<boolean> {
-  if (!botToken || !chatId) {
-    logger.warn("Telegram not configured", { hasBotToken: !!botToken, hasChatId: !!chatId });
-    return false;
-  }
-
-  try {
-    const payload: Record<string, unknown> = {
-      chat_id: chatId,
-      text,
-      parse_mode: "HTML",
-      disable_web_page_preview: false,
-    };
-
-    if (threadId) {
-      payload.message_thread_id = parseInt(threadId);
-    }
-
-    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await res.json();
-    return data.ok === true;
-  } catch (error) {
-    logger.error("Telegram send failed", error as Error);
-    return false;
-  }
-}
-
-async function sendTelegramPhoto(
-  chatId: string,
-  photoUrl: string,
-  caption: string,
-): Promise<boolean> {
-  if (!botToken || !chatId) return false;
-
-  try {
-    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        photo: photoUrl,
-        caption: caption.length > 1024 ? caption.substring(0, 1021) + "..." : caption,
-        parse_mode: "HTML",
-      }),
-    });
-
-    const result = await response.json();
-    return result.ok === true;
-  } catch (error) {
-    logger.error("Telegram photo send failed", error as Error);
-    return false;
-  }
-}
-
-// =============================================================================
 // Utility Functions
 // =============================================================================
 
@@ -146,13 +85,18 @@ function truncate(text: string | null | undefined, max: number): string {
 
 function stripHtml(html: string | null | undefined): string {
   if (!html) return "";
-  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+  return html
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim();
 }
 
 function getProfileName(
-  profile:
-    | { first_name?: string | null; second_name?: string | null; nickname?: string | null }
-    | null,
+  profile: {
+    first_name?: string | null;
+    second_name?: string | null;
+    nickname?: string | null;
+  } | null,
 ): string {
   if (!profile) return "Unknown";
   const fullName = [profile.first_name, profile.second_name].filter(Boolean).join(" ");
@@ -175,31 +119,38 @@ export async function handleTriggerNewPost(
   }
 
   const emoji = postTypeEmoji[(record.post_type as string) || "default"] || postTypeEmoji.default;
-  const postUrl = `${appUrl}/food/${record.id}`;
+  const postUrl = `${getAppUrl()}/food/${record.id}`;
   const isVolunteer = record.post_type === "volunteer";
 
   let message: string;
   if (isVolunteer) {
     message = `${emoji} <b>NEW VOLUNTEER APPLICATION!</b>\n\n`;
     message += `<b>${escapeHtml(record.post_name as string)}</b>\n`;
-    if (record.post_address) message += `📍 ${escapeHtml(record.post_address as string)}\n`;
+    if (record.post_address) {
+      message += `📍 ${escapeHtml(record.post_address as string)}\n`;
+    }
     if (record.post_description) {
       message += `\n<i>${escapeHtml(truncate(record.post_description as string, 200))}</i>\n`;
     }
     message += `\n⏳ <b>Status: Pending Approval</b>`;
-    message += `\n\n🔗 <a href="${appUrl}/volunteers">View Volunteers</a>`;
-    message += ` | <a href="${appUrl}/admin/listings">Admin Dashboard</a>`;
+    message += `\n\n🔗 <a href="${getAppUrl()}/volunteers">View Volunteers</a>`;
+    message += ` | <a href="${getAppUrl()}/admin/listings">Admin Dashboard</a>`;
   } else {
     message = `${emoji} <b>New ${record.post_type || "food"} listing!</b>\n\n`;
     message += `<b>${escapeHtml(record.post_name as string)}</b>\n`;
-    if (record.post_address) message += `📍 ${escapeHtml(record.post_address as string)}\n`;
+    if (record.post_address) {
+      message += `📍 ${escapeHtml(record.post_address as string)}\n`;
+    }
     if (record.post_description) {
       message += `\n${escapeHtml(truncate(record.post_description as string, 150))}\n`;
     }
     message += `\n🔗 <a href="${postUrl}">View on FoodShare</a>`;
   }
 
-  const sent = await sendTelegram(adminChatId, message);
+  const sentId = await sendMessage(getAdminChatId(), message, {
+    disable_web_page_preview: false,
+  });
+  const sent = !!sentId;
 
   logger.info("New post trigger processed", {
     requestId: context.requestId,
@@ -217,32 +168,70 @@ export async function handleTriggerNewPost(
 // Trigger: New User (Database Webhook)
 // =============================================================================
 
+export function renderNewUserTelegramMessage(record: NewUserWebhookRecord): string {
+  const name = [record.first_name, record.second_name].filter(Boolean).join(" ") ||
+    record.nickname ||
+    "New User";
+
+  const telegramId = record.telegram_id ? String(record.telegram_id) : null;
+  const username = record.username
+    ? `@${record.username}`
+    : record.nickname
+    ? `@${record.nickname}`
+    : null;
+  const source = telegramId
+    ? `🤖 <b>Telegram Bot</b> ${username ? `(${username})` : `[ID: ${telegramId}]`}`
+    : `🌐 <b>Web / App</b>`;
+
+  const isVerified = record.email_verified === true || record.is_verified === true;
+  const statusBadge = isVerified ? "✅ Verified" : "⏳ Pending Email Verification";
+  const createdDate = record.created_time || record.created_at || new Date().toISOString();
+
+  let message = `🎉 <b>New Registration on FoodShare!</b>\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+  message += `👤 <b>Name:</b> ${escapeHtml(String(name))}\n`;
+  message += `📧 <b>Email:</b> <code>${escapeHtml(String(record.email || "N/A"))}</code>\n`;
+  message += `📱 <b>Source:</b> ${source}\n`;
+  message += `🛡️ <b>Status:</b> ${statusBadge}\n`;
+  message += `📅 <b>Joined:</b> ${escapeHtml(String(createdDate))}\n\n`;
+  message += `🔧 <a href="${getAppUrl()}/admin/users">Manage in Admin Dashboard</a>`;
+
+  return message;
+}
+
 export async function handleTriggerNewUser(
   body: unknown,
   context: NotificationContext,
 ): Promise<{ success: boolean; message?: string; error?: string }> {
-  const payload = body as { record?: Record<string, unknown> };
-  const record = payload.record;
+  const payload = body as Record<string, unknown> | null | undefined;
+  let record: NewUserWebhookRecord | undefined;
 
-  if (!record) {
-    return { success: false, error: "Missing record" };
+  if (payload && typeof payload === "object") {
+    if ("record" in payload && payload.record && typeof payload.record === "object") {
+      const innerRecord = payload.record as Record<string, unknown>;
+      if ("record" in innerRecord && innerRecord.record && typeof innerRecord.record === "object") {
+        record = innerRecord.record as NewUserWebhookRecord;
+      } else {
+        record = innerRecord as NewUserWebhookRecord;
+      }
+    } else {
+      record = payload as NewUserWebhookRecord;
+    }
   }
 
-  const name = [record.first_name, record.second_name].filter(Boolean).join(" ") ||
-    record.nickname ||
-    "New user";
+  if (!record || (!record.id && !record.email && !record.first_name && !record.nickname)) {
+    return { success: false, error: "Missing record data" };
+  }
 
-  const message = `🎉 <b>New user joined FoodShare!</b>\n\n👤 <b>${
-    escapeHtml(name as string)
-  }</b>\n📧 ${escapeHtml((record.email as string) || "N/A")}\n📅 ${
-    record.created_time || new Date().toISOString()
-  }`;
-
-  const sent = await sendTelegram(adminChatId, message);
+  const message = renderNewUserTelegramMessage(record);
+  const sentId = await sendMessage(getAdminChatId(), message, {
+    disable_web_page_preview: true,
+  });
+  const sent = !!sentId;
 
   logger.info("New user trigger processed", {
     requestId: context.requestId,
     profileId: record.id,
+    source: record.telegram_id ? "telegram" : "web_app",
     sent,
   });
 
@@ -256,11 +245,39 @@ export async function handleTriggerNewUser(
 // Trigger: Forum Post (Database Webhook)
 // =============================================================================
 
+export function renderForumPostTelegramMessage(record: ForumPostWebhookRecord): {
+  adminMessage: string;
+  channelMessage: string;
+  postUrl: string;
+} {
+  const postUrl = `${getAppUrl()}/forum/${record.slug || record.id}`;
+  const description = stripHtml(record.forum_post_description || "");
+  const shortDesc = truncate(description, 150);
+
+  let adminMessage = `<b>New Forum Post!</b>\n\n`;
+  adminMessage += `<b>${escapeHtml(record.forum_post_name || "Untitled")}</b>\n`;
+  if (shortDesc) adminMessage += `\n${escapeHtml(shortDesc)}\n`;
+  adminMessage += `\n<a href="${postUrl}">View on FoodShare</a>`;
+
+  let channelMessage = `<b>${escapeHtml(record.forum_post_name || "Untitled")}</b>\n`;
+  if (shortDesc) {
+    channelMessage += `\n${escapeHtml(truncate(description, 300))}\n`;
+  }
+  channelMessage += `\n<a href="${postUrl}">Read more on FoodShare</a>`;
+
+  return { adminMessage, channelMessage, postUrl };
+}
+
 export async function handleTriggerForumPost(
   body: unknown,
   context: NotificationContext,
-): Promise<{ success: boolean; adminSent?: boolean; channelSent?: boolean; error?: string }> {
-  const payload = body as { record?: Record<string, unknown> };
+): Promise<{
+  success: boolean;
+  adminSent?: boolean;
+  channelSent?: boolean;
+  error?: string;
+}> {
+  const payload = body as { record?: ForumPostWebhookRecord };
   const record = payload.record;
 
   if (!record || !record.forum_post_name) {
@@ -272,16 +289,12 @@ export async function handleTriggerForumPost(
     return { success: true, adminSent: false, channelSent: false };
   }
 
-  const postUrl = `${appUrl}/forum/${record.slug || record.id}`;
-  const description = stripHtml(record.forum_post_description as string);
-  const shortDesc = truncate(description, 150);
+  const { adminMessage, channelMessage } = renderForumPostTelegramMessage(record);
 
-  let adminMessage = `<b>New Forum Post!</b>\n\n`;
-  adminMessage += `<b>${escapeHtml(record.forum_post_name as string)}</b>\n`;
-  if (shortDesc) adminMessage += `\n${escapeHtml(shortDesc)}\n`;
-  adminMessage += `\n<a href="${postUrl}">View on FoodShare</a>`;
-
-  const adminSent = await sendTelegram(adminChatId, adminMessage);
+  const adminSentId = await sendMessage(getAdminChatId(), adminMessage, {
+    disable_web_page_preview: false,
+  });
+  const adminSent = !!adminSentId;
 
   // Check if author is superadmin for channel posting
   let channelSent = false;
@@ -292,15 +305,18 @@ export async function handleTriggerForumPost(
       .eq("profile_id", record.profile_id);
 
     const isSuperAdmin = roles?.some(
-      (r: { roles: { name: string } }) => r.roles?.name === "superadmin",
+      (r: { roles: { name: string } | { name: string }[] | null }) => {
+        const name = Array.isArray(r.roles) ? r.roles[0]?.name : r.roles?.name;
+        return name === "superadmin";
+      },
     );
 
     if (isSuperAdmin) {
-      let channelMessage = `<b>${escapeHtml(record.forum_post_name as string)}</b>\n`;
-      if (shortDesc) channelMessage += `\n${escapeHtml(truncate(description, 300))}\n`;
-      channelMessage += `\n<a href="${postUrl}">Read more on FoodShare</a>`;
-
-      channelSent = await sendTelegram(channelUsername, channelMessage, channelThreadId);
+      const channelSentId = await sendMessage(channelUsername, channelMessage, {
+        disable_web_page_preview: false,
+        ...(getChannelThreadId() ? { message_thread_id: parseInt(getChannelThreadId()!) } : {}),
+      });
+      channelSent = !!channelSentId;
     }
   }
 
@@ -344,7 +360,7 @@ export async function handleTriggerNewReport(
   if (reporterId && context.supabase) {
     const { data } = await context.supabase
       .from("profiles")
-      .select("nickname, first_name, second_name, email")
+      .select("nickname,first_name,second_name,email")
       .eq("id", reporterId)
       .single();
     reporter = data;
@@ -359,7 +375,7 @@ export async function handleTriggerNewReport(
     if (record.post_id && context.supabase) {
       const { data } = await context.supabase
         .from("posts")
-        .select("id, post_name, post_type, post_address, post_description, is_active, images")
+        .select("id,post_name,post_type,post_address,post_description,is_active,images")
         .eq("id", record.post_id)
         .single();
       post = data;
@@ -390,11 +406,11 @@ export async function handleTriggerNewReport(
         imageUrl = (post.images as string[])[0];
       }
 
-      message += `\n🔗 <a href="${appUrl}/food/${post.id}">View Post</a>\n`;
+      message += `\n🔗 <a href="${getAppUrl()}/food/${post.id}">View Post</a>\n`;
     }
 
     message += `\n<b>👤 Reported by:</b> ${getProfileName(reporter)}`;
-    message += `\n\n🔧 <a href="${appUrl}/admin/reports">Manage in Admin</a>`;
+    message += `\n\n🔧 <a href="${getAppUrl()}/admin/reports">Manage in Admin</a>`;
   } // Handle forum reports
   else if (tableName === "forum_reports" || record.forum_id !== undefined) {
     const isCommentReport = !!record.comment_id;
@@ -409,26 +425,30 @@ export async function handleTriggerNewReport(
     }
 
     message += `\n<b>👤 Reported by:</b> ${getProfileName(reporter)}`;
-    message += `\n\n🔧 <a href="${appUrl}/admin/forum/reports">Manage in Admin</a>`;
+    message += `\n\n🔧 <a href="${getAppUrl()}/admin/forum/reports">Manage in Admin</a>`;
   } // General reports
   else {
     message = `📢 <b>GENERAL REPORT</b>\n━━━━━━━━━━━━━━━━━━━━\n\n`;
     if (record.description && record.description !== "-") {
       message += `<b>Description:</b>\n${
-        escapeHtml(truncate(record.description as string, 400))
+        escapeHtml(
+          truncate(record.description as string, 400),
+        )
       }\n`;
     }
     message += `\n<b>👤 Reported by:</b> ${getProfileName(reporter)}`;
-    message += `\n\n🔧 <a href="${appUrl}/admin/reports">Manage in Admin</a>`;
+    message += `\n\n🔧 <a href="${getAppUrl()}/admin/reports">Manage in Admin</a>`;
   }
 
-  // Send with image if available
   let sent = false;
   if (imageUrl) {
-    sent = await sendTelegramPhoto(adminChatId, imageUrl, message);
+    sent = await sendPhoto(getAdminChatId(), imageUrl, message);
   }
   if (!sent) {
-    sent = await sendTelegram(adminChatId, message);
+    const sentId = await sendMessage(getAdminChatId(), message, {
+      disable_web_page_preview: false,
+    });
+    sent = !!sentId;
   }
 
   logger.info("Report trigger processed", {
@@ -558,6 +578,73 @@ export async function handleTriggerNewListing(
 }
 
 // =============================================================================
+// Trigger: User Verified (Database Webhook)
+// =============================================================================
+
+export async function handleTriggerUserVerified(
+  body: unknown,
+  context: NotificationContext,
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  const payload = body as Record<string, unknown> | null | undefined;
+  let record: Record<string, unknown> | undefined;
+
+  if (payload && typeof payload === "object") {
+    if ("record" in payload && payload.record && typeof payload.record === "object") {
+      const innerRecord = payload.record as Record<string, unknown>;
+      if ("record" in innerRecord && innerRecord.record && typeof innerRecord.record === "object") {
+        record = innerRecord.record as Record<string, unknown>;
+      } else {
+        record = innerRecord;
+      }
+    } else {
+      record = payload;
+    }
+  }
+
+  if (!record || (!record.id && !record.email && !record.first_name && !record.nickname)) {
+    return { success: false, error: "Missing record data" };
+  }
+
+  const name = [record.first_name, record.second_name].filter(Boolean).join(" ") ||
+    (record.nickname as string) ||
+    "User";
+
+  const telegramId = record.telegram_id ? String(record.telegram_id) : null;
+  const username = record.username
+    ? `@${record.username}`
+    : record.nickname
+    ? `@${record.nickname}`
+    : null;
+  const source = telegramId
+    ? `🤖 <b>Telegram Bot</b> ${username ? `(${username})` : `[ID: ${telegramId}]`}`
+    : `🌐 <b>Web / App</b>`;
+
+  let message = `🎉 <b>User Email Verified!</b>\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+  message += `👤 <b>Name:</b> ${escapeHtml(name as string)}\n`;
+  message += `📧 <b>Email:</b> <code>${escapeHtml((record.email as string) || "N/A")}</code>\n`;
+  message += `📱 <b>Source:</b> ${source}\n`;
+  message += `✅ <b>Status:</b> Account Verified & Activated\n\n`;
+  message += `🔧 <a href="${getAppUrl()}/admin/users">View User in Admin Dashboard</a>`;
+
+  const sentId = await sendMessage(getAdminChatId(), message, {
+    disable_web_page_preview: true,
+  });
+  const sent = !!sentId;
+
+  logger.info("User verified trigger processed", {
+    requestId: context.requestId,
+    profileId: record.id,
+    source: telegramId ? "telegram" : "web_app",
+    sent,
+  });
+
+  return {
+    success: sent,
+    message: sent ? "User verification notification sent" : "Failed to send notification",
+  };
+}
+
+// =============================================================================
 // Main Trigger Router
 // =============================================================================
 
@@ -579,6 +666,9 @@ export async function handleTrigger(
       case "new-user":
         return handleTriggerNewUser(body, context);
 
+      case "user-verified":
+        return handleTriggerUserVerified(body, context);
+
       case "forum-post":
         return handleTriggerForumPost(body, context);
 
@@ -589,7 +679,10 @@ export async function handleTrigger(
         return handleTriggerNewListing(body, context);
 
       default:
-        return { success: false, error: `Unknown trigger type: ${triggerType}` };
+        return {
+          success: false,
+          error: `Unknown trigger type: ${triggerType}`,
+        };
     }
   } catch (error) {
     logger.error("Trigger processing failed", error as Error);

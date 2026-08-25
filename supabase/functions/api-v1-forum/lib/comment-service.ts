@@ -4,7 +4,7 @@
  * Business logic for forum comments and replies.
  */
 
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 import { logger } from "../../_shared/logger.ts";
 
 export interface CreateCommentInput {
@@ -18,7 +18,10 @@ export interface UpdateCommentInput {
 }
 
 export class CommentService {
-  constructor(private supabase: SupabaseClient, private userId: string) {}
+  constructor(
+    private supabase: SupabaseClient<any, any, any>,
+    private userId: string,
+  ) {}
 
   async createComment(input: CreateCommentInput) {
     const insertData = {
@@ -36,7 +39,10 @@ export class CommentService {
 
     if (error) throw error;
 
-    logger.info("Comment created", { commentId: data.id, forumId: input.forumId });
+    logger.info("Comment created", {
+      commentId: data.id,
+      forumId: input.forumId,
+    });
     return data;
   }
 
@@ -77,13 +83,17 @@ export class CommentService {
     // Verify post ownership
     const { data: post, error: postError } = await this.supabase
       .from("forum")
-      .select("profile_id, post_type")
+      .select("profile_id,post_type")
       .eq("id", forumId)
       .single();
 
     if (postError || !post) throw new Error("Post not found");
-    if (post.profile_id !== this.userId) throw new Error("Only post author can mark best answer");
-    if (post.post_type !== "question") throw new Error("Only questions can have best answers");
+    if (post.profile_id !== this.userId) {
+      throw new Error("Only post author can mark best answer");
+    }
+    if (post.post_type !== "question") {
+      throw new Error("Only questions can have best answers");
+    }
 
     const { error } = await this.supabase
       .from("forum_comments")

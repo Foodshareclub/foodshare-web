@@ -30,31 +30,12 @@ import { measureAsync, PerformanceTimer } from "../../_shared/performance.ts";
 // Configuration
 // =============================================================================
 
-const STRIPE_WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
+const getStripeWebhookSecret = () => Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
 const TIMESTAMP_TOLERANCE_SECONDS = 300; // 5 minutes
 
 // =============================================================================
 // Stripe Event Types
 // =============================================================================
-
-type StripeSubscriptionEventType =
-  | "customer.subscription.created"
-  | "customer.subscription.updated"
-  | "customer.subscription.deleted"
-  | "customer.subscription.trial_will_end"
-  | "customer.subscription.paused"
-  | "customer.subscription.resumed"
-  | "customer.subscription.pending_update_applied"
-  | "customer.subscription.pending_update_expired"
-  | "invoice.paid"
-  | "invoice.payment_failed"
-  | "invoice.payment_action_required"
-  | "invoice.finalized"
-  | "invoice.upcoming"
-  | "charge.refunded"
-  | "charge.dispute.created"
-  | "payment_intent.succeeded"
-  | "payment_intent.payment_failed";
 
 type StripeSubscriptionStatus =
   | "active"
@@ -180,14 +161,14 @@ function mapStripeEventType(type: string): SubscriptionEventType {
 }
 
 const STATUS_MAP: Record<StripeSubscriptionStatus, SubscriptionStatus> = {
-  "active": "active",
-  "trialing": "active",
-  "past_due": "in_billing_retry",
-  "paused": "paused",
-  "canceled": "expired",
-  "incomplete_expired": "expired",
-  "unpaid": "in_billing_retry",
-  "incomplete": "pending",
+  active: "active",
+  trialing: "active",
+  past_due: "in_billing_retry",
+  paused: "paused",
+  canceled: "expired",
+  incomplete_expired: "expired",
+  unpaid: "in_billing_retry",
+  incomplete: "pending",
 };
 
 function mapStripeStatus(status: StripeSubscriptionStatus): SubscriptionStatus {
@@ -214,11 +195,7 @@ async function computeHmacSignature(
     ["sign"],
   );
 
-  const signatureBytes = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    encoder.encode(signedPayload),
-  );
+  const signatureBytes = await crypto.subtle.sign("HMAC", key, encoder.encode(signedPayload));
 
   return Array.from(new Uint8Array(signatureBytes))
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -419,7 +396,8 @@ export const stripeHandler: PlatformHandler = {
       return false;
     }
 
-    if (!STRIPE_WEBHOOK_SECRET) {
+    const secret = getStripeWebhookSecret();
+    if (!secret) {
       timer.end({ success: false, reason: "no_secret" });
       logger.error("STRIPE_WEBHOOK_SECRET not configured");
       return false;
@@ -427,13 +405,15 @@ export const stripeHandler: PlatformHandler = {
 
     const result = await measureAsync(
       "stripe.verify_signature",
-      async () => verifyStripeSignature(body, signature, STRIPE_WEBHOOK_SECRET),
+      async () => verifyStripeSignature(body, signature, secret),
       {},
     );
 
     if (!result.valid) {
       timer.end({ success: false, reason: result.reason });
-      logger.warn("Stripe webhook verification failed", { reason: result.reason });
+      logger.warn("Stripe webhook verification failed", {
+        reason: result.reason,
+      });
       return false;
     }
 
@@ -483,14 +463,14 @@ export const stripeHandler: PlatformHandler = {
       };
 
       logger.warn("Unknown Stripe object type", {
-        objectType: dataObject.object,
+        objectType: (dataObject as any).object,
         eventType: stripeEvent.type,
       });
     }
 
     timer.end({
       eventType: event.eventType,
-      objectType: dataObject.object,
+      objectType: (dataObject as any).object,
       status: event.subscription.status,
     });
 

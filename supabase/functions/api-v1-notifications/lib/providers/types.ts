@@ -86,7 +86,11 @@ export interface SendResult {
 export const DEEP_LINK_CONFIG = {
   ios: { scheme: "foodshare://" },
   android: { scheme: "foodshare://" },
-  web: { baseUrl: "https://foodshare.club" },
+  web: {
+    baseUrl: `https://${
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+    }`,
+  },
 } as const;
 
 export function generateDeepLink(platform: Platform, deepLink: DeepLinkConfig): string {

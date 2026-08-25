@@ -298,13 +298,14 @@ if (data) {
 
 ```typescript
 import React, { useState } from 'react';
-import { Trans } from '@lingui/macro';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { STORAGE_BUCKETS, validateFile, formatFileSize } from '@/constants/storage';
 import { storageAPI } from '@/api/storageAPI';
 
 export const ImageUploader: React.FC = () => {
+  const t = useTranslations('storage');
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -367,14 +368,14 @@ export const ImageUploader: React.FC = () => {
 
       {file && (
         <p>
-          <Trans>Selected:</Trans> {file.name} ({formatFileSize(file.size)})
+          {t('selected')} {file.name} ({formatFileSize(file.size)})
         </p>
       )}
 
       {error && <p className="text-red-600">{error}</p>}
 
       <Button onClick={handleUpload} disabled={!file || uploading}>
-        {uploading ? <Trans>Uploading...</Trans> : <Trans>Upload</Trans>}
+        {uploading ? t('uploading') : t('upload')}
       </Button>
 
       {imageUrl && <img src={imageUrl} alt="Uploaded" />}
@@ -387,11 +388,12 @@ export const ImageUploader: React.FC = () => {
 
 ```typescript
 import React, { useState, useCallback } from 'react';
-import { Trans } from '@lingui/macro';
+import { useTranslations } from 'next-intl';
 import { STORAGE_BUCKETS, validateFile, ALLOWED_MIME_TYPES } from '@/constants/storage';
 import { storageAPI } from '@/api/storageAPI';
 
 export const AdvancedImageUploader: React.FC = () => {
+  const t = useTranslations('storage');
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>('');
   const [uploading, setUploading] = useState(false);
@@ -457,7 +459,7 @@ export const AdvancedImageUploader: React.FC = () => {
         <div>
           <img src={preview} alt="Preview" style={{ maxWidth: '300px' }} />
           <button onClick={handleUpload} disabled={uploading}>
-            {uploading ? <Trans>Uploading...</Trans> : <Trans>Upload</Trans>}
+            {uploading ? t('uploading') : t('upload')}
           </button>
         </div>
       )}

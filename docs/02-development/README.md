@@ -49,11 +49,10 @@ Core development guides, architecture, and best practices for FoodShare.
 ### Frontend
 
 - React 19 + TypeScript
-- Vite 7 (build tool)
-- Chakra UI v3 (components)
-- Redux Toolkit (state)
-- React Router v7 (routing)
-- Lingui (i18n)
+- Next.js 16 App Router (Turbopack)
+- shadcn/ui + Tailwind CSS 4 (components)
+- Server Components + Server Actions (data)
+- next-intl (i18n)
 
 ### Backend
 
@@ -104,13 +103,15 @@ Component.displayName = 'Component';
 ### i18n Pattern
 
 ```typescript
-import { Trans, t } from '@lingui/macro';
+import { useTranslations } from 'next-intl';
+
+const t = useTranslations('common');
 
 // In JSX
-<Text><Trans>Hello World</Trans></Text>
+<Text>{t('helloWorld')}</Text>
 
 // In attributes
-<Input placeholder={t`Enter name`} />
+<Input placeholder={t('enterName')} />
 ```
 
 ## 🔍 Common Patterns

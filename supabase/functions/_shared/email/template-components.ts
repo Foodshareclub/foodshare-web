@@ -13,7 +13,7 @@
  *   title: "Welcome!",
  *   subtitle: "Your journey starts now",
  *   content: emailContent({ greeting: "Hey John!", body: "..." }),
- *   cta: { text: "Get Started", url: "https://foodshare.club" }
+ *   cta: { text: "Get Started", url: `https://${Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"}` }
  * });
  * ```
  */
@@ -55,14 +55,20 @@ export const BRAND = {
   buttonRadius: "50px",
 
   // Assets
-  logoUrl: "https://api.foodshare.club/storage/v1/object/public/assets/logo-512.png",
+  logoUrl: `https://${
+    Deno.env.get("API_DOMAIN") || Deno.env.get("API_DOMAIN") || "api.foodshare.club"
+  }/storage/v1/object/public/assets/logo-512.png`,
 
   // App Store links
   appStore: {
     ios: "https://apps.apple.com/us/app/foodshare-club/id1573242804",
     android: null, // Coming soon
-    iosBadge: "https://api.foodshare.club/storage/v1/object/public/assets/apple-store.png",
-    androidBadge: "https://api.foodshare.club/storage/v1/object/public/assets/google-store.png",
+    iosBadge: `https://${
+      Deno.env.get("API_DOMAIN") || Deno.env.get("API_DOMAIN") || "api.foodshare.club"
+    }/storage/v1/object/public/assets/apple-store.png`,
+    androidBadge: `https://${
+      Deno.env.get("API_DOMAIN") || Deno.env.get("API_DOMAIN") || "api.foodshare.club"
+    }/storage/v1/object/public/assets/google-store.png`,
   },
 
   // Company Info
@@ -71,10 +77,16 @@ export const BRAND = {
     ein: "USA 20231394981",
     address: "4632 Winding Way",
     city: "Sacramento, CA 95841",
-    email: "support@foodshare.club",
-    website: "https://foodshare.club",
-    privacy: "https://foodshare.club/privacy",
-    terms: "https://foodshare.club/terms",
+    email: Deno.env.get("EMAIL_SUPPORT") || "support@foodshare.club",
+    website: `https://${
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+    }`,
+    privacy: `https://${
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+    }/privacy`,
+    terms: `https://${
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+    }/terms`,
   },
 
   // Social Links
@@ -311,18 +323,22 @@ export function statsBar(stats: StatItem[]): string {
 
   if (visibleStats.length === 0) return "";
 
-  const statCells = visibleStats.map((stat) => {
-    const displayValue = typeof stat.value === "number" ? formatStatNumber(stat.value) : stat.value;
+  const statCells = visibleStats
+    .map((stat) => {
+      const displayValue = typeof stat.value === "number"
+        ? formatStatNumber(stat.value)
+        : stat.value;
 
-    return `
+      return `
     <td align="center" style="padding: 16px 8px;">
       <p style="margin: 0; font-size: 28px; font-weight: 800; color: ${
-      stat.color || BRAND.primaryColor
-    };">${displayValue}</p>
+        stat.color || BRAND.primaryColor
+      };">${displayValue}</p>
       <p style="margin: 4px 0 0; font-size: 13px; color: ${BRAND.textMuted}; text-transform: uppercase; letter-spacing: 0.5px;">${stat.label}</p>
     </td>
   `;
-  }).join("");
+    })
+    .join("");
 
   return `<div style="margin: 24px 0; padding: 20px; background: ${BRAND.bgSecondary}; border-radius: ${BRAND.cardRadius};">
   <table width="100%" cellpadding="0" cellspacing="0">
@@ -361,20 +377,25 @@ export function featuredItems(
   items: FeaturedItem[],
   title = "See what others are sharing",
 ): string {
-  const itemCards = items.slice(0, 3).map((item) => `
+  const itemCards = items
+    .slice(0, 3)
+    .map(
+      (item) => `
     <td align="center" valign="top" style="width: 33%; padding: 8px;">
       <a href="${item.url || BRAND.company.website}" style="text-decoration: none;">
         <img src="${item.imageUrl}" alt="${item.title}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; display: block;" />
         <p style="margin: 10px 0 4px; font-size: 14px; font-weight: 700; color: ${BRAND.textPrimary}; line-height: 1.3;">${item.title}</p>
         <p style="margin: 0; font-size: 12px; color: ${BRAND.textMuted};">Shared by ${item.sharedBy}</p>
         ${
-    item.timeAgo
-      ? `<p style="margin: 2px 0 0; font-size: 11px; color: ${BRAND.textLight};">Requested in ${item.timeAgo}</p>`
-      : ""
-  }
+        item.timeAgo
+          ? `<p style="margin: 2px 0 0; font-size: 11px; color: ${BRAND.textLight};">Requested in ${item.timeAgo}</p>`
+          : ""
+      }
       </a>
     </td>
-  `).join("");
+  `,
+    )
+    .join("");
 
   return `<div style="margin: 30px 0; padding: 24px 0; border-top: 1px solid #f0f0f0;">
   <h3 style="margin: 0 0 20px; font-size: 20px; font-weight: 700; color: ${BRAND.textPrimary}; text-align: center;">${title}</h3>
@@ -571,9 +592,7 @@ export function buildEmail(config: EmailConfig): string {
   const contentWithCta = cta ? `${content}${ctaButton(cta)}` : content;
 
   const emailBody = emailContainer(
-    header({ title, subtitle }) +
-      contentSection(contentWithCta) +
-      footer(footerProps),
+    header({ title, subtitle }) + contentSection(contentWithCta) + footer(footerProps),
   );
 
   return documentWrapper(emailBody, title);

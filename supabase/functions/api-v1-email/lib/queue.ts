@@ -169,7 +169,7 @@ async function buildEmailContent(
   if (email.email_type === "newsletter" && email.campaign_id) {
     const { data: campaign, error } = await supabase
       .from("newsletter_campaigns")
-      .select("subject, html_content, text_content")
+      .select("subject,html_content,text_content")
       .eq("id", email.campaign_id)
       .single();
 
@@ -200,7 +200,7 @@ async function buildEmailContent(
   if (email.template_slug) {
     const { data: template, error } = await supabase
       .from("email_templates")
-      .select("subject, html_content, text_content")
+      .select("subject,html_content,text_content")
       .eq("slug", email.template_slug)
       .single();
 
@@ -251,11 +251,7 @@ async function buildEmailContent(
 // Content Helpers
 // =============================================================================
 
-function personalizeContent(
-  content: string,
-  firstName: string | null,
-  email: string,
-): string {
+function personalizeContent(content: string, firstName: string | null, email: string): string {
   return content
     .replace(/\{\{first_name\}\}/gi, firstName || "there")
     .replace(/\{\{name\}\}/gi, firstName || "there")
@@ -311,7 +307,9 @@ function buildDigestHtml(firstName: string | null, metadata: Record<string, unkn
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: #f8f9fa; border-radius: 8px; padding: 30px;">
     <h1 style="margin: 0 0 20px; color: #1a1a1a; font-size: 24px;">Your ${
-    escapeHtml(frequency)
+    escapeHtml(
+      frequency,
+    )
   } digest</h1>
     <p style="margin: 0 0 20px;">Hi ${escapeHtml(firstName || "there")}, here's what you missed:</p>
     <ul style="padding-left: 20px; margin: 0;">
@@ -394,7 +392,7 @@ async function resolveAutomationEmailContent(
 ): Promise<{ subject: string; html: string; to: string } | null> {
   const { data: profile } = await supabase
     .from("profiles")
-    .select("email, first_name, nickname")
+    .select("email,first_name,nickname")
     .eq("id", profileId)
     .single();
 
@@ -403,7 +401,7 @@ async function resolveAutomationEmailContent(
   if (emailData.template_slug) {
     const { data: template } = await supabase
       .from("email_templates")
-      .select("subject, html_content")
+      .select("subject,html_content")
       .eq("slug", emailData.template_slug)
       .eq("is_active", true)
       .single();
@@ -424,9 +422,7 @@ async function resolveAutomationEmailContent(
     const name = profile.first_name || profile.nickname || "there";
     return {
       subject: emailData.subject.replace(/\{\{name\}\}/g, name),
-      html: emailData.html
-        .replace(/\{\{name\}\}/g, name)
-        .replace(/\{\{email\}\}/g, profile.email),
+      html: emailData.html.replace(/\{\{name\}\}/g, name).replace(/\{\{email\}\}/g, profile.email),
       to: profile.email,
     };
   }
@@ -438,7 +434,13 @@ async function processAutomationQueueItem(
   supabase: ReturnType<typeof getServiceRoleClient>,
   item: AutomationQueueItem,
   dryRun: boolean,
-): Promise<{ id: string; success: boolean; provider?: string; error?: string; latencyMs: number }> {
+): Promise<{
+  id: string;
+  success: boolean;
+  provider?: string;
+  error?: string;
+  latencyMs: number;
+}> {
   const startTime = performance.now();
   const maxAttempts = 3;
 
@@ -489,7 +491,11 @@ async function processAutomationQueueItem(
 
     const emailService = getEmailService();
     const result = await emailService.sendEmail(
-      { to: emailContent.to, subject: emailContent.subject, html: emailContent.html },
+      {
+        to: emailContent.to,
+        subject: emailContent.subject,
+        html: emailContent.html,
+      },
       "notification" as EmailType,
     );
 
@@ -620,7 +626,11 @@ export async function handleProcessAutomation(
   const { batchSize, concurrency, dryRun } = ctx.body;
   const startTime = performance.now();
 
-  logger.info("Processing automation queue", { batchSize, concurrency, dryRun });
+  logger.info("Processing automation queue", {
+    batchSize,
+    concurrency,
+    dryRun,
+  });
 
   const supabase = getServiceRoleClient();
   const now = new Date().toISOString();
@@ -642,15 +652,18 @@ export async function handleProcessAutomation(
   }
 
   if (!queueItems?.length) {
-    return ok({
-      success: true,
-      message: "No pending automation emails to process",
-      dryRun,
-      processed: 0,
-      successful: 0,
-      failed: 0,
-      durationMs: Math.round(performance.now() - startTime),
-    }, ctx);
+    return ok(
+      {
+        success: true,
+        message: "No pending automation emails to process",
+        dryRun,
+        processed: 0,
+        successful: 0,
+        failed: 0,
+        durationMs: Math.round(performance.now() - startTime),
+      },
+      ctx,
+    );
   }
 
   const results: Awaited<ReturnType<typeof processAutomationQueueItem>>[] = [];
@@ -675,17 +688,20 @@ export async function handleProcessAutomation(
     durationMs: Math.round(performance.now() - startTime),
   });
 
-  return ok({
-    success: true,
-    message: dryRun ? "Dry run completed" : "Automation queue processed",
-    dryRun,
-    processed: results.length,
-    successful: successful.length,
-    failed: failed.length,
-    avgLatencyMs: results.length > 0
-      ? Math.round(results.reduce((sum, r) => sum + r.latencyMs, 0) / results.length)
-      : 0,
-    errors: failed.map((f) => ({ id: f.id, error: f.error })),
-    durationMs: Math.round(performance.now() - startTime),
-  }, ctx);
+  return ok(
+    {
+      success: true,
+      message: dryRun ? "Dry run completed" : "Automation queue processed",
+      dryRun,
+      processed: results.length,
+      successful: successful.length,
+      failed: failed.length,
+      avgLatencyMs: results.length > 0
+        ? Math.round(results.reduce((sum, r) => sum + r.latencyMs, 0) / results.length)
+        : 0,
+      errors: failed.map((f) => ({ id: f.id, error: f.error })),
+      durationMs: Math.round(performance.now() - startTime),
+    },
+    ctx,
+  );
 }

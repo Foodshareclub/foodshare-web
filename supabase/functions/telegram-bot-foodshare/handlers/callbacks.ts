@@ -2,7 +2,7 @@
  * Callback query handlers for inline button interactions
  */
 
-import { answerCallbackQuery, sendMessage } from "../services/telegram-api.ts";
+import { answerCallbackQuery, sendMessage } from "../../_shared/telegram-client.ts";
 import { setUserState } from "../services/user-state.ts";
 import { getProfileByTelegramId, requiresEmailVerification } from "../services/profile.ts";
 import * as emoji from "../lib/emojis.ts";

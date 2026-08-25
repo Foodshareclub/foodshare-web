@@ -17,7 +17,7 @@
 5. [ADR-004: Hybrid State Management](#adr-004-hybrid-state-management)
 6. [ADR-005: Supabase as Backend Platform](#adr-005-supabase-as-backend-platform)
 7. [ADR-006: Leaflet for Maps](#adr-006-leaflet-for-maps)
-8. [ADR-007: Lingui for Internationalization](#adr-007-lingui-for-internationalization)
+8. [ADR-007: Lingui for Internationalization](#adr-007-lingui-for-internationalization) (superseded by next-intl)
 9. [ADR-008: File-Based Routing with App Router](#adr-008-file-based-routing-with-app-router)
 10. [ADR-009: PostgreSQL via Supabase](#adr-009-postgresql-via-supabase)
 11. [ADR-010: Row Level Security (RLS)](#adr-010-row-level-security-rls)
@@ -611,7 +611,7 @@ Maps are core to FoodShare - users discover food through geographic browsing.
 
 ## ADR-007: Lingui for Internationalization
 
-**Status:** ✅ Accepted
+**Status:** ✅ Accepted → ⛔ Superseded by next-intl (historical — pre-next-intl migration)
 
 **Date:** Q3 2024
 
@@ -686,7 +686,7 @@ FoodShare needs to support multiple languages to serve diverse communities.
 
 - Rejected: Reinventing the wheel
 
-**Current Status:** Active. Lingui is working great.
+**Current Status:** Superseded. Lingui was replaced by next-intl during the server-first migration; translation workflow now uses `messages/{locale}.json` + `bun run translations:sync`.
 
 ---
 
@@ -1256,7 +1256,8 @@ As the project matured and moved towards a self-hosted Supabase infrastructure, 
 - ⚠️ More complex initial setup
 
 **Current Status:** Active. Fully migrated to `web.foodshare.club`.
-   - Generous limits
+
+- Generous limits
 
 5. **Features:**
    - Custom domains
@@ -1372,23 +1373,23 @@ Don't create an ADR for:
 
 ## Summary Table
 
-| ADR | Title                     | Status      | Date              |
-| --- | ------------------------- | ----------- | ----------------- |
-| 001 | Next.js as Framework      | ✅ Accepted | Q3 2024 → Q4 2025 |
-| 002 | React 19 with TypeScript  | ✅ Accepted | Q3 2024           |
-| 003 | shadcn/ui for Components  | ✅ Accepted | Q3 2024 → Q4 2025 |
-| 004 | Hybrid State Management   | ✅ Accepted | Q3 2024 → Q4 2025 |
-| 005 | Supabase as Backend       | ✅ Accepted | Q3 2024           |
-| 006 | Leaflet for Maps          | ✅ Accepted | Q3 2024           |
-| 007 | Lingui for i18n           | ✅ Accepted | Q3 2024           |
-| 008 | App Router for Routing    | ✅ Accepted | Q3 2024 → Q4 2025 |
-| 009 | PostgreSQL Database       | ✅ Accepted | Q3 2024           |
-| 010 | Row Level Security        | ✅ Accepted | Q3 2024           |
-| 011 | Supabase Realtime         | ✅ Accepted | Q3 2024           |
-| 012 | Feature-Based Structure   | ✅ Accepted | Q3 2024           |
-| 013 | API Layer Abstraction     | ✅ Accepted | Q3 2024           |
-| 014 | Server Components and SSR | ✅ Accepted | Q3 2024 → Q4 2025 |
-| 015 | Vercel Hosting            | ✅ Accepted | Q3 2024           |
+| ADR | Title                     | Status                     | Date              |
+| --- | ------------------------- | -------------------------- | ----------------- |
+| 001 | Next.js as Framework      | ✅ Accepted                | Q3 2024 → Q4 2025 |
+| 002 | React 19 with TypeScript  | ✅ Accepted                | Q3 2024           |
+| 003 | shadcn/ui for Components  | ✅ Accepted                | Q3 2024 → Q4 2025 |
+| 004 | Hybrid State Management   | ✅ Accepted                | Q3 2024 → Q4 2025 |
+| 005 | Supabase as Backend       | ✅ Accepted                | Q3 2024           |
+| 006 | Leaflet for Maps          | ✅ Accepted                | Q3 2024           |
+| 007 | Lingui for i18n           | ⛔ Superseded by next-intl | Q3 2024           |
+| 008 | App Router for Routing    | ✅ Accepted                | Q3 2024 → Q4 2025 |
+| 009 | PostgreSQL Database       | ✅ Accepted                | Q3 2024           |
+| 010 | Row Level Security        | ✅ Accepted                | Q3 2024           |
+| 011 | Supabase Realtime         | ✅ Accepted                | Q3 2024           |
+| 012 | Feature-Based Structure   | ✅ Accepted                | Q3 2024           |
+| 013 | API Layer Abstraction     | ✅ Accepted                | Q3 2024           |
+| 014 | Server Components and SSR | ✅ Accepted                | Q3 2024 → Q4 2025 |
+| 015 | Vercel Hosting            | ✅ Accepted                | Q3 2024           |
 
 ---
 

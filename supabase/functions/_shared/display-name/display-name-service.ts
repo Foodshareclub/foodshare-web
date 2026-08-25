@@ -10,7 +10,7 @@
  * - Backwards compatible with pure utility functions
  */
 
-import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 import { cache, CACHE_KEYS, CACHE_TTLS, cacheThrough } from "../cache.ts";
 import { logger } from "../logger.ts";
 import {
@@ -79,10 +79,7 @@ export class DisplayNameService {
   /**
    * Get display name for a user with caching
    */
-  async getDisplayName(
-    userId: string,
-    options?: ExtractOptions,
-  ): Promise<DisplayNameResult> {
+  async getDisplayName(userId: string, options?: ExtractOptions): Promise<DisplayNameResult> {
     const startTime = performance.now();
     metrics.totalLookups++;
 
@@ -218,11 +215,7 @@ export class DisplayNameService {
                 options,
               );
               results[item.user_id] = result;
-              cache.set(
-                CACHE_KEYS.displayName(item.user_id),
-                result,
-                CACHE_TTLS.displayName,
-              );
+              cache.set(CACHE_KEYS.displayName(item.user_id), result, CACHE_TTLS.displayName);
             } catch (err) {
               errors[item.user_id] = err instanceof Error ? err.message : String(err);
             }
@@ -383,7 +376,7 @@ export class DisplayNameService {
   private async fetchProfileData(userId: string): Promise<DatabaseProfileRow | null> {
     const { data, error } = await this.supabase
       .from("profiles")
-      .select("id, display_name, first_name, second_name, nickname, email")
+      .select("id,display_name,first_name,second_name,nickname,email")
       .eq("id", userId)
       .is("deleted_at", null)
       .single();
@@ -536,7 +529,7 @@ export class DisplayNameService {
     // Fetch profiles in batch
     const { data: profiles, error: profileError } = await this.supabase
       .from("profiles")
-      .select("id, display_name, first_name, second_name, nickname, email")
+      .select("id,display_name,first_name,second_name,nickname,email")
       .in("id", userIds)
       .is("deleted_at", null);
 
@@ -553,13 +546,9 @@ export class DisplayNameService {
       .select("*")
       .in("user_id", userIds);
 
-    const overrideMap = new Map(
-      (overrides || []).map((o) => [o.user_id, o]),
-    );
+    const overrideMap = new Map((overrides || []).map((o) => [o.user_id, o]));
 
-    const profileMap = new Map(
-      (profiles || []).map((p) => [p.id, p]),
-    );
+    const profileMap = new Map((profiles || []).map((p) => [p.id, p]));
 
     for (const userId of userIds) {
       try {

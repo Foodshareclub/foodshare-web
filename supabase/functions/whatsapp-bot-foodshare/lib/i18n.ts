@@ -94,7 +94,9 @@ export async function getUserLanguage(phoneNumber: string): Promise<Language> {
       return data.language as Language;
     }
   } catch (error) {
-    logger.error("Error fetching user language preference", { error: String(error) });
+    logger.error("Error fetching user language preference", {
+      error: String(error),
+    });
   }
 
   return "en";
@@ -114,7 +116,9 @@ export async function saveUserLanguage(phoneNumber: string, language: Language):
       phone: phoneNumber.substring(0, 4) + "***",
     });
   } catch (error) {
-    logger.error("Error saving user language preference", { error: String(error) });
+    logger.error("Error saving user language preference", {
+      error: String(error),
+    });
   }
 }
 

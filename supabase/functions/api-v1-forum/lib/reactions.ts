@@ -8,7 +8,13 @@
  */
 
 import { datetimeSchema, positiveIntSchema, uuidSchema, z } from "../../_shared/schemas/common.ts";
-import { created, type HandlerContext, noContent, ok } from "../../_shared/api-handler.ts";
+import {
+  created,
+  type HandlerContext,
+  noContent,
+  ok,
+  paginated,
+} from "../../_shared/api-handler.ts";
 import { ValidationError } from "../../_shared/errors.ts";
 import { logger } from "../../_shared/logger.ts";
 import type { ForumQuery } from "../index.ts";
@@ -206,7 +212,10 @@ export async function submitReport(ctx: HandlerContext): Promise<Response> {
     throw new ValidationError(`Failed to submit report: ${error.message}`);
   }
 
-  logger.info("Forum report submitted", { forumId: body.forumId, commentId: body.commentId });
+  logger.info("Forum report submitted", {
+    forumId: body.forumId,
+    commentId: body.commentId,
+  });
 
   return created({ reportId: data }, ctx);
 }
@@ -275,7 +284,7 @@ export async function votePoll(ctx: HandlerContext): Promise<Response> {
       option_id: body.optionId,
       profile_id: userId,
     })
-    .select("id, poll_id, option_id, created_at")
+    .select("id,poll_id,option_id,created_at")
     .single();
 
   if (error) {
@@ -288,7 +297,9 @@ export async function votePoll(ctx: HandlerContext): Promise<Response> {
 
   // Increment vote count on the option (non-critical -- triggers may handle this)
   try {
-    await supabase.rpc("increment_poll_option_votes", { p_option_id: body.optionId });
+    await supabase.rpc("increment_poll_option_votes", {
+      p_option_id: body.optionId,
+    });
   } catch {
     // Ignore -- vote count triggers may handle this
   }

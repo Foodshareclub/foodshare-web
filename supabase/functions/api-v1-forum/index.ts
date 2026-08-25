@@ -94,31 +94,33 @@ const healthCheck = createHealthHandler("api-v1-forum", VERSION);
 // =============================================================================
 
 const forumQuerySchema = z.object({
-  action: z.enum([
-    "categories",
-    "search",
-    "drafts",
-    "bookmarks",
-    "unread",
-    "series",
-    "comments",
-    "create",
-    "comment",
-    "like",
-    "bookmark",
-    "react",
-    "subscribe",
-    "report",
-    "draft",
-    "poll",
-    "vote",
-    "view",
-    "pin",
-    "lock",
-    "remove",
-    "feature",
-    "best-answer",
-  ]).optional(),
+  action: z
+    .enum([
+      "categories",
+      "search",
+      "drafts",
+      "bookmarks",
+      "unread",
+      "series",
+      "comments",
+      "create",
+      "comment",
+      "like",
+      "bookmark",
+      "react",
+      "subscribe",
+      "report",
+      "draft",
+      "poll",
+      "vote",
+      "view",
+      "pin",
+      "lock",
+      "remove",
+      "feature",
+      "best-answer",
+    ])
+    .optional(),
   id: z.string().optional(),
   q: z.string().optional(),
   categoryId: z.string().optional(),
@@ -250,36 +252,38 @@ async function handleDelete(ctx: HandlerContext<unknown, ForumQuery>): Promise<R
 // Export Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: "api-v1-forum",
-  version: VERSION,
-  requireAuth: false, // GET is public, mutations require auth
-  csrf: true,
-  rateLimit: {
-    limit: 120,
-    windowMs: 60000,
-    keyBy: "ip",
-  },
-  routes: {
-    GET: {
-      querySchema: forumQuerySchema,
-      handler: handleGet,
-      requireAuth: false,
+Deno.serve(
+  createAPIHandler({
+    service: "api-v1-forum",
+    version: VERSION,
+    requireAuth: false, // GET is public, mutations require auth
+    csrf: true,
+    rateLimit: {
+      limit: 120,
+      windowMs: 60000,
+      keyBy: "ip",
     },
-    POST: {
-      querySchema: forumQuerySchema,
-      handler: handlePost,
-      requireAuth: true,
+    routes: {
+      GET: {
+        querySchema: forumQuerySchema,
+        handler: handleGet,
+        requireAuth: false,
+      },
+      POST: {
+        querySchema: forumQuerySchema,
+        handler: handlePost,
+        requireAuth: true,
+      },
+      PUT: {
+        querySchema: forumQuerySchema,
+        handler: handlePut,
+        requireAuth: true,
+      },
+      DELETE: {
+        querySchema: forumQuerySchema,
+        handler: handleDelete,
+        requireAuth: true,
+      },
     },
-    PUT: {
-      querySchema: forumQuerySchema,
-      handler: handlePut,
-      requireAuth: true,
-    },
-    DELETE: {
-      querySchema: forumQuerySchema,
-      handler: handleDelete,
-      requireAuth: true,
-    },
-  },
-}));
+  }),
+);

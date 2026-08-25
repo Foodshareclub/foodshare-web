@@ -14,6 +14,7 @@
 import { getContext } from "./context.ts";
 import { getSupabaseClient } from "./supabase.ts";
 import { CircuitState, getAllCircuitStatuses, getCircuitStatus } from "./circuit-breaker.ts";
+import { logger } from "./logger.ts";
 
 /**
  * Metric event for a function call
@@ -43,7 +44,7 @@ export interface MetricEvent {
 
 // Queue for batching metrics
 const metricsQueue: MetricEvent[] = [];
-let flushTimer: number | undefined;
+let flushTimer: ReturnType<typeof setTimeout> | undefined;
 const FLUSH_INTERVAL_MS = 5000; // Flush every 5 seconds
 const MAX_BATCH_SIZE = 50;
 
@@ -67,13 +68,13 @@ export function recordMetric(event: MetricEvent): void {
   // Start flush timer if not already running
   if (!flushTimer) {
     flushTimer = setTimeout(() => {
-      flushMetrics().catch((e) => console.error("Failed to flush metrics:", e));
+      flushMetrics().catch((e) => logger.error("Failed to flush metrics:", e));
     }, FLUSH_INTERVAL_MS);
   }
 
   // Flush immediately if batch is full
   if (metricsQueue.length >= MAX_BATCH_SIZE) {
-    flushMetrics().catch((e) => console.error("Failed to flush metrics:", e));
+    flushMetrics().catch((e) => logger.error("Failed to flush metrics:", e));
   }
 }
 
@@ -142,11 +143,11 @@ export async function flushMetrics(): Promise<void> {
       } catch (e: unknown) {
         // Log but don't fail
         const message = e instanceof Error ? e.message : String(e);
-        console.error("Failed to record metric:", message);
+        logger.error("Failed to record metric:", { error: message });
       }
     }
   } catch (error) {
-    console.error("Failed to flush metrics:", error);
+    logger.error("Failed to flush metrics:", { error });
     // Don't re-queue failed metrics to avoid memory growth
   }
 }
@@ -168,7 +169,7 @@ export async function syncCircuitStatus(circuitName: string, _state: CircuitStat
       p_success_count: status.successes,
     });
   } catch (error) {
-    console.error("Failed to sync circuit status:", error);
+    logger.error("Failed to sync circuit status:", { error });
   }
 }
 
@@ -202,7 +203,9 @@ export async function getMetricsSummary(minutes: number = 5): Promise<
     ]);
 
     if (errorRateResult.error || p95Result.error) {
-      console.error("Failed to get metrics summary:", errorRateResult.error || p95Result.error);
+      logger.error("Failed to get metrics summary:", {
+        error: errorRateResult.error || p95Result.error,
+      });
       return null;
     }
 
@@ -214,7 +217,7 @@ export async function getMetricsSummary(minutes: number = 5): Promise<
       totalRequests: parseInt(errorData.total_requests) || 0,
     };
   } catch (error) {
-    console.error("Failed to get metrics summary:", error);
+    logger.error("Failed to get metrics summary:", { error });
     return null;
   }
 }
@@ -283,7 +286,7 @@ export async function recordHealthCheck(
       error_message: errorMessage,
     });
   } catch (error) {
-    console.error("Failed to record health check:", error);
+    logger.error("Failed to record health check:", { error });
   }
 }
 

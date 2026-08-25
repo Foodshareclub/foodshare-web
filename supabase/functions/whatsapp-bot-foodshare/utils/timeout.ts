@@ -12,7 +12,7 @@ export async function withTimeout<T>(
   timeoutMs: number,
   errorMessage = "Operation timed out",
 ): Promise<T> {
-  let timeoutId: number;
+  let timeoutId: ReturnType<typeof setTimeout>;
 
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(() => {

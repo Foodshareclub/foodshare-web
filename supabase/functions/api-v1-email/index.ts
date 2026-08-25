@@ -11,6 +11,7 @@
  * - POST /send      - Send a single email (for apps) [JWT auth]
  * - POST /send/template - Send using a named template slug [JWT auth]
  * - POST /send/invitation - Send invitation to non-user [JWT auth]
+ * - POST /webhook   - Supabase GoTrue Auth custom email hooks [Webhook auth]
  * - GET  /providers - Provider health + quota status [service auth]
  * - GET  /health    - Health check [no auth]
  *
@@ -24,6 +25,7 @@ import { VERSION } from "./lib/utils.ts";
 // Schemas (used for route-level validation)
 import {
   automationProcessSchema,
+  goTrueEmailHookSchema,
   processSchema,
   sendInvitationSchema,
   sendSchema,
@@ -32,6 +34,7 @@ import {
 
 // Handlers
 import {
+  handleGoTrueWebhook,
   handleHealth,
   handleProviders,
   handleSend,
@@ -89,8 +92,13 @@ function handlePost(ctx: HandlerContext): Promise<Response> {
     return handleSend({ ...ctx, body } as HandlerContext<typeof body>);
   }
 
+  if (path.endsWith("/webhook")) {
+    const body = goTrueEmailHookSchema.parse(ctx.body);
+    return handleGoTrueWebhook({ ...ctx, body } as HandlerContext<typeof body>);
+  }
+
   throw new AppError(
-    "Unknown route. Available: /process, /send, /send/template, /send/invitation",
+    "Unknown route. Available: /process, /send, /send/template, /send/invitation, /webhook",
     "NOT_FOUND",
     404,
   );
@@ -100,22 +108,24 @@ function handlePost(ctx: HandlerContext): Promise<Response> {
 // Export Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: "api-v1-email",
-  version: VERSION,
-  requireAuth: false, // Auth handled per-route (service/cron for queue ops, JWT for send)
-  csrf: false, // Service-to-service + cron + mobile clients
-  rateLimit: {
-    limit: 30,
-    windowMs: 60000,
-    keyBy: "ip",
-  },
-  routes: {
-    GET: {
-      handler: handleGet,
+Deno.serve(
+  createAPIHandler({
+    service: "api-v1-email",
+    version: VERSION,
+    requireAuth: false, // Auth handled per-route (service/cron for queue ops, JWT for send)
+    csrf: false, // Service-to-service + cron + mobile clients
+    rateLimit: {
+      limit: 30,
+      windowMs: 60000,
+      keyBy: "ip",
     },
-    POST: {
-      handler: handlePost,
+    routes: {
+      GET: {
+        handler: handleGet,
+      },
+      POST: {
+        handler: handlePost,
+      },
     },
-  },
-}));
+  }),
+);

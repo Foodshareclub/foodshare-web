@@ -13,9 +13,12 @@ import type { TrustLevel } from "./types.ts";
 // DeviceCheck Verification
 // =============================================================================
 
-export async function verifyDeviceCheck(
-  token: string,
-): Promise<{ verified: boolean; trustLevel: TrustLevel; message?: string; riskScore: number }> {
+export async function verifyDeviceCheck(token: string): Promise<{
+  verified: boolean;
+  trustLevel: TrustLevel;
+  message?: string;
+  riskScore: number;
+}> {
   try {
     if (!token || token.length < 50) {
       return {
@@ -45,7 +48,9 @@ export async function verifyDeviceCheck(
       };
     }
 
-    logger.info("DeviceCheck token accepted", { tokenPrefix: token.substring(0, 8) });
+    logger.info("DeviceCheck token accepted", {
+      tokenPrefix: token.substring(0, 8),
+    });
     return { verified: true, trustLevel: "trusted", riskScore: 40 };
   } catch (error) {
     logger.error(

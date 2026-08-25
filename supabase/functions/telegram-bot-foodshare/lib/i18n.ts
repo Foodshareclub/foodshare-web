@@ -94,7 +94,9 @@ export async function getUserLanguage(userId: number, languageCode?: string): Pr
         return data.language as Language;
       }
     } catch (error) {
-      logger.error("Error fetching user language preference", { error: String(error) });
+      logger.error("Error fetching user language preference", {
+        error: String(error),
+      });
     }
   }
 
@@ -110,6 +112,8 @@ export async function saveUserLanguage(userId: number, language: Language): Prom
     await supabase.from("profiles").update({ language }).eq("telegram_id", userId);
     logger.info("Saved language preference", { language, userId });
   } catch (error) {
-    logger.error("Error saving user language preference", { error: String(error) });
+    logger.error("Error saving user language preference", {
+      error: String(error),
+    });
   }
 }

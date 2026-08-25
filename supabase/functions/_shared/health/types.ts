@@ -110,7 +110,11 @@ export interface HealthCheckSummary {
   /** Circuit breaker statuses */
   circuitBreakers?: { name: string; state: string; failureCount: number }[];
   /** Recent metrics summary */
-  metrics?: { requestsLast5Min: number; errorRateLast5Min: number; p95LatencyMs: number };
+  metrics?: {
+    requestsLast5Min: number;
+    errorRateLast5Min: number;
+    p95LatencyMs: number;
+  };
   /** Whether an alert was sent */
   alertSent?: boolean;
   /** Alert status message */

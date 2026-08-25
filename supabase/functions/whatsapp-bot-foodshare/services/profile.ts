@@ -104,7 +104,9 @@ export async function getProfileByEmail(email: string): Promise<Profile | null> 
   if (error) {
     const errorType = classifyError(error);
     if (errorType !== DatabaseErrorType.NOT_FOUND) {
-      logDatabaseError("getProfileByEmail", error, { email: email.substring(0, 3) + "***" });
+      logDatabaseError("getProfileByEmail", error, {
+        email: email.substring(0, 3) + "***",
+      });
     }
     return null;
   }

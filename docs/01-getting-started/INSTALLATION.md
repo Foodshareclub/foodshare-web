@@ -6,14 +6,14 @@ Complete setup instructions for the FoodShare web application.
 
 Before starting, ensure you have:
 
-- **Bun 1.2+** - Primary runtime and package manager
+- **Bun >=1.1** - Primary runtime and package manager
 - **Git** - [Download](https://git-scm.com/)
 - **Supabase Account** - [Sign up](https://supabase.com/)
 
 Verify installations:
 
 ```bash
-bun --version   # Should be 1.2.x or higher
+bun --version   # Should be 1.1 or higher
 git --version   # Any recent version
 ```
 
@@ -23,7 +23,7 @@ git --version   # Any recent version
 
 ```bash
 git clone <repository-url>
-cd foodshare/frontend
+cd foodshare-web
 ```
 
 ### 2. Install Dependencies
@@ -165,15 +165,11 @@ git push
 
 ### Working with Translations
 
+Translations use [next-intl](https://next-intl-docs.vercel.app/) with files in `messages/{locale}.json` (21 locales).
+
 ```bash
-# Extract translatable strings
-bun run extract
-
-# Compile translations for runtime
-bun run compile
-
-# Add a new locale
-bun run add-locale
+# Sync translation files to Supabase
+bun run translations:sync
 ```
 
 ## Project Structure
@@ -308,22 +304,28 @@ Git hooks automation:
 
 ### Adding Translations
 
-1. Mark strings for translation:
+1. Edit the English source file `messages/en.json`:
+
+   ```json
+   {
+     "common": {
+       "saveChanges": "Save Changes"
+     }
+   }
+   ```
+
+2. Use the key in components via next-intl:
 
    ```tsx
-   import { t } from "@lingui/macro";
-
-   <button>{t`Save Changes`}</button>;
+   const t = useTranslations("common");
+   <button>{t("saveChanges")}</button>;
    ```
 
-2. Extract and compile:
+3. Sync to the database:
 
    ```bash
-   bun run extract
-   bun run compile
+   bun run translations:sync
    ```
-
-3. Translate in `src/locales/{locale}/messages.po`
 
 ## Troubleshooting
 

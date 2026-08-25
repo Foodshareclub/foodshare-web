@@ -53,12 +53,7 @@ const DEFAULT_STATE_TTL: Record<string, number> = {
 export function createBotUserStateService<TState extends { action?: string }>(
   config: BotUserStateConfig,
 ) {
-  const {
-    tableName,
-    idColumn,
-    ttlConfig = DEFAULT_STATE_TTL,
-    defaultTTL = 30,
-  } = config;
+  const { tableName, idColumn, ttlConfig = DEFAULT_STATE_TTL, defaultTTL = 30 } = config;
 
   function getTTLMinutes(action?: string): number {
     if (!action) return defaultTTL;
@@ -74,7 +69,7 @@ export function createBotUserStateService<TState extends { action?: string }>(
     try {
       const { data, error } = await supabase
         .from(tableName)
-        .select("state, expires_at")
+        .select("state,expires_at")
         .eq(idColumn, id)
         .single();
 
@@ -95,7 +90,10 @@ export function createBotUserStateService<TState extends { action?: string }>(
 
       return data.state as TState;
     } catch (error) {
-      logger.error("Error getting bot user state", { table: tableName, error: String(error) });
+      logger.error("Error getting bot user state", {
+        table: tableName,
+        error: String(error),
+      });
       return null;
     }
   }
@@ -121,7 +119,10 @@ export function createBotUserStateService<TState extends { action?: string }>(
         });
       }
     } catch (error) {
-      logger.error("Error setting bot user state", { table: tableName, error: String(error) });
+      logger.error("Error setting bot user state", {
+        table: tableName,
+        error: String(error),
+      });
       throw error;
     }
   }
@@ -134,7 +135,10 @@ export function createBotUserStateService<TState extends { action?: string }>(
     try {
       await supabase.from(tableName).delete().eq(idColumn, id);
     } catch (error) {
-      logger.error("Error deleting bot user state", { table: tableName, error: String(error) });
+      logger.error("Error deleting bot user state", {
+        table: tableName,
+        error: String(error),
+      });
     }
   }
 
@@ -161,11 +165,17 @@ export function createBotUserStateService<TState extends { action?: string }>(
 
       const count = data?.length || 0;
       if (count > 0) {
-        logger.info("Cleaned up expired bot user states", { table: tableName, count });
+        logger.info("Cleaned up expired bot user states", {
+          table: tableName,
+          count,
+        });
       }
       return count;
     } catch (error) {
-      logger.error("Error in bot state cleanup", { table: tableName, error: String(error) });
+      logger.error("Error in bot state cleanup", {
+        table: tableName,
+        error: String(error),
+      });
       return 0;
     }
   }

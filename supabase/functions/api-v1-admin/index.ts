@@ -64,7 +64,10 @@ async function authenticateAdmin(
 
   const token = authHeader.slice(7);
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser(token);
   if (authError || !user) {
     return { authenticated: false, error: "Invalid token" };
   }
@@ -79,9 +82,7 @@ async function authenticateAdmin(
     return { authenticated: false, error: "Failed to verify admin access" };
   }
 
-  const roles = (userRoles || []).map(
-    (r) => (r.roles as unknown as { name: string }).name,
-  );
+  const roles = (userRoles || []).map((r) => (r.roles as unknown as { name: string }).name);
   const isAdmin = roles.includes("admin") || roles.includes("superadmin");
 
   if (!isAdmin) {
@@ -102,12 +103,15 @@ async function handleRequest(ctx: HandlerContext): Promise<Response> {
 
   // Health check (no auth required)
   if (route.resource === "health" || route.resource === "") {
-    return ok({
-      status: "healthy",
-      version: VERSION,
-      service: SERVICE,
-      timestamp: new Date().toISOString(),
-    }, ctx);
+    return ok(
+      {
+        status: "healthy",
+        version: VERSION,
+        service: SERVICE,
+        timestamp: new Date().toISOString(),
+      },
+      ctx,
+    );
   }
 
   // Authenticate admin
@@ -169,20 +173,22 @@ async function handleRequest(ctx: HandlerContext): Promise<Response> {
 // API Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: SERVICE,
-  version: VERSION,
-  requireAuth: false, // Admin auth handled per-route above
-  csrf: true,
-  rateLimit: {
-    limit: 30,
-    windowMs: 60_000,
-    keyBy: "user",
-  },
-  routes: {
-    GET: { handler: handleRequest },
-    POST: { handler: handleRequest },
-    PUT: { handler: handleRequest },
-    DELETE: { handler: handleRequest },
-  },
-}));
+Deno.serve(
+  createAPIHandler({
+    service: SERVICE,
+    version: VERSION,
+    requireAuth: false, // Admin auth handled per-route above
+    csrf: true,
+    rateLimit: {
+      limit: 30,
+      windowMs: 60_000,
+      keyBy: "user",
+    },
+    routes: {
+      GET: { handler: handleRequest },
+      POST: { handler: handleRequest },
+      PUT: { handler: handleRequest },
+      DELETE: { handler: handleRequest },
+    },
+  }),
+);

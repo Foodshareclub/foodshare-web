@@ -37,11 +37,22 @@ export const verifySendSchema = z.object({
 
 export const verifyConfirmSchema = z.object({
   email: z.string().email(),
-  code: z.string().length(6).regex(/^\d{6}$/, "Code must be 6 digits"),
+  code: z
+    .string()
+    .length(6)
+    .regex(/^\d{6}$/, "Code must be 6 digits"),
 });
 
 export const verifyResendSchema = z.object({
   email: z.string().email(),
+});
+
+export const appleSignInSchema = z.object({
+  identityToken: z.string().min(1, "Identity token is required"),
+  nonce: z.string().optional(),
+  email: z.string().email().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
 });
 
 // =============================================================================

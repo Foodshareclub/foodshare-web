@@ -143,9 +143,7 @@ class UpstashRestClient implements RedisClient {
     const BATCH_SIZE = 10;
     for (let i = 0; i < commands.length; i += BATCH_SIZE) {
       const batch = commands.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(
-        batch.map((cmd) => this.execute(cmd)),
-      );
+      const batchResults = await Promise.all(batch.map((cmd) => this.execute(cmd)));
       results.push(...batchResults);
     }
 
@@ -212,7 +210,9 @@ export const translationCache = {
       const key = getCacheKey(contentType, contentId, field, locale);
       return await redis.get(key);
     } catch (error) {
-      logger.warn("Translation cache get error", { error: (error as Error).message });
+      logger.warn("Translation cache get error", {
+        error: (error as Error).message,
+      });
       return null;
     }
   },
@@ -244,7 +244,9 @@ export const translationCache = {
         result[fields[i]] = values[i];
       }
     } catch (error) {
-      logger.warn("Translation cache mget error", { error: (error as Error).message });
+      logger.warn("Translation cache mget error", {
+        error: (error as Error).message,
+      });
     }
 
     return result;
@@ -267,7 +269,9 @@ export const translationCache = {
       const key = getCacheKey(contentType, contentId, field, locale);
       await redis.setex(key, CACHE_TTL, translation);
     } catch (error) {
-      logger.warn("Translation cache set error", { error: (error as Error).message });
+      logger.warn("Translation cache set error", {
+        error: (error as Error).message,
+      });
     }
   },
 
@@ -299,7 +303,9 @@ export const translationCache = {
         });
       }
     } catch (error) {
-      logger.warn("Translation cache setMultiple error", { error: (error as Error).message });
+      logger.warn("Translation cache setMultiple error", {
+        error: (error as Error).message,
+      });
     }
   },
 
@@ -335,17 +341,16 @@ export const translationCache = {
         });
       }
     } catch (error) {
-      logger.warn("Translation cache batchSet error", { error: (error as Error).message });
+      logger.warn("Translation cache batchSet error", {
+        error: (error as Error).message,
+      });
     }
   },
 
   /**
    * Delete cached translations for a content item
    */
-  async invalidate(
-    contentType: string,
-    contentId: string,
-  ): Promise<void> {
+  async invalidate(contentType: string, contentId: string): Promise<void> {
     const redis = await initRedis();
     if (!redis) return;
 
@@ -361,7 +366,9 @@ export const translationCache = {
         });
       }
     } catch (error) {
-      logger.warn("Translation cache invalidate error", { error: (error as Error).message });
+      logger.warn("Translation cache invalidate error", {
+        error: (error as Error).message,
+      });
     }
   },
 
@@ -396,7 +403,9 @@ export const translationCache = {
         sampleKeys: keys.slice(0, 10),
       };
     } catch (error) {
-      logger.warn("Translation cache getStats error", { error: (error as Error).message });
+      logger.warn("Translation cache getStats error", {
+        error: (error as Error).message,
+      });
       return { available: false, totalKeys: 0, sampleKeys: [] };
     }
   },
@@ -451,14 +460,19 @@ export const userLocaleCache = {
 
       if (cached) {
         const parsed: CachedUserLocale = JSON.parse(cached);
-        logger.debug("User locale cache hit", { userId, locale: parsed.locale });
+        logger.debug("User locale cache hit", {
+          userId,
+          locale: parsed.locale,
+        });
         return parsed.locale;
       }
 
       logger.debug("User locale cache miss", { userId });
       return null;
     } catch (error) {
-      logger.warn("User locale cache get error", { error: (error as Error).message });
+      logger.warn("User locale cache get error", {
+        error: (error as Error).message,
+      });
       return null;
     }
   },
@@ -485,7 +499,9 @@ export const userLocaleCache = {
       await redis.setex(key, USER_LOCALE_TTL, JSON.stringify(value));
       logger.debug("User locale cached", { userId, locale, source });
     } catch (error) {
-      logger.warn("User locale cache set error", { error: (error as Error).message });
+      logger.warn("User locale cache set error", {
+        error: (error as Error).message,
+      });
     }
   },
 
@@ -503,7 +519,9 @@ export const userLocaleCache = {
       await redis.del(key);
       logger.debug("User locale cache deleted", { userId });
     } catch (error) {
-      logger.warn("User locale cache delete error", { error: (error as Error).message });
+      logger.warn("User locale cache delete error", {
+        error: (error as Error).message,
+      });
     }
   },
 
@@ -532,7 +550,9 @@ export const userLocaleCache = {
 
       return null;
     } catch (error) {
-      logger.warn("User locale cache getWithMetadata error", { error: (error as Error).message });
+      logger.warn("User locale cache getWithMetadata error", {
+        error: (error as Error).message,
+      });
       return null;
     }
   },
@@ -604,7 +624,9 @@ export async function getContentTranslationsBatch(
       locale,
     });
   } catch (error) {
-    logger.warn("Failed to fetch content translations", { error: (error as Error).message });
+    logger.warn("Failed to fetch content translations", {
+      error: (error as Error).message,
+    });
   }
 
   return translationsMap;

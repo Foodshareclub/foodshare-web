@@ -18,7 +18,12 @@ import {
   type SendTemplateEmailParams,
 } from "../../_shared/email/index.ts";
 import { escapeHtml, requireServiceAuth, VERSION } from "./utils.ts";
-import type { sendInvitationSchema, sendSchema, sendTemplateSchema } from "./schemas.ts";
+import type {
+  goTrueEmailHookSchema,
+  sendInvitationSchema,
+  sendSchema,
+  sendTemplateSchema,
+} from "./schemas.ts";
 
 // =============================================================================
 // Invitation Email Builder
@@ -30,7 +35,9 @@ function buildInvitationEmail(
 ): { subject: string; html: string } {
   const personalMessage = message
     ? `<p style="color: #555; font-style: italic; border-left: 3px solid #2ECC71; padding-left: 12px; margin: 20px 0;">"${
-      escapeHtml(message)
+      escapeHtml(
+        message,
+      )
     }"</p>`
     : "";
 
@@ -49,7 +56,9 @@ function buildInvitationEmail(
       <div style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #2ECC71; font-size: 28px; margin: 0 0 10px;">You're Invited!</h1>
         <p style="color: #666; font-size: 16px; margin: 0;">${
-    escapeHtml(senderName)
+    escapeHtml(
+      senderName,
+    )
   } wants you to join FoodShare</p>
       </div>
       ${personalMessage}
@@ -61,7 +70,7 @@ function buildInvitationEmail(
         </p>
       </div>
       <div style="text-align: center; margin: 32px 0;">
-        <a href="https://foodshare.club/invite"
+        <a href="https://${Deno.env.get("SITE_DOMAIN") || "foodshare.club"}/invite"
            style="display: inline-block; background: linear-gradient(135deg, #2ECC71, #27AE60); color: white; padding: 16px 40px; border-radius: 30px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);">
           Join FoodShare
         </a>
@@ -71,7 +80,9 @@ function buildInvitationEmail(
           This invitation was sent by ${escapeHtml(senderName)} via FoodShare.
         </p>
         <p style="color: #999; font-size: 12px; margin: 8px 0 0;">
-          <a href="https://foodshare.club" style="color: #2ECC71; text-decoration: none;">foodshare.club</a>
+          <a href="https://${
+    Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+  }" style="color: #2ECC71; text-decoration: none;">foodshare.club</a>
         </p>
       </div>
     </div>
@@ -103,11 +114,7 @@ export async function handleSend(
   );
 
   if (!result.success) {
-    throw new AppError(
-      result.error || "Failed to send email",
-      "EMAIL_SEND_FAILED",
-      502,
-    );
+    throw new AppError(result.error || "Failed to send email", "EMAIL_SEND_FAILED", 502);
   }
 
   return ok(
@@ -186,19 +193,20 @@ export async function handleSendInvitation(
   );
 
   if (!result.success) {
-    throw new AppError(
-      result.error || "Failed to send invitation",
-      "INVITATION_SEND_FAILED",
-      502,
-    );
+    throw new AppError(result.error || "Failed to send invitation", "INVITATION_SEND_FAILED", 502);
   }
 
   // Log analytics (non-blocking)
-  ctx.supabase.from("post_activity_logs").insert({
-    actor_id: ctx.userId,
-    activity_type: "shared",
-    notes: `invitation:email=${recipientEmail.substring(0, 3)}***`,
-  }).then(undefined, () => {/* analytics failure is non-critical */});
+  ctx.supabase
+    .from("post_activity_logs")
+    .insert({
+      actor_id: ctx.userId,
+      activity_type: "shared",
+      notes: `invitation:email=${recipientEmail.substring(0, 3)}***`,
+    })
+    .then(undefined, () => {
+      /* analytics failure is non-critical */
+    });
 
   return ok(
     {
@@ -223,6 +231,99 @@ export async function handleProviders(ctx: HandlerContext): Promise<Response> {
 /** GET /health — Health check (no auth) */
 export function handleHealth(ctx: HandlerContext): Promise<Response> {
   return Promise.resolve(
-    ok({ status: "healthy", version: VERSION, timestamp: new Date().toISOString() }, ctx),
+    ok(
+      {
+        status: "healthy",
+        version: VERSION,
+        timestamp: new Date().toISOString(),
+      },
+      ctx,
+    ),
+  );
+}
+
+/** POST /webhook — Handle Supabase GoTrue Custom Email Hooks */
+export async function handleGoTrueWebhook(
+  ctx: HandlerContext<z.infer<typeof goTrueEmailHookSchema>>,
+): Promise<Response> {
+  const { user, email_data } = ctx.body;
+
+  logger.info("Received GoTrue email webhook", {
+    userId: user.id,
+    action: email_data.email_action_type,
+  });
+
+  const emailService = getEmailService();
+
+  // Map GoTrue action types to template slugs and variables
+  const actionToSlug: Record<string, string> = {
+    signup: "confirmation",
+    invite: "invite",
+    magiclink: "magic_link",
+    recovery: "recovery",
+    email_change_current: "email_change",
+    email_change_new: "email_change",
+    reauthentication: "reauthentication",
+  };
+
+  const slug = actionToSlug[email_data.email_action_type];
+  if (!slug) {
+    throw new AppError(
+      `Unsupported email action type: ${email_data.email_action_type}`,
+      "INVALID_ACTION",
+      400,
+    );
+  }
+
+  // Construct the template variables. Note: We must construct the link using
+  // the redirect_to, token_hash, and email_action_type, just like Supabase does.
+  const urlParams = new URLSearchParams();
+  if (email_data.token_hash) urlParams.set("token_hash", email_data.token_hash);
+  if (email_data.email_action_type) {
+    urlParams.set("type", email_data.email_action_type);
+  }
+  if (email_data.redirect_to) {
+    urlParams.set("redirect_to", email_data.redirect_to);
+  }
+
+  // The auth/v1/verify endpoint is standard for Supabase
+  // We MUST point this to the Supabase API URL, not the Next.js site URL,
+  // because GoTrue handles the PKCE/OTP verification before redirecting.
+  const apiUrl = Deno.env.get("SUPABASE_URL");
+  if (!apiUrl) {
+    throw new AppError("Missing SUPABASE_URL environment variable", "INTERNAL_ERROR", 500);
+  }
+  const actionLink = `${apiUrl}/auth/v1/verify?${urlParams.toString()}`;
+
+  const variables = {
+    user: {
+      email: user.email,
+      ...user.user_metadata,
+    },
+    action_link: actionLink,
+    token: email_data.token,
+    redirect_to: email_data.redirect_to,
+  };
+
+  const params: SendTemplateEmailParams = {
+    to: user.email,
+    slug,
+    variables,
+  };
+
+  const result = await emailService.sendTemplateEmail(params, "auth");
+
+  if (!result.success) {
+    logger.error("Failed to send webhook email", { error: result.error });
+    throw new AppError(result.error || "Failed to send auth email", "WEBHOOK_SEND_FAILED", 502);
+  }
+
+  return ok(
+    {
+      messageId: result.messageId,
+      provider: result.provider,
+      latencyMs: result.latencyMs,
+    },
+    ctx,
   );
 }

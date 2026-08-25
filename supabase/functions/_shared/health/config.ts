@@ -17,12 +17,22 @@ import { FunctionConfig } from "./types.ts";
  */
 export const CRITICAL_FUNCTIONS: FunctionConfig[] = [
   // Core Infrastructure
-  { name: "api-v1-products", critical: true, requiresAuth: false, expectedStatus: [200, 400, 401] },
+  {
+    name: "api-v1-products",
+    critical: true,
+    requiresAuth: false,
+    expectedStatus: [200, 400, 401],
+  },
   { name: "api-v1-feature-flags", critical: true, requiresAuth: false },
   { name: "api-v1-geocoding", critical: true, requiresAuth: false },
   { name: "api-v1-auth", critical: true, requiresAuth: false },
   // Unified Attestation API (consolidates verify-attestation, verify-android-attestation)
-  { name: "api-v1-attestation", critical: true, requiresAuth: false, expectedStatus: [200, 400] },
+  {
+    name: "api-v1-attestation",
+    critical: true,
+    requiresAuth: false,
+    expectedStatus: [200, 400],
+  },
   // Unified Notification System (consolidates ALL notifications: email, push, preferences, digests, triggers)
   { name: "api-v1-notifications", critical: true, requiresAuth: false },
 ];
@@ -42,10 +52,30 @@ export const API_FUNCTIONS: FunctionConfig[] = [
   { name: "api-v1-metrics", critical: false, requiresAuth: false },
 
   // Authenticated APIs
-  { name: "api-v1-chat", critical: false, requiresAuth: true, expectedStatus: [200, 401] },
-  { name: "api-v1-engagement", critical: false, requiresAuth: true, expectedStatus: [200, 401] },
-  { name: "api-v1-profile", critical: false, requiresAuth: true, expectedStatus: [200, 401] },
-  { name: "api-v1-reviews", critical: false, requiresAuth: true, expectedStatus: [200, 401] },
+  {
+    name: "api-v1-chat",
+    critical: false,
+    requiresAuth: true,
+    expectedStatus: [200, 401],
+  },
+  {
+    name: "api-v1-engagement",
+    critical: false,
+    requiresAuth: true,
+    expectedStatus: [200, 401],
+  },
+  {
+    name: "api-v1-profile",
+    critical: false,
+    requiresAuth: true,
+    expectedStatus: [200, 401],
+  },
+  {
+    name: "api-v1-reviews",
+    critical: false,
+    requiresAuth: true,
+    expectedStatus: [200, 401],
+  },
 
   // Unified Admin API (consolidates listings, users, email)
   {
@@ -63,7 +93,12 @@ export const API_FUNCTIONS: FunctionConfig[] = [
   { name: "api-v1-geocoding", critical: false, requiresAuth: false },
 
   // Unified AI API (Groq, z.ai, OpenRouter)
-  { name: "api-v1-ai", critical: false, requiresAuth: true, expectedStatus: [200, 401] },
+  {
+    name: "api-v1-ai",
+    critical: false,
+    requiresAuth: true,
+    expectedStatus: [200, 401],
+  },
 ];
 
 // =============================================================================
@@ -75,7 +110,12 @@ export const API_FUNCTIONS: FunctionConfig[] = [
  */
 export const DATA_FUNCTIONS: FunctionConfig[] = [
   // Sync & Analytics
-  { name: "api-v1-sync", critical: false, requiresAuth: true, expectedStatus: [200, 401] },
+  {
+    name: "api-v1-sync",
+    critical: false,
+    requiresAuth: true,
+    expectedStatus: [200, 401],
+  },
   { name: "api-v1-analytics", critical: false, requiresAuth: false },
 ];
 
@@ -100,19 +140,44 @@ export const UTILITY_FUNCTIONS: FunctionConfig[] = [
   { name: "api-v1-localization", critical: false, requiresAuth: false },
 
   // Security & Utilities
-  { name: "api-v1-ai", critical: false, requiresAuth: false, skipInQuickCheck: true },
+  {
+    name: "api-v1-ai",
+    critical: false,
+    requiresAuth: false,
+    skipInQuickCheck: true,
+  },
 
   // Image Processing
-  { name: "api-v1-images", critical: true, requiresAuth: true, skipInQuickCheck: false },
+  {
+    name: "api-v1-images",
+    critical: true,
+    requiresAuth: true,
+    skipInQuickCheck: false,
+  },
 
   // Monitoring & Automation (api-v1-monitor + sentry-telegram-webhook merged into api-v1-alerts)
   { name: "api-v1-alerts", critical: false, requiresAuth: false },
   // process-automation-queue merged into api-v1-email/process/automation
-  { name: "api-v1-email", critical: false, requiresAuth: false, skipInQuickCheck: true },
+  {
+    name: "api-v1-email",
+    critical: false,
+    requiresAuth: false,
+    skipInQuickCheck: true,
+  },
 
   // Bots (webhooks, not directly callable)
-  { name: "telegram-bot-foodshare", critical: false, requiresAuth: false, skipInQuickCheck: true },
-  { name: "whatsapp-bot-foodshare", critical: false, requiresAuth: false, skipInQuickCheck: true },
+  {
+    name: "telegram-bot-foodshare",
+    critical: false,
+    requiresAuth: false,
+    skipInQuickCheck: true,
+  },
+  {
+    name: "whatsapp-bot-foodshare",
+    critical: false,
+    requiresAuth: false,
+    skipInQuickCheck: true,
+  },
 ];
 
 // =============================================================================

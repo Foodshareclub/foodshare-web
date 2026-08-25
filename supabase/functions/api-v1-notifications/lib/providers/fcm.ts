@@ -8,11 +8,11 @@ import { withOperationTimeout } from "../../../_shared/timeout.ts";
 import type { DeviceToken, Platform, PushPayload, SendResult } from "./types.ts";
 import { generateDeepLink } from "./types.ts";
 
-const env = {
+const getEnv = () => ({
   fcmProjectId: Deno.env.get("FCM_PROJECT_ID"),
   fcmClientEmail: Deno.env.get("FCM_CLIENT_EMAIL"),
   fcmPrivateKey: Deno.env.get("FCM_PRIVATE_KEY"),
-};
+});
 
 let fcmAccessTokenCache: { token: string; expires: number } | null = null;
 
@@ -20,6 +20,8 @@ async function getFcmAccessToken(): Promise<string> {
   if (fcmAccessTokenCache && fcmAccessTokenCache.expires > Date.now()) {
     return fcmAccessTokenCache.token;
   }
+
+  const env = getEnv();
 
   if (!env.fcmClientEmail || !env.fcmPrivateKey || !env.fcmProjectId) {
     throw new Error("FCM not configured");
@@ -153,24 +155,26 @@ export async function sendFcm(device: DeviceToken, payload: PushPayload): Promis
           };
         }
 
+        const env = getEnv();
         const response = await withOperationTimeout(
-          fetch(
-            `https://fcm.googleapis.com/v1/projects/${env.fcmProjectId}/messages:send`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(fcmPayload),
+          fetch(`https://fcm.googleapis.com/v1/projects/${env.fcmProjectId}/messages:send`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
             },
-          ),
+            body: JSON.stringify(fcmPayload),
+          }),
           "push",
         );
 
         if (response.ok) {
           const data = await response.json();
-          return { success: true, platform: "android" as Platform, messageId: data.name };
+          return {
+            success: true,
+            platform: "android" as Platform,
+            messageId: data.name,
+          };
         }
 
         const errorBody = await response.json().catch(() => ({}));
@@ -192,11 +196,16 @@ export async function sendFcm(device: DeviceToken, payload: PushPayload): Promis
 
         throw new Error(errorBody.error?.message || `HTTP ${response.status}`);
       },
-      { failureThreshold: 5, resetTimeout: 60000, halfOpenRequests: 3 },
+      { failureThreshold: 5, resetTimeoutMs: 60000, halfOpenMaxAttempts: 3 },
     );
   } catch (e) {
     if (e instanceof CircuitBreakerError) {
-      return { success: false, platform: "android", error: "Circuit open", retryable: true };
+      return {
+        success: false,
+        platform: "android",
+        error: "Circuit open",
+        retryable: true,
+      };
     }
     return {
       success: false,

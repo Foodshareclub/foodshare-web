@@ -35,7 +35,6 @@ import { LogsTable } from "@/components/foodlytics/logs-table";
 import { AdvisorChat } from "@/components/foodlytics/advisor-chat";
 import { CampaignTracker } from "@/components/foodlytics/campaign-tracker";
 import { PriorityQueue } from "@/components/foodlytics/priority-queue";
-import { FridgeScan } from "@/components/foodlytics/fridge-scan";
 import { UsWasteTracker } from "@/components/foodlytics/us-waste-tracker";
 
 export default function Home() {

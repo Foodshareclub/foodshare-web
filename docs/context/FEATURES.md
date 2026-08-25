@@ -272,11 +272,10 @@ supabase
 
 **Technical Implementation:**
 
-- Framework: Lingui 5.6 with SWC plugin
-- Macros: `<Trans>`, `t` macro
-- Locales: `src/locales/{locale}/messages.{js,po}`
-- Component: `ChangeLanguageContainer`
-- Commands: `bun run extract`, `bun run compile`
+- Framework: next-intl
+- API: `useTranslations()`, `getTranslations()`
+- Locales: `messages/{locale}.json`
+- Commands: `bun run translations:sync`
 
 ---
 

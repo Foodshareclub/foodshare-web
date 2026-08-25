@@ -7,16 +7,17 @@ import { CircuitBreakerError, withCircuitBreaker } from "../../../_shared/circui
 import type { DeviceToken, PushPayload, SendResult } from "./types.ts";
 import { generateDeepLink } from "./types.ts";
 
-const env = {
+const getEnv = () => ({
   vapidPublicKey: Deno.env.get("VAPID_PUBLIC_KEY"),
   vapidPrivateKey: Deno.env.get("VAPID_PRIVATE_KEY"),
   vapidSubject: Deno.env.get("VAPID_SUBJECT") || "mailto:hello@foodshare.club",
-};
+});
 
 let webPushInitialized = false;
 
 function initWebPush(): boolean {
   if (webPushInitialized) return true;
+  const env = getEnv();
   if (!env.vapidPublicKey || !env.vapidPrivateKey) return false;
 
   webpush.setVapidDetails(env.vapidSubject, env.vapidPublicKey, env.vapidPrivateKey);
@@ -73,13 +74,22 @@ export async function sendWebPush(device: DeviceToken, payload: PushPayload): Pr
           urgency: payload.priority === "normal" ? "normal" : "high",
         });
 
-        return { success: true, platform: "web", messageId: result.headers?.location };
+        return {
+          success: true,
+          platform: "web",
+          messageId: result.headers?.location,
+        };
       },
-      { failureThreshold: 5, resetTimeout: 60000, halfOpenRequests: 3 },
+      { failureThreshold: 5, resetTimeoutMs: 60000, halfOpenMaxAttempts: 3 },
     );
   } catch (e: unknown) {
     if (e instanceof CircuitBreakerError) {
-      return { success: false, platform: "web", error: "Circuit open", retryable: true };
+      return {
+        success: false,
+        platform: "web",
+        error: "Circuit open",
+        retryable: true,
+      };
     }
 
     const err = e as { statusCode?: number; body?: string };

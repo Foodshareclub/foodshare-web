@@ -40,28 +40,34 @@ export async function handleCacheOperation(
   const startTime = performance.now();
   metrics.totalRequests++;
 
-  const { supabase, body, userId, ctx: requestCtx } = ctx;
+  const { supabase, body, userId } = ctx;
   const { operation, options } = body;
 
   // Health check (no auth required)
   if (operation === "health" || operation === "ping") {
-    return ok({
-      success: true,
-      operation,
-      result: {
-        status: isCircuitBreakerOpen() ? "degraded" : "healthy",
-        version: CONFIG.version,
-        circuitBreaker: circuitBreaker.state,
-        metrics: {
-          totalRequests: metrics.totalRequests,
-          successRate: metrics.totalRequests > 0
-            ? metrics.successfulRequests / metrics.totalRequests
-            : 1,
-          averageLatencyMs: metrics.averageLatencyMs,
+    return ok(
+      {
+        success: true,
+        operation,
+        result: {
+          status: isCircuitBreakerOpen() ? "degraded" : "healthy",
+          version: CONFIG.version,
+          circuitBreaker: circuitBreaker.state,
+          metrics: {
+            totalRequests: metrics.totalRequests,
+            successRate: metrics.totalRequests > 0
+              ? metrics.successfulRequests / metrics.totalRequests
+              : 1,
+            averageLatencyMs: metrics.averageLatencyMs,
+          },
+        },
+        metadata: {
+          version: CONFIG.version,
+          executionMs: Math.round(performance.now() - startTime),
         },
       },
-      metadata: { version: CONFIG.version, executionMs: Math.round(performance.now() - startTime) },
-    }, ctx);
+      ctx,
+    );
   }
 
   // Check circuit breaker
@@ -109,14 +115,13 @@ export async function handleCacheOperation(
     operation,
     key: body.key?.substring(0, 30),
     userId: userId?.substring(0, 8),
-    requestId: requestCtx?.requestId,
+    requestId: ctx.request.headers.get("x-request-id") || "unknown",
   });
 
-  // Get Redis credentials
   const requestMetadata = {
-    ip_address: requestCtx?.ip || "unknown",
-    user_agent: requestCtx?.userAgent || "unknown",
-    request_id: requestCtx?.requestId,
+    ip_address: ctx.request.headers.get("x-forwarded-for") || "unknown",
+    user_agent: ctx.request.headers.get("user-agent") || "unknown",
+    request_id: ctx.request.headers.get("x-request-id") || "unknown",
   };
 
   const [urlResult, tokenResult] = await Promise.all([
@@ -154,7 +159,7 @@ export async function handleCacheOperation(
         case "get": {
           if (!body.key) throw new ValidationError("Missing key");
           const { scopedKey } = validateAndScopeKey(body.key, userId, false);
-          let value = await executeRedisCommand(redisUrl, redisToken, ["GET", scopedKey]) as
+          let value = (await executeRedisCommand(redisUrl, redisToken, ["GET", scopedKey])) as
             | string
             | null;
           if (value) value = await decompressValue(value);
@@ -163,7 +168,9 @@ export async function handleCacheOperation(
 
         case "set": {
           if (!body.key) throw new ValidationError("Missing key");
-          if (body.value === undefined) throw new ValidationError("Missing value");
+          if (body.value === undefined) {
+            throw new ValidationError("Missing value");
+          }
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
           let valueToStore = typeof body.value === "string"
             ? body.value
@@ -185,7 +192,9 @@ export async function handleCacheOperation(
 
         case "getset": {
           if (!body.key) throw new ValidationError("Missing key");
-          if (body.value === undefined) throw new ValidationError("Missing value");
+          if (body.value === undefined) {
+            throw new ValidationError("Missing value");
+          }
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
           let valueToStore = typeof body.value === "string"
             ? body.value
@@ -195,11 +204,11 @@ export async function handleCacheOperation(
             valueToStore = await compressValue(valueToStore);
           }
 
-          let oldValue = await executeRedisCommand(redisUrl, redisToken, [
+          let oldValue = (await executeRedisCommand(redisUrl, redisToken, [
             "GETSET",
             scopedKey,
             valueToStore,
-          ]) as string | null;
+          ])) as string | null;
           if (oldValue) oldValue = await decompressValue(oldValue);
 
           if (body.ttl) {
@@ -212,24 +221,32 @@ export async function handleCacheOperation(
         case "delete": {
           if (!body.key) throw new ValidationError("Missing key");
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
-          return { deleted: await executeRedisCommand(redisUrl, redisToken, ["DEL", scopedKey]) };
+          return {
+            deleted: await executeRedisCommand(redisUrl, redisToken, ["DEL", scopedKey]),
+          };
         }
 
         case "incr": {
           if (!body.key) throw new ValidationError("Missing key");
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
-          return { value: await executeRedisCommand(redisUrl, redisToken, ["INCR", scopedKey]) };
+          return {
+            value: await executeRedisCommand(redisUrl, redisToken, ["INCR", scopedKey]),
+          };
         }
 
         case "decr": {
           if (!body.key) throw new ValidationError("Missing key");
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
-          return { value: await executeRedisCommand(redisUrl, redisToken, ["DECR", scopedKey]) };
+          return {
+            value: await executeRedisCommand(redisUrl, redisToken, ["DECR", scopedKey]),
+          };
         }
 
         case "expire": {
           if (!body.key) throw new ValidationError("Missing key");
-          if (!body.ttl || body.ttl <= 0) throw new ValidationError("Invalid TTL");
+          if (!body.ttl || body.ttl <= 0) {
+            throw new ValidationError("Invalid TTL");
+          }
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
           const expireResult = await executeRedisCommand(redisUrl, redisToken, [
             "EXPIRE",
@@ -250,18 +267,22 @@ export async function handleCacheOperation(
         case "ttl": {
           if (!body.key) throw new ValidationError("Missing key");
           const { scopedKey } = validateAndScopeKey(body.key, userId, false);
-          return { ttl: await executeRedisCommand(redisUrl, redisToken, ["TTL", scopedKey]) };
+          return {
+            ttl: await executeRedisCommand(redisUrl, redisToken, ["TTL", scopedKey]),
+          };
         }
 
         // Batch Operations
         case "mget": {
           if (!body.keys?.length) throw new ValidationError("Missing keys");
           const scopedKeys = body.keys.map((k) => validateAndScopeKey(k, userId, false).scopedKey);
-          const values = await executeRedisCommand(redisUrl, redisToken, [
+          const values = (await executeRedisCommand(redisUrl, redisToken, [
             "MGET",
             ...scopedKeys,
-          ]) as (string | null)[];
-          const decompressed = await Promise.all(values.map((v) => v ? decompressValue(v) : null));
+          ])) as (string | null)[];
+          const decompressed = await Promise.all(
+            values.map((v) => (v ? decompressValue(v) : null)),
+          );
           return { values: decompressed };
         }
 
@@ -285,8 +306,8 @@ export async function handleCacheOperation(
           await executeRedisCommand(redisUrl, redisToken, ["MSET", ...scopedPairs]);
 
           const ttl = body.ttl || CONFIG.ttlPresets.medium;
-          const pipeline = entries.map((_, i) =>
-            ["EXPIRE", scopedPairs[i * 2], ttl] as (string | number)[]
+          const pipeline = entries.map(
+            (_, i) => ["EXPIRE", scopedPairs[i * 2], ttl] as (string | number)[],
           );
           await executeRedisPipeline(redisUrl, redisToken, pipeline);
 
@@ -306,11 +327,11 @@ export async function handleCacheOperation(
           if (!body.key) throw new ValidationError("Missing key");
           if (!body.field) throw new ValidationError("Missing field");
           const { scopedKey } = validateAndScopeKey(body.key, userId, false);
-          let value = await executeRedisCommand(redisUrl, redisToken, [
+          let value = (await executeRedisCommand(redisUrl, redisToken, [
             "HGET",
             scopedKey,
             body.field,
-          ]) as string | null;
+          ])) as string | null;
           if (value) value = await decompressValue(value);
           return { value };
         }
@@ -319,12 +340,14 @@ export async function handleCacheOperation(
           if (!body.key) throw new ValidationError("Missing key");
           if (!body.fields?.length) throw new ValidationError("Missing fields");
           const { scopedKey } = validateAndScopeKey(body.key, userId, false);
-          const values = await executeRedisCommand(redisUrl, redisToken, [
+          const values = (await executeRedisCommand(redisUrl, redisToken, [
             "HMGET",
             scopedKey,
             ...body.fields,
-          ]) as (string | null)[];
-          const decompressed = await Promise.all(values.map((v) => v ? decompressValue(v) : null));
+          ])) as (string | null)[];
+          const decompressed = await Promise.all(
+            values.map((v) => (v ? decompressValue(v) : null)),
+          );
 
           const hashResult: Record<string, string | null> = {};
           body.fields.forEach((field, i) => {
@@ -361,7 +384,9 @@ export async function handleCacheOperation(
 
         case "hmset": {
           if (!body.key) throw new ValidationError("Missing key");
-          if (!body.fieldValues) throw new ValidationError("Missing fieldValues");
+          if (!body.fieldValues) {
+            throw new ValidationError("Missing fieldValues");
+          }
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
 
           const args: string[] = [scopedKey];
@@ -385,10 +410,10 @@ export async function handleCacheOperation(
         case "hgetall": {
           if (!body.key) throw new ValidationError("Missing key");
           const { scopedKey } = validateAndScopeKey(body.key, userId, false);
-          const rawResult = await executeRedisCommand(redisUrl, redisToken, [
+          const rawResult = (await executeRedisCommand(redisUrl, redisToken, [
             "HGETALL",
             scopedKey,
-          ]) as string[];
+          ])) as string[];
 
           const hash: Record<string, string> = {};
           for (let i = 0; i < rawResult.length; i += 2) {
@@ -472,19 +497,25 @@ export async function handleCacheOperation(
         case "lpop": {
           if (!body.key) throw new ValidationError("Missing key");
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
-          return { value: await executeRedisCommand(redisUrl, redisToken, ["LPOP", scopedKey]) };
+          return {
+            value: await executeRedisCommand(redisUrl, redisToken, ["LPOP", scopedKey]),
+          };
         }
 
         case "rpop": {
           if (!body.key) throw new ValidationError("Missing key");
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
-          return { value: await executeRedisCommand(redisUrl, redisToken, ["RPOP", scopedKey]) };
+          return {
+            value: await executeRedisCommand(redisUrl, redisToken, ["RPOP", scopedKey]),
+          };
         }
 
         case "llen": {
           if (!body.key) throw new ValidationError("Missing key");
           const { scopedKey } = validateAndScopeKey(body.key, userId, false);
-          return { length: await executeRedisCommand(redisUrl, redisToken, ["LLEN", scopedKey]) };
+          return {
+            length: await executeRedisCommand(redisUrl, redisToken, ["LLEN", scopedKey]),
+          };
         }
 
         case "ltrim": {
@@ -540,12 +571,15 @@ export async function handleCacheOperation(
           ];
           if (options?.withScores) cmd.push("WITHSCORES");
 
-          const rawResult = await executeRedisCommand(redisUrl, redisToken, cmd) as string[];
+          const rawResult = (await executeRedisCommand(redisUrl, redisToken, cmd)) as string[];
 
           if (options?.withScores) {
             const members: { member: string; score: number }[] = [];
             for (let i = 0; i < rawResult.length; i += 2) {
-              members.push({ member: rawResult[i], score: parseFloat(rawResult[i + 1]) });
+              members.push({
+                member: rawResult[i],
+                score: parseFloat(rawResult[i + 1]),
+              });
             }
             return { members };
           }
@@ -566,12 +600,15 @@ export async function handleCacheOperation(
           if (options?.withScores) cmd.push("WITHSCORES");
           if (body.count) cmd.push("LIMIT", body.start ?? 0, body.count);
 
-          const rawResult = await executeRedisCommand(redisUrl, redisToken, cmd) as string[];
+          const rawResult = (await executeRedisCommand(redisUrl, redisToken, cmd)) as string[];
 
           if (options?.withScores) {
             const members: { member: string; score: number }[] = [];
             for (let i = 0; i < rawResult.length; i += 2) {
-              members.push({ member: rawResult[i], score: parseFloat(rawResult[i + 1]) });
+              members.push({
+                member: rawResult[i],
+                score: parseFloat(rawResult[i + 1]),
+              });
             }
             return { members };
           }
@@ -592,17 +629,19 @@ export async function handleCacheOperation(
           if (!body.key) throw new ValidationError("Missing key");
           if (!body.member) throw new ValidationError("Missing member");
           const { scopedKey } = validateAndScopeKey(body.key, userId, false);
-          const score = await executeRedisCommand(redisUrl, redisToken, [
+          const score = (await executeRedisCommand(redisUrl, redisToken, [
             "ZSCORE",
             scopedKey,
             body.member,
-          ]) as string | null;
+          ])) as string | null;
           return { score: score ? parseFloat(score) : null };
         }
 
         case "zrem": {
           if (!body.key) throw new ValidationError("Missing key");
-          if (!body.member && !body.members?.length) throw new ValidationError("Missing member(s)");
+          if (!body.member && !body.members?.length) {
+            throw new ValidationError("Missing member(s)");
+          }
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
           const membersToRemove = body.members?.map((m) => m.member) || [body.member!];
           return {
@@ -618,19 +657,21 @@ export async function handleCacheOperation(
           if (!body.key) throw new ValidationError("Missing key");
           if (!body.member) throw new ValidationError("Missing member");
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
-          const newScore = await executeRedisCommand(redisUrl, redisToken, [
+          const newScore = (await executeRedisCommand(redisUrl, redisToken, [
             "ZINCRBY",
             scopedKey,
             body.score ?? 1,
             body.member,
-          ]) as string;
+          ])) as string;
           return { score: parseFloat(newScore) };
         }
 
         case "zcard": {
           if (!body.key) throw new ValidationError("Missing key");
           const { scopedKey } = validateAndScopeKey(body.key, userId, false);
-          return { count: await executeRedisCommand(redisUrl, redisToken, ["ZCARD", scopedKey]) };
+          return {
+            count: await executeRedisCommand(redisUrl, redisToken, ["ZCARD", scopedKey]),
+          };
         }
 
         case "zcount": {
@@ -696,7 +737,9 @@ export async function handleCacheOperation(
         case "scard": {
           if (!body.key) throw new ValidationError("Missing key");
           const { scopedKey } = validateAndScopeKey(body.key, userId, false);
-          return { count: await executeRedisCommand(redisUrl, redisToken, ["SCARD", scopedKey]) };
+          return {
+            count: await executeRedisCommand(redisUrl, redisToken, ["SCARD", scopedKey]),
+          };
         }
 
         // Utility Operations
@@ -704,15 +747,16 @@ export async function handleCacheOperation(
           if (!userId) throw new AuthError("Authentication required");
           const pattern = body.pattern || `user:${userId}:*`;
           if (
-            !pattern.startsWith(`user:${userId}:`) && !pattern.startsWith("app:") &&
+            !pattern.startsWith(`user:${userId}:`) &&
+            !pattern.startsWith("app:") &&
             !pattern.startsWith("global:")
           ) {
             throw new ValidationError("Can only list your own keys or shared keys");
           }
-          const keys = await executeRedisCommand(redisUrl, redisToken, [
+          const keys = (await executeRedisCommand(redisUrl, redisToken, [
             "KEYS",
             pattern,
-          ]) as string[];
+          ])) as string[];
           return { keys, count: keys.length };
         }
 
@@ -720,29 +764,37 @@ export async function handleCacheOperation(
           if (!userId) throw new AuthError("Authentication required");
           const pattern = body.pattern || `user:${userId}:*`;
           if (
-            !pattern.startsWith(`user:${userId}:`) && !pattern.startsWith("app:") &&
+            !pattern.startsWith(`user:${userId}:`) &&
+            !pattern.startsWith("app:") &&
             !pattern.startsWith("global:")
           ) {
             throw new ValidationError("Can only scan your own keys or shared keys");
           }
-          const scanResult = await executeRedisCommand(redisUrl, redisToken, [
+          const scanResult = (await executeRedisCommand(redisUrl, redisToken, [
             "SCAN",
             body.cursor || "0",
             "MATCH",
             pattern,
             "COUNT",
             body.count || 100,
-          ]) as [string, string[]];
-          return { cursor: scanResult[0], keys: scanResult[1], done: scanResult[0] === "0" };
+          ])) as [string, string[]];
+          return {
+            cursor: scanResult[0],
+            keys: scanResult[1],
+            done: scanResult[0] === "0",
+          };
         }
 
         case "stats": {
           if (!userId) throw new AuthError("Authentication required");
-          const info = await executeRedisCommand(redisUrl, redisToken, ["INFO", "stats"]) as string;
-          const memory = await executeRedisCommand(redisUrl, redisToken, [
+          const info = (await executeRedisCommand(redisUrl, redisToken, [
+            "INFO",
+            "stats",
+          ])) as string;
+          const memory = (await executeRedisCommand(redisUrl, redisToken, [
             "INFO",
             "memory",
-          ]) as string;
+          ])) as string;
 
           const statsInfo = parseRedisInfo(info);
           const memoryInfo = parseRedisInfo(memory);
@@ -769,10 +821,10 @@ export async function handleCacheOperation(
           if (!pattern.startsWith(`user:${userId}:`)) {
             throw new ValidationError("Can only flush your own keys");
           }
-          const keys = await executeRedisCommand(redisUrl, redisToken, [
+          const keys = (await executeRedisCommand(redisUrl, redisToken, [
             "KEYS",
             pattern,
-          ]) as string[];
+          ])) as string[];
           if (keys.length > 0) {
             await executeRedisCommand(redisUrl, redisToken, ["DEL", ...keys]);
           }
@@ -811,15 +863,18 @@ export async function handleCacheOperation(
     userId: userId?.substring(0, 8),
   });
 
-  return ok({
-    success: true,
-    operation,
-    result,
-    metadata: {
-      version: CONFIG.version,
-      compressed,
-      executionMs: Math.round(executionMs),
-      circuitBreaker: circuitBreaker.state,
+  return ok(
+    {
+      success: true,
+      operation,
+      result,
+      metadata: {
+        version: CONFIG.version,
+        compressed,
+        executionMs: Math.round(executionMs),
+        circuitBreaker: circuitBreaker.state,
+      },
     },
-  }, ctx);
+    ctx,
+  );
 }

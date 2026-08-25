@@ -56,13 +56,13 @@ export async function toggleRow(
 
   if (existing) {
     // Remove
-    await supabase
-      .from(table)
-      .delete()
-      .eq(entityColumn, entityId)
-      .eq(userColumn, userId);
+    await supabase.from(table).delete().eq(entityColumn, entityId).eq(userColumn, userId);
 
-    logger.debug("Toggle removed", { table, entityId, userId: userId.substring(0, 8) });
+    logger.debug("Toggle removed", {
+      table,
+      entityId,
+      userId: userId.substring(0, 8),
+    });
     return { active: false };
   }
 
@@ -72,6 +72,10 @@ export async function toggleRow(
     [userColumn]: userId,
   });
 
-  logger.debug("Toggle added", { table, entityId, userId: userId.substring(0, 8) });
+  logger.debug("Toggle added", {
+    table,
+    entityId,
+    userId: userId.substring(0, 8),
+  });
   return { active: true };
 }

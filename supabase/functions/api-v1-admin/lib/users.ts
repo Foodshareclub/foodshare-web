@@ -37,11 +37,11 @@ const banUserSchema = z.object({
 // =============================================================================
 
 class ValidationError extends Error {
-  name = "ValidationError";
+  override name = "ValidationError";
 }
 
 class NotFoundError extends Error {
-  name = "NotFoundError";
+  override name = "NotFoundError";
 }
 
 // =============================================================================
@@ -140,7 +140,9 @@ async function handleListUsers(
 
   let dbQuery = ctx.supabase
     .from("profiles")
-    .select("id, first_name, second_name, email, created_time, is_active", { count: "exact" });
+    .select("id, first_name, second_name, email, created_time, is_active", {
+      count: "exact",
+    });
 
   if (queryParams.search) {
     const safeSearch = queryParams.search.replace(/[%_]/g, "\\$&");
@@ -167,15 +169,16 @@ async function handleListUsers(
           .from("posts")
           .select("*", { count: "exact", head: true })
           .eq("profile_id", user.id),
-        ctx.supabase
-          .from("user_roles")
-          .select("roles!inner(name)")
-          .eq("profile_id", user.id),
+        ctx.supabase.from("user_roles").select("roles!inner(name)").eq("profile_id", user.id),
       ]);
 
       const roles = (userRoles ?? [])
         .map((r) => {
-          const roleData = r.roles as unknown as { name: string } | { name: string }[];
+          const roleData = r.roles as unknown as
+            | { name: string }
+            | {
+              name: string;
+            }[];
           return Array.isArray(roleData) ? roleData[0]?.name : roleData?.name;
         })
         .filter(Boolean) as string[];
@@ -202,16 +205,19 @@ async function handleListUsers(
   const total = count ?? 0;
   const hasMore = offset + limit < total;
 
-  return jsonResponse({
-    success: true,
-    data: filteredUsers,
-    pagination: {
-      page,
-      limit,
-      total,
-      hasMore,
+  return jsonResponse(
+    {
+      success: true,
+      data: filteredUsers,
+      pagination: {
+        page,
+        limit,
+        total,
+        hasMore,
+      },
     },
-  }, ctx.corsHeaders);
+    ctx.corsHeaders,
+  );
 }
 
 async function handleUpdateRole(
@@ -239,16 +245,23 @@ async function handleUpdateRole(
   // Upsert into user_roles
   const { error } = await ctx.supabase
     .from("user_roles")
-    .upsert(
-      { profile_id: userId, role_id: roleData.id },
-      { onConflict: "profile_id,role_id" },
-    );
+    .upsert({ profile_id: userId, role_id: roleData.id }, { onConflict: "profile_id,role_id" });
 
   if (error) throw new Error(error.message);
 
-  await logAdminAction(ctx, "UPDATE_USER_ROLE", userId, { newRole: input.role });
+  await logAdminAction(ctx, "UPDATE_USER_ROLE", userId, {
+    newRole: input.role,
+  });
 
-  return jsonResponse({ success: true, userId, role: input.role, updated: true }, ctx.corsHeaders);
+  return jsonResponse(
+    {
+      success: true,
+      userId,
+      role: input.role,
+      updated: true,
+    },
+    ctx.corsHeaders,
+  );
 }
 
 async function handleUpdateRoles(
@@ -263,9 +276,7 @@ async function handleUpdateRoles(
   const input = updateRolesSchema.parse(body);
 
   // Get all role IDs from roles table
-  const { data: allRoles, error: rolesError } = await ctx.supabase
-    .from("roles")
-    .select("id, name");
+  const { data: allRoles, error: rolesError } = await ctx.supabase.from("roles").select("id,name");
 
   if (rolesError) throw new Error(rolesError.message);
 
@@ -287,14 +298,14 @@ async function handleUpdateRoles(
     .map((roleId) => ({ profile_id: userId, role_id: roleId }));
 
   if (rolesToInsert.length > 0) {
-    const { error: insertError } = await ctx.supabase
-      .from("user_roles")
-      .insert(rolesToInsert);
+    const { error: insertError } = await ctx.supabase.from("user_roles").insert(rolesToInsert);
 
     if (insertError) throw new Error(insertError.message);
   }
 
-  await logAdminAction(ctx, "UPDATE_USER_ROLES", userId, { roles: input.roles });
+  await logAdminAction(ctx, "UPDATE_USER_ROLES", userId, {
+    roles: input.roles,
+  });
 
   return jsonResponse(
     { success: true, userId, roles: input.roles, updated: true },
@@ -302,11 +313,7 @@ async function handleUpdateRoles(
   );
 }
 
-async function handleBanUser(
-  userId: string,
-  body: unknown,
-  ctx: AdminContext,
-): Promise<Response> {
+async function handleBanUser(userId: string, body: unknown, ctx: AdminContext): Promise<Response> {
   if (userId === ctx.adminId) {
     throw new ValidationError("Cannot ban yourself");
   }
@@ -316,7 +323,7 @@ async function handleBanUser(
   // Check if user exists
   const { data: targetUser } = await ctx.supabase
     .from("profiles")
-    .select("id, first_name, second_name, email")
+    .select("id,first_name,second_name,email")
     .eq("id", userId)
     .single();
 
@@ -333,32 +340,29 @@ async function handleBanUser(
   if (error) throw new Error(error.message);
 
   // Deactivate all user's listings
-  await ctx.supabase
-    .from("posts")
-    .update({ is_active: false })
-    .eq("profile_id", userId);
+  await ctx.supabase.from("posts").update({ is_active: false }).eq("profile_id", userId);
 
   await logAdminAction(ctx, "BAN_USER", userId, {
     targetEmail: targetUser.email,
     reason: input.reason,
   });
 
-  return jsonResponse({
-    success: true,
-    userId,
-    banned: true,
-    reason: input.reason,
-  }, ctx.corsHeaders);
+  return jsonResponse(
+    {
+      success: true,
+      userId,
+      banned: true,
+      reason: input.reason,
+    },
+    ctx.corsHeaders,
+  );
 }
 
-async function handleUnbanUser(
-  userId: string,
-  ctx: AdminContext,
-): Promise<Response> {
+async function handleUnbanUser(userId: string, ctx: AdminContext): Promise<Response> {
   // Check if user exists
   const { data: targetUser } = await ctx.supabase
     .from("profiles")
-    .select("id, email, is_active")
+    .select("id,email,is_active")
     .eq("id", userId)
     .single();
 
@@ -378,7 +382,9 @@ async function handleUnbanUser(
 
   if (error) throw new Error(error.message);
 
-  await logAdminAction(ctx, "UNBAN_USER", userId, { targetEmail: targetUser.email });
+  await logAdminAction(ctx, "UNBAN_USER", userId, {
+    targetEmail: targetUser.email,
+  });
 
   return jsonResponse({ success: true, userId, unbanned: true }, ctx.corsHeaders);
 }

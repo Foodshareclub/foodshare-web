@@ -3,7 +3,7 @@
  */
 
 import { logger } from "../../_shared/logger.ts";
-import { scheduleGroupMessageDeletion, sendMessage } from "../services/telegram-api.ts";
+import { scheduleGroupMessageDeletion, sendMessage } from "../../_shared/telegram-client.ts";
 import { getUserState, setUserState } from "../services/user-state.ts";
 import { getProfileByTelegramId, updateProfile } from "../services/profile.ts";
 import { trackMessage } from "../services/tracking.ts";
@@ -30,8 +30,6 @@ import { handleEmailInput, handleVerificationCode } from "./auth.ts";
 
 // Actions that require authorization
 const PROTECTED_ACTIONS = new Set(["share", "nearby", "profile", "impact", "stats", "language"]);
-// Public actions that don't require auth (kept for documentation)
-const _PUBLIC_ACTIONS = new Set(["find", "help", "leaderboard"]);
 
 /**
  * Check if user is authorized (has verified email)
@@ -100,7 +98,10 @@ export async function handleNewChatMembers(
 
   const msgId = await sendMessage(chatId, greeting);
   if (msgId) scheduleGroupMessageDeletion(chatId, msgId);
-  logger.info("Greeted new members in group", { chatId, members: humans.map((m) => m.id) });
+  logger.info("Greeted new members in group", {
+    chatId,
+    members: humans.map((m) => m.id),
+  });
 }
 
 export async function handleTextMessage(message: TelegramMessage): Promise<void> {
@@ -147,8 +148,10 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
         return handleImpactCommand(chatId, userId);
       case "stats":
         return handleStatsCommand(chatId, userId, message.from?.language_code);
-      case "help":
-        return handleHelpCommand(chatId, message.from?.language_code);
+      case "help": {
+        const { detectLanguage } = await import("../lib/i18n.ts");
+        return handleHelpCommand(chatId, detectLanguage(message.from?.language_code));
+      }
       case "language":
         return handleLanguageCommand(chatId, userId);
       case "leaderboard":
@@ -247,7 +250,7 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
 
     const { extractCoordinates } = await import("../services/geocoding.ts");
     const { getSupabaseClient } = await import("../../_shared/supabase.ts");
-    const { APP_URL } = await import("../config/index.ts");
+    const { getAppUrl } = await import("../config/index.ts");
     const { withTimeout } = await import("../utils/timeout.ts");
 
     await sendMessage(chatId, `${emoji.LOCATION} Looking up location...`);
@@ -307,9 +310,13 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
         // Validate the URL is a proper Supabase Storage URL
         if (validateImageUrl(uploadResult.value)) {
           imageUrls = [uploadResult.value];
-          logger.info("Photo uploaded and validated", { url: uploadResult.value });
+          logger.info("Photo uploaded and validated", {
+            url: uploadResult.value,
+          });
         } else {
-          logger.error("Invalid image URL returned", { url: uploadResult.value });
+          logger.error("Invalid image URL returned", {
+            url: uploadResult.value,
+          });
           photoWarning = `\n\n${emoji.WARNING} <i>Note: Photo upload failed validation.</i>`;
         }
       } else {
@@ -356,7 +363,7 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
       msg.successMessage(
         "Food Shared Successfully!",
         `${emoji.CELEBRATE} Your food is now available for the community!\n\n` +
-          `${emoji.LINK} <a href="${APP_URL}/product/${post.id}">View Your Post</a>\n\n` +
+          `${emoji.LINK} <a href="${getAppUrl()}/product/${post.id}">View Your Post</a>\n\n` +
           `${emoji.SPARKLES} Thank you for reducing food waste! 🌍${photoWarning}`,
       ),
       { reply_markup: { remove_keyboard: true } },
@@ -441,7 +448,7 @@ export async function handleLocationMessage(message: TelegramMessage): Promise<v
   // Handle food sharing location (GPS)
   if (userState?.action === "sharing_food" && userState.step === "location") {
     const { getSupabaseClient } = await import("../../_shared/supabase.ts");
-    const { APP_URL } = await import("../config/index.ts");
+    const { getAppUrl } = await import("../config/index.ts");
     const { withTimeout } = await import("../utils/timeout.ts");
 
     await sendMessage(chatId, `${emoji.LOCATION} Creating your post...`);
@@ -522,7 +529,7 @@ export async function handleLocationMessage(message: TelegramMessage): Promise<v
       msg.successMessage(
         "Food Shared Successfully!",
         `${emoji.CELEBRATE} Your food is now available for the community!\n\n` +
-          `${emoji.LINK} <a href="${APP_URL}/product/${post.id}">View Your Post</a>\n\n` +
+          `${emoji.LINK} <a href="${getAppUrl()}/product/${post.id}">View Your Post</a>\n\n` +
           `${emoji.SPARKLES} Thank you for reducing food waste! 🌍${photoWarning}`,
       ),
       { reply_markup: { remove_keyboard: true } },

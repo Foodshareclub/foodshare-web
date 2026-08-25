@@ -19,10 +19,7 @@ export class InAppChannelAdapter implements ChannelAdapter {
   name = "in_app";
   channel = "in_app" as const;
 
-  async send(
-    payload: InAppPayload,
-    context: NotificationContext,
-  ): Promise<ChannelDeliveryResult> {
+  async send(payload: InAppPayload, context: NotificationContext): Promise<ChannelDeliveryResult> {
     const startTime = performance.now();
 
     try {
@@ -121,9 +118,7 @@ export class InAppChannelAdapter implements ChannelAdapter {
     });
 
     // Send in parallel
-    const results = await Promise.all(
-      payloads.map((payload) => this.send(payload, context)),
-    );
+    const results = await Promise.all(payloads.map((payload) => this.send(payload, context)));
 
     return results;
   }
@@ -211,7 +206,9 @@ export async function getUnreadCount(
       .is("read_at", null);
 
     if (error) {
-      logger.error("Failed to get unread count", new Error(error.message), { userId });
+      logger.error("Failed to get unread count", new Error(error.message), {
+        userId,
+      });
       return 0;
     }
 
@@ -237,7 +234,9 @@ export async function markAllAsRead(
       .is("read_at", null);
 
     if (error) {
-      logger.error("Failed to mark all as read", new Error(error.message), { userId });
+      logger.error("Failed to mark all as read", new Error(error.message), {
+        userId,
+      });
       return false;
     }
 

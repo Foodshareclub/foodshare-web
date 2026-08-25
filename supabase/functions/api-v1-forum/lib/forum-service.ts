@@ -5,7 +5,7 @@
  * Separates data access from HTTP handlers.
  */
 
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 import { logger } from "../../_shared/logger.ts";
 
 export interface ForumPost {
@@ -47,7 +47,10 @@ export interface UpdatePostInput {
 }
 
 export class ForumService {
-  constructor(private supabase: SupabaseClient, private userId: string) {}
+  constructor(
+    private supabase: SupabaseClient<any, any, any>,
+    private userId: string,
+  ) {}
 
   async createPost(input: CreatePostInput) {
     const slug = this.generateSlug(input.title);
@@ -67,7 +70,7 @@ export class ForumService {
     const { data, error } = await this.supabase
       .from("forum")
       .insert(insertData)
-      .select("id, slug, forum_post_name, forum_post_created_at")
+      .select("id,slug,forum_post_name,forum_post_created_at")
       .single();
 
     if (error) throw error;
@@ -77,7 +80,10 @@ export class ForumService {
       await this.addTags(data.id, input.tags);
     }
 
-    logger.info("Forum post created", { forumId: data.id, userId: this.userId });
+    logger.info("Forum post created", {
+      forumId: data.id,
+      userId: this.userId,
+    });
     return data;
   }
 
@@ -91,17 +97,25 @@ export class ForumService {
     };
 
     if (input.title !== undefined) updateData.forum_post_name = input.title;
-    if (input.description !== undefined) updateData.forum_post_description = input.description;
-    if (input.categoryId !== undefined) updateData.category_id = input.categoryId;
+    if (input.description !== undefined) {
+      updateData.forum_post_description = input.description;
+    }
+    if (input.categoryId !== undefined) {
+      updateData.category_id = input.categoryId;
+    }
     if (input.postType !== undefined) updateData.post_type = input.postType;
-    if (input.imageUrl !== undefined) updateData.forum_post_image = input.imageUrl;
-    if (input.richContent !== undefined) updateData.rich_content = input.richContent;
+    if (input.imageUrl !== undefined) {
+      updateData.forum_post_image = input.imageUrl;
+    }
+    if (input.richContent !== undefined) {
+      updateData.rich_content = input.richContent;
+    }
 
     const { data, error } = await this.supabase
       .from("forum")
       .update(updateData)
       .eq("id", postId)
-      .select("id, forum_post_name, forum_post_updated_at, slug")
+      .select("id,forum_post_name,forum_post_updated_at,slug")
       .single();
 
     if (error) throw error;
@@ -205,21 +219,19 @@ export class ForumService {
       tag_id: tagId,
     }));
 
-    const { error } = await this.supabase
-      .from("forum_post_tags")
-      .insert(tagRows);
+    const { error } = await this.supabase.from("forum_post_tags").insert(tagRows);
 
     if (error) {
-      logger.warn("Failed to insert tags", { error: error.message, forumId: postId });
+      logger.warn("Failed to insert tags", {
+        error: error.message,
+        forumId: postId,
+      });
     }
   }
 
   private async replaceTags(postId: number, tagIds: number[]) {
     // Delete existing tags
-    await this.supabase
-      .from("forum_post_tags")
-      .delete()
-      .eq("forum_id", postId);
+    await this.supabase.from("forum_post_tags").delete().eq("forum_id", postId);
 
     // Insert new tags
     if (tagIds.length > 0) {
@@ -228,12 +240,15 @@ export class ForumService {
   }
 
   private generateSlug(title: string): string {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .substring(0, 100) +
-      "-" + Date.now().toString(36);
+    return (
+      title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .substring(0, 100) +
+      "-" +
+      Date.now().toString(36)
+    );
   }
 }

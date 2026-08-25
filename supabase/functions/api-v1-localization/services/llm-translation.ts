@@ -54,7 +54,7 @@ const SUPPORTED_LANGUAGES = [
   "hi",
 ] as const;
 
-type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
+type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 /** Translation error codes for structured error handling */
 enum TranslationErrorCode {
@@ -215,7 +215,13 @@ class LRUCache<K, V> {
     this.cache.set(key, { value, timestamp: Date.now(), accessCount: 1 });
   }
 
-  getStats(): { size: number; maxSize: number; hitRate: number; hits: number; misses: number } {
+  getStats(): {
+    size: number;
+    maxSize: number;
+    hitRate: number;
+    hits: number;
+    misses: number;
+  } {
     const total = this.hits + this.misses;
     return {
       size: this.cache.size,
@@ -335,7 +341,7 @@ class LLMTranslationService {
 
   // Timeouts - fast fail for quick fallback
   private readonly DEFAULT_TIMEOUT = 10000; // 10 seconds
-  private readonly FALLBACK_TIMEOUT = 8000; // 8 seconds for fallbacks
+  // private readonly FALLBACK_TIMEOUT = 8000; // 8 seconds for fallbacks
   private readonly MAX_RETRIES = 1; // Single attempt - fail fast
 
   // Per-service circuit breakers
@@ -486,7 +492,10 @@ class LLMTranslationService {
       cb.successes++;
       if (cb.successes >= this.CIRCUIT_CONFIG.successThreshold) {
         cb.state = "CLOSED";
-        logger.info("circuit_closed", { service, reason: "success_threshold_reached" });
+        logger.info("circuit_closed", {
+          service,
+          reason: "success_threshold_reached",
+        });
       }
     }
   }
@@ -533,7 +542,9 @@ class LLMTranslationService {
         windowMs: this.retryBudget.windowMs,
         maxRetries: this.retryBudget.maxRetries,
       };
-      logger.debug("retry_budget_reset", { remaining: this.retryBudget.remaining });
+      logger.debug("retry_budget_reset", {
+        remaining: this.retryBudget.remaining,
+      });
     }
     return this.retryBudget.remaining > 0;
   }
@@ -554,7 +565,9 @@ class LLMTranslationService {
    */
   private checkDeadline(deadline: number | undefined, logger: StructuredLogger): void {
     if (deadline && Date.now() > deadline) {
-      logger.warn("deadline_exceeded", { deadline: new Date(deadline).toISOString() });
+      logger.warn("deadline_exceeded", {
+        deadline: new Date(deadline).toISOString(),
+      });
       throw new TranslationError(
         TranslationErrorCode.DEADLINE_EXCEEDED,
         "Translation deadline exceeded",
@@ -645,7 +658,11 @@ class LLMTranslationService {
       const hasQuota = remaining >= charCount;
 
       if (!hasQuota) {
-        logger.info("quota_exhausted", { service, remaining, needed: charCount });
+        logger.info("quota_exhausted", {
+          service,
+          remaining,
+          needed: charCount,
+        });
       }
 
       return hasQuota;
@@ -725,7 +742,7 @@ class LLMTranslationService {
       const newUsage = data?.[0]?.chars_used ?? 0;
       const freeLimit = this.FREE_LIMITS[service];
       const remaining = freeLimit - newUsage;
-      const percentUsed = (newUsage / freeLimit * 100).toFixed(1);
+      const percentUsed = ((newUsage / freeLimit) * 100).toFixed(1);
 
       logger.info("usage_recorded", {
         service,
@@ -738,9 +755,15 @@ class LLMTranslationService {
 
       // Check alert thresholds
       if (newUsage / freeLimit >= ALERT_THRESHOLDS.quotaCritical) {
-        logger.error("quota_critical", { service, percentUsed: `${percentUsed}%` });
+        logger.error("quota_critical", {
+          service,
+          percentUsed: `${percentUsed}%`,
+        });
       } else if (newUsage / freeLimit >= ALERT_THRESHOLDS.quotaWarning) {
-        logger.warn("quota_warning", { service, percentUsed: `${percentUsed}%` });
+        logger.warn("quota_warning", {
+          service,
+          percentUsed: `${percentUsed}%`,
+        });
       }
 
       // Immediately mark as exhausted if we exceeded the limit
@@ -748,7 +771,10 @@ class LLMTranslationService {
         this.markServiceExhausted(service, logger);
       }
     } catch (err) {
-      logger.warn("usage_record_error", { service, error: (err as Error).message });
+      logger.warn("usage_record_error", {
+        service,
+        error: (err as Error).message,
+      });
     }
   }
 
@@ -791,10 +817,7 @@ class LLMTranslationService {
 
     // Rotate order for load balancing
     const startIndex = this.fallbackIndex % available.length;
-    const rotated = [
-      ...available.slice(startIndex),
-      ...available.slice(0, startIndex),
-    ];
+    const rotated = [...available.slice(startIndex), ...available.slice(0, startIndex)];
     this.fallbackIndex++;
 
     logger.debug("fallback_services_available", { services: rotated });
@@ -820,7 +843,7 @@ class LLMTranslationService {
       case "amazon":
         return this.tryAmazonTranslate(text, sourceLang, targetLang);
       default:
-        return { text, cached: false, quality: 0 };
+        return { text, cached: false, quality: 0 } as any;
     }
   }
 
@@ -831,8 +854,12 @@ class LLMTranslationService {
     const msg = error.message.toLowerCase();
     if (msg.includes("timeout") || msg.includes("aborted")) return "TIMEOUT";
     if (msg.includes("429") || msg.includes("rate")) return "RATE_LIMITED";
-    if (msg.includes("503") || msg.includes("502") || msg.includes("504")) return "SERVICE_DOWN";
-    if (msg.includes("network") || msg.includes("fetch")) return "NETWORK_ERROR";
+    if (msg.includes("503") || msg.includes("502") || msg.includes("504")) {
+      return "SERVICE_DOWN";
+    }
+    if (msg.includes("network") || msg.includes("fetch")) {
+      return "NETWORK_ERROR";
+    }
     return "UNKNOWN";
   }
 
@@ -841,34 +868,34 @@ class LLMTranslationService {
    */
   private mapToDeepLLanguage(lang: string): string {
     const mapping: Record<string, string> = {
-      "en": "EN",
-      "ru": "RU",
-      "es": "ES",
-      "fr": "FR",
-      "de": "DE",
-      "it": "IT",
-      "pt": "PT-BR",
-      "ja": "JA",
-      "ko": "KO",
-      "zh": "ZH",
-      "ar": "AR",
-      "nl": "NL",
-      "pl": "PL",
-      "tr": "TR",
-      "uk": "UK",
-      "cs": "CS",
-      "da": "DA",
-      "fi": "FI",
-      "el": "EL",
-      "hu": "HU",
-      "id": "ID",
-      "no": "NB",
-      "ro": "RO",
-      "sk": "SK",
-      "sv": "SV",
-      "th": "TH",
-      "vi": "VI",
-      "hi": "HI",
+      en: "EN",
+      ru: "RU",
+      es: "ES",
+      fr: "FR",
+      de: "DE",
+      it: "IT",
+      pt: "PT-BR",
+      ja: "JA",
+      ko: "KO",
+      zh: "ZH",
+      ar: "AR",
+      nl: "NL",
+      pl: "PL",
+      tr: "TR",
+      uk: "UK",
+      cs: "CS",
+      da: "DA",
+      fi: "FI",
+      el: "EL",
+      hu: "HU",
+      id: "ID",
+      no: "NB",
+      ro: "RO",
+      sk: "SK",
+      sv: "SV",
+      th: "TH",
+      vi: "VI",
+      hi: "HI",
     };
     return mapping[lang.toLowerCase()] || lang.toUpperCase();
   }
@@ -879,8 +906,8 @@ class LLMTranslationService {
    */
   private mapToGoogleLanguage(lang: string): string {
     const mapping: Record<string, string> = {
-      "zh": "zh-CN", // Simplified Chinese
-      "pt": "pt-BR", // Brazilian Portuguese
+      zh: "zh-CN", // Simplified Chinese
+      pt: "pt-BR", // Brazilian Portuguese
     };
     return mapping[lang.toLowerCase()] || lang.toLowerCase();
   }
@@ -890,8 +917,8 @@ class LLMTranslationService {
    */
   private mapToMicrosoftLanguage(lang: string): string {
     const mapping: Record<string, string> = {
-      "zh": "zh-Hans", // Simplified Chinese
-      "pt": "pt-br", // Brazilian Portuguese
+      zh: "zh-Hans", // Simplified Chinese
+      pt: "pt-br", // Brazilian Portuguese
     };
     return mapping[lang.toLowerCase()] || lang.toLowerCase();
   }
@@ -901,8 +928,8 @@ class LLMTranslationService {
    */
   private mapToAmazonLanguage(lang: string): string {
     const mapping: Record<string, string> = {
-      "zh": "zh", // Simplified Chinese
-      "pt": "pt-BR", // Brazilian Portuguese
+      zh: "zh", // Simplified Chinese
+      pt: "pt-BR", // Brazilian Portuguese
     };
     return mapping[lang.toLowerCase()] || lang.toLowerCase();
   }
@@ -920,7 +947,7 @@ class LLMTranslationService {
 
     if (!deeplKey) {
       sharedLogger.warn("DeepL API key not configured, skipping fallback");
-      return { text, cached: false, quality: 0, service: "deepl" };
+      return { text, cached: false, quality: 0, service: "deepl" } as any;
     }
 
     try {
@@ -938,7 +965,7 @@ class LLMTranslationService {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
-          "Authorization": `DeepL-Auth-Key ${deeplKey}`,
+          Authorization: `DeepL-Auth-Key ${deeplKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -953,20 +980,25 @@ class LLMTranslationService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        sharedLogger.error("DeepL API error", { status: response.status, error: errorText });
-        return { text, cached: false, quality: 0, service: "deepl" };
+        sharedLogger.error("DeepL API error", {
+          status: response.status,
+          error: errorText,
+        });
+        return { text, cached: false, quality: 0, service: "deepl" } as any;
       }
 
       const data = await response.json();
       const translatedText = data.translations?.[0]?.text;
 
       if (!translatedText || translatedText === text) {
-        return { text, cached: false, quality: 0, service: "deepl" };
+        return { text, cached: false, quality: 0, service: "deepl" } as any;
       }
 
       // DeepL translations are high quality
       const quality = this.calculateQuality(text, translatedText);
-      sharedLogger.info("DeepL fallback success", { quality: quality.toFixed(2) });
+      sharedLogger.info("DeepL fallback success", {
+        quality: quality.toFixed(2),
+      });
 
       // Cache the result
       if (quality > 0.5) {
@@ -978,11 +1010,16 @@ class LLMTranslationService {
         });
       }
 
-      return { text: translatedText, cached: false, quality, service: "deepl" };
+      return {
+        text: translatedText,
+        cached: false,
+        quality,
+        service: "deepl",
+      } as any;
     } catch (error) {
       const err = error as Error;
       sharedLogger.error("DeepL fallback failed", { error: err.message });
-      return { text, cached: false, quality: 0, service: "deepl" };
+      return { text, cached: false, quality: 0, service: "deepl" } as any;
     }
   }
 
@@ -999,7 +1036,7 @@ class LLMTranslationService {
 
     if (!googleKey) {
       sharedLogger.warn("Google Translate API key not configured, skipping fallback");
-      return { text, cached: false, quality: 0, service: "google" };
+      return { text, cached: false, quality: 0, service: "google" } as any;
     }
 
     try {
@@ -1034,19 +1071,21 @@ class LLMTranslationService {
           status: response.status,
           error: errorText,
         });
-        return { text, cached: false, quality: 0, service: "google" };
+        return { text, cached: false, quality: 0, service: "google" } as any;
       }
 
       const data = await response.json();
       const translatedText = data.data?.translations?.[0]?.translatedText;
 
       if (!translatedText || translatedText === text) {
-        return { text, cached: false, quality: 0, service: "google" };
+        return { text, cached: false, quality: 0, service: "google" } as any;
       }
 
       // Google translations are high quality
       const quality = this.calculateQuality(text, translatedText);
-      sharedLogger.info("Google Translate fallback success", { quality: quality.toFixed(2) });
+      sharedLogger.info("Google Translate fallback success", {
+        quality: quality.toFixed(2),
+      });
 
       // Cache the result
       if (quality > 0.5) {
@@ -1058,11 +1097,18 @@ class LLMTranslationService {
         });
       }
 
-      return { text: translatedText, cached: false, quality, service: "google" };
+      return {
+        text: translatedText,
+        cached: false,
+        quality,
+        service: "google",
+      } as any;
     } catch (error) {
       const err = error as Error;
-      sharedLogger.error("Google Translate fallback failed", { error: err.message });
-      return { text, cached: false, quality: 0, service: "google" };
+      sharedLogger.error("Google Translate fallback failed", {
+        error: err.message,
+      });
+      return { text, cached: false, quality: 0, service: "google" } as any;
     }
   }
 
@@ -1081,7 +1127,7 @@ class LLMTranslationService {
 
     if (!msKey) {
       sharedLogger.warn("Microsoft Translator API key not configured, skipping fallback");
-      return { text, cached: false, quality: 0, service: "microsoft" };
+      return { text, cached: false, quality: 0, service: "microsoft" } as any;
     }
 
     try {
@@ -1113,19 +1159,21 @@ class LLMTranslationService {
           status: response.status,
           error: errorText,
         });
-        return { text, cached: false, quality: 0, service: "microsoft" };
+        return { text, cached: false, quality: 0, service: "microsoft" } as any;
       }
 
       const data = await response.json();
       const translatedText = data?.[0]?.translations?.[0]?.text;
 
       if (!translatedText || translatedText === text) {
-        return { text, cached: false, quality: 0, service: "microsoft" };
+        return { text, cached: false, quality: 0, service: "microsoft" } as any;
       }
 
       // Microsoft translations are high quality
       const quality = this.calculateQuality(text, translatedText);
-      sharedLogger.info("Microsoft Translator fallback success", { quality: quality.toFixed(2) });
+      sharedLogger.info("Microsoft Translator fallback success", {
+        quality: quality.toFixed(2),
+      });
 
       // Cache the result
       if (quality > 0.5) {
@@ -1137,11 +1185,18 @@ class LLMTranslationService {
         });
       }
 
-      return { text: translatedText, cached: false, quality, service: "microsoft" };
+      return {
+        text: translatedText,
+        cached: false,
+        quality,
+        service: "microsoft",
+      } as any;
     } catch (error) {
       const err = error as Error;
-      sharedLogger.error("Microsoft Translator fallback failed", { error: err.message });
-      return { text, cached: false, quality: 0, service: "microsoft" };
+      sharedLogger.error("Microsoft Translator fallback failed", {
+        error: err.message,
+      });
+      return { text, cached: false, quality: 0, service: "microsoft" } as any;
     }
   }
 
@@ -1189,7 +1244,7 @@ class LLMTranslationService {
         "Content-Type": "application/json",
         "X-Amz-Date": amzDate,
         "X-Amz-Target": "AWSShineFrontendService_20170701.TranslateText",
-        "Authorization": authorizationHeader,
+        Authorization: authorizationHeader,
       },
     };
   }
@@ -1198,9 +1253,9 @@ class LLMTranslationService {
     const encoder = new TextEncoder();
     const data = encoder.encode(message);
     const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join(
-      "",
-    );
+    return Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
   }
 
   private async hmacSha256(key: ArrayBuffer, message: string): Promise<ArrayBuffer> {
@@ -1217,9 +1272,9 @@ class LLMTranslationService {
 
   private async hmacSha256Hex(key: ArrayBuffer, message: string): Promise<string> {
     const signature = await this.hmacSha256(key, message);
-    return Array.from(new Uint8Array(signature)).map((b) => b.toString(16).padStart(2, "0")).join(
-      "",
-    );
+    return Array.from(new Uint8Array(signature))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
   }
 
   private async getSignatureKey(
@@ -1229,7 +1284,7 @@ class LLMTranslationService {
     service: string,
   ): Promise<ArrayBuffer> {
     const encoder = new TextEncoder();
-    const kDate = await this.hmacSha256(encoder.encode("AWS4" + secretKey), dateStamp);
+    const kDate = await this.hmacSha256(encoder.encode("AWS4" + secretKey) as any, dateStamp);
     const kRegion = await this.hmacSha256(kDate, region);
     const kService = await this.hmacSha256(kRegion, service);
     return this.hmacSha256(kService, "aws4_request");
@@ -1251,7 +1306,7 @@ class LLMTranslationService {
 
     if (!awsAccessKeyId || !awsSecretAccessKey) {
       sharedLogger.warn("AWS credentials not configured, skipping Amazon Translate fallback");
-      return { text, cached: false, quality: 0, service: "amazon" };
+      return { text, cached: false, quality: 0, service: "amazon" } as any;
     }
 
     try {
@@ -1295,19 +1350,21 @@ class LLMTranslationService {
           status: response.status,
           error: errorText,
         });
-        return { text, cached: false, quality: 0, service: "amazon" };
+        return { text, cached: false, quality: 0, service: "amazon" } as any;
       }
 
       const data = await response.json();
       const translatedText = data.TranslatedText;
 
       if (!translatedText || translatedText === text) {
-        return { text, cached: false, quality: 0, service: "amazon" };
+        return { text, cached: false, quality: 0, service: "amazon" } as any;
       }
 
       // Amazon translations are high quality
       const quality = this.calculateQuality(text, translatedText);
-      sharedLogger.info("Amazon Translate fallback success", { quality: quality.toFixed(2) });
+      sharedLogger.info("Amazon Translate fallback success", {
+        quality: quality.toFixed(2),
+      });
 
       // Cache the result
       if (quality > 0.5) {
@@ -1319,11 +1376,18 @@ class LLMTranslationService {
         });
       }
 
-      return { text: translatedText, cached: false, quality, service: "amazon" };
+      return {
+        text: translatedText,
+        cached: false,
+        quality,
+        service: "amazon",
+      } as any;
     } catch (error) {
       const err = error as Error;
-      sharedLogger.error("Amazon Translate fallback failed", { error: err.message });
-      return { text, cached: false, quality: 0, service: "amazon" };
+      sharedLogger.error("Amazon Translate fallback failed", {
+        error: err.message,
+      });
+      return { text, cached: false, quality: 0, service: "amazon" } as any;
     }
   }
 
@@ -1450,7 +1514,9 @@ class LLMTranslationService {
   /**
    * Get current metrics snapshot
    */
-  getMetrics(): TranslationMetrics & { cache: { hitRate: number; size: number } } {
+  getMetrics(): TranslationMetrics & {
+    cache: { hitRate: number; size: number };
+  } {
     const cacheStats = this.cache.getStats();
     return {
       ...this.metrics,
@@ -1548,7 +1614,12 @@ class LLMTranslationService {
       }
 
       const quality = this.calculateQuality(text, translatedText);
-      return { text: translatedText, cached: false, quality, tokensUsed: data.tokensUsed };
+      return {
+        text: translatedText,
+        cached: false,
+        quality,
+        tokensUsed: data.tokensUsed,
+      } as any;
     } finally {
       clearTimeout(timeoutId);
     }
@@ -1607,10 +1678,14 @@ class LLMTranslationService {
     if (lengthRatio < 0.5 || lengthRatio > 2.0) quality *= 0.7;
 
     // Penalize if translation contains JSON artifacts
-    if (translated.includes("{") || translated.includes('"translation"')) quality *= 0.5;
+    if (translated.includes("{") || translated.includes('"translation"')) {
+      quality *= 0.5;
+    }
 
     // Bonus for reasonable length
-    if (lengthRatio >= 0.7 && lengthRatio <= 1.5) quality = Math.min(1.0, quality + 0.05);
+    if (lengthRatio >= 0.7 && lengthRatio <= 1.5) {
+      quality = Math.min(1.0, quality + 0.05);
+    }
 
     // Check HTML preservation
     const originalFormat = this.detectContentFormat(original);
@@ -1663,7 +1738,9 @@ class LLMTranslationService {
     // Request coalescing - check for in-flight request
     const inFlight = this.inFlightRequests.get(cacheKey);
     if (inFlight) {
-      logger.debug("request_coalesced", { cacheKey: cacheKey.substring(0, 50) });
+      logger.debug("request_coalesced", {
+        cacheKey: cacheKey.substring(0, 50),
+      });
       return inFlight;
     }
 
@@ -1746,7 +1823,7 @@ class LLMTranslationService {
     }
 
     let shouldTryFallback = false;
-    let _usedService = "llm";
+    // let _usedService = "llm";
 
     // Check circuit breaker for primary service
     if (!this.isCircuitAllowed("llm", logger)) {
@@ -1798,7 +1875,9 @@ class LLMTranslationService {
           }
 
           // Low quality - try fallback
-          logger.warn("primary_low_quality", { quality: result.quality.toFixed(2) });
+          logger.warn("primary_low_quality", {
+            quality: result.quality.toFixed(2),
+          });
           shouldTryFallback = true;
           break;
         } catch (error) {
@@ -1877,8 +1956,11 @@ class LLMTranslationService {
             service,
           });
 
-          logger.info("fallback_success", { service, quality: result.quality.toFixed(2) });
-          _usedService = service;
+          logger.info("fallback_success", {
+            service,
+            quality: result.quality.toFixed(2),
+          });
+          // _usedService = service;
 
           return {
             success: true,
@@ -1893,7 +1975,10 @@ class LLMTranslationService {
         }
 
         this.recordCircuitFailure(service, "Low quality translation", logger);
-        logger.warn("fallback_low_quality", { service, quality: result.quality.toFixed(2) });
+        logger.warn("fallback_low_quality", {
+          service,
+          quality: result.quality.toFixed(2),
+        });
       }
     }
 
@@ -2004,7 +2089,10 @@ class LLMTranslationService {
       return this.translate(text, sourceLang, targetLang, context, options);
     }
 
-    logger.info("long_text_chunking", { textLength: text.length, maxChunkSize });
+    logger.info("long_text_chunking", {
+      textLength: text.length,
+      maxChunkSize,
+    });
 
     // Split into sentences
     const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];

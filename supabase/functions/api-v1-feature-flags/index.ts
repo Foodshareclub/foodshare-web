@@ -85,14 +85,10 @@ async function handleGetFeatureFlags(ctx: HandlerContext<unknown, FlagsQuery>): 
 
   if (cached) {
     logger.debug("Feature flags cache hit", { cacheKey });
-    return ok(
-      { flags: cached.flags, context: cached.context },
-      ctx,
-      {
-        cacheTTL: cached.meta?.cacheTTL || 60,
-        uiHints: { refreshAfter: cached.meta?.refreshAfter || 300 },
-      },
-    );
+    return ok({ flags: cached.flags, context: cached.context }, ctx, {
+      cacheTTL: cached.meta?.cacheTTL || 60,
+      uiHints: { refreshAfter: cached.meta?.refreshAfter || 300 },
+    });
   }
 
   const { data, error } = await supabase.rpc("get_user_feature_flags", {
@@ -272,7 +268,9 @@ async function handleGet(ctx: HandlerContext<unknown, FlagsQuery>): Promise<Resp
 
   // GET /compatibility
   if (
-    subPath === "compatibility" || subPath === "compatibility/" || query.action === "compatibility"
+    subPath === "compatibility" ||
+    subPath === "compatibility/" ||
+    query.action === "compatibility"
   ) {
     return handleCompatibilityCheck(ctx);
   }
@@ -293,19 +291,21 @@ async function handleGet(ctx: HandlerContext<unknown, FlagsQuery>): Promise<Resp
 // Export Handler
 // =============================================================================
 
-Deno.serve(createAPIHandler({
-  service: "api-v1-feature-flags",
-  version: VERSION,
-  requireAuth: false, // Auth is optional — flags work for anonymous users too
-  rateLimit: {
-    limit: 60,
-    windowMs: 60000,
-    keyBy: "ip",
-  },
-  routes: {
-    GET: {
-      querySchema: flagsQuerySchema,
-      handler: handleGet,
+Deno.serve(
+  createAPIHandler({
+    service: "api-v1-feature-flags",
+    version: VERSION,
+    requireAuth: false, // Auth is optional — flags work for anonymous users too
+    rateLimit: {
+      limit: 60,
+      windowMs: 60000,
+      keyBy: "ip",
     },
-  },
-}));
+    routes: {
+      GET: {
+        querySchema: flagsQuerySchema,
+        handler: handleGet,
+      },
+    },
+  }),
+);

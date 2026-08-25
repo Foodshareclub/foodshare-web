@@ -112,10 +112,7 @@ export async function executeRedisPipeline(
 // Request Coalescing
 // =============================================================================
 
-export async function coalesceRequest<T>(
-  key: string,
-  operation: () => Promise<T>,
-): Promise<T> {
+export async function coalesceRequest<T>(key: string, operation: () => Promise<T>): Promise<T> {
   const existing = pendingRequests.get(key);
   if (existing) {
     metrics.coalescedRequests++;
@@ -164,7 +161,7 @@ export async function decompressValue(value: string): Promise<string> {
 }
 
 export function shouldCompress(value: string, options?: { compress?: boolean }): boolean {
-  return (options?.compress !== false) && value.length > CONFIG.compressionThreshold;
+  return options?.compress !== false && value.length > CONFIG.compressionThreshold;
 }
 
 // =============================================================================

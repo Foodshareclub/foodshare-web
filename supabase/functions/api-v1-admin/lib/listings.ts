@@ -111,7 +111,9 @@ export async function handleListingsRoute(
   switch (method) {
     case "PUT":
       if (action === "activate") return handleActivate(listingId, ctx);
-      if (action === "deactivate") return handleDeactivate(listingId, body, ctx);
+      if (action === "deactivate") {
+        return handleDeactivate(listingId, body, ctx);
+      }
       if (action === "notes") return handleUpdateNotes(listingId, body, ctx);
       if (!action) return handleUpdate(listingId, body, ctx);
       break;
@@ -139,18 +141,21 @@ async function handleUpdate(
   };
 
   if (input.postName !== undefined) updateData.post_name = input.postName;
-  if (input.postDescription !== undefined) updateData.post_description = input.postDescription;
+  if (input.postDescription !== undefined) {
+    updateData.post_description = input.postDescription;
+  }
   if (input.postType !== undefined) updateData.post_type = input.postType;
   if (input.pickupTime !== undefined) updateData.pickup_time = input.pickupTime;
-  if (input.availableHours !== undefined) updateData.available_hours = input.availableHours;
-  if (input.postAddress !== undefined) updateData.post_address = input.postAddress;
+  if (input.availableHours !== undefined) {
+    updateData.available_hours = input.availableHours;
+  }
+  if (input.postAddress !== undefined) {
+    updateData.post_address = input.postAddress;
+  }
   if (input.isActive !== undefined) updateData.is_active = input.isActive;
   if (input.adminNotes !== undefined) updateData.admin_notes = input.adminNotes;
 
-  const { error } = await ctx.supabase
-    .from("posts")
-    .update(updateData)
-    .eq("id", listingId);
+  const { error } = await ctx.supabase.from("posts").update(updateData).eq("id", listingId);
 
   if (error) throw new Error(error.message);
 
@@ -192,7 +197,9 @@ async function handleDeactivate(
 
   if (error) throw new Error(error.message);
 
-  await logAdminAction(ctx, "deactivate_listing", String(listingId), { reason: input.reason });
+  await logAdminAction(ctx, "deactivate_listing", String(listingId), {
+    reason: input.reason,
+  });
 
   return jsonResponse({ success: true, listingId, isActive: false }, ctx.corsHeaders);
 }
