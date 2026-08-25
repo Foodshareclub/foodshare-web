@@ -80,7 +80,7 @@ export async function updateDeviceRecord(
         risk_score: Math.min(riskScore, existing.risk_score || 100),
         platform,
         flags: {
-          ...existing.flags,
+          ...(existing.flags || {}),
           lastVerdicts: verdicts,
           lastVerifiedAt: now,
         },
