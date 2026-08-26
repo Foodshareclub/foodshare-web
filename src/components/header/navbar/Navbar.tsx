@@ -162,20 +162,29 @@ function Navbar({
             isCompact ? "py-1.5" : "py-3"
           )}
         >
-          <div className={cn(isCompact ? "w-auto" : "w-full max-w-[850px]")}>
-            <SearchBar
-              isCompact={isCompact}
-              onSearchClick={handleSearchClick}
-              defaultCategory={activeCategory}
-            />
-          </div>
+          {activeCategory !== "foodlytics" && (
+            <div className={cn(isCompact ? "w-auto" : "w-full max-w-[850px]")}>
+              <SearchBar
+                isCompact={isCompact}
+                onSearchClick={handleSearchClick}
+                defaultCategory={activeCategory}
+              />
+            </div>
+          )}
         </div>
       </header>
 
-      {/* Spacer - adjusted for new single navbar height */}
+      {/* Spacer - adjusted for new single navbar height; Foodlytics hides the search row */}
       <div
         style={{
-          height: isCompact ? "120px" : "170px",
+          height:
+            activeCategory === "foodlytics"
+              ? isCompact
+                ? "72px"
+                : "84px"
+              : isCompact
+                ? "120px"
+                : "170px",
           transition: "height 0.3s ease-in-out",
         }}
       />
