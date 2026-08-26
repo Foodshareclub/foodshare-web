@@ -59,11 +59,22 @@ jobs:
           path: node_modules
           key: bun-daily-${{ hashFiles('bun.lock') }}
       - run: bun install --frozen-lockfile
-      # TODO(debt): admin-mock unit tests are env-sensitive on the
-      # self-hosted ARM runner (pass on GH-hosted CI, which gates all
-      # pushes). Advisory here until root-caused.
-      - run: bun run ${{ matrix.job == 'test' && 'test:ci' || matrix.job }}
-        continue-on-error: ${{ matrix.job == 'test' }}
+      # 'test' runs each spec in its own bun process: admin-mock fixtures
+      # pollute across files when many-core runners parallelise file
+      # execution inside a single `bun test` invocation.
+      - name: Run ${{ matrix.job }}
+        run: |
+          if [ "${{ matrix.job }}" != "test" ]; then
+            bun run ${{ matrix.job }}
+          else
+            fail=0
+            while IFS= read -r f; do
+              echo "▶ $f"
+              bun test "$f" || fail=1
+            done < <(find src/__tests__ src/lib src/store src/utils src/api \
+                       \( -name "*.test.ts" -o -name "*.test.tsx" \) | sort)
+            exit $fail
+          fi
 
   e2e:
     name: Playwright E2E (${{ matrix.shardIndex }}/${{ matrix.shardTotal }})

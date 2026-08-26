@@ -103,14 +103,12 @@ const nextConfig: NextConfig = {
   // Enhanced image optimization
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**",
-      },
-      {
-        protocol: "http",
-        hostname: "**",
-      },
+      // Self-hosted storage + legacy cloud host (rows not yet rewritten)
+      { protocol: "https", hostname: "api.foodshare.club" },
+      { protocol: "https", hostname: "iazmjdjwnkilycbjwpzp.supabase.co" },
+      // Local development
+      { protocol: "http", hostname: "localhost" },
+      { protocol: "https", hostname: "*.supabase.co" },
     ],
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
