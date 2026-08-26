@@ -147,12 +147,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Foodshareclub/foodshare-backend
-          path: backend
+          path: ${{ runner.temp }}/compat/backend
           token: ${{ secrets.CROSS_REPO_TOKEN }}
       - uses: actions/checkout@v4
         with:
           repository: Foodshareclub/foodshare-tools
-          path: tools
+          path: ${{ runner.temp }}/compat/tools
           token: ${{ secrets.CROSS_REPO_TOKEN }}
 
       - name: Run compat checks
@@ -161,7 +161,7 @@ jobs:
           # TODO: remove once org GitHub Actions billing is fixed
           IGNORE_CI_FAIL: Foodshareclub/foodshare-app Foodshareclub/foodshare-tools
           WEB_DIR: ${{ github.workspace }}
-          BACKEND_DIR: ${{ github.workspace }}/backend
+          BACKEND_DIR: ${{ runner.temp }}/compat/backend
         run: bash "$GITHUB_WORKSPACE/tools/scripts/compat-check.sh"
 
   ai-test-gap:
