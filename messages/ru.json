@@ -10,10 +10,10 @@
     "organisations": "Организации",
     "volunteers": "Волонтёры",
     "zerowaste": "Без отходов",
-    "foodlytics": "Foodlytics",
     "vegan": "Веган",
     "challenges": "Челленджи",
-    "forum": "Форум"
+    "forum": "Форум",
+    "foodlytics": "Foodlytics"
   },
   "0_views": "{0} просмотров",
   "buttonvalue": "{buttonValue}",

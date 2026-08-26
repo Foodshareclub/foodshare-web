@@ -10,10 +10,10 @@
     "organisations": "組織",
     "volunteers": "ボランティア",
     "zerowaste": "ゼロウェイスト",
-    "foodlytics": "Foodlytics",
     "vegan": "ビーガン",
     "challenges": "チャレンジ",
-    "forum": "フォーラム"
+    "forum": "フォーラム",
+    "foodlytics": "Foodlytics"
   },
   "0_views": "{0} 回表示",
   "buttonvalue": "{buttonValue}",

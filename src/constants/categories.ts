@@ -29,12 +29,12 @@ export const CATEGORIES = [
   { id: "foodbank", labelKey: "categories.foodbanks", icon: Warehouse },
   { id: "fridge", labelKey: "categories.fridges", icon: Refrigerator },
   { id: "zerowaste", labelKey: "categories.zerowaste", icon: Recycle },
-  { id: "foodlytics", labelKey: "categories.foodlytics", icon: BarChart3 },
   { id: "vegan", labelKey: "categories.vegan", icon: Sprout },
   { id: "organisation", labelKey: "categories.organisations", icon: Landmark },
   { id: "volunteer", labelKey: "categories.volunteers", icon: HeartHandshake },
   { id: "challenge", labelKey: "categories.challenges", icon: Trophy },
   { id: "forum", labelKey: "categories.forum", icon: MessageSquare },
+  { id: "foodlytics", labelKey: "categories.foodlytics", icon: BarChart3 },
 ] as const;
 
 export type CategoryIcon = LucideIcon;
