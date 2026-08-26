@@ -26,6 +26,11 @@ env:
 
 jobs:
   quality:
+    env:
+      # self-hosted runners lack injected public env; keep env validation off
+      SKIP_ENV_VALIDATION: "true"
+      NEXT_PUBLIC_SUPABASE_URL: https://api.foodshare.club
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
     name: Quality (${{ matrix.job }})
     runs-on: [self-hosted, Linux]
     timeout-minutes: 20
