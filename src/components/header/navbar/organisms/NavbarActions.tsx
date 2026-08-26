@@ -1,6 +1,4 @@
 import type { CustomRoomType } from "@/api/chatAPI";
-import Link from "next/link";
-import { BarChart3 } from "lucide-react";
 import { BecomeSharerBlock } from "@/components/becomeSharerBlock/BecomeSharerBlock";
 import { BecomeSharerButton } from "@/components/becomeSharerBlock/BecomeSharerButton";
 import { NotificationCenter } from "@/components/notifications";
@@ -94,16 +92,6 @@ export function NavbarActions({
 
   return (
     <div className="flex items-center gap-3">
-      {/* Foodlytics Navigation */}
-      <Link
-        href="/foodlytics"
-        className="flex items-center justify-center h-10 w-10 md:w-auto md:px-4 rounded-xl text-stone-400 hover:text-emerald-400 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20 transition-all duration-200"
-        title="Foodlytics Dashboard"
-      >
-        <BarChart3 className="h-5 w-5" />
-        <span className="hidden md:block ml-2 text-sm font-bold">Foodlytics</span>
-      </Link>
-
       {/* Add Listing / Login - next to profile */}
       {!isAuth ? <BecomeSharerButton /> : <BecomeSharerBlock />}
 

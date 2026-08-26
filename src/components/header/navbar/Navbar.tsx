@@ -66,8 +66,8 @@ function Navbar({
     const routeName = categoryId.toLowerCase();
     onProductTypeChange(categoryId);
 
-    // Forum and Challenge have their own routes without map views
-    if (routeName === "forum" || routeName === "challenge") {
+    // Forum, Challenge and Foodlytics have their own routes without map views
+    if (routeName === "forum" || routeName === "challenge" || routeName === "foodlytics") {
       router.push(`/${routeName}`);
       return;
     }
