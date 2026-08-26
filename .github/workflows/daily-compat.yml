@@ -162,7 +162,7 @@ jobs:
           IGNORE_CI_FAIL: Foodshareclub/foodshare-app Foodshareclub/foodshare-tools
           WEB_DIR: ${{ github.workspace }}
           BACKEND_DIR: .compat/backend
-        run: bash "$GITHUB_WORKSPACE/tools/scripts/compat-check.sh"
+        run: bash "$GITHUB_WORKSPACE/.compat/tools/scripts/compat-check.sh"
 
   ai-test-gap:
     name: AI test-gap analysis (24h commits)
