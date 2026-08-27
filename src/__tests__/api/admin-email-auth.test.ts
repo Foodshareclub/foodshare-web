@@ -21,7 +21,22 @@ mock.module("@/lib/supabase/server", () => ({
 
 // Mock admin check
 mock.module("@/lib/data/admin-check", () => ({
-  checkUserIsAdmin: () => Promise.resolve({ isAdmin: mockIsAdmin, roles: mockIsAdmin ? ["admin"] : [] }),
+  checkUserIsAdmin: () =>
+    Promise.resolve({ isAdmin: mockIsAdmin, roles: mockIsAdmin ? ["admin"] : [] }),
+  getAdminAuth: () =>
+    Promise.resolve({
+      isAdmin: mockIsAdmin,
+      isSuperAdmin: false,
+      roles: mockIsAdmin ? ["admin"] : [],
+      userId: mockUser?.id || null,
+    }),
+  requireAdmin: () => {
+    if (!mockIsAdmin) throw new Error("Unauthorized");
+    return Promise.resolve({ isAdmin: true, roles: ["admin"], userId: mockUser?.id || null });
+  },
+  requireSuperAdmin: () => {
+    throw new Error("Unauthorized");
+  },
 }));
 
 // Mock data functions to prevent actual DB calls

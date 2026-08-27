@@ -80,6 +80,22 @@ mock.module("@/lib/data/admin-check", () => ({
     const isAdmin = roles.includes("admin") || roles.includes("superadmin");
     return { isAdmin, roles };
   }),
+  getAdminAuth: mock(async () => {
+    const roles = mockState.userRoles.map((r) => r.roles.name);
+    const isAdmin = roles.includes("admin") || roles.includes("superadmin");
+    const isSuperAdmin = roles.includes("superadmin");
+    return { isAdmin, isSuperAdmin, roles, userId: mockState.user?.id || null };
+  }),
+  requireAdmin: mock(async () => {
+    const roles = mockState.userRoles.map((r) => r.roles.name);
+    if (!roles.includes("admin") && !roles.includes("superadmin")) throw new Error("Unauthorized");
+    return { isAdmin: true, roles, userId: mockState.user?.id || null };
+  }),
+  requireSuperAdmin: mock(async () => {
+    const roles = mockState.userRoles.map((r) => r.roles.name);
+    if (!roles.includes("superadmin")) throw new Error("Unauthorized");
+    return { isSuperAdmin: true, roles, userId: mockState.user?.id || null };
+  }),
 }));
 
 // Import AFTER mocks are set up
