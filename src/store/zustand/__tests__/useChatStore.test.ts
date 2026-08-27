@@ -5,7 +5,7 @@
 
 import { act } from "@testing-library/react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import { useChatStore } from "./useChatStore";
+import { useChatStore } from "../useChatStore";
 import type { RoomType, CustomRoomType, RoomParticipantsType } from "@/api/chatAPI";
 
 // Mock data

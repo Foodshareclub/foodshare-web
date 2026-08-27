@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach } from "bun:test";
 import { act } from "@testing-library/react";
 
 import type { User, Session } from "@supabase/supabase-js";
-import { useAuthStore, authActions } from "./useAuthStore";
+import { useAuthStore, authActions } from "../useAuthStore";
 
 // Mock user and session for testing
 const mockUser: User = {
