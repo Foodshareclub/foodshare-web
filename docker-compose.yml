@@ -23,7 +23,7 @@ services:
     cap_drop:
       - ALL
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health-check"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -48,17 +48,8 @@ services:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
     command: tunnel --metrics 0.0.0.0:2000 run
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:2000/ready"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
-    depends_on:
-      foodshare-web:
-        condition: service_healthy
     logging:
       driver: "json-file"
       options:
@@ -66,15 +57,6 @@ services:
         max-file: "3"
     networks:
       - foodshare-web-network
-
-  autoheal:
-    container_name: foodshare-autoheal-web
-    image: willfarrell/autoheal:latest
-    restart: always
-    environment:
-      - AUTOHEAL_CONTAINER_LABEL=all
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
 
 networks:
   foodshare-web-network:
