@@ -10,6 +10,8 @@ services:
       - NODE_TLS_REJECT_UNAUTHORIZED=0
       - NEXT_PUBLIC_APPLE_CLIENT_ID=club.foodshare.web
     restart: unless-stopped
+    labels:
+      - autoheal=true
     read_only: true
     tmpfs:
       - /tmp
@@ -45,9 +47,17 @@ services:
 
   cloudflared:
     container_name: foodshare-cloudflared-web
-    image: cloudflare/cloudflared:latest
+    image: cloudflare/cloudflared:latest-alpine
     restart: unless-stopped
+    labels:
+      - autoheal=true
     command: tunnel --metrics 0.0.0.0:2000 run
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:2000/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     logging:

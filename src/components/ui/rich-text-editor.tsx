@@ -108,21 +108,25 @@ export function RichTextEditor({
     }
   }, [value, editor]);
 
+  const chain = () => editor?.chain().focus() as any;
+
   const addLink = () => {
     if (linkUrl && editor) {
-      editor.chain().focus().extendMarkRange("link").setLink({ href: linkUrl }).run();
+      chain().extendMarkRange("link").setLink({ href: linkUrl }).run();
       setLinkUrl("");
     }
   };
 
   const addImage = () => {
     if (imageUrl && editor) {
-      editor.chain().focus().setImage({ src: imageUrl }).run();
+      chain().setImage({ src: imageUrl }).run();
       setImageUrl("");
     }
   };
 
-  if (!editor) return null;
+  if (!editor) {
+    return null;
+  }
 
   return (
     <div
@@ -136,28 +140,28 @@ export function RichTextEditor({
         {/* Text Formatting */}
         <ToolbarGroup>
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleBold().run()}
+            onClick={() => chain().toggleBold().run()}
             isActive={editor.isActive("bold")}
             tooltip="Bold (⌘B)"
           >
             <Bold className="h-4 w-4" />
           </ToolbarButton>
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleItalic().run()}
+            onClick={() => chain().toggleItalic().run()}
             isActive={editor.isActive("italic")}
             tooltip="Italic (⌘I)"
           >
             <Italic className="h-4 w-4" />
           </ToolbarButton>
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleStrike().run()}
+            onClick={() => chain().toggleStrike().run()}
             isActive={editor.isActive("strike")}
             tooltip="Strikethrough"
           >
             <Strikethrough className="h-4 w-4" />
           </ToolbarButton>
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleCode().run()}
+            onClick={() => chain().toggleCode().run()}
             isActive={editor.isActive("code")}
             tooltip="Inline Code"
           >
@@ -170,28 +174,28 @@ export function RichTextEditor({
         {/* Headings */}
         <ToolbarGroup>
           <ToolbarButton
-            onClick={() => editor.chain().focus().setParagraph().run()}
+            onClick={() => chain().setParagraph().run()}
             isActive={editor.isActive("paragraph")}
             tooltip="Paragraph"
           >
             <Pilcrow className="h-4 w-4" />
           </ToolbarButton>
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            onClick={() => chain().toggleHeading({ level: 1 }).run()}
             isActive={editor.isActive("heading", { level: 1 })}
             tooltip="Heading 1"
           >
             <Heading1 className="h-4 w-4" />
           </ToolbarButton>
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            onClick={() => chain().toggleHeading({ level: 2 }).run()}
             isActive={editor.isActive("heading", { level: 2 })}
             tooltip="Heading 2"
           >
             <Heading2 className="h-4 w-4" />
           </ToolbarButton>
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            onClick={() => chain().toggleHeading({ level: 3 }).run()}
             isActive={editor.isActive("heading", { level: 3 })}
             tooltip="Heading 3"
           >
@@ -204,35 +208,35 @@ export function RichTextEditor({
         {/* Lists & Blocks */}
         <ToolbarGroup>
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            onClick={() => chain().toggleBulletList().run()}
             isActive={editor.isActive("bulletList")}
             tooltip="Bullet List"
           >
             <List className="h-4 w-4" />
           </ToolbarButton>
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            onClick={() => chain().toggleOrderedList().run()}
             isActive={editor.isActive("orderedList")}
             tooltip="Numbered List"
           >
             <ListOrdered className="h-4 w-4" />
           </ToolbarButton>
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            onClick={() => chain().toggleBlockquote().run()}
             isActive={editor.isActive("blockquote")}
             tooltip="Quote"
           >
             <Quote className="h-4 w-4" />
           </ToolbarButton>
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+            onClick={() => chain().toggleCodeBlock().run()}
             isActive={editor.isActive("codeBlock")}
             tooltip="Code Block"
           >
             <Code2 className="h-4 w-4" />
           </ToolbarButton>
           <ToolbarButton
-            onClick={() => editor.chain().focus().setHorizontalRule().run()}
+            onClick={() => chain().setHorizontalRule().run()}
             tooltip="Horizontal Rule"
           >
             <Minus className="h-4 w-4" />

@@ -152,13 +152,39 @@ async function syncTranslations() {
   log(`Found ${files.length} translation files to process`);
 
   // Fetch existing translations
-  const { data: existingTranslations, error: fetchError } = await supabase
-    .from("translations")
-    .select("locale,messages,version");
+  let existingTranslations:
+    { locale: string; messages: Record<string, unknown>; version: string }[] | null = null;
 
-  if (fetchError) {
-    log(`Failed to fetch existing translations: ${fetchError.message}`, "error");
-    process.exit(1);
+  try {
+    const { data, error: fetchError } = await supabase
+      .from("translations")
+      .select("locale,messages,version");
+
+    if (fetchError) {
+      if (dryRun) {
+        log(
+          `Could not fetch remote translations (${fetchError.message}), running local validation only`,
+          "warn"
+        );
+      } else {
+        log(`Failed to fetch existing translations: ${fetchError.message}`, "error");
+        process.exit(1);
+      }
+    } else {
+      existingTranslations = data as unknown as {
+        locale: string;
+        messages: Record<string, unknown>;
+        version: string;
+      }[];
+    }
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    if (dryRun) {
+      log(`Could not connect to Supabase (${errorMessage}), running local validation only`, "warn");
+    } else {
+      log(`Failed to connect to Supabase: ${errorMessage}`, "error");
+      process.exit(1);
+    }
   }
 
   const existingMap = new Map(existingTranslations?.map((t) => [t.locale, t]) || []);
