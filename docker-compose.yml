@@ -67,5 +67,14 @@ services:
     networks:
       - foodshare-web-network
 
+  autoheal:
+    container_name: foodshare-autoheal-web
+    image: willfarrell/autoheal:latest
+    restart: always
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
 networks:
   foodshare-web-network:
