@@ -1,0 +1,27 @@
+{
+  "name": "foodshare-search",
+  "collaborators": [
+    "Foodshare Team <engineering@foodshare.club>"
+  ],
+  "description": "High-performance fuzzy search and text matching",
+  "version": "1.4.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Foodshareclub/foodshare-tools"
+  },
+  "files": [
+    "foodshare_search_bg.wasm",
+    "foodshare_search.js",
+    "foodshare_search.d.ts"
+  ],
+  "main": "foodshare_search.js",
+  "types": "foodshare_search.d.ts",
+  "keywords": [
+    "search",
+    "fuzzy",
+    "levenshtein",
+    "text-matching",
+    "relevance"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "name": "foodshare-crypto",
+  "collaborators": [
+    "Foodshare Team <engineering@foodshare.club>"
+  ],
+  "description": "Cryptographic utilities for webhook verification and HMAC",
+  "version": "1.4.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Foodshareclub/foodshare-tools"
+  },
+  "files": [
+    "foodshare_crypto_bg.wasm",
+    "foodshare_crypto.js",
+    "foodshare_crypto.d.ts"
+  ],
+  "main": "foodshare_crypto.js",
+  "types": "foodshare_crypto.d.ts",
+  "keywords": [
+    "hmac",
+    "sha256",
+    "webhook",
+    "crypto",
+    "security"
+  ]
+}

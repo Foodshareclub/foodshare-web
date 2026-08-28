@@ -1,0 +1,27 @@
+{
+  "name": "foodshare-compression",
+  "collaborators": [
+    "Foodshare Team <engineering@foodshare.club>"
+  ],
+  "description": "Response compression utilities with Brotli support",
+  "version": "1.4.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Foodshareclub/foodshare-tools"
+  },
+  "files": [
+    "foodshare_compression_bg.wasm",
+    "foodshare_compression.js",
+    "foodshare_compression.d.ts"
+  ],
+  "main": "foodshare_compression.js",
+  "types": "foodshare_compression.d.ts",
+  "keywords": [
+    "compression",
+    "brotli",
+    "gzip",
+    "etag",
+    "deflate"
+  ]
+}

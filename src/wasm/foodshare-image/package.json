@@ -1,0 +1,27 @@
+{
+  "name": "foodshare-image",
+  "collaborators": [
+    "Foodshare Team <engineering@foodshare.club>"
+  ],
+  "description": "Image processing utilities for format detection and resizing",
+  "version": "1.4.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Foodshareclub/foodshare-tools"
+  },
+  "files": [
+    "foodshare_image_bg.wasm",
+    "foodshare_image.js",
+    "foodshare_image.d.ts"
+  ],
+  "main": "foodshare_image.js",
+  "types": "foodshare_image.d.ts",
+  "keywords": [
+    "image",
+    "resize",
+    "format-detection",
+    "metadata",
+    "optimization"
+  ]
+}
