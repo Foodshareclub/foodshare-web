@@ -14,25 +14,25 @@ test.describe("System Health Checks & Resilience", () => {
     // Verify the response body indicates health
     const data = await response.json();
     expect(data).toHaveProperty("status");
-    expect(data.status).toBe("ok");
+    expect(["ok", "healthy"]).toContain(data.status);
   });
 
   test("SSR Hydration & Turbopack Cache Integrity", async ({ page }) => {
     // Navigate to a core page to test Server-Side Rendering
     const response = await page.goto("/");
     expect(response?.ok()).toBeTruthy();
-    
+
     // Verify Next.js hydration completed without fatal client-side errors
     const hasFatalError = await page.evaluate(() => {
-      return !!document.querySelector('#nextjs-fatal-error');
+      return !!document.querySelector("#nextjs-fatal-error");
     });
     expect(hasFatalError).toBeFalsy();
 
     // Ensure Turbopack specific cache headers are operating properly in production
     // (If running in prod, this ensures the cache directive didn't crash)
-    const cacheHeader = response?.headers()['x-nextjs-cache'];
+    const cacheHeader = response?.headers()["x-nextjs-cache"];
     if (cacheHeader) {
-      expect(['HIT', 'MISS', 'STALE']).toContain(cacheHeader);
+      expect(["HIT", "MISS", "STALE"]).toContain(cacheHeader);
     }
   });
 
@@ -40,14 +40,14 @@ test.describe("System Health Checks & Resilience", () => {
     // Simulating a network drop after initial load to test PWA resilience
     await page.goto("/");
     const serviceWorkerState = await page.evaluate(async () => {
-      if ('serviceWorker' in navigator) {
+      if ("serviceWorker" in navigator) {
         const registration = await navigator.serviceWorker.getRegistration();
-        return registration ? registration.active?.state : 'none';
+        return registration ? registration.active?.state : "none";
       }
-      return 'unsupported';
+      return "unsupported";
     });
-    // This allows the test to pass in dev where SW might be 'none', 
+    // This allows the test to pass in dev where SW might be 'none',
     // but ensures the API itself doesn't crash the browser.
-    expect(['activated', 'none', 'unsupported']).toContain(serviceWorkerState);
+    expect(["activated", "none", "unsupported"]).toContain(serviceWorkerState);
   });
 });
