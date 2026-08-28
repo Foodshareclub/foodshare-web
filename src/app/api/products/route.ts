@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { approximateGeoJSON } from "@/utils/postgis";
+import { generateETag as generateWasmETag } from "@/lib/wasm-compression";
 
 // Type for products with location
 type ProductWithLocation = {
@@ -80,18 +81,13 @@ function jsonWithCache(
 }
 
 /**
- * Generate simple ETag from data
+ * Generate cryptographic SHA-256 ETag from data using WebAssembly
  */
 function generateETag(data: unknown): string {
-  const str = JSON.stringify(data);
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return `"${Math.abs(hash).toString(16)}"`;
+  const str = typeof data === "string" ? data : JSON.stringify(data);
+  return generateWasmETag(str);
 }
+
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

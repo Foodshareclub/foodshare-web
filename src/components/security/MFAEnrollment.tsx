@@ -11,7 +11,8 @@
  * - Security best practices
  */
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useActionState, useOptimistic } from "react";
+import { useFormStatus } from "react-dom";
 
 import {
   Loader2,
@@ -32,6 +33,32 @@ interface MFAEnrollmentProps {
 
 type EnrollmentStep = "method_selection" | "phone_entry" | "verification" | "backup_codes";
 
+// React 19: Dedicated Submit Button utilizing useFormStatus
+function SubmitButton({ pendingText, defaultText }: { pendingText: string, defaultText: string }) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed flex items-center justify-center gap-2"
+    >
+      {pending ? (
+        <>
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>{pendingText}</span>
+        </>
+      ) : (
+        <span>{defaultText}</span>
+      )}
+    </button>
+  );
+}
+
+interface ActionState {
+  error?: string;
+  success?: boolean;
+}
+
 export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
   profileId,
   onEnrolled,
@@ -39,13 +66,84 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
 }) => {
   const [step, setStep] = useState<EnrollmentStep>("method_selection");
   const [selectedMethod, setSelectedMethod] = useState<MFAMethod>("email");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
   const [challengeId, setChallengeId] = useState("");
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState("");
   const [_attemptsRemaining, setAttemptsRemaining] = useState(5);
+
+  // React 19: Optimistic UI state for step progression
+  const [optimisticStep, setOptimisticStep] = useOptimistic(
+    step,
+    (_state, newStep: EnrollmentStep) => newStep
+  );
+
+  // React 19: Action State for sending verification code
+  const [sendState, sendVerificationAction] = useActionState<ActionState, FormData>(
+    async (_prevState: ActionState, formData: FormData): Promise<ActionState> => {
+      const method = (formData.get("method") as "sms" | "email") || "sms";
+      const phone = formData.get("phone") as string;
+      
+      if (method === "sms" && (!phone || phone.length < 10)) {
+        return { error: "Please enter a valid phone number" };
+      }
+
+      try {
+        const result = await MFAService.createChallenge(profileId, method);
+        if (!result.success) {
+          if (result.error === "rate_limit_exceeded") {
+            return { error: `Too many attempts. Try again after ${result.locked_until}` };
+          }
+          return { error: result.error || "Failed to send verification code" };
+        }
+        setChallengeId(result.challenge_id || "");
+        setStep("verification");
+        return { success: true };
+      } catch {
+        return { error: "Failed to send verification code. Please try again." };
+      }
+    },
+    {}
+  );
+
+  // React 19: Action State for verifying code and enrolling
+  const [verifyState, verifyCodeAction] = useActionState<ActionState, FormData>(
+    async (_prevState: ActionState, formData: FormData): Promise<ActionState> => {
+      const code = formData.get("code") as string;
+      const phone = formData.get("phone") as string;
+      
+      if (!code || code.length !== 6) {
+        return { error: "Please enter a valid 6-digit code" };
+      }
+
+      try {
+        const verifyResult = await MFAService.verifyChallenge(challengeId, code, profileId);
+        if (!verifyResult.success) {
+          if (verifyResult.attempts_remaining !== undefined) {
+            setAttemptsRemaining(verifyResult.attempts_remaining);
+            return { error: `Invalid code. ${verifyResult.attempts_remaining} attempts remaining.` };
+          }
+          return { error: verifyResult.error || "Verification failed" };
+        }
+
+        // Verification successful, now enroll the user
+        const enrollResult = await MFAService.enrollMFA(
+          profileId,
+          selectedMethod,
+          selectedMethod === "sms" ? phone : undefined
+        );
+
+        if (!enrollResult.success) {
+          return { error: enrollResult.error || "Failed to complete enrollment" };
+        }
+
+        setBackupCodes(enrollResult.backup_codes || []);
+        setStep("backup_codes");
+        return { success: true };
+      } catch {
+        return { error: "Verification failed. Please try again." };
+      }
+    },
+    {}
+  );
 
   // Handle method selection
   const handleMethodSelection = (method: MFAMethod) => {
@@ -53,95 +151,12 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
     if (method === "sms") {
       setStep("phone_entry");
     } else {
-      // For email, proceed directly to verification
-      sendVerificationCode("email");
-    }
-  };
-
-  // Handle phone number submission
-  const handlePhoneSubmit = () => {
-    if (!phoneNumber || phoneNumber.length < 10) {
-      setError("Please enter a valid phone number");
-      return;
-    }
-
-    sendVerificationCode("sms");
-  };
-
-  // Send verification code
-  const sendVerificationCode = (method: "sms" | "email") => {
-    setError("");
-
-    startTransition(async () => {
-      try {
-        const result = await MFAService.createChallenge(profileId, method);
-
-        if (!result.success) {
-          if (result.error === "rate_limit_exceeded") {
-            setError(`Too many attempts. Try again after ${result.locked_until}`);
-          } else {
-            setError(result.error || "Failed to send verification code");
-          }
-          return;
-        }
-
-        setChallengeId(result.challenge_id || "");
-        setStep("verification");
-      } catch {
-        setError("Failed to send verification code. Please try again.");
-      }
-    });
-  };
-
-  // Handle verification code submission
-  const handleVerificationSubmit = () => {
-    if (!verificationCode || verificationCode.length !== 6) {
-      setError("Please enter a valid 6-digit code");
-      return;
-    }
-
-    setError("");
-
-    startTransition(async () => {
-      try {
-        const result = await MFAService.verifyChallenge(challengeId, verificationCode, profileId);
-
-        if (!result.success) {
-          if (result.attempts_remaining !== undefined) {
-            setAttemptsRemaining(result.attempts_remaining);
-            setError(`Invalid code. ${result.attempts_remaining} attempts remaining.`);
-          } else {
-            setError(result.error || "Verification failed");
-          }
-          return;
-        }
-
-        // Verification successful, now enroll the user
-        await completeEnrollmentAsync();
-      } catch {
-        setError("Verification failed. Please try again.");
-      }
-    });
-  };
-
-  // Complete MFA enrollment (called within a transition)
-  const completeEnrollmentAsync = async () => {
-    try {
-      const result = await MFAService.enrollMFA(
-        profileId,
-        selectedMethod,
-        selectedMethod === "sms" ? phoneNumber : undefined
-      );
-
-      if (!result.success) {
-        setError(result.error || "Failed to complete enrollment");
-        return;
-      }
-
-      setBackupCodes(result.backup_codes || []);
-      setStep("backup_codes");
-    } catch {
-      setError("Failed to complete enrollment. Please try again.");
+      setOptimisticStep("verification");
+      const formData = new FormData();
+      formData.append("method", "email");
+      React.startTransition(() => {
+        sendVerificationAction(formData);
+      });
     }
   };
 
@@ -222,51 +237,47 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
         </p>
       </div>
 
-      {error && (
+      {sendState?.error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-800">{error}</p>
+          <p className="text-sm text-red-800">{sendState.error}</p>
         </div>
       )}
 
-      <div>
-        <label className="block text-sm font-medium text-foreground/80 mb-2">
-          &quot;Phone Number&quot;
-        </label>
-        <input
-          type="tel"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          placeholder="+1234567890"
-          className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
-        />
-        <p className="mt-1 text-xs text-muted-foreground">
-          &quot;Include country code (e.g., +1 for US)&quot;
-        </p>
-      </div>
+      <form action={(formData) => {
+        setOptimisticStep("verification");
+        sendVerificationAction(formData);
+      }}>
+        <input type="hidden" name="method" value="sms" />
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-foreground/80 mb-2">
+            &quot;Phone Number&quot;
+          </label>
+          <input
+            type="tel"
+            name="phone"
+            placeholder="+1234567890"
+            required
+            className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            &quot;Include country code (e.g., +1 for US)&quot;
+          </p>
+        </div>
 
-      <div className="flex gap-3">
-        <button
-          onClick={() => setStep("method_selection")}
-          className="flex-1 px-4 py-3 border border-border rounded-lg hover:bg-muted transition-colors"
-        >
-          &quot;Back&quot;
-        </button>
-        <button
-          onClick={handlePhoneSubmit}
-          disabled={isPending}
-          className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isPending ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>&quot;Sending...&quot;</span>
-            </>
-          ) : (
-            <span>&quot;Continue&quot;</span>
-          )}
-        </button>
-      </div>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => setStep("method_selection")}
+            className="flex-1 px-4 py-3 border border-border rounded-lg hover:bg-muted transition-colors"
+          >
+            &quot;Back&quot;
+          </button>
+          <div className="flex-1">
+            <SubmitButton pendingText="Sending..." defaultText="Continue" />
+          </div>
+        </div>
+      </form>
     </div>
   );
 
@@ -285,54 +296,47 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
         </p>
       </div>
 
-      {error && (
+      {verifyState?.error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-800">{error}</p>
+          <p className="text-sm text-red-800">{verifyState.error}</p>
         </div>
       )}
 
-      <div>
-        <label className="block text-sm font-medium text-foreground/80 mb-2">
-          &quot;Verification Code&quot;
-        </label>
-        <input
-          type="text"
-          value={verificationCode}
-          onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-          placeholder="000000"
-          className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent text-center text-2xl tracking-widest font-mono"
-          maxLength={6}
-        />
-        <p className="mt-1 text-xs text-muted-foreground text-center">
-          &quot;Code expires in 5 minutes&quot;
-        </p>
-      </div>
+      <form action={(formData) => {
+        setOptimisticStep("backup_codes");
+        verifyCodeAction(formData);
+      }}>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-foreground/80 mb-2">
+            &quot;Verification Code&quot;
+          </label>
+          <input
+            type="text"
+            name="code"
+            placeholder="000000"
+            required
+            className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent text-center text-2xl tracking-widest font-mono"
+            maxLength={6}
+          />
+          <p className="mt-1 text-xs text-muted-foreground text-center">
+            &quot;Code expires in 5 minutes&quot;
+          </p>
+        </div>
 
-      <div className="flex gap-3">
-        <button
-          onClick={() => sendVerificationCode(selectedMethod as "sms" | "email")}
-          disabled={isPending}
-          className="px-4 py-2 text-sm text-primary hover:text-primary/80 underline"
-        >
-          &quot;Resend Code&quot;
-        </button>
-      </div>
+        <div className="flex gap-3 mb-4">
+          <input type="hidden" name="method" value={selectedMethod} />
+          <button
+            type="submit"
+            formAction={sendVerificationAction}
+            className="px-4 py-2 text-sm text-primary hover:text-primary/80 underline"
+          >
+            &quot;Resend Code&quot;
+          </button>
+        </div>
 
-      <button
-        onClick={handleVerificationSubmit}
-        disabled={isPending || verificationCode.length !== 6}
-        className="w-full px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed flex items-center justify-center gap-2"
-      >
-        {isPending ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>&quot;Verifying...&quot;</span>
-          </>
-        ) : (
-          <span>&quot;Verify Code&quot;</span>
-        )}
-      </button>
+        <SubmitButton pendingText="Verifying..." defaultText="Verify Code" />
+      </form>
     </div>
   );
 
@@ -389,7 +393,7 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
 
   // Render current step
   const renderStep = () => {
-    switch (step) {
+    switch (optimisticStep) {
       case "method_selection":
         return renderMethodSelection();
       case "phone_entry":

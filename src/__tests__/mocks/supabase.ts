@@ -1,9 +1,11 @@
 /**
  * Supabase Mock for Tests
  * Centralized mock that can be imported in test files
+ * Migrated from @jest/globals to bun:test (10x)
  */
 
-import { jest } from '@jest/globals';
+import { mock } from "bun:test";
+const jest = { fn: mock } as unknown as { fn: typeof mock };
 
 // Create a shared mock state that can be modified per-test
 export const mockAuthState = {

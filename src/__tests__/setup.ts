@@ -170,9 +170,15 @@ mock.module("next/navigation", () => ({
   }),
   usePathname: () => "/",
   useSearchParams: () => new URLSearchParams(),
-  useParams: () => ({}),
-  redirect: () => {},
-  notFound: () => {},
+  redirect: (url: string) => {
+    const error = new Error("NEXT_REDIRECT") as Error & { url: string; digest: string };
+    error.url = url;
+    error.digest = `NEXT_REDIRECT;replace;${url};307;`;
+    throw error;
+  },
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
 }));
 
 // Mock next-intl

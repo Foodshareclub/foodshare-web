@@ -1,14 +1,16 @@
 /**
  * Logger Tests
  * Verify logging functionality
+ * Migrated from Jest globals to bun:test (10x)
  */
 
+import { describe, it, expect, beforeEach, spyOn, mock } from "bun:test";
 import { logger, createLogger, getErrorHistory, clearErrorHistory } from "@/lib/logger";
 
 describe("Logger", () => {
   beforeEach(() => {
     clearErrorHistory();
-    jest.clearAllMocks();
+    mock.clearAllMocks();
   });
 
   it("should create a logger instance", () => {
@@ -17,21 +19,21 @@ describe("Logger", () => {
   });
 
   it("should log info messages", () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+    const consoleSpy = spyOn(console, "log").mockImplementation();
     logger.info("Test message");
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
 
   it("should log success messages", () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+    const consoleSpy = spyOn(console, "log").mockImplementation();
     logger.success("Success message");
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
 
   it("should log warnings and store in history", () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+    const consoleSpy = spyOn(console, "log").mockImplementation();
     logger.warn("Warning message");
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
@@ -42,7 +44,7 @@ describe("Logger", () => {
   });
 
   it("should log errors and store in history", () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+    const consoleSpy = spyOn(console, "log").mockImplementation();
     const error = new Error("Test error");
     logger.error("Error message", error);
     expect(consoleSpy).toHaveBeenCalled();
@@ -55,7 +57,7 @@ describe("Logger", () => {
   });
 
   it("should include context in logs", () => {
-    const consoleSpy = jest.spyOn(console, "groupCollapsed").mockImplementation();
+    const consoleSpy = spyOn(console, "groupCollapsed").mockImplementation();
     logger.info("Test with context", { userId: "123" });
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
@@ -80,7 +82,7 @@ describe("Logger", () => {
   });
 
   it("should log API calls", () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+    const consoleSpy = spyOn(console, "log").mockImplementation();
     logger.api("GET", "/api/users", 200, 150);
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();

@@ -8,7 +8,7 @@ services:
       - .env.production
     environment:
       - NODE_TLS_REJECT_UNAUTHORIZED=0
-      - NEXT_PUBLIC_APPLE_CLIENT_ID=club.foodshare.web
+      - NEXT_PUBLIC_APPLE_CLIENT_ID=${NEXT_PUBLIC_APPLE_CLIENT_ID:-club.foodshare.web}
     restart: unless-stopped
     labels:
       - autoheal=true
@@ -25,11 +25,11 @@ services:
     cap_drop:
       - ALL
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health && curl -f -I http://localhost:3000/ || exit 1"]
+      interval: 20s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
     deploy:
       resources:
         limits:

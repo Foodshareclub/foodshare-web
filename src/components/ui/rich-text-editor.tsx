@@ -131,12 +131,15 @@ export function RichTextEditor({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border/50 bg-background/50 overflow-hidden",
+        "rounded-xl border border-white/20 bg-white/10 dark:bg-black/10 overflow-hidden",
+        "backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)]",
+        "transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]",
+        "hover:shadow-[0_12px_48px_rgba(0,0,0,0.12)] hover:border-white/30",
         className
       )}
     >
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 p-2 border-b border-border/50 bg-muted/30">
+      <div className="flex flex-wrap items-center gap-0.5 p-2 border-b border-white/10 bg-white/5 dark:bg-black/5 backdrop-blur-md">
         {/* Text Formatting */}
         <ToolbarGroup>
           <ToolbarButton
@@ -401,8 +404,11 @@ function ToolbarButton({
       disabled={disabled}
       className={cn(
         size === "sm" ? "h-7 w-7 p-0" : "h-8 w-8 p-0",
-        isActive && "bg-muted text-primary",
-        disabled && "opacity-50"
+        "transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]",
+        "hover:bg-white/10 dark:hover:bg-white/5",
+        !disabled && "hover:scale-110 active:scale-95",
+        isActive && "bg-white/20 dark:bg-white/10 text-primary shadow-[inset_0_1px_2px_rgba(255,255,255,0.2)]",
+        disabled && "opacity-50 cursor-not-allowed"
       )}
     >
       {children}

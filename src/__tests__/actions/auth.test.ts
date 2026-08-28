@@ -317,10 +317,8 @@ describe("Auth Server Actions", () => {
 
       const result = await signInWithPassword(formData);
 
-      expect(result).toEqual({
-        success: false,
-        error: "Invalid login credentials",
-      });
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Invalid login credentials");
     });
   });
 
@@ -339,7 +337,7 @@ describe("Auth Server Actions", () => {
 
       const result = await signUp(formData);
 
-      expect(result).toEqual({ success: true });
+      expect(result.success).toBe(true);
     });
 
     it("should return error when email already exists", async () => {
@@ -352,10 +350,8 @@ describe("Auth Server Actions", () => {
 
       const result = await signUp(formData);
 
-      expect(result).toEqual({
-        success: false,
-        error: "User already registered",
-      });
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("User already registered");
     });
   });
 
@@ -367,7 +363,7 @@ describe("Auth Server Actions", () => {
     it("should sign out and redirect to home", async () => {
       try {
         await signOut();
-        fail("Expected signOut to throw NEXT_REDIRECT");
+        expect.unreachable("Expected signOut to throw NEXT_REDIRECT");
       } catch (error) {
         expect((error as Error).message).toBe("NEXT_REDIRECT");
         expect((error as Error & { url: string }).url).toBe("/");
@@ -383,7 +379,7 @@ describe("Auth Server Actions", () => {
     it("should return success when email sent", async () => {
       const result = await resetPassword("test@example.com");
 
-      expect(result).toEqual({ success: true });
+      expect(result.success).toBe(true);
     });
 
     it("should return error when email not found", async () => {
@@ -391,10 +387,8 @@ describe("Auth Server Actions", () => {
 
       const result = await resetPassword("nonexistent@example.com");
 
-      expect(result).toEqual({
-        success: false,
-        error: "User not found",
-      });
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("User not found");
     });
   });
 
@@ -411,7 +405,7 @@ describe("Auth Server Actions", () => {
 
       const result = await updatePassword(formData);
 
-      expect(result).toEqual({ success: true });
+      expect(result.success).toBe(true);
     });
 
     it("should return error on invalid password", async () => {
@@ -420,10 +414,8 @@ describe("Auth Server Actions", () => {
 
       const result = await updatePassword(formData);
 
-      expect(result).toEqual({
-        success: false,
-        error: "Password must be at least 8 characters",
-      });
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Password must be at least 8 characters");
     });
   });
 
