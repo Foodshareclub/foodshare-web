@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Leaf, Award, ShieldAlert, Sparkles } from "lucide-react";
+import { Leaf, Award, Sparkles } from "lucide-react";
 import { FoodCategory, WasteReason, CATEGORY_METRIC_MAP, WasteEntry } from "@/lib/foodlytics/types";
 import {
   Card,
