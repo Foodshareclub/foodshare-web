@@ -1,10 +1,8 @@
 "use client";
 
 import { Users, Package, MessageSquare, AlertTriangle, Sparkles, Zap } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { GrokAssistant } from "@/app/admin/ai-insights/GrokAssistant";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { AIInsightsData } from "@/lib/data/admin-ai-insights";
 
@@ -64,9 +62,6 @@ export function AIInsightsClient({ initialData }: Props) {
       );
   }, []);
 
-  const colorForCritical = (critical: number) =>
-    critical > 5 ? "red" : critical > 0 ? "orange" : "emerald";
-
   return (
     <div className="space-y-6">
       {/* Quick Stats */}
@@ -85,7 +80,7 @@ export function AIInsightsClient({ initialData }: Props) {
             <AlertTriangle className="h-5 w-5 text-green-400" />
             <div>
               <div className="text-lg font-bold text-white">Churn Risk</div>
-              <div className="text-sm text-zinc-500">${data.churnRate.toFixed(1)}%</div>
+              <div className="text-sm text-zinc-500">{data.churnRate.toFixed(1)}%</div>
               <div className="text-xs mt-1">({data.atRiskUsers} users inactive)</div>
             </div>
           </div>
