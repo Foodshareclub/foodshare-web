@@ -28,6 +28,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { ThemeProvider } from "next-themes";
 import { getBrowserLocale, type Locale } from "@/i18n/config";
 import { ActionToastProvider } from "@/hooks/useActionToast";
+import { GPUProvider } from "@/lib/gpu";
 
 /**
  * Create QueryClient with optimized defaults
@@ -192,7 +193,9 @@ export function Providers({ children, initialLocale = "en" }: ProvidersProps) {
       <LocaleContext.Provider value={localeContextValue}>
         <NextIntlClientProvider key={locale} locale={locale} messages={messages} timeZone="UTC">
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <ActionToastProvider>{children}</ActionToastProvider>
+            <GPUProvider>
+              <ActionToastProvider>{children}</ActionToastProvider>
+            </GPUProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
       </LocaleContext.Provider>

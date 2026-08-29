@@ -27,6 +27,7 @@ import { acceptChallenge } from "@/app/actions/challenges";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useConfetti } from "@/components/gpu/GPUConfetti";
 import type { Challenge } from "@/lib/data/challenges";
 import type { AuthUser } from "@/lib/data/auth";
 
@@ -78,6 +79,7 @@ export function ChallengeDetailClient({
   const [isAccepted, setIsAccepted] = useState(initialIsAccepted);
   const [isAccepting, setIsAccepting] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const { trigger: triggerConfetti } = useConfetti();
 
   const difficulty = (challenge.challenge_difficulty as keyof typeof DIFFICULTY_CONFIG) || "Easy";
   const config = DIFFICULTY_CONFIG[difficulty] || DIFFICULTY_CONFIG.Easy;
@@ -96,15 +98,8 @@ export function ChallengeDetailClient({
     if (result.success) {
       setIsAccepted(true);
 
-      // Lazy-load confetti only when needed
-      import("canvas-confetti").then(({ default: confetti }) => {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#FF2D55", "#00A699", "#FFD700"],
-        });
-      });
+      // GPU confetti (falls back to canvas-confetti on unsupported browsers)
+      triggerConfetti();
     }
   };
 

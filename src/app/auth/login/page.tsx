@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { OAUTH_PROVIDERS, hasEnabledProviders } from "@/lib/config/oauth";
+import { FloatingOrbs } from "@/components/gpu/FloatingOrbs";
+import { GradientBackground } from "@/components/gpu/GradientBackground";
 
 // Inline brand SVGs (avoids react-icons dependency)
 const GoogleIcon = () => (
@@ -118,7 +120,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background relative overflow-hidden">
-      {/* Background Pattern */}
+      {/* GPU Background Effects */}
+      <GradientBackground />
+      <FloatingOrbs opacity={0.6} />
+
+      {/* Fallback dot pattern (visible when GPU unsupported) */}
       <div
         className="absolute top-0 left-0 right-0 bottom-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none"
         style={{

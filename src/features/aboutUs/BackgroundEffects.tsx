@@ -1,14 +1,19 @@
 /**
  * Background effects components for About Us page
- * Animated background elements for visual enhancement
+ * GPU-accelerated animated background elements with Framer Motion fallback
  */
+
+"use client";
 
 import React from "react";
 import { useScroll, useTransform, useSpring } from "framer-motion";
 import { MotionBox } from "./MotionComponents";
-import { orbAnimation } from "./animations";
+import { useGPUContext, GPUErrorBoundary } from "@/lib/gpu";
+import { FloatingOrbs as GPUFloatingOrbs } from "@/components/gpu/FloatingOrbs";
+import { GradientBackground as GPUGradientBackground } from "@/components/gpu/GradientBackground";
 
 export const AnimatedGradientBackground: React.FC = () => {
+  const { supported } = useGPUContext();
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const smoothY = useSpring(y, {
@@ -17,6 +22,16 @@ export const AnimatedGradientBackground: React.FC = () => {
     restDelta: 0.001,
   });
 
+  // GPU path: single fragment shader replaces CSS gradient animation
+  if (supported) {
+    return (
+      <GPUErrorBoundary>
+        <GPUGradientBackground className="-z-10" />
+      </GPUErrorBoundary>
+    );
+  }
+
+  // Fallback: original Framer Motion implementation
   return (
     <MotionBox
       className="absolute top-0 left-0 right-0 bottom-0 -z-10"
@@ -32,16 +47,39 @@ export const AnimatedGradientBackground: React.FC = () => {
   );
 };
 
-// Deterministic positions for floating orbs (avoids impure Math.random() during render)
-const ORB_POSITIONS = [
-  { top: 15, left: 72 },
-  { top: 48, left: 23 },
-  { top: 78, left: 85 },
-  { top: 32, left: 45 },
-  { top: 65, left: 10 },
-];
-
 export const FloatingOrbs: React.FC = () => {
+  const { supported } = useGPUContext();
+
+  // GPU path: single fullscreen shader replaces 5 Framer Motion blur circles
+  if (supported) {
+    return (
+      <GPUErrorBoundary>
+        <GPUFloatingOrbs className="-z-10" />
+      </GPUErrorBoundary>
+    );
+  }
+
+  // Fallback: original Framer Motion implementation
+  const ORB_POSITIONS = [
+    { top: 15, left: 72 },
+    { top: 48, left: 23 },
+    { top: 78, left: 85 },
+    { top: 32, left: 45 },
+    { top: 65, left: 10 },
+  ];
+
+  const orbAnimation = (duration: number) => ({
+    animate: {
+      x: [0, Math.random() * 100 - 50, 0],
+      y: [0, Math.random() * 100 - 50, 0],
+      scale: [1, 1.2, 1],
+    },
+    transition: {
+      duration,
+      repeat: Infinity,
+    },
+  });
+
   return (
     <>
       {ORB_POSITIONS.map((pos, i) => (

@@ -35,6 +35,7 @@ import { AdvisorChat } from "@/components/foodlytics/advisor-chat";
 import { CampaignTracker } from "@/components/foodlytics/campaign-tracker";
 import { PriorityQueue } from "@/components/foodlytics/priority-queue";
 import { UsWasteTracker } from "@/components/foodlytics/us-waste-tracker";
+import { FloatingOrbs } from "@/components/gpu/FloatingOrbs";
 
 const SECTIONS = [
   { id: "dashboard", label: "Impact Dashboard", icon: BarChart3 },
@@ -308,6 +309,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen text-stone-200 font-sans antialiased flex flex-col flex-1 pb-12">
+      {/* GPU background orbs */}
+      <FloatingOrbs opacity={0.15} />
+
       {/* Upper Navigation Header bar */}
       <header
         id="foodlytics-header"

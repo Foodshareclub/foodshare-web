@@ -58,6 +58,12 @@ const nextConfig: NextConfig = {
   // Set Turbopack root to silence monorepo lockfile warning
   turbopack: {
     root: __dirname,
+    rules: {
+      "*.wgsl": {
+        loaders: ["@vgpu/wgsl/loader-webpack"],
+        as: "*.js",
+      },
+    },
   },
 
   experimental: {

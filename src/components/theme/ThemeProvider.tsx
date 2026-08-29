@@ -2,13 +2,15 @@
 
 /**
  * ThemeProvider Component
- * Advanced theme management with radial reveal animation,
+ * Advanced theme management with GPU-accelerated radial reveal animation,
  * time-based scheduling, and accessibility support
  */
 
-import React, { useEffect, useRef, type ReactNode } from "react";
+import React, { useEffect, useRef, useState, useCallback, type ReactNode } from "react";
 import { ThemeToastProvider } from "./ThemeToast";
 import { useTheme } from "@/hooks";
+import { useGPUContext } from "@/lib/gpu";
+import { ThemeTransition } from "@/components/gpu/ThemeTransition";
 
 interface ThemeProviderProps {
   children: ReactNode;
@@ -42,7 +44,7 @@ const initClickTracking = () => {
 };
 
 /**
- * Creates a radial reveal animation from the click point
+ * Creates a radial reveal animation from the click point (CSS fallback)
  */
 const createRadialReveal = (
   resolvedTheme: "light" | "dark",
@@ -102,11 +104,25 @@ const createRadialReveal = (
 
 /**
  * ThemeProvider ensures the theme is applied to the DOM
+ * Uses GPU radial wipe when available, falls back to CSS clip-path
  */
 const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const { resolvedTheme, theme } = useTheme();
+  const { supported: gpuSupported } = useGPUContext();
   const isFirstRender = useRef(true);
   const prevTheme = useRef(resolvedTheme);
+
+  // GPU theme transition state
+  const [transition, setTransition] = useState<{
+    active: boolean;
+    isDark: boolean;
+    x: number;
+    y: number;
+  }>({ active: false, isDark: false, x: 0, y: 0 });
+
+  const handleTransitionComplete = useCallback(() => {
+    setTransition((prev) => ({ ...prev, active: false }));
+  }, []);
 
   // Apply theme changes with animation
   useEffect(() => {
@@ -129,29 +145,38 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     if (prevTheme.current === resolvedTheme) return;
     prevTheme.current = resolvedTheme;
 
-    // Create radial reveal animation
-    createRadialReveal(resolvedTheme, lastClickPosition);
+    // Skip animation if reduced motion preferred
+    if (prefersReducedMotion()) return;
+
+    const isDark = resolvedTheme === "dark";
+    const { x, y } = lastClickPosition;
+
+    if (gpuSupported) {
+      // GPU path: radial wipe shader
+      setTransition({ active: true, isDark, x, y });
+    } else {
+      // CSS fallback: clip-path radial reveal
+      createRadialReveal(resolvedTheme, lastClickPosition);
+    }
 
     // Add smooth transitions for elements
-    if (!prefersReducedMotion()) {
-      const style = document.createElement("style");
-      style.id = "theme-transition-styles";
-      style.textContent = `
-        *, *::before, *::after {
-          transition:
-            background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-            border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-            color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-            fill 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-            stroke 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-            box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        }
-      `;
-      document.head.appendChild(style);
+    const style = document.createElement("style");
+    style.id = "theme-transition-styles";
+    style.textContent = `
+      *, *::before, *::after {
+        transition:
+          background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+          border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+          color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+          fill 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+          stroke 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+          box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      }
+    `;
+    document.head.appendChild(style);
 
-      setTimeout(() => style.remove(), 500);
-    }
-  }, [resolvedTheme]);
+    setTimeout(() => style.remove(), 500);
+  }, [resolvedTheme, gpuSupported]);
 
   // Time-based auto theme (when set to system)
   useEffect(() => {
@@ -159,15 +184,25 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
     const checkTimeBasedTheme = () => {
       // Time-based theme check - respects system preference
-      // Dark from 7 PM to 7 AM, but system handles via prefers-color-scheme
     };
 
-    // Check every minute for time changes
     const interval = setInterval(checkTimeBasedTheme, 60000);
     return () => clearInterval(interval);
   }, [theme]);
 
-  return <ThemeToastProvider>{children}</ThemeToastProvider>;
+  return (
+    <ThemeToastProvider>
+      {children}
+      {/* GPU theme transition overlay */}
+      <ThemeTransition
+        active={transition.active}
+        originX={transition.x}
+        originY={transition.y}
+        isDark={transition.isDark}
+        onComplete={handleTransitionComplete}
+      />
+    </ThemeToastProvider>
+  );
 };
 
 export { ThemeProvider };

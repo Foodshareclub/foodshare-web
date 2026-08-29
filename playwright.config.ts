@@ -57,6 +57,22 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
 
+    // WebGPU-enabled Chromium for GPU shader tests
+    {
+      name: "chromium-webgpu",
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: {
+          args: [
+            "--enable-unsafe-webgpu",
+            "--enable-features=Vulkan,UseSkiaRenderer",
+            "--use-vulkan=swiftshader",
+            "--enable-webgpu-developer-features",
+          ],
+        },
+      },
+    },
+
     // Uncomment to add more browsers
     // {
     //   name: 'firefox',

@@ -11,6 +11,7 @@ import { ChallengeLeaderboard } from "@/components/challenges/ChallengeLeaderboa
 import { ActiveChallenges } from "@/components/challenges/ActiveChallenges";
 import { QueryErrorBoundary } from "@/components/ErrorBoundary";
 import { useDeckChallenges } from "@/hooks/queries/useChallenges";
+import { FloatingOrbs } from "@/components/gpu/FloatingOrbs";
 import type { InitialProductStateType } from "@/types/product.types";
 import type { AuthUser } from "@/lib/data/auth";
 import type { LeaderboardUser, UserRankInfo } from "@/components/challenges/ChallengeLeaderboard";
@@ -98,62 +99,8 @@ function HeroSection({
 }) {
   return (
     <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-gradient-to-br from-background via-primary/5 to-teal-500/5">
-      {/* Animated background orbs */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Large primary orb */}
-        <motion.div
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[100px]"
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.3, 0.5, 0.3],
-            x: [0, 50, 0],
-            y: [0, -30, 0],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
-        {/* Teal orb */}
-        <motion.div
-          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-teal-500/20 rounded-full blur-[80px]"
-          animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.4, 0.2, 0.4],
-            x: [0, -40, 0],
-            y: [0, 40, 0],
-          }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        />
-        {/* Orange accent orb */}
-        <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[120px]"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.15, 0.25, 0.15],
-          }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        />
-        {/* Floating particles */}
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-2 h-2 bg-primary/30 rounded-full"
-            style={{
-              left: `${20 + i * 12}%`,
-              top: `${30 + (i % 3) * 20}%`,
-            }}
-            animate={{
-              y: [0, -30, 0],
-              opacity: [0.3, 0.7, 0.3],
-              scale: [1, 1.5, 1],
-            }}
-            transition={{
-              duration: 3 + i * 0.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.3,
-            }}
-          />
-        ))}
-      </div>
+      {/* GPU-accelerated background orbs */}
+      <FloatingOrbs opacity={0.5} />
 
       {/* Content */}
       <div className="relative min-h-[calc(100vh-4rem)] px-4 sm:px-6 lg:px-8 py-12">

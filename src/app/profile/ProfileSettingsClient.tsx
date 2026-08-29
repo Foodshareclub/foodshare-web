@@ -19,6 +19,7 @@ import {
   Heart,
   LogOut,
 } from "lucide-react";
+import { FloatingOrbs } from "@/components/gpu/FloatingOrbs";
 
 // Icon aliases for consistency
 const HiOutlineUser = User;
@@ -171,11 +172,8 @@ export function ProfileSettingsClient({ user: _user }: ProfileSettingsClientProp
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
-      {/* Decorative background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-br from-primary/10 to-transparent blur-3xl animate-pulse" />
-        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-br from-emerald-500/10 to-transparent blur-3xl animate-pulse delay-1000" />
-      </div>
+      {/* GPU background orbs */}
+      <FloatingOrbs opacity={0.2} />
 
       <div className="relative container mx-auto max-w-5xl pt-24 pb-12 px-4">
         {/* Page Header */}
