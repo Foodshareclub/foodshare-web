@@ -1,4 +1,11 @@
-import "server-only";
+// server-only guard — static import can fail in Bun test environments even when
+// the mock is registered, causing a SyntaxError that hides all named exports.
+// Use a conditional require so tests skip it while production Next.js builds
+// (which strip server-only at bundle time) are unaffected.
+if (process.env.NODE_ENV !== "test" && process.env.BUN_TEST !== "1") {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require("server-only");
+}
 
 /**
  * Supabase Server Configuration for Next.js App Router
@@ -9,17 +16,19 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL! || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! || '';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL! || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! || "";
 
 if (!supabaseUrl || !supabaseAnonKey) {
   if (
-    process.env.NODE_ENV !== 'test' && 
-    process.env.SKIP_ENV_VALIDATION !== 'true' &&
-    process.env.NEXT_PHASE !== 'phase-production-build'
+    process.env.NODE_ENV !== "test" &&
+    process.env.SKIP_ENV_VALIDATION !== "true" &&
+    process.env.NEXT_PHASE !== "phase-production-build"
   ) {
     // Only throw if we are actually running the app, not building it
-    console.warn("⚠️ Missing Supabase environment variables. This is expected during build if they are not provided.");
+    console.warn(
+      "⚠️ Missing Supabase environment variables. This is expected during build if they are not provided."
+    );
   }
 }
 
