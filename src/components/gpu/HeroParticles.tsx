@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useGPUContext } from "@/lib/gpu";
 import { useSmoothScrollGPU } from "@/lib/gpu/useScrollGPU";
+import { initGPURender } from "@/lib/gpu/useGPURender";
 import type { FrameLoopHandle } from "vgpu";
 
 interface HeroParticlesProps {
@@ -14,13 +15,15 @@ interface HeroParticlesProps {
 /**
  * GPU hero particles — 200+ floating particles with scroll parallax.
  * Replaces Framer Motion particle arrays.
+ *
+ * Uses shared GPU device pool. Scroll is already via ref (good).
  */
 export function HeroParticles({ className = "", count = 200, opacity = 1 }: HeroParticlesProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { supported } = useGPUContext();
   const scroll = useSmoothScrollGPU(0.05);
   const loopRef = useRef<FrameLoopHandle | null>(null);
-  const gpuRef = useRef<any>(null);
+  const renderRef = useRef<Awaited<ReturnType<typeof initGPURender>> | null>(null);
   const scrollRef = useRef(0);
 
   // Keep scroll ref in sync without re-triggering effect
@@ -34,20 +37,18 @@ export function HeroParticles({ className = "", count = 200, opacity = 1 }: Hero
     let cancelled = false;
 
     async function start() {
-      const { init, draw, surface, frameLoop, clock } = await import("vgpu");
+      const { draw, frameLoop, clock } = await import("vgpu");
       const shader = (await import("./HeroParticles.wgsl")).default;
 
-      const canvas = canvasRef.current!;
-      if (cancelled) return;
-
-      const gpu = await init();
+      const render = await initGPURender({ canvasRef, enabled: true });
       if (cancelled) {
-        gpu.dispose();
+        render.dispose();
         return;
       }
 
-      const canvasSurface = surface(gpu, canvas, { dpr: [1, 2], autoResize: true });
-      const particles = draw(gpu, {
+      renderRef.current = render;
+
+      const particles = draw(render.gpu, {
         shader,
         label: "HeroParticles",
         vertices: 3,
@@ -56,29 +57,31 @@ export function HeroParticles({ className = "", count = 200, opacity = 1 }: Hero
           params: {
             time: 0,
             scroll: 0,
-            resolution: canvasSurface.size,
+            resolution: render.surface.size,
             particleCount: count,
           },
         },
       });
 
-      canvasSurface.onResize(() => {
-        particles.set({ params: { resolution: canvasSurface.size } });
+      await render.warmUp(particles);
+
+      const unsubResize = render.surface.onResize(() => {
+        particles.set({ params: { resolution: render.surface.size } });
       });
+      render.onCleanup(unsubResize);
 
-      const time = clock(gpu);
-      gpuRef.current = { gpu, canvasSurface, particles };
+      const time = clock(render.gpu);
 
-      loopRef.current = frameLoop(gpu, (frame) => {
+      loopRef.current = frameLoop(render.gpu, (frame) => {
         particles.set({
           params: {
             time: time.time,
             scroll: scrollRef.current,
-            resolution: canvasSurface.size,
+            resolution: render.surface.size,
             particleCount: count,
           },
         });
-        frame.pass(canvasSurface, particles);
+        frame.pass(render.surface, particles);
       });
     }
 
@@ -87,9 +90,9 @@ export function HeroParticles({ className = "", count = 200, opacity = 1 }: Hero
     return () => {
       cancelled = true;
       loopRef.current?.stop();
-      gpuRef.current?.gpu?.dispose();
-      gpuRef.current = null;
       loopRef.current = null;
+      renderRef.current?.dispose();
+      renderRef.current = null;
     };
   }, [supported, count]);
 

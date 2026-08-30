@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useGPUContext } from "@/lib/gpu";
+import { acquireGPU, releaseGPU } from "@/lib/gpu/GPUDevicePool";
 import type { FrameLoopHandle } from "vgpu";
 
 interface GPUConfettiProps {
@@ -18,6 +19,8 @@ interface GPUConfettiProps {
  * GPU-accelerated confetti particle system.
  * Renders 5000+ particles at 60fps using instanced vertex shaders.
  * Falls back to canvas-confetti on unsupported browsers.
+ *
+ * Uses shared GPU device pool. Pre-warms pipeline on first burst.
  */
 export function GPUConfetti({
   active = false,
@@ -29,6 +32,7 @@ export function GPUConfetti({
   const { supported } = useGPUContext();
   const loopRef = useRef<FrameLoopHandle | null>(null);
   const gpuRef = useRef<any>(null);
+  const hasAcquired = useRef(false);
   const [burstTime, setBurstTime] = useState(-10);
 
   // Trigger burst
@@ -45,19 +49,19 @@ export function GPUConfetti({
     let cancelled = false;
 
     async function start() {
-      const { init, draw, surface, frameLoop, clock } = await import("vgpu");
+      const { draw, surface, frameLoop, clock } = await import("vgpu");
       const shader = (await import("./GPUConfetti.wgsl")).default;
 
-      const canvas = canvasRef.current!;
-      if (cancelled) return;
+      const { gpu } = await acquireGPU();
+      hasAcquired.current = true;
 
-      const gpu = await init();
       if (cancelled) {
-        gpu.dispose();
+        releaseGPU();
         return;
       }
 
-      const canvasSurface = surface(gpu, canvas, { dpr: [1, 2], autoResize: true });
+      const canvasSurface = surface(gpu, canvasRef.current!, { dpr: [1, 2], autoResize: true });
+
       const confetti = draw(gpu, {
         shader,
         label: "GPUConfetti",
@@ -71,6 +75,13 @@ export function GPUConfetti({
           },
         },
       });
+
+      // Pre-warm pipeline
+      try {
+        await confetti.compile(canvasSurface);
+      } catch {
+        // best-effort
+      }
 
       const time = clock(gpu);
       gpuRef.current = { gpu, canvasSurface, confetti };
@@ -95,9 +106,12 @@ export function GPUConfetti({
     return () => {
       cancelled = true;
       loopRef.current?.stop();
-      gpuRef.current?.gpu?.dispose();
-      gpuRef.current = null;
       loopRef.current = null;
+      gpuRef.current = null;
+      if (hasAcquired.current) {
+        releaseGPU();
+        hasAcquired.current = false;
+      }
     };
   }, [supported, burstTime, particles, duration]);
 

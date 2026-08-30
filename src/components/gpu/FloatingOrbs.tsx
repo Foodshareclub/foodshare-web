@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useGPUContext } from "@/lib/gpu";
+import { initGPURender } from "@/lib/gpu/useGPURender";
 import type { FrameLoopHandle } from "vgpu";
 
 interface FloatingOrbsProps {
@@ -14,12 +15,21 @@ interface FloatingOrbsProps {
  * GPU-accelerated floating orbs background.
  * Renders 5 animated gradient circles in a single fullscreen fragment shader.
  * Falls back to CSS blur circles when WebGPU is unavailable.
+ *
+ * Uses shared GPU device pool — no redundant init() calls.
+ * Scroll is passed as a ref to avoid pipeline teardown on scroll.
  */
 export function FloatingOrbs({ className = "", scroll = 0, opacity = 1 }: FloatingOrbsProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { supported } = useGPUContext();
   const loopRef = useRef<FrameLoopHandle | null>(null);
-  const gpuRef = useRef<any>(null);
+  const renderRef = useRef<Awaited<ReturnType<typeof initGPURender>> | null>(null);
+  const scrollRef = useRef(scroll);
+
+  // Keep scroll ref in sync without re-triggering effect
+  useEffect(() => {
+    scrollRef.current = scroll;
+  }, [scroll]);
 
   useEffect(() => {
     if (!supported || !canvasRef.current) return;
@@ -27,34 +37,37 @@ export function FloatingOrbs({ className = "", scroll = 0, opacity = 1 }: Floati
     let cancelled = false;
 
     async function start() {
-      const { init, effect, surface, frameLoop, clock } = await import("vgpu");
+      const { effect, frameLoop, clock } = await import("vgpu");
       const shader = (await import("./FloatingOrbs.wgsl")).default;
 
-      const canvas = canvasRef.current!;
-      if (cancelled) return;
-
-      const gpu = await init();
+      const render = await initGPURender({ canvasRef, enabled: true });
       if (cancelled) {
-        gpu.dispose();
+        render.dispose();
         return;
       }
 
-      const canvasSurface = surface(gpu, canvas, { dpr: [1, 2], autoResize: true });
-      const orbEffect = effect(gpu, shader, {
+      renderRef.current = render;
+
+      const orbEffect = effect(render.gpu, shader, {
         label: "FloatingOrbs",
-        set: { params: { time: 0, scroll, resolution: canvasSurface.size } },
+        set: { params: { time: 0, scroll: scrollRef.current, resolution: render.surface.size } },
       });
 
-      canvasSurface.onResize(() => {
-        orbEffect.set({ params: { resolution: canvasSurface.size } });
+      // Pre-warm pipeline to avoid first-frame jank
+      await render.warmUp(orbEffect);
+
+      const unsubResize = render.surface.onResize(() => {
+        orbEffect.set({ params: { resolution: render.surface.size } });
       });
+      render.onCleanup(unsubResize);
 
-      const time = clock(gpu);
-      gpuRef.current = { gpu, canvasSurface, orbEffect };
+      const time = clock(render.gpu);
 
-      loopRef.current = frameLoop(gpu, (frame) => {
-        orbEffect.set({ params: { time: time.time, scroll, resolution: canvasSurface.size } });
-        frame.pass(canvasSurface, orbEffect);
+      loopRef.current = frameLoop(render.gpu, (frame) => {
+        orbEffect.set({
+          params: { time: time.time, scroll: scrollRef.current, resolution: render.surface.size },
+        });
+        frame.pass(render.surface, orbEffect);
       });
     }
 
@@ -63,11 +76,11 @@ export function FloatingOrbs({ className = "", scroll = 0, opacity = 1 }: Floati
     return () => {
       cancelled = true;
       loopRef.current?.stop();
-      gpuRef.current?.gpu?.dispose();
-      gpuRef.current = null;
       loopRef.current = null;
+      renderRef.current?.dispose();
+      renderRef.current = null;
     };
-  }, [supported, scroll]);
+  }, [supported]); // scroll is via ref, no need in deps
 
   // CSS fallback positions (matches original deterministic positions)
   const ORB_FALLBACK = [

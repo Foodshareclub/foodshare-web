@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useGPUContext } from "@/lib/gpu";
+import { initGPURender } from "@/lib/gpu/useGPURender";
 import type { FrameLoopHandle } from "vgpu";
 
 interface GPUSkeletonProps {
@@ -14,6 +15,8 @@ interface GPUSkeletonProps {
 /**
  * GPU-accelerated loading skeleton with animated shimmer.
  * Falls back to CSS pulse animation on unsupported browsers.
+ *
+ * Uses shared GPU device pool. Pre-warms pipeline.
  */
 export function GPUSkeleton({
   className = "",
@@ -24,7 +27,7 @@ export function GPUSkeleton({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { supported } = useGPUContext();
   const loopRef = useRef<FrameLoopHandle | null>(null);
-  const gpuRef = useRef<any>(null);
+  const renderRef = useRef<Awaited<ReturnType<typeof initGPURender>> | null>(null);
 
   useEffect(() => {
     if (!supported || !canvasRef.current) return;
@@ -32,36 +35,36 @@ export function GPUSkeleton({
     let cancelled = false;
 
     async function start() {
-      const { init, effect, surface, frameLoop, clock } = await import("vgpu");
+      const { effect, frameLoop, clock } = await import("vgpu");
       const shader = (await import("./GPUSkeleton.wgsl")).default;
 
-      const canvas = canvasRef.current!;
-      if (cancelled) return;
-
-      const gpu = await init();
+      const render = await initGPURender({ canvasRef, enabled: true });
       if (cancelled) {
-        gpu.dispose();
+        render.dispose();
         return;
       }
 
-      const canvasSurface = surface(gpu, canvas, { dpr: [1, 2], autoResize: true });
-      const skeleton = effect(gpu, shader, {
+      renderRef.current = render;
+
+      const skeleton = effect(render.gpu, shader, {
         label: "GPUSkeleton",
-        set: { params: { time: 0, resolution: canvasSurface.size, borderRadius: 12 } },
+        set: { params: { time: 0, resolution: render.surface.size, borderRadius: 12 } },
       });
 
-      canvasSurface.onResize(() => {
-        skeleton.set({ params: { resolution: canvasSurface.size } });
+      await render.warmUp(skeleton);
+
+      const unsubResize = render.surface.onResize(() => {
+        skeleton.set({ params: { resolution: render.surface.size } });
       });
+      render.onCleanup(unsubResize);
 
-      const time = clock(gpu);
-      gpuRef.current = { gpu, canvasSurface, skeleton };
+      const time = clock(render.gpu);
 
-      loopRef.current = frameLoop(gpu, (frame) => {
+      loopRef.current = frameLoop(render.gpu, (frame) => {
         skeleton.set({
-          params: { time: time.time, resolution: canvasSurface.size, borderRadius: 12 },
+          params: { time: time.time, resolution: render.surface.size, borderRadius: 12 },
         });
-        frame.pass(canvasSurface, skeleton);
+        frame.pass(render.surface, skeleton);
       });
     }
 
@@ -70,9 +73,9 @@ export function GPUSkeleton({
     return () => {
       cancelled = true;
       loopRef.current?.stop();
-      gpuRef.current?.gpu?.dispose();
-      gpuRef.current = null;
       loopRef.current = null;
+      renderRef.current?.dispose();
+      renderRef.current = null;
     };
   }, [supported]);
 

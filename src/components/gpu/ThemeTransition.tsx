@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { useGPUContext } from "@/lib/gpu";
+import { acquireGPU, releaseGPU } from "@/lib/gpu/GPUDevicePool";
 import type { FrameLoopHandle } from "vgpu";
 
 interface ThemeTransitionProps {
@@ -15,6 +16,8 @@ interface ThemeTransitionProps {
 /**
  * GPU-accelerated radial wipe theme transition.
  * Replaces DOM clip-path animation with a fullscreen fragment shader.
+ *
+ * Uses shared GPU device pool. Short-lived — only active during transition.
  */
 export function ThemeTransition({
   active,
@@ -26,7 +29,7 @@ export function ThemeTransition({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { supported } = useGPUContext();
   const loopRef = useRef<FrameLoopHandle | null>(null);
-  const gpuRef = useRef<any>(null);
+  const hasAcquired = useRef(false);
 
   useEffect(() => {
     if (!supported || !active || !canvasRef.current) return;
@@ -34,19 +37,18 @@ export function ThemeTransition({
     let cancelled = false;
 
     async function start() {
-      const { init, effect, surface, frameLoop } = await import("vgpu");
+      const { effect, surface, frameLoop } = await import("vgpu");
       const shader = (await import("./ThemeTransition.wgsl")).default;
 
-      const canvas = canvasRef.current!;
-      if (cancelled) return;
+      const { gpu } = await acquireGPU();
+      hasAcquired.current = true;
 
-      const gpu = await init();
       if (cancelled) {
-        gpu.dispose();
+        releaseGPU();
         return;
       }
 
-      const canvasSurface = surface(gpu, canvas, { dpr: 1, autoResize: false });
+      const canvasSurface = surface(gpu, canvasRef.current!, { dpr: 1, autoResize: false });
       const maxRadius =
         Math.hypot(
           Math.max(originX, window.innerWidth - originX),
@@ -67,7 +69,12 @@ export function ThemeTransition({
         },
       });
 
-      gpuRef.current = { gpu, canvasSurface, transition };
+      // Pre-warm
+      try {
+        await transition.compile(canvasSurface);
+      } catch {
+        // best-effort
+      }
 
       const duration = 500; // ms
       const startTime = performance.now();
@@ -104,9 +111,11 @@ export function ThemeTransition({
     return () => {
       cancelled = true;
       loopRef.current?.stop();
-      gpuRef.current?.gpu?.dispose();
-      gpuRef.current = null;
       loopRef.current = null;
+      if (hasAcquired.current) {
+        releaseGPU();
+        hasAcquired.current = false;
+      }
     };
   }, [supported, active, originX, originY, isDark, onComplete]);
 

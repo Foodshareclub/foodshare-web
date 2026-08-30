@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useGPUContext } from "@/lib/gpu";
+import { initGPURender } from "@/lib/gpu/useGPURender";
 import type { FrameLoopHandle } from "vgpu";
 
 interface GradientBackgroundProps {
@@ -12,12 +13,19 @@ interface GradientBackgroundProps {
 /**
  * GPU-accelerated animated gradient background.
  * Replaces CSS `background-size: 400% 400%` animation with a fragment shader.
+ *
+ * Uses shared GPU device pool. Scroll passed as ref to avoid re-init.
  */
 export function GradientBackground({ className = "", scroll = 0 }: GradientBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { supported } = useGPUContext();
   const loopRef = useRef<FrameLoopHandle | null>(null);
-  const gpuRef = useRef<any>(null);
+  const renderRef = useRef<Awaited<ReturnType<typeof initGPURender>> | null>(null);
+  const scrollRef = useRef(scroll);
+
+  useEffect(() => {
+    scrollRef.current = scroll;
+  }, [scroll]);
 
   useEffect(() => {
     if (!supported || !canvasRef.current) return;
@@ -25,34 +33,36 @@ export function GradientBackground({ className = "", scroll = 0 }: GradientBackg
     let cancelled = false;
 
     async function start() {
-      const { init, effect, surface, frameLoop, clock } = await import("vgpu");
+      const { effect, frameLoop, clock } = await import("vgpu");
       const shader = (await import("./GradientBackground.wgsl")).default;
 
-      const canvas = canvasRef.current!;
-      if (cancelled) return;
-
-      const gpu = await init();
+      const render = await initGPURender({ canvasRef, enabled: true });
       if (cancelled) {
-        gpu.dispose();
+        render.dispose();
         return;
       }
 
-      const canvasSurface = surface(gpu, canvas, { dpr: [1, 2], autoResize: true });
-      const gradientEffect = effect(gpu, shader, {
+      renderRef.current = render;
+
+      const gradientEffect = effect(render.gpu, shader, {
         label: "GradientBackground",
-        set: { params: { time: 0, scroll, resolution: canvasSurface.size } },
+        set: { params: { time: 0, scroll: scrollRef.current, resolution: render.surface.size } },
       });
 
-      canvasSurface.onResize(() => {
-        gradientEffect.set({ params: { resolution: canvasSurface.size } });
+      await render.warmUp(gradientEffect);
+
+      const unsubResize = render.surface.onResize(() => {
+        gradientEffect.set({ params: { resolution: render.surface.size } });
       });
+      render.onCleanup(unsubResize);
 
-      const time = clock(gpu);
-      gpuRef.current = { gpu, canvasSurface, gradientEffect };
+      const time = clock(render.gpu);
 
-      loopRef.current = frameLoop(gpu, (frame) => {
-        gradientEffect.set({ params: { time: time.time, scroll, resolution: canvasSurface.size } });
-        frame.pass(canvasSurface, gradientEffect);
+      loopRef.current = frameLoop(render.gpu, (frame) => {
+        gradientEffect.set({
+          params: { time: time.time, scroll: scrollRef.current, resolution: render.surface.size },
+        });
+        frame.pass(render.surface, gradientEffect);
       });
     }
 
@@ -61,11 +71,11 @@ export function GradientBackground({ className = "", scroll = 0 }: GradientBackg
     return () => {
       cancelled = true;
       loopRef.current?.stop();
-      gpuRef.current?.gpu?.dispose();
-      gpuRef.current = null;
       loopRef.current = null;
+      renderRef.current?.dispose();
+      renderRef.current = null;
     };
-  }, [supported, scroll]);
+  }, [supported]);
 
   if (!supported) {
     return (

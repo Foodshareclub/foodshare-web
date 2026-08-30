@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { acquireGPU, releaseGPU } from "./GPUDevicePool";
 
 export interface WebGPUState {
   supported: boolean;
@@ -60,19 +61,23 @@ export function useWebGPU(): WebGPUState {
 
 /**
  * Initialize vgpu lazily — only when the component actually needs GPU.
+ * Uses the shared device pool so multiple components share one GPUDevice.
  * Returns a ref-stable init function and cleanup.
  */
 export function useGPUInit() {
   const gpuRef = useRef<any>(null);
   const loopRef = useRef<any>(null);
+  const hasAcquired = useRef(false);
 
   const initGPU = useCallback(async (canvas: HTMLCanvasElement) => {
     if (gpuRef.current) return gpuRef.current;
 
-    const { init, surface, clock } = await import("vgpu");
+    const { surface, clock } = await import("vgpu");
     const frameLoopFn = (await import("vgpu")).frameLoop;
 
-    const gpu = await init();
+    const { gpu } = await acquireGPU();
+    hasAcquired.current = true;
+
     const canvasSurface = surface(gpu, canvas, { dpr: [1, 2] });
     const time = clock(gpu);
 
@@ -97,9 +102,12 @@ export function useGPUInit() {
 
   const cleanup = useCallback(() => {
     loopRef.current?.stop();
-    gpuRef.current?.gpu?.dispose();
     gpuRef.current = null;
     loopRef.current = null;
+    if (hasAcquired.current) {
+      releaseGPU();
+      hasAcquired.current = false;
+    }
   }, []);
 
   return { initGPU, startLoop, cleanup };
