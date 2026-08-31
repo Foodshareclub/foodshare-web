@@ -33,7 +33,7 @@ test.describe("Home Page", () => {
 
   test("should display product grid or loading skeleton", async ({ page }) => {
     // Wait for content to load - either products grid or skeleton
-    await page.waitForTimeout(2000);
+    await page.waitForSelector('[class*="grid"]', { timeout: 5000 });
 
     // Check for grid layout (ProductGrid component)
     const grid = page.locator('[class*="grid"]').first();
@@ -42,8 +42,8 @@ test.describe("Home Page", () => {
 
   test('should display "Show map" navigation button', async ({ page }) => {
     // NavigateButtons shows a "Show map" button on listing pages
-    const mapButton = page.locator("button").filter({ hasText: /show map/i });
-    const hasMapButton = await mapButton.isVisible().catch(() => false);
+    const mapButton = page.getByRole("button", { name: /show map/i });
+    const hasMapButton = await mapButton.isVisible();
 
     // Map button should be visible on home page
     expect(hasMapButton).toBeTruthy();
@@ -68,19 +68,10 @@ test.describe("Home Page", () => {
     await page.goto("/?lat=51.5074&lng=-0.1278&radius=5000");
     await page.waitForLoadState("domcontentloaded");
 
-    // Page should load with location filter active: either the product grid
-    // has content, or the "Nothing shared within..." empty state shows once
-    // nearby fetching settles. An empty grid collapses to zero height
-    // (Playwright: hidden), so accept whichever of the two states materializes.
-    await expect(async () => {
-      const hasEmptyState = await page
-        .getByText(/nothing shared within/i)
-        .isVisible()
-        .catch(() => false);
-      if (hasEmptyState) return;
-      const items = await page.locator('[class*="grid"] > *').count();
-      expect(items).toBeGreaterThan(0);
-    }).toPass({ timeout: 15000 });
+    // Wait for either empty state or products to appear
+    await page.waitForSelector(':matches(.nothing-shared-within, [class*="grid"])', {
+      timeout: 15000,
+    });
 
     // URL should contain location params
     expect(page.url()).toContain("lat=");
@@ -92,7 +83,7 @@ test.describe("Home Page", () => {
     const searchBar = page
       .locator('[class*="search"], input[type="search"], [placeholder*="search" i]')
       .first();
-    const hasSearchBar = await searchBar.isVisible().catch(() => false);
+    const hasSearchBar = await searchBar.isVisible();
 
     // Search functionality exists (may be a search button or input)
     expect(
@@ -127,7 +118,6 @@ test.describe("Home Page - Navigation", () => {
     await page.goto("/");
     // Wait for navbar to render
     await page.waitForSelector('header, nav, [class*="navbar"]', { timeout: 30000 });
-    await page.waitForTimeout(2000);
 
     // Click on a category button (e.g., "Things" or similar)
     const categoryButton = page
@@ -139,7 +129,7 @@ test.describe("Home Page - Navigation", () => {
 
     if (isVisible) {
       await categoryButton.click();
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("domcontentloaded");
 
       // Should navigate to category page
       const url = page.url();
@@ -155,7 +145,6 @@ test.describe("Home Page - Product Cards", () => {
   test("should display product cards when data is available", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(3000);
 
     // Check for product cards (links to /food/[id] or similar)
     const productLinks = page.locator('a[href^="/food/"]');
@@ -168,7 +157,6 @@ test.describe("Home Page - Product Cards", () => {
   test("should navigate to product detail when clicking a card", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(3000);
 
     // Find first product link
     const productLink = page.locator('a[href^="/food/"]').first();

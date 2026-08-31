@@ -29,9 +29,6 @@ test.describe("Map Page", () => {
     await page.goto("/map/food");
     await page.waitForLoadState("domcontentloaded");
 
-    // Wait for loading to finish and map to render
-    await page.waitForTimeout(3000);
-
     // Wait for Leaflet to initialize
     const mapContainer = page.locator(".leaflet-container");
     await expect(mapContainer).toBeVisible({ timeout: 20000 });
@@ -69,7 +66,11 @@ test.describe("Map Page", () => {
     if (isVisible) {
       // Click zoom in
       await zoomIn.click();
-      await page.waitForTimeout(500);
+      // Wait for zoom animation to complete
+      await page.waitForSelector(":matches(.leaflet-anim-zooming, .leaflet-zoom-animated)", {
+        timeout: 2000,
+        state: "hidden",
+      });
 
       // Map should still be visible after zoom
       await expect(mapContainer).toBeVisible();
@@ -106,7 +107,6 @@ test.describe("Map Page", () => {
       await page.goto(`/map/${type}`);
       // Wait for map container to render
       await page.waitForSelector(".leaflet-container", { timeout: 30000 });
-      await page.waitForTimeout(1000);
 
       // Page should load
       await expect(page).toHaveURL(`/map/${type}`);
@@ -130,9 +130,6 @@ test.describe("Map Page", () => {
     const mapContainer = page.locator(".leaflet-container");
     await expect(mapContainer).toBeVisible({ timeout: 20000 });
 
-    // Wait for data to potentially load
-    await page.waitForTimeout(3000);
-
     // Check for markers or marker clusters or empty state
     const markers = page.locator(".leaflet-marker-icon");
     const emptyState = page.getByText(/no items found/i);
@@ -152,7 +149,10 @@ test.describe("Map Page", () => {
 
     // Wait for flyTo/setView animations (up to ~2s) to settle so markers
     // stop moving before we interact with them
-    await page.waitForTimeout(3000);
+    await page.waitForSelector(":matches(.leaflet-anim-zooming, .leaflet-zoom-animated)", {
+      state: "hidden",
+      timeout: 2000,
+    });
 
     // Target actual post markers (custom-map-marker), NOT the user-location
     // marker which has a perpetual pulse animation and never settles
@@ -203,7 +203,10 @@ test.describe("Map with Location", () => {
     await page.waitForSelector(".leaflet-container", { timeout: 30000 });
 
     // Wait for map to initialize and potentially center
-    await page.waitForTimeout(2000);
+    await page.waitForSelector(":matches(.leaflet-anim-zooming, .leaflet-zoom-animated)", {
+      state: "hidden",
+      timeout: 2000,
+    });
 
     // Check that map loaded successfully
     const mapContainer = page.locator(".leaflet-container");

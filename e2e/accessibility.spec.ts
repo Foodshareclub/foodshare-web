@@ -7,7 +7,6 @@ test.describe("Accessibility", () => {
     for (const path of pages) {
       await page.goto(path);
       // Wait for content to load (not just loading spinner)
-      await page.waitForTimeout(3000);
       await page.waitForLoadState("domcontentloaded");
 
       // Page should have some title (may be default or custom)
@@ -19,7 +18,6 @@ test.describe("Accessibility", () => {
   test("should have proper heading hierarchy on home page", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(2000);
 
     // Check for headings (h1, h2, h3)
     const headings = page.locator("h1, h2, h3");
@@ -33,7 +31,6 @@ test.describe("Accessibility", () => {
   test("should have alt text on images", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(2000);
 
     const images = page.locator("img");
     const imageCount = await images.count();
@@ -154,7 +151,7 @@ test.describe("Dark Mode", () => {
 
       // Toggle theme
       await themeToggle.click();
-      await page.waitForTimeout(500);
+      await page.waitForSelector(":matches(.dark, .light)", { timeout: 3000 });
 
       // Theme should have changed
       const newHtmlClass = await page.locator("html").getAttribute("class");

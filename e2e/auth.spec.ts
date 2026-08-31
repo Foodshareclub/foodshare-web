@@ -86,7 +86,7 @@ test.describe("Authentication - Login", () => {
     await page.getByRole("button", { name: /log in/i }).click();
 
     // Wait for error response - error appears in a red box
-    await page.waitForTimeout(3000);
+    await page.waitForSelector('.bg-red-50, [class*="red"]', { timeout: 10000 });
 
     // Should show error message or stay on login page
     const errorMessage = page.locator('.bg-red-50, [class*="red"]').first();

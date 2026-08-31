@@ -18,8 +18,12 @@ export async function waitForHydration(page: Page, options: { timeout?: number }
   // Wait for domcontentloaded
   await page.waitForLoadState("domcontentloaded");
 
-  // Small delay for hydration to complete
-  await page.waitForTimeout(500);
+  // Small delay for hydration to complete - wait for any visible content
+  try {
+    await page.waitForSelector(":visible", { timeout: 2000, state: "visible" });
+  } catch {
+    // Content may not be immediately visible; continue anyway
+  }
 }
 
 /**

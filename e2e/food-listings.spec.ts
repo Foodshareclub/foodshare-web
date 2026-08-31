@@ -13,8 +13,10 @@ test.describe("Food Listings Page", () => {
   });
 
   test("should display product grid with items or empty state", async ({ page }) => {
-    // Wait for content to load
-    await page.waitForTimeout(2000);
+    // Wait for content to load - either product grid or empty state
+    await page.waitForSelector(':matches([class*="grid"], .nothing-shared-within)', {
+      timeout: 15000,
+    });
 
     // Either the product grid has content, or the "Nothing shared within..."
     // empty state shows once nearby fetching settles. An empty grid collapses
@@ -85,7 +87,6 @@ test.describe("Food Listings Page", () => {
   test("should navigate to food detail page when clicking a product", async ({ page }) => {
     // Wait for grid to load
     await page.waitForSelector('[class*="grid"], main', { timeout: 30000 });
-    await page.waitForTimeout(2000);
 
     // Find a product card link
     const productCard = page.locator('a[href^="/food/"]').first();
@@ -93,7 +94,7 @@ test.describe("Food Listings Page", () => {
 
     if (isVisible) {
       await productCard.click();
-      await page.waitForTimeout(3000);
+      await page.waitForLoadState("domcontentloaded");
       await expect(page).toHaveURL(/\/food\/[a-zA-Z0-9-]+/);
     } else {
       // If no products, test passes (empty state is acceptable)
@@ -101,10 +102,10 @@ test.describe("Food Listings Page", () => {
     }
   });
 
-  test('should display "Show map" button', async ({ page }) => {
+  test("should display 'Show map' button", async ({ page }) => {
     // NavigateButtons shows "Show map" button on listing pages
-    const mapButton = page.locator("button").filter({ hasText: /show map/i });
-    const hasMapButton = await mapButton.isVisible().catch(() => false);
+    const mapButton = page.getByRole("button", { name: /show map/i });
+    const hasMapButton = await mapButton.isVisible();
 
     expect(hasMapButton).toBeTruthy();
   });
@@ -115,7 +116,6 @@ test.describe("Food Detail Page", () => {
     // First go to listings and get a real food item URL
     await page.goto("/food");
     await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(2000);
 
     const productLink = page.locator('a[href^="/food/"]').first();
     const isVisible = await productLink.isVisible().catch(() => false);

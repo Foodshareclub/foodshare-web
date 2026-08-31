@@ -33,7 +33,7 @@ test.describe("Site Navigation", () => {
 
     // Scroll to footer
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(500);
+    await page.waitForSelector('.footer, [class*="footer"]', { timeout: 3000 });
 
     // Check for common footer links
     const termsLink = page.getByRole("link", { name: /terms/i });
