@@ -1,21 +1,35 @@
 import type { Metadata } from "next";
 import { generatePageMetadata } from "@/lib/metadata";
+import { createClient } from "@/lib/supabase/server";
 
-/**
- * Static metadata for product detail pages
- * Dynamic SEO metadata is handled at runtime
- */
-export const metadata: Metadata = generatePageMetadata({
-  title: "Product Listing",
-  description: "View this food sharing listing on FoodShare - find free food, share surplus food, and connect with your community.",
-  path: "/food",
-  keywords: ["free food", "food sharing", "community", "share food", "reduce waste"],
-});
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const supa = await createClient();
 
-export default function ProductDetailLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+  const { data, error } = await supa
+    .from("posts")
+    .select("id, title, description, images, created_at, updated_at")
+    .eq("id", params.id)
+    .single();
+
+  if (error || !data) {
+    return {};
+  }
+
+  return generatePageMetadata({
+    title: data.title,
+    description: data.description,
+    path: `/food/${data.id}`,
+    images:
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data.images?.map((img: any) => ({
+        url: img.url,
+        alt: img.alt || data.title,
+      })) || [],
+    noIndex: false,
+    type: "website",
+  });
+}
+
+export default function ProductDetailLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
