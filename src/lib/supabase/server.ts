@@ -1,21 +1,20 @@
 // server-only guard — static import can fail in Bun test environments even when
 // the mock is registered, causing a SyntaxError that hides all named exports.
-// Use try/catch so tests never break while production Next.js builds are unaffected.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   require("server-only");
 } catch {
-  // Module not found or mocked — safe to skip in tests/builds
+  /* safe in tests/builds */
 }
 
 /**
  * Supabase Server Configuration for Next.js App Router
  * Cookie-based session handling for Server Components and Server Actions
+ *
+ * Imports are inside functions to prevent SyntaxError that hides named exports
+ * in CI Bun test runs. Module-level static imports fail to resolve when
+ * mock.module paths don't match CI's resolved module paths.
  */
-
-import { createServerClient } from "@supabase/ssr";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL! || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! || "";
@@ -26,7 +25,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
     process.env.SKIP_ENV_VALIDATION !== "true" &&
     process.env.NEXT_PHASE !== "phase-production-build"
   ) {
-    // Only throw if we are actually running the app, not building it
     console.warn(
       "⚠️ Missing Supabase environment variables. This is expected during build if they are not provided."
     );
@@ -38,25 +36,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * Use this inside unstable_cache() where cookies() cannot be called
  */
 export function createCachedClient() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { createClient } = require("@supabase/supabase-js");
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error("Missing Supabase environment variables");
   }
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey);
-}
-
-/**
- * Get all cookies from the cookie store
- * NOTE: Previous filtering logic was removed as it caused false positives
- * and filtered out valid Supabase auth cookies, breaking authentication.
- * Supabase handles invalid cookies gracefully on its own.
- */
-function getSafeCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
-  try {
-    return cookieStore.getAll();
-  } catch (error) {
-    console.error("Error reading cookies:", error);
-    return [];
-  }
+  return createClient(supabaseUrl, supabaseAnonKey);
 }
 
 /**
@@ -65,6 +50,10 @@ function getSafeCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
  * Includes error handling for corrupted cookies
  */
 export async function createClient() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { createServerClient } = require("@supabase/ssr");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { cookies } = require("next/headers");
   const cookieStore = await cookies();
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -75,16 +64,31 @@ export async function createClient() {
     },
     cookies: {
       getAll() {
-        return getSafeCookies(cookieStore);
-      },
-      setAll(cookiesToSet) {
         try {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, {
-              ...options,
-              domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || options.domain,
-            });
-          });
+          return cookieStore.getAll();
+        } catch (error) {
+          console.error("Error reading cookies:", error);
+          return [];
+        }
+      },
+      setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+        try {
+          cookiesToSet.forEach(
+            ({
+              name,
+              value,
+              options,
+            }: {
+              name: string;
+              value: string;
+              options?: Record<string, unknown>;
+            }) => {
+              cookieStore.set(name, value, {
+                ...options,
+                domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || options?.domain,
+              });
+            }
+          );
         } catch {
           // The `setAll` method was called from a Server Component.
           // This can be ignored if you have proxy.ts refreshing user sessions.
