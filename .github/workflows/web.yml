@@ -415,3 +415,99 @@ jobs:
             # Deploy (Cloudflare Tunnel + Web via compose)
             docker compose --env-file .env.production up -d --force-recreate
             echo "Deploy complete"
+
+      - name: Setup Tailscale on VPS
+        if: success()
+        env:
+          TAILSCALE_AUTH_KEY: ${{ secrets.TAILSCALE_AUTH_KEY }}
+          TAILSCALE_NODE_KEY: ${{ secrets.TAILSCALE_NODE_KEY }}
+          TAILSCALE_TL_PUB: ${{ secrets.TAILSCALE_TL_PUB }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          set -eo pipefail
+
+          # Verify at least one key method is set
+          if [ -z "$TAILSCALE_AUTH_KEY" ] && [ -z "$TAILSCALE_NODE_KEY" ]; then
+            echo "::warning::Neither TAILSCALE_AUTH_KEY nor TAILSCALE_NODE_KEY set — skipping Tailscale setup"
+            exit 0
+          fi
+
+          if [ -z "$VPS_SSH_KEY" ]; then
+            echo "::warning::VPS_SSH_KEY not set — skipping Tailscale setup"
+            exit 0
+          fi
+
+          mkdir -p ~/.ssh
+          echo "$VPS_SSH_KEY" > ~/.ssh/vps_ssh_key
+          chmod 600 ~/.ssh/vps_ssh_key
+          trap 'rm -f ~/.ssh/vps_ssh_key' EXIT
+
+          echo "=== Running Tailscale setup on Frontend VPS ==="
+
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i ~/.ssh/vps_ssh_key "organic@${VPS_HOST}" \
+            "TAILSCALE_AUTH_KEY='$TAILSCALE_AUTH_KEY' TAILSCALE_NODE_KEY='$TAILSCALE_NODE_KEY' TAILSCALE_TL_PUB='$TAILSCALE_TL_PUB' bash -s" << 'REMOTE_EOF'
+          set -euo pipefail
+
+          log_info() { echo "[INFO] $1"; }
+          log_success() { echo "[OK]   $1"; }
+
+          # 1. Install Tailscale if not present
+          if ! command -v tailscale &>/dev/null; then
+            log_info "Installing Tailscale..."
+            curl -fsSL https://tailscale.com/install.sh | sh
+          fi
+
+          # 2. Build connection parameters
+          tailscale_args=("--accept-routes" "--advertise-routes=10.0.0.0/8" "--hostname=$(hostname)")
+
+          AUTH_KEY="${TAILSCALE_AUTH_KEY:-${TAILSCALE_NODE_KEY:-}}"
+          if [[ -n "$AUTH_KEY" ]]; then
+            tailscale_args+=("--auth-key" "$AUTH_KEY")
+          fi
+
+          log_info "Connecting to Tailnet..."
+          sudo tailscale up "${tailscale_args[@]}"
+
+          # 3. Wait for connection readiness
+          for i in $(seq 1 30); do
+            if tailscale status >/dev/null 2>&1; then
+              log_success "Tailscale is running on $(hostname)."
+              break
+            fi
+            sleep 2
+          done
+
+          # 4. Configure SSH config for cross-server access
+          log_info "Configuring SSH over Tailscale..."
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          touch ~/.ssh/config
+          chmod 600 ~/.ssh/config
+
+          if ! grep -q "Host backendvps-ts" ~/.ssh/config; then
+            cat << 'SSHEOF' >> ~/.ssh/config
+
+          Host backendvps-ts
+            HostName 100.92.38.119
+            User organic
+            IdentityFile ~/.ssh/foodshare_id_ed25519
+            IdentitiesOnly yes
+          SSHEOF
+          fi
+
+          if ! grep -q "Host frontendvps-ts" ~/.ssh/config; then
+            cat << 'SSHEOF' >> ~/.ssh/config
+
+          Host frontendvps-ts
+            HostName 100.99.241.23
+            User organic
+            IdentityFile ~/.ssh/foodshare_id_ed25519
+            IdentitiesOnly yes
+          SSHEOF
+          fi
+
+          log_success "Tailscale SSH config updated."
+          REMOTE_EOF
+
+          echo "=== Tailscale setup complete ==="
