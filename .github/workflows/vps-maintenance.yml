@@ -24,61 +24,58 @@ on:
 jobs:
   maintenance:
     name: VPS Maintenance
-    runs-on: [self-hosted, Linux]
+    runs-on: self-hosted
     steps:
       - name: Perform Maintenance via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: organic
-          key: ${{ secrets.VPS_SSH_KEY }}
-          command_timeout: 5m
-          script: |
-            set -x
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          RUNNER_ACCESS_TOKEN: ${{ secrets.RUNNER_ACCESS_TOKEN }}
+          FIX_RUNNER: ${{ github.event.inputs.fix_runner }}
+          UPGRADE_PACKAGES: ${{ github.event.inputs.upgrade_packages }}
+          DEBUG_SERVICES: ${{ github.event.inputs.debug_services }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$VPS_SSH_KEY" > ~/.ssh/vps_key
+          chmod 600 ~/.ssh/vps_key
+          trap 'rm -f ~/.ssh/vps_key' EXIT
 
-            # Health Checks
-            echo "=== Health Checks ==="
-            df -h
-            free -m
-            uptime
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/vps_key "organic@${VPS_HOST}" \
+            "RUNNER_ACCESS_TOKEN='$RUNNER_ACCESS_TOKEN' FIX_RUNNER='$FIX_RUNNER' UPGRADE_PACKAGES='$UPGRADE_PACKAGES' DEBUG_SERVICES='$DEBUG_SERVICES' EVENT_NAME='$EVENT_NAME' bash -s" << 'REMOTE_EOF'
+          set -e
 
-            # Debug Services
-            if [ "${{ github.event.inputs.debug_services }}" == "true" ]; then
-              echo "=== Docker Container Status ==="
-              cd /home/organic/dev/foodshare-backend
-              docker compose ps
-              echo "=== Auth (GoTrue) Logs (last 100 lines) ==="
-              docker compose logs --tail=100 auth 2>&1 || true
-              echo "=== Kong Logs (last 50 lines) ==="
-              docker compose logs --tail=50 kong 2>&1 || true
-              echo "=== Auth Health Check ==="
-              curl -v http://localhost:54321/auth/v1/health 2>&1 || true
-              echo "=== Direct GoTrue Health ==="
-              docker compose exec -T auth wget -qO- http://localhost:9999/health 2>&1 || true
-            fi
+          echo "=== Health Checks ==="
+          df -h && free -m && uptime
 
-            # Package Upgrades
-            if [ "${{ github.event.inputs.upgrade_packages }}" == "true" ] || [ "${{ github.event_name }}" == "schedule" ]; then
-              echo "=== Upgrading Packages ==="
-              sudo apt-get update
-              sudo apt-get upgrade -y
-              sudo apt-get autoremove -y
-            fi
+          # Always refresh the runner ORG_ACCESS_TOKEN from the passed-in secret
+          if [ -n "$RUNNER_ACCESS_TOKEN" ]; then
+            echo "=== Refreshing runner ORG_ACCESS_TOKEN ==="
+            sed -i "s|^ORG_ACCESS_TOKEN=.*|ORG_ACCESS_TOKEN=$RUNNER_ACCESS_TOKEN|" /home/organic/dev/foodshare-runner/.env
+            echo "✅ ORG_ACCESS_TOKEN updated"
+          fi
 
-            # Fix Runner & Restart
-            if [ "${{ github.event.inputs.fix_runner }}" == "true" ]; then
-              echo "=== Fixing Runner ==="
-              echo "Removing conflicting container..."
-              docker rm -f supabase-cloudflared || true
+          # Debug Services
+          if [ "$DEBUG_SERVICES" = "true" ]; then
+            echo "=== Docker Container Status ==="
+            docker ps --format 'table {{.Names}}\t{{.Status}}'
+          fi
 
-              echo "Starting runner..."
-              RUNNER=$(docker ps -a --format '{{.Names}}' | grep runner || true)
-              if [ -n "$RUNNER" ]; then
-                docker start $RUNNER
-              fi
+          # Package Upgrades
+          if [ "$UPGRADE_PACKAGES" = "true" ] || [ "$EVENT_NAME" = "schedule" ]; then
+            echo "=== Upgrading Packages ==="
+            sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get autoremove -y
+          fi
 
-              echo "Restarting backend..."
-              cd /home/organic/dev/foodshare-backend
-              ./scripts/deploy.sh restart full
-              echo "Done."
-            fi
+          # Fix Runner & Restart
+          if [ "$FIX_RUNNER" = "true" ]; then
+            echo "=== Restarting Runner ==="
+            cd /home/organic/dev/foodshare-runner
+            docker compose --profile org down || true
+            docker rm -f frontend-github-runner 2>/dev/null || true
+            docker compose --profile org up -d
+            sleep 8
+            docker logs frontend-github-runner --tail=10 2>&1 || true
+            echo "Done."
+          fi
+          REMOTE_EOF
