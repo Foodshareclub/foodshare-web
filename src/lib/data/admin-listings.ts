@@ -167,7 +167,7 @@ export async function getAdminListings(
 
   if (error) throw new Error(error.message);
 
-  const listings: AdminListing[] = (data ?? []).map((item) => ({
+  const listings: AdminListing[] = (data ?? []).map((item: any) => ({
     ...item,
     status: deriveStatus(item),
     profile: extractFirst(item.profile as Array<AdminListing["profile"]>),
@@ -254,7 +254,7 @@ export async function getListingStats(): Promise<ListingStats> {
 
   // Count by category
   const byCategory: Record<string, number> = {};
-  (categoryData ?? []).forEach((item) => {
+  (categoryData ?? []).forEach((item: any) => {
     const type = item.post_type || "unknown";
     byCategory[type] = (byCategory[type] || 0) + 1;
   });

@@ -296,7 +296,7 @@ export async function getUsers(
 
     // Get product counts and roles for each user
     const usersWithData = await Promise.all(
-      (data ?? []).map(async (user) => {
+      (data ?? []).map(async (user: any) => {
         const [{ count: productsCount }, { data: userRoles }] = await Promise.all([
           supabase
             .from("posts")
@@ -306,7 +306,7 @@ export async function getUsers(
         ]);
 
         const roles = (userRoles ?? [])
-          .map((r) => {
+          .map((r: any) => {
             const roleData = r.roles as unknown as { name: string } | { name: string }[];
             return Array.isArray(roleData) ? roleData[0]?.name : roleData?.name;
           })

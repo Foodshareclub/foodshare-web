@@ -441,7 +441,7 @@ export async function deleteAvatar(): Promise<ServerActionResult<void>> {
     const { data: files } = await supabase.storage.from("avatars").list(user.id);
 
     if (files && files.length > 0) {
-      const filePaths = files.map((f) => `${user.id}/${f.name}`);
+      const filePaths = files.map((f: any) => `${user.id}/${f.name}`);
       await supabase.storage.from("avatars").remove(filePaths);
     }
 
@@ -449,7 +449,7 @@ export async function deleteAvatar(): Promise<ServerActionResult<void>> {
     const { data: profileFiles } = await supabase.storage.from("profiles").list(user.id);
 
     if (profileFiles && profileFiles.length > 0) {
-      const profilePaths = profileFiles.map((f) => `${user.id}/${f.name}`);
+      const profilePaths = profileFiles.map((f: any) => `${user.id}/${f.name}`);
       await supabase.storage.from("profiles").remove(profilePaths);
     }
 

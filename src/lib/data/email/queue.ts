@@ -152,7 +152,7 @@ export async function getRecentCampaigns(limit = 10): Promise<RecentCampaign[]> 
     return [];
   }
 
-  return (data || []).map((c) => ({
+  return (data || []).map((c: any) => ({
     id: c.id,
     name: c.name,
     subject: c.subject,
@@ -191,7 +191,7 @@ export async function getActiveAutomations(): Promise<ActiveAutomation[]> {
     return [];
   }
 
-  return (data || []).map((a) => ({
+  return (data || []).map((a: any) => ({
     id: a.id,
     name: a.name,
     triggerType: a.trigger_type,
@@ -218,7 +218,7 @@ export async function getAudienceSegments(): Promise<AudienceSegment[]> {
     return [];
   }
 
-  return (data || []).map((s) => ({
+  return (data || []).map((s: any) => ({
     id: s.id,
     name: s.name,
     description: s.description,

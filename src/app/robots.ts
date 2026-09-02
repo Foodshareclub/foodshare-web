@@ -9,6 +9,10 @@ export default function robots(): MetadataRoute.Robots {
         allow: [
           "/",
           "/food",
+          "/product",
+          "/product/",
+          "/listing",
+          "/listing/",
           "/map",
           "/food/",
           "/forum",
@@ -35,7 +39,20 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "Googlebot",
-        allow: ["/", "/food", "/map", "/food/", "/profile/", "/forum", "/forum/", "/challenge"],
+        allow: [
+          "/",
+          "/food",
+          "/product",
+          "/product/",
+          "/listing",
+          "/listing/",
+          "/map",
+          "/food/",
+          "/profile/",
+          "/forum",
+          "/forum/",
+          "/challenge",
+        ],
         disallow: [
           "/api/",
           "/admin/",
@@ -74,7 +91,18 @@ export default function robots(): MetadataRoute.Robots {
       // This enables visibility in ChatGPT Search, Perplexity, Google AI Mode
       {
         userAgent: "GPTBot",
-        allow: ["/", "/food", "/forum", "/help", "/map", "/challenge", "/terms", "/privacy"],
+        allow: [
+          "/",
+          "/food",
+          "/product",
+          "/listing",
+          "/forum",
+          "/help",
+          "/map",
+          "/challenge",
+          "/terms",
+          "/privacy",
+        ],
         disallow: [
           "/api/",
           "/admin/",
@@ -90,7 +118,18 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "ChatGPT-User",
-        allow: ["/", "/food", "/forum", "/help", "/map", "/challenge", "/terms", "/privacy"],
+        allow: [
+          "/",
+          "/food",
+          "/product",
+          "/listing",
+          "/forum",
+          "/help",
+          "/map",
+          "/challenge",
+          "/terms",
+          "/privacy",
+        ],
         disallow: [
           "/api/",
           "/admin/",
@@ -106,7 +145,18 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "CCBot",
-        allow: ["/", "/food", "/forum", "/help", "/map", "/challenge", "/terms", "/privacy"],
+        allow: [
+          "/",
+          "/food",
+          "/product",
+          "/listing",
+          "/forum",
+          "/help",
+          "/map",
+          "/challenge",
+          "/terms",
+          "/privacy",
+        ],
         disallow: [
           "/api/",
           "/admin/",
@@ -122,7 +172,18 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "anthropic-ai",
-        allow: ["/", "/food", "/forum", "/help", "/map", "/challenge", "/terms", "/privacy"],
+        allow: [
+          "/",
+          "/food",
+          "/product",
+          "/listing",
+          "/forum",
+          "/help",
+          "/map",
+          "/challenge",
+          "/terms",
+          "/privacy",
+        ],
         disallow: [
           "/api/",
           "/admin/",
@@ -138,7 +199,18 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "PerplexityBot",
-        allow: ["/", "/food", "/forum", "/help", "/map", "/challenge", "/terms", "/privacy"],
+        allow: [
+          "/",
+          "/food",
+          "/product",
+          "/listing",
+          "/forum",
+          "/help",
+          "/map",
+          "/challenge",
+          "/terms",
+          "/privacy",
+        ],
         disallow: [
           "/api/",
           "/admin/",
@@ -154,7 +226,18 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "Google-Extended",
-        allow: ["/", "/food", "/forum", "/help", "/map", "/challenge", "/terms", "/privacy"],
+        allow: [
+          "/",
+          "/food",
+          "/product",
+          "/listing",
+          "/forum",
+          "/help",
+          "/map",
+          "/challenge",
+          "/terms",
+          "/privacy",
+        ],
         disallow: [
           "/api/",
           "/admin/",

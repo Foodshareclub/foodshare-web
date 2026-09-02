@@ -447,7 +447,7 @@ export async function getAdminCustomers(limit = 100): Promise<AdminCustomer[]> {
     return [];
   }
 
-  return (data || []).map((c) => {
+  return (data || []).map((c: any) => {
     const profile = c.profiles as {
       first_name?: string;
       second_name?: string;

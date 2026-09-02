@@ -141,7 +141,8 @@ export async function getUserStats(userId: string): Promise<ProfileStats> {
   const totalReviews = reviews?.length ?? 0;
   const averageRating =
     totalReviews > 0
-      ? (reviews?.reduce((sum, r) => sum + (r.reviewed_rating || 0), 0) ?? 0) / totalReviews
+      ? (reviews?.reduce((sum: any, r: any) => sum + (r.reviewed_rating || 0), 0) ?? 0) /
+        totalReviews
       : 0;
 
   return {
@@ -201,8 +202,8 @@ export async function getUserRoles(userId: string): Promise<string[]> {
   if (error) return [];
 
   return (data ?? [])
-    .map((r) => (r.roles as unknown as { name: string })?.name)
-    .filter((name): name is string => !!name);
+    .map((r: any) => (r.roles as unknown as { name: string })?.name)
+    .filter((name: unknown): name is string => !!name);
 }
 
 /**
@@ -233,7 +234,7 @@ export async function getProfileReviews(userId: string): Promise<ProfileReview[]
     return data ?? null;
   };
 
-  return (data ?? []).map((review) => ({
+  return (data ?? []).map((review: any) => ({
     id: review.id,
     rating: review.rating,
     comment: review.comment,
@@ -332,7 +333,7 @@ export async function getPopularProfileIds(limit: number = 100): Promise<string[
       .order("created_time", { ascending: false })
       .limit(limit);
 
-    return (data ?? []).map((p) => p.id);
+    return (data ?? []).map((p: any) => p.id);
   } catch {
     return [];
   }

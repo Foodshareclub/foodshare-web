@@ -92,7 +92,10 @@ export async function getBounceStats(): Promise<BounceStats> {
   const bounceEvents = bounceEventsRes.data || [];
   const suppressionData = suppressionRes.data || [];
   const dailyBounces = dailyBouncesRes.data || [];
-  const emailsSent = (emailsSentRes.data || []).reduce((sum, q) => sum + (q.emails_sent || 0), 0);
+  const emailsSent = (emailsSentRes.data || []).reduce(
+    (sum: any, q: any) => sum + (q.emails_sent || 0),
+    0
+  );
 
   // Count by type
   let hardBounces = 0,

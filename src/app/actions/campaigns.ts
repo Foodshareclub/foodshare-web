@@ -81,7 +81,7 @@ async function verifyAdminAccess(): Promise<AuthError | AuthSuccess> {
     .eq("profile_id", user.id);
 
   const roles = (userRoles || [])
-    .map((r) => (r.roles as unknown as { name: string })?.name)
+    .map((r: any) => (r.roles as unknown as { name: string })?.name)
     .filter(Boolean);
 
   const isAdmin = roles.includes("admin") || roles.includes("superadmin");

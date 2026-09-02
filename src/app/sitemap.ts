@@ -132,7 +132,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // Forum category routes
-  const forumCategoryRoutes: MetadataRoute.Sitemap = forumCategories.map((category) => ({
+  const forumCategoryRoutes: MetadataRoute.Sitemap = forumCategories.map((category: any) => ({
     url: `${baseUrl}/forum?category=${category.slug}`,
     lastModified: new Date(category.updated_at),
     changeFrequency: "daily" as const,
@@ -147,16 +147,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: post.is_pinned ? 0.8 : post.is_featured ? 0.7 : 0.6,
   }));
 
-  // Food product routes (individual listings)
-  const foodProductRoutes: MetadataRoute.Sitemap = foodProducts.map((product) => ({
-    url: `${baseUrl}/food/${product.id}`,
-    lastModified: new Date(product.updated_at || product.created_at),
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
+  // Product routes — agnostic canonical with slug forkeyword (DB-owned post_slug)
+  const foodProductRoutes: MetadataRoute.Sitemap = foodProducts.map((product: any) => {
+    const slug =
+      (product.post_slug as string) ||
+      ((product.post_name as string)
+        ? (product.post_name as string)
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .slice(0, 60) || "item"
+        : "item");
+    return {
+      url: `${baseUrl}/product/${product.id}-${slug}`,
+      lastModified: new Date(product.updated_at || product.created_at),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    };
+  });
 
   // Challenge routes
-  const challengeRoutes: MetadataRoute.Sitemap = challenges.map((challenge) => ({
+  const challengeRoutes: MetadataRoute.Sitemap = challenges.map((challenge: any) => ({
     url: `${baseUrl}/challenge/${challenge.id}`,
     lastModified: new Date(challenge.challenge_updated_at || challenge.challenge_created_at),
     changeFrequency: "weekly" as const,
@@ -182,24 +194,40 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 }
 
 /**
- * Fetch published forum posts for sitemap
+ * Fetch published forum posts for sitemap — paginated
  */
 async function getForumPostsForSitemap() {
   try {
     const supabase = createCachedClient();
+    const pageSize = 1000;
+    let all: Array<{
+      id: number;
+      slug: string | null;
+      forum_post_updated_at: string;
+      last_activity_at: string | null;
+      is_pinned: boolean;
+      is_featured: boolean;
+    }> = [];
+    let from = 0;
+    while (true) {
+      const { data, error } = await supabase
+        .from("forum")
+        .select("id,slug,forum_post_updated_at,last_activity_at,is_pinned,is_featured")
+        .eq("forum_published", true)
+        .order("forum_post_created_at", { ascending: false })
+        .range(from, from + pageSize - 1);
 
-    const { data, error } = await supabase
-      .from("forum")
-      .select("id,slug,forum_post_updated_at,last_activity_at,is_pinned,is_featured")
-      .eq("forum_published", true)
-      .order("forum_post_created_at", { ascending: false });
-
-    if (error) {
-      console.error("Failed to fetch forum posts for sitemap:", error);
-      return [];
+      if (error) {
+        console.error("Failed to fetch forum posts for sitemap:", error);
+        return all;
+      }
+      if (!data || data.length === 0) break;
+      all = all.concat(data as typeof all);
+      if (data.length < pageSize) break;
+      from += pageSize;
+      if (from >= 20000) break;
     }
-
-    return data || [];
+    return all;
   } catch {
     console.error("Error fetching forum posts for sitemap");
     return [];
@@ -233,24 +261,42 @@ async function getForumCategoriesForSitemap() {
 
 /**
  * Fetch active food posts for sitemap
- * Returns all active posts for complete SEO coverage
+ * Returns all active posts for complete SEO coverage — paginated to avoid 1000-row limit
  */
 async function getFoodProductsForSitemap() {
   try {
     const supabase = createCachedClient();
+    const pageSize = 1000;
+    let all: Array<{
+      id: number;
+      post_name: string | null;
+      post_slug: string | null;
+      created_at: string;
+      updated_at: string | null;
+    }> = [];
+    let from = 0;
+    while (true) {
+      const { data, error } = await supabase
+        .from("posts")
+        .select("id,post_name,post_slug,created_at,updated_at")
+        .eq("is_active", true)
+        .order("id", { ascending: false })
+        .range(from, from + pageSize - 1);
 
-    const { data, error } = await supabase
-      .from("posts")
-      .select("id,created_at,updated_at")
-      .eq("is_active", true)
-      .order("id", { ascending: false });
+      if (error) {
+        console.error("Failed to fetch food posts for sitemap:", error);
+        return all;
+      }
 
-    if (error) {
-      console.error("Failed to fetch food posts for sitemap:", error);
-      return [];
+      if (!data || data.length === 0) break;
+      all = all.concat(data as typeof all);
+      if (data.length < pageSize) break;
+      from += pageSize;
+      // Safety cap 50k to avoid runaway
+      if (from >= 50000) break;
     }
 
-    return data || [];
+    return all;
   } catch {
     console.error("Error fetching food posts for sitemap");
     return [];

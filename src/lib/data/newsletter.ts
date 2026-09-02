@@ -176,9 +176,10 @@ export async function getNewsletterStats(): Promise<NewsletterStats> {
     .eq("status", "sent");
 
   const totalCampaigns = campaigns?.length || 0;
-  const totalSent = campaigns?.reduce((sum, c) => sum + (c.total_sent || 0), 0) || 0;
-  const totalOpened = campaigns?.reduce((sum, c) => sum + (c.total_opened || 0), 0) || 0;
-  const totalClicked = campaigns?.reduce((sum, c) => sum + (c.total_clicked || 0), 0) || 0;
+  const totalSent = campaigns?.reduce((sum: any, c: any) => sum + (c.total_sent || 0), 0) || 0;
+  const totalOpened = campaigns?.reduce((sum: any, c: any) => sum + (c.total_opened || 0), 0) || 0;
+  const totalClicked =
+    campaigns?.reduce((sum: any, c: any) => sum + (c.total_clicked || 0), 0) || 0;
 
   const avgOpenRate = totalSent > 0 ? (totalOpened / totalSent) * 100 : 0;
   const avgClickRate = totalOpened > 0 ? (totalClicked / totalOpened) * 100 : 0;

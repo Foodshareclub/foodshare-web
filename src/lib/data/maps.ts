@@ -162,7 +162,7 @@ async function getNearbyLocationsFallback(
   if (error) throw new Error(error.message);
 
   // Filter by bounds in JavaScript
-  const filtered = (data ?? []).filter((item) => {
+  const filtered = (data ?? []).filter((item: any) => {
     const loc = item.location_json as { coordinates?: [number, number] } | null;
     if (!loc?.coordinates) return false;
     const [lng, lat] = loc.coordinates;

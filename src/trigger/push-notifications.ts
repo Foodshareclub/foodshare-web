@@ -73,12 +73,12 @@ export const sendPushTask = task({
 
     // If specific token requested, filter to that
     const tokensToSend = payload.deviceToken
-      ? devices.filter((d) => d.token === payload.deviceToken)
+      ? devices.filter((d: any) => d.token === payload.deviceToken)
       : devices;
 
     // Send to each device via Edge Function
     const results = await Promise.allSettled(
-      tokensToSend.map(async (device) => {
+      tokensToSend.map(async (device: any) => {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-push-notification`,
           {
@@ -219,7 +219,7 @@ export const sendDeferredNotificationsTask = schedules.task({
 
     // Send each notification
     const results = await Promise.allSettled(
-      deferred.map(async (notification) => {
+      deferred.map(async (notification: any) => {
         // Send the notification
         await sendPushTask.triggerAndWait({
           userId: notification.user_id,

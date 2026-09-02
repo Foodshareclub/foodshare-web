@@ -174,7 +174,9 @@ export async function getForumStats(): Promise<ForumStats> {
     supabase.from("forum").select("profile_id").eq("forum_published", true),
   ]);
 
-  const uniqueUsers = new Set(activeUsersResult.data?.map((p) => p.profile_id).filter(Boolean));
+  const uniqueUsers = new Set(
+    activeUsersResult.data?.map((p: any) => p.profile_id).filter(Boolean)
+  );
 
   return {
     totalPosts: postsResult.count ?? 0,

@@ -48,7 +48,7 @@ export async function GET() {
     }
 
     // Transform the data
-    const activeChallenges = (participants || []).map((p) => {
+    const activeChallenges = (participants || []).map((p: any) => {
       const challengeData = Array.isArray(p.challenges) ? p.challenges[0] : p.challenges;
       const challenge = challengeData as {
         id: number;

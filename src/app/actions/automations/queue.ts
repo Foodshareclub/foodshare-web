@@ -310,9 +310,9 @@ export async function getAutomationInsights(flowId: string): Promise<
 
     const enrollmentStats = {
       total: enrollments?.length || 0,
-      active: enrollments?.filter((e) => e.status === "active").length || 0,
-      completed: enrollments?.filter((e) => e.status === "completed").length || 0,
-      exited: enrollments?.filter((e) => e.status === "exited").length || 0,
+      active: enrollments?.filter((e: any) => e.status === "active").length || 0,
+      completed: enrollments?.filter((e: any) => e.status === "completed").length || 0,
+      exited: enrollments?.filter((e: any) => e.status === "exited").length || 0,
     };
 
     // Get email stats
@@ -322,9 +322,9 @@ export async function getAutomationInsights(flowId: string): Promise<
       .eq("flow_id", flowId);
 
     const emailStats = {
-      sent: emails?.filter((e) => e.status === "sent").length || 0,
-      failed: emails?.filter((e) => e.status === "failed").length || 0,
-      pending: emails?.filter((e) => e.status === "pending").length || 0,
+      sent: emails?.filter((e: any) => e.status === "sent").length || 0,
+      failed: emails?.filter((e: any) => e.status === "failed").length || 0,
+      pending: emails?.filter((e: any) => e.status === "pending").length || 0,
     };
 
     // Get flow for conversion data

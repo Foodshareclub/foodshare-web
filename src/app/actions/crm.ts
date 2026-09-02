@@ -147,7 +147,7 @@ export async function importProfilesAsCRMCustomers(): Promise<ServerActionResult
     }
 
     // Create CRM customer records
-    const customersToInsert = profiles.map((p) => ({
+    const customersToInsert = profiles.map((p: any) => ({
       profile_id: p.id,
       status: "active",
       lifecycle_stage: "lead",

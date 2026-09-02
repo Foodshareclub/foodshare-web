@@ -169,9 +169,10 @@ export async function getAutomationStats(): Promise<{
     .eq("status", "sent")
     .gte("sent_at", today);
 
-  const activeFlows = flows?.filter((f) => f.status === "active").length || 0;
-  const totalEnrolled = flows?.reduce((sum, f) => sum + (f.total_enrolled || 0), 0) || 0;
-  const totalCompleted = flows?.reduce((sum, f) => sum + (f.total_completed || 0), 0) || 0;
+  const activeFlows = flows?.filter((f: any) => f.status === "active").length || 0;
+  const totalEnrolled = flows?.reduce((sum: any, f: any) => sum + (f.total_enrolled || 0), 0) || 0;
+  const totalCompleted =
+    flows?.reduce((sum: any, f: any) => sum + (f.total_completed || 0), 0) || 0;
 
   return {
     totalFlows: flows?.length || 0,

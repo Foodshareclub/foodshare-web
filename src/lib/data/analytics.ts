@@ -198,12 +198,11 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
       .not("profile_id", "is", null);
 
     // Get aggregate stats (views and likes)
-    const { data: statsData } = await supabase
-      .from("posts")
-      .select("post_views,post_like_counter");
+    const { data: statsData } = await supabase.from("posts").select("post_views,post_like_counter");
 
-    const totalViews = statsData?.reduce((sum, p) => sum + (p.post_views || 0), 0) || 0;
-    const totalLikes = statsData?.reduce((sum, p) => sum + (p.post_like_counter || 0), 0) || 0;
+    const totalViews = statsData?.reduce((sum: any, p: any) => sum + (p.post_views || 0), 0) || 0;
+    const totalLikes =
+      statsData?.reduce((sum: any, p: any) => sum + (p.post_like_counter || 0), 0) || 0;
 
     // Calculate percentage changes
     const usersChange =
@@ -299,7 +298,7 @@ export async function getMonthlyGrowth(): Promise<ServerActionResult<MonthlyGrow
       monthlyData[monthKey] = { users: 0, listings: 0 };
     }
 
-    users?.forEach((u) => {
+    users?.forEach((u: any) => {
       if (u.created_time) {
         const date = new Date(u.created_time);
         const monthKey = date.toLocaleString("en-US", { month: "short" });
@@ -309,7 +308,7 @@ export async function getMonthlyGrowth(): Promise<ServerActionResult<MonthlyGrow
       }
     });
 
-    listings?.forEach((l) => {
+    listings?.forEach((l: any) => {
       if (l.created_at) {
         const date = new Date(l.created_at);
         const monthKey = date.toLocaleString("en-US", { month: "short" });
@@ -356,7 +355,7 @@ export async function getDailyActiveUsers(): Promise<ServerActionResult<DailyAct
     // Aggregate by day
     const dailyData: Record<string, number> = {};
 
-    users?.forEach((u) => {
+    users?.forEach((u: any) => {
       if (u.last_seen_at) {
         const date = u.last_seen_at.substring(0, 10);
         dailyData[date] = (dailyData[date] || 0) + 1;
@@ -468,7 +467,7 @@ export async function getUserRetentionCohorts(): Promise<ServerActionResult<Rete
     // Group by cohort month
     const cohorts: Record<string, { size: number; month1: number; month2: number }> = {};
 
-    users?.forEach((u) => {
+    users?.forEach((u: any) => {
       if (!u.created_time) return;
       const cohort = u.created_time.substring(0, 7);
 
@@ -522,7 +521,7 @@ export async function getInventoryAging(): Promise<ServerActionResult<InventoryA
     const now = Date.now();
     const buckets = { "0-7 days": 0, "7-30 days": 0, "30+ days": 0 };
 
-    listings?.forEach((l) => {
+    listings?.forEach((l: any) => {
       if (!l.created_at) return;
       const daysDiff = Math.floor((now - new Date(l.created_at).getTime()) / (1000 * 60 * 60 * 24));
 
@@ -565,7 +564,7 @@ export async function getListingTypeDistribution(): Promise<
     const typeCounts: Record<string, number> = {};
     let total = 0;
 
-    listings?.forEach((l) => {
+    listings?.forEach((l: any) => {
       const type = l.post_type || "unknown";
       typeCounts[type] = (typeCounts[type] || 0) + 1;
       total++;
@@ -610,7 +609,7 @@ export async function getTopSharers(limit: number = 10): Promise<ServerActionRes
       { nickname: string; totalListings: number; arrangedCount: number }
     > = {};
 
-    listings?.forEach((l) => {
+    listings?.forEach((l: any) => {
       const userId = l.profile_id;
       if (!userId) return;
 
@@ -715,7 +714,7 @@ export async function getGeographicHotspots(): Promise<ServerActionResult<GeoHot
       { count: number; arrangedCount: number; types: Record<string, number> }
     > = {};
 
-    listings?.forEach((l) => {
+    listings?.forEach((l: any) => {
       // location_json is GeoJSON: { type: "Point", coordinates: [lng, lat] }
       const locationJson = l.location_json as {
         type: string;
@@ -794,7 +793,7 @@ export async function getActivityByHour(): Promise<ServerActionResult<HourlyActi
       hourlyData[i] = { listingCount: 0, eventCount: 0 };
     }
 
-    listings?.forEach((l) => {
+    listings?.forEach((l: any) => {
       if (l.created_at) {
         const hour = new Date(l.created_at).getHours();
         hourlyData[hour].listingCount++;

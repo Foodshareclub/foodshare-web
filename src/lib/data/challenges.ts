@@ -112,12 +112,13 @@ export async function getChallengeStats(): Promise<ChallengeStats> {
   // Calculate totals
   const totalChallenges = challenges.length;
   const totalParticipants = challenges.reduce(
-    (sum, c) => sum + (Number(c.challenged_people) || 0),
+    (sum: any, c: any) => sum + (Number(c.challenged_people) || 0),
     0
   );
   // XP earned = sum of (score * participants who completed)
   const totalXpEarned = challenges.reduce(
-    (sum, c) => sum + (Number(c.challenge_score) || 0) * (Number(c.challenged_people) || 0),
+    (sum: any, c: any) =>
+      sum + (Number(c.challenge_score) || 0) * (Number(c.challenged_people) || 0),
     0
   );
 

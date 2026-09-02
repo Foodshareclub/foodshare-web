@@ -96,7 +96,10 @@ export async function setupWelcomeAutomation(
     const { data: existingFlow } = await supabase
       .from("email_automation_flows")
       .select("id,name,status")
-      .ilike("name", `%${preset === "welcome_with_testers" ? "Welcome Series + Tester" : "Welcome Series"}%`)
+      .ilike(
+        "name",
+        `%${preset === "welcome_with_testers" ? "Welcome Series + Tester" : "Welcome Series"}%`
+      )
       .not("status", "eq", "archived")
       .single();
 
@@ -196,7 +199,7 @@ export async function checkWelcomeAutomationStatus(): Promise<
         welcomeSeriesTemplates.map((t) => t.slug)
       );
 
-    const existingSlugs = new Set(templates?.map((t) => t.slug) || []);
+    const existingSlugs = new Set(templates?.map((t: any) => t.slug) || []);
     const templateStatus = welcomeSeriesTemplates.map((t) => ({
       slug: t.slug,
       exists: existingSlugs.has(t.slug),

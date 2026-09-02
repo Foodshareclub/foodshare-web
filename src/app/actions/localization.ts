@@ -1,6 +1,6 @@
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from "@/lib/supabase/server";
 
 export interface LocaleStats {
   locale: string;
@@ -31,9 +31,9 @@ export async function getLocalizationAnalytics(): Promise<{
   try {
     // Try RPC first
     const { data: analytics, error: analyticsError } = await supabase.rpc(
-      'get_localization_analytics',
+      "get_localization_analytics",
       {
-        time_window: '24 hours',
+        time_window: "24 hours",
       }
     );
 
@@ -45,9 +45,9 @@ export async function getLocalizationAnalytics(): Promise<{
     const timeThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
     const { data: rawData, error: queryError } = await supabase
-      .from('translation_analytics')
-      .select('*')
-      .gte('timestamp', timeThreshold);
+      .from("translation_analytics")
+      .select("*")
+      .gte("timestamp", timeThreshold);
 
     if (queryError) {
       return { data: null, error: queryError.message };
@@ -59,7 +59,7 @@ export async function getLocalizationAnalytics(): Promise<{
     let totalResponseTime = 0;
     let cachedRequests = 0;
 
-    rawData?.forEach((row) => {
+    rawData?.forEach((row: any) => {
       totalRequests++;
       totalResponseTime += row.response_time_ms || 0;
       if (row.cached) cachedRequests++;
@@ -90,12 +90,12 @@ export async function getLocalizationAnalytics(): Promise<{
 
     // Fetch errors
     const { data: errors } = await supabase
-      .from('translation_errors')
-      .select('locale')
-      .gte('timestamp', timeThreshold);
+      .from("translation_errors")
+      .select("locale")
+      .gte("timestamp", timeThreshold);
 
     const errorMap = new Map<string, number>();
-    errors?.forEach((err) => {
+    errors?.forEach((err: any) => {
       errorMap.set(err.locale, (errorMap.get(err.locale) || 0) + 1);
     });
 
@@ -115,7 +115,7 @@ export async function getLocalizationAnalytics(): Promise<{
   } catch (err) {
     return {
       data: null,
-      error: err instanceof Error ? err.message : 'Failed to fetch analytics',
+      error: err instanceof Error ? err.message : "Failed to fetch analytics",
     };
   }
 }

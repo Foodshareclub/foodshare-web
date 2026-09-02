@@ -38,6 +38,9 @@ export type InitialProductStateType = {
   post_like_counter: number;
   transportation: string;
   post_name: string;
+  post_slug?: string | null;
+  slug?: string | null;
+  canonical_slug?: string | null;
   post_type: string;
   is_active: boolean;
   post_views: number;

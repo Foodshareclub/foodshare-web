@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ProfileWithAuth } from "./ProfileWithAuth";
 import { getPublicProfile } from "@/lib/data/profiles";
 import { generatePersonJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
+import { siteConfig } from "@/lib/metadata";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -32,7 +33,7 @@ export default async function ViewProfilePage({ params }: PageProps) {
     name: fullName,
     description: profile.about_me || undefined,
     image: profile.avatar_url || undefined,
-    url: `https://foodshare.club/profile/${id}`,
+    url: `${siteConfig.url}/profile/${id}`,
     memberSince: profile.created_time || undefined,
   });
 
@@ -64,8 +65,8 @@ export async function generateMetadata({ params }: PageProps) {
 
   const fullName = [profile.first_name, profile.second_name].filter(Boolean).join(" ") || "User";
   const description = profile.about_me?.slice(0, 160) || `View ${fullName}'s profile on FoodShare`;
-  const pageUrl = `https://foodshare.club/profile/${id}`;
-  const imageUrl = profile.avatar_url || "https://foodshare.club/og-image.jpg";
+  const pageUrl = `${siteConfig.url}/profile/${id}`;
+  const imageUrl = profile.avatar_url || siteConfig.ogImage;
 
   return {
     title: `${fullName} | FoodShare`,

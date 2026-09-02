@@ -173,7 +173,9 @@ export const checkAutomationQueueTask = schedules.task({
 
     // Process each item
     const results = await Promise.allSettled(
-      dueItems.map((item) => processAutomationEmailTask.triggerAndWait({ queueItemId: item.id }))
+      dueItems.map((item: any) =>
+        processAutomationEmailTask.triggerAndWait({ queueItemId: item.id })
+      )
     );
 
     let sent = 0;

@@ -137,19 +137,81 @@ const nextConfig: NextConfig = {
   // Output standalone for Docker/container deployments
   output: process.env.BUILD_STANDALONE === "true" ? "standalone" : undefined,
 
-  // Redirects for legacy detail page routes only
+  // Redirects — 308 permanent for SEO reindex to agnostic /listing/[id]-[slug]
   async redirects() {
     return [
-      // Legacy /products/:id routes → /food/:id (products route doesn't exist)
+      // /food/:id handled by page.tsx with slug-aware 308 (single hop to /product/123-slug), not here
+      // Agnostic product is canonical — /listing/* is deprecated after rename
       {
-        source: "/products/:id(\\d+)",
-        destination: "/food/:id",
+        source: "/listing/:id*",
+        destination: "/product/:id*",
         permanent: true,
       },
-      // Legacy /things/:id routes → /thing/:id (plural to singular)
+      // Legacy /products/:id routes → /product/:id
       {
-        source: "/things/:id(\\d+)",
-        destination: "/thing/:id",
+        source: "/products/:id*",
+        destination: "/product/:id*",
+        permanent: true,
+      },
+      // Type-prefixed detail aliases → agnostic product (category keyword now in slug, not path)
+      {
+        source: "/thing/:id*",
+        destination: "/product/:id*",
+        permanent: true,
+      },
+      {
+        source: "/things/:id*",
+        destination: "/product/:id*",
+        permanent: true,
+      },
+      {
+        source: "/borrow/:id*",
+        destination: "/product/:id*",
+        permanent: true,
+      },
+      {
+        source: "/wanted/:id*",
+        destination: "/product/:id*",
+        permanent: true,
+      },
+      {
+        source: "/fridge/:id*",
+        destination: "/product/:id*",
+        permanent: true,
+      },
+      {
+        source: "/foodbank/:id*",
+        destination: "/product/:id*",
+        permanent: true,
+      },
+      {
+        source: "/organisation/:id*",
+        destination: "/product/:id*",
+        permanent: true,
+      },
+      {
+        source: "/organisations/:id*",
+        destination: "/product/:id*",
+        permanent: true,
+      },
+      {
+        source: "/volunteer/:id*",
+        destination: "/product/:id*",
+        permanent: true,
+      },
+      {
+        source: "/volunteers/:id*",
+        destination: "/product/:id*",
+        permanent: true,
+      },
+      {
+        source: "/zerowaste/:id*",
+        destination: "/product/:id*",
+        permanent: true,
+      },
+      {
+        source: "/vegan/:id*",
+        destination: "/product/:id*",
         permanent: true,
       },
       // /community → /forum (community is now the forum)
@@ -229,45 +291,6 @@ const nextConfig: NextConfig = {
       {
         source: "/vegan",
         destination: "/food?type=vegan",
-      },
-      // Detail page rewrites: /:type/:id -> /food/:id
-      {
-        source: "/thing/:id",
-        destination: "/food/:id",
-      },
-      {
-        source: "/borrow/:id",
-        destination: "/food/:id",
-      },
-      {
-        source: "/wanted/:id",
-        destination: "/food/:id",
-      },
-      {
-        source: "/fridge/:id",
-        destination: "/food/:id",
-      },
-      {
-        source: "/foodbank/:id",
-        destination: "/food/:id",
-      },
-      {
-        source: "/organisation/:id",
-        destination: "/food/:id",
-      },
-      {
-        source: "/volunteer/:id",
-        destination: "/food/:id",
-      },
-      // Challenge detail has its own dedicated route at /challenge/[id]
-      // No rewrite needed
-      {
-        source: "/zerowaste/:id",
-        destination: "/food/:id",
-      },
-      {
-        source: "/vegan/:id",
-        destination: "/food/:id",
       },
     ];
   },

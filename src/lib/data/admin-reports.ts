@@ -202,7 +202,9 @@ export async function getReportsData(): Promise<ReportsData> {
     },
     listingsByCategory: aggregateByCategory(categoryData),
     listingsByDay: aggregateByDay(recentListings),
-    usersByDay: aggregateByDay(recentUsers?.map((u) => ({ created_at: u.created_time })) ?? null),
+    usersByDay: aggregateByDay(
+      recentUsers?.map((u: any) => ({ created_at: u.created_time })) ?? null
+    ),
     topUsers: [], // TODO: Implement with proper query
     recentActivity: [], // TODO: Implement with audit log
   } as const;

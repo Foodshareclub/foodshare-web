@@ -117,7 +117,7 @@ export async function getAuditLogs(limit: number = 20): Promise<AuditLog[]> {
     return [];
   }
 
-  return (data ?? []).map((log) => {
+  return (data ?? []).map((log: any) => {
     const admin = extractFirst(
       log.admin as Array<{ first_name: string; second_name: string; email: string }>
     );
@@ -161,7 +161,7 @@ export async function getPendingListings(): Promise<PendingListing[]> {
     return [];
   }
 
-  return (data ?? []).map((listing) => {
+  return (data ?? []).map((listing: any) => {
     const profile = extractFirst(
       listing.profile as Array<{ first_name: string; second_name: string; email: string }>
     );

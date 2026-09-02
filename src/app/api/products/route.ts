@@ -88,7 +88,6 @@ function generateETag(data: unknown): string {
   return generateWasmETag(str);
 }
 
-
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const type = searchParams.get("type");
@@ -184,7 +183,9 @@ export async function GET(request: NextRequest) {
       // Non-owner: restricted to public fields + approximate locations
       const { data, error } = await supabase
         .from("posts_with_location")
-        .select("id,post_name,post_type,images,created_at,post_views,post_like_counter,location_json")
+        .select(
+          "id,post_name,post_type,images,created_at,post_views,post_like_counter,location_json"
+        )
         .eq("profile_id", userId)
         .eq("is_active", true)
         .order("created_at", { ascending: false });
@@ -237,7 +238,7 @@ export async function GET(request: NextRequest) {
       if (error) throw error;
 
       // Apply location privacy (~200m approximation) for user safety
-      const approximatedData = (data ?? []).map((item) => ({
+      const approximatedData = (data ?? []).map((item: any) => ({
         ...item,
         location_json: approximateGeoJSON(item.location_json, item.id),
       }));

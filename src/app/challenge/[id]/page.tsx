@@ -1,11 +1,12 @@
-import { Suspense } from 'react';
-import { notFound } from 'next/navigation';
-import { getChallengeById } from '@/lib/data/challenges';
-import { getUser } from '@/app/actions/auth';
-import { hasAcceptedChallenge } from '@/app/actions/challenges';
-import { ChallengeDetailClient } from './ChallengeDetailClient';
-import { Skeleton } from '@/components/ui/skeleton';
-import { generateEventJsonLd, generateBreadcrumbJsonLd, safeJsonLdStringify } from '@/lib/jsonld';
+import { Suspense } from "react";
+import { notFound } from "next/navigation";
+import { getChallengeById } from "@/lib/data/challenges";
+import { getUser } from "@/app/actions/auth";
+import { hasAcceptedChallenge } from "@/app/actions/challenges";
+import { ChallengeDetailClient } from "./ChallengeDetailClient";
+import { Skeleton } from "@/components/ui/skeleton";
+import { generateEventJsonLd, generateBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
+import { siteConfig } from "@/lib/metadata";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -32,16 +33,19 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
 
   // Generate JSON-LD structured data
   const eventJsonLd = generateEventJsonLd({
-    name: challenge.challenge_title || 'Community Challenge',
-    description: challenge.challenge_description || 'Join this challenge on FoodShare',
+    name: challenge.challenge_title || "Community Challenge",
+    description: challenge.challenge_description || "Join this challenge on FoodShare",
     image: challenge.challenge_image || undefined,
-    url: `https://foodshare.club/challenge/${challengeId}`,
+    url: `${siteConfig.url}/challenge/${challengeId}`,
   });
 
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
-    { name: 'Home', url: 'https://foodshare.club' },
-    { name: 'Challenges', url: 'https://foodshare.club/challenge' },
-    { name: challenge.challenge_title || 'Challenge', url: `https://foodshare.club/challenge/${challengeId}` },
+    { name: "Home", url: siteConfig.url },
+    { name: "Challenges", url: `${siteConfig.url}/challenge` },
+    {
+      name: challenge.challenge_title || "Challenge",
+      url: `${siteConfig.url}/challenge/${challengeId}`,
+    },
   ]);
 
   return (
@@ -66,19 +70,20 @@ export async function generateMetadata({ params }: PageProps) {
   const challengeId = parseInt(id, 10);
 
   if (isNaN(challengeId)) {
-    return { title: 'Challenge Not Found' };
+    return { title: "Challenge Not Found" };
   }
 
   const challenge = await getChallengeById(challengeId);
 
   if (!challenge) {
-    return { title: 'Challenge Not Found' };
+    return { title: "Challenge Not Found" };
   }
 
-  const title = challenge.challenge_title || 'Community Challenge';
-  const description = challenge.challenge_description?.slice(0, 160) || 'Join this challenge on FoodShare';
-  const pageUrl = `https://foodshare.club/challenge/${challengeId}`;
-  const imageUrl = challenge.challenge_image || 'https://foodshare.club/og-image.jpg';
+  const title = challenge.challenge_title || "Community Challenge";
+  const description =
+    challenge.challenge_description?.slice(0, 160) || "Join this challenge on FoodShare";
+  const pageUrl = `${siteConfig.url}/challenge/${challengeId}`;
+  const imageUrl = challenge.challenge_image || siteConfig.ogImage;
 
   return {
     title: `${title} | FoodShare Challenges`,
@@ -88,10 +93,10 @@ export async function generateMetadata({ params }: PageProps) {
     },
     // OpenGraph: Facebook, LinkedIn, WhatsApp
     openGraph: {
-      type: 'article',
-      locale: 'en_US',
+      type: "article",
+      locale: "en_US",
       url: pageUrl,
-      siteName: 'FoodShare',
+      siteName: "FoodShare",
       title,
       description,
       images: [
@@ -100,16 +105,16 @@ export async function generateMetadata({ params }: PageProps) {
           width: 1200,
           height: 630,
           alt: `${title} - FoodShare Challenge`,
-          type: 'image/jpeg',
+          type: "image/jpeg",
         },
       ],
-      section: 'Challenges',
+      section: "Challenges",
     },
     // Twitter / X Cards
     twitter: {
-      card: 'summary_large_image',
-      site: '@foodshareapp',
-      creator: '@foodshareapp',
+      card: "summary_large_image",
+      site: "@foodshareapp",
+      creator: "@foodshareapp",
       title: `${title} | FoodShare`,
       description,
       images: [

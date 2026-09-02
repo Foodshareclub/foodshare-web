@@ -344,7 +344,13 @@ export async function getUserInteractedChallengeIds(): Promise<{
     .select("challenge_id")
     .eq("user_rejected_challenge", user.id);
 
-  const declined = [...new Set((declinedActivities || []).map((d) => d.challenge_id))];
+  const declined: number[] = [
+    ...new Set(
+      ((declinedActivities as unknown as { challenge_id: number }[]) || []).map(
+        (d: { challenge_id: number }) => d.challenge_id
+      )
+    ),
+  ];
 
   return { accepted, declined, completed };
 }

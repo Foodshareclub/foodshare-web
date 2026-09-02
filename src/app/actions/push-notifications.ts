@@ -113,7 +113,13 @@ export async function broadcastPushNotification(payload: PushPayload): Promise<S
     return { success: true, sent: 0, failed: 0 };
   }
 
-  const userIds = [...new Set(tokens.map((t) => t.profile_id))];
+  const userIds: string[] = [
+    ...new Set(
+      ((tokens as unknown as { profile_id: string }[]) || []).map(
+        (t: { profile_id: string }) => t.profile_id
+      )
+    ),
+  ];
 
   return sendPushNotification(userIds, payload);
 }

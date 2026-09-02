@@ -311,5 +311,5 @@ export async function getPopularProductIds(limit: number = 50): Promise<number[]
     .limit(limit);
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map((p) => p.id);
+  return (data ?? []).map((p: any) => p.id);
 }

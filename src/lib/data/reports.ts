@@ -129,13 +129,13 @@ export async function getReportStats(): Promise<ReportStats> {
   const { data: statusCounts, error: statusError } = await supabase
     .from("post_reports")
     .select("status")
-    .then(({ data, error }) => {
+    .then(({ data, error }: any) => {
       if (error) return { data: null, error };
       const counts = {
         total: data?.length || 0,
-        pending: data?.filter((r) => r.status === "pending").length || 0,
-        aiReviewed: data?.filter((r) => r.status === "ai_reviewed").length || 0,
-        resolved: data?.filter((r) => r.status === "resolved").length || 0,
+        pending: data?.filter((r: any) => r.status === "pending").length || 0,
+        aiReviewed: data?.filter((r: any) => r.status === "ai_reviewed").length || 0,
+        resolved: data?.filter((r: any) => r.status === "resolved").length || 0,
       };
       return { data: counts, error: null };
     });

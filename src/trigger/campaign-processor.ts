@@ -171,7 +171,7 @@ export const checkScheduledCampaignsTask = schedules.task({
 
     // Trigger processing for each due campaign
     const triggers = await Promise.allSettled(
-      dueCampaigns.map((campaign) => processCampaignTask.trigger({ campaignId: campaign.id }))
+      dueCampaigns.map((campaign: any) => processCampaignTask.trigger({ campaignId: campaign.id }))
     );
 
     const triggered = triggers.filter((t) => t.status === "fulfilled").length;
@@ -179,7 +179,7 @@ export const checkScheduledCampaignsTask = schedules.task({
     return {
       processed: dueCampaigns.length,
       triggered,
-      campaigns: dueCampaigns.map((c) => c.name),
+      campaigns: dueCampaigns.map((c: any) => c.name),
     };
   },
 });

@@ -334,7 +334,7 @@ export async function getUserBookmarks(limit: number = 50): Promise<ActionResult
 
     if (error) throw new Error(error.message);
 
-    return (data || []).map((b) => b.post_id);
+    return (data || []).map((b: any) => b.post_id);
   }, "getUserBookmarks");
 }
 
@@ -413,8 +413,8 @@ export async function getBatchEngagementStatus(
           .in("post_id", postIds),
       ]);
 
-      userLikes = (likesResult.data || []).map((l) => l.post_id);
-      userBookmarks = (bookmarksResult.data || []).map((b) => b.post_id);
+      userLikes = (likesResult.data || []).map((l: any) => l.post_id);
+      userBookmarks = (bookmarksResult.data || []).map((b: any) => b.post_id);
     }
 
     // Build result

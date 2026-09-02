@@ -1,13 +1,16 @@
-import { Suspense } from 'react';
-import { getUser, checkUserIsAdmin } from '@/app/actions/auth';
-import { createClient } from '@/lib/supabase/server';
-import { SettingsNavbar } from './SettingsNavbar';
+import { Suspense } from "react";
+import { getUser, checkUserIsAdmin } from "@/app/actions/auth";
+import { createClient } from "@/lib/supabase/server";
+import { SettingsNavbar } from "./SettingsNavbar";
+import { generateNoIndexMetadata } from "@/lib/metadata";
+
+export const metadata = generateNoIndexMetadata("Settings", "Manage your FoodShare settings");
 
 /**
  * Check if a string is a full URL (http/https)
  */
 function isFullUrl(url: string): boolean {
-  return url.startsWith('http://') || url.startsWith('https://');
+  return url.startsWith("http://") || url.startsWith("https://");
 }
 
 /**
@@ -17,20 +20,20 @@ function isFullUrl(url: string): boolean {
 async function getProfileForNavbar(userId: string) {
   const supabase = await createClient();
   const { data } = await supabase
-    .from('profiles')
-    .select('first_name, second_name, avatar_url')
-    .eq('id', userId)
+    .from("profiles")
+    .select("first_name, second_name, avatar_url")
+    .eq("id", userId)
     .single();
-  
+
   if (!data) return null;
-  
+
   // Resolve avatar URL to public URL if needed
   let resolvedAvatarUrl = data.avatar_url;
   if (data.avatar_url && !isFullUrl(data.avatar_url)) {
-    const { data: urlData } = supabase.storage.from('profiles').getPublicUrl(data.avatar_url);
+    const { data: urlData } = supabase.storage.from("profiles").getPublicUrl(data.avatar_url);
     resolvedAvatarUrl = urlData?.publicUrl || null;
   }
-  
+
   return {
     ...data,
     avatar_url: resolvedAvatarUrl,
@@ -41,11 +44,7 @@ async function getProfileForNavbar(userId: string) {
  * Settings Layout - Server Component
  * Provides navbar for all settings pages
  */
-export default async function SettingsLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
   const [user, isAdmin] = await Promise.all([getUser(), checkUserIsAdmin()]);
 
   // Get profile data if user is authenticated (direct fetch, no cache)
@@ -61,10 +60,10 @@ export default async function SettingsLayout({
           userId={user?.id}
           isAuth={!!user}
           isAdmin={isAdmin}
-          imgUrl={profile?.avatar_url || ''}
-          firstName={profile?.first_name || ''}
-          secondName={profile?.second_name || ''}
-          email={user?.email || ''}
+          imgUrl={profile?.avatar_url || ""}
+          firstName={profile?.first_name || ""}
+          secondName={profile?.second_name || ""}
+          email={user?.email || ""}
         />
       </Suspense>
       {children}
@@ -91,7 +90,7 @@ function NavbarSkeleton() {
           <div className="h-12 w-full max-w-[850px] bg-muted rounded-full animate-pulse" />
         </div>
       </div>
-      <div style={{ height: '170px' }} />
+      <div style={{ height: "170px" }} />
     </>
   );
 }
