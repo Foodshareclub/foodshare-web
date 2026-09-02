@@ -1,16 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Sparkles,
-  FileText,
-  ChevronRight,
-  Zap,
-  PlayCircle,
-  X,
-  CheckCircle2,
-  ShieldAlert,
-} from "lucide-react";
+import { Sparkles, FileText, ChevronRight, Zap, X } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
 interface Candidate {

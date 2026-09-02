@@ -1,21 +1,11 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import { getProductById } from "@/lib/data/products";
 import { getChallengeById } from "@/lib/data/challenges";
+import { slugify } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ type?: string }>;
-}
-
-function slugify(text: string): string {
-  return (
-    text
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 60) || "item"
-  );
 }
 
 /**
@@ -38,9 +28,7 @@ export default async function FoodLegacyRedirect({ params, searchParams }: PageP
   const product = await getProductById(productId).catch(() => null);
   if (!product) notFound();
 
-  const rawSlug =
-    (product as unknown as { post_slug?: string }).post_slug ||
-    slugify(product.post_name || "item");
+  const rawSlug = product.post_slug || slugify(product.post_name || "item");
   const slug = slugify(rawSlug);
   permanentRedirect(`/product/${productId}-${slug}`);
 }

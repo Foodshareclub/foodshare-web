@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       categories,
       ignore_paths,
       custom_instructions,
-      skip_initial_sync = false,
+      skip_initial_sync: _skip_initial_sync = false,
     } = await request.json();
     if (!full_name?.includes("/")) return handleError("Invalid repo format (expected owner/repo)");
 
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       .eq("full_name", full_name)
       .single();
 
-    const isNewOrNewlyEnabled = !existing || (!existing.enabled && enabled);
+    const _isNewOrNewlyEnabled = !existing || (!existing.enabled && enabled);
 
     const { data, error } = await supabase
       .from("repo_configs")

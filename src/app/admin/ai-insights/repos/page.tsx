@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,15 +17,7 @@ interface RepoConfig {
   custom_instructions: string | null;
 }
 
-interface PrInfo {
-  number: number;
-  title: string;
-  state: string;
-  html_url: string;
-}
-
 export default function ReposPage() {
-  const router = useRouter();
   const [configs, setConfigs] = useState<RepoConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
@@ -66,7 +57,6 @@ export default function ReposPage() {
   const handleSave = async () => {
     if (!formData.full_name?.includes("/")) return;
     setLoading(true);
-    const [owner, repo] = formData.full_name.split("/");
     try {
       const res = await fetch("/api/admin/repos/config", {
         method: "POST",
@@ -95,7 +85,7 @@ export default function ReposPage() {
     }
   };
 
-  const handleDelete = async (fullName: string) => {
+  const _handleDelete = async (fullName: string) => {
     if (!confirm(`Delete repository ${fullName}?`)) return;
     setLoading(true);
     try {

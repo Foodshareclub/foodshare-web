@@ -24,6 +24,7 @@ export type InitialProductStateType = {
   images: string[];
   id: number;
   location: PostGISGeography;
+  location_json?: GeoJSONPoint | null;
   post_address: string;
   post_stripped_address: string;
   is_arranged: boolean;
@@ -31,6 +32,9 @@ export type InitialProductStateType = {
   post_like_counter: number;
   transportation: string;
   post_name: string;
+  post_slug?: string | null;
+  slug?: string | null;
+  canonical_slug?: string | null;
   post_type: string;
   is_active: boolean;
   post_views: number;
@@ -120,7 +124,9 @@ export const productAPI = {
    * @param currentUserID - The user's profile ID
    * @returns Promise with user's products (includes inactive for owner to manage)
    */
-  getCurrentUserProduct(currentUserID: string): PromiseLike<PostgrestResponse<InitialProductStateType>> {
+  getCurrentUserProduct(
+    currentUserID: string
+  ): PromiseLike<PostgrestResponse<InitialProductStateType>> {
     return supabase.from("posts_with_location").select("*").eq("profile_id", currentUserID);
   },
 
@@ -130,7 +136,11 @@ export const productAPI = {
    * @returns Promise with product and reviews
    */
   getOneProduct(productId: number): PromiseLike<PostgrestResponse<InitialProductStateType>> {
-    return supabase.from("posts_with_location").select(`*, reviews(*)`).eq("id", productId).eq("is_active", true);
+    return supabase
+      .from("posts_with_location")
+      .select(`*, reviews(*)`)
+      .eq("id", productId)
+      .eq("is_active", true);
   },
 
   /**
@@ -138,7 +148,9 @@ export const productAPI = {
    * @param createdProduct - The product data to insert
    * @returns Promise with insert result
    */
-  async createProduct(createdProduct: Partial<InitialProductStateType>): Promise<PostgrestSingleResponse<null>> {
+  async createProduct(
+    createdProduct: Partial<InitialProductStateType>
+  ): Promise<PostgrestSingleResponse<null>> {
     return supabase.from("posts").insert(createdProduct).select().single();
   },
 
@@ -147,7 +159,9 @@ export const productAPI = {
    * @param createdProduct - The product data to update
    * @returns Promise with upsert result
    */
-  async updateProduct(createdProduct: Partial<InitialProductStateType>): Promise<PostgrestSingleResponse<null>> {
+  async updateProduct(
+    createdProduct: Partial<InitialProductStateType>
+  ): Promise<PostgrestSingleResponse<null>> {
     return supabase.from("posts").upsert(createdProduct).select().single();
   },
 
@@ -167,7 +181,10 @@ export const productAPI = {
    * @param productSearchType - Optional product type filter
    * @returns Promise with search results
    */
-  searchProducts(searchWord: string, productSearchType: string): PromiseLike<PostgrestResponse<InitialProductStateType>> {
+  searchProducts(
+    searchWord: string,
+    productSearchType: string
+  ): PromiseLike<PostgrestResponse<InitialProductStateType>> {
     let query = supabase
       .from("posts_with_location")
       .select("*,reviews(*)")

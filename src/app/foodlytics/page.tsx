@@ -53,7 +53,7 @@ export default function Home() {
 
   // Dashboard state
   const [logs, setLogs] = useState<WasteEntry[]>([]);
-  const [isLoadingLogs, setIsLoadingLogs] = useState(true);
+  const [_isLoadingLogs, setIsLoadingLogs] = useState(true);
   const [logsError, setLogsError] = useState<string | null>(null);
 
   // US categories macro data state
@@ -61,8 +61,8 @@ export default function Home() {
   const [isLoadingUsCategories, setIsLoadingUsCategories] = useState(true);
 
   // Live DB Sync Observer HUD states
-  const [dbStatus, setDbStatus] = useState<"connected" | "syncing" | "error">("connected");
-  const [dbLatency, setDbLatency] = useState<number | null>(null);
+  const [_dbStatus, setDbStatus] = useState<"connected" | "syncing" | "error">("connected");
+  const [_dbLatency, setDbLatency] = useState<number | null>(null);
 
   // Advisor Chat State
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([

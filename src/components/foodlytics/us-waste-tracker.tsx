@@ -8,7 +8,6 @@ import {
   Droplet,
   RefreshCw,
   BarChart2,
-  CheckCircle2,
   AlertTriangle,
   Terminal,
 } from "lucide-react";

@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import { ChevronRight, RotateCcw, Send, AlertCircle, Info, Bot, HelpCircle } from "lucide-react";
-import { FoodCategory, ChatMessage, CATEGORY_METRIC_MAP } from "@/lib/foodlytics/types";
+import { ChatMessage, CATEGORY_METRIC_MAP } from "@/lib/foodlytics/types";
 import { Card, CardContent } from "@/components/foodlytics/ui/card";
 import { Button } from "@/components/foodlytics/ui/button";
 import { Input } from "@/components/foodlytics/ui/input";
@@ -189,7 +189,7 @@ export function AdvisorChat({
                     try {
                       sourcesList = JSON.parse(sourcesMatch[1]);
                       cleanText = msg.text.replace(/```sources\n[\s\S]*?\n```/, "").trim();
-                    } catch (e) {
+                    } catch {
                       // ignore parse error
                     }
                   }

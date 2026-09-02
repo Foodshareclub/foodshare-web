@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { TrendingDown, ShieldAlert, Award, Calendar, ChevronRight } from "lucide-react";
+import { TrendingDown, ShieldAlert, Award, Calendar } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
 interface Intervention {

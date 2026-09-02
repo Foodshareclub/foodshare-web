@@ -2,15 +2,6 @@ import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { ok, handleError } from "@/lib/api";
 
-interface ReviewInput {
-  owner: string;
-  repo: string;
-  pr_number: number;
-  post?: boolean;
-  depth?: "quick" | "standard" | "deep";
-  focus_areas?: string[];
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -21,7 +12,7 @@ export async function POST(request: NextRequest) {
     const pr_number = Number(body.pr_number);
     const post = body.post;
     const depth = String(body.depth || "").trim();
-    const focus_areas = Array.isArray(body.focus_areas) ? body.focus_areas : [];
+    const _focus_areas = Array.isArray(body.focus_areas) ? body.focus_areas : [];
 
     if (!owner?.includes("/")) return handleError("Invalid owner format (expected owner)");
     if (!repo?.includes("/")) return handleError("Invalid repo format (expected owner/repo)");
@@ -29,7 +20,6 @@ export async function POST(request: NextRequest) {
     if (depth && !["quick", "standard", "deep"].includes(depth))
       return handleError("Invalid depth");
     const fullName = `${owner}/${repo}`;
-    const options = depth || focus_areas ? { depth, focus_areas } : undefined;
 
     const supabase = await createClient();
 

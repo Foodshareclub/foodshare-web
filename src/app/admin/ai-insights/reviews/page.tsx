@@ -38,7 +38,7 @@ export default function ReviewsPage() {
   const [repos, setRepos] = useState<RepoConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRepo, setSelectedRepo] = useState("");
-  const [prs, setPrs] = useState<PR[]>([]);
+  const [prs, _setPrs] = useState<PR[]>([]);
   const [selectedPr, setSelectedPr] = useState("");
   const [reviewing, setReviewing] = useState(false);
   const [reviewProgress, setReviewProgress] = useState("");

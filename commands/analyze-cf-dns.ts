@@ -100,5 +100,3 @@ async function checkCloudflareDNS() {
 }
 
 checkCloudflareDNS();
-
-export {};

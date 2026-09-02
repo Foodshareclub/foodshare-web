@@ -107,3 +107,20 @@ export function escapeHtml(text: string): string {
 export function escapeFilterValue(value: string): string {
   return value.replace(/[%_\\]/g, "\\$&");
 }
+
+/**
+ * Generate an SEO-friendly slug from text.
+ * Lowercases, trims, replaces non-alphanumeric chars with '-',
+ * limits to 60 chars, defaults to "item".
+ * Matches the backend implementation in foodshare-backend.
+ */
+export function slugify(text: string): string {
+  return (
+    text
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "item"
+  );
+}

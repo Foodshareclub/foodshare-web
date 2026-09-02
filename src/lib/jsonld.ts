@@ -126,6 +126,10 @@ export function calculateAggregateRating(
 /**
  * ProductPosting structured data for food listings
  * Uses Product schema with offer for free items
+ *
+ * @param canonicalSlug - Optional "{id}-{slug}" canonical path segment.
+ *   If provided, the @id and offer URL use /product/{canonicalSlug}.
+ *   Falls back to the legacy /food/{id} path for backward compatibility.
  */
 export function generateProductJsonLd({
   id,
@@ -138,6 +142,7 @@ export function generateProductJsonLd({
   authorName,
   authorUrl,
   aggregateRating,
+  canonicalSlug,
 }: {
   id: number;
   name: string;
@@ -149,11 +154,14 @@ export function generateProductJsonLd({
   authorName?: string;
   authorUrl?: string;
   aggregateRating?: { ratingValue: number; reviewCount: number };
+  canonicalSlug?: string;
 }) {
+  const canonicalPath = canonicalSlug ? `/product/${canonicalSlug}` : `/food/${id}`;
+  const canonicalUrl = `${siteConfig.url}${canonicalPath}`;
   return {
     "@context": "https://schema.org",
     "@type": "Product",
-    "@id": `${siteConfig.url}/food/${id}`,
+    "@id": canonicalUrl,
     name,
     description: description.slice(0, 300),
     image: image || siteConfig.ogImage,
@@ -163,7 +171,7 @@ export function generateProductJsonLd({
       price: "0",
       priceCurrency: "USD",
       availability: "https://schema.org/InStock",
-      url: `${siteConfig.url}/food/${id}`,
+      url: canonicalUrl,
       seller: authorName
         ? {
             "@type": "Person",

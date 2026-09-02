@@ -9,21 +9,11 @@ import {
   safeJsonLdStringify,
   calculateAggregateRating,
 } from "@/lib/jsonld";
+import { slugify } from "@/lib/utils";
 import { siteConfig, generatePageMetadata } from "@/lib/metadata";
 
 interface PageProps {
   params: Promise<{ id: string }>;
-}
-
-function slugify(text: string): string {
-  return (
-    text
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 60) || "item"
-  );
 }
 
 function parseId(idParam: string): number | null {
@@ -33,7 +23,7 @@ function parseId(idParam: string): number | null {
 }
 
 function canonicalSlug(product: InitialProductStateType): string {
-  const base = product.post_slug || product.slug || slugify(product.post_name || "item");
+  const base = product.post_slug || slugify(product.post_name || "item");
   const slug = slugify(base);
   return `${product.id}-${slug}`;
 }
@@ -68,12 +58,20 @@ export default async function ListingDetailPage({ params }: PageProps) {
   if (!product) notFound();
 
   const expected = canonicalSlug(product);
-  // If slug missing or wrong, 308 to canonical (preserves SEO juice)
-  if (idParam !== String(productId) && idParam !== expected) {
-    // Also handle bare /product/123 → canonical with slug
+  const paramId = parseId(idParam);
+
+  // If paramId is null or the ID doesn't match, redirect to canonical
+  if (!paramId || paramId !== productId) {
     redirect(`/product/${expected}`);
   }
-  if (idParam === String(productId)) {
+
+  // If the URL has a slug component, verify it matches the computed slug
+  // Format: /product/123-slug → idParam = "123-slug"
+  const idParamParts = idParam.split("-");
+  const urlSlug = idParamParts.slice(1).join("-"); // everything after the numeric ID
+
+  // If there's a slug in the URL and it doesn't match the computed slug, redirect
+  if (urlSlug && urlSlug !== expected.split("-").slice(1).join("-")) {
     redirect(`/product/${expected}`);
   }
 
@@ -87,6 +85,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     datePosted: product.created_at,
     location: product.post_stripped_address,
     aggregateRating: aggregateRating || undefined,
+    canonicalSlug: expected,
   });
 
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([

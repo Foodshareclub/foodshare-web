@@ -1,3 +1,4 @@
+import { slugify } from "@/lib/utils";
 import { supabase } from "@/lib/supabase/client";
 import type { PostgrestSingleResponse } from "@supabase/supabase-js";
 
@@ -325,14 +326,8 @@ export const forumAPI = {
     slug?: string;
     rich_content?: Record<string, unknown>;
   }): PromiseLike<PostgrestSingleResponse<ForumPost>> {
-    const slug =
-      post.slug ||
-      post.forum_post_name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "") +
-        "-" +
-        Date.now();
+    const baseSlug = slugify(post.forum_post_name);
+    const slug = post.slug || baseSlug;
 
     return supabase
       .from("forum")

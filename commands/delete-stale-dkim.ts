@@ -87,5 +87,3 @@ async function deleteStaleRecord() {
 }
 
 deleteStaleRecord();
-
-export {};

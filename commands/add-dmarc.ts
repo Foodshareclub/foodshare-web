@@ -74,5 +74,3 @@ async function addDmarcRecord() {
 }
 
 addDmarcRecord();
-
-export {};

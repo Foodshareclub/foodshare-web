@@ -2,9 +2,13 @@ import { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/metadata";
 import { createCachedClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 3600;
+
 /**
  * Dynamic sitemap for SEO
  * Includes static routes, food products, forum posts, and forum categories
+ * Generated at request time (not build time) to avoid cert fetch during build
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
@@ -132,12 +136,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // Forum category routes
-  const forumCategoryRoutes: MetadataRoute.Sitemap = forumCategories.map((category: any) => ({
-    url: `${baseUrl}/forum?category=${category.slug}`,
-    lastModified: new Date(category.updated_at),
-    changeFrequency: "daily" as const,
-    priority: 0.7,
-  }));
+  const forumCategoryRoutes: MetadataRoute.Sitemap = forumCategories.map(
+    (category: { slug: string; updated_at: string }) => ({
+      url: `${baseUrl}/forum?category=${category.slug}`,
+      lastModified: new Date(category.updated_at),
+      changeFrequency: "daily" as const,
+      priority: 0.7,
+    })
+  );
 
   // Forum post routes
   const forumPostRoutes: MetadataRoute.Sitemap = forumPosts.map((post) => ({
@@ -148,32 +154,46 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // Product routes — agnostic canonical with slug forkeyword (DB-owned post_slug)
-  const foodProductRoutes: MetadataRoute.Sitemap = foodProducts.map((product: any) => {
-    const slug =
-      (product.post_slug as string) ||
-      ((product.post_name as string)
-        ? (product.post_name as string)
-            .toLowerCase()
-            .trim()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-+|-+$/g, "")
-            .slice(0, 60) || "item"
-        : "item");
-    return {
-      url: `${baseUrl}/product/${product.id}-${slug}`,
-      lastModified: new Date(product.updated_at || product.created_at),
-      changeFrequency: "weekly" as const,
-      priority: 0.7,
-    };
-  });
+  const foodProductRoutes: MetadataRoute.Sitemap = foodProducts.map(
+    (product: {
+      id: number;
+      post_name: string | null;
+      post_slug: string | null;
+      created_at: string;
+      updated_at: string | null;
+    }) => {
+      const slug =
+        (product.post_slug as string) ||
+        ((product.post_name as string)
+          ? (product.post_name as string)
+              .toLowerCase()
+              .trim()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/^-+|-+$/g, "")
+              .slice(0, 60) || "item"
+          : "item");
+      return {
+        url: `${baseUrl}/product/${product.id}-${slug}`,
+        lastModified: new Date(product.updated_at || product.created_at),
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      };
+    }
+  );
 
   // Challenge routes
-  const challengeRoutes: MetadataRoute.Sitemap = challenges.map((challenge: any) => ({
-    url: `${baseUrl}/challenge/${challenge.id}`,
-    lastModified: new Date(challenge.challenge_updated_at || challenge.challenge_created_at),
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
+  const challengeRoutes: MetadataRoute.Sitemap = challenges.map(
+    (challenge: {
+      id: number;
+      challenge_created_at: string;
+      challenge_updated_at: string | null;
+    }) => ({
+      url: `${baseUrl}/challenge/${challenge.id}`,
+      lastModified: new Date(challenge.challenge_updated_at || challenge.challenge_created_at),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    })
+  );
 
   // Public profile routes
   const publicProfileRoutes: MetadataRoute.Sitemap = publicProfiles.map((profile) => ({
@@ -218,7 +238,13 @@ async function getForumPostsForSitemap() {
         .range(from, from + pageSize - 1);
 
       if (error) {
-        console.error("Failed to fetch forum posts for sitemap:", error);
+        // Silent during build — cert may not be available, return partial/empty
+        if (
+          process.env.NODE_ENV !== "production" ||
+          !String(error.message).includes("certificate")
+        ) {
+          console.warn("Failed to fetch forum posts for sitemap:", error.message);
+        }
         return all;
       }
       if (!data || data.length === 0) break;
@@ -229,7 +255,6 @@ async function getForumPostsForSitemap() {
     }
     return all;
   } catch {
-    console.error("Error fetching forum posts for sitemap");
     return [];
   }
 }
@@ -248,13 +273,14 @@ async function getForumCategoriesForSitemap() {
       .order("sort_order", { ascending: true });
 
     if (error) {
-      console.error("Failed to fetch forum categories for sitemap:", error);
+      if (process.env.NODE_ENV !== "production" || !String(error.message).includes("certificate")) {
+        console.warn("Failed to fetch forum categories for sitemap:", error.message);
+      }
       return [];
     }
 
     return data || [];
   } catch {
-    console.error("Error fetching forum categories for sitemap");
     return [];
   }
 }
@@ -284,7 +310,12 @@ async function getFoodProductsForSitemap() {
         .range(from, from + pageSize - 1);
 
       if (error) {
-        console.error("Failed to fetch food posts for sitemap:", error);
+        if (
+          process.env.NODE_ENV !== "production" ||
+          !String(error.message).includes("certificate")
+        ) {
+          console.warn("Failed to fetch food posts for sitemap:", error.message);
+        }
         return all;
       }
 
@@ -298,7 +329,7 @@ async function getFoodProductsForSitemap() {
 
     return all;
   } catch {
-    console.error("Error fetching food posts for sitemap");
+    // Silent fallback — sitemap still returns static routes
     return [];
   }
 }
@@ -317,13 +348,14 @@ async function getChallengesForSitemap() {
       .order("id", { ascending: false });
 
     if (error) {
-      console.error("Failed to fetch challenges for sitemap:", error);
+      if (process.env.NODE_ENV !== "production" || !String(error.message).includes("certificate")) {
+        console.warn("Failed to fetch challenges for sitemap:", error.message);
+      }
       return [];
     }
 
     return data || [];
   } catch {
-    console.error("Error fetching challenges for sitemap");
     return [];
   }
 }
