@@ -29,6 +29,10 @@ verify_jwt = false
 [functions.api-v1-search]
 verify_jwt = false
 
+# Zero-Latency Edge AI Vector Search (Supabase.ai / z.ai / Groq fallback)
+[functions.api-v1-vector-search]
+verify_jwt = false
+
 # Feature Flags, A/B experiments, version compatibility (replaces feature-flags)
 # Auth optional — flags work for anonymous users
 [functions.api-v1-feature-flags]
@@ -196,5 +200,11 @@ verify_jwt = false
 # System health monitoring & alerting (cron every 5 min)
 # Checks error rates, latency, circuit breakers, login spikes, vault failures
 [functions.api-v1-alerts]
+verify_jwt = false
+
+# Tailscale Tailnet Management Webhook
+# Handles Tailscale events: nodeCreated, nodeDeleted, policyUpdate, user events, etc.
+# Always returns 200 to prevent retry storms (Tailscale delivers at-least-once)
+[functions.api-v1-tailscale-webhook]
 verify_jwt = false
 

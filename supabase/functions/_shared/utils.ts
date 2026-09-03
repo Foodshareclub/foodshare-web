@@ -116,3 +116,17 @@ export async function withTimeout<T>(
 export function generateRequestId(): string {
   return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
+
+/**
+ * Generate an SEO-friendly slug from text.
+ * Lowercases, trims, replaces non-alphanumeric chars with '-',
+ * limits to 60 chars, defaults to "item".
+ * Used across all platforms for consistent URL slugs.
+ */
+export function slugify(text: string): string {
+  const s = text.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(
+    0,
+    60,
+  );
+  return s || "item";
+}

@@ -6,6 +6,13 @@
  *
  * Platform-aware optimizations for iOS, Android, and Web clients.
  *
+ * Features:
+ * - ETag / 304 Not Modified conditional responses
+ * - Correlation ID propagation for distributed tracing
+ * - Deprecation / Sunset headers (RFC 8594)
+ * - SSE streaming response builder
+ * - Retryable error flag surfacing
+ *
  * @module response-adapter
  */
 
@@ -21,6 +28,8 @@ export interface APIError {
   code: string;
   message: string;
   details?: unknown;
+  /** Whether the client should retry this request */
+  retryable?: boolean;
 }
 
 export interface ResponseMeta {
@@ -59,12 +68,63 @@ export interface APIResponse<T = unknown> {
   uiHints?: UIHints;
 }
 
+/**
+ * Standard Security Headers
+ *
+ * Defense-in-depth headers applied to every response:
+ * - X-Content-Type-Options: Prevent MIME-sniffing attacks
+ * - X-Frame-Options: Prevent clickjacking via iframe embedding
+ * - Strict-Transport-Security: Enforce HTTPS for 1 year + subdomains
+ * - Referrer-Policy: Prevent leaking full referrer URLs on cross-origin requests
+ * - Permissions-Policy: Disable unnecessary browser features from API responses
+ */
+export const SECURITY_HEADERS: Record<string, string> = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+};
+
 // =============================================================================
 // Response Builders
 // =============================================================================
 
+/** Options for deprecation warning headers (RFC 8594) */
+export interface DeprecationOptions {
+  /** ISO 8601 date when this version was deprecated */
+  deprecatedAt?: string;
+  /** ISO 8601 date when this version will be removed */
+  sunsetDate?: string;
+  /** Human-readable deprecation message */
+  message?: string;
+  /** URL to migration guide */
+  link?: string;
+}
+
+/**
+ * Generate a weak ETag from response body using SHA-256.
+ * Returns a W/"..." weak validator suitable for semantic equivalence checks.
+ */
+export async function generateETag(body: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(body);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = new Uint8Array(hashBuffer);
+  // Use first 16 bytes (128 bits) for a compact but collision-resistant ETag
+  const hex = Array.from(hashArray.slice(0, 16))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return `W/"${hex}"`;
+}
+
 /**
  * Build a unified success response
+ *
+ * Supports:
+ * - ETag generation + If-None-Match → 304 Not Modified
+ * - Correlation ID propagation for distributed tracing
+ * - Deprecation / Sunset headers (RFC 8594)
  */
 export function buildSuccessResponse<T>(
   data: T,
@@ -75,6 +135,10 @@ export function buildSuccessResponse<T>(
     uiHints?: UIHints;
     cacheTTL?: number;
     version?: string;
+    /** Original request for ETag conditional check (If-None-Match) */
+    request?: Request;
+    /** Deprecation warning headers */
+    deprecation?: DeprecationOptions;
   },
 ): Response {
   const ctx = getContext();
@@ -94,12 +158,18 @@ export function buildSuccessResponse<T>(
   };
 
   const headers: Record<string, string> = {
+    ...SECURITY_HEADERS,
     ...corsHeaders,
     "Content-Type": "application/json",
   };
 
   if (ctx?.requestId) {
     headers["X-Request-Id"] = ctx.requestId;
+  }
+
+  // Propagate correlation ID for distributed tracing
+  if (ctx?.correlationId) {
+    headers["X-Correlation-Id"] = ctx.correlationId;
   }
 
   if (options?.version) {
@@ -110,16 +180,65 @@ export function buildSuccessResponse<T>(
     headers["Cache-Control"] = `public, max-age=${options.cacheTTL}`;
   }
 
+  // Deprecation headers (RFC 8594)
+  if (options?.deprecation) {
+    if (options.deprecation.deprecatedAt) {
+      headers["Deprecation"] = options.deprecation.deprecatedAt;
+    }
+    if (options.deprecation.sunsetDate) {
+      headers["Sunset"] = options.deprecation.sunsetDate;
+    }
+    if (options.deprecation.link) {
+      headers["Link"] = `<${options.deprecation.link}>; rel="deprecation"; type="text/html"`;
+    }
+  }
+
+  const body = JSON.stringify(response);
+
   logger.debug("Building success response", {
     hasData: !!data,
     hasPagination: !!options?.pagination,
     hasUIHints: !!options?.uiHints,
   });
 
-  return new Response(JSON.stringify(response), {
+  // ETag / Conditional request: return 304 Not Modified if content unchanged.
+  // Hash the resource payload (data, pagination, version) rather than volatile request metadata (timestamp, requestId).
+  const etagSource = JSON.stringify({
+    data,
+    pagination: options?.pagination,
+    version: options?.version,
+  });
+  const etag = `W/"${fnv1aHash(etagSource)}"`;
+  headers["ETag"] = etag;
+
+  if (options?.request) {
+    const ifNoneMatch = options.request.headers.get("If-None-Match");
+    if (ifNoneMatch && ifNoneMatch === etag) {
+      return new Response(null, {
+        status: 304,
+        headers,
+      });
+    }
+  }
+
+  return new Response(body, {
     status: options?.status || 200,
     headers,
   });
+}
+
+/**
+ * Fast FNV-1a hash for ETag generation (synchronous, no crypto overhead).
+ * Produces a 64-bit hex string — sufficient for cache invalidation.
+ */
+function fnv1aHash(str: string): string {
+  let h = 0x811c9dc5; // FNV offset basis (32-bit)
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193); // FNV prime (32-bit)
+  }
+  // Convert to unsigned 32-bit hex
+  return (h >>> 0).toString(16).padStart(8, "0");
 }
 
 /**
@@ -151,6 +270,12 @@ export function buildErrorResponse(
     statusCode = error.statusCode;
   }
 
+  // Determine retryable flag from AppError
+  const retryable = "retryable" in error &&
+      typeof error.retryable === "boolean"
+    ? error.retryable
+    : undefined;
+
   // Build error body
   let errorBody: APIError;
   if ("code" in error && typeof error.code === "string") {
@@ -162,11 +287,13 @@ export function buildErrorResponse(
       code: error.code,
       message: error.message,
       details,
+      retryable,
     };
   } else {
     errorBody = {
       code: "INTERNAL_ERROR",
       message: isProduction ? "Internal server error" : error.message,
+      retryable,
     };
   }
 
@@ -182,12 +309,18 @@ export function buildErrorResponse(
   };
 
   const headers: Record<string, string> = {
+    ...SECURITY_HEADERS,
     ...corsHeaders,
     "Content-Type": "application/json",
   };
 
   if (ctx?.requestId) {
     headers["X-Request-Id"] = ctx.requestId;
+  }
+
+  // Propagate correlation ID for distributed tracing
+  if (ctx?.correlationId) {
+    headers["X-Correlation-Id"] = ctx.correlationId;
   }
 
   if (options?.retryAfterMs) {
@@ -206,6 +339,80 @@ export function buildErrorResponse(
 
   return new Response(JSON.stringify(response), {
     status: statusCode,
+    headers,
+  });
+}
+
+/**
+ * Build a 204 No Content response with security and CORS headers.
+ *
+ * Use for DELETE endpoints and mutation operations that return no body.
+ */
+export function buildNoContentResponse(
+  corsHeaders: Record<string, string>,
+): Response {
+  const ctx = getContext();
+
+  const headers: Record<string, string> = {
+    ...SECURITY_HEADERS,
+    ...corsHeaders,
+  };
+
+  if (ctx?.requestId) {
+    headers["X-Request-Id"] = ctx.requestId;
+  }
+  if (ctx?.correlationId) {
+    headers["X-Correlation-Id"] = ctx.correlationId;
+  }
+
+  return new Response(null, {
+    status: 204,
+    headers,
+  });
+}
+
+/**
+ * Build a Server-Sent Events (SSE) streaming response.
+ *
+ * Returns a `Response` with `text/event-stream` content type and proper
+ * headers for streaming. The caller provides a `ReadableStream` that
+ * emits SSE-formatted data.
+ *
+ * @example
+ * ```typescript
+ * const stream = new ReadableStream({
+ *   start(controller) {
+ *     controller.enqueue(new TextEncoder().encode("data: hello\n\n"));
+ *     controller.close();
+ *   },
+ * });
+ * return buildStreamResponse(stream, corsHeaders);
+ * ```
+ */
+export function buildStreamResponse(
+  stream: ReadableStream,
+  corsHeaders: Record<string, string>,
+): Response {
+  const ctx = getContext();
+
+  const headers: Record<string, string> = {
+    ...SECURITY_HEADERS,
+    ...corsHeaders,
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive",
+    "X-Accel-Buffering": "no", // Disable nginx buffering for SSE
+  };
+
+  if (ctx?.requestId) {
+    headers["X-Request-Id"] = ctx.requestId;
+  }
+  if (ctx?.correlationId) {
+    headers["X-Correlation-Id"] = ctx.correlationId;
+  }
+
+  return new Response(stream, {
+    status: 200,
     headers,
   });
 }

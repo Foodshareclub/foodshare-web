@@ -47,6 +47,9 @@ export interface SearchResultItem {
   score: number;
   post_name: string;
   post_description: string;
+  post_slug?: string;
+  canonical_slug?: string;
+  canonical_url?: string;
   category: string;
   pickup_address: string;
   location?: { lat: number; lng: number };
@@ -76,6 +79,8 @@ export interface WebhookPayload {
 export interface PostRecord {
   id: string;
   post_name: string;
+  post_slug?: string;
+  canonical_slug?: string;
   post_description: string;
   post_address: string;
   post_type: string;
@@ -295,17 +300,26 @@ export function buildFilters(params: {
   return filters;
 }
 
+import { slugify } from "../../_shared/utils.ts";
+
 // =============================================================================
 // Result Transformers
 // =============================================================================
 
 export function transformVectorResult(r: VectorQueryResult): SearchResultItem {
   const m = r.metadata || {};
+  const postSlug = String(m.post_slug || m.slug || "") || slugify(String(m.post_name || ""));
+  const canonicalSlug = `${r.id}-${postSlug}`;
+  const baseUrl = Deno.env.get("SITE_URL") || Deno.env.get("NEXT_PUBLIC_SITE_URL") ||
+    "https://foodshare.club";
   return {
     id: r.id,
     score: r.score,
     post_name: String(m.post_name || ""),
     post_description: String(m.post_description || "").slice(0, 500),
+    post_slug: postSlug,
+    canonical_slug: canonicalSlug,
+    canonical_url: `${baseUrl}/product/${canonicalSlug}`,
     category: String(m.category || ""),
     pickup_address: String(m.pickup_address || ""),
     location: transformLocation(m.latitude, m.longitude) ?? undefined,
@@ -317,17 +331,27 @@ export function transformVectorResult(r: VectorQueryResult): SearchResultItem {
 export function transformPostsToResults(
   posts: Record<string, unknown>[],
 ): SearchResultItem[] {
-  return posts.map((row, idx) => ({
-    id: String(row.id),
-    score: 1 - idx * 0.01,
-    post_name: String(row.post_name || ""),
-    post_description: String(row.post_description || "").slice(0, 500),
-    category: (row.categories as { name: string } | null)?.name || "",
-    pickup_address: String(row.post_address || ""),
-    location: transformLocation(row.latitude, row.longitude) ?? undefined,
-    posted_at: String(row.created_at || ""),
-    images: Array.isArray(row.images) ? (row.images as string[]) : undefined,
-  }));
+  const baseUrl = Deno.env.get("SITE_URL") || Deno.env.get("NEXT_PUBLIC_SITE_URL") ||
+    "https://foodshare.club";
+  return posts.map((row, idx) => {
+    const postSlug = String(row.post_slug || row.slug || "") ||
+      slugify(String(row.post_name || ""));
+    const canonicalSlug = `${row.id}-${postSlug}`;
+    return {
+      id: String(row.id),
+      score: 1 - idx * 0.01,
+      post_name: String(row.post_name || ""),
+      post_description: String(row.post_description || "").slice(0, 500),
+      post_slug: postSlug,
+      canonical_slug: canonicalSlug,
+      canonical_url: `${baseUrl}/product/${canonicalSlug}`,
+      category: (row.categories as { name: string } | null)?.name || "",
+      pickup_address: String(row.post_address || ""),
+      location: transformLocation(row.latitude, row.longitude) ?? undefined,
+      posted_at: String(row.created_at || ""),
+      images: Array.isArray(row.images) ? (row.images as string[]) : undefined,
+    };
+  });
 }
 
 // =============================================================================

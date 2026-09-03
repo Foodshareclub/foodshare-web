@@ -10,6 +10,7 @@ import { sanitizeHtml } from "../../../_shared/validation-rules.ts";
 import { validateProductImageUrls } from "../../../_shared/storage-urls.ts";
 import type { ListQuery, UpdateProductBody } from "../schemas.ts";
 import { transformProduct } from "../transformers.ts";
+import { cache, invalidateListingCache } from "../../../_shared/cache.ts";
 
 export async function updateProduct(
   ctx: HandlerContext<UpdateProductBody, ListQuery>,
@@ -98,5 +99,12 @@ export async function updateProduct(
     newVersion: data.version,
   });
 
-  return ok(transformProduct(data), ctx);
+  invalidateListingCache(productId, userId);
+  try {
+    cache.clear();
+  } catch (_e) {
+    // ignore cache clear errors
+  }
+
+  return ok(transformProduct(data), ctx, { cacheTTL: 60 });
 }

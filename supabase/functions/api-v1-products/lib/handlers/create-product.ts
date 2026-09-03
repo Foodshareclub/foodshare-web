@@ -10,6 +10,7 @@ import { sanitizeHtml } from "../../../_shared/validation-rules.ts";
 import { validateProductImageUrls } from "../../../_shared/storage-urls.ts";
 import type { CreateProductBody } from "../schemas.ts";
 import { transformProduct } from "../transformers.ts";
+import { cache } from "../../../_shared/cache.ts";
 
 export async function createProduct(
   ctx: HandlerContext<CreateProductBody>,
@@ -77,6 +78,13 @@ export async function createProduct(
   }
 
   logger.info("Product created", { productId: data.id, userId });
+
+  // 10x cache invalidation — new listing busts list caches
+  try {
+    cache.clear();
+  } catch (_e) {
+    // ignore cache clear errors
+  }
 
   try {
     (globalThis as any).EdgeRuntime.waitUntil(

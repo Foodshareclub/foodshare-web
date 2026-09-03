@@ -31,7 +31,7 @@ export async function textSearch(
   let queryBuilder = supabase
     .from("posts_with_location")
     .select(
-      `id, post_name, post_description, post_address, post_type, category_id, images, latitude, longitude, categories(name), profile_id, created_at, is_active`,
+      `id, post_name, post_slug, post_description, post_address, post_type, category_id, images, latitude, longitude, categories(name), profile_id, created_at, is_active`,
       { count: "exact" },
     )
     .eq("is_active", true)
@@ -94,7 +94,7 @@ export async function textSearch(
   const { data: fallbackData, error: fallbackError, count } = await supabase
     .from("posts_with_location")
     .select(
-      `id, post_name, post_description, post_address, post_type, category_id, images, latitude, longitude, categories(name), profile_id, created_at`,
+      `id, post_name, post_slug, post_description, post_address, post_type, category_id, images, latitude, longitude, categories(name), profile_id, created_at`,
       { count: "exact" },
     )
     .eq("is_active", true)
@@ -132,7 +132,7 @@ export async function fuzzySearch(
   let queryBuilder = supabase
     .from("posts_with_location")
     .select(
-      `id, post_name, post_description, post_address, post_type, category_id, images, latitude, longitude, categories(name), profile_id, created_at`,
+      `id, post_name, post_slug, post_description, post_address, post_type, category_id, images, latitude, longitude, categories(name), profile_id, created_at`,
       { count: "exact" },
     )
     .or(

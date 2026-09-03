@@ -251,7 +251,7 @@ function meanPool(tokenEmbeddings: number[][]): number[] {
   if (tokenEmbeddings.length === 0) return [];
 
   const dim = tokenEmbeddings[0].length;
-  const result = new Array(dim).fill(0);
+  const result = Array.from({ length: dim }, () => 0);
 
   for (const embedding of tokenEmbeddings) {
     for (let i = 0; i < dim; i++) {

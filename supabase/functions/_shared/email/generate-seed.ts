@@ -270,7 +270,7 @@ const SAMPLE_DATA: Record<string, Record<string, unknown>> = {
     listingUrl: `https://${
       Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
       "foodshare.club"
-    }/food/456`,
+    }/product/456`,
     listingType: "food",
     listingEmoji: "🍎",
   },

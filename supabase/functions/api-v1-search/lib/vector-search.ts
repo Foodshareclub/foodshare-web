@@ -5,6 +5,7 @@
 import { logger } from "../../_shared/logger.ts";
 import { AppError, ValidationError } from "../../_shared/errors.ts";
 import { generateEmbedding, generateEmbeddings } from "../../_shared/embeddings.ts";
+import { slugify } from "../../_shared/utils.ts";
 import {
   buildVectorFilter,
   getVectorClient,
@@ -175,12 +176,15 @@ async function indexPost(post: PostRecord): Promise<void> {
     .slice(0, 8000);
   const embeddingResult = await generateEmbeddings([textToEmbed]);
 
+  const computedSlug = post.post_slug || slugify(post.post_name);
   const vectorRecord: VectorRecord = {
     id: post.id,
     vector: embeddingResult.embeddings[0],
     metadata: {
       post_id: post.id,
       post_name: post.post_name,
+      post_slug: computedSlug,
+      canonical_slug: `${post.id}-${computedSlug}`,
       post_description: post.post_description?.slice(0, 1000),
       category,
       category_id: post.category_id,
@@ -248,12 +252,15 @@ async function indexPostsBatch(posts: PostRecord[]): Promise<IndexResult> {
 
       const vectorRecords: VectorRecord[] = batch.map((post, idx) => {
         const cat = post.category_name || `category_${post.category_id}`;
+        const computedSlug = post.post_slug || slugify(post.post_name);
         return {
           id: post.id,
           vector: embeddingResult.embeddings[idx],
           metadata: {
             post_id: post.id,
             post_name: post.post_name,
+            post_slug: computedSlug,
+            canonical_slug: `${post.id}-${computedSlug}`,
             post_description: post.post_description?.slice(0, 1000),
             category: cat,
             category_id: post.category_id,
@@ -444,7 +451,7 @@ export async function handleBatchIndex(
   let query = supabase
     .from("posts_with_location")
     .select(
-      `id, post_name, post_description, post_address, post_type, category_id, images, latitude, longitude, profile_id, is_active, is_arranged, created_at, updated_at, pickup_time, available_hours, categories(name)`,
+      `id, post_name, post_slug, post_description, post_address, post_type, category_id, images, latitude, longitude, profile_id, is_active, is_arranged, created_at, updated_at, pickup_time, available_hours, categories(name)`,
     )
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
@@ -495,6 +502,8 @@ export async function handleBatchIndex(
     (p: Record<string, unknown>) => ({
       id: p.id as string,
       post_name: p.post_name as string,
+      post_slug: (p.post_slug as string) ||
+        (p as Record<string, unknown>).slug as string | undefined,
       post_description: p.post_description as string,
       post_address: p.post_address as string,
       post_type: p.post_type as string,

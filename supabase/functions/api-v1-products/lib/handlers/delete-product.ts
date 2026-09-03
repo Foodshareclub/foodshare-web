@@ -7,6 +7,7 @@ import { noContent } from "../../../_shared/api-handler.ts";
 import { NotFoundError, ValidationError } from "../../../_shared/errors.ts";
 import { logger } from "../../../_shared/logger.ts";
 import type { ListQuery } from "../schemas.ts";
+import { cache, invalidateListingCache } from "../../../_shared/cache.ts";
 
 export async function deleteProduct(
   ctx: HandlerContext<unknown, ListQuery>,
@@ -50,6 +51,13 @@ export async function deleteProduct(
   }
 
   logger.info("Product deleted", { productId, userId });
+
+  invalidateListingCache(productId, userId);
+  try {
+    cache.clear();
+  } catch (_e) {
+    // ignore cache clear errors
+  }
 
   return noContent(ctx);
 }

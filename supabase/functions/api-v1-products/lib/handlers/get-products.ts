@@ -265,24 +265,28 @@ export async function getProduct(
     const { data: related } = await supabase
       .from("posts_with_location")
       .select(
-        "id,title,images,post_type,created_at,latitude,longitude,profile_id",
+        "id,post_name,post_slug,images,post_type,created_at,latitude,longitude,profile_id,canonical_slug",
       )
       .neq("id", productId)
-      .eq("status", "active")
+      .eq("is_active", true)
       .or(`category_id.eq.${data.category_id},post_type.eq.${data.post_type}`)
       .limit(6);
 
     if (related) {
-      result.relatedListings = fuzzProductListCoordinates(related, userId).map((
-        r,
-      ) => ({
-        id: r.id,
-        title: r.title,
-        imageUrl: (r.images as string[])?.[0],
-        postType: r.post_type,
-        createdAt: r.created_at,
-        coordinates_approximate: r.coordinates_approximate,
-      }));
+      result.relatedListings = fuzzProductListCoordinates(related.map(transformProduct), userId)
+        .map(
+          (r) => ({
+            id: r.id,
+            title: (r.post_name as string) || (r.title as string),
+            slug: r.slug as string,
+            canonicalSlug: r.canonical_slug as string,
+            canonicalUrl: r.canonicalUrl as string,
+            imageUrl: (r.images as string[])?.[0],
+            postType: r.post_type as string,
+            createdAt: r.created_at as string,
+            coordinates_approximate: (r as Record<string, unknown>).coordinates_approximate,
+          }),
+        );
     }
   }
 
@@ -298,7 +302,8 @@ export async function getProduct(
     result.canContact = userId !== data.profile_id;
   }
 
-  return ok(result, ctx);
+  // SEO cache — 60s public for crawlers, ETag handles 304
+  return ok(result, ctx, { cacheTTL: 60 });
 }
 
 /**

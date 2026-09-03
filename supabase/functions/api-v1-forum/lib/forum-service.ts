@@ -7,6 +7,7 @@
 
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 import { logger } from "../../_shared/logger.ts";
+import { slugify } from "../../_shared/utils.ts";
 
 export interface ForumPost {
   id: number;
@@ -53,7 +54,7 @@ export class ForumService {
   ) {}
 
   async createPost(input: CreatePostInput) {
-    const slug = this.generateSlug(input.title);
+    const slug = await this.generateSlug(input.title);
 
     const insertData = {
       forum_post_name: input.title,
@@ -244,13 +245,28 @@ export class ForumService {
     }
   }
 
-  private generateSlug(title: string): string {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .substring(0, 100) +
-      "-" + Date.now().toString(36);
+  private async generateSlug(title: string): Promise<string> {
+    const baseSlug = slugify(title).substring(0, 80); // 80 chars max, using shared slugify
+
+    let slug = baseSlug;
+    // Ensure uniqueness: check existing forum slugs
+    const { count: initialCount } = await this.supabase
+      .from("forum")
+      .select("*", { count: "exact", head: true })
+      .eq("slug", slug);
+
+    let suffix = 1;
+    let currentCount = initialCount;
+    while (currentCount && currentCount > 0) {
+      slug = `${baseSlug}-${suffix}`;
+      const { count: newCount } = await this.supabase
+        .from("forum")
+        .select("*", { count: "exact", head: true })
+        .eq("slug", slug);
+      currentCount = newCount;
+      suffix++;
+    }
+
+    return slug;
   }
 }

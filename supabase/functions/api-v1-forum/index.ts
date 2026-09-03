@@ -279,11 +279,13 @@ Deno.serve(createAPIHandler({
       querySchema: forumQuerySchema,
       handler: handlePost,
       requireAuth: true,
+      idempotent: true,
     },
     PUT: {
       querySchema: forumQuerySchema,
       handler: handlePut,
       requireAuth: true,
+      idempotent: true,
     },
     DELETE: {
       querySchema: forumQuerySchema,

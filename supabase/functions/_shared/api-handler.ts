@@ -878,24 +878,28 @@ export function createAPIHandler(config: APIHandlerConfig) {
       addStandardHeaders(errorResponse, ctx);
       return errorResponse;
     } finally {
-      // Collect spans BEFORE clearing context
-      const spans = getSpans();
-      const totalMs = Math.round(performance.now() - ctx.startTime);
-      if (spans.length > 0) {
-        logger.info("Request spans", {
-          handler: service,
-          requestId: ctx.requestId,
-          totalMs,
-          spanCount: spans.length,
-          spans: spans.map((s: Span) => ({
-            op: s.operation,
-            ms: s.durationMs,
-            status: s.status,
-          })),
-        });
+      try {
+        // Collect spans BEFORE clearing context
+        const spans = getSpans();
+        const totalMs = Math.round(performance.now() - ctx.startTime);
+        if (spans.length > 0) {
+          logger.info("Request spans", {
+            handler: service,
+            requestId: ctx.requestId,
+            totalMs,
+            spanCount: spans.length,
+            spans: spans.map((s: Span) => ({
+              op: s.operation,
+              ms: s.durationMs,
+              status: s.status,
+            })),
+          });
+        }
+        clearSpans();
+        clearContext();
+      } catch (cleanupErr) {
+        logger.warn("Handler context cleanup warning", { error: cleanupErr });
       }
-      clearSpans();
-      clearContext();
     }
   };
 }

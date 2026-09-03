@@ -230,7 +230,7 @@ export class DisplayNameService {
             }
           }
         }
-      } catch (_error) {
+      } catch {
         // Fallback to individual queries
         await this.fallbackBatchLookup(uncachedIds, results, errors, options);
       }
