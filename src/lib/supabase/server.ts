@@ -1,8 +1,8 @@
-// server-only guard — static import can fail in Bun test environments even when
-// the mock is registered, causing a SyntaxError that hides all named exports.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+// server-only guard — static import can fail in Bun test environments
+// Using dynamic import to avoid ESM require errors in CI
 try {
-  require("server-only");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  if (typeof require !== "undefined") require("server-only");
 } catch {
   /* safe in tests/builds */
 }
