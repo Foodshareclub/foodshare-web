@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/metadata";
 import { createCachedClient } from "@/lib/supabase/server";
+import { slugify } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
@@ -163,15 +164,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       updated_at: string | null;
     }) => {
       const slug =
-        (product.post_slug as string) ||
-        ((product.post_name as string)
-          ? (product.post_name as string)
-              .toLowerCase()
-              .trim()
-              .replace(/[^a-z0-9]+/g, "-")
-              .replace(/^-+|-+$/g, "")
-              .slice(0, 60) || "item"
-          : "item");
+        (product.post_slug as string) || slugify((product.post_name as string) || "item");
       return {
         url: `${baseUrl}/product/${product.id}-${slug}`,
         lastModified: new Date(product.updated_at || product.created_at),
