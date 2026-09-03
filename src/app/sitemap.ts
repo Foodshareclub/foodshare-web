@@ -127,10 +127,59 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.7,
     },
+    // Guides — migrated from foodshare-docs
+    {
+      url: `${baseUrl}/guides`,
+      lastModified: new Date("2026-09-03"),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/guides/food-safety`,
+      lastModified: new Date("2026-09-03"),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/guides/safe-sharing`,
+      lastModified: new Date("2026-09-03"),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/guides/sharing-guidelines`,
+      lastModified: new Date("2026-09-03"),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/guides/what-can-i-share`,
+      lastModified: new Date("2026-09-03"),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/guides/expiry-dates`,
+      lastModified: new Date("2026-09-03"),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/guides/borrow`,
+      lastModified: new Date("2026-09-03"),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/guides/cookie-policy`,
+      lastModified: new Date("2026-09-03"),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
     // Challenges section
     {
       url: `${baseUrl}/challenge`,
-      lastModified: new Date(),
+      lastModified: new Date("2026-09-03"),
       changeFrequency: "daily",
       priority: 0.8,
     },
