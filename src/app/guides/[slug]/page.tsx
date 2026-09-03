@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/navigation/PageHeader";
 import { generatePageMetadata } from "@/lib/metadata";
 import { generateArticleJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
-import { getGuide, getAllGuideSlugs, guides } from "@/lib/guides";
+import { getGuide, getAllGuideSlugs } from "@/lib/guides";
 
 interface Params {
   slug: string;

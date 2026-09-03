@@ -6,9 +6,20 @@
  */
 
 import React, { useEffect, useState, useMemo } from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
+import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
 import { Loader2, MapPin } from "lucide-react";
+
+const MapContainer = dynamic(() => import("react-leaflet").then((m) => m.MapContainer), {
+  ssr: false,
+});
+const TileLayer = dynamic(() => import("react-leaflet").then((m) => m.TileLayer), { ssr: false });
+const CircleMarker = dynamic(() => import("react-leaflet").then((m) => m.CircleMarker), {
+  ssr: false,
+});
+const Popup = dynamic(() => import("react-leaflet").then((m) => m.Popup), { ssr: false });
+// useMap must be imported statically for FitBounds hook but guarded by dynamic MapContainer
+import { useMap } from "react-leaflet";
 import { fetchGeographicHotspots } from "@/app/actions/analytics-data";
 import type { GeoHotspot } from "@/lib/data/analytics";
 

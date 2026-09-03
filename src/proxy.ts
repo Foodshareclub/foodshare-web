@@ -529,13 +529,16 @@ export async function proxy(request: NextRequest) {
     if (adminClient) {
       const { data: userRoles } = await adminClient
         .from("user_roles")
-        .select("role_id,roles(name)")
+        .select("roles(name)")
         .eq("profile_id", user.id);
 
-      type RoleRow = { role_id: string; roles: { name: string } | null };
-      const roles = ((userRoles as RoleRow[] | null) || [])
-        .map((r) => r.roles?.name)
-        .filter((name): name is string => Boolean(name));
+      const roles = ((userRoles as unknown[]) || [])
+        .map((r: unknown) => {
+          const row = r as { roles: { name: string } | { name: string }[] | null };
+          const role = row.roles;
+          return Array.isArray(role) ? role[0]?.name : role?.name;
+        })
+        .filter((name): name is string => typeof name === "string");
       isAdmin = roles.includes("admin") || roles.includes("superadmin");
     }
 
