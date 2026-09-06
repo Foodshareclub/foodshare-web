@@ -7,13 +7,12 @@ interface AvatarProps {
   alt: string;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
-  children?: React.ReactNode;
 }
 
 /**
  * Avatar - A circular avatar component
  */
-export const Avatar: React.FC<AvatarProps> = ({ src, alt, size = "md", className, children }) => {
+export const Avatar: React.FC<AvatarProps> = ({ src, alt, size = "md", className }) => {
   const sizeMap = {
     sm: "w-8 h-8",
     md: "w-10 h-10",

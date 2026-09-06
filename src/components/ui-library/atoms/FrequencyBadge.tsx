@@ -5,19 +5,17 @@ interface FrequencyBadgeProps {
   count: number;
   label?: string;
   size?: "sm" | "md";
-  variant?: "default" | "low" | "high";
   className?: string;
 }
 
 /**
  * FrequencyBadge - Displays a count with color-coded badge
- * Color variants provide semantic meaning for different count ranges
+ * Color provides semantic meaning for different count ranges
  */
 export const FrequencyBadge: React.FC<FrequencyBadgeProps> = ({
   count,
   label = "items",
   size = "md",
-  variant = "default",
   className,
 }) => {
   const sizeMap = {
@@ -25,17 +23,11 @@ export const FrequencyBadge: React.FC<FrequencyBadgeProps> = ({
     md: "text-sm text-[0.875rem]",
   };
 
-  const variantMap = {
-    default: "bg-muted/20 text-muted",
-    low: "bg-success/20 text-success",
-    high: "bg-primary/20 text-primary",
-  };
-
   const getBadgeClass = (): string => {
-    if (count === 0) return variantMap["default"];
-    if (count < 5) return variantMap["low"];
-    if (count < 20) return variantMap["high"];
-    return variantMap["default"];
+    if (count === 0) return "bg-muted/20 text-muted";
+    if (count < 5) return "bg-success/20 text-success";
+    if (count < 20) return "bg-warning/20 text-warning";
+    return "bg-primary/20 text-primary";
   };
 
   return (

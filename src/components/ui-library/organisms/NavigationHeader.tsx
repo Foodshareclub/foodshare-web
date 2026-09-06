@@ -1,7 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { SearchField } from "@/components/ui-library/molecules/SearchField";
-import { NavbarWrapper } from "@/components/header/navbar/NavbarWrapper";
 import { NavbarActions } from "@/components/header/navbar/NavbarActions";
 import NavbarLogo from "@/components/header/navbar/NavbarLogo";
 import { Avatar } from "@/components/ui-library/atoms/Avatar";
@@ -11,23 +10,19 @@ import { Avatar } from "@/components/ui-library/atoms/Avatar";
  * Provides a consistent header with search, actions, and branding
  */
 interface NavigationHeaderProps {
-  locale?: "en" | "ar" | "fr" | "de";
   isAdmin?: boolean;
   user?: {
     name: string;
     avatar?: string;
   };
-  onLocaleChange?: (locale: string) => void;
   showSearch?: boolean;
   searchPlaceholder: string;
   className?: string;
 }
 
 export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
-  locale,
   isAdmin,
   user,
-  onLocaleChange,
   showSearch = true,
   searchPlaceholder,
   className,

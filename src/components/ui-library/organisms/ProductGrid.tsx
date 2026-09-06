@@ -10,8 +10,6 @@ import { ProductCard } from "@/components/productCard/ProductCard";
 interface ProductGridProps {
   products: InitialProductStateType[];
   onViewProduct?: (product: InitialProductStateType) => void;
-  layout?: "grid" | "masonry";
-  columns?: number;
   className?: string;
   isLoading?: boolean;
   emptyState?: React.ReactNode;
@@ -23,8 +21,6 @@ interface ProductGridProps {
 export const ProductGrid: React.FC<ProductGridProps> = ({
   products,
   onViewProduct,
-  layout = "grid",
-  columns = 3,
   className,
   isLoading = false,
   emptyState,
