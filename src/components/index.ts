@@ -10,6 +10,12 @@ export { OneProductContainer } from "./oneProduct/OneProductContainer";
 export { default as AsideProducts } from "./asideProducts/AsideProducts";
 export { ProductsLocation } from "./productsLocation/ProductLocation";
 
+// Auth & Security
+export { AuthGuard, RequireAuth, RequireGuest, RequireAdmin } from "./guards/AuthGuard";
+export { BecomeSharerBlock } from "./becomeSharerBlock/BecomeSharerBlock";
+export { BecomeSharerButton } from "./becomeSharerBlock/BecomeSharerButton";
+export { AddListingButton } from "./becomeSharerBlock/AddListingButton";
+
 // User Profile & Personal Info
 export { default as Avatar } from "./avatar/Avatar";
 export { UnifiedAvatar, DisplayAvatar, RippleAvatar, UploadAvatar } from "./avatar/UnifiedAvatar";
@@ -20,9 +26,6 @@ export { MinifiedUserInfo } from "./minifiedUserInfo/MinifiedUserInfo";
 export { NameBlock } from "./profile/NameBlock";
 export { EmailBlock } from "./profile/EmailBlock";
 export { PhoneNumberBlock } from "./profile/PhoneNumberBlock";
-export { BecomeSharerBlock } from "./becomeSharerBlock/BecomeSharerBlock";
-export { BecomeSharerButton } from "./becomeSharerBlock/BecomeSharerButton";
-export { AddListingButton } from "./becomeSharerBlock/AddListingButton";
 
 // UI Library Molecules
 export { SearchField } from "./ui-library/molecules/SearchField";
@@ -85,9 +88,6 @@ export { default as ChangeLanguageContainer } from "./localization/ChangeLanguag
 
 // Error Boundaries
 export { FeatureErrorBoundary, AsyncErrorBoundary, withErrorBoundary } from "./ErrorBoundary";
-
-// Auth Guards
-export { AuthGuard, RequireAuth, RequireGuest, RequireAdmin } from "./guards/AuthGuard";
 
 // Glass utilities - Use Tailwind classes: glass, glass-subtle, glass-prominent
 // Or use Button/Dialog/Drawer with variant="glass"
