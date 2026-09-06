@@ -8,9 +8,9 @@ const nextConfig: NextConfig = {
   // React Compiler - automatic memoization for +15-20% render performance
   reactCompiler: true,
 
-  // Skip TypeScript checks during build (already checked in CI)
+  // TypeScript is checked in CI (`bun run type-check`); fail builds on type errors.
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
   // HTML-limited bots that cannot execute JavaScript
@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
     /Googlebot|Bingbot|Yandex|YandexBot|DuckDuckBot|Slurp|Baiduspider|facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Applebot|PinterestBot|Discordbot|GPTBot|ChatGPT-User|PerplexityBot|Google-Extended|anthropic-ai|CCBot/,
 
   // cacheComponents disabled — requires further React 19 compatibility testing
-  // cacheComponents: true,
+  cacheComponents: false,
 
   // Custom cache life profiles for "use cache" / cacheLife() in data layer
   cacheLife: {
