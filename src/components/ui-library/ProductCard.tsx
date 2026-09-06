@@ -2,6 +2,8 @@
 
 import React from "react";
 import Image from "next/image";
+import { StatusIndicator } from "@/components/ui-library/atoms/StatusIndicator";
+import { FrequencyBadge } from "@/components/ui-library/atoms/FrequencyBadge";
 
 interface ProductCardProps {
   image: string;
@@ -26,6 +28,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onClick,
   hover: _hover = true,
 }) => {
+  const ratingStars = rating
+    ? Array.from({ length: rating }, (_, i) => (
+        <span key={i} aria-hidden="true" className="text-yellow-500">
+          ★
+        </span>
+      ))
+    : [];
+
   return (
     <button
       type="button"
@@ -49,32 +59,38 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {badge}
           </div>
         )}
-      </div>
 
-      {/* Card Body - Airbnb-style typography */}
-      <div className="p-3">
-        {/* Title & Rating */}
-        <div className="flex justify-between items-center mb-1">
+        {/* Status Indicator */}
+        <StatusIndicator status="online" className="absolute top-2 right-2" />
+
+        {/* Card Body - Airbnb-style typography */}
+        <div className="p-3">
+          {/* Title */}
           <p className="text-card-title line-clamp-1 flex-1">{title}</p>
+
+          {/* Subtitle */}
+          {subtitle && <p className="text-card-body line-clamp-1 mb-1">{subtitle}</p>}
+
+          {/* Price */}
+          {price && (
+            <div className="flex items-baseline gap-1 mt-1">
+              <span className="text-card-emphasis">${price}</span>
+              <span className="text-card-body">/ night</span>
+            </div>
+          )}
+
+          {/* Rating */}
           {rating && (
-            <div className="flex items-center gap-1 ml-2">
+            <div className="flex items-center gap-1 mt-2">
               <span className="text-card-body">★</span>
-              <span className="text-card-emphasis">{rating.toFixed(2)}</span>
+              {ratingStars}
               {reviewCount && <span className="text-card-small">({reviewCount})</span>}
             </div>
           )}
+
+          {/* Frequency Badge */}
+          {reviewCount && <FrequencyBadge count={reviewCount} label="reviews" />}
         </div>
-
-        {/* Subtitle */}
-        {subtitle && <p className="text-card-body line-clamp-1 mb-1">{subtitle}</p>}
-
-        {/* Price */}
-        {price && (
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-card-emphasis">${price}</span>
-            <span className="text-card-body">/ night</span>
-          </div>
-        )}
       </div>
     </button>
   );

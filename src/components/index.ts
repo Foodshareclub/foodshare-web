@@ -20,10 +20,18 @@ export { MinifiedUserInfo } from "./minifiedUserInfo/MinifiedUserInfo";
 export { NameBlock } from "./profile/NameBlock";
 export { EmailBlock } from "./profile/EmailBlock";
 export { PhoneNumberBlock } from "./profile/PhoneNumberBlock";
-export { AddressBlock } from "./profile/AddressBlock";
 export { BecomeSharerBlock } from "./becomeSharerBlock/BecomeSharerBlock";
 export { BecomeSharerButton } from "./becomeSharerBlock/BecomeSharerButton";
 export { AddListingButton } from "./becomeSharerBlock/AddListingButton";
+
+// UI Library Molecules
+export { SearchField } from "./ui-library/molecules/SearchField";
+export { StatusBadge } from "./ui-library/molecules/StatusBadge";
+
+// UI Library Organisms
+export { UserProfileCard } from "./ui-library/organisms/UserProfileCard";
+export { NavigationHeader } from "./ui-library/organisms/NavigationHeader";
+export { ProductGrid } from "./ui-library/organisms/ProductGrid";
 
 // Chat Components
 export { InputSection } from "./chat/InputSection";
@@ -59,7 +67,6 @@ export { ResponsiveContainer } from "./shared/ResponsiveContainer";
 export { default as Carousel } from "./carousel/Carousel";
 export { default as ItemsForCarousel } from "./carousel/ItemsForCarousel";
 export { default as Comments } from "./comments/Comments";
-export { SearchField } from "./searchField/SearchField";
 export { RequiredStar } from "./requiredStar/RequiredStar";
 export { SettingsCard } from "./settingsCard/SettingsCard";
 export { default as NavigateButtons } from "./navigateButtons/NavigateButtons";

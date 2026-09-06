@@ -1,10 +1,18 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript", "react", "nextjs", "jsx-a11y"],
+  "plugins": ["typescript", "react", "nextjs", "jsx-a11y", "import"],
   "rules": {
-    "no-unused-vars": "warn",
-    "no-console": "warn",
-    "react/jsx-key": "error"
+    "no-unused-vars": "error",
+    "no-console": "error",
+    "react/jsx-key": "error",
+    "react/jsx-no-bind": "warn",
+    "import/order": "warn",
+    "import/exports": "error",
+    "nextjs/no-html-node-inline-style": "warn",
+    "nextjs/no-img-element": "warn",
+    "jsx-a11y/img-has-alt": "error",
+    "jsx-a11y/focusable-role": "error",
+    "unicorn/filename-case": "warn"
   },
   "ignorePatterns": [".next", "out", "node_modules", "coverage", "public"]
 }

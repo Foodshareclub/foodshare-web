@@ -3,6 +3,13 @@ export { ResponsiveGrid } from "./ResponsiveGrid";
 export { CustomCategoryNav } from "./CustomCategoryNav";
 export { CategoryNav } from "./CategoryNav";
 export type { Category } from "./CustomCategoryNav";
+export { StatusIndicator } from "./atoms/StatusIndicator";
+export { FrequencyBadge } from "./atoms/FrequencyBadge";
+export { GlassButton } from "./atoms/GlassButton";
+export { Avatar } from "./atoms/Avatar";
+export { LoadingSkeleton } from "./atoms/LoadingSkeleton";
+export { Divider } from "./atoms/Divider";
+export { ProductGrid } from "./ProductGrid";
 
 /* ============================================================================
    Core UI Components

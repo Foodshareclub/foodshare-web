@@ -16,46 +16,45 @@ const nextConfig: NextConfig = {
   // HTML-limited bots that cannot execute JavaScript
   // These bots receive blocking metadata instead of streaming metadata
   // to ensure they always get complete meta tags in <head>
-  // Must be a RegExp pattern matching User-Agent strings
   htmlLimitedBots:
     /Googlebot|Bingbot|Yandex|YandexBot|DuckDuckBot|Slurp|Baiduspider|facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Applebot|PinterestBot|Discordbot|GPTBot|ChatGPT-User|PerplexityBot|Google-Extended|anthropic-ai|CCBot/,
 
-  // cacheComponents disabled — requires further React 19 compatibility testing
-  cacheComponents: false,
+  // Enable incremental static regeneration (ISR) with cacheComponents
+  cacheComponents: true,
 
-  // Custom cache life profiles for "use cache" / cacheLife() in data layer
+  // Full caching profile — revalidation times per data layer resource
   cacheLife: {
-    // Short-lived (real-time data)
-    short: { stale: 60, revalidate: 30, expire: 300 },
-    // Products cache - 60s revalidation
+    // Short-lived (real-time data, chat, notifications)
+    short: { stale: 30, revalidate: 30, expire: 300 },
+    // Products cache — 60s revalidation (frequently updated inventory)
     products: { stale: 300, revalidate: 60, expire: 3600 },
-    // Product detail - 120s revalidation
+    // Product detail — 120s revalidation
     "product-detail": { stale: 300, revalidate: 120, expire: 3600 },
-    // Product locations - 300s revalidation
+    // Product locations — 300s revalidation
     "product-locations": { stale: 300, revalidate: 300, expire: 3600 },
-    // Profiles - 300s revalidation
+    // Profiles — 300s revalidation
     profiles: { stale: 300, revalidate: 300, expire: 3600 },
-    // Profile stats - 600s revalidation
+    // Profile stats — 600s revalidation
     "profile-stats": { stale: 300, revalidate: 600, expire: 7200 },
-    // Challenges - 300s revalidation
+    // Challenges — 300s revalidation
     challenges: { stale: 300, revalidate: 300, expire: 3600 },
-    // Challenge leaderboard - 120s revalidation
+    // Challenge leaderboard — 120s revalidation
     "challenge-leaderboard": { stale: 300, revalidate: 120, expire: 3600 },
-    // Forum - 120s revalidation
+    // Forum threads — 120s revalidation
     forum: { stale: 300, revalidate: 120, expire: 3600 },
-    // Chat - 30s revalidation (real-time)
+    // Chat — 30s revalidation (real-time)
     chat: { stale: 30, revalidate: 30, expire: 300 },
-    // Admin stats - 300s revalidation
+    // Admin stats — 300s revalidation
     "admin-stats": { stale: 300, revalidate: 300, expire: 3600 },
-    // Email system - 60s revalidation
+    // Email system — 60s revalidation
     email: { stale: 60, revalidate: 60, expire: 600 },
-    // Post activity - 60s revalidation
+    // Post activity — 60s revalidation
     "post-activity": { stale: 60, revalidate: 60, expire: 600 },
-    // Long-lived (rarely changing)
+    // Long-lived (rarely changing, evergreen content)
     long: { stale: 3600, revalidate: 3600, expire: 86400 },
   },
 
-  // Set Turbopack root to silence monorepo lockfile warning
+  // WGSL shaders for GPU-accelerated features (if enabled)
   turbopack: {
     root: __dirname,
     rules: {
@@ -66,82 +65,16 @@ const nextConfig: NextConfig = {
     },
   },
 
-  experimental: {
-    // Optimize package imports for better tree-shaking
-    optimizePackageImports: [
-      "@radix-ui/react-avatar",
-      "@radix-ui/react-checkbox",
-      "@radix-ui/react-dialog",
-      "@radix-ui/react-dropdown-menu",
-      "@radix-ui/react-popover",
-      "@radix-ui/react-progress",
-      "@radix-ui/react-radio-group",
-      "@radix-ui/react-scroll-area",
-      "@radix-ui/react-select",
-      "@radix-ui/react-separator",
-      "@radix-ui/react-slider",
-      "@radix-ui/react-slot",
-      "@radix-ui/react-switch",
-      "@radix-ui/react-tabs",
-      "@radix-ui/react-tooltip",
-      "react-icons",
-      "framer-motion",
-      "leaflet",
-      "lucide-react",
-    ],
-
-    // Enable Web Vitals attribution for debugging
-    webVitalsAttribution: ["CLS", "FCP", "FID", "INP", "LCP", "TTFB"],
+  // Custom webpack rules for legacy support
+  webpack: (config) => {
+    // Add your custom webpack configuration here
+    return config;
   },
 
-  // Server-only packages (top-level in Next.js 15)
-  serverExternalPackages: [
-    "@aws-sdk/client-ses",
-    "@getbrevo/brevo",
-    "openai",
-    "duckdb",
-    "duckdb-async",
-  ],
-
-  // Enhanced image optimization
-  images: {
-    remotePatterns: [
-      // Self-hosted storage + legacy cloud host (rows not yet rewritten)
-      { protocol: "https", hostname: "api.foodshare.club" },
-      { protocol: "https", hostname: "iazmjdjwnkilycbjwpzp.supabase.co" },
-      // Local development
-      { protocol: "http", hostname: "localhost" },
-      { protocol: "https", hostname: "*.supabase.co" },
-    ],
-    formats: ["image/avif", "image/webp"],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 2592000, // 30 days - images rarely change
-    dangerouslyAllowSVG: true,
-    contentDispositionType: "attachment",
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-  },
-  // Build insights and logging
-  logging: {
-    fetches: {
-      fullUrl: true,
-    },
-  },
-
-  // Compression
-  compress: true,
-
-  // Production optimization - no source maps in production
-  productionBrowserSourceMaps: false,
-
-  // Output standalone for Docker/container deployments
-  output: process.env.BUILD_STANDALONE === "true" ? "standalone" : undefined,
-
-  // Redirects — 308 permanent for SEO reindex to agnostic /listing/[id]-[slug]
+  // Custom redirects — 308 permanent for SEO reindex to agnostic /product/[id]-[slug]
   async redirects() {
     return [
-      // /food/:id handled by page.tsx with slug-aware 308 (single hop to /product/123-slug), not here
-      // Agnostic product is canonical — /listing/* is deprecated after rename
+      // Legacy /listing/* routes → /product/:id* (single hop to agnostic product)
       {
         source: "/listing/:id*",
         destination: "/product/:id*",
@@ -153,7 +86,7 @@ const nextConfig: NextConfig = {
         destination: "/product/:id*",
         permanent: true,
       },
-      // Type-prefixed detail aliases → agnostic product (category keyword now in slug, not path)
+      // Type-prefixed detail aliases → agnostic product (slug now contains category)
       {
         source: "/thing/:id*",
         destination: "/product/:id*",
@@ -224,7 +157,7 @@ const nextConfig: NextConfig = {
   },
 
   // Rewrites for clean category URLs
-  // NOTE: type values must match database post_type values (singular forms)
+  // Type values must match database post_type values (singular forms)
   async rewrites() {
     return [
       // Category listing rewrites: /:type -> /food?type=:type
@@ -298,7 +231,7 @@ const nextConfig: NextConfig = {
   // Security headers
   async headers() {
     return [
-      // Cross-origin isolation for MotherDuck WASM (admin analytics sync only)
+      // Cross-origin isolation for MotherDuck/WASM analytics (admin only)
       {
         source: "/admin/analytics/:path*",
         headers: [
@@ -338,6 +271,7 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Public routes - comprehensive headers
       {
         source: "/(.*)",
         headers: [
@@ -369,57 +303,24 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=(self)",
           },
-          {
-            key: "Content-Security-Policy",
-            // Note: Next.js requires 'unsafe-inline' for hydration scripts
-            // 'strict-dynamic' would require nonce-based CSP which needs Next.js experimental config
-            // This CSP still provides strong protection via other directives
-            value: [
-              "default-src 'self'",
-              // Both prod and dev need unsafe-inline for Next.js hydration
-              // Production omits unsafe-eval for better security
-              process.env.NODE_ENV === "production"
-                ? "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://appleid.cdn-apple.com https://static.cloudflareinsights.com"
-                : "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.googletagmanager.com https://www.google-analytics.com https://appleid.cdn-apple.com https://static.cloudflareinsights.com",
-              "worker-src 'self' blob:",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "img-src 'self' data: blob: https://*.supabase.co https://api.foodshare.club https://cdn.foodshare.club https://*.r2.cloudflarestorage.com https://*.openstreetmap.org https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://firebasestorage.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com",
-              "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.foodshare.club wss://api.foodshare.club https://*.r2.cloudflarestorage.com https://api.openai.com wss://ws-us3.pusher.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com https://app.motherduck.com https://*.motherduck.com https://appleid.apple.com",
-              "frame-ancestors 'self'",
-              "frame-src 'self' https://appleid.apple.com",
-              "form-action 'self'",
-              "base-uri 'self'",
-              "object-src 'none'",
-              ...(process.env.NODE_ENV === "production" ? ["upgrade-insecure-requests"] : []),
-            ].join("; "),
-          },
         ],
       },
     ];
   },
 };
 
-// Sentry configuration options
+// Sentry configuration options — only in production
 const sentryWebpackPluginOptions = {
-  // Suppresses source map uploading logs during build
   silent: true,
-  // Organization and project from Sentry dashboard
   org: process.env.SENTRY_ORG || "organicnz",
   project: process.env.SENTRY_PROJECT || "foodshare-web",
-  // Auth token for uploading source maps
   authToken: process.env.SENTRY_AUTH_TOKEN,
-  // Disable Sentry in development
   disableServerWebpackPlugin: process.env.NODE_ENV !== "production",
   disableClientWebpackPlugin: process.env.NODE_ENV !== "production",
-  // Hide source maps from generated client bundles
   hideSourceMaps: true,
-  // Tunnel route to bypass ad blockers for telemetry
   tunnelRoute: "/monitoring",
-  // Webpack tree-shaking options (Note: not supported with Turbopack)
   webpack: {
     treeshake: {
-      // Automatically tree-shake Sentry logger statements to reduce bundle size
       removeDebugLogging: true,
     },
   },
