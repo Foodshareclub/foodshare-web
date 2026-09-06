@@ -295,8 +295,8 @@ export function ChallengeDeck({
                 variants={shuffleButtonVariants}
                 initial="idle"
                 animate={isShuffling ? "spinning" : "idle"}
-                whileHover="hover"
-                whileTap="tap"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleShuffle();

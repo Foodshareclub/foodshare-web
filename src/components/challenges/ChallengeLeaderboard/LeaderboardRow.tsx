@@ -28,8 +28,8 @@ export function LeaderboardRow({ user, isCurrentUser = false, onClick }: Leaderb
         isCurrentUser && "ring-2 ring-primary/50 bg-primary/5"
       )}
       variants={rowVariants}
-      whileHover="hover"
-      whileTap="tap"
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
       aria-label={`View ${displayName}'s profile. Rank ${user.rank}, ${user.completedCount} challenges completed`}
     >
