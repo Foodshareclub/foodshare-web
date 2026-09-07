@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
   // React Compiler - automatic memoization for +15-20% render performance
   reactCompiler: true,
 
+  // Standalone output for minimal container images (Dockerfile copies
+  // .next/standalone). Required for Quadlet/Podman deployment.
+  output: "standalone",
+
   // Trim client bundles: tree-shake large icon/data libs via modular imports
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns", "lodash-es"],

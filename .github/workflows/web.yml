@@ -287,7 +287,11 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
-          tags: type=raw,value=latest
+          # :latest for Quadlet convenience + :sha-XXXXXXX for digest-pinned
+          # rollbacks (see DOCKER-TO-PODMAN-MIGRATION-PLAN.md auto-update strategy)
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-,format=short
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
