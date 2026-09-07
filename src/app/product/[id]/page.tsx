@@ -32,6 +32,10 @@ function canonicalSlug(product: InitialProductStateType): string {
 const getCachedProduct = cache(async (id: number) => getProductById(id));
 
 export async function generateStaticParams(): Promise<{ id: string }[]> {
+  // Phase 7: skip live Supabase reads during stubbed CI builds — keeps
+  // `bun run build` fast and hermetic; runtime ISR/PPR still populates.
+  const { shouldStubPrerender } = await import("@/lib/build-env");
+  if (shouldStubPrerender()) return [];
   try {
     const { getPopularProductIds } = await import("@/lib/data/products");
     const ids = await getPopularProductIds(50);

@@ -14,6 +14,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { ForumPost, ForumComment } from "@/api/forumAPI";
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  // Phase 7: skip live Supabase reads during stubbed CI builds.
+  if (
+    process.env.SKIP_ENV_VALIDATION === "true" ||
+    process.env.NEXT_PHASE === "phase-production-build"
+  ) {
+    return [];
+  }
   try {
     const supabase = createCachedClient();
     const { data } = await supabase

@@ -1,3 +1,8 @@
+# RETIRED (Phase 7): Cloudflare Tunnel is the public entry point — no
+# host-level reverse proxy needed. Kept for Docker rollback path only
+# (`docker compose up -d` still references it). Quadlet cutover uses
+# foodshare-web.container + foodshare-cloudflared.container; do NOT add a
+# caddy.container. Delete after 2+ weeks of Quadlet confidence.
 {
     email {$CADDY_ACME_EMAIL}
 }

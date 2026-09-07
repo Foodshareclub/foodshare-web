@@ -18,10 +18,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  BUN_VERSION: "latest"
-  NODE_VERSION: "20"
+  BUN_VERSION: "1.4.2"
+  NODE_VERSION: "24"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: "true"
 
 jobs:
   # Combined validation job - runs lint, oxlint, biome, type-check, test in parallel
@@ -74,7 +73,7 @@ jobs:
     name: Build
     runs-on: [self-hosted, Linux]
     needs: validate
-    timeout-minutes: 15
+    timeout-minutes: 30
     outputs:
       build-artifact: build-output
     steps:
@@ -103,14 +102,17 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.next/cache
-          key: nextjs-${{ hashFiles('**/bun.lock') }}-${{ hashFiles('**/*.ts', '**/*.tsx') }}
+          key: nextjs-${{ hashFiles('bun.lock', 'next.config.ts', 'package.json') }}-${{ github.sha }}
           restore-keys: |
-            nextjs-${{ hashFiles('**/bun.lock') }}-
+            nextjs-${{ hashFiles('bun.lock', 'next.config.ts', 'package.json') }}-
+            nextjs-
 
       - name: Build
         run: bun run build
         env:
           SKIP_ENV_VALIDATION: "true"
+          NEXT_TELEMETRY_DISABLED: "1"
+          NODE_OPTIONS: "--max-old-space-size=4096"
           NEXT_PUBLIC_SUPABASE_URL: https://api.${{ secrets.SITE_DOMAIN }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -368,7 +370,7 @@ jobs:
     runs-on: [self-hosted, Linux]
     needs: docker
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-    timeout-minutes: 10
+    timeout-minutes: 15
     environment:
       name: production
     steps:
@@ -429,8 +431,15 @@ jobs:
             docker rm -f foodshare-caddy 2>/dev/null || true
             docker rm -f foodshare-cloudflared-web 2>/dev/null || true
             # Deploy (Cloudflare Tunnel + Web via compose)
+            # NOTE: Docker compose is the active deploy path + instant rollback.
+            # Quadlet cutover (foodshare-web.container) is staged in the parent
+            # orchestrator repo; once the VPS enables those units this step
+            # becomes `systemctl --user restart foodshare-web` after `podman pull`.
             docker compose --env-file .env.production up -d --force-recreate
             echo "Deploy complete"
+            docker compose --env-file .env.production ps
+            sleep 10
+            curl -fsS -m 20 http://127.0.0.1:3000/ > /dev/null && echo "Web health OK" || (docker compose --env-file .env.production logs --tail=50 foodshare-web; exit 1)
 
       - name: Setup Tailscale on VPS
         if: success()
