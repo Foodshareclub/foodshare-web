@@ -28,41 +28,49 @@ mock.module("@/app/actions/analytics", () => ({
   trackEvent: mock(async () => {}),
 }));
 
-mock.module("@/lib/supabase/server", () => ({
-  createClient: mock(async () => ({
-    auth: {
-      getUser: mock(async () => ({
-        data: { user: mockState.user },
-        error: mockState.authError,
-      })),
-    },
-    from: mock(() => ({
-      select: mock(() => ({
-        eq: mock(() => ({
-          single: mock(async () => ({
-            data: mockState.profile,
-            error: mockState.dbError,
-          })),
+// Shared mock client for every server-client variant. All three named exports
+// (createClient/createCachedClient/createServerClient) must exist so the mock
+// registry shape matches the real module across bun versions and shared
+// per-process mock registries when test files run in one invocation.
+const createMockServerClient = () => ({
+  auth: {
+    getUser: mock(async () => ({
+      data: { user: mockState.user },
+      error: mockState.authError,
+    })),
+  },
+  from: mock(() => ({
+    select: mock(() => ({
+      eq: mock(() => ({
+        single: mock(async () => ({
+          data: mockState.profile,
+          error: mockState.dbError,
         })),
       })),
     })),
-    rpc: mock(async (fn: string) => {
-      if (mockState.rpcError) {
-        return { data: null, error: mockState.rpcError };
-      }
-      if (fn === "create_telegram_link_token") {
-        return {
-          data: {
-            token: "test_token_abc123",
-            expires_at: new Date(Date.now() + 600000).toISOString(),
-            ttl_minutes: 10,
-          },
-          error: null,
-        };
-      }
-      return { data: { success: true }, error: null };
-    }),
   })),
+  rpc: mock(async (fn: string) => {
+    if (mockState.rpcError) {
+      return { data: null, error: mockState.rpcError };
+    }
+    if (fn === "create_telegram_link_token") {
+      return {
+        data: {
+          token: "test_token_abc123",
+          expires_at: new Date(Date.now() + 600000).toISOString(),
+          ttl_minutes: 10,
+        },
+        error: null,
+      };
+    }
+    return { data: { success: true }, error: null };
+  }),
+});
+
+mock.module("@/lib/supabase/server", () => ({
+  createClient: mock(async () => createMockServerClient()),
+  createCachedClient: mock(() => createMockServerClient()),
+  createServerClient: mock(async () => createMockServerClient()),
 }));
 
 describe("Telegram Server Actions", () => {

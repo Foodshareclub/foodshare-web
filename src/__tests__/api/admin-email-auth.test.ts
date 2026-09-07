@@ -9,15 +9,22 @@ import { describe, it, expect, beforeEach, mock } from "bun:test";
 let mockUser: { id: string } | null = null;
 let mockIsAdmin = false;
 
-// Mock Supabase server
-mock.module("@/lib/supabase/server", () => ({
-  createClient: () =>
+// Mock Supabase server — full export surface (createClient/createCachedClient/
+// createServerClient) so the mock registry shape matches the real module
+// across bun versions when test files share one process.
+mock.module("@/lib/supabase/server", () => {
+  const createMockAuthClient = () =>
     Promise.resolve({
       auth: {
         getUser: () => Promise.resolve({ data: { user: mockUser }, error: null }),
       },
-    }),
-}));
+    });
+  return {
+    createClient: createMockAuthClient,
+    createCachedClient: createMockAuthClient,
+    createServerClient: createMockAuthClient,
+  };
+});
 
 // Mock admin check
 mock.module("@/lib/data/admin-check", () => ({

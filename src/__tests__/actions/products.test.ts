@@ -108,10 +108,13 @@ const createMockSupabaseClient = () => {
   };
 };
 
-// Mock the Supabase server module BEFORE any imports
+// Mock the Supabase server module BEFORE any imports — full export surface
+// (createClient/createCachedClient/createServerClient) to match the real
+// module across bun versions when files share one mock registry.
 mock.module("@/lib/supabase/server", () => ({
   createClient: mock(() => Promise.resolve(createMockSupabaseClient())),
   createCachedClient: mock(() => createMockSupabaseClient()),
+  createServerClient: mock(() => Promise.resolve(createMockSupabaseClient())),
 }));
 
 // Import data functions from lib/data (not actions - 'use server' files can't re-export)
