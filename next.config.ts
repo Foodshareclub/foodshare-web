@@ -8,6 +8,20 @@ const nextConfig: NextConfig = {
   // React Compiler - automatic memoization for +15-20% render performance
   reactCompiler: true,
 
+  // Trim client bundles: tree-shake large icon/data libs via modular imports
+  experimental: {
+    optimizePackageImports: ["lucide-react", "date-fns", "lodash-es"],
+  },
+
+  // Remote images (avatars, listing photos) — Supabase Storage + R2 CDN
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "**.supabase.co" },
+      { protocol: "https", hostname: "**.r2.cloudflarestorage.com" },
+      { protocol: "https", hostname: "**.foodshare.club" },
+    ],
+  },
+
   // TypeScript is checked in CI (`bun run type-check`); fail builds on type errors.
   typescript: {
     ignoreBuildErrors: false,

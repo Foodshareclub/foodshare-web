@@ -3,8 +3,11 @@ import { siteConfig } from "@/lib/metadata";
 import { createCachedClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 3600;
+/**
+ * Dynamic sitemap — Cache Components mode: no legacy `revalidate`/`dynamic`
+ * segment config (incompatible with `cacheComponents`). Generated on demand;
+ * upstream Supabase reads are cached per `cacheLife` profiles in `next.config.ts`.
+ */
 
 /**
  * Dynamic sitemap for SEO

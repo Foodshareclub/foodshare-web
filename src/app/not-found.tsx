@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { BackButton } from "@/components/navigation/BackButton";
 
-export const dynamic = 'force-dynamic';
-
 export default function NotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">

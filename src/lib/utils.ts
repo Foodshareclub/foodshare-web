@@ -2,7 +2,10 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 /**
- * Utility function to merge Tailwind classes with proper precedence
+ * Utility function to merge Tailwind classes with proper precedence.
+ *
+ * Canonical implementation lives in `@/lib/cn` — this re-export keeps
+ * existing `from "@/lib/utils"` imports working during migration.
  */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

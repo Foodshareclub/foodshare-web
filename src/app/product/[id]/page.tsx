@@ -41,8 +41,6 @@ export async function generateStaticParams(): Promise<{ id: string }[]> {
   }
 }
 
-export const dynamicParams = true;
-
 /**
  * Agnostic Listing Detail — bleeding-edge SEO
  * Supports /product/123 and /product/123-slug, canonical is /product/123-slug

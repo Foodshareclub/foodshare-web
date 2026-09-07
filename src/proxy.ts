@@ -563,6 +563,13 @@ export async function proxy(request: NextRequest) {
     response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
   }
 
+  // Locale cookie (migrated from legacy `middleware.ts` — Next 16 uses `proxy.ts` only):
+  // ensure a `locale` cookie exists so server components can resolve i18n without
+  // reading the `Accept-Language` header on every request.
+  if (!request.cookies.has("locale")) {
+    response.cookies.set("locale", "en", { path: "/", sameSite: "lax" });
+  }
+
   return response;
 }
 

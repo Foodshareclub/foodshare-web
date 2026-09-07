@@ -74,3 +74,13 @@ export { iconElement } from "@/components/ui/icon";
 
 export { Sheet } from "@/components/ui/sheet";
 export { Dialog } from "@/components/ui/dialog";
+
+/* ============================================================================
+   Molecules & Organisms (atoms → molecules → organisms hierarchy)
+   ============================================================================ */
+
+export { SearchField } from "./molecules/SearchField";
+export { StatusBadge } from "./molecules/StatusBadge";
+export { UserProfileCard } from "./organisms/UserProfileCard";
+export { NavigationHeader } from "./organisms/NavigationHeader";
+export { ProductGrid as ProductGridOrganism } from "./organisms/ProductGrid";
