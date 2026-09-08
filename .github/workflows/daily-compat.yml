@@ -95,8 +95,8 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       NEXT_PUBLIC_APP_URL: https://${{ secrets.SITE_DOMAIN }}
       NEXT_PUBLIC_SITE_URL: https://${{ secrets.SITE_DOMAIN }}
-      NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN || 'https://3467e48f7cb71ccbe4b0e96b0136da1b@o4509901022691328.ingest.de.sentry.io/4511957598797904' }}
-      SENTRY_ORG: ${{ secrets.SENTRY_ORG || 'organicnz' }}
+      NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN || 'https://e52cb069f4c7e57f1284abc69548b5a4@o4512048058859520.ingest.us.sentry.io/4512048227876864' }}
+      SENTRY_ORG: ${{ secrets.SENTRY_ORG || 'organicnz-7v' }}
       SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT || 'foodshare-web' }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       SENTRY_RELEASE: ${{ github.sha }}

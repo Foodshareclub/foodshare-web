@@ -5,7 +5,7 @@ const isProd = process.env.NODE_ENV === "production";
 Sentry.init({
   dsn:
     process.env.NEXT_PUBLIC_SENTRY_DSN ||
-    "https://3467e48f7cb71ccbe4b0e96b0136da1b@o4509901022691328.ingest.de.sentry.io/4511957598797904",
+    "https://e52cb069f4c7e57f1284abc69548b5a4@o4512048058859520.ingest.us.sentry.io/4512048227876864",
   environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || "production",
   // Release links events to commits/PRs (suspect commits, resolve-on-merge).
   // Injected at build time from CI (git SHA); unset locally.
