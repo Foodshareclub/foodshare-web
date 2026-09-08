@@ -13,5 +13,9 @@ Sentry.init({
   // 100% tracing locally, 10% in prod — full-fidelity prod tracing is a
   // cost and latency liability; errors are still captured at 100%.
   tracesSampleRate: isProd ? 0.1 : 1.0,
+  // Session replay: never bulk-record (privacy + cost), always capture the
+  // replay when an error occurs — the single highest-leverage debug artifact.
+  replaysSessionSampleRate: 0,
+  replaysOnErrorSampleRate: 1.0,
   debug: false,
 });
