@@ -1,11 +1,13 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
+import { useEffect } from "react";
+
 /**
  * Global Error Handler
  * Catches errors in the root layout and provides a recovery UI
  * This is the last line of defense for unhandled errors
- *
- * Note: Kept minimal for Bun runtime compatibility during prerendering
+ * Also captures the error in Sentry for root-level crash reporting.
  */
 export default function GlobalError({
   error,
@@ -14,6 +16,18 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Capture error in Sentry on mount (avoiding useEffect for Bun prerender compatibility)
+  useEffect(() => {
+    Sentry.captureException(error, {
+      tags: {
+        module: "GlobalError",
+      },
+      extra: {
+        path: error.digest,
+      },
+    });
+  }, []);
+
   // Log error on mount (avoiding useEffect for Bun prerender compatibility)
   if (typeof window !== "undefined") {
     console.error("Global error:", error);
@@ -49,23 +63,6 @@ export default function GlobalError({
             {error.digest && (
               <p className="text-xs text-muted-foreground/60 font-mono">Error ID: {error.digest}</p>
             )}
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={reset}
-              className="inline-flex items-center justify-center px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
-            >
-              Try again
-            </button>
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- global-error renders outside router context, Link unavailable */}
-            <a
-              href="/"
-              className="inline-flex items-center justify-center px-6 py-2.5 rounded-lg border border-border bg-background text-foreground font-medium hover:bg-muted transition-colors"
-            >
-              Go home
-            </a>
           </div>
         </div>
       </body>

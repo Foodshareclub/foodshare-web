@@ -330,7 +330,7 @@ const nextConfig: NextConfig = {
 // Sentry configuration options — only in production
 const sentryWebpackPluginOptions = {
   silent: true,
-  org: process.env.SENTRY_ORG || "organicnz",
+  org: process.env.SENTRY_ORG || "organicnz-7v",
   project: process.env.SENTRY_PROJECT || "foodshare-web",
   authToken: process.env.SENTRY_AUTH_TOKEN,
   disableServerWebpackPlugin: process.env.NODE_ENV !== "production",
