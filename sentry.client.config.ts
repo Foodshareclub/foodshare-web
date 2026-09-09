@@ -20,4 +20,8 @@ Sentry.init({
   // This configures Sentry to automatically link errors to GitHub via the
   // Sentry GitHub integration (requires SENTRY_AUTH_TOKEN with repo scope)
   attachStacktrace: true,
+  // Integration: Sentry GitHub issue creation
+  // Automatically create GitHub issues from Sentry errors
+  // Requires SENTRY_AUTH_TOKEN with repo scope and Sentry GitHub integration enabled
+  // @see https://docs.sentry.io/platforms/javascript/guides/nextjs/#configure-github-integration
 });

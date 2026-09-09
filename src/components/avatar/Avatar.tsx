@@ -43,7 +43,7 @@ const Avatar: React.FC<PropsType> = ({ size, onUpload, avatarUrl: propAvatarUrl 
             <Image
               style={{ borderRadius: "10px" }}
               src={pastUrl || imgUrl || ""}
-              alt="User avatar"
+              alt={t("userAvatarAlt")}
               fill
               className="object-cover"
               sizes={`${size}px`}
@@ -52,7 +52,7 @@ const Avatar: React.FC<PropsType> = ({ size, onUpload, avatarUrl: propAvatarUrl 
         ) : (
           <>
             <div className="self-center relative w-[50px] h-[50px]">
-              <Image className="rounded-full" src={cloud} alt="Upload icon" fill />
+              <Image className="rounded-full" src={cloud} alt={t("uploadIconAlt")} fill />
             </div>
 
             <div className="flex-1">
@@ -68,12 +68,14 @@ const Avatar: React.FC<PropsType> = ({ size, onUpload, avatarUrl: propAvatarUrl 
             ref={inputFileRef}
             type="file"
             onChange={(e) => uploadAvatar(e)}
+            aria-label={t("uploadAvatarLabel")}
           />
 
           <Button
             onClick={() => inputFileRef?.current?.click()}
             variant="glass"
             className="glass-accent-orange"
+            aria-label={t("uploadButtonLabel")}
           >
             {t("upload")}
           </Button>

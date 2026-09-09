@@ -272,12 +272,14 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
-  docker:
-    name: Docker Build & Push
+  build-and-publish:
+    name: Build & Publish (Docker + Podman)
     runs-on: [self-hosted, Linux]
     needs: build
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     timeout-minutes: 30
+    outputs:
+      build-artifact: build-output
     steps:
       - uses: actions/checkout@v4
 
@@ -288,13 +290,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata for container images
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
           # :latest for Quadlet convenience + :sha-XXXXXXX for digest-pinned
-          # rollbacks (see DOCKER-TO-PODMAN-MIGRATION-PLAN.md auto-update strategy)
+          # rollouts (see DOCKER-TO-PODMAN-MIGRATION-PLAN.md auto-update strategy)
           tags: |
             type=raw,value=latest
             type=sha,prefix=sha-,format=short
@@ -302,7 +304,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - name: Set up Docker Buildx
+      - name: Set up Docker Buildx (for build only)
         uses: docker/setup-buildx-action@v3
         with:
           driver: docker-container
@@ -323,7 +325,7 @@ jobs:
             SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
             NEXT_PUBLIC_APP_URL=https://${{ secrets.SITE_DOMAIN }}
             NEXT_PUBLIC_SITE_URL=https://${{ secrets.SITE_DOMAIN }}
-            NEXT_PUBLIC_SENTRY_DSN=${{ secrets.NEXT_PUBLIC_SENTRY_DSN || 'https://e52cb069f4c7e57f1284abc69548b5a4@o4512048058859520.ingest.us.sentry.io/4512048227876864' }}
+            NEXT_PUBLIC_SENTRY_DSN=${{ secrets.NEXT_PUBLIC_SENTRY_DSN || 'https://e52cb069f4c7e57f1284abc69548b5a4@o4512048227876864' }}
             SENTRY_ORG=${{ secrets.SENTRY_ORG || 'organicnz-7v' }}
             SENTRY_PROJECT=${{ secrets.SENTRY_PROJECT || 'foodshare-web' }}
             SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -334,42 +336,81 @@ jobs:
             NEXT_PUBLIC_OAUTH_APPLE_ENABLED=${{ secrets.NEXT_PUBLIC_OAUTH_APPLE_ENABLED }}
             NEXT_PUBLIC_OAUTH_GITHUB_ENABLED=${{ secrets.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED }}
 
-  sync-translations:
-    name: Sync Translations
-    runs-on: [self-hosted, Linux]
-    needs: build
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-    steps:
-      - uses: actions/checkout@v4
+      - name: Generate Quadlet unit files
+        run: |
+          mkdir -p .github/quadlet
+          cat > .github/quadlet/foodshare-web.container << 'EOF'
+          [Container]
+          image = "ghcr.io/${{ github.repository }}:latest"
+          name = "foodshare-web"
+          port = [3000:3000]
+          restart = "always"
+          memory = "1G"
+          pids_limit = 100
+          read_only = true
+          tmpfs = ["/tmp", "/app/.next/cache"]
+          security_opt = ["no-new-privileges:true"]
+          cap_drop = ["ALL"]
+          healthcheck = ["curl -f http://localhost:3000/api/health && curl -f -I http://localhost:3000/ || exit 1"]
+          user = "nextjs:bunjs"
+          EOF
+          cat > .github/quadlet/foodshare-cloudflared-web.container << 'EOF'
+          [Container]
+          image = "cloudflare/cloudflared:latest"
+          name = "foodshare-cloudflared-web"
+          restart = "unless-stopped"
+          port = [2000:2000]
+          healthcheck = ["cloudflared --version"]
+          EOF
 
-      - uses: actions/setup-node@v4
+      - name: Tar build output
+        run: tar -cvf build-output.tar .next public messages package.json bun.lock
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          name: build-output
+          path: build-output.tar
+          retention-days: 1
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
+      - name: Check Bundle Size Budget
+        run: bun scripts/check-bundle-size.ts
 
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: bun-${{ hashFiles('bun.lock') }}-${{ runner.os }}
-          restore-keys: |
-            bun-
+    sync-translations:
+      runs-on: [self-hosted, Linux]
+      needs: build
+      if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      steps:
+        - uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+        - uses: actions/setup-node@v4
+          with:
+            node-version: ${{ env.NODE_VERSION }}
 
-      - name: Sync translations
-        continue-on-error: true
-        run: bun run translations:sync -- --verbose
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: https://api.${{ secrets.SITE_DOMAIN }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          NEXT_PUBLIC_APP_URL: https://${{ secrets.SITE_DOMAIN }}
-          NEXT_PUBLIC_SITE_URL: https://${{ secrets.SITE_DOMAIN }}
+        - uses: oven-sh/setup-bun@v2
+          with:
+            bun-version: ${{ env.BUN_VERSION }}
+
+        - name: Cache node_modules
+          uses: actions/cache@v4
+          with:
+            path: node_modules
+            key: bun-${{ hashFiles('bun.lock') }}-${{ runner.os }}
+            restore-keys: |
+              bun-
+
+        - name: Install dependencies
+          run: bun install --frozen-lockfile
+
+        - name: Sync translations
+          continue-on-error: true
+          run: bun run translations:sync -- --verbose
+          env:
+            NEXT_PUBLIC_SUPABASE_URL: https://api.${{ secrets.SITE_DOMAIN }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+            NEXT_PUBLIC_APP_URL: https://${{ secrets.SITE_DOMAIN }}
+            NEXT_PUBLIC_SITE_URL: https://${{ secrets.SITE_DOMAIN }}
 
   deploy:
     name: Deploy

@@ -1,0 +1,58 @@
+# foodshare-web.container - Quadlet unit for Podman/systemd
+# This file replaces docker-compose for the Next.js web application
+
+[Container]
+name=foodshare-web
+# Image built from the foodshare-tools GitHub Actions workflow
+image=ghcr.io/foodshareclub/foodshare-web:latest
+# Use standalone output from Next.js 16 for minimal image size
+# Built with: oven/bun multi-stage build + `bun run build --standalone`
+# See: .github/workflows/web.yml Docker build + push step
+
+# Environment variables from production .env.production
+# These should be set via Quadlet environment= or a .env file mounted at runtime
+envFILE=/etc/foodshare/foodshare-web.env
+
+# Network configuration - must be on the foodshare-web-network
+network=foodshare-web-network
+
+# Port mapping - expose port 3000
+portmap=tcp:3000:3000
+
+# Security settings for standalone Next.js output
+# Running as non-root user (recommended)
+user=nextjs:nextjs
+
+# Resource limits
+memory=1G
+pids_limit=100
+
+# Healthcheck - verify the application is running
+# Next.js standalone mode healthcheck
+healthcmd=/usr/bin/curl -f http://localhost:3000/api/health || exit 1
+healthinterval=20s
+healthtimeout=10s
+healthretries=5
+
+# Startup order - wait for Supabase/services to be ready
+# The cloudflared tunnel should be started before this container
+# Use: systemctl start foodshare-cloudflared-web before foodshare-web
+
+# Log configuration
+logdriver=json-file
+logopts max-size=10m
+logopts max-file=3
+
+# Restart policy - unless-stopped is the default
+# When the container exits, it will be restarted
+# For production, consider using a systemd timer or supervisor instead
+
+# Quadlet-specific settings
+# Ensure the container starts after network is available
+when-started=network-online.target
+
+# Note: This Quadlet unit assumes:
+# 1. The image ghcr.io/foodshareclub/foodshare-web:latest is available
+# 2. Environment variables are provided via /etc/foodshare/foodshare-web.env
+# 3. The network foodshare-web-network exists (created by Quadlet or Docker)
+# 4. The cloudflared tunnel (foodshare-cloudflared-web) is running separately
