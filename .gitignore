@@ -26,6 +26,10 @@ yarn.lock
 # env files (can opt-in for committing if needed)
 .env*
 !.env.production.example
+# Sentry env files are committable by design: DSN/org/project are public
+# client identifiers; SENTRY_AUTH_TOKEN (secret) is never stored in them.
+!.env.production.sentry
+!.env.example.sentry
 
 # typescript
 *.tsbuildinfo
