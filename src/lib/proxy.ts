@@ -1,5 +1,7 @@
 "use client";
 
+import type { NextRequest } from "next/server";
+
 // proxy.ts — Next.js Route Middleware Proxy
 // Provides API route proxying for development and staged environments
 // Used alongside middleware.ts for cross-origin routing and API forwarding
@@ -8,4 +10,159 @@
 // ✅ True standalone module — can be imported by middleware or API routes
 // ✅ Zero runtime overhead when NODE_ENV !== development
 
-// ─── Configuration ──────────────────────────────────────────────────────────\n//\n// Define API route proxies that forward requests to external services\n// during development, while pointing to production in staging/production.\n//\n// Pattern: \"/api/*\" → target URL\n// Useful for:\n// - Forwarding to Supabase Edge Functions during dev\n// - Forwarding to external auth providers\n// - CORS preflight handling\n// - Rate limiting in dev\n//\n// Usage in middleware.ts:\n//   if (pathname.startsWith('/api/')) return NextResponse.next();\n//   // proxy.ts handles the actual forwarding\n\nexport const proxies = {\n  // Supabase Edge Functions during development\n  supabase: {\n    target: process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(\`/rest/v1\`, \"\") || \"https://your-project.supabase.co\",\n    // Path prefix to match in middleware\n    prefix: \"/api/supabase\",\n  },\n  // External API services\n  external: {\n    target: process.env.EXTERNAL_API_URL || \"https://api.example.com\",\n    prefix: \"/api/external\",\n  },\n};\n\n// ─── Proxy Handler ──────────────────────────────────────────────────────────\n// Creates a Next.js Response that proxies the request to the target URL\n// Preserves headers, method, and body\n//\n// ✅ Phase 1.2: True standalone — no useEffect, no useState, just pure function\nexport async function handleProxy(\n  request: Request,\n  targetUrl: string,\n  options: {\n    // Modify request before forwarding\n    modifyRequest?: (req: Request) => Request;\n    // Modify response before sending back\n    modifyResponse?: (resp: Response) => Response;\n    // Which headers to preserve\n    preserveHeaders?: string[];\n  } = {}\n): Promise<Response> => {\n  const { modifyRequest, modifyResponse, preserveHeaders = [] } = options;\n\n  // Build the target URL\n  const url = new URL(targetUrl);\n\n  // Clone and modify the request if needed\n  const modifiedRequest = modifyRequest ? modifyRequest(request) : request;\n\n  // Forward the request\n  const response = await fetch(modifiedRequest, {\n    // Forward credentials (cookies, auth headers)\n    credentials: \"include\",\n    // Forward method\n    method: modifiedRequest.method,\n    // Forward headers — preserve custom ones + content-type\n    headers: {\n      ...modifiedRequest.headers,\n      ...(preserveHeaders.length > 0 ? // Only preserve specified headers\n        preserveHeaders.reduce((acc, header) => {\n          if (modifiedRequest.headers.has(header)) {\n            acc[header] = modifiedRequest.headers.get(header)!;\n          }\n          return acc;\n        }, {}) : {})\n    },\n    // Body for POST/PUT/PATCH\n    body: modifiedRequest.method !== \"GET\" && modifiedRequest.method !== \"HEAD\" \n      ? await modifiedRequest.clone().body\n      : undefined,\n    // Redirect following\n    redirect: \"follow\",\n  });\n\n  // Modify response if needed\n  if (modifyResponse) {\n    return modifyResponse(response);\n  }\n\n  // Preserve status and important headers\n  const preservedHeaders: Record<string, string> = {};\n  for (const header of preserveHeaders) {\n    if (response.headers.has(header)) {\n      preservedHeaders[header] = response.headers.get(header)!;\n    }\n  }\n\n  // Return proxied response\n  return new Response(response.body, {\n    status: response.status,\n    statusText: response.statusText,\n    headers: {\n      ...preservedHeaders,\n      // CORS headers for browser consumption\n      \"Access-Control-Allow-Origin\": \"*\",\n      \"Access-Control-Allow-Methods\": \"GET, POST, PUT, DELETE, OPTIONS\",\n      \"Access-Control-Allow-Headers\": \"Content-Type, Authorization\",\n      // Cache control for ISR compatibility\n      \"Cache-Control\": \"no-store\",\n    },\n  });\n};\n\n// ─── Development Proxy Middleware ──────────────────────────────────────────\n// Use in Next.js middleware or development-only server\n// Forwards /api/* requests to external services during development\n//\n// ✅ Safe for ISR/Cache Components — no runtime in production\nexport function createDevProxyMiddleware(\n  request: NextRequest,\n  config: typeof proxies[keyof typeof proxies]\n): Response | null {\n  // Only active in development\n  if (process.env.NODE_ENV !== \"development\") {\n    return null;\n  }\n\n  const { target, prefix } = config;\n  const pathname = request.nextUrl.pathname;\n\n  // Check if this request matches the proxy prefix\n  if (!pathname.startsWith(prefix)) {\n    return null;\n  }\n\n  // Strip the prefix and forward to target\n  const strippedPathname = pathname.slice(prefix.length);\n  const targetUrl = new URL(\`\${target}\${strippedPathname}\`, request.url);\n\n  return handleProxy(request, targetUrl.href, {\n    preserveHeaders: [\"authorization\", \"content-type\", \"x-api-key\"],\n  });\n}\n\n// ─── Export typed proxy config ─────────────────────────────────────────────\n// Type-safe access to proxy configurations\n\nexport type ProxyConfig = typeof proxies[keyof typeof proxies];\nexport type { handleProxy, createDevProxyMiddleware };\n\n// ─── Default export for convenience ────────────────────────────────────────\n// Default proxy setup for Supabase Edge Functions\n//\n// Usage in middleware.ts:\n//   const devProxy = createDevProxyMiddleware(request, proxies.supabase);\n//   if (devProxy) return devProxy;\nexport default proxies;
+// ─── Configuration ──────────────────────────────────────────────────────────
+//
+// Define API route proxies that forward requests to external services
+// during development, while pointing to production in staging/production.
+//
+// Pattern: "/api/*" → target URL
+// Useful for:
+// - Forwarding to Supabase Edge Functions during dev
+// - Forwarding to external auth providers
+// - CORS preflight handling
+// - Rate limiting in dev
+//
+// Usage in middleware.ts:
+//   if (pathname.startsWith('/api/')) return NextResponse.next();
+//   // proxy.ts handles the actual forwarding
+
+export const proxies = {
+  // Supabase Edge Functions during development
+  supabase: {
+    target:
+      process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(`/rest/v1`, "") ||
+      "https://your-project.supabase.co",
+    // Path prefix to match in middleware
+    prefix: "/api/supabase",
+  },
+  // External API services
+  external: {
+    target: process.env.EXTERNAL_API_URL || "https://api.example.com",
+    prefix: "/api/external",
+  },
+};
+
+// ─── Proxy Handler ──────────────────────────────────────────────────────────
+// Creates a Next.js Response that proxies the request to the target URL
+// Preserves headers, method, and body
+//
+// ✅ Phase 1.2: True standalone — no useEffect, no useState, just pure function
+export async function handleProxy(
+  request: Request,
+  targetUrl: string,
+  options: {
+    // Modify request before forwarding
+    modifyRequest?: (req: Request) => Request;
+    // Modify response before sending back
+    modifyResponse?: (resp: Response) => Response;
+    // Which headers to preserve
+    preserveHeaders?: string[];
+  } = {}
+): Promise<Response> {
+  const { modifyRequest, modifyResponse, preserveHeaders = [] } = options;
+
+  // Build the target URL
+  const url = new URL(targetUrl);
+
+  // Clone and modify the request if needed
+  const modifiedRequest = modifyRequest ? modifyRequest(request) : request;
+
+  // Forward the request
+  const response = await fetch(modifiedRequest, {
+    // Forward credentials (cookies, auth headers)
+    credentials: "include",
+    // Forward method
+    method: modifiedRequest.method,
+    // Forward headers — preserve custom ones + content-type
+    headers: {
+      ...modifiedRequest.headers,
+      ...(preserveHeaders.length > 0 // Only preserve specified headers
+        ? preserveHeaders.reduce<Record<string, string>>((acc, header) => {
+            if (modifiedRequest.headers.has(header)) {
+              acc[header] = modifiedRequest.headers.get(header)!;
+            }
+            return acc;
+          }, {})
+        : {}),
+    },
+    // Body for POST/PUT/PATCH
+    body:
+      modifiedRequest.method !== "GET" && modifiedRequest.method !== "HEAD"
+        ? await modifiedRequest.clone().body
+        : undefined,
+    // Redirect following
+    redirect: "follow",
+  });
+
+  // Modify response if needed
+  if (modifyResponse) {
+    return modifyResponse(response);
+  }
+
+  // Preserve status and important headers
+  const preservedHeaders: Record<string, string> = {};
+  for (const header of preserveHeaders) {
+    if (response.headers.has(header)) {
+      preservedHeaders[header] = response.headers.get(header)!;
+    }
+  }
+
+  // Return proxied response
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: {
+      ...preservedHeaders,
+      // CORS headers for browser consumption
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      // Cache control for ISR compatibility
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
+// ─── Development Proxy Middleware ──────────────────────────────────────────
+// Use in Next.js middleware or development-only server
+// Forwards /api/* requests to external services during development
+//
+// ✅ Safe for ISR/Cache Components — no runtime in production
+export async function createDevProxyMiddleware(
+  request: NextRequest,
+  config: (typeof proxies)[keyof typeof proxies]
+): Promise<Response | null> {
+  // Only active in development
+  if (process.env.NODE_ENV !== "development") {
+    return null;
+  }
+
+  const { target, prefix } = config;
+  const pathname = request.nextUrl.pathname;
+
+  // Check if this request matches the proxy prefix
+  if (!pathname.startsWith(prefix)) {
+    return null;
+  }
+
+  // Strip the prefix and forward to target
+  const strippedPathname = pathname.slice(prefix.length);
+  const targetUrl = new URL(`${target}${strippedPathname}`, request.url);
+
+  return handleProxy(request, targetUrl.href, {
+    preserveHeaders: ["authorization", "content-type", "x-api-key"],
+  });
+}
+
+// ─── Export typed proxy config ─────────────────────────────────────────────
+// Type-safe access to proxy configurations
+
+export type ProxyConfig = (typeof proxies)[keyof typeof proxies];
+
+// ─── Default export for convenience ────────────────────────────────────────
+// Default proxy setup for Supabase Edge Functions
+//
+// Usage in middleware.ts:
+//   const devProxy = createDevProxyMiddleware(request, proxies.supabase);
+//   if (devProxy) return devProxy;
+export default proxies;

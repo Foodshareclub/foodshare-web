@@ -12,7 +12,7 @@
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import proxies from "@/lib/proxy";
+import proxies, { handleProxy } from "@/lib/proxy";
 
 // ─── Core Constants ───────────────────────────────────────────────────────────
 
@@ -40,10 +40,10 @@ function stripLocale(path: string): string {
 // Only active when NODE_ENV === "development".
 // Uses proxy.ts configuration for target URLs and header preservation.
 
-export function createDevProxyMiddleware(
+export async function createDevProxyMiddleware(
   request: NextRequest,
   proxyConfig: (typeof proxies)[keyof typeof proxies]
-): NextResponse | null {
+): Promise<Response | null> {
   // Only active in development
   if (process.env.NODE_ENV !== "development") {
     return null;
@@ -59,16 +59,16 @@ export function createDevProxyMiddleware(
 
   // Strip the prefix and forward to target
   const strippedPathname = pathname.slice(prefix.length);
-  const targetUrl = new URL(`\${target}\${strippedPathname}`, request.url);
+  const targetUrl = new URL(`${target}${strippedPathname}`, request.url);
 
-  return proxies.handleProxy(request, targetUrl.href, {
+  return handleProxy(request, targetUrl.href, {
     preserveHeaders: ["authorization", "content-type", "x-api-key"],
   });
 }
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const stripped = stripLocale(path);
   const isPublic = PUBLIC_PATHS.some((p) => stripped.startsWith(p));
@@ -91,7 +91,7 @@ export function middleware(request: NextRequest) {
   // Try each proxy config; return the first match or null
   for (const key of Object.keys(proxies)) {
     const proxyConfig = proxies[key as keyof typeof proxies];
-    const devProxy = createDevProxyMiddleware(request, proxyConfig);
+    const devProxy = await createDevProxyMiddleware(request, proxyConfig);
     if (devProxy) {
       return devProxy;
     }

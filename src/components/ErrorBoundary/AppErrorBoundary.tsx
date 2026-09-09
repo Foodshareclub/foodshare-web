@@ -77,8 +77,16 @@ export class AppErrorBoundary extends Component<Props, State> {
 
       localStorage.setItem(`app_error_${Date.now()}`, JSON.stringify(errorLog));
 
-      // TODO: Send to your error tracking service
-      // Example: Sentry.captureException(error, { contexts: { react: errorInfo } });
+      // Forward to Sentry when configured (dynamic import keeps the
+      // boundary usable even if the SDK is not bundled on this route).
+      void import("@sentry/nextjs")
+        .then((Sentry) =>
+          Sentry.captureException(error, {
+            contexts: { react: { componentStack: errorInfo.componentStack } },
+            tags: { module: "AppErrorBoundary" },
+          })
+        )
+        .catch(() => undefined);
     } catch (e) {
       console.error("Failed to report error:", e);
     }
