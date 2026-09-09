@@ -34,14 +34,17 @@ const getCachedProduct = cache(async (id: number) => getProductById(id));
 export async function generateStaticParams(): Promise<{ id: string }[]> {
   // Phase 7: skip live Supabase reads during stubbed CI builds — keeps
   // `bun run build` fast and hermetic; runtime ISR/PPR still populates.
+  // NOTE (Cache Components): generateStaticParams must return >= 1 result,
+  // so stubbed builds prerender a single sentinel id that the page below
+  // short-circuits to notFound() without any network access.
   const { shouldStubPrerender } = await import("@/lib/build-env");
-  if (shouldStubPrerender()) return [];
+  if (shouldStubPrerender()) return [{ id: "0" }];
   try {
     const { getPopularProductIds } = await import("@/lib/data/products");
     const ids = await getPopularProductIds(50);
     return ids.map((id) => ({ id: String(id) }));
   } catch {
-    return [];
+    return [{ id: "0" }];
   }
 }
 
@@ -54,9 +57,11 @@ export default async function ListingDetailPage({ params }: PageProps) {
   const { id: idParam } = await params;
   const productId = parseId(idParam);
 
-  if (productId === null || isNaN(productId)) notFound();
+  // Real product ids are positive serials; <= 0 is the build-stub sentinel
+  // (see generateStaticParams) — never fetch for it.
+  if (productId === null || isNaN(productId) || productId <= 0) notFound();
 
-  const product = await getCachedProduct(productId);
+  const product = await getCachedProduct(productId).catch(() => null);
   if (!product) notFound();
 
   const expected = canonicalSlug(product);

@@ -15,11 +15,13 @@ import type { ForumPost, ForumComment } from "@/api/forumAPI";
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
   // Phase 7: skip live Supabase reads during stubbed CI builds.
+  // NOTE (Cache Components): must return >= 1 result; the placeholder slug
+  // renders notFound() without network (see getForumPost guard below).
   if (
     process.env.SKIP_ENV_VALIDATION === "true" ||
     process.env.NEXT_PHASE === "phase-production-build"
   ) {
-    return [];
+    return [{ slug: "__stub__" }];
   }
   try {
     const supabase = createCachedClient();
@@ -31,11 +33,12 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
 
     const results = (data ?? []).filter((p: any) => p.slug).map((p: any) => ({ slug: p.slug }));
 
-    // When using Cache Components, must return at least one result
-    return results.length > 0 ? results : [{ slug: "placeholder" }];
+    // When using Cache Components, must return at least one result.
+    // __stub__ renders notFound() without network (see guard above).
+    return results.length > 0 ? results : [{ slug: "__stub__" }];
   } catch {
-    // Return placeholder to satisfy Cache Components requirement
-    return [{ slug: "placeholder" }];
+    // Offline/empty DB fallback — same stub contract as above.
+    return [{ slug: "__stub__" }];
   }
 }
 
@@ -45,6 +48,10 @@ type PageProps = {
 
 // Wrapped with cache() to deduplicate calls between generateMetadata and page component
 const getForumPost = cache(async (slugOrId: string): Promise<ForumPost | null> => {
+  // Build-stub sentinel (see generateStaticParams): short-circuit before any
+  // cookies()/network access so hermetic builds stay offline.
+  if (slugOrId === "__stub__") return null;
+
   const supabase = await createClient();
 
   // Check if it's a numeric ID
