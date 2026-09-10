@@ -38,7 +38,14 @@
     "docker:build": "docker compose build",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
-    "docker:logs": "docker compose logs -f foodshare-web"
+    "docker:logs": "docker compose logs -f foodshare-web",
+    "podman:build": "podman build -t ghcr.io/foodshareclub/foodshare-web:latest .",
+    "podman:up": "podman compose up -d || podman-compose up -d",
+    "podman:down": "podman compose down || podman-compose down",
+    "podman:logs": "podman logs -f foodshare-web",
+    "quadlet:install": "bash scripts/quadlet-install.sh",
+    "verify:sentry": "bun scripts/verify-sentry.ts",
+    "verify:quadlet": "bash scripts/verify-quadlet.sh"
   },
   "dependencies": {
     "@ai-sdk/openai": "3.0.41",

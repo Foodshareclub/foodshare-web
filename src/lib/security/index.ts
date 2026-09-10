@@ -1,43 +1,31 @@
 /**
- * Security Module
+ * Security utilities: validation, XSS protection, audit, MFA, rate-limiting,
+ * sensitive-data handling, and token management.
  *
- * Enterprise-grade security utilities.
- *
- * @module lib/security
+ * Canonical implementations live here — import from `@/lib/security`
+ * directly in new code.
  */
-
-// Rate Limiting
+export { validateEmail } from "./email";
+export { sanitizeHtml } from "./html";
+export { AuditLogService, LogAdminAction, type AuditLogEntry } from "./auditLog";
+export {
+  MFAService,
+  checkAdminMFARequired,
+  validateAdminAAL2,
+  type MFAMethod,
+  type AALLevel,
+  type MFAConfiguration,
+  type MFAChallenge,
+  type MFAVerificationResult,
+  type MFASession,
+} from "./mfa";
 export {
   checkRateLimit,
   requireRateLimit,
   withRateLimit,
+  type RateLimitType,
+  type RateLimitResult,
 } from "./rateLimit";
-export type { RateLimitType, RateLimitResult } from "./rateLimit";
-
-// MFA
-export * from "./mfa";
-
-// Audit Logging
-export * from "./auditLog";
-
-// Token Management
-export {
-  TokenManager,
-  getTokenManager,
-  getAccessToken,
-  getAuthHeader,
-  refreshTokenIfNeeded,
-  startTokenManager,
-  stopTokenManager,
-} from "./token-manager";
-export type {
-  TokenInfo,
-  TokenManagerConfig,
-  TokenEventType,
-  TokenEvent,
-} from "./token-manager";
-
-// Sensitive Data
 export {
   DEFAULT_SENSITIVE_FIELDS,
   isSensitiveField,
@@ -54,5 +42,18 @@ export {
   sanitizeRequestBody,
   sanitizeResponse,
   createSanitizedFetch,
+  type SensitiveDataConfig,
 } from "./sensitive-data";
-export type { SensitiveDataConfig } from "./sensitive-data";
+export {
+  TokenManager,
+  getTokenManager,
+  getAccessToken,
+  getAuthHeader,
+  refreshTokenIfNeeded,
+  startTokenManager,
+  stopTokenManager,
+  type TokenInfo,
+  type TokenManagerConfig,
+  type TokenEventType,
+  type TokenEvent,
+} from "./token-manager";

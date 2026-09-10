@@ -273,7 +273,7 @@ jobs:
           retention-days: 14
 
   build-and-publish:
-    name: Build & Publish (Docker + Podman)
+    name: Build & Publish (OCI image for Podman/Quadlet)
     runs-on: [self-hosted, Linux]
     needs: build
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
@@ -336,32 +336,27 @@ jobs:
             NEXT_PUBLIC_OAUTH_APPLE_ENABLED=${{ secrets.NEXT_PUBLIC_OAUTH_APPLE_ENABLED }}
             NEXT_PUBLIC_OAUTH_GITHUB_ENABLED=${{ secrets.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED }}
 
-      - name: Generate Quadlet unit files
+      - name: Validate Quadlet units (single source of truth)
         run: |
-          mkdir -p .github/quadlet
-          cat > .github/quadlet/foodshare-web.container << 'EOF'
-          [Container]
-          image = "ghcr.io/${{ github.repository }}:latest"
-          name = "foodshare-web"
-          port = [3000:3000]
-          restart = "always"
-          memory = "1G"
-          pids_limit = 100
-          read_only = true
-          tmpfs = ["/tmp", "/app/.next/cache"]
-          security_opt = ["no-new-privileges:true"]
-          cap_drop = ["ALL"]
-          healthcheck = ["curl -f http://localhost:3000/api/health && curl -f -I http://localhost:3000/ || exit 1"]
-          user = "nextjs:bunjs"
-          EOF
-          cat > .github/quadlet/foodshare-cloudflared-web.container << 'EOF'
-          [Container]
-          image = "cloudflare/cloudflared:latest"
-          name = "foodshare-cloudflared-web"
-          restart = "unless-stopped"
-          port = [2000:2000]
-          healthcheck = ["cloudflared --version"]
-          EOF
+          bash scripts/verify-quadlet.sh
+          if command -v /usr/libexec/podman/quadlet >/dev/null 2>&1; then
+            for unit in foodshare-web.container foodshare-cloudflared-web.container foodshare-web-network.network; do
+              /usr/libexec/podman/quadlet --dryrun "$PWD/$unit" >/dev/null && echo "quadlet OK: $unit"
+            done
+          else
+            echo "quadlet binary not on runner — static checks passed"
+          fi
+
+      - name: Create Sentry release (suspect-commits → issues/PRs)
+        if: env.SENTRY_AUTH_TOKEN != ''
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG || 'organicnz-7v' }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT || 'foodshare-web' }}
+        uses: getsentry/action-release@v1
+        with:
+          environment: production
+          version: ${{ github.sha }}
 
       - name: Tar build output
         run: tar -cvf build-output.tar .next public messages package.json bun.lock
@@ -376,46 +371,46 @@ jobs:
       - name: Check Bundle Size Budget
         run: bun scripts/check-bundle-size.ts
 
-    sync-translations:
-      runs-on: [self-hosted, Linux]
-      needs: build
-      if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-      steps:
-        - uses: actions/checkout@v4
+  sync-translations:
+    runs-on: [self-hosted, Linux]
+    needs: build
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    steps:
+      - uses: actions/checkout@v4
 
-        - uses: actions/setup-node@v4
-          with:
-            node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
-        - uses: oven-sh/setup-bun@v2
-          with:
-            bun-version: ${{ env.BUN_VERSION }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
 
-        - name: Cache node_modules
-          uses: actions/cache@v4
-          with:
-            path: node_modules
-            key: bun-${{ hashFiles('bun.lock') }}-${{ runner.os }}
-            restore-keys: |
-              bun-
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: bun-${{ hashFiles('bun.lock') }}-${{ runner.os }}
+          restore-keys: |
+            bun-
 
-        - name: Install dependencies
-          run: bun install --frozen-lockfile
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
 
-        - name: Sync translations
-          continue-on-error: true
-          run: bun run translations:sync -- --verbose
-          env:
-            NEXT_PUBLIC_SUPABASE_URL: https://api.${{ secrets.SITE_DOMAIN }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-            SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-            NEXT_PUBLIC_APP_URL: https://${{ secrets.SITE_DOMAIN }}
-            NEXT_PUBLIC_SITE_URL: https://${{ secrets.SITE_DOMAIN }}
+      - name: Sync translations
+        continue-on-error: true
+        run: bun run translations:sync -- --verbose
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://api.${{ secrets.SITE_DOMAIN }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_APP_URL: https://${{ secrets.SITE_DOMAIN }}
+          NEXT_PUBLIC_SITE_URL: https://${{ secrets.SITE_DOMAIN }}
 
   deploy:
     name: Deploy
     runs-on: [self-hosted, Linux]
-    needs: docker
+    needs: build-and-publish
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     timeout-minutes: 15
     environment:
@@ -470,24 +465,24 @@ jobs:
             printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_ANON_KEY=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\nSITE_DOMAIN=%s\nCLOUDFLARE_TUNNEL_TOKEN=%s\nNEXT_PUBLIC_APP_URL=%s\nNEXT_PUBLIC_SITE_URL=%s\nNEXT_PUBLIC_SENTRY_DSN=%s\nSENTRY_ORG=%s\nSENTRY_PROJECT=%s\nSENTRY_RELEASE=%s\nNEXT_PUBLIC_SENTRY_RELEASE=%s\nNEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=%s\nNEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED=%s\nNEXT_PUBLIC_OAUTH_APPLE_ENABLED=%s\nNEXT_PUBLIC_OAUTH_GITHUB_ENABLED=%s\n' \
               "$NEXT_PUBLIC_SUPABASE_URL" "$NEXT_PUBLIC_SUPABASE_ANON_KEY" "$SUPABASE_SERVICE_ROLE_KEY" "$SITE_DOMAIN" "$CLOUDFLARE_TUNNEL_TOKEN" "$NEXT_PUBLIC_APP_URL" "$NEXT_PUBLIC_SITE_URL" "$NEXT_PUBLIC_SENTRY_DSN" "$SENTRY_ORG" "$SENTRY_PROJECT" "$SENTRY_RELEASE" "$SENTRY_RELEASE" "$NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED" "$NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED" "$NEXT_PUBLIC_OAUTH_APPLE_ENABLED" "$NEXT_PUBLIC_OAUTH_GITHUB_ENABLED" > .env.production && cp .env.production .env
 
-            # GHCR Login and pull
+            # GHCR login + pull via Podman (OCI image built in build-and-publish)
+            echo "$GITHUB_TOKEN" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+            podman pull ghcr.io/${REPO_LOWER}:latest
 
-            echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker pull ghcr.io/${REPO_LOWER}:latest
-
-            # Remove old manually-created containers if they exist outside compose
-            docker rm -f foodshare-caddy 2>/dev/null || true
-            docker rm -f foodshare-cloudflared-web 2>/dev/null || true
-            # Deploy (Cloudflare Tunnel + Web via compose)
-            # NOTE: Docker compose is the active deploy path + instant rollback.
-            # Quadlet cutover (foodshare-web.container) is staged in the parent
-            # orchestrator repo; once the VPS enables those units this step
-            # becomes `systemctl --user restart foodshare-web` after `podman pull`.
-            docker compose --env-file .env.production up -d --force-recreate
+            # Deploy via Quadlet: install canonical units as user systemd services
+            mkdir -p ~/.config/containers/systemd
+            cp foodshare-web.container foodshare-cloudflared-web.container foodshare-web-network.network ~/.config/containers/systemd/
+            # Quadlet reads env from /etc/foodshare/foodshare-web.env — install it
+            sudo mkdir -p /etc/foodshare
+            sudo cp .env.production /etc/foodshare/foodshare-web.env
+            sudo chmod 600 /etc/foodshare/foodshare-web.env
+            systemctl --user daemon-reload
+            systemctl --user enable --now foodshare-web-network foodshare-web foodshare-cloudflared-web
+            systemctl --user restart foodshare-web foodshare-cloudflared-web
             echo "Deploy complete"
-            docker compose --env-file .env.production ps
+            systemctl --user is-active foodshare-web foodshare-cloudflared-web
             sleep 10
-            curl -fsS -m 20 http://127.0.0.1:3000/ > /dev/null && echo "Web health OK" || (docker compose --env-file .env.production logs --tail=50 foodshare-web; exit 1)
+            curl -fsS -m 20 http://127.0.0.1:3000/api/health > /dev/null && echo "Web health OK" || (systemctl --user status foodshare-web --no-pager; podman logs --tail=50 foodshare-web; exit 1)
 
       - name: Setup Tailscale on VPS
         if: success()

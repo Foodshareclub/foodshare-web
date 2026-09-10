@@ -1,0 +1,9 @@
+# foodshare-web Quadlet network — created once via systemctl --user start.
+[Unit]
+Description=FoodShare web network
+
+[Network]
+Label=app=foodshare-web
+
+[Install]
+WantedBy=default.target

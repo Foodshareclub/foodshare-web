@@ -11,7 +11,7 @@ export { navigatePhotosObject } from "@/utils/navigatePhotosObject";
 export { navigationActionsSVG } from "@/utils/navigationActions";
 export { settingsInfoArray } from "@/utils/settingsInfoArray";
 
-// Storage Error Handler
+// Storage Error Handler (canonical: `@/lib/errors`)
 export {
   detectStorageError,
   testStorageAvailability,
@@ -19,7 +19,7 @@ export {
   logStorageError,
   type StorageErrorType,
   type StorageErrorInfo,
-} from "@/lib/errors/storage-handler";
+} from "@/lib/errors";
 
 // Mock Data
 export { teamMockArray } from "./mockArray";

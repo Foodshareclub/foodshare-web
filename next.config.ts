@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
   // React Compiler - automatic memoization for +15-20% render performance
   reactCompiler: true,
 
+  // Don't leak framework fingerprinting header (security + bytes)
+  poweredByHeader: false,
+
+  // Keep native binary deps external to the server bundle (smaller images)
+  serverExternalPackages: ["sharp"],
+
   // Standalone output for minimal container images (Dockerfile copies
   // .next/standalone). Required for Quadlet/Podman deployment.
   output: "standalone",

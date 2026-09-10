@@ -16,7 +16,7 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  // Capture error in Sentry on mount (avoiding useEffect for Bun prerender compatibility)
+  // Capture error in Sentry (re-runs if a different error replaces this one).
   useEffect(() => {
     Sentry.captureException(error, {
       tags: {
@@ -26,7 +26,7 @@ export default function GlobalError({
         path: error.digest,
       },
     });
-  }, []);
+  }, [error]);
 
   // Log error on mount (avoiding useEffect for Bun prerender compatibility)
   if (typeof window !== "undefined") {
@@ -63,6 +63,13 @@ export default function GlobalError({
             {error.digest && (
               <p className="text-xs text-muted-foreground/60 font-mono">Error ID: {error.digest}</p>
             )}
+            <button
+              type="button"
+              onClick={reset}
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              Try again
+            </button>
           </div>
         </div>
       </body>

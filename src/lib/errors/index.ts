@@ -65,6 +65,16 @@ export { createApiError, isApiError, getUserMessage, isRetryable, generateReques
 // Supabase Error Mapping
 export { mapSupabaseError, isSupabaseError } from "./supabase";
 
+// Storage Error Handling (Supabase Storage availability + recovery)
+export {
+  detectStorageError,
+  testStorageAvailability,
+  clearSupabaseStorage,
+  logStorageError,
+  type StorageErrorType,
+  type StorageErrorInfo,
+} from "./storage-handler";
+
 // Auth Errors
 export {
   AUTH_ERRORS,

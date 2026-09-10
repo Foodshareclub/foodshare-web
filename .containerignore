@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.github
+.env*
+!.env.production.example
+scripts/
+coverage/
+playwright-report/
+test-results/
+*.md
+.DS_Store
+.turbo
+.eslintcache
+bundle-report.html
