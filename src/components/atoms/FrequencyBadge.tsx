@@ -52,7 +52,7 @@ export const FrequencyBadge = ({
   size = "md",
   className,
   "aria-label": ariaLabel,
-  ...props
+  ..._props
 }: FrequencyBadgeProps) => {
   const classes = cn(
     "inline-flex items-center rounded-full border gap-1.5",

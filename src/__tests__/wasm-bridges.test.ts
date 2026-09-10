@@ -8,11 +8,7 @@ import {
   calculateHybridScore,
   calculateDistanceDecay,
 } from "@/lib/wasm-search";
-import {
-  calculateHaversineDistance,
-  filterItemsWithinRadius,
-  parsePostGisLocation,
-} from "@/lib/wasm-geo";
+import { calculateHaversineDistance } from "@/lib/wasm-geo";
 import {
   compressBrotli,
   decompressBrotliString,

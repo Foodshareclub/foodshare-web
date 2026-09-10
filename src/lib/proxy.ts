@@ -61,8 +61,8 @@ export async function handleProxy(
 ): Promise<Response> {
   const { modifyRequest, modifyResponse, preserveHeaders = [] } = options;
 
-  // Build the target URL
-  const url = new URL(targetUrl);
+  // Build and validate the target URL
+  const _url = new URL(targetUrl);
 
   // Clone and modify the request if needed
   const modifiedRequest = modifyRequest ? modifyRequest(request) : request;
