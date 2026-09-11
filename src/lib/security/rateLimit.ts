@@ -4,7 +4,6 @@
  */
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { headers } from "next/headers";
 
 // Create Redis client (uses UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN env vars)
 const redis = new Redis({
@@ -51,9 +50,12 @@ export type RateLimitType = keyof typeof limiters;
 
 /**
  * Get client identifier for rate limiting
+ * Uses dynamic import of `next/headers` to avoid Turbopack/PPR build errors
  */
 async function getClientIdentifier(): Promise<string> {
-  const headersList = await headers();
+  // Lazy-import next/headers only at runtime in Server context
+  const { headers: nextHeaders } = await import("next/headers");
+  const headersList: any = await nextHeaders();
 
   // Try to get real IP from various headers
   const forwardedFor = headersList.get("x-forwarded-for");
@@ -89,7 +91,7 @@ export async function checkRateLimit(
   }
 
   const id = identifier || (await getClientIdentifier());
-  const limiter = limiters[type];
+  const limiter = limiters[type] || limiters.standard;
 
   const { success, limit, remaining, reset } = await limiter.limit(id);
 

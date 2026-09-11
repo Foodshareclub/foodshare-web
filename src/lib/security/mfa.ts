@@ -12,8 +12,8 @@
  * @module lib/security/mfa
  */
 
-import { supabase } from '@/lib/supabase/client';
-import { createLogger } from '@/lib/logger';
+import { supabase } from "@/lib/supabase/client";
+import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("MFAService");
 
@@ -21,8 +21,8 @@ const logger = createLogger("MFAService");
 // Types
 // ============================================================================
 
-export type MFAMethod = 'sms' | 'email' | 'both';
-export type AALLevel = 'aal1' | 'aal2';
+export type MFAMethod = "sms" | "email" | "both";
+export type AALLevel = "aal1" | "aal2";
 
 export interface MFAConfiguration {
   id: string;
@@ -93,9 +93,9 @@ export class MFAService {
    */
   static async isMFAEnabled(profileId: string): Promise<boolean> {
     const { data, error } = await supabase
-      .from('mfa_configuration')
-      .select('is_mfa_enabled')
-      .eq('profile_id', profileId)
+      .from("mfa_configuration")
+      .select("is_mfa_enabled")
+      .eq("profile_id", profileId)
       .single();
 
     if (error || !data) return false;
@@ -106,7 +106,7 @@ export class MFAService {
    * Check if user requires MFA (admins always require it)
    */
   static async requiresMFA(profileId: string): Promise<boolean> {
-    const { data, error } = await supabase.rpc('requires_mfa', {
+    const { data, error } = await supabase.rpc("requires_mfa", {
       p_profile_id: profileId,
     });
 
@@ -122,16 +122,16 @@ export class MFAService {
    * Get current Authenticator Assurance Level
    */
   static async getCurrentAAL(profileId: string): Promise<AALLevel> {
-    const { data, error } = await supabase.rpc('get_current_aal', {
+    const { data, error } = await supabase.rpc("get_current_aal", {
       p_profile_id: profileId,
     });
 
     if (error) {
       logger.error("Error getting AAL", error);
-      return 'aal1';
+      return "aal1";
     }
 
-    return (data as AALLevel) || 'aal1';
+    return (data as AALLevel) || "aal1";
   }
 
   /**
@@ -139,9 +139,9 @@ export class MFAService {
    */
   static async getConfiguration(profileId: string): Promise<MFAConfiguration | null> {
     const { data, error } = await supabase
-      .from('mfa_configuration')
-      .select('*')
-      .eq('profile_id', profileId)
+      .from("mfa_configuration")
+      .select("*")
+      .eq("profile_id", profileId)
       .single();
 
     if (error) {
@@ -156,17 +156,14 @@ export class MFAService {
    * Create MFA verification challenge
    * This generates a code and sends it via SMS or Email
    */
-  static async createChallenge(
-    profileId: string,
-    method: 'sms' | 'email'
-  ): Promise<MFAChallenge> {
+  static async createChallenge(profileId: string, method: "sms" | "email"): Promise<MFAChallenge> {
     try {
       // Get IP address and user agent for rate limiting
       const ipAddress = await this.getClientIPAddress();
       const userAgent = navigator.userAgent;
 
       // Create challenge via database function
-      const { data, error } = await supabase.rpc('create_mfa_challenge', {
+      const { data, error } = await supabase.rpc("create_mfa_challenge", {
         p_profile_id: profileId,
         p_method: method,
         p_ip_address: ipAddress,
@@ -193,7 +190,7 @@ export class MFAService {
       logger.error("Exception creating challenge", error as Error);
       return {
         success: false,
-        error: 'Failed to create MFA challenge',
+        error: "Failed to create MFA challenge",
       };
     }
   }
@@ -207,7 +204,7 @@ export class MFAService {
     profileId: string
   ): Promise<MFAVerificationResult> {
     try {
-      const { data, error } = await supabase.rpc('verify_mfa_challenge', {
+      const { data, error } = await supabase.rpc("verify_mfa_challenge", {
         p_challenge_id: challengeId,
         p_code: code,
         p_profile_id: profileId,
@@ -236,7 +233,7 @@ export class MFAService {
       logger.error("Exception verifying challenge", error as Error);
       return {
         success: false,
-        error: 'Failed to verify MFA code',
+        error: "Failed to verify MFA code",
       };
     }
   }
@@ -252,7 +249,7 @@ export class MFAService {
     try {
       // Generate backup codes
       const { data: backupCodes, error: backupError } = await supabase.rpc(
-        'generate_backup_codes',
+        "generate_backup_codes",
         { count: 10 }
       );
 
@@ -262,17 +259,15 @@ export class MFAService {
       }
 
       // Create or update MFA configuration
-      const { error: configError } = await supabase
-        .from('mfa_configuration')
-        .upsert({
-          profile_id: profileId,
-          is_mfa_enabled: true,
-          mfa_method: method,
-          backup_codes: backupCodes as string[],
-          backup_codes_used: [],
-          mfa_enabled_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
+      const { error: configError } = await supabase.from("mfa_configuration").upsert({
+        profile_id: profileId,
+        is_mfa_enabled: true,
+        mfa_method: method,
+        backup_codes: backupCodes as string[],
+        backup_codes_used: [],
+        mfa_enabled_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
 
       if (configError) {
         logger.error("Error saving configuration", configError);
@@ -280,11 +275,8 @@ export class MFAService {
       }
 
       // If enrolling with phone, update profile
-      if (method === 'sms' && phoneNumber) {
-        await supabase
-          .from('profiles')
-          .update({ phone: phoneNumber })
-          .eq('id', profileId);
+      if (method === "sms" && phoneNumber) {
+        await supabase.from("profiles").update({ phone: phoneNumber }).eq("id", profileId);
       }
 
       return {
@@ -295,7 +287,7 @@ export class MFAService {
       logger.error("Exception enrolling MFA", error as Error);
       return {
         success: false,
-        error: 'Failed to enroll in MFA',
+        error: "Failed to enroll in MFA",
       };
     }
   }
@@ -306,12 +298,12 @@ export class MFAService {
   static async disableMFA(profileId: string): Promise<{ success: boolean; error?: string }> {
     try {
       const { error } = await supabase
-        .from('mfa_configuration')
+        .from("mfa_configuration")
         .update({
           is_mfa_enabled: false,
           updated_at: new Date().toISOString(),
         })
-        .eq('profile_id', profileId);
+        .eq("profile_id", profileId);
 
       if (error) {
         logger.error("Error disabling MFA", error);
@@ -320,15 +312,15 @@ export class MFAService {
 
       // Invalidate all active sessions
       await supabase
-        .from('mfa_sessions')
+        .from("mfa_sessions")
         .update({ is_active: false })
-        .eq('profile_id', profileId)
-        .eq('is_active', true);
+        .eq("profile_id", profileId)
+        .eq("is_active", true);
 
       return { success: true };
     } catch (error) {
       logger.error("Exception disabling MFA", error as Error);
-      return { success: false, error: 'Failed to disable MFA' };
+      return { success: false, error: "Failed to disable MFA" };
     }
   }
 
@@ -337,12 +329,12 @@ export class MFAService {
    */
   static async getActiveSession(profileId: string): Promise<MFASession | null> {
     const { data, error } = await supabase
-      .from('mfa_sessions')
-      .select('*')
-      .eq('profile_id', profileId)
-      .eq('is_active', true)
-      .gt('expires_at', new Date().toISOString())
-      .order('created_at', { ascending: false })
+      .from("mfa_sessions")
+      .select("*")
+      .eq("profile_id", profileId)
+      .eq("is_active", true)
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
       .limit(1)
       .single();
 
@@ -355,28 +347,25 @@ export class MFAService {
    */
   static async updateSessionActivity(sessionId: string): Promise<void> {
     await supabase
-      .from('mfa_sessions')
+      .from("mfa_sessions")
       .update({
         last_activity_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // Extend by 1 hour
       })
-      .eq('session_id', sessionId);
+      .eq("session_id", sessionId);
   }
 
   /**
    * Verify backup code
    */
-  static async verifyBackupCode(
-    profileId: string,
-    code: string
-  ): Promise<MFAVerificationResult> {
+  static async verifyBackupCode(profileId: string, code: string): Promise<MFAVerificationResult> {
     try {
       // Get MFA configuration
       const config = await this.getConfiguration(profileId);
       if (!config || !config.backup_codes) {
         return {
           success: false,
-          error: 'No backup codes available',
+          error: "No backup codes available",
         };
       }
 
@@ -385,48 +374,48 @@ export class MFAService {
       if (codeIndex === -1) {
         return {
           success: false,
-          error: 'Invalid backup code',
+          error: "Invalid backup code",
         };
       }
 
       if (config.backup_codes_used?.includes(code)) {
         return {
           success: false,
-          error: 'Backup code already used',
+          error: "Backup code already used",
         };
       }
 
       // Mark code as used
       const usedCodes = [...(config.backup_codes_used || []), code];
       await supabase
-        .from('mfa_configuration')
+        .from("mfa_configuration")
         .update({
           backup_codes_used: usedCodes,
           last_mfa_verification_at: new Date().toISOString(),
         })
-        .eq('profile_id', profileId);
+        .eq("profile_id", profileId);
 
       // Create MFA session
       const sessionId = crypto.randomUUID();
-      await supabase.from('mfa_sessions').insert({
+      await supabase.from("mfa_sessions").insert({
         profile_id: profileId,
         session_id: sessionId,
-        current_aal: 'aal2',
+        current_aal: "aal2",
         mfa_verified_at: new Date().toISOString(),
-        mfa_method_used: 'backup_code',
+        mfa_method_used: "backup_code",
       });
 
       return {
         success: true,
         session_id: sessionId,
-        aal: 'aal2',
+        aal: "aal2",
         verified_at: new Date().toISOString(),
       };
     } catch (error) {
       logger.error("Exception verifying backup code", error as Error);
       return {
         success: false,
-        error: 'Failed to verify backup code',
+        error: "Failed to verify backup code",
       };
     }
   }
@@ -440,51 +429,57 @@ export class MFAService {
    */
   private static async sendVerificationCode(
     profileId: string,
-    method: 'sms' | 'email',
+    method: "sms" | "email",
     code: string
   ): Promise<void> {
     try {
       // Get user details
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('email, phone, first_name')
-        .eq('id', profileId)
+        .from("profiles")
+        .select("email, phone, first_name")
+        .eq("id", profileId)
         .single();
 
       if (!profile) {
-        throw new Error('Profile not found');
+        throw new Error("Profile not found");
       }
 
-      if (method === 'email') {
+      if (method === "email") {
         // Send email via email queue
-        await supabase.from('email_queue').insert({
+        await supabase.from("email_queue").insert({
           recipient_id: profileId,
           recipient_email: profile.email,
-          email_type: 'mfa_verification',
-          subject: 'Your verification code',
+          email_type: "mfa_verification",
+          subject: "Your verification code",
           template_data: {
             first_name: profile.first_name,
             code: code,
-            expires_in: '5 minutes',
+            expires_in: "5 minutes",
           },
-          priority: 'high',
+          priority: "high",
         });
 
         logger.info("Verification code sent via email", { email: profile.email });
-      } else if (method === 'sms') {
+      } else if (method === "sms") {
         // TODO: Integrate with SMS provider (Twilio, MessageBird, etc.)
-        // For now, log the code (in production, this should send actual SMS)
-        if (process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== "production") {
           logger.debug("SMS verification code (dev mode)", { code, phone: profile.phone });
+        } else {
+          await this.sendSMSBridge(profile.phone, `Your verification code is: ${code}`);
         }
-
-        // In production, you would call an SMS API here:
-        // await this.sendSMS(profile.phone, `Your verification code is: ${code}`);
       }
     } catch (error) {
       logger.error("Error sending verification code", error as Error);
       throw error;
     }
+  }
+
+  /**
+   * Send SMS via configured provider (Twilio, MessageBird, etc.)
+   * Stub for development; wire to a real provider for production.
+   */
+  private static async sendSMSBridge(phone: string, message: string): Promise<void> {
+    logger.debug("SMS sent (dev mode)", { phone, message });
   }
 
   /**
@@ -494,9 +489,9 @@ export class MFAService {
     try {
       // In a real application, you might get this from a header set by your server
       // For now, return a placeholder
-      return '0.0.0.0';
+      return "0.0.0.0";
     } catch {
-      return '0.0.0.0';
+      return "0.0.0.0";
     }
   }
 }
@@ -520,33 +515,33 @@ export async function checkAdminMFARequired(): Promise<{
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return { required: false, currentAAL: 'aal1', isAdmin: false };
+      return { required: false, currentAAL: "aal1", isAdmin: false };
     }
 
     // Check if user is admin using user_roles table
     const { data: userRole } = await supabase
-      .from('user_roles')
-      .select('roles!inner(name)')
-      .eq('profile_id', user.id)
-      .in('roles.name', ['admin', 'superadmin'])
+      .from("user_roles")
+      .select("roles!inner(name)")
+      .eq("profile_id", user.id)
+      .in("roles.name", ["admin", "superadmin"])
       .maybeSingle();
 
     const isAdmin = !!userRole;
 
     if (!isAdmin) {
-      return { required: false, currentAAL: 'aal1', isAdmin: false };
+      return { required: false, currentAAL: "aal1", isAdmin: false };
     }
 
     // Check current AAL level
     const currentAAL = await MFAService.getCurrentAAL(user.id);
 
     // Admins need AAL2
-    const required = currentAAL !== 'aal2';
+    const required = currentAAL !== "aal2";
 
     return { required, currentAAL, isAdmin: true };
   } catch (error) {
     logger.error("Error checking admin MFA requirement", error as Error);
-    return { required: false, currentAAL: 'aal1', isAdmin: false };
+    return { required: false, currentAAL: "aal1", isAdmin: false };
   }
 }
 
@@ -562,15 +557,15 @@ export async function validateAdminAAL2(): Promise<{
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { valid: false, error: 'Not authenticated' };
+    return { valid: false, error: "Not authenticated" };
   }
 
   const currentAAL = await MFAService.getCurrentAAL(user.id);
 
-  if (currentAAL !== 'aal2') {
+  if (currentAAL !== "aal2") {
     return {
       valid: false,
-      error: 'Multi-factor authentication required for this action',
+      error: "Multi-factor authentication required for this action",
     };
   }
 
