@@ -31,7 +31,8 @@ export * from "./useDistanceWorker";
 export * from "./useProductDistanceCalculation";
 export * from "./useSearchSuggestions";
 export * from "./getAllCountries";
-export * from "./useMarkerIcon";
+// Leaflet reads window at module load. Import useMarkerIcon directly inside
+// browser-only map boundaries, never through this server-rendered barrel.
 
 // Unified Chat hooks (for realtime subscriptions)
 export * from "./useUnifiedChat";

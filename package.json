@@ -45,7 +45,8 @@
     "podman:logs": "podman logs -f foodshare-web",
     "quadlet:install": "bash scripts/quadlet-install.sh",
     "verify:sentry": "bun scripts/verify-sentry.ts",
-    "verify:quadlet": "bash scripts/verify-quadlet.sh"
+    "verify:quadlet": "bash scripts/verify-quadlet.sh",
+    "gpu:check": "bun scripts/check-gpu-backgrounds.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "3.0.41",

@@ -38,6 +38,7 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
   const [rating, setRating] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   // Auth state from Zustand
   const { isAuthenticated } = useAuth();
@@ -52,22 +53,26 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
 
     if (buttonValue === "approval pending") {
       setIsUpdating(true);
+      setUpdateError(null);
       try {
         const formData = new FormData();
         formData.set("is_active", "false");
-        if (product.images) formData.set("images", JSON.stringify(product.images));
+        formData.set("version", String(product.version ?? ""));
 
-        await updateProduct(product.id, formData);
+        const result = await updateProduct(product.id, formData);
+        if (!result.success) throw new Error(result.error.message);
 
         if (roomId && requesterId) {
           const roomFormData = new FormData();
           roomFormData.set("post_arranged_to", requesterId);
-          await updateRoom(roomId, roomFormData);
+          const roomResult = await updateRoom(roomId, roomFormData);
+          if (!roomResult.success) throw new Error(roomResult.error.message);
         }
 
         router.refresh();
       } catch (error) {
         console.error("Failed to update:", error);
+        setUpdateError(error instanceof Error ? error.message : "Could not update this listing. Please try again.");
       } finally {
         setIsUpdating(false);
       }
@@ -199,12 +204,18 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
 
         {/* Action Button */}
         <div className="mt-6">
+          {updateError && (
+            <p role="alert" className="mb-3 text-sm text-destructive">
+              {updateError}
+            </p>
+          )}
           {!isAuthenticated ? (
             <AuthenticationUserModal oneProductComponent buttonValue="Login" />
           ) : (
             <Button
               variant="glass"
               onClick={onClick}
+              disabled={isUpdating || isDisabled}
               className={`w-full uppercase font-semibold py-3 ${
                 variant === "accentGreen" ? "glass-accent-primary" : "glass-accent-orange"
               } ${isDisabled ? "opacity-50 pointer-events-none" : ""}`}

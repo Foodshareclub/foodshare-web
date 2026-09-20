@@ -1,28 +1,22 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
-import dynamic from "next/dynamic";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Menu, X } from "lucide-react";
+import { deleteProduct, updateProduct } from "@/app/actions/products";
+import { DeleteConfirmationModal } from "@/components/modals/ConfirmationModal";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { DeleteConfirmationModal } from "@/components/modals/ConfirmationModal";
-import { updateProduct, deleteProduct } from "@/app/actions/products";
-import { cn } from "@/lib/utils";
-import { isValidImageUrl } from "@/lib/image";
-import { getProductDetailUrl } from "@/utils/categoryMapping";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getPostTypeConfig } from "@/lib/constants";
+import { isValidImageUrl } from "@/lib/image";
+import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
+import { getProductDetailUrl } from "@/utils/categoryMapping";
+import { Eye, EyeOff, Menu, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import dynamic from "next/dynamic";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 
 // Lazy load the heavy modal
 const PublishListingModal = dynamic(() => import("@/components/modals/PublishListingModal"), {
@@ -49,6 +43,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Get unique post types from user's posts with counts
   const postTypes = [...new Set(posts.map((p) => p.post_type))];
@@ -57,7 +52,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
       acc[post.post_type] = (acc[post.post_type] || 0) + 1;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   );
 
   // Filter and sort posts
@@ -65,10 +60,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
     .filter((post) => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        if (
-          !post.post_name.toLowerCase().includes(query) &&
-          !post.post_description?.toLowerCase().includes(query)
-        ) {
+        if (!post.post_name.toLowerCase().includes(query) && !post.post_description?.toLowerCase().includes(query)) {
           return false;
         }
       }
@@ -112,14 +104,17 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
   };
 
   const handleToggleStatus = async (post: InitialProductStateType) => {
+    setActionError(null);
     const formData = new FormData();
     formData.set("is_active", String(!post.is_active));
+    formData.set("version", String(post.version ?? ""));
     startTransition(async () => {
       const result = await updateProduct(post.id, formData);
       if (result.success) {
         router.refresh();
       } else {
         console.error("Failed to toggle post status:", result.error);
+        setActionError(result.error.message);
       }
     });
   };
@@ -127,18 +122,15 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
   // Category navigation content - reusable for mobile and desktop
   const categoryNavContent = (onSelect: (type: string) => void) => (
     <div className="glass rounded-xl p-4">
-      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-        Categories
-      </h3>
+      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Categories</h3>
       <nav className="space-y-1">
         <button
+          type="button"
           onClick={() => onSelect("all")}
           className={cn(
             "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
             "hover:bg-muted/80",
-            filterType === "all"
-              ? "bg-primary/10 text-primary border border-primary/30"
-              : "text-foreground/80"
+            filterType === "all" ? "bg-primary/10 text-primary border border-primary/30" : "text-foreground/80",
           )}
         >
           <span className="flex items-center gap-3">
@@ -157,12 +149,13 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
 
           return (
             <button
+              type="button"
               key={type}
               onClick={() => onSelect(type)}
               className={cn(
                 "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                 "hover:bg-muted/80",
-                isActive ? cn("border", typeInfo.bgActive) : "text-foreground/80"
+                isActive ? cn("border", typeInfo.bgActive) : "text-foreground/80",
               )}
             >
               <span className="flex items-center gap-3">
@@ -181,6 +174,11 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
 
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background pt-24 pb-12">
+      {actionError && (
+        <p role="alert" className="mx-auto mb-4 max-w-7xl px-6 text-destructive">
+          {actionError}
+        </p>
+      )}
       {/* Mobile Sidebar Toggle */}
       <Button
         variant="outline"
@@ -194,7 +192,9 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
 
       {/* Mobile Overlay */}
       {isSidebarOpen && (
-        <div
+        <button
+          type="button"
+          aria-label="Close category menu"
           className="fixed inset-0 bg-black/50 z-30 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
@@ -207,7 +207,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
           "bg-background/95 backdrop-blur-lg",
           "pt-24 px-4 overflow-y-auto",
           "transform transition-transform duration-300 ease-in-out",
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         {categoryNavContent((type) => {
@@ -222,14 +222,9 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl font-bold text-foreground">My Posts</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage all your shared items and food listings
-            </p>
+            <p className="text-muted-foreground mt-1">Manage all your shared items and food listings</p>
           </div>
-          <Button
-            onClick={() => setIsCreateOpen(true)}
-            className="bg-emerald-600 hover:bg-emerald-700 gap-2"
-          >
+          <Button onClick={() => setIsCreateOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 gap-2">
             <Plus className="h-4 w-4" />
             Create New Post
           </Button>
@@ -242,9 +237,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
             <div className="text-sm text-muted-foreground">Total Posts</div>
           </div>
           <div className="glass rounded-xl p-4">
-            <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-              {activeCount}
-            </div>
+            <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{activeCount}</div>
             <div className="text-sm text-muted-foreground">Active</div>
           </div>
           <div className="glass rounded-xl p-4">
@@ -278,10 +271,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
                     className="pl-10"
                   />
                 </div>
-                <Select
-                  value={filterStatus}
-                  onValueChange={(v) => setFilterStatus(v as FilterStatus)}
-                >
+                <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as FilterStatus)}>
                   <SelectTrigger className="w-full sm:w-[140px]">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
@@ -356,11 +346,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
         {/* Modals */}
         <PublishListingModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
         {editingPost && (
-          <PublishListingModal
-            product={editingPost}
-            isOpen={!!editingPost}
-            onClose={() => setEditingPost(null)}
-          />
+          <PublishListingModal product={editingPost} isOpen={!!editingPost} onClose={() => setEditingPost(null)} />
         )}
         <DeleteConfirmationModal
           isOpen={!!deletingPost}
@@ -397,13 +383,10 @@ function PostCard({ post, onEdit, onDelete, onToggleStatus, isUpdating }: PostCa
     <div
       className={cn(
         "glass rounded-xl overflow-hidden transition-all duration-200 hover:shadow-lg",
-        !post.is_active && "opacity-60"
+        !post.is_active && "opacity-60",
       )}
     >
-      <Link
-        href={getProductDetailUrl(post.post_type, post.id)}
-        className="block relative aspect-[4/3]"
-      >
+      <Link href={getProductDetailUrl(post.post_type, post.id)} className="block relative aspect-[4/3]">
         {post.images?.length > 0 && isValidImageUrl(post.images[0]) ? (
           <Image
             src={post.images[0]}
@@ -422,9 +405,7 @@ function PostCard({ post, onEdit, onDelete, onToggleStatus, isUpdating }: PostCa
             variant={post.is_active ? "default" : "secondary"}
             className={cn(
               "text-xs",
-              post.is_active
-                ? "bg-emerald-500/90 hover:bg-emerald-500"
-                : "bg-gray-500/90 hover:bg-gray-500"
+              post.is_active ? "bg-emerald-500/90 hover:bg-emerald-500" : "bg-gray-500/90 hover:bg-gray-500",
             )}
           >
             {post.is_active ? "Active" : "Inactive"}

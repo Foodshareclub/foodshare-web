@@ -23,7 +23,7 @@ fn orbSdf(p: vec2f, center: vec2f, radius: f32) -> f32 {
 }
 
 fn softBlur(d: f32, softness: f32) -> f32 {
-  return smoothstep(softness, 0.0, d);
+  return 1.0 - smoothstep(0.0, softness, d);
 }
 
 @fragment fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
@@ -84,7 +84,9 @@ fn softBlur(d: f32, softness: f32) -> f32 {
   color += c4 * softBlur(d4, softness) * 0.14;
 
   // Scroll-responsive opacity fade at top
-  let scrollFade = 1.0 - params.scroll * 0.5;
+  let scrollFade = clamp(1.0 - params.scroll * 0.5, 0.0, 1.0);
 
-  return vec4f(color * scrollFade, 1.0);
+  // The canvas uses premultiplied alpha. Preserve the page underneath the glow.
+  let alpha = max(max(color.r, color.g), color.b) * scrollFade;
+  return vec4f(color * scrollFade, alpha);
 }
