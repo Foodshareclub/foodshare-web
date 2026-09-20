@@ -3,8 +3,8 @@
  * Centralized types for product/post data structures
  */
 
-import type { PostGISGeography, GeoJSONPoint } from "./postgis.types";
 import { parsePostGISPoint } from "@/utils/postgis";
+import type { GeoJSONPoint, PostGISGeography } from "./postgis.types";
 
 /**
  * Review type for product reviews
@@ -45,6 +45,8 @@ export type InitialProductStateType = {
   is_active: boolean;
   post_views: number;
   profile_id: string;
+  /** Database revision captured when this listing was loaded for editing. */
+  version?: number | null;
   reviews?: Array<ReviewsType>;
 };
 
@@ -77,9 +79,7 @@ export type ProductWithCoordinates = InitialProductStateType & {
  * Best practice: Use posts_with_location view which provides location_json
  * as proper GeoJSON via ST_AsGeoJSON()
  */
-export function getCoordinates(
-  product: InitialProductStateType | LocationType
-): { lat: number; lng: number } | null {
+export function getCoordinates(product: InitialProductStateType | LocationType): { lat: number; lng: number } | null {
   // Prefer location_json (GeoJSON from computed column via ST_AsGeoJSON)
   if ("location_json" in product && product.location_json) {
     const parsed = parsePostGISPoint(product.location_json);

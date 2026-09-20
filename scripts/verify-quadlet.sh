@@ -43,10 +43,10 @@ for unit in foodshare-web.container foodshare-cloudflared-web.container; do
   fi
 done
 
-# Deploy workflow must wire the real jobs and use podman deploy
+# Keep optional Quadlet assets valid; production uses its existing Docker services.
 grep -Eq "needs: build-and-publish" "$ROOT/.github/workflows/web.yml" && pass "deploy needs build-and-publish" || fail_msg "deploy still needs a non-existent job"
 grep -Eq "needs: docker" "$ROOT/.github/workflows/web.yml" && fail_msg "dangling 'needs: docker' still present" || pass "no dangling needs: docker"
-grep -Eq "podman login|podman pull" "$ROOT/.github/workflows/web.yml" && pass "deploy uses podman" || fail_msg "deploy does not use podman"
+grep -Eq "bash scripts/deploy-production.sh" "$ROOT/.github/workflows/web.yml" && pass "deploy uses the verified production rollout" || fail_msg "deploy is missing the production rollout script"
 grep -Eq "health-curl-fail" "$ROOT/.github/workflows/web.yml" && fail_msg "invalid --health-curl-fail flag still present" || pass "no invalid podman flags"
 
 if [ "$fail" -gt 0 ]; then echo "$fail check(s) failed."; exit 1; fi

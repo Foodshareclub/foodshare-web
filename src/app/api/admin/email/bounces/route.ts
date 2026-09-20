@@ -4,8 +4,9 @@
  * Returns email bounce statistics
  */
 
-import { NextResponse } from "next/server";
 import { getBounceStats } from "@/lib/data/admin-email";
+import { isPrerenderInterruption } from "@/lib/errors";
+import { NextResponse } from "next/server";
 import { requireAdmin } from "../_shared/requireAdmin";
 
 export async function GET() {
@@ -16,10 +17,10 @@ export async function GET() {
     const bounceStats = await getBounceStats();
     return NextResponse.json(bounceStats);
   } catch (error) {
+    if (isPrerenderInterruption(error)) {
+      throw error;
+    }
     console.error("[API /api/admin/email/bounces] Error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch bounce statistics" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch bounce statistics" }, { status: 500 });
   }
 }

@@ -7,10 +7,10 @@
  * cookies() cannot be called inside cached functions.
  */
 
-import { createCachedClient } from "@/lib/supabase/server";
 import { PAGINATION } from "@/lib/constants";
+import { createCachedClient } from "@/lib/supabase/server";
 import type { InitialProductStateType, LocationType } from "@/types/product.types";
-import { approximateGeoJSON } from "@/utils/postgis";
+import { approximateGeoJSON, parsePostGISPoint } from "@/utils/postgis";
 
 // Re-export types for consumers
 export type { InitialProductStateType, LocationType };
@@ -24,26 +24,28 @@ export type { InitialProductStateType, LocationType };
  * Each location is offset by ~100-200m using a deterministic algorithm
  * based on the post ID (consistent across requests)
  */
-function applyLocationPrivacy<T extends { id: number; location_json?: unknown }>(
-  products: T[]
-): T[] {
-  return products.map((item) => ({
-    ...item,
-    location_json: approximateGeoJSON(item.location_json, item.id),
-  }));
+function applyLocationPrivacy<T extends { id: number; location_json?: unknown }>(products: T[]): T[] {
+  return products.map(approximateProductLocation);
+}
+
+function approximateProductLocation<T extends { id: number; location_json?: unknown }>(product: T): T {
+  const locationJson = approximateGeoJSON(product.location_json, product.id);
+  const coordinates = parsePostGISPoint(locationJson);
+  return {
+    ...product,
+    location_json: locationJson,
+    ...("location" in product ? { location: null } : {}),
+    ...("latitude" in product ? { latitude: coordinates?.latitude ?? null } : {}),
+    ...("longitude" in product ? { longitude: coordinates?.longitude ?? null } : {}),
+  };
 }
 
 /**
  * Apply location approximation to a single product
  */
-function applyLocationPrivacySingle<T extends { id: number; location_json?: unknown }>(
-  product: T | null
-): T | null {
+function applyLocationPrivacySingle<T extends { id: number; location_json?: unknown }>(product: T | null): T | null {
   if (!product) return null;
-  return {
-    ...product,
-    location_json: approximateGeoJSON(product.location_json, product.id),
-  };
+  return approximateProductLocation(product);
 }
 
 // ============================================================================
@@ -69,10 +71,7 @@ export interface PaginationOptions {
 /**
  * Cached first page of products by type
  */
-async function getProductsFirstPageCached(
-  normalizedType: string,
-  limit: number
-): Promise<InitialProductStateType[]> {
+async function getProductsFirstPageCached(normalizedType: string, limit: number): Promise<InitialProductStateType[]> {
   const supabase = createCachedClient();
 
   // Order by id DESC for stable cursor pagination
@@ -99,7 +98,7 @@ async function getProductsFirstPageCached(
  */
 export async function getProducts(
   productType: string,
-  options?: PaginationOptions
+  options?: PaginationOptions,
 ): Promise<InitialProductStateType[]> {
   const normalizedType = productType.toLowerCase();
   const limit = options?.limit ?? PAGINATION.DEFAULT_PAGE_SIZE;
@@ -134,7 +133,7 @@ export async function getProducts(
  */
 export async function getProductsPaginated(
   productType: string,
-  options?: PaginationOptions
+  options?: PaginationOptions,
 ): Promise<PaginatedResult<InitialProductStateType>> {
   const normalizedType = productType.toLowerCase();
   const limit = options?.limit ?? PAGINATION.DEFAULT_PAGE_SIZE;
@@ -162,8 +161,7 @@ export async function getProductsPaginated(
   const items = data ?? [];
   const hasMore = items.length > limit;
   const resultItems = hasMore ? items.slice(0, limit) : items;
-  const nextCursor =
-    hasMore && resultItems.length > 0 ? resultItems[resultItems.length - 1].id : null;
+  const nextCursor = hasMore && resultItems.length > 0 ? resultItems[resultItems.length - 1].id : null;
 
   return {
     // Apply location privacy (~200m approximation) for user safety
@@ -273,7 +271,7 @@ export async function getUserProducts(userId: string): Promise<InitialProductSta
  */
 export async function searchProducts(
   searchWord: string,
-  productSearchType?: string
+  productSearchType?: string,
 ): Promise<InitialProductStateType[]> {
   const supabase = createCachedClient();
 
@@ -300,7 +298,7 @@ export async function searchProducts(
  * Get popular product IDs for static generation
  * Returns most recently created active products
  */
-export async function getPopularProductIds(limit: number = 50): Promise<number[]> {
+export async function getPopularProductIds(limit = 50): Promise<number[]> {
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
@@ -311,5 +309,5 @@ export async function getPopularProductIds(limit: number = 50): Promise<number[]
     .limit(limit);
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map((p: any) => p.id);
+  return (data ?? []).map((p: { id: number }) => p.id);
 }

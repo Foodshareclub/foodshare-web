@@ -4,7 +4,12 @@
 
 import type { HandlerContext } from "../../../_shared/api-handler.ts";
 import { noContent } from "../../../_shared/api-handler.ts";
-import { NotFoundError, ValidationError } from "../../../_shared/errors.ts";
+import {
+  AuthenticationError,
+  AuthorizationError,
+  NotFoundError,
+  ValidationError,
+} from "../../../_shared/errors.ts";
 import { logger } from "../../../_shared/logger.ts";
 import type { ListQuery } from "../schemas.ts";
 import { cache, invalidateListingCache } from "../../../_shared/cache.ts";
@@ -20,42 +25,47 @@ export async function deleteProduct(
   }
 
   if (!userId) {
-    throw new ValidationError("Authentication required");
+    throw new AuthenticationError();
   }
 
   const { data: existing, error: fetchError } = await supabase
     .from("posts")
     .select("id,profile_id")
     .eq("id", productId)
-    .single();
+    .maybeSingle();
 
-  if (fetchError || !existing) {
+  if (fetchError) throw fetchError;
+  if (!existing) {
     throw new NotFoundError("Product", productId);
   }
 
   if (existing.profile_id !== userId) {
-    throw new ValidationError("You can only delete your own products");
+    throw new AuthorizationError("You can only delete your own products");
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("posts")
     .update({
       is_active: false,
-      deleted_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     })
-    .eq("id", productId);
+    .eq("id", productId)
+    .eq("profile_id", userId)
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     logger.error("Failed to delete product", new Error(error.message));
     throw error;
   }
+  if (!data) throw new NotFoundError("Product", productId);
 
   logger.info("Product deleted", { productId, userId });
 
   invalidateListingCache(productId, userId);
   try {
     cache.clear();
-  } catch (_e) {
+  } catch {
     // ignore cache clear errors
   }
 

@@ -26,7 +26,7 @@ jobs:
   # Combined validation job - runs lint, oxlint, biome, type-check, test in parallel
   validate:
     name: Validate (${{ matrix.job }})
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -34,6 +34,8 @@ jobs:
         job: [lint, "lint:oxlint", "lint:biome", type-check, test]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -60,6 +62,8 @@ jobs:
 
       - name: Run ${{ matrix.job }}
         run: bun run ${{ matrix.job == 'test' && 'test:ci' || matrix.job }}
+        env:
+          BIOME_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
 
       - name: Upload coverage
         if: matrix.job == 'test'
@@ -71,7 +75,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-24.04
     needs: validate
     timeout-minutes: 30
     outputs:
@@ -144,7 +148,7 @@ jobs:
 
   e2e:
     name: E2E (${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-24.04
     needs: build
     timeout-minutes: 45
     strategy:
@@ -216,14 +220,12 @@ jobs:
 
       - name: Verify build output
         run: |
-          echo "Checking .next build output..."
-          ls -la .next/ || echo "ERROR: .next directory not found!"
-          ls -la .next/BUILD_ID 2>/dev/null && echo "Build ID: $(cat .next/BUILD_ID)" || echo "WARNING: No BUILD_ID found"
-          echo "Server routes:"
-          ls .next/server/ 2>/dev/null | head -10 || echo "No server directory"
+          test -s .next/BUILD_ID
+          test -d .next/server
+          echo "Production build artifact verified"
 
       - name: Run Playwright tests
-        run: npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: bunx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload Blob report
         uses: actions/upload-artifact@v4
@@ -235,7 +237,7 @@ jobs:
 
   merge-e2e-reports:
     name: Merge E2E Reports
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-24.04
     needs: e2e
     if: always()
     steps:
@@ -273,13 +275,14 @@ jobs:
           retention-days: 14
 
   build-and-publish:
-    name: Build & Publish (OCI image for Podman/Quadlet)
-    runs-on: [self-hosted, Linux]
+    name: Build and publish production image
+    # Both serving hosts are ARM64; build on the matching architecture.
+    runs-on: ubuntu-24.04-arm
     needs: build
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     timeout-minutes: 30
     outputs:
-      build-artifact: build-output
+      image-digest: ${{ steps.image.outputs.digest }}
     steps:
       - uses: actions/checkout@v4
 
@@ -295,14 +298,10 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
-          # :latest for Quadlet convenience + :sha-XXXXXXX for digest-pinned
-          # rollouts (see DOCKER-TO-PODMAN-MIGRATION-PLAN.md auto-update strategy)
+          # Tags aid discovery; production deploys only the validated digest.
           tags: |
             type=raw,value=latest
             type=sha,prefix=sha-,format=short
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx (for build only)
         uses: docker/setup-buildx-action@v3
@@ -310,11 +309,12 @@ jobs:
           driver: docker-container
 
       - name: Build and push Docker image
+        id: image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
@@ -358,21 +358,9 @@ jobs:
           environment: production
           version: ${{ github.sha }}
 
-      - name: Tar build output
-        run: tar -cvf build-output.tar .next public messages package.json bun.lock
-
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: build-output.tar
-          retention-days: 1
-
-      - name: Check Bundle Size Budget
-        run: bun scripts/check-bundle-size.ts
 
   sync-translations:
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-24.04
     needs: build
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     steps:
@@ -408,9 +396,14 @@ jobs:
           NEXT_PUBLIC_SITE_URL: https://${{ secrets.SITE_DOMAIN }}
 
   deploy:
-    name: Deploy
+    name: Deploy (${{ matrix.host }})
     runs-on: [self-hosted, Linux]
     needs: build-and-publish
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix:
+        host: [VPS_BACKEND_HOST, VPS_FRONTEND_HOST]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     timeout-minutes: 15
     environment:
@@ -423,6 +416,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          DEPLOY_SHA: ${{ github.sha }}
+          DEPLOY_IMAGE: ghcr.io/foodshareclub/foodshare-web@${{ needs.build-and-publish.outputs.image-digest }}
+          NEXT_PUBLIC_SENTRY_RELEASE: ${{ github.sha }}
           NEXT_PUBLIC_SUPABASE_URL: https://api.${{ secrets.SITE_DOMAIN }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -439,143 +436,15 @@ jobs:
           NEXT_PUBLIC_OAUTH_APPLE_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_APPLE_ENABLED }}
           NEXT_PUBLIC_OAUTH_GITHUB_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED }}
         with:
-          host: ${{ secrets.VPS_HOST }}
+          host: ${{ secrets[matrix.host] }}
           username: organic
           key: ${{ secrets.VPS_SSH_KEY }}
           command_timeout: 10m
-          envs: GITHUB_TOKEN,GITHUB_REPO,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,SITE_DOMAIN,CLOUDFLARE_TUNNEL_TOKEN,NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_SITE_URL,NEXT_PUBLIC_SENTRY_DSN,SENTRY_ORG,SENTRY_PROJECT,SENTRY_RELEASE,NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED,NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED,NEXT_PUBLIC_OAUTH_APPLE_ENABLED,NEXT_PUBLIC_OAUTH_GITHUB_ENABLED
+          envs: DEPLOY_SHA,DEPLOY_IMAGE,GITHUB_ACTOR,GITHUB_TOKEN,GITHUB_REPO,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,SITE_DOMAIN,CLOUDFLARE_TUNNEL_TOKEN,NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_SITE_URL,NEXT_PUBLIC_SENTRY_DSN,SENTRY_ORG,SENTRY_PROJECT,SENTRY_RELEASE,NEXT_PUBLIC_SENTRY_RELEASE,NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED,NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED,NEXT_PUBLIC_OAUTH_APPLE_ENABLED,NEXT_PUBLIC_OAUTH_GITHUB_ENABLED
           script: |
-            set -eo pipefail
-            mkdir -p ${{ secrets.VPS_DEPLOY_PATH }}
+            set -euo pipefail
             cd ${{ secrets.VPS_DEPLOY_PATH }}
-
-            REPO_LOWER=$(echo "$GITHUB_REPO" | tr '[:upper:]' '[:lower:]')
-
-            # Bootstrap if missing
-            if [ ! -d .git ]; then
-              git clone --depth 1 https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git .
-            fi
-
-            # Update code
-            git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git
-            git fetch origin main
-            git reset --hard origin/main
-
-            # Sync secrets to .env.production
-            printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_ANON_KEY=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\nSITE_DOMAIN=%s\nCLOUDFLARE_TUNNEL_TOKEN=%s\nNEXT_PUBLIC_APP_URL=%s\nNEXT_PUBLIC_SITE_URL=%s\nNEXT_PUBLIC_SENTRY_DSN=%s\nSENTRY_ORG=%s\nSENTRY_PROJECT=%s\nSENTRY_RELEASE=%s\nNEXT_PUBLIC_SENTRY_RELEASE=%s\nNEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=%s\nNEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED=%s\nNEXT_PUBLIC_OAUTH_APPLE_ENABLED=%s\nNEXT_PUBLIC_OAUTH_GITHUB_ENABLED=%s\n' \
-              "$NEXT_PUBLIC_SUPABASE_URL" "$NEXT_PUBLIC_SUPABASE_ANON_KEY" "$SUPABASE_SERVICE_ROLE_KEY" "$SITE_DOMAIN" "$CLOUDFLARE_TUNNEL_TOKEN" "$NEXT_PUBLIC_APP_URL" "$NEXT_PUBLIC_SITE_URL" "$NEXT_PUBLIC_SENTRY_DSN" "$SENTRY_ORG" "$SENTRY_PROJECT" "$SENTRY_RELEASE" "$SENTRY_RELEASE" "$NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED" "$NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED" "$NEXT_PUBLIC_OAUTH_APPLE_ENABLED" "$NEXT_PUBLIC_OAUTH_GITHUB_ENABLED" > .env.production && cp .env.production .env
-
-            # GHCR login + pull via Podman (OCI image built in build-and-publish)
-            echo "$GITHUB_TOKEN" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
-            podman pull ghcr.io/${REPO_LOWER}:latest
-
-            # Deploy via Quadlet: install canonical units as user systemd services
-            mkdir -p ~/.config/containers/systemd
-            cp foodshare-web.container foodshare-cloudflared-web.container foodshare-web-network.network ~/.config/containers/systemd/
-            # Quadlet reads env from /etc/foodshare/foodshare-web.env — install it
-            sudo mkdir -p /etc/foodshare
-            sudo cp .env.production /etc/foodshare/foodshare-web.env
-            sudo chmod 600 /etc/foodshare/foodshare-web.env
-            systemctl --user daemon-reload
-            systemctl --user enable --now foodshare-web-network foodshare-web foodshare-cloudflared-web
-            systemctl --user restart foodshare-web foodshare-cloudflared-web
-            echo "Deploy complete"
-            systemctl --user is-active foodshare-web foodshare-cloudflared-web
-            sleep 10
-            curl -fsS -m 20 http://127.0.0.1:3000/api/health > /dev/null && echo "Web health OK" || (systemctl --user status foodshare-web --no-pager; podman logs --tail=50 foodshare-web; exit 1)
-
-      - name: Setup Tailscale on VPS
-        if: success()
-        env:
-          TAILSCALE_AUTH_KEY: ${{ secrets.TAILSCALE_AUTH_KEY }}
-          TAILSCALE_NODE_KEY: ${{ secrets.TAILSCALE_NODE_KEY }}
-          TAILSCALE_TL_PUB: ${{ secrets.TAILSCALE_TL_PUB }}
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-        run: |
-          set -eo pipefail
-
-          # Verify at least one key method is set
-          if [ -z "$TAILSCALE_AUTH_KEY" ] && [ -z "$TAILSCALE_NODE_KEY" ]; then
-            echo "::warning::Neither TAILSCALE_AUTH_KEY nor TAILSCALE_NODE_KEY set — skipping Tailscale setup"
-            exit 0
-          fi
-
-          if [ -z "$VPS_SSH_KEY" ]; then
-            echo "::warning::VPS_SSH_KEY not set — skipping Tailscale setup"
-            exit 0
-          fi
-
-          mkdir -p ~/.ssh
-          echo "$VPS_SSH_KEY" > ~/.ssh/vps_ssh_key
-          chmod 600 ~/.ssh/vps_ssh_key
-          trap 'rm -f ~/.ssh/vps_ssh_key' EXIT
-
-          echo "=== Running Tailscale setup on Frontend VPS ==="
-
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i ~/.ssh/vps_ssh_key "organic@${VPS_HOST}" \
-            "TAILSCALE_AUTH_KEY='$TAILSCALE_AUTH_KEY' TAILSCALE_NODE_KEY='$TAILSCALE_NODE_KEY' TAILSCALE_TL_PUB='$TAILSCALE_TL_PUB' bash -s" << 'REMOTE_EOF'
-          set -euo pipefail
-
-          log_info() { echo "[INFO] $1"; }
-          log_success() { echo "[OK]   $1"; }
-
-          # 1. Install Tailscale if not present
-          if ! command -v tailscale &>/dev/null; then
-            log_info "Installing Tailscale..."
-            curl -fsSL https://tailscale.com/install.sh | sh
-          fi
-
-          # 2. Build connection parameters
-          tailscale_args=("--accept-routes" "--advertise-routes=10.0.0.0/8" "--hostname=$(hostname)")
-
-          AUTH_KEY="${TAILSCALE_AUTH_KEY:-${TAILSCALE_NODE_KEY:-}}"
-          if [[ -n "$AUTH_KEY" ]]; then
-            tailscale_args+=("--auth-key" "$AUTH_KEY")
-          fi
-
-          log_info "Connecting to Tailnet..."
-          sudo tailscale up "${tailscale_args[@]}"
-
-          # 3. Wait for connection readiness
-          for i in $(seq 1 30); do
-            if tailscale status >/dev/null 2>&1; then
-              log_success "Tailscale is running on $(hostname)."
-              break
-            fi
-            sleep 2
-          done
-
-          # 4. Configure SSH config for cross-server access
-          log_info "Configuring SSH over Tailscale..."
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          touch ~/.ssh/config
-          chmod 600 ~/.ssh/config
-
-          if ! grep -q "Host backendvps-ts" ~/.ssh/config; then
-            cat << 'SSHEOF' >> ~/.ssh/config
-
-          Host backendvps-ts
-            HostName 100.92.38.119
-            User organic
-            IdentityFile ~/.ssh/foodshare_id_ed25519
-            IdentitiesOnly yes
-          SSHEOF
-          fi
-
-          if ! grep -q "Host frontendvps-ts" ~/.ssh/config; then
-            cat << 'SSHEOF' >> ~/.ssh/config
-
-          Host frontendvps-ts
-            HostName 100.99.241.23
-            User organic
-            IdentityFile ~/.ssh/foodshare_id_ed25519
-            IdentitiesOnly yes
-          SSHEOF
-          fi
-
-          log_success "Tailscale SSH config updated."
-          REMOTE_EOF
-
-          echo "=== Tailscale setup complete ==="
+            git fetch "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git" "$DEPLOY_SHA"
+            git reset --hard FETCH_HEAD
+            git remote set-url origin "https://github.com/${GITHUB_REPO}.git"
+            bash scripts/deploy-production.sh

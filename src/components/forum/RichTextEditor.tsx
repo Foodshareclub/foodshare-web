@@ -5,10 +5,20 @@
  * Wrapper around the shared rich-text-editor component
  */
 
-import { useCallback } from "react";
 import { FeatureErrorBoundary } from "@/components/ErrorBoundary";
-import { RichTextEditor as TiptapEditor } from "@/components/ui/rich-text-editor";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
+import { useCallback } from "react";
+import { RichTextViewer } from "./RichTextViewer";
+
+const TiptapEditor = dynamic(() => import("@/components/ui/rich-text-editor").then((mod) => mod.RichTextEditor), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center border border-border rounded-lg p-8 text-sm text-muted-foreground animate-pulse">
+      Loading editor...
+    </div>
+  ),
+});
 
 type RichTextEditorProps = {
   content?: string;
@@ -32,7 +42,7 @@ export function RichTextEditor({
       // Pass empty object for json - HTML is the source of truth
       onChange?.(html, {});
     },
-    [onChange]
+    [onChange],
   );
 
   if (!editable) {
@@ -43,11 +53,12 @@ export function RichTextEditor({
           "prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-blockquote:my-2",
           "prose-headings:font-semibold prose-h2:text-xl prose-h3:text-lg",
           "border border-border rounded-lg overflow-hidden bg-background",
-          className
+          className,
         )}
         style={{ minHeight }}
-        dangerouslySetInnerHTML={{ __html: content }}
-      />
+      >
+        <RichTextViewer content={content} />
+      </div>
     );
   }
 

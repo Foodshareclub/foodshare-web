@@ -9,6 +9,8 @@
  * - User/platform identification
  */
 
+import { AsyncLocalStorage } from "node:async_hooks";
+
 /**
  * Context available throughout a request lifecycle
  */
@@ -35,9 +37,9 @@ export interface RequestContext {
   spanCount?: number;
 }
 
-// Store context for the current request
-// Note: Deno edge functions are single-threaded per request, so this is safe
-let currentContext: RequestContext | null = null;
+// Async requests interleave within the same isolate. Scope context to the
+// execution chain so another request cannot replace its user or trace ID.
+const contextStorage = new AsyncLocalStorage<RequestContext | null>();
 
 /**
  * Generate a unique request ID
@@ -115,7 +117,7 @@ export function createContext(
     metadata: {},
   };
 
-  currentContext = context;
+  contextStorage.enterWith(context);
   return context;
 }
 
@@ -124,13 +126,14 @@ export function createContext(
  * Returns null if no context has been created for this request
  */
 export function getContext(): RequestContext | null {
-  return currentContext;
+  return contextStorage.getStore() ?? null;
 }
 
 /**
  * Get context or throw if not available
  */
 export function requireContext(): RequestContext {
+  const currentContext = getContext();
   if (!currentContext) {
     throw new Error(
       "Request context not initialized. Call createContext first.",
@@ -145,6 +148,7 @@ export function requireContext(): RequestContext {
 export function updateContext(
   updates: Partial<Omit<RequestContext, "requestId" | "startTime">>,
 ): void {
+  const currentContext = getContext();
   if (!currentContext) {
     throw new Error(
       "Request context not initialized. Call createContext first.",
@@ -171,6 +175,7 @@ export function updateContext(
  * Set the authenticated user ID in context
  */
 export function setUserId(userId: string): void {
+  const currentContext = getContext();
   if (currentContext) {
     currentContext.userId = userId;
   }
@@ -180,6 +185,7 @@ export function setUserId(userId: string): void {
  * Add metadata to the current context
  */
 export function addMetadata(key: string, value: unknown): void {
+  const currentContext = getContext();
   if (currentContext) {
     currentContext.metadata[key] = value;
   }
@@ -189,6 +195,7 @@ export function addMetadata(key: string, value: unknown): void {
  * Get elapsed time since request start in milliseconds
  */
 export function getElapsedMs(): number {
+  const currentContext = getContext();
   if (!currentContext) return 0;
   return Math.round(performance.now() - currentContext.startTime);
 }
@@ -197,7 +204,7 @@ export function getElapsedMs(): number {
  * Clear the current context (call at end of request)
  */
 export function clearContext(): void {
-  currentContext = null;
+  contextStorage.enterWith(null);
 }
 
 /**
@@ -208,21 +215,14 @@ export async function withContext<T>(
   context: RequestContext,
   fn: () => Promise<T>,
 ): Promise<T> {
-  const previousContext = currentContext;
-  currentContext = context;
-
-  try {
-    return await fn();
-  } finally {
-    currentContext = previousContext;
-  }
+  return await contextStorage.run(context, fn);
 }
 
 /**
  * Get headers to propagate context to downstream services
  */
 export function getContextHeaders(): Record<string, string> {
-  const ctx = currentContext;
+  const ctx = getContext();
   if (!ctx) return {};
 
   const headers: Record<string, string> = {
@@ -243,7 +243,7 @@ export function getContextHeaders(): Record<string, string> {
 export function getResponseHeaders(
   additionalHeaders?: Record<string, string>,
 ): Record<string, string> {
-  const ctx = currentContext;
+  const ctx = getContext();
 
   return {
     "Content-Type": "application/json",
@@ -260,7 +260,7 @@ export function getResponseHeaders(
  * Create a summary object for logging
  */
 export function getContextSummary(): Record<string, unknown> {
-  const ctx = currentContext;
+  const ctx = getContext();
   if (!ctx) return {};
 
   return {
@@ -288,13 +288,9 @@ export function handleWithContext(
   service: string,
   handler: (request: Request, context: RequestContext) => Promise<Response>,
 ): (request: Request) => Promise<Response> {
-  return async (request: Request) => {
-    const ctx = createContext(request, service);
-
-    try {
-      return await handler(request, ctx);
-    } finally {
-      clearContext();
-    }
-  };
+  return (request: Request) =>
+    contextStorage.run(null, () => {
+      const ctx = createContext(request, service);
+      return handler(request, ctx);
+    });
 }

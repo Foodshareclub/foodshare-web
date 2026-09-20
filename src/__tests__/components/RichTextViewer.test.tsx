@@ -1,93 +1,36 @@
-/**
- * RichTextViewer XSS Tests
- * Verify DOMPurify sanitization prevents XSS attacks
- */
-
-import { describe, it, expect, mock } from "bun:test";
-import { JSDOM } from "jsdom";
+import { afterAll, expect, mock, test } from "bun:test";
 import createDOMPurify from "dompurify";
+import { JSDOM } from "jsdom";
+// DOMPurify recommends jsdom for Node; Happy DOM is only the React rendering harness.
+const documentWindow = new JSDOM("").window;
+const sanitizer = createDOMPurify(documentWindow);
+mock.module("dompurify", () => ({ default: sanitizer }));
+const { RichTextViewer } = await import("@/components/forum/RichTextViewer");
+afterAll(() => documentWindow.close());
+import { render } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 
-// Mock next-intl
-mock.module("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
-}));
+const hostile =
+  '<p>Shared food</p><img src="x" onerror="alert(1)"><a href="javascript:alert(2)" onclick="alert(4)">bad link</a><script>alert(3)</script><svg onload="alert(5)"></svg><a href="https://example.com">Safe link</a>';
 
-const jsdomWindow = new JSDOM("").window;
-const DOMPurify = createDOMPurify(jsdomWindow as any);
+test("server rendering never emits unsanitized rich text", () => {
+  const html = renderToString(<RichTextViewer content={hostile} />);
+  expect(html).not.toContain("onerror");
+  expect(html).not.toContain("javascript:");
+  expect(html).not.toContain("<script");
+});
 
-describe("RichTextViewer XSS Protection", () => {
-  it("sanitizes script tags from HTML content", () => {
-    const malicious = '<p>Hello</p><script>alert("xss")</script>';
-    const clean = DOMPurify.sanitize(malicious, {
-      ALLOWED_TAGS: ["p", "br", "strong", "b", "em", "i", "a", "span"],
-      ALLOWED_ATTR: ["href", "target", "rel"],
-    });
-
-    expect(clean).not.toContain("<script>");
-    expect(clean).toContain("<p>Hello</p>");
-  });
-
-  it("sanitizes onclick handlers", () => {
-    const malicious = '<a href="#" onclick="alert(1)">click</a>';
-    const clean = DOMPurify.sanitize(malicious, {
-      ALLOWED_TAGS: ["a"],
-      ALLOWED_ATTR: ["href", "target", "rel"],
-    });
-
-    expect(clean).not.toContain("onclick");
-    expect(clean).toContain('href="#"');
-  });
-
-  it("sanitizes javascript: URLs", () => {
-    const malicious = '<a href="javascript:alert(1)">click</a>';
-    const clean = DOMPurify.sanitize(malicious, {
-      ALLOWED_TAGS: ["a"],
-      ALLOWED_ATTR: ["href", "target", "rel"],
-    });
-
-    expect(clean).not.toContain("javascript:");
-  });
-
-  it("sanitizes img onerror XSS", () => {
-    const malicious = '<img src="x" onerror="alert(1)">';
-    const clean = DOMPurify.sanitize(malicious, {
-      ALLOWED_TAGS: ["p", "br", "strong", "a"],
-      ALLOWED_ATTR: ["href"],
-    });
-
-    expect(clean).not.toContain("onerror");
-    expect(clean).not.toContain("<img");
-  });
-
-  it("adds target and rel to links via hook (not post-sanitization)", () => {
-    DOMPurify.addHook("afterSanitizeAttributes", (node) => {
-      if (node.tagName === "A") {
-        node.setAttribute("target", "_blank");
-        node.setAttribute("rel", "noopener noreferrer");
-      }
-    });
-
-    const html = '<a href="https://example.com">link</a>';
-    const clean = DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: ["a"],
-      ALLOWED_ATTR: ["href", "target", "rel"],
-      ADD_ATTR: ["target", "rel"],
-    });
-
-    DOMPurify.removeHook("afterSanitizeAttributes");
-
-    expect(clean).toContain('target="_blank"');
-    expect(clean).toContain('rel="noopener noreferrer"');
-  });
-
-  it("prevents SVG-based XSS", () => {
-    const malicious = '<svg onload="alert(1)"><circle r="50"></circle></svg>';
-    const clean = DOMPurify.sanitize(malicious, {
-      ALLOWED_TAGS: ["p", "br", "strong", "a"],
-      ALLOWED_ATTR: ["href"],
-    });
-
-    expect(clean).not.toContain("onload");
-    expect(clean).not.toContain("<svg");
-  });
+test("browser rendering preserves text and removes active content", () => {
+  const view = render(<RichTextViewer content={hostile} />);
+  expect(view.container.textContent).toContain("Shared food");
+  expect(view.container.innerHTML).not.toContain("onerror");
+  expect(view.container.innerHTML).not.toContain("onclick");
+  expect(view.container.innerHTML).not.toContain("onload");
+  expect(view.container.innerHTML).not.toContain("javascript:");
+  expect(view.container.querySelector("script")).toBeNull();
+  expect(view.container.querySelector("svg")).toBeNull();
+  const link = view.container.querySelector('a[href="https://example.com"]');
+  expect(link?.getAttribute("target")).toBe("_blank");
+  expect(link?.getAttribute("rel")).toBe("noopener noreferrer");
+  view.unmount();
 });

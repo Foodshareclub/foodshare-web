@@ -19,7 +19,7 @@ concurrentScripts = 16
 save = true
 
 [test]
-coverage = true
+coverage = false
 coverageDir = "coverage"
 preload = ["./src/__tests__/happydom.ts", "./src/__tests__/setup.ts"]
 

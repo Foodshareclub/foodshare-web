@@ -1,57 +1,51 @@
 "use client";
 
-import { useState, useCallback, useEffect, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import {
-  Apple,
-  Gift,
-  Wrench,
-  HandHelping,
-  Refrigerator,
-  Landmark,
-  Building2,
-  Users,
-  Trophy,
-  Recycle,
-  Leaf,
-  ArrowLeft,
-  PlusCircle,
-  Car,
-  ChefHat,
-  ClipboardList,
-  Smartphone,
-  Camera,
-  Globe,
-  Code,
-  HeartHandshake,
-  X,
-  Loader2,
-  ImagePlus,
-  Sparkles,
-} from "lucide-react";
-import { LISTING } from "@/constants/validation";
-import { createProduct } from "@/app/actions/products";
-import { generateListingDraft } from "@/app/actions/ai-draft";
-import { resizeImagesForAI } from "@/lib/image/resize-for-ai";
-import { useUIStore } from "@/store/zustand/useUIStore";
 import { imageAPI } from "@/api/imageAPI";
+import { generateListingDraft } from "@/app/actions/ai-draft";
+import { createProduct } from "@/app/actions/products";
 import Navbar from "@/components/header/navbar/Navbar";
 // Note: Auth state is determined by server-passed userId prop, not useAuth()
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { STORAGE_BUCKETS } from "@/constants/storage";
+import { LISTING } from "@/constants/validation";
+import { resizeImagesForAI } from "@/lib/image/resize-for-ai";
+import { useUIStore } from "@/store/zustand/useUIStore";
+import {
+  Apple,
+  ArrowLeft,
+  Building2,
+  Camera,
+  Car,
+  ChefHat,
+  ClipboardList,
+  Code,
+  Gift,
+  Globe,
+  HandHelping,
+  HeartHandshake,
+  ImagePlus,
+  Landmark,
+  Leaf,
+  Loader2,
+  PlusCircle,
+  Recycle,
+  Refrigerator,
+  Smartphone,
+  Sparkles,
+  Trophy,
+  Users,
+  Wrench,
+  X,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState, useTransition } from "react";
 
 // Volunteer skills options with Lucide icons
 const VOLUNTEER_SKILLS = [
@@ -104,12 +98,7 @@ interface NewProductFormProps {
   isAdmin?: boolean;
 }
 
-export function NewProductForm({
-  userId,
-  initialType = "food",
-  profile,
-  isAdmin = false,
-}: NewProductFormProps) {
+export function NewProductForm({ userId, initialType = "food", profile, isAdmin = false }: NewProductFormProps) {
   const t = useTranslations();
   const router = useRouter();
   const { userLocation: _userLocation } = useUIStore();
@@ -175,25 +164,25 @@ export function NewProductForm({
       const validFiles: File[] = [];
       const newPreviews: string[] = [];
 
-      files.forEach((file) => {
+      for (const file of files) {
         if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
           setError(`Invalid file type: ${file.name}. Please use PNG, JPEG, or WebP.`);
-          return;
+          continue;
         }
 
         if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
           setError(`File ${file.name} is too large. Maximum size is ${MAX_FILE_SIZE_MB}MB.`);
-          return;
+          continue;
         }
 
         validFiles.push(file);
         newPreviews.push(URL.createObjectURL(file));
-      });
+      }
 
       setSelectedImages((prev) => [...prev, ...validFiles]);
       setImagePreviews((prev) => [...prev, ...newPreviews]);
     },
-    [selectedImages]
+    [selectedImages],
   );
 
   const handleRemoveImage = useCallback((index: number) => {
@@ -357,7 +346,8 @@ export function NewProductForm({
           volunteer: "/volunteer?submitted=true",
           challenge: "/challenge?submitted=true",
         };
-        const redirectUrl = redirectMap[formData.post_type] || `/food?type=${formData.post_type}`;
+        const savedType = result.data.post_type;
+        const redirectUrl = redirectMap[savedType] || `/${savedType}`;
         router.push(redirectUrl);
         router.refresh();
       } catch (err) {
@@ -392,6 +382,7 @@ export function NewProductForm({
         {/* Page Header */}
         <div className="mb-6">
           <button
+            type="button"
             onClick={() => router.back()}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
           >
@@ -425,10 +416,7 @@ export function NewProductForm({
               <Label htmlFor="post_type" className="text-base font-semibold mb-2 block">
                 {t("category")} <span className="text-red-500">*</span>
               </Label>
-              <Select
-                value={formData.post_type}
-                onValueChange={(value) => handleInputChange("post_type", value)}
-              >
+              <Select value={formData.post_type} onValueChange={(value) => handleInputChange("post_type", value)}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -529,7 +517,7 @@ export function NewProductForm({
                           {/* eslint-disable-next-line @next/next/no-img-element -- blob URLs for local previews */}
                           <img
                             src={imagePreviews[0]}
-                            alt="Your photo"
+                            alt="Your profile preview"
                             className="w-32 h-32 object-cover rounded-full border-4 border-emerald-500"
                           />
                           <button
@@ -557,9 +545,7 @@ export function NewProductForm({
                           <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mb-3">
                             <Camera className="w-8 h-8 text-emerald-600" />
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            Click to upload your photo
-                          </p>
+                          <p className="text-sm text-muted-foreground">Click to upload your photo</p>
                         </label>
                       </div>
                     )}
@@ -606,21 +592,18 @@ export function NewProductForm({
                 {/* Skills Multi-Select */}
                 <div className="mb-6">
                   <Label className="text-base font-semibold mb-2 block">
-                    Your Skills{" "}
-                    <span className="text-muted-foreground font-normal">
-                      (select all that apply)
-                    </span>
+                    Your Skills <span className="text-muted-foreground font-normal">(select all that apply)</span>
                   </Label>
                   <div className="grid grid-cols-2 gap-3 mt-3">
                     {VOLUNTEER_SKILLS.map((skill) => (
-                      <div
+                      <label
+                        htmlFor={skill.id}
                         key={skill.id}
                         className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-all ${
                           formData.volunteer_skills.includes(skill.id)
                             ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
                             : "border-border hover:border-emerald-300 dark:hover:border-emerald-700"
                         }`}
-                        onClick={() => handleSkillToggle(skill.id)}
                       >
                         <Checkbox
                           id={skill.id}
@@ -628,14 +611,11 @@ export function NewProductForm({
                           onCheckedChange={() => handleSkillToggle(skill.id)}
                           className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
                         />
-                        <label
-                          htmlFor={skill.id}
-                          className="text-sm font-medium cursor-pointer flex items-center gap-2"
-                        >
+                        <span className="text-sm font-medium cursor-pointer flex items-center gap-2">
                           <skill.Icon className="w-4 h-4 text-emerald-600" />
                           <span>{skill.label}</span>
-                        </label>
-                      </div>
+                        </span>
+                      </label>
                     ))}
                   </div>
                 </div>
@@ -651,27 +631,18 @@ export function NewProductForm({
                     className="grid grid-cols-2 gap-3 mt-3"
                   >
                     {AVAILABILITY_OPTIONS.map((option) => (
-                      <div
+                      <label
+                        htmlFor={option.value}
                         key={option.value}
                         className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-all ${
                           formData.available_hours === option.value
                             ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
                             : "border-border hover:border-emerald-300 dark:hover:border-emerald-700"
                         }`}
-                        onClick={() => handleInputChange("available_hours", option.value)}
                       >
-                        <RadioGroupItem
-                          value={option.value}
-                          id={option.value}
-                          className="text-emerald-500"
-                        />
-                        <label
-                          htmlFor={option.value}
-                          className="text-sm font-medium cursor-pointer"
-                        >
-                          {option.label}
-                        </label>
-                      </div>
+                        <RadioGroupItem value={option.value} id={option.value} className="text-emerald-500" />
+                        <span className="text-sm font-medium cursor-pointer">{option.label}</span>
+                      </label>
                     ))}
                   </RadioGroup>
                 </div>
@@ -711,8 +682,7 @@ export function NewProductForm({
                     )}
                   </button>
                   <p className="text-center text-sm text-muted-foreground">
-                    Your application will be reviewed by our team. We&apos;ll notify you once
-                    approved!
+                    Your application will be reviewed by our team. We&apos;ll notify you once approved!
                   </p>
                   <Button
                     type="button"
@@ -740,7 +710,7 @@ export function NewProductForm({
                     {imagePreviews.length > 0 && (
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         {imagePreviews.map((preview, index) => (
-                          <div key={index} className="relative group">
+                          <div key={preview} className="relative group">
                             {/* eslint-disable-next-line @next/next/no-img-element -- blob URLs for local previews */}
                             <img
                               src={preview}

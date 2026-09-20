@@ -5,9 +5,9 @@
  * Uses DOMPurify for XSS protection instead of heavy TipTap
  */
 
-import { useMemo } from "react";
-import DOMPurify from "dompurify";
 import { cn } from "@/lib/utils";
+import DOMPurify from "dompurify";
+import { useMemo, useSyncExternalStore } from "react";
 
 type RichTextViewerProps = {
   content: string | Record<string, unknown> | null;
@@ -126,9 +126,14 @@ function extractText(children: unknown[] | undefined): string {
     .join("");
 }
 
+const subscribeToHydration = () => () => {};
+const clientSnapshot = () => true;
+const serverSnapshot = () => false;
+
 export function RichTextViewer({ content, className }: RichTextViewerProps) {
+  const hydrated = useSyncExternalStore(subscribeToHydration, clientSnapshot, serverSnapshot);
   const sanitizedHtml = useMemo(() => {
-    if (!content) return "";
+    if (!content || !hydrated) return "";
 
     let html: string;
     if (typeof content === "string") {
@@ -152,22 +157,21 @@ export function RichTextViewer({ content, className }: RichTextViewerProps) {
       return clean;
     }
 
-    return html;
-  }, [content]);
+    return "";
+  }, [content, hydrated]);
 
   if (!content) return null;
 
+  const viewerClassName = cn(
+    "prose prose-sm dark:prose-invert max-w-none",
+    "prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-blockquote:my-2",
+    "prose-headings:font-semibold prose-h2:text-xl prose-h3:text-lg",
+    "prose-a:text-primary prose-a:underline",
+    "prose-img:rounded-lg prose-img:max-w-full",
+    className,
+  );
   return (
-    <div
-      className={cn(
-        "prose prose-sm dark:prose-invert max-w-none",
-        "prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-blockquote:my-2",
-        "prose-headings:font-semibold prose-h2:text-xl prose-h3:text-lg",
-        "prose-a:text-primary prose-a:underline",
-        "prose-img:rounded-lg prose-img:max-w-full",
-        className
-      )}
-      dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
-    />
+    // biome-ignore lint/security/noDangerouslySetInnerHtml: DOMPurify sanitizes browser HTML; SSR and initial hydration return empty HTML.
+    <div className={viewerClassName} dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
   );
 }

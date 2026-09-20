@@ -100,74 +100,74 @@ const nextConfig: NextConfig = {
     return [
       // Legacy /listing/* routes → /product/:id* (single hop to agnostic product)
       {
-        source: "/listing/:id*",
+        source: "/listing/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       // Legacy /products/:id routes → /product/:id
       {
-        source: "/products/:id*",
+        source: "/products/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       // Type-prefixed detail aliases → agnostic product (slug now contains category)
       {
-        source: "/thing/:id*",
+        source: "/thing/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/things/:id*",
+        source: "/things/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/borrow/:id*",
+        source: "/borrow/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/wanted/:id*",
+        source: "/wanted/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/fridge/:id*",
+        source: "/fridge/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/foodbank/:id*",
+        source: "/foodbank/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/organisation/:id*",
+        source: "/organisation/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/organisations/:id*",
+        source: "/organisations/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/volunteer/:id*",
+        source: "/volunteer/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/volunteers/:id*",
+        source: "/volunteers/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/zerowaste/:id*",
+        source: "/zerowaste/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/vegan/:id*",
+        source: "/vegan/:id+",
         destination: "/product/:id*",
         permanent: true,
       },

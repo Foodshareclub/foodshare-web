@@ -3,20 +3,12 @@
  * Modern CRM with fixed layout and scrollable content
  */
 
-import { Suspense } from "react";
 import { CRMDashboard } from "@/app/admin/crm/components/CRMDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  getCustomerTagsCached,
-  getAdminCustomersCached,
-  getAdminCRMStatsCached,
-} from "@/lib/data/crm";
-import {
-  getCampaigns,
-  getSegments,
-  getAutomationFlows,
-  getNewsletterStats,
-} from "@/lib/data/newsletter";
+import { getAdminCRMStatsCached, getAdminCustomersCached, getCustomerTagsCached } from "@/lib/data/crm";
+import { getAutomationFlows, getCampaigns, getNewsletterStats, getSegments } from "@/lib/data/newsletter";
+import { isPrerenderInterruption } from "@/lib/errors";
+import { Suspense } from "react";
 
 function DashboardSkeleton() {
   return (
@@ -28,32 +20,22 @@ function DashboardSkeleton() {
             <Skeleton className="h-6 w-48 mb-2" />
             <Skeleton className="h-4 w-64" />
           </div>
-          <div className="flex gap-2">
-            <Skeleton className="h-9 w-28" />
-            <Skeleton className="h-9 w-32" />
-          </div>
-        </div>
-        <div className="flex gap-2 mt-4">
-          {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-9 w-24 rounded-lg" />
-          ))}
         </div>
       </div>
-      {/* Content Skeleton */}
-      <div className="flex-1 p-4 space-y-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-xl" />
+
+      {/* Main Content Skeleton */}
+      <div className="flex-1 p-6 space-y-6">
+        {/* KPI Row Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {["customers", "revenue", "campaigns", "subscribers"].map((metric) => (
+            <Skeleton key={metric} className="h-24 rounded-lg" />
           ))}
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-40 rounded-xl" />
-          ))}
-        </div>
+
+        {/* Charts Row Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-64 rounded-xl" />
-          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-80 rounded-lg" />
+          <Skeleton className="h-80 rounded-lg" />
         </div>
       </div>
     </div>
@@ -63,33 +45,34 @@ function DashboardSkeleton() {
 const defaultCRMStats = {
   totalCustomers: 0,
   activeCustomers: 0,
-  atRiskCustomers: 0,
-  newThisWeek: 0,
+  newThisMonth: 0,
+  churnRate: 0,
+  totalRevenue: 0,
+  avgOrderValue: 0,
+  customerLifetimeValue: 0,
 };
 
 const defaultNewsletterStats = {
-  totalCampaigns: 0,
-  totalSent: 0,
-  avgOpenRate: 0,
-  avgClickRate: 0,
   totalSubscribers: 0,
   activeAutomations: 0,
 };
 
 async function fetchCRMData() {
   try {
-    const [tags, customers, crmStats, campaigns, segments, automations, newsletterStats] =
-      await Promise.all([
-        getCustomerTagsCached(),
-        getAdminCustomersCached(100),
-        getAdminCRMStatsCached(),
-        getCampaigns(10),
-        getSegments(),
-        getAutomationFlows(),
-        getNewsletterStats(),
-      ]);
+    const [tags, customers, crmStats, campaigns, segments, automations, newsletterStats] = await Promise.all([
+      getCustomerTagsCached(),
+      getAdminCustomersCached(100),
+      getAdminCRMStatsCached(),
+      getCampaigns(10),
+      getSegments(),
+      getAutomationFlows(),
+      getNewsletterStats(),
+    ]);
     return { tags, customers, crmStats, campaigns, segments, automations, newsletterStats };
   } catch (error) {
+    if (isPrerenderInterruption(error)) {
+      throw error;
+    }
     console.error("[Admin] CRM data fetch error:", error);
     return {
       tags: [],
@@ -104,8 +87,7 @@ async function fetchCRMData() {
 }
 
 async function AdminDashboardData() {
-  const { tags, customers, crmStats, campaigns, segments, automations, newsletterStats } =
-    await fetchCRMData();
+  const { tags, customers, crmStats, campaigns, segments, automations, newsletterStats } = await fetchCRMData();
 
   // Ensure data is serializable to prevent "Server Components render" errors
   // This handles Date objects, undefined values, and other non-serializable types
@@ -118,7 +100,7 @@ async function AdminDashboardData() {
       segments,
       automations,
       newsletterStats,
-    })
+    }),
   );
 
   return <CRMDashboard {...sanitizedProps} />;

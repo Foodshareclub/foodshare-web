@@ -6,7 +6,7 @@
  */
 
 import { logger } from "./logger.ts";
-import { getContext } from "./context.ts";
+import { getContext, type RequestContext } from "./context.ts";
 
 // =============================================================================
 // Types
@@ -45,14 +45,26 @@ export interface SpanHandle {
 
 const MAX_SPANS_PER_REQUEST = 100;
 
-// Per-request span storage (safe in single-threaded Deno edge functions)
-let currentSpans: Span[] = [];
+const requestSpans = new WeakMap<RequestContext, Span[]>();
+let standaloneSpans: Span[] = [];
+
+function getSpanStore(): Span[] {
+  const context = getContext();
+  if (!context) return standaloneSpans;
+  let spans = requestSpans.get(context);
+  if (!spans) {
+    spans = [];
+    requestSpans.set(context, spans);
+  }
+  return spans;
+}
 
 /**
  * Start a new span for tracking an operation within a request.
  * Call `.end()` on the returned handle when the operation completes.
  */
 export function startSpan(operation: string): SpanHandle {
+  const currentSpans = getSpanStore();
   const span: Span = {
     operation,
     startTime: performance.now(),
@@ -78,14 +90,16 @@ export function startSpan(operation: string): SpanHandle {
  * Get all spans for the current request.
  */
 export function getSpans(): Span[] {
-  return [...currentSpans];
+  return [...getSpanStore()];
 }
 
 /**
  * Clear spans for the current request (call at end of request, before clearContext).
  */
 export function clearSpans(): void {
-  currentSpans = [];
+  const context = getContext();
+  if (context) requestSpans.delete(context);
+  else standaloneSpans = [];
 }
 
 // =============================================================================

@@ -8,7 +8,12 @@
  */
 
 import { createAPIHandler } from "../_shared/api-handler.ts";
-import { createProductSchema, listQuerySchema, updateProductSchema } from "./lib/schemas.ts";
+import {
+  createProductSchema,
+  listQuerySchema,
+  mutationQuerySchema,
+  updateProductSchema,
+} from "./lib/schemas.ts";
 import { handleGet } from "./lib/handlers/get-products.ts";
 import { createProduct } from "./lib/handlers/create-product.ts";
 import { updateProduct } from "./lib/handlers/update-product.ts";
@@ -39,11 +44,13 @@ Deno.serve(createAPIHandler({
     },
     PUT: {
       schema: updateProductSchema,
+      querySchema: mutationQuerySchema,
       handler: updateProduct,
       requireAuth: true,
       idempotent: true,
     },
     DELETE: {
+      querySchema: mutationQuerySchema,
       handler: deleteProduct,
       requireAuth: true,
     },

@@ -1,14 +1,23 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import { imageAPI } from "@/api/imageAPI";
+import { createProduct, updateProduct } from "@/app/actions/products";
+import { fetchUserAddress } from "@/app/actions/profile";
+import DeleteCardModal from "@/components/modals/DeleteCardModal";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { STORAGE_BUCKETS } from "@/constants/storage";
+import { useAuth } from "@/hooks/useAuth";
+import { useUIStore } from "@/store/zustand/useUIStore";
+import type { InitialProductStateType } from "@/types/product.types";
 import {
-  Loader2,
+  AlertCircle,
   BarChart3,
   CheckCircle,
-  AlertCircle,
   Eye,
   EyeOff,
   FileText,
+  Loader2,
   RotateCw,
   Save,
   Trash2,
@@ -17,51 +26,30 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import type { PublishListingModalType } from "./publish-listing/types";
-import { categoryConfig, MAX_DESCRIPTION_LENGTH } from "./publish-listing/constants";
+import React, { useRef, useState, useEffect } from "react";
 import {
+  AriaAnnouncer,
   Confetti,
+  ImageLightbox,
   ProgressBar,
   QualityScore,
-  ImageLightbox,
-  TemplatePicker,
-  AriaAnnouncer,
   SmartTips,
+  TemplatePicker,
 } from "./publish-listing/components";
+import { MAX_DESCRIPTION_LENGTH, categoryConfig } from "./publish-listing/constants";
 import { useImageUpload, useListingForm, useUndoRedo } from "./publish-listing/hooks";
 import { BasicDetailsStep } from "./publish-listing/steps/BasicDetailsStep";
-import { MediaUploadStep } from "./publish-listing/steps/MediaUploadStep";
 import { LocationPickupStep } from "./publish-listing/steps/LocationPickupStep";
+import { MediaUploadStep } from "./publish-listing/steps/MediaUploadStep";
 import { PublishListingFooter } from "./publish-listing/steps/PublishListingFooter";
-import DeleteCardModal from "@/components/modals/DeleteCardModal";
-import { useAuth } from "@/hooks/useAuth";
-import { createProduct, updateProduct } from "@/app/actions/products";
-import { fetchUserAddress } from "@/app/actions/profile";
-import { useUIStore } from "@/store/zustand/useUIStore";
-import { imageAPI } from "@/api/imageAPI";
-import type { InitialProductStateType } from "@/types/product.types";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { STORAGE_BUCKETS } from "@/constants/storage";
-import { Button } from "@/components/ui/button";
+import type { PublishListingModalType } from "./publish-listing/types";
 
 /**
  * PublishListingModal Component
  * Modal for creating and editing product listings
  * Refactored into modular step components for high maintainability
  */
-function PublishListingModal({
-  product,
-  isOpen,
-  onClose,
-  setOpenEdit,
-  value,
-}: PublishListingModalType) {
+function PublishListingModal({ product, isOpen, onClose, setOpenEdit, value }: PublishListingModalType) {
   const _t = useTranslations();
   const router = useRouter();
   const formRef = useRef<HTMLDivElement>(null);
@@ -138,6 +126,7 @@ function PublishListingModal({
     }
   }, [isOpen, id, product]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Reinitialize on dialog or listing changes; changing images is an edit.
   useEffect(() => {
     if (isOpen) {
       if (product) {
@@ -209,9 +198,7 @@ function PublishListingModal({
       transportation: form.formData.metroStation,
       condition: form.formData.condition || "",
       profile_id: id,
-      location: userLocation
-        ? `SRID=4326;POINT(${userLocation.longitude} ${userLocation.latitude})`
-        : undefined,
+      location: userLocation ? `SRID=4326;POINT(${userLocation.longitude} ${userLocation.latitude})` : undefined,
     };
 
     if (product && images[0]?.isExisting) {
@@ -265,13 +252,13 @@ function PublishListingModal({
       if (imagesToUpload.length > 0) {
         setUploadProgress(`Uploading ${imagesToUpload.length} image(s)...`);
 
-        const filesToUpload = imagesToUpload.map((img) => img.file!);
+        const filesToUpload = imagesToUpload.flatMap((img) => (img.file ? [img.file] : []));
         const batchResult = await imageAPI.uploadBatch(
           filesToUpload,
           { bucket: STORAGE_BUCKETS.POSTS },
           (completed, total) => {
             setUploadProgress(`Uploading ${completed}/${total} image(s)...`);
-          }
+          },
         );
 
         if (batchResult.error) {
@@ -310,14 +297,15 @@ function PublishListingModal({
         formData.set("longitude", userLocation.longitude.toString());
       }
 
-      let result;
       if (product) {
+        if (!product.version) {
+          throw new Error("Please refresh this listing before editing it.");
+        }
+        formData.set("version", String(product.version));
         formData.set("is_active", "true");
-        result = await updateProduct(productId, formData);
-      } else {
-        result = await createProduct(formData);
-        if (result.success) form.clearDraft();
       }
+      const result = product ? await updateProduct(productId, formData) : await createProduct(formData);
+      if (!product && result.success) form.clearDraft();
 
       if (!result.success) {
         throw new Error(result.error?.message || "Failed to save listing");
@@ -348,11 +336,7 @@ function PublishListingModal({
   const onDialogOpenChange = (open: boolean) => {
     if (!open) {
       if (publishState === "loading") {
-        if (
-          confirm(
-            "Publishing involves uploading images. Closing now may result in incomplete data. Are you sure?"
-          )
-        ) {
+        if (confirm("Publishing involves uploading images. Closing now may result in incomplete data. Are you sure?")) {
           onClose();
           setOpenEdit?.(false);
         }
@@ -379,13 +363,9 @@ function PublishListingModal({
                 <CheckCircle className="h-12 w-12 text-green-500" />
               </div>
             </div>
-            <h3 className="mt-6 text-xl font-semibold">
-              {product ? "Listing Updated!" : "Listing Published!"}
-            </h3>
+            <h3 className="mt-6 text-xl font-semibold">{product ? "Listing Updated!" : "Listing Published!"}</h3>
             <p className="mt-2 text-muted-foreground">
-              {form.formData.scheduledDate
-                ? "Your listing is scheduled"
-                : "Your listing is now live"}
+              {form.formData.scheduledDate ? "Your listing is scheduled" : "Your listing is now live"}
             </p>
           </div>
         </DialogContent>
@@ -396,10 +376,7 @@ function PublishListingModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onDialogOpenChange}>
-        <DialogContent
-          variant="glass"
-          className="max-w-md md:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
-        >
+        <DialogContent variant="glass" className="max-w-md md:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           <div className="absolute top-0 left-0 right-0">
             <ProgressBar progress={form.progress} />
           </div>
@@ -414,9 +391,7 @@ function PublishListingModal({
                   )}
                 </DialogTitle>
                 <DialogDescription className="text-muted-foreground">
-                  {product
-                    ? "Update your listing details below"
-                    : "Share something with your community"}
+                  {product ? "Update your listing details below" : "Add photos, a description, and pickup details"}
                 </DialogDescription>
               </div>
               <div className="flex items-center gap-2">
@@ -649,21 +624,11 @@ function PublishListingModal({
 
       {/* Lightbox Preview */}
       {lightboxIndex !== null && (
-        <ImageLightbox
-          images={images}
-          initialIndex={lightboxIndex}
-          onClose={() => setLightboxIndex(null)}
-        />
+        <ImageLightbox images={images} initialIndex={lightboxIndex} onClose={() => setLightboxIndex(null)} />
       )}
 
       {/* Delete Confirmation Modal */}
-      {product && (
-        <DeleteCardModal
-          product={product}
-          isOpen={isDeleteOpen}
-          onClose={() => setIsDeleteOpen(false)}
-        />
-      )}
+      {product && <DeleteCardModal product={product} isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} />}
     </>
   );
 }

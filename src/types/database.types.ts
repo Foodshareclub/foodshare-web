@@ -3,11 +3,7 @@
  * Single source of truth across FoodShare monorepo.
  */
 
-import type {
-  NotificationCategory,
-  NotificationChannel,
-  NotificationFrequency,
-} from "./notifications.types";
+import type { NotificationCategory, NotificationChannel, NotificationFrequency } from "./notifications.types";
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -216,6 +212,9 @@ export interface Database {
           embedding: number[] | null;
           created_at: string | null;
           updated_at: string | null;
+          version: number;
+          sync_version: number | null;
+          expires_at: string | null;
         };
         Insert: {
           id?: number;
@@ -244,6 +243,9 @@ export interface Database {
           embedding?: number[] | null;
           created_at?: string | null;
           updated_at?: string | null;
+          version?: number;
+          sync_version?: number | null;
+          expires_at?: string | null;
         };
         Update: {
           id?: number;
@@ -272,6 +274,9 @@ export interface Database {
           embedding?: number[] | null;
           created_at?: string | null;
           updated_at?: string | null;
+          version?: number;
+          sync_version?: number | null;
+          expires_at?: string | null;
         };
       };
       households: {
@@ -365,6 +370,9 @@ export interface Database {
           is_arranged: boolean | null;
           created_at: string | null;
           updated_at: string | null;
+          version: number | null;
+          sync_version: number | null;
+          expires_at: string | null;
           profile_id: string | null;
           images: string[] | null;
           post_views: number | null;
@@ -462,5 +470,4 @@ export type WasteLogInsert = Database["public"]["Tables"]["waste_logs"]["Insert"
 export type WasteLogUpdate = Database["public"]["Tables"]["waste_logs"]["Update"];
 export type TelegramLinkToken = Database["public"]["Tables"]["telegram_link_tokens"]["Row"];
 export type NotificationSettings = Database["public"]["Tables"]["notification_settings"]["Row"];
-export type NotificationPreference =
-  Database["public"]["Tables"]["notification_preferences"]["Row"];
+export type NotificationPreference = Database["public"]["Tables"]["notification_preferences"]["Row"];

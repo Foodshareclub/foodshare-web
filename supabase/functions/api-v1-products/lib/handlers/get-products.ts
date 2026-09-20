@@ -3,7 +3,7 @@
  */
 
 import type { HandlerContext } from "../../../_shared/api-handler.ts";
-import { ok, paginated } from "../../../_shared/api-handler.ts";
+import { ok, paginated } from "../../../_shared/handler/responses.ts";
 import { NotFoundError, ValidationError } from "../../../_shared/errors.ts";
 import { logger } from "../../../_shared/logger.ts";
 import { cache } from "../../../_shared/cache.ts";
@@ -17,6 +17,7 @@ import { aggregateCounts } from "../../../_shared/aggregation.ts";
 import { createHealthHandler } from "../../../_shared/health-handler.ts";
 import { fuzzProductCoordinates, fuzzProductListCoordinates } from "../location-fuzzer.ts";
 import type { ListQuery } from "../schemas.ts";
+import { fetchNearbyProducts } from "../nearby-products.ts";
 import { transformProduct, transformProductDetail } from "../transformers.ts";
 
 const VERSION = "2.0.0";
@@ -36,32 +37,29 @@ export async function getFeed(
 
   const lat = parseFloatSafe(query.lat, 0);
   const lng = parseFloatSafe(query.lng, 0);
-  const searchRadiusKm = 50;
-
-  const limit = parseIntSafe(query.limit, 20);
-  const cursor = parseIntSafe(query.cursor, 0);
+  const searchRadiusKm = parseFloatSafeWithBounds(query.radiusKm || query.radius, 0.1, 100, 50);
+  const limit = normalizeLimit(query.limit);
+  const cursor = Math.max(0, parseIntSafe(query.cursor, 0));
 
   const [listings, counts] = await Promise.all([
-    supabase.rpc("get_nearby_posts", {
-      p_latitude: lat,
-      p_longitude: lng,
-      p_radius_meters: searchRadiusKm * 1000,
-      p_limit: limit + 1,
-      p_offset: cursor,
+    fetchNearbyProducts(supabase, {
+      lat,
+      lng,
+      radiusKm: searchRadiusKm,
+      limit,
+      offset: cursor,
+      postType: query.postType,
+      categoryId: query.categoryId ? parseIntSafe(query.categoryId) : undefined,
+      userId: query.userId,
     }),
     aggregateCounts(supabase, userId),
   ]);
 
-  if (listings.error) {
-    logger.error("Feed query failed", new Error(listings.error.message));
-    throw listings.error;
-  }
-
-  const items = listings.data || [];
+  const items = listings;
   const hasMore = items.length > limit;
   const resultItems = hasMore ? items.slice(0, -1) : items;
 
-  const fuzzedListings = fuzzProductListCoordinates(resultItems, userId);
+  const fuzzedListings = fuzzProductListCoordinates(resultItems.map(transformProduct), userId);
   const nextCursor = hasMore ? cursor + limit : null;
 
   return ok({
@@ -80,7 +78,7 @@ export async function listProducts(
 ): Promise<Response> {
   const { supabase, query } = ctx;
 
-  const cacheKey = `products:list:${JSON.stringify(query)}`;
+  const cacheKey = `products:list:${ctx.userId ?? "anon"}:${JSON.stringify(query)}`;
   interface CachedListResult {
     items: Record<string, unknown>[];
     total: number;
@@ -109,7 +107,7 @@ export async function listProducts(
   const radius = parseFloatSafeWithBounds(
     query.radiusKm || query.radius,
     0.1,
-    1000,
+    100,
     10,
   );
   const userId = query.userId;
@@ -127,21 +125,16 @@ export async function listProducts(
       }
     }
 
-    dbQuery = supabase.rpc("get_nearby_posts", {
-      p_latitude: lat,
-      p_longitude: lng,
-      p_radius_meters: radius * 1000,
-      p_limit: limit + 1,
-      p_offset: offset,
-      p_post_type: postType,
-    }, { count: "exact" });
-
-    if (categoryId) {
-      dbQuery = dbQuery.eq("category_id", categoryId);
-    }
-    if (userId) {
-      dbQuery = dbQuery.eq("profile_id", userId);
-    }
+    dbQuery = fetchNearbyProducts(supabase, {
+      lat,
+      lng,
+      radiusKm: radius,
+      limit,
+      offset: Math.max(0, offset),
+      postType,
+      categoryId,
+      userId,
+    }).then((data) => ({ data, error: null, count: null }));
   } else {
     const compositeCursor = query.cursor ? decodeCursor(query.cursor) : null;
 
@@ -238,21 +231,27 @@ export async function getProduct(
   const includeOwner = includes.includes("owner");
   const includeRelated = includes.includes("related");
 
-  const profileFields = includeOwner
-    ? "id, display_name, avatar_url, created_at, bio, rating_average, rating_count, is_volunteer"
-    : "id, display_name, avatar_url, created_at";
+  // Keep the API aliases while selecting the canonical database columns.
+  const profileFields =
+    "id, display_name:nickname, first_name, second_name, avatar_url, created_at:created_time" +
+    (includeOwner ? ", bio" : "");
 
   const { data, error } = await supabase
     .from("posts_with_location")
     .select(`
       *,
       profile:profiles!posts_profile_id_fkey(${profileFields}),
-      category:categories(id, name, icon)
+      category:categories(id, name, icon:icon_url)
     `)
     .eq("id", productId)
-    .single();
+    .returns<Record<string, unknown>[]>()
+    .maybeSingle();
 
-  if (error || !data) {
+  if (error) {
+    logger.error("Failed to get product", new Error(error.message));
+    throw error;
+  }
+  if (!data) {
     throw new NotFoundError("Product", productId);
   }
 
@@ -302,8 +301,9 @@ export async function getProduct(
     result.canContact = userId !== data.profile_id;
   }
 
-  // SEO cache — 60s public for crawlers, ETag handles 304
-  return ok(result, ctx, { cacheTTL: 60 });
+  const response = ok(result, ctx, userId ? undefined : { cacheTTL: 60 });
+  if (userId) response.headers.set("Cache-Control", "private, no-store");
+  return response;
 }
 
 /**
