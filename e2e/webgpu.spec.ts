@@ -25,7 +25,7 @@ test.describe("WebGPU Rendering", () => {
     expect(typeof gpuSupported).toBe("boolean");
   });
 
-  test("about us page renders without GPU errors", async ({ page }) => {
+  test("login page renders without GPU errors", async ({ page }) => {
     // Collect console errors
     const errors: string[] = [];
     page.on("console", (msg) => {
@@ -34,7 +34,7 @@ test.describe("WebGPU Rendering", () => {
       }
     });
 
-    await page.goto("/about");
+    await page.goto("/auth/login");
     await page.waitForLoadState("networkidle");
 
     // Page should load without GPU-related crashes
@@ -65,7 +65,7 @@ test.describe("WebGPU Rendering", () => {
   });
 
   test("GPU canvas elements are properly cleaned up", async ({ page }) => {
-    await page.goto("/about");
+    await page.goto("/auth/login");
     await page.waitForLoadState("networkidle");
 
     // Count canvas elements
@@ -92,7 +92,7 @@ test.describe("WebGPU Fallback", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/about");
+    await page.goto("/auth/login");
     await page.waitForLoadState("networkidle");
 
     // Should render without errors (using CSS fallback)

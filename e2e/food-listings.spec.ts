@@ -14,7 +14,7 @@ test.describe("Food Listings Page", () => {
 
   test("should display product grid with items or empty state", async ({ page }) => {
     // Wait for content to load - either product grid or empty state
-    await page.waitForSelector(':matches([class*="grid"], .nothing-shared-within)', {
+    await page.waitForSelector(':is([class*="grid"], .nothing-shared-within)', {
       timeout: 15000,
     });
 

@@ -2,20 +2,14 @@
 
 import { useState } from "react";
 
-import {
-  ClipboardList,
-  MessageCircle,
-  Settings,
-  LogOut,
-  HelpCircle,
-  Info,
-  LayoutGrid,
-} from "lucide-react";
 import type { CustomRoomType } from "@/api/chatAPI";
-import { DragHandleIcon } from "@/utils/icons";
-import { Button } from "@/components/ui/button";
-import { UniversalDrawer, MinifiedUserInfo, AuthenticationUserModal } from "@/components";
+import { MinifiedUserInfo } from "@/components/minifiedUserInfo/MinifiedUserInfo";
+import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
 import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
+import { Button } from "@/components/ui/button";
+import UniversalDrawer from "@/components/universalDrawer/UniversalDrawer";
+import { DragHandleIcon } from "@/utils/icons";
+import { ClipboardList, HelpCircle, Info, LayoutGrid, LogOut, MessageCircle, Settings } from "lucide-react";
 
 // Lucide icons
 
@@ -125,12 +119,7 @@ export function MobileMenu({
       >
         <>
           {/* User Info */}
-          <MinifiedUserInfo
-            src={imgUrl}
-            firstName={firstName}
-            secondName={secondName}
-            description={email}
-          />
+          <MinifiedUserInfo src={imgUrl} firstName={firstName} secondName={secondName} description={email} />
 
           <div className="mt-10">
             {/* Authenticated Menu */}
@@ -170,9 +159,7 @@ export function MobileMenu({
                   type="button"
                   className={`${hasNotifications ? "glass-accent-primary" : "glass-subtle"} rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary`}
                   onClick={() => handleNavigation(onNavigateToMyMessages)}
-                  aria-label={
-                    hasNotifications ? `Chat (${signalOfNewMessage.length} unread)` : "Chat"
-                  }
+                  aria-label={hasNotifications ? `Chat (${signalOfNewMessage.length} unread)` : "Chat"}
                 >
                   <MessageCircle className="w-8 h-8 flex-shrink-0" />
                   <span className="text-3xl">

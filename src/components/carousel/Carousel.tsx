@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { navigationActionsSVG } from "@/utils/navigationActions";
+import ItemsForCarousel from "@/components/carousel/ItemsForCarousel";
 import type { PagesType } from "@/components/header/navbar/types";
-import { ItemsForCarousel } from "@/components";
+import { navigationActionsSVG } from "@/utils/navigationActions";
+import { useRouter } from "next/navigation";
 
 type PropsType = {
   getRoute: (route: string) => void;
@@ -13,13 +13,7 @@ type PropsType = {
   isCompact?: boolean;
 };
 
-export default function Carousel({
-  getRoute,
-  setPageType,
-  pageType,
-  productType,
-  isCompact = false,
-}: PropsType) {
+export default function Carousel({ getRoute, setPageType, pageType, productType, isCompact = false }: PropsType) {
   const router = useRouter();
 
   const navigateHandler = (name: string) => {
@@ -38,8 +32,8 @@ export default function Carousel({
         WebkitOverflowScrolling: "touch",
       }}
     >
-      {navigationActionsSVG.map((item, id) => (
-        <div key={id} className="snap-start shrink-0">
+      {navigationActionsSVG.map((item) => (
+        <div key={item.nameForUrl} className="snap-start shrink-0">
           <ItemsForCarousel
             item={item}
             navigateHandler={navigateHandler}
