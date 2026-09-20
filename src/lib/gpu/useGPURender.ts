@@ -1,13 +1,15 @@
 "use client";
 
-import { acquireGPU, releaseGPU } from "./GPUDevicePool";
-import type { Gpu, Surface, Effect, Draw } from "vgpu";
+import type { Draw, Effect, Gpu, Surface } from "vgpu";
+import { acquireGPU } from "./GPUDevicePool";
 
 interface GPURenderOptions {
   /** Canvas ref to attach the surface to */
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
   /** Whether rendering is enabled */
   enabled?: boolean;
+  /** Cancels initialization before a detached or reused canvas is claimed. */
+  signal?: AbortSignal;
   /** Surface options */
   surfaceOptions?: { dpr?: number | [number, number]; autoResize?: boolean };
 }
@@ -64,39 +66,64 @@ interface GPURenderHandle {
  * ```
  */
 export async function initGPURender(options: GPURenderOptions): Promise<GPURenderHandle> {
-  const { canvasRef, enabled = true, surfaceOptions } = options;
+  const { canvasRef, enabled = true, surfaceOptions, signal } = options;
 
   if (!enabled || !canvasRef.current) {
     throw new Error("initGPURender: canvas not ready");
   }
 
-  const { gpu } = await acquireGPU();
-  const { surface: createSurface } = await import("vgpu");
+  signal?.throwIfAborted();
+  const canvas = canvasRef.current;
+  const { gpu, release } = await acquireGPU();
+  let canvasSurface: Surface;
+  try {
+    const { surface: createSurface } = await import("vgpu");
+    signal?.throwIfAborted();
+    if (canvasRef.current !== canvas) throw new Error("initGPURender: canvas detached during initialization");
+    canvasSurface = createSurface(gpu, canvas, {
+      dpr: surfaceOptions?.dpr ?? [1, 2],
+      autoResize: surfaceOptions?.autoResize ?? true,
+    });
+  } catch (error) {
+    release();
+    throw error;
+  }
 
-  const canvasSurface = createSurface(gpu, canvasRef.current, {
-    dpr: surfaceOptions?.dpr ?? [1, 2],
-    autoResize: surfaceOptions?.autoResize ?? true,
-  });
-
-  let cleanupFns: (() => void)[] = [];
+  const cleanupFns: (() => void)[] = [];
+  let disposed = false;
 
   return {
     gpu,
     surface: canvasSurface,
     onCleanup: (fn: () => void) => {
-      cleanupFns.push(fn);
+      if (disposed) fn();
+      else cleanupFns.push(fn);
     },
     warmUp: async (pipeline: Effect | Draw) => {
       try {
-        await pipeline.compile(canvasSurface);
+        await pipeline.compile({ colors: [canvasSurface.format] });
       } catch {
         // Pre-warming is best-effort; don't break rendering if it fails
       }
     },
     dispose: () => {
-      cleanupFns.forEach((fn) => fn());
-      cleanupFns = [];
-      releaseGPU();
+      if (disposed) return;
+      disposed = true;
+      try {
+        for (const fn of cleanupFns.splice(0)) {
+          try {
+            fn();
+          } catch {
+            // A failing listener must not prevent the remaining resources from releasing.
+          }
+        }
+      } finally {
+        try {
+          canvasSurface.dispose();
+        } finally {
+          release();
+        }
+      }
     },
   };
 }

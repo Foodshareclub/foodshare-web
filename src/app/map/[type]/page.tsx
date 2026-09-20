@@ -1,8 +1,8 @@
-import { Suspense } from "react";
-import { Metadata } from "next";
-import { MapClient } from "./MapClient";
 import { getUser } from "@/app/actions/auth";
 import { categoryMetadata, siteConfig } from "@/lib/metadata";
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import { MapClient } from "./MapLoader";
 
 interface PageProps {
   params: Promise<{ type: string }>;

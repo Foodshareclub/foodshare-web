@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import React, { memo, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import type { RoomParticipantsType, CustomRoomType } from "@/api/chatAPI";
+import type { CustomRoomType, RoomParticipantsType } from "@/api/chatAPI";
+import { InputSection } from "@/components/chat/InputSection";
 import { useMediaQuery } from "@/hooks";
-import { InputSection } from "@/components";
+import { useRouter } from "next/navigation";
+import type React from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 import MessageItem from "./MessageItem";
 
 type MessagesWindowType = {
@@ -35,6 +36,7 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(
     const userImg = userAvatarUrl;
 
     // Auto-scroll to latest message when messages change
+    // biome-ignore lint/correctness/useExhaustiveDependencies: New messages are the signal to scroll the anchor again.
     useEffect(() => {
       messagesAnchorRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
@@ -45,7 +47,7 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(
         const targetId = isUserRequester ? currentRoom?.profiles.id : requesterId;
         router.push(`/volunteers/${targetId}`);
       },
-      [currentRoom?.profiles.id, requesterId, router]
+      [currentRoom?.profiles.id, requesterId, router],
     );
 
     return (
@@ -112,10 +114,9 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(
       prevProps.userID === nextProps.userID &&
       prevProps.roomId === nextProps.roomId &&
       prevProps.messages.length === nextProps.messages.length &&
-      prevProps.messages[prevProps.messages.length - 1]?.id ===
-        nextProps.messages[nextProps.messages.length - 1]?.id
+      prevProps.messages[prevProps.messages.length - 1]?.id === nextProps.messages[nextProps.messages.length - 1]?.id
     );
-  }
+  },
 );
 
 MessagesWindow.displayName = "MessagesWindow";

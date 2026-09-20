@@ -1,19 +1,13 @@
 "use client";
 
-import React from "react";
-import { RequiredStar } from "@/components";
-import { Label } from "@/components/ui/label";
+import { RequiredStar } from "@/components/requiredStar/RequiredStar";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { categoryConfig, conditionOptions, MAX_DESCRIPTION_LENGTH } from "../constants";
-import { VoiceInput, TitleSuggestions, CharacterProgressRing } from "../components";
+import React from "react";
+import { CharacterProgressRing, TitleSuggestions, VoiceInput } from "../components";
+import { MAX_DESCRIPTION_LENGTH, categoryConfig, conditionOptions } from "../constants";
 
 interface BasicDetailsStepProps {
   category: string;
@@ -44,12 +38,9 @@ export function BasicDetailsStep({
   onVoiceTranscript,
   onTitleSuggestionSelect,
 }: BasicDetailsStepProps) {
-  const selectedCategoryConfig = category
-    ? categoryConfig[category as keyof typeof categoryConfig]
-    : null;
+  const selectedCategoryConfig = category ? categoryConfig[category as keyof typeof categoryConfig] : null;
   const titlePlaceholder = selectedCategoryConfig?.placeholders?.title || "What is it called";
-  const descriptionPlaceholder =
-    selectedCategoryConfig?.placeholders?.description || "A few words about...";
+  const descriptionPlaceholder = selectedCategoryConfig?.placeholders?.description || "A few words about...";
 
   return (
     <div className="space-y-4">
@@ -93,13 +84,7 @@ export function BasicDetailsStep({
             className={showTitleError ? "border-destructive pr-8" : "pr-8"}
           />
         </div>
-        {category && (
-          <TitleSuggestions
-            category={category}
-            currentTitle={title}
-            onSelect={onTitleSuggestionSelect}
-          />
-        )}
+        {category && <TitleSuggestions category={category} currentTitle={title} onSelect={onTitleSuggestionSelect} />}
       </div>
 
       {/* Description Textarea */}

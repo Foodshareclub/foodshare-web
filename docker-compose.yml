@@ -1,13 +1,12 @@
 services:
   foodshare-web:
     container_name: foodshare-web
-    image: ghcr.io/foodshareclub/foodshare-web:latest
+    image: ${FOODSHARE_WEB_IMAGE:-ghcr.io/foodshareclub/foodshare-web:latest}
     expose:
       - "3000"
     env_file:
       - .env.production
     environment:
-      - NODE_TLS_REJECT_UNAUTHORIZED=0
       - NEXT_PUBLIC_APPLE_CLIENT_ID=${NEXT_PUBLIC_APPLE_CLIENT_ID:-club.foodshare.web}
     restart: unless-stopped
     labels:

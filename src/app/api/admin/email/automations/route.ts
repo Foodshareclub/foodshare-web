@@ -4,8 +4,9 @@
  * Returns active email automation flows
  */
 
-import { NextResponse } from "next/server";
 import { getActiveAutomations } from "@/lib/data/admin-email";
+import { isPrerenderInterruption } from "@/lib/errors";
+import { NextResponse } from "next/server";
 import { requireAdmin } from "../_shared/requireAdmin";
 
 export async function GET() {
@@ -16,10 +17,10 @@ export async function GET() {
     const automations = await getActiveAutomations();
     return NextResponse.json(automations);
   } catch (error) {
+    if (isPrerenderInterruption(error)) {
+      throw error;
+    }
     console.error("[API /api/admin/email/automations] Error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch automations" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch automations" }, { status: 500 });
   }
 }

@@ -54,6 +54,7 @@ export {
   getUnknownErrorMessage,
   toError,
   hasErrorCode,
+  isPrerenderInterruption,
 } from "./guards";
 
 // Zod Validation Helpers

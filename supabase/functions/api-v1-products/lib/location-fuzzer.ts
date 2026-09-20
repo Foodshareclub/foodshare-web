@@ -40,17 +40,17 @@ export function fuzzProductCoordinates(
     ...product,
     latitude: fuzzed.latitude,
     longitude: fuzzed.longitude,
+    // The raw PostGIS value also contains exact coordinates.
+    location: null,
     coordinates_approximate: true,
   };
 
   // Also fuzz location_json if present
   if (product.location_json && typeof product.location_json === "object") {
     const locJson = product.location_json as Record<string, unknown>;
-    result.location_json = {
-      ...locJson,
-      latitude: fuzzed.latitude,
-      longitude: fuzzed.longitude,
-    };
+    result.location_json = locJson.type === "Point"
+      ? { type: "Point", coordinates: [fuzzed.longitude, fuzzed.latitude] }
+      : { latitude: fuzzed.latitude, longitude: fuzzed.longitude };
   }
 
   return result;

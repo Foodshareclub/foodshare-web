@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { ContactsBlock } from '@/components';
-import { ResponsiveContainer } from '@/components/shared/ResponsiveContainer';
-import type { ContactsBlockType } from '@/components/chat/ContactsBlock';
+import ContactsBlock from "@/components/chat/ContactsBlock";
+import type { ContactsBlockType } from "@/components/chat/ContactsBlock";
+import { ResponsiveContainer } from "@/components/shared/ResponsiveContainer";
+import type React from "react";
 
 /**
  * ContactsBlockDrawerContainer
@@ -17,11 +17,7 @@ export const ContactsBlockDrawerContainer: React.FC<ContactsBlockType> = ({
   userID,
 }) => {
   return (
-    <ResponsiveContainer
-      drawerPlacement="start"
-      drawerSize="md"
-      triggerPosition="left"
-    >
+    <ResponsiveContainer drawerPlacement="start" drawerSize="md" triggerPosition="left">
       <ContactsBlock
         userID={userID}
         allRooms={allRooms}

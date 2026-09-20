@@ -14,7 +14,7 @@
 import type { Gpu } from "vgpu";
 
 interface PoolEntry {
-  gpu: Gpu;
+  gpu: Gpu | null;
   refCount: number;
   ready: Promise<Gpu>;
 }
@@ -24,6 +24,8 @@ let pool: PoolEntry | null = null;
 export interface SharedGPU {
   gpu: Gpu;
   ready: Promise<Gpu>;
+  /** Releases this acquisition exactly once, even during overlapping cleanup. */
+  release: () => void;
 }
 
 /**
@@ -31,17 +33,54 @@ export interface SharedGPU {
  * First caller triggers init(); subsequent callers reuse the same device.
  */
 export async function acquireGPU(): Promise<SharedGPU> {
-  if (pool) {
-    pool.refCount++;
-    return { gpu: pool.gpu, ready: pool.ready };
+  if (!pool) {
+    // Publish the pending initialization before yielding. Concurrent canvases
+    // must share the same promise as well as the same resolved device.
+    const entry: PoolEntry = {
+      gpu: null,
+      refCount: 0,
+      ready: import("vgpu").then(({ init }) => init()),
+    };
+    entry.ready = entry.ready.then(
+      (gpu) => {
+        entry.gpu = gpu;
+        return gpu;
+      },
+      (error) => {
+        if (pool === entry) pool = null;
+        throw error;
+      },
+    );
+    pool = entry;
   }
 
-  const { init } = await import("vgpu");
-  const gpu = await init();
-  const ready = Promise.resolve(gpu);
+  const entry = pool;
+  entry.refCount++;
+  const gpu = await entry.ready;
+  let released = false;
+  return {
+    gpu,
+    ready: entry.ready,
+    release: () => {
+      if (released) return;
+      released = true;
+      releaseEntry(entry);
+    },
+  };
+}
 
-  pool = { gpu, refCount: 1, ready };
-  return { gpu, ready };
+function releaseEntry(entry: PoolEntry): void {
+  if (entry.refCount <= 0) return;
+  entry.refCount--;
+  if (entry.refCount === 0) {
+    if (pool === entry) pool = null;
+    if (entry.gpu) entry.gpu.dispose();
+    else
+      void entry.ready.then(
+        (gpu) => gpu.dispose(),
+        () => {},
+      );
+  }
 }
 
 /**
@@ -49,13 +88,7 @@ export async function acquireGPU(): Promise<SharedGPU> {
  * When refCount reaches 0, disposes the device.
  */
 export function releaseGPU(): void {
-  if (!pool) return;
-
-  pool.refCount--;
-  if (pool.refCount <= 0) {
-    pool.gpu.dispose();
-    pool = null;
-  }
+  if (pool) releaseEntry(pool);
 }
 
 /**

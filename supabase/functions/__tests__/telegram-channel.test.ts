@@ -73,6 +73,7 @@ Deno.test("TelegramChannelAdapter: sends formatted message when telegram_id is p
   const context = createMockContext(987654321);
 
   // Set mock bot token
+  const originalToken = Deno.env.get("TELEGRAM_BOT_TOKEN");
   Deno.env.set("TELEGRAM_BOT_TOKEN", "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11");
 
   const originalFetch = globalThis.fetch;
@@ -108,14 +109,33 @@ Deno.test("TelegramChannelAdapter: sends formatted message when telegram_id is p
     assertEquals(result.deliveredTo, ["987654321"]);
   } finally {
     globalThis.fetch = originalFetch;
+    if (originalToken === undefined) Deno.env.delete("TELEGRAM_BOT_TOKEN");
+    else Deno.env.set("TELEGRAM_BOT_TOKEN", originalToken);
   }
 });
 
 Deno.test("handleDeepLinkToken: rejects empty token", async () => {
-  const result = await handleDeepLinkToken(
-    "",
-    { id: 123456, first_name: "Test", is_bot: false },
-    123456,
-  );
-  assertEquals(result, false);
+  const originalFetch = globalThis.fetch;
+  const originalToken = Deno.env.get("TELEGRAM_BOT_TOKEN");
+  Deno.env.set("TELEGRAM_BOT_TOKEN", "test-bot-token");
+  let messageCount = 0;
+  globalThis.fetch = async (_input, init) => {
+    const body = JSON.parse(String((init as RequestInit | undefined)?.body));
+    assertEquals(body.chat_id, 123456);
+    messageCount++;
+    return Response.json({ ok: true, result: { message_id: 1 } });
+  };
+  try {
+    const result = await handleDeepLinkToken(
+      "",
+      { id: 123456, first_name: "Test", is_bot: false },
+      123456,
+    );
+    assertEquals(result, false);
+    assertEquals(messageCount, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalToken === undefined) Deno.env.delete("TELEGRAM_BOT_TOKEN");
+    else Deno.env.set("TELEGRAM_BOT_TOKEN", originalToken);
+  }
 });

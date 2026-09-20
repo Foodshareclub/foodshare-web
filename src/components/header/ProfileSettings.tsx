@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { FileText, HelpCircle, Info, List, LogOut, MessageSquare, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { FileText, MessageSquare, Settings, LogOut, HelpCircle, Info, List } from "lucide-react";
+import { useState } from "react";
 
-import { cn } from "@/lib/utils";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { DEFAULT_AVATAR_URL } from "@/constants/storage";
+import type { ProfileSettingsProps } from "@/components/header/navbar/types";
+import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,8 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { ProfileSettingsProps } from "@/components/header/navbar/types";
-import { AuthenticationUserModal } from "@/components";
+import { DEFAULT_AVATAR_URL } from "@/constants/storage";
+import { cn } from "@/lib/utils";
 
 export default function ProfileSettings({
   signalOfNewMessage,
@@ -47,7 +47,7 @@ export default function ProfileSettings({
                   "cursor-pointer rounded-full h-[42px] w-[42px] relative",
                   "after:content-[''] after:w-4 after:h-4 after:bg-green-300",
                   "after:border-2 after:border-background after:rounded-full",
-                  "after:absolute after:bottom-0 after:right-0"
+                  "after:absolute after:bottom-0 after:right-0",
                 )}
               >
                 <Avatar className="h-[42px] w-[42px]">
@@ -71,17 +71,11 @@ export default function ProfileSettings({
                   <FileText className="h-4 w-4" />
                   My Posts
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => navigateToMyLists()}
-                  className="gap-2 cursor-pointer"
-                >
+                <DropdownMenuItem onClick={() => navigateToMyLists()} className="gap-2 cursor-pointer">
                   <List className="h-4 w-4" />
                   My Listings
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => navigateToMyMessages()}
-                  className="gap-2 cursor-pointer"
-                >
+                <DropdownMenuItem onClick={() => navigateToMyMessages()} className="gap-2 cursor-pointer">
                   <MessageSquare className="h-4 w-4" />
                   {signalOfNewMessage.length ? (
                     <span className="flex items-center gap-2">
@@ -95,17 +89,11 @@ export default function ProfileSettings({
                   )}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => navigateToAccSettings()}
-                  className="gap-2 cursor-pointer"
-                >
+                <DropdownMenuItem onClick={() => navigateToAccSettings()} className="gap-2 cursor-pointer">
                   <Settings className="h-4 w-4" />
                   Account Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => navigateToLogout()}
-                  className="gap-2 cursor-pointer text-destructive"
-                >
+                <DropdownMenuItem onClick={() => navigateToLogout()} className="gap-2 cursor-pointer text-destructive">
                   <LogOut className="h-4 w-4" />
                   Log Out
                 </DropdownMenuItem>
@@ -115,10 +103,7 @@ export default function ProfileSettings({
                 <DropdownMenuItem onClick={() => setIsLoginOpen(true)} className="cursor-pointer">
                   Login
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setIsRegisterOpen(true)}
-                  className="cursor-pointer"
-                >
+                <DropdownMenuItem onClick={() => setIsRegisterOpen(true)} className="cursor-pointer">
                   Registration
                 </DropdownMenuItem>
               </>
@@ -138,11 +123,7 @@ export default function ProfileSettings({
       </div>
 
       {/* Auth Modals - Rendered outside menu */}
-      <AuthenticationUserModal
-        buttonValue="Login"
-        isOpen={isLoginOpen}
-        onClose={() => setIsLoginOpen(false)}
-      />
+      <AuthenticationUserModal buttonValue="Login" isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
       <AuthenticationUserModal
         buttonValue="Registration"
         isOpen={isRegisterOpen}

@@ -5,9 +5,9 @@
  * All mutations should go through this client to ensure consistency with iOS/Android.
  */
 
-import type { APIResponse, APIErrorResponse } from "./types";
-import { createClient } from "@/lib/supabase/server";
 import type { ActionResult, ErrorCode } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
+import type { APIErrorResponse } from "./types";
 
 const APP_VERSION = "3.0.2";
 
@@ -69,6 +69,40 @@ function mapErrorCode(code: string): ErrorCode {
   return ERROR_CODE_MAP[code] || "INTERNAL_ERROR";
 }
 
+function isErrorResponse(value: unknown): value is APIErrorResponse {
+  if (!value || typeof value !== "object" || !("success" in value) || value.success !== false) {
+    return false;
+  }
+  return (
+    "error" in value &&
+    !!value.error &&
+    typeof value.error === "object" &&
+    "code" in value.error &&
+    typeof value.error.code === "string" &&
+    "message" in value.error &&
+    typeof value.error.message === "string"
+  );
+}
+
+function httpError(status: number): ActionResult<never> {
+  const errors: Record<number, [ErrorCode, string]> = {
+    400: ["VALIDATION_ERROR", "Invalid request"],
+    401: ["UNAUTHORIZED", "Authentication required"],
+    403: ["FORBIDDEN", "You do not have permission to perform this action"],
+    404: ["NOT_FOUND", "Resource not found"],
+    408: ["TIMEOUT", "Request timed out"],
+    409: ["CONFLICT", "The resource has changed. Please refresh and try again"],
+    413: ["PAYLOAD_TOO_LARGE", "Request is too large"],
+    422: ["VALIDATION_ERROR", "Invalid request"],
+    429: ["RATE_LIMIT", "Too many requests. Please try again later"],
+    502: ["SERVICE_UNAVAILABLE", "Service temporarily unavailable"],
+    503: ["SERVICE_UNAVAILABLE", "Service temporarily unavailable"],
+    504: ["TIMEOUT", "Request timed out"],
+  };
+  const [code, message] = errors[status] ?? ["INTERNAL_ERROR", "Server returned an invalid response"];
+  return { success: false, error: { code, message } };
+}
+
 // =============================================================================
 // API Client
 // =============================================================================
@@ -91,20 +125,22 @@ function mapErrorCode(code: string): ErrorCode {
  */
 export async function apiCall<TResponse, TBody = unknown>(
   endpoint: string,
-  options: APICallOptions<TBody>
+  options: APICallOptions<TBody>,
 ): Promise<ActionResult<TResponse>> {
   const { method, body, query, idempotencyKey, timeout = 30000, skipAuth = false } = options;
   const correlationId = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  let timedOut = false;
 
   try {
     // Build URL with query params
     const url = new URL(`${EDGE_FUNCTIONS_URL}/${endpoint}`);
     if (query) {
-      Object.entries(query).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(query)) {
         if (value !== undefined) {
           url.searchParams.set(key, String(value));
         }
-      });
+      }
     }
 
     // Get auth token
@@ -130,13 +166,19 @@ export async function apiCall<TResponse, TBody = unknown>(
     // Build headers
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
+      Accept: "application/json",
       "X-Client-Platform": "web",
       "X-Correlation-Id": correlationId,
       "X-App-Version": APP_VERSION,
     };
 
+    const apiKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (apiKey) {
+      headers.apikey = apiKey;
+    }
+
     if (authToken) {
-      headers["Authorization"] = `Bearer ${authToken}`;
+      headers.Authorization = `Bearer ${authToken}`;
     }
 
     if (idempotencyKey) {
@@ -145,16 +187,17 @@ export async function apiCall<TResponse, TBody = unknown>(
 
     // Make request with timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    timeoutId = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, timeout);
 
     const response = await fetch(url.toString(), {
       method,
       headers,
-      body: body ? JSON.stringify(body) : undefined,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
       signal: controller.signal,
     });
-
-    clearTimeout(timeoutId);
 
     // Handle 204 No Content (successful delete)
     if (response.status === 204) {
@@ -164,35 +207,49 @@ export async function apiCall<TResponse, TBody = unknown>(
       };
     }
 
-    // Parse response
-    const result = (await response.json()) as APIResponse<TResponse>;
+    // Gateways may return HTML or a different JSON shape. Keep the deadline
+    // active until the body has finished, and preserve meaningful HTTP errors.
+    let result: unknown;
+    try {
+      result = await response.json();
+    } catch (error) {
+      if (timedOut) throw error;
+      return httpError(response.status);
+    }
 
-    // Convert to ActionResult
-    if (result.success) {
+    if (isErrorResponse(result)) {
       return {
-        success: true,
-        data: result.data,
+        success: false,
+        error: {
+          code: mapErrorCode(result.error.code),
+          message: result.error.message,
+          details: result.error.details,
+        },
       };
     }
 
-    // Handle error response
-    const errorResponse = result as APIErrorResponse;
-    return {
-      success: false,
-      error: {
-        code: mapErrorCode(errorResponse.error.code),
-        message: errorResponse.error.message,
-        details: errorResponse.error.details,
-      },
-    };
+    if (!response.ok) return httpError(response.status);
+
+    // Convert to ActionResult
+    if (result && typeof result === "object" && "success" in result && result.success === true && "data" in result) {
+      return {
+        success: true,
+        data: result.data as TResponse,
+      };
+    }
+
+    return httpError(response.status);
   } catch (error) {
+    if (timedOut) {
+      return { success: false, error: { code: "TIMEOUT", message: "Request timed out" } };
+    }
     // Handle network/timeout errors
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         return {
           success: false,
           error: {
-            code: "NETWORK_ERROR",
+            code: "TIMEOUT",
             message: "Request timed out",
           },
         };
@@ -217,6 +274,8 @@ export async function apiCall<TResponse, TBody = unknown>(
         message: "An unexpected error occurred",
       },
     };
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
   }
 }
 
@@ -230,7 +289,7 @@ export async function apiCall<TResponse, TBody = unknown>(
 export async function apiGet<TResponse>(
   endpoint: string,
   query?: Record<string, string | number | boolean | undefined>,
-  options?: Omit<APICallOptions, "method" | "body" | "query">
+  options?: Omit<APICallOptions, "method" | "body" | "query">,
 ): Promise<ActionResult<TResponse>> {
   return apiCall<TResponse>(endpoint, {
     method: "GET",
@@ -245,7 +304,7 @@ export async function apiGet<TResponse>(
 export async function apiPost<TResponse, TBody = unknown>(
   endpoint: string,
   body: TBody,
-  options?: Omit<APICallOptions<TBody>, "method" | "body">
+  options?: Omit<APICallOptions<TBody>, "method" | "body">,
 ): Promise<ActionResult<TResponse>> {
   return apiCall<TResponse, TBody>(endpoint, {
     method: "POST",
@@ -262,7 +321,7 @@ export async function apiPut<TResponse, TBody = unknown>(
   endpoint: string,
   body: TBody,
   query?: Record<string, string | number | boolean | undefined>,
-  options?: Omit<APICallOptions<TBody>, "method" | "body" | "query">
+  options?: Omit<APICallOptions<TBody>, "method" | "body" | "query">,
 ): Promise<ActionResult<TResponse>> {
   return apiCall<TResponse, TBody>(endpoint, {
     method: "PUT",
@@ -279,7 +338,7 @@ export async function apiPut<TResponse, TBody = unknown>(
 export async function apiDelete<TResponse = void>(
   endpoint: string,
   query?: Record<string, string | number | boolean | undefined>,
-  options?: Omit<APICallOptions, "method" | "body" | "query">
+  options?: Omit<APICallOptions, "method" | "body" | "query">,
 ): Promise<ActionResult<TResponse>> {
   return apiCall<TResponse>(endpoint, {
     method: "DELETE",

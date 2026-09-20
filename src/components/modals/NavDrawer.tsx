@@ -1,13 +1,15 @@
 "use client";
 
+import { DragHandleIcon } from "@/utils/icons";
 import * as React from "react";
 import { useState } from "react";
-import { DragHandleIcon } from "@/utils/icons";
 
 import type { ProfileSettingsProps } from "@/components/header/navbar/types";
-import { AuthenticationUserModal, MinifiedUserInfo, UniversalDrawer } from "@/components";
-import { Button } from "@/components/ui/button";
+import { MinifiedUserInfo } from "@/components/minifiedUserInfo/MinifiedUserInfo";
+import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
 import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
+import { Button } from "@/components/ui/button";
+import UniversalDrawer from "@/components/universalDrawer/UniversalDrawer";
 
 export default function NawDrawer({
   firstName,
@@ -49,16 +51,12 @@ export default function NawDrawer({
         placement={"end"}
       >
         <>
-          <MinifiedUserInfo
-            src={imgUrl}
-            firstName={firstName}
-            secondName={secondName}
-            description={email}
-          />
+          <MinifiedUserInfo src={imgUrl} firstName={firstName} secondName={secondName} description={email} />
           <div className="mt-10">
             {isAuth ? (
               <div className="flex flex-col gap-3">
-                <div
+                <button
+                  type="button"
                   className="glass-subtle rounded-xl p-4 cursor-pointer gpu"
                   onClick={() => {
                     onClose();
@@ -66,8 +64,9 @@ export default function NawDrawer({
                   }}
                 >
                   <p className="text-3xl">&quot;My listing&apos;s&quot;</p>
-                </div>
-                <div
+                </button>
+                <button
+                  type="button"
                   className="glass-subtle rounded-xl p-4 cursor-pointer gpu"
                   onClick={() => {
                     onClose();
@@ -75,9 +74,10 @@ export default function NawDrawer({
                   }}
                 >
                   <p className="text-3xl">&quot;Account settings&quot;</p>
-                </div>
+                </button>
 
-                <div
+                <button
+                  type="button"
                   className={`${signalOfNewMessage.length ? "glass-accent-primary" : "glass-subtle"} rounded-xl p-4 cursor-pointer gpu`}
                   onClick={() => {
                     onClose();
@@ -89,9 +89,10 @@ export default function NawDrawer({
                       ? `"You have ${signalOfNewMessage.length} unanswered messages"`
                       : `"My messages"`}
                   </p>
-                </div>
+                </button>
 
-                <div
+                <button
+                  type="button"
                   className="glass-subtle rounded-xl p-4 cursor-pointer gpu"
                   onClick={() => {
                     onClose();
@@ -99,7 +100,7 @@ export default function NawDrawer({
                   }}
                 >
                   <p className="text-3xl">&quot;Log Out&quot;</p>
-                </div>
+                </button>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
@@ -107,7 +108,8 @@ export default function NawDrawer({
                 <AuthenticationUserModal buttonValue="Registration" fullScreen={false} />
               </div>
             )}
-            <div
+            <button
+              type="button"
               className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3"
               onClick={() => {
                 onClose();
@@ -115,19 +117,18 @@ export default function NawDrawer({
               }}
             >
               <p className="text-3xl">&quot;About Us&quot;</p>
-            </div>
-            <div
+            </button>
+            <button
+              type="button"
               className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3"
               onClick={() => navigateToHelp()}
             >
               <p className="text-3xl">&quot;Help&quot;</p>
-            </div>
+            </button>
 
             {/* Theme Switcher */}
             <div className="mt-6 pt-4 border-t border-border/30">
-              <p className="text-sm text-muted-foreground mb-3 font-medium">
-                &quot;Appearance&quot;
-              </p>
+              <p className="text-sm text-muted-foreground mb-3 font-medium">&quot;Appearance&quot;</p>
               <ThemeToggleInline />
             </div>
           </div>

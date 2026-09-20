@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { Clock, Frame, FrameLoopHandle, Gpu, Surface } from "vgpu";
 import { acquireGPU, releaseGPU } from "./GPUDevicePool";
 
 export interface WebGPUState {
@@ -9,27 +10,18 @@ export interface WebGPUState {
   error: Error | null;
 }
 
-const CACHE_KEY = "foodshare:webgpu:supported";
-
 function detectWebGPUSupport(): boolean {
   if (typeof navigator === "undefined") return false;
-  return !!(navigator as any).gpu;
+  return "gpu" in navigator && Boolean(navigator.gpu);
 }
 
 /**
- * Detects WebGPU browser support with aggressive caching.
+ * Detects WebGPU browser support after hydration.
  * Returns a stable reference across re-renders.
  */
 export function useWebGPU(): WebGPUState {
-  const [state, setState] = useState<WebGPUState>(() => {
-    if (typeof window !== "undefined") {
-      const cached = sessionStorage.getItem(CACHE_KEY);
-      if (cached !== null) {
-        return { supported: cached === "true", loading: false, error: null };
-      }
-    }
-    return { supported: false, loading: true, error: null };
-  });
+  // A cached client capability must not change the first hydration render.
+  const [state, setState] = useState<WebGPUState>({ supported: false, loading: true, error: null });
 
   useEffect(() => {
     let cancelled = false;
@@ -38,7 +30,6 @@ export function useWebGPU(): WebGPUState {
       try {
         const supported = detectWebGPUSupport();
         if (cancelled) return;
-        sessionStorage.setItem(CACHE_KEY, String(supported));
         setState({ supported, loading: false, error: null });
       } catch (err) {
         if (cancelled) return;
@@ -65,8 +56,13 @@ export function useWebGPU(): WebGPUState {
  * Returns a ref-stable init function and cleanup.
  */
 export function useGPUInit() {
-  const gpuRef = useRef<any>(null);
-  const loopRef = useRef<any>(null);
+  const gpuRef = useRef<{
+    gpu: Gpu;
+    canvasSurface: Surface;
+    time: Clock;
+    frameLoop: typeof import("vgpu").frameLoop;
+  } | null>(null);
+  const loopRef = useRef<FrameLoopHandle | null>(null);
   const hasAcquired = useRef(false);
 
   const initGPU = useCallback(async (canvas: HTMLCanvasElement) => {
@@ -86,18 +82,18 @@ export function useGPUInit() {
   }, []);
 
   const startLoop = useCallback(
-    (callback: (frame: any, ctx: { time: number; texel: [number, number] }) => void) => {
+    (callback: (frame: Frame, ctx: { time: number; texel: readonly [number, number] }) => void) => {
       if (!gpuRef.current) return;
       const { gpu, canvasSurface, time, frameLoop: frameLoopFn } = gpuRef.current;
 
-      loopRef.current = frameLoopFn(gpu, (frame: any) => {
+      loopRef.current = frameLoopFn(gpu, (frame) => {
         callback(frame, {
           time: time.time,
           texel: canvasSurface.texelSize,
         });
       });
     },
-    []
+    [],
   );
 
   const cleanup = useCallback(() => {

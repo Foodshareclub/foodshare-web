@@ -2,7 +2,7 @@
  * Type Guards and Unknown Error Utilities
  */
 
-import type { AppError, ActionResult } from "./types";
+import type { ActionResult, AppError } from "./types";
 
 // ============================================================================
 // Type Guards
@@ -16,9 +16,7 @@ export function isSuccessResult<T>(result: ActionResult<T>): result is { success
   return result.success === true;
 }
 
-export function isFailureResult<T>(
-  result: ActionResult<T>
-): result is { success: false; error: AppError } {
+export function isFailureResult<T>(result: ActionResult<T>): result is { success: false; error: AppError } {
   return result.success === false;
 }
 
@@ -57,11 +55,29 @@ export function toError(error: unknown): Error {
 /**
  * Type guard to check if an error has a specific code property
  */
-export function hasErrorCode<T extends string>(
-  error: unknown,
-  code: T
-): error is Error & { code: T } {
-  return (
-    error instanceof Error && "code" in error && (error as Error & { code: unknown }).code === code
-  );
+export function hasErrorCode<T extends string>(error: unknown, code: T): error is Error & { code: T } {
+  return error instanceof Error && "code" in error && (error as Error & { code: unknown }).code === code;
+}
+
+/**
+ * Detect Next.js prerender / dynamic server interruption errors.
+ * These errors MUST be rethrown so Next.js partial prerendering and streaming work properly.
+ */
+export function isPrerenderInterruption(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const digest = (error as { digest?: unknown }).digest;
+  if (typeof digest === "string") {
+    if (
+      digest.startsWith("DYNAMIC_SERVER_USAGE") ||
+      digest === "HANGING_PROMISE_REJECTION" ||
+      digest === "NEXT_PRERENDER_INTERRUPTED"
+    ) {
+      return true;
+    }
+  }
+  const message = (error as { message?: unknown }).message;
+  if (typeof message === "string" && message.includes("During prerendering")) {
+    return true;
+  }
+  return false;
 }

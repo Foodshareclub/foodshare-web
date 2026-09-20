@@ -4,13 +4,15 @@
 
 import type { HandlerContext } from "../../../_shared/api-handler.ts";
 import { created } from "../../../_shared/api-handler.ts";
-import { ValidationError } from "../../../_shared/errors.ts";
+import { AuthenticationError, ValidationError } from "../../../_shared/errors.ts";
 import { logger } from "../../../_shared/logger.ts";
 import { sanitizeHtml } from "../../../_shared/validation-rules.ts";
 import { validateProductImageUrls } from "../../../_shared/storage-urls.ts";
 import type { CreateProductBody } from "../schemas.ts";
 import { transformProduct } from "../transformers.ts";
 import { cache } from "../../../_shared/cache.ts";
+import { classifyListing } from "../classification.ts";
+import { predictListingCategory } from "../classification-ai.ts";
 
 export async function createProduct(
   ctx: HandlerContext<CreateProductBody>,
@@ -18,7 +20,7 @@ export async function createProduct(
   const { supabase, userId, body } = ctx;
 
   if (!userId) {
-    throw new ValidationError("Authentication required");
+    throw new AuthenticationError();
   }
 
   const imageCheck = await validateProductImageUrls(body.images);
@@ -52,6 +54,13 @@ export async function createProduct(
     throw new ValidationError("Content validation failed", validation.issues);
   }
 
+  const classification = await classifyListing({
+    title: sanitizedTitle,
+    description: sanitizedDescription,
+    postType: body.postType,
+    categoryMode: body.categoryMode,
+  }, predictListingCategory);
+
   const { data, error } = await supabase
     .from("posts")
     .insert({
@@ -59,15 +68,20 @@ export async function createProduct(
       post_name: sanitizedTitle,
       post_description: sanitizedDescription,
       images: body.images,
-      post_type: body.postType,
-      latitude: body.latitude,
-      longitude: body.longitude,
-      pickup_address: sanitizedPickupAddress,
+      post_type: classification.postType,
+      ...(body.longitude !== undefined && body.latitude !== undefined
+        ? { location: `SRID=4326;POINT(${body.longitude} ${body.latitude})` }
+        : {}),
+      post_address: sanitizedPickupAddress,
       pickup_time: sanitizedPickupTime,
-      category_id: body.categoryId,
+      available_hours: sanitizedPickupTime,
+      transportation: body.transportation ? sanitizeHtml(body.transportation) : undefined,
+      condition: body.condition ? sanitizeHtml(body.condition) : undefined,
+      // A subcategory chosen for the old type may be incompatible with the resolved type.
+      category_id: classification.postType === body.postType ? body.categoryId : undefined,
       expires_at: body.expiresAt,
-      is_active: true,
-      version: 1,
+      is_active: classification.postType !== "volunteer",
+      metadata: { classification: { ...classification, decidedAt: new Date().toISOString() } },
     })
     .select()
     .single();
@@ -82,8 +96,12 @@ export async function createProduct(
   // 10x cache invalidation — new listing busts list caches
   try {
     cache.clear();
-  } catch (_e) {
+  } catch {
     // ignore cache clear errors
+  }
+
+  if (!data.is_active || body.latitude === undefined || body.longitude === undefined) {
+    return created(transformProduct(data), ctx);
   }
 
   try {
@@ -93,8 +111,8 @@ export async function createProduct(
           route: "trigger/new-listing",
           food_item_id: data.id,
           user_id: userId,
-          latitude: data.latitude,
-          longitude: data.longitude,
+          latitude: body.latitude,
+          longitude: body.longitude,
           post_name: data.post_name,
           post_type: data.post_type,
         },

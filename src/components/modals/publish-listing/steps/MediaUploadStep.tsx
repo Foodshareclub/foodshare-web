@@ -1,10 +1,11 @@
 "use client";
 
-import React, { RefObject } from "react";
-import { Loader2, Plus, ZoomIn, GripVertical, X, AlertCircle } from "lucide-react";
+import { RequiredStar } from "@/components/requiredStar/RequiredStar";
 import { Label } from "@/components/ui/label";
-import { RequiredStar } from "@/components";
 import { ALLOWED_MIME_TYPES } from "@/constants/mime-types";
+import { AlertCircle, GripVertical, Loader2, Plus, X, ZoomIn } from "lucide-react";
+import type React from "react";
+import type { RefObject } from "react";
 import { MAX_IMAGES } from "../constants";
 import type { ImageItem } from "../types";
 
@@ -71,11 +72,7 @@ export function MediaUploadStep({
               `}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={image.url}
-              alt={`Image ${index + 1}`}
-              className="w-full h-full object-cover"
-            />
+            <img src={image.url} alt={`Listing preview ${index + 1}`} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors" />
             {index === 0 && (
               <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-primary text-primary-foreground text-[10px] font-medium rounded">
@@ -105,19 +102,9 @@ export function MediaUploadStep({
 
         {images.length < MAX_IMAGES && (
           <div
-            onClick={onFileInputClick}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
-            role="button"
-            tabIndex={0}
-            aria-label="Add image"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onFileInputClick();
-              }
-            }}
             className={`
                 aspect-square rounded-lg border-2 border-dashed transition-all duration-200 cursor-pointer
                 flex flex-col items-center justify-center gap-1
@@ -127,20 +114,23 @@ export function MediaUploadStep({
                 ${!isDragOver && !showImageError ? "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50" : ""}
               `}
           >
-            {isCompressing ? (
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            ) : (
-              <>
-                <Plus
-                  className={`h-6 w-6 ${showImageError ? "text-destructive" : "text-muted-foreground"}`}
-                />
-                {images.length === 0 && (
-                  <span className="text-xs text-muted-foreground text-center px-2">
-                    Drop images or click
-                  </span>
-                )}
-              </>
-            )}
+            <button
+              type="button"
+              onClick={onFileInputClick}
+              aria-label="Add image"
+              className="flex h-full w-full flex-col items-center justify-center gap-1"
+            >
+              {isCompressing ? (
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              ) : (
+                <>
+                  <Plus className={`h-6 w-6 ${showImageError ? "text-destructive" : "text-muted-foreground"}`} />
+                  {images.length === 0 && (
+                    <span className="text-xs text-muted-foreground text-center px-2">Drop images or click</span>
+                  )}
+                </>
+              )}
+            </button>
           </div>
         )}
       </div>
@@ -166,9 +156,7 @@ export function MediaUploadStep({
           Please add at least one photo
         </p>
       )}
-      <p className="text-xs text-muted-foreground">
-        Drag to reorder. First image will be the cover.
-      </p>
+      <p className="text-xs text-muted-foreground">Drag to reorder. First image will be the cover.</p>
     </div>
   );
 }

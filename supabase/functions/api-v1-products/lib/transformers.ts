@@ -9,6 +9,16 @@ import { slugify } from "../../_shared/utils.ts";
 export function transformProduct(data: Record<string, unknown>) {
   // Return raw database format (snake_case) for web compatibility
   const raw = { ...data } as Record<string, unknown>;
+  // The edit revision is separate from analytics/sync updates.
+  raw.version = raw.version ?? null;
+  const point = raw.location_json as { type?: string; coordinates?: unknown[] } | null;
+  if (point?.type === "Point" && Array.isArray(point.coordinates)) {
+    const [longitude, latitude] = point.coordinates;
+    if (typeof latitude === "number" && typeof longitude === "number") {
+      raw.latitude ??= latitude;
+      raw.longitude ??= longitude;
+    }
+  }
   const id = raw.id as number | string | undefined;
   const postSlug = (raw.post_slug as string) || (raw.slug as string) || "";
   const postName = (raw.post_name as string) || (raw.title as string) || "";

@@ -69,7 +69,7 @@ test.describe("Home Page", () => {
     await page.waitForLoadState("domcontentloaded");
 
     // Wait for either empty state or products to appear
-    await page.waitForSelector(':matches(.nothing-shared-within, [class*="grid"])', {
+    await page.waitForSelector(':is(.nothing-shared-within, [class*="grid"])', {
       timeout: 15000,
     });
 
@@ -125,19 +125,9 @@ test.describe("Home Page - Navigation", () => {
       .filter({ hasText: /things|thing/i })
       .first();
 
-    const isVisible = await categoryButton.isVisible().catch(() => false);
-
-    if (isVisible) {
-      await categoryButton.click();
-      await page.waitForLoadState("domcontentloaded");
-
-      // Should navigate to category page
-      const url = page.url();
-      expect(url.includes("/thing") || url.includes("/things")).toBeTruthy();
-    } else {
-      // No category buttons visible - pass test (may be mobile view)
-      expect(true).toBeTruthy();
-    }
+    await expect(categoryButton).toBeVisible();
+    await categoryButton.click();
+    await expect(page).toHaveURL(/\/things?(?:[/?#]|$)/);
   });
 });
 

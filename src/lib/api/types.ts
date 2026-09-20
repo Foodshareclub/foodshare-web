@@ -97,10 +97,13 @@ export interface CreateProductRequest {
   description?: string;
   images: string[];
   postType: ListingPostType;
-  latitude: number;
-  longitude: number;
+  categoryMode?: "auto" | "manual";
+  latitude?: number;
+  longitude?: number;
   pickupAddress?: string;
   pickupTime?: string;
+  transportation?: string;
+  condition?: string;
   categoryId?: number;
   expiresAt?: string;
 }
@@ -110,6 +113,7 @@ export interface CreateProductRequest {
  * Requires version for optimistic locking
  */
 export interface UpdateProductRequest {
+  postType?: ListingPostType;
   title?: string;
   description?: string;
   images?: string[];
@@ -126,23 +130,22 @@ export interface UpdateProductRequest {
  */
 export interface ProductResponse {
   id: number;
-  title: string;
-  description: string | null;
+  post_name: string;
+  post_description: string | null;
   images: string[];
-  postType: ListingPostType;
-  location: {
-    lat: number;
-    lng: number;
-    address: string | null;
-  };
-  pickupTime: string | null;
-  categoryId: number | null;
-  isActive: boolean;
-  expiresAt: string | null;
-  createdAt: string;
-  updatedAt: string | null;
+  post_type: ListingPostType;
+  post_address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  pickup_time: string | null;
+  category_id: number | null;
+  is_active: boolean;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string | null;
   version: number;
-  userId: string;
+  sync_version: number;
+  profile_id: string;
 }
 
 /**
