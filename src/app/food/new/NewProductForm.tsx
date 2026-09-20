@@ -3,7 +3,6 @@
 import { imageAPI } from "@/api/imageAPI";
 import { generateListingDraft } from "@/app/actions/ai-draft";
 import { createProduct } from "@/app/actions/products";
-import Navbar from "@/components/header/navbar/Navbar";
 // Note: Auth state is determined by server-passed userId prop, not useAuth()
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -98,15 +97,10 @@ interface NewProductFormProps {
   isAdmin?: boolean;
 }
 
-export function NewProductForm({ userId, initialType = "food", profile, isAdmin = false }: NewProductFormProps) {
+export function NewProductForm({ userId, initialType = "food" }: NewProductFormProps) {
   const t = useTranslations();
   const router = useRouter();
   const { userLocation: _userLocation } = useUIStore();
-
-  // Use server-passed userId to determine auth (avoids hydration mismatch)
-  // The userId prop is only passed when user is authenticated on server
-  const isAuthenticated = !!userId;
-  const avatarUrl = profile?.avatar_url;
 
   const [isSubmitting, startSubmitTransition] = useTransition();
   const [isDrafting, setIsDrafting] = useState(false);
@@ -357,26 +351,8 @@ export function NewProductForm({ userId, initialType = "food", profile, isAdmin 
     });
   };
 
-  const handleRouteChange = (route: string) => {
-    router.push(`/${route}`);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background dark:from-background dark:to-muted/20">
-      <Navbar
-        userId={userId}
-        isAuth={isAuthenticated}
-        isAdmin={isAdmin}
-        productType="food"
-        onRouteChange={handleRouteChange}
-        onProductTypeChange={() => {}}
-        imgUrl={avatarUrl || profile?.avatar_url || ""}
-        firstName={profile?.first_name || ""}
-        secondName={profile?.second_name || ""}
-        email={profile?.email || ""}
-        signalOfNewMessage={[]}
-      />
-
       {/* Form */}
       <div className="container mx-auto px-4 pb-8 max-w-3xl">
         {/* Page Header */}
