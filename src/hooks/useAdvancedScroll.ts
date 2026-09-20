@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { saveScrollState, restoreScrollState } from "@/utils/scrollPersistence";
+import { restoreScrollState, saveScrollState } from "@/utils/scrollPersistence";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type ScrollDirection = "up" | "down" | "none";
 
@@ -54,42 +54,26 @@ export const useAdvancedScroll = (options: UseAdvancedScrollOptions = {}) => {
     debounceMs = 0,
   } = options;
 
-  // Calculate smart thresholds based on viewport
-  const viewportHeight = window.innerHeight;
-  const calculatedCompactThreshold = calculateSmartThreshold(viewportHeight, compactThreshold);
-  const calculatedHideThreshold =
-    calculateSmartThreshold(viewportHeight, hideThreshold === "auto" ? "auto" : hideThreshold) *
-    1.5; // Hide threshold is 1.5x compact threshold
-
-  const [scrollState, setScrollState] = useState<AdvancedScrollState>(() => {
-    // Try to restore previous scroll state for smooth navigation
-    const restored = restoreScrollState();
-    if (restored) {
-      return {
-        scrollY: restored.scrollY,
-        direction: "none",
-        isCompact: restored.isCompact,
-        isHidden: false, // Never restore hidden state
-        isAtTop: restored.scrollY < 10,
-        scrollPercentage: 0,
-      };
-    }
-    return {
-      scrollY: 0,
-      direction: "none",
-      isCompact: false,
-      isHidden: false,
-      isAtTop: true,
-      scrollPercentage: 0,
-    };
+  // Keep server HTML and the first hydration render identical. Browser state
+  // is read after mounting, when window and sessionStorage are available.
+  const [scrollState, setScrollState] = useState<AdvancedScrollState>({
+    scrollY: 0,
+    direction: "none",
+    isCompact: false,
+    isHidden: false,
+    isAtTop: true,
+    scrollPercentage: 0,
   });
 
   const lastScrollY = useRef(0);
   const lastDirection = useRef<ScrollDirection>("none");
   const ticking = useRef(false);
+  const initialized = useRef(false);
   const debounceTimeout = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const updateScrollState = useCallback(() => {
+    const calculatedCompactThreshold = calculateSmartThreshold(window.innerHeight, compactThreshold);
+    const calculatedHideThreshold = calculateSmartThreshold(window.innerHeight, hideThreshold) * 1.5;
     const currentScrollY = window.scrollY;
     const documentHeight = document.documentElement.scrollHeight - window.innerHeight;
     const scrollPercentage = documentHeight > 0 ? (currentScrollY / documentHeight) * 100 : 0;
@@ -140,13 +124,7 @@ export const useAdvancedScroll = (options: UseAdvancedScrollOptions = {}) => {
 
     lastScrollY.current = currentScrollY;
     ticking.current = false;
-  }, [
-    calculatedCompactThreshold,
-    calculatedHideThreshold,
-    showOnScrollUp,
-    hideOnScrollDown,
-    scrollState.isHidden,
-  ]);
+  }, [compactThreshold, hideThreshold, showOnScrollUp, hideOnScrollDown, scrollState.isHidden]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -168,7 +146,11 @@ export const useAdvancedScroll = (options: UseAdvancedScrollOptions = {}) => {
       }
     };
 
-    // Set initial state
+    // Restore the last position for direction tracking after hydration.
+    if (!initialized.current) {
+      lastScrollY.current = restoreScrollState()?.scrollY ?? window.scrollY;
+      initialized.current = true;
+    }
     updateScrollState();
 
     // Add scroll listener with passive option for performance
