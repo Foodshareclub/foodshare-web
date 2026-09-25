@@ -1,14 +1,29 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import { imageAPI } from "@/api/imageAPI";
+import { createProduct, updateProduct } from "@/app/actions/products";
+import { fetchUserAddress } from "@/app/actions/profile";
+import DeleteCardModal from "@/components/modals/DeleteCardModal";
+import { Button } from "@/components/ui/button";
 import {
-  Loader2,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { STORAGE_BUCKETS } from "@/constants/storage";
+import { useAuth } from "@/hooks/useAuth";
+import { useUIStore } from "@/store/zustand/useUIStore";
+import type { InitialProductStateType } from "@/types/product.types";
+import {
+  AlertCircle,
   BarChart3,
   CheckCircle,
-  AlertCircle,
   Eye,
   EyeOff,
   FileText,
+  Loader2,
   RotateCw,
   Save,
   Trash2,
@@ -17,38 +32,23 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import type { PublishListingModalType } from "./publish-listing/types";
-import { categoryConfig, MAX_DESCRIPTION_LENGTH } from "./publish-listing/constants";
+import React, { useRef, useState, useEffect } from "react";
 import {
+  AriaAnnouncer,
   Confetti,
+  ImageLightbox,
   ProgressBar,
   QualityScore,
-  ImageLightbox,
-  TemplatePicker,
-  AriaAnnouncer,
   SmartTips,
+  TemplatePicker,
 } from "./publish-listing/components";
+import { MAX_DESCRIPTION_LENGTH, categoryConfig } from "./publish-listing/constants";
 import { useImageUpload, useListingForm, useUndoRedo } from "./publish-listing/hooks";
 import { BasicDetailsStep } from "./publish-listing/steps/BasicDetailsStep";
-import { MediaUploadStep } from "./publish-listing/steps/MediaUploadStep";
 import { LocationPickupStep } from "./publish-listing/steps/LocationPickupStep";
+import { MediaUploadStep } from "./publish-listing/steps/MediaUploadStep";
 import { PublishListingFooter } from "./publish-listing/steps/PublishListingFooter";
-import DeleteCardModal from "@/components/modals/DeleteCardModal";
-import { useAuth } from "@/hooks/useAuth";
-import { createProduct, updateProduct } from "@/app/actions/products";
-import { fetchUserAddress } from "@/app/actions/profile";
-import { useUIStore } from "@/store/zustand/useUIStore";
-import { imageAPI } from "@/api/imageAPI";
-import type { InitialProductStateType } from "@/types/product.types";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { STORAGE_BUCKETS } from "@/constants/storage";
-import { Button } from "@/components/ui/button";
+import type { PublishListingModalType } from "./publish-listing/types";
 
 /**
  * PublishListingModal Component
@@ -138,6 +138,7 @@ function PublishListingModal({
     }
   }, [isOpen, id, product]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Reinitialize on dialog or listing changes; changing images is an edit.
   useEffect(() => {
     if (isOpen) {
       if (product) {
@@ -265,7 +266,7 @@ function PublishListingModal({
       if (imagesToUpload.length > 0) {
         setUploadProgress(`Uploading ${imagesToUpload.length} image(s)...`);
 
-        const filesToUpload = imagesToUpload.map((img) => img.file!);
+        const filesToUpload = imagesToUpload.flatMap((img) => (img.file ? [img.file] : []));
         const batchResult = await imageAPI.uploadBatch(
           filesToUpload,
           { bucket: STORAGE_BUCKETS.POSTS },
@@ -310,14 +311,17 @@ function PublishListingModal({
         formData.set("longitude", userLocation.longitude.toString());
       }
 
-      let result;
       if (product) {
+        if (!product.version) {
+          throw new Error("Please refresh this listing before editing it.");
+        }
+        formData.set("version", String(product.version));
         formData.set("is_active", "true");
-        result = await updateProduct(productId, formData);
-      } else {
-        result = await createProduct(formData);
-        if (result.success) form.clearDraft();
       }
+      const result = product
+        ? await updateProduct(productId, formData)
+        : await createProduct(formData);
+      if (!product && result.success) form.clearDraft();
 
       if (!result.success) {
         throw new Error(result.error?.message || "Failed to save listing");
@@ -416,7 +420,7 @@ function PublishListingModal({
                 <DialogDescription className="text-muted-foreground">
                   {product
                     ? "Update your listing details below"
-                    : "Share something with your community"}
+                    : "Add photos, a description, and pickup details"}
                 </DialogDescription>
               </div>
               <div className="flex items-center gap-2">

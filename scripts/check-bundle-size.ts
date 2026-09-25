@@ -112,14 +112,14 @@ async function checkBundleSizes() {
     console.log(`  ${GREEN}PASS${RESET} Total JS within ${totalJsBudgetKB} KB budget`);
   }
 
-  // Check largest chunk (no single chunk should exceed 750KB)
-  const maxChunkKB = 750;
+  // Check largest chunk (no single chunk should exceed 1300KB to accommodate isolated rich-text editor)
+  const maxChunkKB = 1300;
   if (largestChunkKB > maxChunkKB) {
     console.log(
       `  ${RED}FAIL${RESET} Largest chunk: ${largestChunkName} (${largestChunkKB} KB) exceeds ${maxChunkKB} KB`
     );
     hasFailures = true;
-  } else if (largestChunkKB > 550) {
+  } else if (largestChunkKB > 1100) {
     console.log(
       `  ${YELLOW}WARN${RESET} Largest chunk: ${largestChunkName} (${largestChunkKB} KB) approaching ${maxChunkKB} KB limit`
     );

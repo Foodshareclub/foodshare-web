@@ -120,10 +120,14 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
         />
 
         {/* Custom Marker with Popup */}
-        <Marker icon={customMarker} position={position}>
+        <Marker
+          icon={customMarker}
+          position={position}
+          title={oneProduct.post_name || t("address")}
+        >
           <Popup className="product-card-popup">
             <div className="product-popup-card">
-              <h3 className="product-popup-title">{oneProduct.post_name}</h3>
+              <p className="product-popup-title">{oneProduct.post_name}</p>
               <span className="product-popup-badge">{oneProduct.post_type}</span>
               {oneProduct.post_stripped_address && (
                 <p className="product-popup-address">📍 {oneProduct.post_stripped_address}</p>
@@ -144,7 +148,7 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
               <span className="text-lg">📍</span>
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-foreground truncate">{oneProduct.post_name}</h4>
+              <p className="font-semibold text-foreground truncate">{oneProduct.post_name}</p>
               <p className="text-sm text-muted-foreground truncate">
                 {oneProduct.post_stripped_address}
               </p>

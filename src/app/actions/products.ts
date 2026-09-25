@@ -1,27 +1,20 @@
 "use server";
 
-import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
-import { type ActionResult, withErrorHandling, validateWithSchema } from "@/lib/errors";
-import {
-  CACHE_TAGS,
-  getProductTags,
-} from "@/lib/data/cache-keys";
-import { invalidateTag, invalidatePostActivityCaches } from "@/lib/data/cache-invalidation";
 import { trackEvent } from "@/app/actions/analytics";
 import { logPostActivity as _logPostActivity } from "@/app/actions/post-activity";
+import { createProductAPI, deleteProductAPI } from "@/lib/api/products";
+import { invalidatePostActivityCaches, invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS, getProductTags } from "@/lib/data/cache-keys";
+import { embedProduct } from "@/lib/embeddings";
+import { type ActionResult, validateWithSchema, withErrorHandling } from "@/lib/errors";
 import {
+  type ProductSearchDocument,
   indexProduct,
   removeProductFromSearch,
-  type ProductSearchDocument,
 } from "@/lib/storage/search";
-import { embedProduct } from "@/lib/embeddings";
 import { createActionLogger } from "@/lib/structured-logger";
-import {
-  createProductAPI,
-  updateProductAPI as _updateProductAPI,
-  deleteProductAPI,
-} from "@/lib/api/products";
+import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
 
 // Feature flag for Edge Function migration (set to true to enable)
 const USE_EDGE_FUNCTIONS = process.env.USE_EDGE_FUNCTIONS_FOR_PRODUCTS === "true";
@@ -77,7 +70,7 @@ async function indexProductForSearch(
  */
 function invalidateProductCaches(productId?: number, postType?: string, profileId?: string): void {
   // Use helper for consistent tag invalidation
-  getProductTags(productId, postType).forEach((tag) => invalidateTag(tag));
+  for (const tag of getProductTags(productId, postType)) invalidateTag(tag);
 
   // Invalidate user-specific cache
   if (profileId) {
@@ -98,6 +91,7 @@ const createProductSchema = z.object({
   post_name: z.string().min(1, "Name is required").max(200),
   post_description: z.string().min(1, "Description is required").max(5000),
   post_type: z.string().min(1, "Type is required"),
+  category_mode: z.enum(["auto", "manual"]).optional(),
   post_address: z.string().optional().default(""), // Address is optional
   available_hours: z.string().optional(),
   transportation: z.string().optional(),
@@ -110,19 +104,22 @@ const createProductSchema = z.object({
 });
 
 const updateProductSchema = createProductSchema.partial().extend({
+  // Create defaults must not erase omitted fields during a partial edit.
+  post_address: z.string().optional(),
+  images: z.array(z.string()).optional(),
   is_active: z.boolean().optional(),
+  version: z.number().int().positive().safe(),
 });
 
 /**
  * Create a new product
  *
- * Routes to Edge Function when:
- * - USE_EDGE_FUNCTIONS flag is enabled
- * - Latitude and longitude are provided
- *
- * Falls back to direct Supabase otherwise.
+ * Every new listing passes through the shared Edge Function classifier.
+ * Missing coordinates remain absent; they never become a fictional (0, 0) location.
  */
-export async function createProduct(formData: FormData): Promise<ActionResult<{ id: number }>> {
+export async function createProduct(
+  formData: FormData
+): Promise<ActionResult<{ id: number; post_type: string }>> {
   const logger = await createActionLogger("createProduct");
   logger.info("Starting product creation");
 
@@ -134,9 +131,8 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
   };
   const getOptionalNumber = (key: string): number | undefined => {
     const value = formData.get(key);
-    if (!value) return undefined;
-    const num = parseFloat(value as string);
-    return isNaN(num) ? undefined : num;
+    if (value === null || value === "") return undefined;
+    return typeof value === "string" ? Number(value) : Number.NaN;
   };
 
   // Parse images JSON safely
@@ -154,6 +150,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     post_name: getString("post_name"),
     post_description: getString("post_description"),
     post_type: getString("post_type"),
+    category_mode: getOptionalString("category_mode"),
     post_address: getOptionalString("post_address") ?? "",
     available_hours: getOptionalString("available_hours"),
     transportation: getOptionalString("transportation"),
@@ -168,7 +165,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     post_name: rawData.post_name,
     post_type: rawData.post_type,
     images_count: rawData.images?.length,
-    has_location: !!(rawData.latitude && rawData.longitude),
+    has_location: rawData.latitude !== undefined && rawData.longitude !== undefined,
   });
 
   // Validate with standard helper
@@ -178,152 +175,67 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     return validation;
   }
 
-  // Check if we should use Edge Function
-  const hasLocation =
-    validation.data.latitude !== undefined && validation.data.longitude !== undefined;
-  const useEdgeFunction = USE_EDGE_FUNCTIONS && hasLocation;
-
-  if (useEdgeFunction) {
-    logger.info("Using Edge Function path", { hasLocation });
-
-    // Route through Edge Function for unified cross-platform behavior
-    const result = await createProductAPI({
-      post_name: validation.data.post_name,
-      post_description: validation.data.post_description,
-      post_type: validation.data.post_type,
-      post_address: validation.data.post_address,
-      available_hours: validation.data.available_hours,
-      transportation: validation.data.transportation,
-      condition: validation.data.condition,
-      images: validation.data.images ?? [],
-      profile_id: validation.data.profile_id,
-      latitude: validation.data.latitude,
-      longitude: validation.data.longitude,
-    });
-
-    if (result.success) {
-      // Invalidate caches
-      invalidateProductCaches(
-        result.data.id,
-        validation.data.post_type,
-        validation.data.profile_id
-      );
-
-      // Fire-and-forget background tasks
-      Promise.all([
-        trackEvent("Listing Created", {
-          listingId: result.data.id,
-          type: validation.data.post_type,
-          via: "edge-function",
-        }),
-        indexProductForSearch(result.data.id, {
-          post_name: validation.data.post_name,
-          post_description: validation.data.post_description,
-          post_type: validation.data.post_type,
-          post_address: validation.data.post_address,
-          profile_id: validation.data.profile_id,
-          // NOTE: Edge Function currently handles is_active separately
-          // Volunteer posts require approval via admin dashboard
-          is_active: validation.data.post_type !== "volunteer",
-        }),
-        embedProduct({
-          id: result.data.id,
-          title: validation.data.post_name,
-          description: validation.data.post_description,
-          type: validation.data.post_type,
-          location: validation.data.post_address || undefined,
-          userId: validation.data.profile_id,
-        }),
-      ]).catch(() => {});
-
-      logger.info("Product created via Edge Function", { id: result.data.id });
-    }
-
-    return result;
+  if ((validation.data.latitude === undefined) !== (validation.data.longitude === undefined)) {
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Latitude and longitude must be provided together",
+      },
+    };
   }
 
-  // Fallback: Direct Supabase path (legacy behavior)
-  logger.info("Using direct Supabase path", { hasLocation, useEdgeFunctions: USE_EDGE_FUNCTIONS });
-
-  return withErrorHandling(async () => {
+  return withErrorHandling<ActionResult<{ id: number; post_type: string }>>(async () => {
     const supabase = await createClient();
-
-    // Verify user is authenticated and matches profile_id
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error("You must be signed in to create a listing");
+    if (!user || user.id !== validation.data.profile_id) {
+      throw new Error("You must be signed in as the listing owner");
     }
 
-    if (user.id !== validation.data.profile_id) {
-      throw new Error("Unauthorized: User ID mismatch");
+    const result = await createProductAPI(validation.data);
+    if (!result.success) return result;
+
+    // Use the saved category everywhere; classification may have corrected the form's default.
+    const savedType = result.data.post_type;
+    invalidateProductCaches(result.data.id, savedType, user.id);
+    if (savedType !== validation.data.post_type) {
+      invalidateProductCaches(result.data.id, validation.data.post_type, user.id);
     }
-
-    // Remove lat/lng from insert data (not in posts table schema for direct insert)
-    const { latitude: _lat, longitude: _lng, ...insertData } = validation.data;
-
-    // Volunteer posts require admin approval (start as inactive)
-    const isVolunteerPost = validation.data.post_type === "volunteer";
-    const initialActiveStatus = !isVolunteerPost; // false for volunteers, true for others
-
-    const { data, error } = await supabase
-      .from("posts")
-      .insert({ ...insertData, is_active: initialActiveStatus })
-      .select("id")
-      .single();
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    // Batch invalidate all product caches
-    invalidateProductCaches(data.id, validation.data.post_type, validation.data.profile_id);
-
-    logger.info("Product created", { id: data.id });
-    return { id: data.id };
-  }, "createProduct").then(async (result) => {
-    if (result.success && result.data) {
-      // Fire-and-forget: analytics, search indexing, and embeddings (don't block response)
-      Promise.all([
-        trackEvent("Listing Created", {
-          listingId: result.data.id,
-          type: formData.get("post_type") as string,
-        }),
-        indexProductForSearch(result.data.id, {
-          post_name: formData.get("post_name") as string,
-          post_description: formData.get("post_description") as string,
-          post_type: formData.get("post_type") as string,
-          post_address: formData.get("post_address") as string | undefined,
-          profile_id: formData.get("profile_id") as string,
-          // Volunteer posts start inactive (pending approval)
-          is_active: formData.get("post_type") !== "volunteer",
-        }),
-        embedProduct({
-          id: result.data.id,
-          title: formData.get("post_name") as string,
-          description: formData.get("post_description") as string,
-          type: formData.get("post_type") as string,
-          location: (formData.get("post_address") as string) || undefined,
-          userId: formData.get("profile_id") as string,
-        }),
-      ]).catch(() => {});
-    }
+    Promise.all([
+      trackEvent("Listing Created", {
+        listingId: result.data.id,
+        type: savedType,
+        via: "edge-function",
+      }),
+      indexProductForSearch(result.data.id, {
+        post_name: validation.data.post_name,
+        post_description: validation.data.post_description,
+        post_type: savedType,
+        post_address: validation.data.post_address,
+        profile_id: user.id,
+        is_active: result.data.is_active,
+      }),
+      embedProduct({
+        id: result.data.id,
+        title: validation.data.post_name,
+        description: validation.data.post_description,
+        type: savedType,
+        location: validation.data.post_address || undefined,
+        userId: user.id,
+      }),
+    ]).catch(() => {});
+    logger.info("Product created via Edge Function", { id: result.data.id, postType: savedType });
     return result;
-  });
+  }, "createProduct").then((result) => (result.success ? result.data : result));
 }
 
 /**
  * Update an existing product
  *
- * TODO: Migrate to Edge Function when version field is added to product type.
- * The Edge Function requires `version` for optimistic locking, which needs:
- * 1. Add `version` to InitialProductStateType (src/types/product.types.ts)
- * 2. Include version in product queries (lib/data/products.ts)
- * 3. Pass version through FormData when editing
- * 4. Call updateProductAPI with version
- *
- * Currently stays on direct Supabase path for backwards compatibility.
+ * Uses the revision loaded by the edit form so concurrent web and mobile
+ * updates cannot silently overwrite each other.
  */
 export async function updateProduct(
   id: number,
@@ -333,7 +245,7 @@ export async function updateProduct(
   logger.info("Starting product update", { id });
 
   // Parse form data
-  const rawData: Record<string, unknown> = {};
+  const rawData: Record<string, unknown> = { version: Number(formData.get("version")) };
   const fields = [
     "post_name",
     "post_description",
@@ -371,7 +283,7 @@ export async function updateProduct(
     return validation;
   }
 
-  return withErrorHandling(async () => {
+  return withErrorHandling<ActionResult<undefined>>(async () => {
     const supabase = await createClient();
 
     // Verify user is authenticated
@@ -383,21 +295,65 @@ export async function updateProduct(
     }
 
     // Get current product info for cache invalidation and ownership check
-    const { data: currentProduct } = await supabase
+    const { data: currentProduct, error: fetchError } = await supabase
       .from("posts")
-      .select("post_type,profile_id")
+      .select("post_type,profile_id,metadata")
       .eq("id", id)
-      .single();
+      .maybeSingle();
+
+    if (fetchError) throw new Error(fetchError.message);
+    if (!currentProduct) {
+      return { success: false, error: { code: "NOT_FOUND", message: "Listing not found" } };
+    }
 
     // Verify ownership
     if (currentProduct?.profile_id && currentProduct.profile_id !== user.id) {
       throw new Error("Unauthorized: You can only edit your own listings");
     }
 
-    const { error } = await supabase.from("posts").update(validation.data).eq("id", id);
+    const { version, category_mode: _categoryMode, ...fields } = validation.data;
+    const updates: Record<string, unknown> = { ...fields };
+    if (fields.post_type && fields.post_type !== currentProduct.post_type) {
+      updates.category_id = null;
+      updates.metadata = {
+        ...(currentProduct.metadata && typeof currentProduct.metadata === "object"
+          ? currentProduct.metadata
+          : {}),
+        classification: {
+          version: "2026-09-19.1",
+          source: "manual",
+          status: "manual",
+          requestedPostType: currentProduct.post_type,
+          postType: fields.post_type,
+          suggestedPostType: null,
+          confidence: null,
+          needsReview: false,
+          reason: "explicit_category_choice",
+          decidedAt: new Date().toISOString(),
+        },
+      };
+      if (fields.post_type === "volunteer") updates.is_active = false;
+    }
+    const { data: updated, error } = await supabase
+      .from("posts")
+      .update(updates)
+      .eq("id", id)
+      .eq("profile_id", user.id)
+      .eq("version", version)
+      .select("id")
+      .maybeSingle();
 
     if (error) {
       throw new Error(error.message);
+    }
+    if (!updated) {
+      return {
+        success: false,
+        error: {
+          code: "CONFLICT",
+          message: "This listing changed while you were editing. Please refresh and try again.",
+        },
+      };
     }
 
     // Batch invalidate caches - handles both old and new type
@@ -427,8 +383,8 @@ export async function updateProduct(
     }
 
     logger.info("Product updated", { id });
-    return undefined;
-  }, "updateProduct");
+    return { success: true, data: undefined };
+  }, "updateProduct").then((result) => (result.success ? result.data : result));
 }
 
 /**
@@ -550,19 +506,18 @@ export async function toggleProductFavorite(
       invalidateTag(CACHE_TAGS.USER_PRODUCTS(userId));
 
       return { isFavorited: false };
-    } else {
-      // Add favorite
-      const { error } = await supabase
-        .from("favorites")
-        .insert({ product_id: productId, user_id: userId });
-
-      if (error) throw new Error(error.message);
-
-      // Invalidate caches for immediate UI update
-      invalidateTag(CACHE_TAGS.PRODUCT(productId));
-      invalidateTag(CACHE_TAGS.USER_PRODUCTS(userId));
-
-      return { isFavorited: true };
     }
+    // Add favorite
+    const { error } = await supabase
+      .from("favorites")
+      .insert({ product_id: productId, user_id: userId });
+
+    if (error) throw new Error(error.message);
+
+    // Invalidate caches for immediate UI update
+    invalidateTag(CACHE_TAGS.PRODUCT(productId));
+    invalidateTag(CACHE_TAGS.USER_PRODUCTS(userId));
+
+    return { isFavorited: true };
   }, "toggleProductFavorite");
 }

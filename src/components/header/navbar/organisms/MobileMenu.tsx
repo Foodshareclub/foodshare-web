@@ -14,7 +14,9 @@ import {
 import type { CustomRoomType } from "@/api/chatAPI";
 import { DragHandleIcon } from "@/utils/icons";
 import { Button } from "@/components/ui/button";
-import { UniversalDrawer, MinifiedUserInfo, AuthenticationUserModal } from "@/components";
+import UniversalDrawer from "@/components/universalDrawer/UniversalDrawer";
+import { MinifiedUserInfo } from "@/components/minifiedUserInfo/MinifiedUserInfo";
+import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
 import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
 
 // Lucide icons
@@ -100,9 +102,11 @@ export function MobileMenu({
     <div className="self-center">
       {/* Menu Trigger Button */}
       <Button
+        type="button"
         onClick={handleOpen}
         variant="ghost"
-        className="relative"
+        size="icon-lg"
+        className="relative rounded-full"
         aria-label={hasNotifications ? "See menu (new messages)" : "See menu"}
         aria-haspopup="dialog"
       >

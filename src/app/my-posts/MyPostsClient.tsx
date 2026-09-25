@@ -1,11 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
-import dynamic from "next/dynamic";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Menu, X } from "lucide-react";
+import { deleteProduct, updateProduct } from "@/app/actions/products";
+import { DeleteConfirmationModal } from "@/components/modals/ConfirmationModal";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,14 +12,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { DeleteConfirmationModal } from "@/components/modals/ConfirmationModal";
-import { updateProduct, deleteProduct } from "@/app/actions/products";
-import { cn } from "@/lib/utils";
-import { isValidImageUrl } from "@/lib/image";
-import { getProductDetailUrl } from "@/utils/categoryMapping";
 import { getPostTypeConfig } from "@/lib/constants";
+import { isValidImageUrl } from "@/lib/image";
+import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
+import { getProductDetailUrl } from "@/utils/categoryMapping";
+import { Eye, EyeOff, Menu, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import dynamic from "next/dynamic";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 
 // Lazy load the heavy modal
 const PublishListingModal = dynamic(() => import("@/components/modals/PublishListingModal"), {
@@ -49,6 +49,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Get unique post types from user's posts with counts
   const postTypes = [...new Set(posts.map((p) => p.post_type))];
@@ -112,14 +113,17 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
   };
 
   const handleToggleStatus = async (post: InitialProductStateType) => {
+    setActionError(null);
     const formData = new FormData();
     formData.set("is_active", String(!post.is_active));
+    formData.set("version", String(post.version ?? ""));
     startTransition(async () => {
       const result = await updateProduct(post.id, formData);
       if (result.success) {
         router.refresh();
       } else {
         console.error("Failed to toggle post status:", result.error);
+        setActionError(result.error.message);
       }
     });
   };
@@ -132,6 +136,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
       </h3>
       <nav className="space-y-1">
         <button
+          type="button"
           onClick={() => onSelect("all")}
           className={cn(
             "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
@@ -157,6 +162,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
 
           return (
             <button
+              type="button"
               key={type}
               onClick={() => onSelect(type)}
               className={cn(
@@ -181,6 +187,11 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
 
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background pt-24 pb-12">
+      {actionError && (
+        <p role="alert" className="mx-auto mb-4 max-w-7xl px-6 text-destructive">
+          {actionError}
+        </p>
+      )}
       {/* Mobile Sidebar Toggle */}
       <Button
         variant="outline"
@@ -194,7 +205,9 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
 
       {/* Mobile Overlay */}
       {isSidebarOpen && (
-        <div
+        <button
+          type="button"
+          aria-label="Close category menu"
           className="fixed inset-0 bg-black/50 z-30 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />

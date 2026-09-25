@@ -216,6 +216,9 @@ export interface Database {
           embedding: number[] | null;
           created_at: string | null;
           updated_at: string | null;
+          version: number;
+          sync_version: number | null;
+          expires_at: string | null;
         };
         Insert: {
           id?: number;
@@ -244,6 +247,9 @@ export interface Database {
           embedding?: number[] | null;
           created_at?: string | null;
           updated_at?: string | null;
+          version?: number;
+          sync_version?: number | null;
+          expires_at?: string | null;
         };
         Update: {
           id?: number;
@@ -272,6 +278,9 @@ export interface Database {
           embedding?: number[] | null;
           created_at?: string | null;
           updated_at?: string | null;
+          version?: number;
+          sync_version?: number | null;
+          expires_at?: string | null;
         };
       };
       households: {
@@ -365,6 +374,9 @@ export interface Database {
           is_arranged: boolean | null;
           created_at: string | null;
           updated_at: string | null;
+          version: number | null;
+          sync_version: number | null;
+          expires_at: string | null;
           profile_id: string | null;
           images: string[] | null;
           post_views: number | null;

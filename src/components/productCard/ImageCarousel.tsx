@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { isValidImageUrl, normalizeImageUrl } from "@/lib/image";
+import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight, Leaf, Package } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { gpu120Image, gpu120Interactive } from "@/utils/gpuStyles";
-import { isValidImageUrl, normalizeImageUrl } from "@/lib/image";
+import { useRef, useState } from "react";
+import { LISTING_PHOTO } from "./listing-layout";
 
 type ImageCarouselProps = {
   images: string[];
@@ -22,156 +25,126 @@ export function ImageCarousel({
   postName,
   postType,
 }: ImageCarouselProps) {
+  const t = useTranslations();
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  const validImages = [
+    ...new Set(images.filter(isValidImageUrl).map((url) => normalizeImageUrl(url) as string)),
+  ];
+  const PlaceholderIcon = postType === "food" || postType === "vegan" ? Leaf : Package;
+  const placeholder = (
+    <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-muted via-muted to-primary/5 text-muted-foreground">
+      <span className="flex size-20 items-center justify-center rounded-full border border-border/60 bg-background/60">
+        <PlaceholderIcon className="size-8" strokeWidth={1.25} aria-hidden="true" />
+      </span>
+    </div>
+  );
 
-  // Validate and normalize images
-  const validImages = images.filter(isValidImageUrl).map((img) => normalizeImageUrl(img) as string);
-  // Fallback for missing images
+  const handleScroll = () => {
+    const element = scrollRef.current;
+    if (!element || !element.clientWidth) return;
+    // RTL scrollLeft is negative. Keep the logical image index positive.
+    const index = Math.round(Math.abs(element.scrollLeft) / element.clientWidth);
+    setActiveIndex(Math.min(validImages.length - 1, Math.max(0, index)));
+  };
+
+  const scrollToIndex = (index: number, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const element = scrollRef.current;
+    if (!element) return;
+    const direction = getComputedStyle(element).direction === "rtl" ? -1 : 1;
+    element.scrollTo({
+      left: direction * index * element.clientWidth,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+    });
+    setActiveIndex(index);
+  };
+
   if (validImages.length === 0) {
     return (
-      <div className="relative w-full h-full overflow-hidden bg-muted aspect-square">
-        <Link
-          href={productUrl}
-          className="w-full h-full relative cursor-pointer flex items-center justify-center bg-gradient-to-br from-muted to-muted/80"
-          prefetch={true}
-        >
-          <span className="text-5xl drop-shadow-sm">📦</span>
-        </Link>
-      </div>
+      <Link
+        href={productUrl}
+        aria-label={postName}
+        className={cn(
+          LISTING_PHOTO,
+          "relative block focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-ring"
+        )}
+      >
+        {placeholder}
+      </Link>
     );
   }
 
-  const handleScroll = () => {
-    if (scrollRef.current) {
-      const scrollPosition = scrollRef.current.scrollLeft;
-      const width = scrollRef.current.clientWidth;
-      const newIndex = Math.round(scrollPosition / width);
-      setActiveIndex(newIndex);
-    }
-  };
-
-  const scrollToIndex = (index: number, e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    if (scrollRef.current) {
-      const width = scrollRef.current.clientWidth;
-      scrollRef.current.scrollTo({
-        left: index * width,
-        behavior: "smooth",
-      });
-      setActiveIndex(index);
-    }
-  };
-
   return (
-    <div
-      className="relative w-full h-full overflow-hidden group/carousel aspect-square"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className={cn(LISTING_PHOTO, "relative overflow-hidden")}>
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex overflow-x-auto snap-x snap-mandatory w-full h-full"
-        style={{
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-          WebkitOverflowScrolling: "touch",
-        }}
+        className="flex size-full snap-x snap-mandatory overflow-x-auto scrollbar-none"
       >
-        {validImages.map((image, i) => (
-          <div key={i} className="w-full h-full shrink-0 snap-center relative">
-            <Link
-              href={productUrl}
-              className="w-full h-full block relative cursor-pointer bg-muted"
-              prefetch={true}
-              // Prevent dragging the link to create a ghost image
-              onDragStart={(e) => e.preventDefault()}
-            >
-              {imageErrors[i] ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-muted to-muted/80 z-10">
-                  <span className="text-5xl drop-shadow-sm">📦</span>
-                </div>
-              ) : (
-                <Image
-                  className="object-cover"
-                  style={
-                    i === 0
-                      ? { ...gpu120Image, viewTransitionName: `product-hero-${productId}` }
-                      : gpu120Image
-                  }
-                  src={image}
-                  alt={`${postName} - ${postType} listing - Image ${i + 1}`}
-                  fill
-                  onError={() => setImageErrors((prev) => ({ ...prev, [i]: true }))}
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-                  placeholder="blur"
-                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDBAMBAAAAAAAAAAAAAQIDAAQFBhESMSFBgRP/xAAVAQEBAAAAAAAAAAAAAAAAAAADBP/EABkRAAIDAQAAAAAAAAAAAAAAAAECAAMhMf/aAAwDAQACEQMRAD8AwWOzleZo4kLyOQqqOySdgKta0vYltMMJba0VgFDxvEZRvt1yCCO/VKUoDbYmr0P/2Q=="
-                />
-              )}
-
-              {/* Subtle top gradient for the Heart button contrast */}
-              <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
-
-              {/* Subtle bottom gradient for the pagination dots contrast */}
-              <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
-            </Link>
-          </div>
+        {validImages.map((image, index) => (
+          <Link
+            key={image}
+            href={productUrl}
+            aria-label={postName}
+            tabIndex={index === activeIndex ? 0 : -1}
+            className="relative block size-full shrink-0 snap-center bg-muted focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-ring"
+            onDragStart={(event) => event.preventDefault()}
+          >
+            {imageErrors[image] ? (
+              placeholder
+            ) : (
+              <Image
+                className="object-cover"
+                style={
+                  index === 0 ? { viewTransitionName: `product-hero-${productId}` } : undefined
+                }
+                src={image}
+                alt={postName}
+                fill
+                onError={() => setImageErrors((previous) => ({ ...previous, [image]: true }))}
+                sizes="(min-width: 1440px) 316px, (min-width: 1280px) 25vw, (min-width: 960px) 33vw, (min-width: 600px) 50vw, 100vw"
+              />
+            )}
+          </Link>
         ))}
       </div>
 
-      {/* Navigation Arrows (Desktop) */}
       {validImages.length > 1 && (
-        <>
-          <div
-            className={`absolute left-2 top-1/2 -translate-y-1/2 transition-opacity duration-200 z-10 ${
-              isHovered && activeIndex > 0 ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
+        <div className="pointer-events-none absolute inset-x-3 bottom-3 flex items-center justify-between gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon-lg"
+            className="pointer-events-auto rounded-full"
+            onClick={(event) => scrollToIndex(activeIndex - 1, event)}
+            disabled={activeIndex === 0}
+            aria-label={`${t("previous")} — ${postName}`}
           >
-            <button
-              onClick={(e) => scrollToIndex(activeIndex - 1, e)}
-              className="airbnb-action-btn airbnb-action-btn-hover w-7 h-7"
-              aria-label="Previous image"
-              style={gpu120Interactive}
-            >
-              <ChevronLeft className="w-4 h-4 text-foreground" />
-            </button>
-          </div>
-          <div
-            className={`absolute right-2 top-1/2 -translate-y-1/2 transition-opacity duration-200 z-10 ${
-              isHovered && activeIndex < validImages.length - 1
-                ? "opacity-100"
-                : "opacity-0 pointer-events-none"
-            }`}
+            <ChevronLeft className="rtl:rotate-180" />
+          </Button>
+          <span
+            className="rounded-full bg-background/95 px-3 py-1 text-xs font-medium tabular-nums text-foreground"
+            aria-hidden="true"
+            dir="ltr"
           >
-            <button
-              onClick={(e) => scrollToIndex(activeIndex + 1, e)}
-              className="airbnb-action-btn airbnb-action-btn-hover w-7 h-7"
-              aria-label="Next image"
-              style={gpu120Interactive}
-            >
-              <ChevronRight className="w-4 h-4 text-foreground" />
-            </button>
-          </div>
-        </>
-      )}
-
-      {/* Dots */}
-      {validImages.length > 1 && (
-        <div className="absolute bottom-3 left-0 right-0 airbnb-dots pointer-events-none z-10">
-          {validImages.map((_, i) => (
-            <div
-              key={i}
-              className={`airbnb-dot shadow-sm ${
-                i === activeIndex ? "airbnb-dot-active" : "opacity-60"
-              }`}
-            />
-          ))}
+            {activeIndex + 1} / {validImages.length}
+          </span>
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon-lg"
+            className="pointer-events-auto rounded-full"
+            onClick={(event) => scrollToIndex(activeIndex + 1, event)}
+            disabled={activeIndex === validImages.length - 1}
+            aria-label={`${t("next")} — ${postName}`}
+          >
+            <ChevronRight className="rtl:rotate-180" />
+          </Button>
         </div>
       )}
     </div>

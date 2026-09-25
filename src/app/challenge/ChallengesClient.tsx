@@ -17,6 +17,7 @@ import type { AuthUser } from "@/lib/data/auth";
 import type { LeaderboardUser, UserRankInfo } from "@/components/challenges/ChallengeLeaderboard";
 
 interface ChallengesClientProps {
+  searchTerm?: string;
   challenges: InitialProductStateType[];
   user: AuthUser | null;
   stats: { totalChallenges: number; totalParticipants: number; totalXpEarned: number };
@@ -36,6 +37,7 @@ function formatNumber(num: number): string {
 }
 
 export function ChallengesClient({
+  searchTerm = "",
   challenges: initialChallenges,
   user,
   stats,
@@ -47,7 +49,7 @@ export function ChallengesClient({
   const isAuth = !!user;
 
   // Use React Query with server-side initial data for optimal hydration
-  const { data: challenges } = useDeckChallenges(initialChallenges, { limit: 12 });
+  const { data: challenges } = useDeckChallenges(initialChallenges, { limit: 12, searchTerm });
 
   // Handle deck card click - store the active card and open modal
   const handleDeckCardClick = (challenge: InitialProductStateType) => {

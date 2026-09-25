@@ -7,7 +7,7 @@
  * @module api-v1-notifications/lib/template-engine
  */
 
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "../../_shared/logger.ts";
 
 // =============================================================================

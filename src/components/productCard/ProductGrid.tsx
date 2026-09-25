@@ -1,9 +1,12 @@
 "use client";
 
+import { cn } from "@/lib/utils";
+import type { InitialProductStateType } from "@/types/product.types";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { ProductCard } from "./ProductCard";
 import SkeletonCard from "./SkeletonCard";
-import type { InitialProductStateType } from "@/types/product.types";
+import { LISTING_CONTAINER, LISTING_GRID } from "./listing-layout";
 
 interface ProductGridProps {
   products: InitialProductStateType[];
@@ -22,14 +25,7 @@ const LOADING_MORE_SKELETONS = Array.from({ length: 4 }, (_, i) => i);
 
 /**
  * ProductGrid - Displays products in a responsive grid with infinite scroll
- * Uses auto-fill grid columns to perfectly match Airbnb's density:
- * - Mobile (< 550px): 1 column
- * - sm (~640px): 2 columns
- * - md (~768px): 3 columns
- * - lg (~1024px): 4 columns
- * - xl (~1440px): 5 columns
- * - 2xl (~1600px): 6 columns
- * - 3xl (~1920px+): 7+ columns
+ * Keeps readable card widths, from one column on phones to four on desktop.
  */
 export function ProductGrid({
   products,
@@ -38,6 +34,7 @@ export function ProductGrid({
   isFetchingMore = false,
   hasMore = false,
 }: ProductGridProps) {
+  const t = useTranslations();
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // IntersectionObserver for infinite scroll
@@ -66,12 +63,10 @@ export function ProductGrid({
   }, [onLoadMore, hasMore, isFetchingMore]);
 
   return (
-    <div
-      className="overflow-y-auto"
-      style={{ transform: "translateZ(0)", WebkitOverflowScrolling: "touch" }}
-    >
-      <div className="@container page-px py-7">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 [@media(min-width:1880px)]:grid-cols-7 auto-rows-[auto_1fr] gap-x-6 gap-y-10">
+    <div aria-busy={isLoading || isFetchingMore}>
+      <h2 className="sr-only">{t("active_listings")}</h2>
+      <div className={cn(LISTING_CONTAINER, "py-6 pb-28 sm:py-8 sm:pb-32")}>
+        <div className={LISTING_GRID}>
           {isLoading
             ? SKELETON_ITEMS.map((i) => <SkeletonCard key={i} isLoaded={false} />)
             : products.map((product) => <ProductCard product={product} key={product.id} />)}

@@ -1,4 +1,9 @@
 {
+  "search_filters": {
+    "any_distance": "Dowolna odległość",
+    "within_km": "W promieniu {distance} km",
+    "location_error": "Lokalizacja jest niedostępna. Zezwól na dostęp do lokalizacji i spróbuj ponownie lub wybierz dowolną odległość."
+  },
   "0": "{0}",
   "categories": {
     "food": "Jedzenie",

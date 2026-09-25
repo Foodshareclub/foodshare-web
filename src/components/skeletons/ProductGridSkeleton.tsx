@@ -1,5 +1,6 @@
 import { NavbarSkeleton } from "./NavbarSkeleton";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
+import { LISTING_CONTAINER, LISTING_GRID } from "@/components/productCard/listing-layout";
 import { cn } from "@/lib/utils";
 
 interface ProductGridSkeletonProps {
@@ -22,10 +23,12 @@ export function ProductGridSkeleton({
   return (
     <div className={cn("min-h-screen bg-background", className)}>
       {showNavbar && <NavbarSkeleton />}
-      <div className="grid gap-x-6 gap-y-10 px-7 py-7 xl:px-20 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 [@media(min-width:1880px)]:grid-cols-7">
-        {[...Array(count)].map((_, i) => (
-          <SkeletonCard key={i} isLoaded={false} />
-        ))}
+      <div className={cn(LISTING_CONTAINER, "py-6 pb-28 sm:py-8 sm:pb-32")}>
+        <div className={LISTING_GRID}>
+          {Array.from({ length: count }, (_, i) => (
+            <SkeletonCard key={i} isLoaded={false} />
+          ))}
+        </div>
       </div>
     </div>
   );

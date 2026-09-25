@@ -4,13 +4,20 @@
 
 import type { HandlerContext } from "../../../_shared/api-handler.ts";
 import { ok } from "../../../_shared/api-handler.ts";
-import { ConflictError, NotFoundError, ValidationError } from "../../../_shared/errors.ts";
+import {
+  AuthenticationError,
+  AuthorizationError,
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+} from "../../../_shared/errors.ts";
 import { logger } from "../../../_shared/logger.ts";
 import { sanitizeHtml } from "../../../_shared/validation-rules.ts";
 import { validateProductImageUrls } from "../../../_shared/storage-urls.ts";
 import type { ListQuery, UpdateProductBody } from "../schemas.ts";
 import { transformProduct } from "../transformers.ts";
 import { cache, invalidateListingCache } from "../../../_shared/cache.ts";
+import { manualClassification } from "../classification.ts";
 
 export async function updateProduct(
   ctx: HandlerContext<UpdateProductBody, ListQuery>,
@@ -23,21 +30,22 @@ export async function updateProduct(
   }
 
   if (!userId) {
-    throw new ValidationError("Authentication required");
+    throw new AuthenticationError();
   }
 
   const { data: existing, error: fetchError } = await supabase
     .from("posts")
-    .select("id,profile_id,version")
+    .select("id,profile_id,version,post_type,metadata")
     .eq("id", productId)
-    .single();
+    .maybeSingle();
 
-  if (fetchError || !existing) {
+  if (fetchError) throw fetchError;
+  if (!existing) {
     throw new NotFoundError("Product", productId);
   }
 
   if (existing.profile_id !== userId) {
-    throw new ValidationError("You can only update your own products");
+    throw new AuthorizationError("You can only update your own products");
   }
 
   if (existing.version !== body.version) {
@@ -58,7 +66,6 @@ export async function updateProduct(
   }
 
   const updates: Record<string, unknown> = {
-    version: existing.version + 1,
     updated_at: new Date().toISOString(),
   };
 
@@ -68,29 +75,45 @@ export async function updateProduct(
   }
   if (body.images !== undefined) updates.images = body.images;
   if (body.pickupAddress !== undefined) {
-    updates.pickup_address = sanitizeHtml(body.pickupAddress);
+    updates.post_address = sanitizeHtml(body.pickupAddress);
   }
   if (body.pickupTime !== undefined) {
     updates.pickup_time = sanitizeHtml(body.pickupTime);
+    updates.available_hours = updates.pickup_time;
   }
   if (body.categoryId !== undefined) updates.category_id = body.categoryId;
   if (body.expiresAt !== undefined) updates.expires_at = body.expiresAt;
   if (body.isActive !== undefined) updates.is_active = body.isActive;
+  if (body.postType !== undefined && body.postType !== existing.post_type) {
+    updates.post_type = body.postType;
+    updates.category_id = body.categoryId ?? null;
+    updates.metadata = {
+      ...(existing.metadata ?? {}),
+      classification: {
+        ...manualClassification(body.postType),
+        requestedPostType: existing.post_type,
+        decidedAt: new Date().toISOString(),
+      },
+    };
+    // Moving a listing into volunteering must enter its existing approval workflow.
+    if (body.postType === "volunteer") updates.is_active = false;
+  }
 
   const { data, error } = await supabase
     .from("posts")
     .update(updates)
     .eq("id", productId)
+    .eq("profile_id", userId)
     .eq("version", body.version)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
-    if (error.code === "PGRST116") {
-      throw new ConflictError("Product was modified during update");
-    }
     logger.error("Failed to update product", new Error(error.message));
     throw error;
+  }
+  if (!data) {
+    throw new ConflictError("Product was modified during update. Please refresh and try again.");
   }
 
   logger.info("Product updated", {
@@ -102,9 +125,9 @@ export async function updateProduct(
   invalidateListingCache(productId, userId);
   try {
     cache.clear();
-  } catch (_e) {
+  } catch {
     // ignore cache clear errors
   }
 
-  return ok(transformProduct(data), ctx, { cacheTTL: 60 });
+  return ok(transformProduct(data), ctx);
 }

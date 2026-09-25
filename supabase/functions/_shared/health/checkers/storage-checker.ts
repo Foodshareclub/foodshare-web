@@ -4,7 +4,7 @@
  * Checks Supabase storage connectivity and response time.
  */
 
-import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { HealthStatus, ServiceHealth, STORAGE_DEGRADED_THRESHOLD_MS } from "../types.ts";
 
 /**

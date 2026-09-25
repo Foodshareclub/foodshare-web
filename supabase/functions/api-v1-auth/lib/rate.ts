@@ -11,7 +11,7 @@
  * - 100 attempts/hour per IP → 1 hour IP block
  */
 
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "../../_shared/logger.ts";
 import type { AuthContext } from "./types.ts";
 import type { RateCheckBody, RateRecordBody } from "./schemas.ts";

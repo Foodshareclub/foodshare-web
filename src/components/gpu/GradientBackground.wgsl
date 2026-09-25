@@ -40,7 +40,7 @@ struct Params {
   let alpha = 0.03 + noise * 0.015;
 
   // Scroll fade
-  let scrollFade = 1.0 - params.scroll * 0.3;
+  let scrollFade = clamp(1.0 - params.scroll * 0.3, 0.0, 1.0);
 
-  return vec4f(color * alpha * scrollFade, 1.0);
+  return vec4f(color * alpha * scrollFade, alpha * scrollFade);
 }

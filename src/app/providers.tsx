@@ -14,21 +14,13 @@
  * React Query is only used for client-side state management where needed.
  */
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  useSyncExternalStore,
-} from "react";
+import { ActionToastProvider } from "@/hooks/useActionToast";
+import { type Locale, getBrowserLocale, getLocaleDirection } from "@/i18n/config";
+import { GPUProvider } from "@/lib/gpu";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
 import { ThemeProvider } from "next-themes";
-import { getBrowserLocale, type Locale } from "@/i18n/config";
-import { ActionToastProvider } from "@/hooks/useActionToast";
-import { GPUProvider } from "@/lib/gpu";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 /**
  * Create QueryClient with optimized defaults
@@ -63,36 +55,13 @@ function getQueryClient(): QueryClient {
   return browserQueryClient;
 }
 
-// Loading component - renders before ThemeProvider, so we use inline styles
-// with CSS custom properties that respect the user's system preference
-const LoadingSpinner = () => (
-  <div
-    className="min-h-screen flex flex-col justify-center"
-    style={{
-      // Use CSS variables from globals.css which respect prefers-color-scheme
-      backgroundColor: "hsl(var(--background))",
-    }}
-  >
-    <div
-      className="m-auto w-12 h-12 rounded-full animate-spin"
-      style={{
-        borderWidth: "4px",
-        borderStyle: "solid",
-        borderColor: "hsl(var(--primary))",
-        borderTopColor: "transparent",
-      }}
-    />
-  </div>
-);
-
 // Message loading cache - using AbstractIntlMessages type for nested messages
 type Messages = Record<string, unknown>;
 const messageCache = new Map<Locale, Messages>();
 
 async function loadMessages(locale: Locale): Promise<Messages> {
-  if (messageCache.has(locale)) {
-    return messageCache.get(locale)!;
-  }
+  const cached = messageCache.get(locale);
+  if (cached) return cached;
 
   try {
     // Dynamic import for locale messages
@@ -117,53 +86,42 @@ interface LocaleContextType {
 
 const LocaleContext = createContext<LocaleContextType | null>(null);
 
-/**
- * Client detection using useSyncExternalStore
- * This avoids the cascading render issue with setState in useEffect
- */
-function subscribeToNothing(): () => void {
-  return () => {};
-}
-
-function getClientSnapshot(): boolean {
-  return true;
-}
-
-function getServerSnapshot(): boolean {
-  return false;
-}
-
-function useIsClient(): boolean {
-  return useSyncExternalStore(subscribeToNothing, getClientSnapshot, getServerSnapshot);
-}
-
 interface ProvidersProps {
   children: React.ReactNode;
-  initialLocale?: Locale;
+  initialLocale: Locale;
+  initialMessages: Messages;
 }
 
-export function Providers({ children, initialLocale = "en" }: ProvidersProps) {
-  const isClient = useIsClient();
+export function Providers({ children, initialLocale, initialMessages }: ProvidersProps) {
   const [locale, setLocale] = useState<Locale>(initialLocale);
-  const [messages, setMessages] = useState<Messages | null>(null);
-  const [isLocaleLoaded, setIsLocaleLoaded] = useState(false);
+  const [messages, setMessages] = useState<Messages>(initialMessages);
 
   // Get or create QueryClient (singleton pattern for browser)
   const queryClient = useMemo(() => getQueryClient(), []);
 
   useEffect(() => {
-    // Load browser locale preferences on client
-    // Using async IIFE to batch state updates after async operation
+    document.documentElement.lang = locale;
+    document.documentElement.dir = getLocaleDirection(locale);
+  }, [locale]);
+
+  useEffect(() => {
+    let cancelled = false;
+    // Server messages make the first render usable before hydration. Only load
+    // another catalog when a browser-only preference differs from the cookie.
     const initLocale = async (): Promise<void> => {
       const browserLocale = getBrowserLocale();
+      if (browserLocale === initialLocale) return;
       const msgs = await loadMessages(browserLocale);
-      // Batch updates together after async operation completes
-      setLocale(browserLocale);
-      setMessages(msgs);
-      setIsLocaleLoaded(true);
+      if (!cancelled) {
+        setLocale(browserLocale);
+        setMessages(msgs);
+      }
     };
-    initLocale();
-  }, []);
+    void initLocale();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialLocale]);
 
   const changeLocale = useCallback(async (newLocale: Locale) => {
     // Load messages for new locale
@@ -183,15 +141,10 @@ export function Providers({ children, initialLocale = "en" }: ProvidersProps) {
   // Memoize context value to prevent unnecessary re-renders
   const localeContextValue = useMemo(() => ({ changeLocale, locale }), [changeLocale, locale]);
 
-  // Show loading until client-side rendering and locale messages are ready
-  if (!isClient || !isLocaleLoaded || !messages) {
-    return <LoadingSpinner />;
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <LocaleContext.Provider value={localeContextValue}>
-        <NextIntlClientProvider key={locale} locale={locale} messages={messages} timeZone="UTC">
+        <NextIntlClientProvider locale={locale} messages={messages} timeZone="UTC">
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <GPUProvider>
               <ActionToastProvider>{children}</ActionToastProvider>

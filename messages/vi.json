@@ -1,4 +1,9 @@
 {
+  "search_filters": {
+    "any_distance": "Mọi khoảng cách",
+    "within_km": "Trong vòng {distance} km",
+    "location_error": "Không thể xác định vị trí. Hãy cho phép truy cập vị trí và thử lại, hoặc chọn mọi khoảng cách."
+  },
   "0": "{0}",
   "categories": {
     "food": "Thực phẩm",

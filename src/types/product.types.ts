@@ -3,8 +3,8 @@
  * Centralized types for product/post data structures
  */
 
-import type { PostGISGeography, GeoJSONPoint } from "./postgis.types";
 import { parsePostGISPoint } from "@/utils/postgis";
+import type { GeoJSONPoint, PostGISGeography } from "./postgis.types";
 
 /**
  * Review type for product reviews
@@ -45,6 +45,8 @@ export type InitialProductStateType = {
   is_active: boolean;
   post_views: number;
   profile_id: string;
+  /** Database revision captured when this listing was loaded for editing. */
+  version?: number | null;
   reviews?: Array<ReviewsType>;
 };
 

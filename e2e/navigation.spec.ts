@@ -31,29 +31,14 @@ test.describe("Site Navigation", () => {
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
 
-    // Scroll to footer
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForSelector('.footer, [class*="footer"]', { timeout: 3000 });
-
-    // Check for common footer links
-    const termsLink = page.getByRole("link", { name: /terms/i });
-    const privacyLink = page.getByRole("link", { name: /privacy/i });
-
-    const hasTerms = await termsLink.isVisible().catch(() => false);
-    const hasPrivacy = await privacyLink.isVisible().catch(() => false);
-
-    if (hasTerms) {
-      await termsLink.click();
-      await page.waitForLoadState("domcontentloaded");
-      await expect(page).toHaveURL(/\/terms/);
-      await page.goBack();
-    }
-
-    if (hasPrivacy) {
-      await privacyLink.click();
-      await page.waitForLoadState("domcontentloaded");
-      await expect(page).toHaveURL(/\/privacy/);
-    }
+    const footer = page.getByRole("contentinfo");
+    await expect(footer).toBeVisible();
+    const feedback = footer.getByRole("link", { name: "Feedback", exact: true });
+    const donation = footer.getByRole("link", { name: "Donation", exact: true });
+    await expect(feedback).toHaveAttribute("href", "/feedback");
+    await expect(donation).toHaveAttribute("href", "/donation");
+    await feedback.click();
+    await expect(page).toHaveURL(/\/feedback/);
   });
 
   test("should show 404 page for unknown routes", async ({ page }) => {

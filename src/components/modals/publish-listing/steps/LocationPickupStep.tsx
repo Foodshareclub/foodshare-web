@@ -1,12 +1,12 @@
 "use client";
 
-import React from "react";
-import { MapPin, Clock, Train, Tag } from "lucide-react";
-import { Label } from "@/components/ui/label";
+import { RequiredStar } from "@/components/requiredStar/RequiredStar";
 import { Input } from "@/components/ui/input";
-import { RequiredStar } from "@/components";
-import { dietaryOptions, MAX_TAGS } from "../constants";
-import { TagInput, CollapsibleSection } from "../components";
+import { Label } from "@/components/ui/label";
+import { Clock, MapPin, Tag, Train } from "lucide-react";
+import type React from "react";
+import { CollapsibleSection, TagInput } from "../components";
+import { MAX_TAGS, dietaryOptions } from "../constants";
 
 interface LocationPickupStepProps {
   address: string;

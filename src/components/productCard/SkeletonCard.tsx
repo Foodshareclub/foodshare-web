@@ -1,44 +1,23 @@
-import React from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { LISTING_PHOTO } from "./listing-layout";
 
-type PropsSkeletonType = {
-  isLoaded: boolean;
-};
+function SkeletonCard({ isLoaded }: { isLoaded: boolean }) {
+  const motion = isLoaded ? "animate-none" : "motion-reduce:animate-none";
 
-// React Compiler handles memoization automatically
-function SkeletonCard({ isLoaded }: PropsSkeletonType) {
   return (
-    <div className="contents">
-      {!isLoaded ? (
-        <div className="relative col-span-1 row-span-2 grid grid-rows-subgrid gap-0 h-full min-w-0">
-          <div className="relative rounded-xl overflow-hidden bg-muted">
-            <div style={{ aspectRatio: "20/19" }} className="bg-muted animate-pulse" />
-          </div>
-          <div className="mt-3 flex flex-col gap-0.5">
-            <div className="h-[15px] bg-muted animate-pulse rounded-sm w-3/4 mb-0.5" />
-            <div className="h-[15px] bg-muted animate-pulse rounded-sm w-1/2 mb-0.5" />
-            <div className="h-[15px] bg-muted animate-pulse rounded-sm w-2/3 mb-0.5" />
-            <div className="mt-1 h-[15px] bg-muted animate-pulse rounded-sm w-1/3" />
-          </div>
-        </div>
-      ) : (
-        <div className="relative col-span-1 row-span-2 grid grid-rows-subgrid gap-0 h-full min-w-0">
-          <div className="relative rounded-xl overflow-hidden bg-muted">
-            <div
-              style={{ aspectRatio: "20/19" }}
-              className="w-full bg-muted"
-              role="img"
-              aria-label="Product image placeholder"
-            />
-          </div>
-          <div className="mt-3 flex flex-col gap-0.5">
-            <div className="h-[15px] w-3/4 mb-0.5" />
-            <div className="h-[15px] w-1/2 mb-0.5" />
-            <div className="h-[15px] w-2/3 mb-0.5" />
-            <div className="mt-1 h-[15px] w-1/3" />
-          </div>
-        </div>
-      )}
-    </div>
+    <Card variant="listing" className="flex h-full min-w-0 flex-col" aria-hidden="true">
+      <Skeleton className={cn(LISTING_PHOTO, "rounded-2xl", motion)} />
+      <CardHeader className="gap-2">
+        <Skeleton className={cn("h-5 w-4/5", motion)} />
+        <Skeleton className={cn("h-5 w-3/5", motion)} />
+        <Skeleton className={cn("mt-1 h-4 w-2/3", motion)} />
+      </CardHeader>
+      <CardContent className="mt-auto">
+        <Skeleton className={cn("h-4 w-1/2", motion)} />
+      </CardContent>
+    </Card>
   );
 }
 

@@ -1,3 +1,4 @@
+/* oxlint-disable unicorn/no-thenable -- Supabase query builder mocks must be thenable. */
 /**
  * Products Data Functions Tests
  * Unit tests for product-related data fetching functions
@@ -6,7 +7,7 @@
  * Server Actions (mutations) cannot re-export data functions due to 'use server' constraints.
  */
 
-import { mock, describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 // Shared mock state - must be outside mock.module for it to be accessible
 const mockState = {
@@ -87,7 +88,7 @@ const createMockSupabaseClient = () => {
         })
       ),
       // Make thenable for direct await
-      // eslint-disable-next-line unicorn/no-thenable
+      // biome-ignore lint/suspicious/noThenProperty: Supabase query builders are thenable.
       then: (resolve: (value: unknown) => void) =>
         resolve({
           data: mockState.products,
@@ -119,10 +120,10 @@ mock.module("@/lib/supabase/server", () => ({
 
 // Import data functions from lib/data (not actions - 'use server' files can't re-export)
 import {
-  getProducts,
   getAllProducts,
   getProductById,
   getProductLocations,
+  getProducts,
   getUserProducts,
 } from "@/lib/data/products";
 
@@ -202,6 +203,26 @@ describe("Products Data Functions", () => {
   // ==========================================================================
 
   describe("getProductById", () => {
+    it("removes exact location aliases from public product data", async () => {
+      mockState.product = {
+        id: 1,
+        version: 25,
+        location: "exact-postgis-value",
+        latitude: 51.5,
+        longitude: -0.12,
+        location_json: { type: "Point", coordinates: [-0.12, 51.5] },
+      };
+      const result = await getProductById(1);
+      const location = result?.location_json;
+      expect(result?.location).toBeNull();
+      expect(result?.version).toBe(25);
+      expect(location?.coordinates).not.toEqual([-0.12, 51.5]);
+      expect(result).toMatchObject({
+        latitude: location?.coordinates[1],
+        longitude: location?.coordinates[0],
+      });
+    });
+
     it("should return product with reviews when found", async () => {
       const mockProduct = {
         id: 1,

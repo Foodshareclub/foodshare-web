@@ -1,4 +1,9 @@
 {
+  "search_filters": {
+    "any_distance": "Jarak berapa pun",
+    "within_km": "Dalam {distance} km",
+    "location_error": "Lokasi tidak tersedia. Izinkan akses lokasi dan coba lagi, atau pilih jarak berapa pun."
+  },
   "0": "{0}",
   "categories": {
     "food": "Makanan",

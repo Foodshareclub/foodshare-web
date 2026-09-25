@@ -4,9 +4,10 @@
  * Triggers the unified notifications API to fetch real data from provider APIs
  */
 
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { checkUserIsAdmin } from "@/lib/data/admin-check";
+import { isPrerenderInterruption } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
@@ -48,6 +49,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data);
   } catch (error) {
+    if (isPrerenderInterruption(error)) {
+      throw error;
+    }
     console.error("[API /api/admin/email/sync] Error:", error);
     return NextResponse.json({ error: "Failed to sync provider stats" }, { status: 500 });
   }

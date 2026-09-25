@@ -1,4 +1,9 @@
 {
+  "search_filters": {
+    "any_distance": "Alla avstånd",
+    "within_km": "Inom {distance} km",
+    "location_error": "Platsen är inte tillgänglig. Tillåt platsåtkomst och försök igen, eller välj alla avstånd."
+  },
   "0": "{0}",
   "categories": {
     "food": "Mat",

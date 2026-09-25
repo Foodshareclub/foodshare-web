@@ -1,4 +1,9 @@
 {
+  "search_filters": {
+    "any_distance": "Qualquer distância",
+    "within_km": "Num raio de {distance} km",
+    "location_error": "A localização não está disponível. Permita o acesso à localização e tente novamente, ou escolha qualquer distância."
+  },
   "0": "{0}",
   "categories": {
     "food": "Comida",

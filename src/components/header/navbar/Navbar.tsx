@@ -1,19 +1,21 @@
 "use client";
 
-import React from "react";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import NavbarLogo from "./NavbarLogo";
-import SearchBar from "./SearchBar";
-import NavbarActions from "./NavbarActions";
-import { CategoryNavigation } from "./organisms";
-import type { NavbarProps } from "./types";
-import { cn } from "@/lib/utils";
 import { useAdvancedScroll } from "@/hooks";
 import { useAuth } from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
+import { LISTING_CONTAINER } from "@/components/productCard/listing-layout";
+import { GradientBackground } from "@/components/gpu/GradientBackground";
+import { useTranslations } from "next-intl";
+import { useRouter, useSearchParams } from "next/navigation";
+import React from "react";
+import NavbarActions from "./NavbarActions";
+import NavbarLogo from "./NavbarLogo";
+import SearchBar from "./SearchBar";
+import { CategoryNavigation } from "./organisms";
+import type { NavbarProps } from "./types";
 
-import { PATH } from "@/utils";
 import { CATEGORIES } from "@/constants/categories";
+import { PATH } from "@/utils";
 
 /**
  * Navbar Component - Airbnb Pattern Implementation
@@ -35,7 +37,7 @@ function Navbar({
 }: NavbarProps) {
   const _t = useTranslations();
   const { logout } = useAuth();
-  const { isCompact, scrollY } = useAdvancedScroll({
+  const { scrollY } = useAdvancedScroll({
     compactThreshold: 100,
     hideThreshold: 150,
     showOnScrollUp: false,
@@ -43,7 +45,14 @@ function Navbar({
   });
 
   const router = useRouter();
-  const activeCategory = productType.toLowerCase() || "food";
+  const searchParams = useSearchParams();
+  const routeCategory = productType.toLowerCase() || "food";
+  const activeCategory =
+    searchParams.get("type") === "all"
+      ? "all"
+      : routeCategory === "business"
+        ? "organisation"
+        : routeCategory;
 
   // Get category translations
   const tCategories = useTranslations("categories");
@@ -68,11 +77,17 @@ function Navbar({
 
     // Forum, Challenge and Foodlytics have their own routes without map views
     if (routeName === "forum" || routeName === "challenge" || routeName === "foodlytics") {
-      router.push(`/${routeName}`);
+      const keyword = routeName === "challenge" ? searchParams.get("key_word") : null;
+      router.push(
+        `/${routeName}${keyword ? `?${new URLSearchParams({ key_word: keyword })}` : ""}`
+      );
       return;
     }
 
-    const targetRoute = routeName === "food" ? "/food" : `/${routeName}`;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("type");
+    const query = params.toString();
+    const targetRoute = `/${routeName}${query ? `?${query}` : ""}`;
 
     if (mapMode) {
       router.push(`/map/${routeName}`);
@@ -82,7 +97,12 @@ function Navbar({
   };
 
   const handleSearchClick = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({
+      top: 0,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+    });
   };
 
   const handleNavigateToMyLists = () => router.push(PATH.myListingsPage);
@@ -102,37 +122,27 @@ function Navbar({
     <>
       {/* SINGLE MERGED NAVBAR - Always Visible */}
       <header
-        className={cn("navbar bg-background w-full fixed top-0 z-[100]", "border-b border-border")}
+        className={cn("navbar sticky top-0 z-[100] w-full bg-background", "border-b border-border")}
         style={{
           boxShadow: navbarShadow,
           backfaceVisibility: "hidden" as const,
           perspective: 1000,
         }}
       >
-        {/* Row 1: Logo + Category Tabs + Actions */}
+        {/* Stable primary row; search moves below the actions on smaller screens. */}
         <div
           className={cn(
-            "flex items-center justify-between gap-4 px-4 md:px-7 xl:px-20",
-            "transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-            isCompact ? "pt-3 pb-1" : "pt-4 pb-1.5"
+            LISTING_CONTAINER,
+            "relative isolate z-20 grid grid-cols-[1fr_auto] items-center gap-x-6 gap-y-3 py-3 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:py-4"
           )}
         >
-          {/* Left: Logo - fixed width for true centering */}
-          <div className="flex-shrink-0 w-[140px]">
-            <NavbarLogo onNavigate={handleLogoClick} isCompact={isCompact} />
+          <GradientBackground />
+          {/* Keep the logo and actions outside the scrollable category region. */}
+          <div className="shrink-0">
+            <NavbarLogo onNavigate={handleLogoClick} />
           </div>
 
-          {/* Center: Category Navigation - truly centered */}
-          <div className="flex-1 flex justify-center">
-            <CategoryNavigation
-              categories={translatedCategories}
-              activeCategory={activeCategory}
-              onCategoryChange={handleCategoryChange}
-            />
-          </div>
-
-          {/* Right: Actions - fixed width to match left for true centering */}
-          <div className="flex-shrink-0 w-[140px] flex justify-end">
+          <div className="col-start-2 row-start-1 flex shrink-0 justify-end lg:col-start-3">
             <NavbarActions
               isAuth={isAuth}
               isAdmin={isAdmin}
@@ -152,42 +162,27 @@ function Navbar({
               onNavigateToDashboard={handleNavigateToDashboard}
             />
           </div>
-        </div>
-
-        {/* Row 2: Search Bar (centered, responsive to scroll) */}
-        <div
-          className={cn(
-            "flex justify-center items-center px-4 md:px-7 xl:px-20",
-            "transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-            isCompact ? "py-1.5" : "py-3"
-          )}
-        >
-          {activeCategory !== "foodlytics" && (
-            <div className={cn(isCompact ? "w-auto" : "w-full max-w-[850px]")}>
+          {activeCategory !== "foodlytics" && activeCategory !== "forum" && (
+            <div className="col-span-2 row-start-2 w-full min-w-0 max-w-[720px] justify-self-center lg:col-span-1 lg:col-start-2 lg:row-start-1">
               <SearchBar
-                isCompact={isCompact}
+                key={activeCategory}
                 onSearchClick={handleSearchClick}
                 defaultCategory={activeCategory}
               />
             </div>
           )}
         </div>
+        <div className="border-t border-border/60">
+          <div className={LISTING_CONTAINER}>
+            <CategoryNavigation
+              categories={translatedCategories}
+              activeCategory={activeCategory}
+              onCategoryChange={handleCategoryChange}
+              className="gap-3 py-2 sm:gap-5 lg:justify-between"
+            />
+          </div>
+        </div>
       </header>
-
-      {/* Spacer - adjusted for new single navbar height; Foodlytics hides the search row */}
-      <div
-        style={{
-          height:
-            activeCategory === "foodlytics"
-              ? isCompact
-                ? "72px"
-                : "84px"
-              : isCompact
-                ? "120px"
-                : "170px",
-          transition: "height 0.3s ease-in-out",
-        }}
-      />
     </>
   );
 }

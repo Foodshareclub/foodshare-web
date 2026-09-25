@@ -25,7 +25,7 @@ test.describe("WebGPU Rendering", () => {
     expect(typeof gpuSupported).toBe("boolean");
   });
 
-  test("about us page renders without GPU errors", async ({ page }) => {
+  test("login page renders without GPU errors", async ({ page }) => {
     // Collect console errors
     const errors: string[] = [];
     page.on("console", (msg) => {
@@ -34,7 +34,7 @@ test.describe("WebGPU Rendering", () => {
       }
     });
 
-    await page.goto("/about");
+    await page.goto("/auth/login");
     await page.waitForLoadState("networkidle");
 
     // Page should load without GPU-related crashes
@@ -44,8 +44,24 @@ test.describe("WebGPU Rendering", () => {
     expect(gpuErrors).toHaveLength(0);
 
     // Background effects should be present (either canvas or CSS fallback)
-    const backgroundElement = await page.locator("canvas, .blur-\\[40px\\]").first();
+    const backgroundElement = page
+      .locator('[data-gpu-effect="orbs"], [data-gpu-fallback="orbs"]:visible')
+      .first();
     await expect(backgroundElement).toBeVisible();
+  });
+
+  test("paints the GPU background when a WebGPU adapter is available", async ({ page }) => {
+    await page.goto("/auth/login");
+    const adapterAvailable = await page.evaluate(async () => {
+      const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<unknown> } }).gpu;
+      return Boolean(await gpu?.requestAdapter());
+    });
+    test.skip(!adapterAvailable, "This browser has no GPU adapter; the fallback test covers it.");
+    await expect(page.locator('[data-gpu-effect="orbs"]')).toHaveAttribute(
+      "data-gpu-ready",
+      "true"
+    );
+    await expect(page.locator('[data-gpu-fallback="orbs"]')).toBeHidden();
   });
 
   test("challenge page confetti trigger works", async ({ page }) => {
@@ -65,7 +81,7 @@ test.describe("WebGPU Rendering", () => {
   });
 
   test("GPU canvas elements are properly cleaned up", async ({ page }) => {
-    await page.goto("/about");
+    await page.goto("/auth/login");
     await page.waitForLoadState("networkidle");
 
     // Count canvas elements
@@ -92,14 +108,16 @@ test.describe("WebGPU Fallback", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/about");
+    await page.goto("/auth/login");
     await page.waitForLoadState("networkidle");
 
     // Should render without errors (using CSS fallback)
     expect(errors).toHaveLength(0);
 
-    // Should have CSS fallback elements (blur circles)
-    const fallbackElements = await page.locator(".blur-\\[40px\\]").count();
-    expect(fallbackElements).toBeGreaterThan(0);
+    await expect(page.locator('[data-gpu-fallback="orbs"]')).toBeVisible();
+    await expect(page.locator('[data-gpu-effect="orbs"]')).toHaveAttribute(
+      "data-gpu-ready",
+      "false"
+    );
   });
 });

@@ -9,6 +9,7 @@ import type { PaginatedChallengesResponse } from "@/lib/data/challenges";
 // ============================================================================
 
 interface UseChallengesParams {
+  searchTerm?: string;
   limit?: number;
   difficulty?: string;
   enabled?: boolean;
@@ -19,6 +20,7 @@ interface UseChallengesParams {
 // ============================================================================
 
 async function fetchChallenges(params: {
+  searchTerm?: string;
   page: number;
   limit: number;
   difficulty?: string;
@@ -31,6 +33,7 @@ async function fetchChallenges(params: {
   if (params.difficulty && params.difficulty !== "all") {
     searchParams.set("difficulty", params.difficulty);
   }
+  if (params.searchTerm?.trim()) searchParams.set("key_word", params.searchTerm.trim());
 
   const response = await fetch(`/api/challenges?${searchParams.toString()}`, {
     next: { revalidate: 60 },
@@ -40,7 +43,9 @@ async function fetchChallenges(params: {
     throw new Error("Failed to fetch challenges");
   }
 
-  return response.json();
+  const result = await response.json();
+  if (!result.success || !result.data) throw new Error("Failed to fetch challenges");
+  return result.data as PaginatedChallengesResponse;
 }
 
 // ============================================================================
@@ -54,11 +59,13 @@ async function fetchChallenges(params: {
 export function useInfiniteChallenges({
   limit = 12,
   difficulty,
+  searchTerm,
   enabled = true,
 }: UseChallengesParams = {}) {
   return useInfiniteQuery({
-    queryKey: ["challenges", "infinite", { limit, difficulty }],
-    queryFn: ({ pageParam = 1 }) => fetchChallenges({ page: pageParam, limit, difficulty }),
+    queryKey: ["challenges", "infinite", { limit, difficulty, searchTerm }],
+    queryFn: ({ pageParam = 1 }) =>
+      fetchChallenges({ page: pageParam, limit, difficulty, searchTerm }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.pagination.hasMore ? lastPage.pagination.page + 1 : undefined,
@@ -105,12 +112,12 @@ export function useDeckChallenges(
   initialData: InitialProductStateType[],
   options: UseChallengesParams = {}
 ) {
-  const { limit = 12, difficulty } = options;
+  const { limit = 12, difficulty, searchTerm } = options;
 
   return useQuery({
-    queryKey: ["challenges", "deck", { limit, difficulty }],
+    queryKey: ["challenges", "deck", { limit, difficulty, searchTerm }],
     queryFn: async () => {
-      const result = await fetchChallenges({ page: 1, limit, difficulty });
+      const result = await fetchChallenges({ page: 1, limit, difficulty, searchTerm });
       return result.data;
     },
     initialData,

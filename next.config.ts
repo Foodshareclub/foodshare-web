@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { withSentryConfig } from "@sentry/nextjs";
+import { CONFIGURED_IMAGE_PATTERNS } from "./src/lib/image";
 
 const withNextIntl = createNextIntlPlugin();
 
@@ -20,16 +21,19 @@ const nextConfig: NextConfig = {
 
   // Trim client bundles: tree-shake large icon/data libs via modular imports
   experimental: {
-    optimizePackageImports: ["lucide-react", "date-fns", "lodash-es"],
+    optimizePackageImports: [
+      "lucide-react",
+      "date-fns",
+      "lodash-es",
+      "@tiptap/core",
+      "@tiptap/react",
+      "@tiptap/pm",
+    ],
   },
 
-  // Remote images (avatars, listing photos) — Supabase Storage + R2 CDN
+  // Match URL validation, including the legacy Firebase photos still in listings.
   images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "**.supabase.co" },
-      { protocol: "https", hostname: "**.r2.cloudflarestorage.com" },
-      { protocol: "https", hostname: "**.foodshare.club" },
-    ],
+    remotePatterns: CONFIGURED_IMAGE_PATTERNS,
   },
 
   // TypeScript is checked in CI (`bun run type-check`); fail builds on type errors.
@@ -98,76 +102,77 @@ const nextConfig: NextConfig = {
   // Custom redirects — 308 permanent for SEO reindex to agnostic /product/[id]-[slug]
   async redirects() {
     return [
+      // Require a detail segment: an optional catch-all also redirects category indexes to /product (404).
       // Legacy /listing/* routes → /product/:id* (single hop to agnostic product)
       {
-        source: "/listing/:id*",
+        source: "/listing/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       // Legacy /products/:id routes → /product/:id
       {
-        source: "/products/:id*",
+        source: "/products/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       // Type-prefixed detail aliases → agnostic product (slug now contains category)
       {
-        source: "/thing/:id*",
+        source: "/thing/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/things/:id*",
+        source: "/things/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/borrow/:id*",
+        source: "/borrow/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/wanted/:id*",
+        source: "/wanted/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/fridge/:id*",
+        source: "/fridge/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/foodbank/:id*",
+        source: "/foodbank/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/organisation/:id*",
+        source: "/organisation/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/organisations/:id*",
+        source: "/organisations/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/volunteer/:id*",
+        source: "/volunteer/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/volunteers/:id*",
+        source: "/volunteers/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/zerowaste/:id*",
+        source: "/zerowaste/:id+",
         destination: "/product/:id*",
         permanent: true,
       },
       {
-        source: "/vegan/:id*",
+        source: "/vegan/:id+",
         destination: "/product/:id*",
         permanent: true,
       },

@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { useSearchParams } from "next/navigation";
-import { useLocale } from "next-intl";
-import { ProductGrid } from "@/components/productCard/ProductGrid";
-import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
-import { useUIStore } from "@/store/zustand/useUIStore";
 import { fetchNearbyListings, fetchProductsPaginated } from "@/app/actions/nearby-listings";
-import type { InitialProductStateType } from "@/types/product.types";
+import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
+import { ProductGrid } from "@/components/productCard/ProductGrid";
+import { Button } from "@/components/ui/button";
 import type { NearbyCursor, NearbyPost } from "@/lib/data/nearby-posts";
+import { useUIStore } from "@/store/zustand/useUIStore";
+import type { InitialProductStateType } from "@/types/product.types";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /** Hard cap on radius expansion. Beyond this the feed is considered exhausted. */
 const MAX_RADIUS_METERS = 50000; // 50km
@@ -33,6 +34,8 @@ function nextRadiusStep(currentRadius: number): number {
 
 interface HomeClientProps {
   initialProducts: InitialProductStateType[];
+  initialLoadFailed?: boolean;
+  searchTerm?: string;
   productType?: string;
   /** Nearby posts with distance (when location filter is active) */
   nearbyPosts?: NearbyPost[] | null;
@@ -61,6 +64,8 @@ interface HomeClientProps {
  */
 export function HomeClient({
   initialProducts,
+  initialLoadFailed = false,
+  searchTerm = "",
   productType = "food",
   nearbyPosts,
   isLocationFiltered = false,
@@ -69,6 +74,9 @@ export function HomeClient({
   initialNextCursor = null,
 }: HomeClientProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const t = useTranslations();
+  const hasExplicitDistance = searchParams.get("distance") === "nearby";
   const locale = useLocale();
 
   // Get stored location from Zustand (persisted across sessions)
@@ -99,6 +107,7 @@ export function HomeClient({
     isLocationFiltered ? null : (initialNextCursor as unknown as number | null)
   );
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [paginationFailed, setPaginationFailed] = useState(false);
   // True once at least one load-more has fired. Gates the "Nothing shared"
   // message to initial load only, so it never reflects the expansion radius.
   const [_hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false);
@@ -111,11 +120,9 @@ export function HomeClient({
   const locationRef = useRef<{ lat: number; lng: number; queryRadius: number } | null>(
     isLocationFiltered && searchParams.has("lat") && searchParams.has("lng")
       ? {
-          lat: parseFloat(searchParams.get("lat") as string),
-          lng: parseFloat(searchParams.get("lng") as string),
-          queryRadius: searchParams.has("radius")
-            ? parseInt(searchParams.get("radius") as string, 10)
-            : radiusMeters,
+          lat: Number.parseFloat(searchParams.get("lat") as string),
+          lng: Number.parseFloat(searchParams.get("lng") as string),
+          queryRadius: radiusMeters,
         }
       : null
   );
@@ -123,6 +130,7 @@ export function HomeClient({
   // Use server-rendered nearby posts if available, otherwise use client-fetched ones
   const effectiveNearbyPosts = isLocationFiltered ? nearbyPosts : clientNearbyPosts;
   const effectiveIsLocationFiltered = isLocationFiltered || isClientLocationFiltered;
+  const initialFetchFailed = initialLoadFailed && !isClientLocationFiltered;
 
   const baseProducts =
     effectiveIsLocationFiltered && effectiveNearbyPosts
@@ -157,7 +165,7 @@ export function HomeClient({
     []
   );
 
-  const effectiveHasMore = hasMore;
+  const effectiveHasMore = hasMore && !paginationFailed && !initialFetchFailed;
 
   /**
    * Append newly fetched nearby posts, deduping by id against everything
@@ -188,12 +196,13 @@ export function HomeClient({
    */
   const handleLoadMore = useCallback(async () => {
     if (isFetchingMore) return;
+    setPaginationFailed(false);
 
     // Location mode: keyset pagination with radius expansion on drain.
     if (effectiveIsLocationFiltered && locationRef.current) {
       const canPageCurrentTier = hasMore && nearbyCursor !== null;
       const atRadiusCap = locationRef.current.queryRadius >= MAX_RADIUS_METERS;
-      if (!canPageCurrentTier && atRadiusCap) {
+      if (!canPageCurrentTier && (atRadiusCap || hasExplicitDistance || !!searchTerm)) {
         // Exhausted at max radius — feed is genuinely done.
         setHasMore(false);
         return;
@@ -215,6 +224,7 @@ export function HomeClient({
           lng,
           radius,
           postType: productType,
+          searchTerm,
           cursor: usingCursor as NearbyCursor | null,
         });
 
@@ -228,10 +238,19 @@ export function HomeClient({
 
           // Tier drained but a larger radius remains: keep infinite scroll
           // armed so the next trigger expands the net again.
-          if (!result.hasMore && radius < MAX_RADIUS_METERS) {
+          if (
+            !result.hasMore &&
+            radius < MAX_RADIUS_METERS &&
+            !hasExplicitDistance &&
+            !searchTerm
+          ) {
             setHasMore(true);
           }
+        } else {
+          setPaginationFailed(true);
         }
+      } catch {
+        setPaginationFailed(true);
       } finally {
         setIsFetchingMore(false);
       }
@@ -243,7 +262,7 @@ export function HomeClient({
       setIsFetchingMore(true);
       setHasAttemptedLoadMore(true);
       try {
-        const result = await fetchProductsPaginated(productType, productsCursor);
+        const result = await fetchProductsPaginated(productType, productsCursor, searchTerm);
         if (result.success) {
           setExtraProducts((prev) => {
             const existingIds = new Set([...baseProducts, ...prev].map((p) => p.id));
@@ -252,7 +271,11 @@ export function HomeClient({
           });
           setHasMore(result.hasMore);
           setProductsCursor(result.nextCursor);
+        } else {
+          setPaginationFailed(true);
         }
+      } catch {
+        setPaginationFailed(true);
       } finally {
         setIsFetchingMore(false);
       }
@@ -264,11 +287,16 @@ export function HomeClient({
     productsCursor,
     effectiveIsLocationFiltered,
     productType,
+    searchTerm,
+    hasExplicitDistance,
+    baseProducts,
     appendDeduped,
   ]);
 
   // Auto-detect location on mount
   useEffect(() => {
+    // An explicit text search must not be replaced by the nearby feed.
+    if (searchTerm || searchParams.get("distance") === "any") return;
     // Skip if URL already has location params (server already rendered nearby data)
     if (searchParams.has("lat") && searchParams.has("lng")) {
       return;
@@ -285,16 +313,18 @@ export function HomeClient({
       newParams.set("radius", radius.toString());
       window.history.replaceState({}, "", `?${newParams.toString()}`);
 
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         fetchNearby(userLocation.latitude, userLocation.longitude, radius, productType);
       }, 0);
-      return;
+      return () => clearTimeout(timer);
     }
 
     // Request browser geolocation
+    let cancelled = false;
     if (navigator?.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          if (cancelled) return;
           const { latitude, longitude } = position.coords;
           const radius = geoDistance || radiusMeters;
 
@@ -321,8 +351,12 @@ export function HomeClient({
         }
       );
     }
+    return () => {
+      cancelled = true;
+    };
   }, [
     searchParams,
+    searchTerm,
     userLocation,
     setUserLocation,
     geoDistance,
@@ -341,13 +375,38 @@ export function HomeClient({
         isFetchingMore={isFetchingMore}
         hasMore={effectiveHasMore}
       />
-      {effectiveIsLocationFiltered &&
-        effectiveNearbyPosts &&
-        effectiveNearbyPosts.length === 0 &&
+      {(initialFetchFailed || paginationFailed) && (
+        <div role="alert" className="flex flex-col items-center gap-3 px-4 py-8">
+          <p className="text-muted-foreground">{t("something_went_wrong")}</p>
+          <Button
+            variant="outline"
+            onClick={() => (initialFetchFailed ? router.refresh() : handleLoadMore())}
+          >
+            {t("try_again")}
+          </Button>
+        </div>
+      )}
+      {!initialFetchFailed &&
+        !paginationFailed &&
+        !products.length &&
+        !isFetchingNearby &&
+        !isFetchingMore &&
+        !hasMore &&
+        !effectiveIsLocationFiltered && (
+          <p role="status" className="px-4 py-8 text-center text-muted-foreground">
+            {t("no_listings_found")}
+          </p>
+        )}
+      {!initialFetchFailed &&
+        !paginationFailed &&
+        effectiveIsLocationFiltered &&
+        !hasMore &&
+        products.length === 0 &&
         !isFetchingNearby && (
           <div className="text-center py-8 text-muted-foreground">
-            Nothing shared within {formatDistance(displayRadius, locale)} yet — be the first to post
-            in your area!
+            {searchTerm
+              ? t("no_listings_found")
+              : `Nothing shared within ${formatDistance(displayRadius, locale)} yet — be the first to post in your area!`}
           </div>
         )}
     </>

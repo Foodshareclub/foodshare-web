@@ -1,5 +1,5 @@
-import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { LucideIcon } from "lucide-react";
 
 export interface CategoryItemProps {
   /** Unique category identifier */
@@ -10,6 +10,7 @@ export interface CategoryItemProps {
   icon?: LucideIcon;
   /** Active/selected state */
   isActive?: boolean;
+  tabIndex?: number;
   /** Click handler */
   onClick: (id: string) => void;
   /** Optional keyboard event handler for arrow key navigation */
@@ -40,6 +41,7 @@ export function CategoryItem({
   label,
   icon,
   isActive = false,
+  tabIndex,
   onClick,
   onKeyDown: externalOnKeyDown,
   className,
@@ -62,42 +64,34 @@ export function CategoryItem({
     <button
       type="button"
       role="tab"
+      data-category-id={id}
       aria-selected={isActive}
       aria-label={label}
-      tabIndex={isActive ? 0 : -1}
+      tabIndex={tabIndex ?? (isActive ? 0 : -1)}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       className={cn(
-        "flex flex-col items-center justify-center gap-1 px-2 py-1 min-w-fit relative",
-        "transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
-        "hover:scale-105 active:scale-95",
-        "focus:outline-none focus-visible:outline-none",
+        "relative flex min-h-14 min-w-14 flex-col items-center justify-center gap-1.5 px-2 py-2",
+        "transition-colors duration-200 hover:bg-muted motion-reduce:transition-none",
+        isActive && "bg-primary/5",
+        "rounded-lg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
         className
       )}
-      style={{
-        transform: "translateZ(0)",
-        willChange: "transform",
-      }}
     >
       {icon && (
         <span
-          className={cn(
-            "transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
-            isActive ? "scale-110 text-primary" : "scale-100 text-muted-foreground"
-          )}
+          className={cn(isActive ? "text-primary" : "text-muted-foreground")}
           aria-hidden="true"
-          style={{ transform: "translateZ(0)", willChange: "transform" }}
         >
           {(() => {
             const Icon = icon;
-            return <Icon className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.75} />;
+            return <Icon className="size-5 md:size-6" strokeWidth={isActive ? 2 : 1.5} />;
           })()}
         </span>
       )}
       <span
         className={cn(
-          "text-[10px] md:text-[11px] whitespace-nowrap tracking-wide select-none",
-          "transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
+          "select-none whitespace-nowrap text-xs",
           isActive ? "font-semibold text-foreground" : "font-medium text-muted-foreground"
         )}
       >
@@ -105,15 +99,7 @@ export function CategoryItem({
       </span>
 
       {/* Active Indicator - Bottom Border */}
-      {isActive && (
-        <div
-          className="absolute -bottom-0.5 left-0 w-full h-0.5 bg-primary rounded-t-sm"
-          style={{
-            transform: "translateZ(0)",
-            willChange: "transform",
-          }}
-        />
-      )}
+      {isActive && <div className="absolute bottom-0 inset-x-2 h-0.5 bg-primary rounded-full" />}
     </button>
   );
 }

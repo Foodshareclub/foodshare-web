@@ -151,7 +151,7 @@ test.describe("Dark Mode", () => {
 
       // Toggle theme
       await themeToggle.click();
-      await page.waitForSelector(":matches(.dark, .light)", { timeout: 3000 });
+      await page.waitForSelector(":is(.dark, .light)", { timeout: 3000 });
 
       // Theme should have changed
       const newHtmlClass = await page.locator("html").getAttribute("class");

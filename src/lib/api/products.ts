@@ -1,17 +1,18 @@
 /**
  * Product API Client
  *
- * Transforms between web app schema (snake_case) and Edge Function schema (camelCase).
+ * Maps web form fields to the Edge Function's camelCase requests.
+ * Product responses retain the shared snake_case database contract.
  * All product mutations should use these functions.
  */
 
-import { apiPost, apiPut, apiDelete } from "./client";
 import type { ActionResult } from "@/lib/errors";
+import { apiDelete, apiPost, apiPut } from "./client";
 import type {
   CreateProductRequest,
-  UpdateProductRequest,
-  ProductResponse,
   ListingPostType,
+  ProductResponse,
+  UpdateProductRequest,
 } from "./types";
 
 // =============================================================================
@@ -22,6 +23,7 @@ export interface WebCreateProductInput {
   post_name: string;
   post_description: string;
   post_type: string;
+  category_mode?: "auto" | "manual";
   post_address?: string;
   available_hours?: string;
   transportation?: string;
@@ -58,10 +60,13 @@ function toCreateRequest(input: WebCreateProductInput): CreateProductRequest {
     description: input.post_description || undefined,
     images: input.images,
     postType: input.post_type as ListingPostType,
-    latitude: input.latitude ?? 0,
-    longitude: input.longitude ?? 0,
+    categoryMode: input.category_mode,
+    latitude: input.latitude,
+    longitude: input.longitude,
     pickupAddress: input.post_address || undefined,
     pickupTime: input.available_hours || undefined,
+    transportation: input.transportation,
+    condition: input.condition,
   };
 }
 
@@ -72,6 +77,7 @@ function toUpdateRequest(input: WebUpdateProductInput): UpdateProductRequest {
   return {
     title: input.post_name,
     description: input.post_description,
+    postType: input.post_type as ListingPostType | undefined,
     images: input.images,
     pickupAddress: input.post_address,
     pickupTime: input.available_hours,
@@ -95,19 +101,21 @@ export function fromProductResponse(product: ProductResponse): {
   created_at: string;
   updated_at: string | null;
   version: number;
+  sync_version: number;
 } {
   return {
     id: product.id,
-    post_name: product.title,
-    post_description: product.description,
-    post_type: product.postType,
-    post_address: product.location.address,
+    post_name: product.post_name,
+    post_description: product.post_description,
+    post_type: product.post_type,
+    post_address: product.post_address,
     images: product.images,
-    is_active: product.isActive,
-    profile_id: product.userId,
-    created_at: product.createdAt,
-    updated_at: product.updatedAt,
+    is_active: product.is_active,
+    profile_id: product.profile_id,
+    created_at: product.created_at,
+    updated_at: product.updated_at,
     version: product.version,
+    sync_version: product.sync_version,
   };
 }
 
@@ -118,9 +126,13 @@ export function fromProductResponse(product: ProductResponse): {
 /**
  * Create a product via Edge Function
  */
-export async function createProductAPI(
-  input: WebCreateProductInput
-): Promise<ActionResult<{ id: number }>> {
+export async function createProductAPI(input: WebCreateProductInput): Promise<
+  ActionResult<{
+    id: number;
+    post_type: ListingPostType;
+    is_active: boolean;
+  }>
+> {
   const request = toCreateRequest(input);
 
   const result = await apiPost<ProductResponse, CreateProductRequest>("api-v1-products", request);
@@ -131,7 +143,11 @@ export async function createProductAPI(
 
   return {
     success: true,
-    data: { id: result.data.id },
+    data: {
+      id: result.data.id,
+      post_type: result.data.post_type,
+      is_active: result.data.is_active,
+    },
   };
 }
 

@@ -69,6 +69,7 @@ export interface ChallengesPaginationParams {
   page?: number;
   limit?: number;
   difficulty?: string;
+  searchTerm?: string;
 }
 
 /**
@@ -129,14 +130,18 @@ export async function getChallengeStats(): Promise<ChallengeStats> {
  * Get all published challenges with caching
  * Returns data transformed to InitialProductStateType for component compatibility
  */
-export async function getChallenges(): Promise<InitialProductStateType[]> {
+export async function getChallenges(searchTerm = ""): Promise<InitialProductStateType[]> {
   const supabase = createCachedClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("challenges")
     .select("*")
     .eq("challenge_published", true)
     .order("challenge_created_at", { ascending: false });
+
+  if (searchTerm.trim())
+    query = query.ilike("challenge_title", `%${searchTerm.trim().replace(/[\\%_]/g, "\\$&")}%`);
+  const { data, error } = await query;
 
   if (error) throw new Error(error.message);
   return (data ?? []).map(transformChallengeToProduct);
@@ -149,7 +154,7 @@ export async function getChallenges(): Promise<InitialProductStateType[]> {
 export async function getChallengesPaginated(
   params: ChallengesPaginationParams = {}
 ): Promise<PaginatedChallengesResponse> {
-  const { page = 1, limit = 12, difficulty } = params;
+  const { page = 1, limit = 12, difficulty, searchTerm } = params;
   const offset = (page - 1) * limit;
 
   const supabase = createCachedClient();
@@ -164,6 +169,8 @@ export async function getChallengesPaginated(
   if (difficulty && difficulty !== "all") {
     query = query.eq("challenge_difficulty", difficulty);
   }
+  if (searchTerm?.trim())
+    query = query.ilike("challenge_title", `%${searchTerm.trim().replace(/[\\%_]/g, "\\$&")}%`);
 
   // Add pagination and ordering
   const { data, error, count } = await query

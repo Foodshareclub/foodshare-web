@@ -1,10 +1,8 @@
 "use client";
 
-import React from "react";
-import { RequiredStar } from "@/components";
-import { Label } from "@/components/ui/label";
+import { RequiredStar } from "@/components/requiredStar/RequiredStar";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -12,8 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { categoryConfig, conditionOptions, MAX_DESCRIPTION_LENGTH } from "../constants";
-import { VoiceInput, TitleSuggestions, CharacterProgressRing } from "../components";
+import { Textarea } from "@/components/ui/textarea";
+import React from "react";
+import { CharacterProgressRing, TitleSuggestions, VoiceInput } from "../components";
+import { MAX_DESCRIPTION_LENGTH, categoryConfig, conditionOptions } from "../constants";
 
 interface BasicDetailsStepProps {
   category: string;

@@ -10,6 +10,7 @@ yarn.lock
 /coverage
 /test-results
 /playwright-report
+/blob-report
 /playwright/.cache
 
 # next.js

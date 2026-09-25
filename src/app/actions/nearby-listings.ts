@@ -29,6 +29,7 @@ export interface FetchNearbyListingsParams {
   limit?: number;
   /** Keyset cursor from the previous page, or null for the first page. */
   cursor?: NearbyCursor | null;
+  searchTerm?: string;
 }
 
 export interface NearbyListingsResult {
@@ -53,6 +54,7 @@ export async function fetchNearbyListings({
   postType = "food",
   limit = 20,
   cursor = null,
+  searchTerm,
 }: FetchNearbyListingsParams): Promise<NearbyListingsResult> {
   // Validate coordinates — never trust client input.
   if (
@@ -85,6 +87,7 @@ export async function fetchNearbyListings({
       postType,
       limit,
       cursor,
+      searchTerm,
     });
 
     return {
@@ -116,7 +119,8 @@ export async function fetchNearbyListings({
  */
 export async function fetchProductsPaginated(
   productType: string = "food",
-  cursor?: number | null
+  cursor?: number | null,
+  searchTerm?: string
 ): Promise<{
   success: boolean;
   data: InitialProductStateType[];
@@ -128,6 +132,7 @@ export async function fetchProductsPaginated(
     const result = await getProductsPaginated(productType, {
       cursor,
       limit: 20,
+      searchTerm,
     });
 
     return {

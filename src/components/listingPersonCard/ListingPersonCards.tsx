@@ -1,13 +1,14 @@
 "use client";
 
-import type { ChangeEvent, ReactNode } from "react";
-import React, { useRef, useState } from "react";
+import { uploadProfileAvatar } from "@/app/actions/profile";
 import peak from "@/assets/peakpx-min.jpg";
+import AvatarWithRipple from "@/components/listingPersonCard/AvatarWithRipple";
+import { ALLOWED_MIME_TYPES } from "@/constants/mime-types";
 import { createPhotoUrl } from "@/utils";
 import { EditIcon } from "@/utils/icons";
-import { AvatarWithRipple } from "@/components";
-import { ALLOWED_MIME_TYPES } from "@/constants/mime-types";
-import { uploadProfileAvatar } from "@/app/actions/profile";
+import type { ChangeEvent, ReactNode } from "react";
+import type React from "react";
+import { useRef, useState } from "react";
 
 type PropsType = {
   children?: ReactNode;
@@ -60,6 +61,7 @@ const ListingPersonCards: React.FC<PropsType> = ({ children, settings, profile }
         <AvatarWithRipple img={pastUrl || profile?.avatar_url || undefined} />
         {settings && (
           <button
+            type="button"
             className="bg-muted hover:bg-green-200 dark:hover:bg-green-900 p-2 rounded-full absolute cursor-pointer transition-colors"
             style={{ top: "48vh", left: "51vw" }}
             onClick={() => inputFileRef?.current?.click()}

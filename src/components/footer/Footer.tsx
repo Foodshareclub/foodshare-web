@@ -1,15 +1,15 @@
-import type { ReactNode } from "react";
-import Image from "next/image";
-import twitter from "@/assets/twiter23.png";
-import instagram from "@/assets/insta23.png";
 import facebook from "@/assets/facebook23.png";
+import feedback from "@/assets/feedbackIcon.svg";
+import donat from "@/assets/heartRed23.png";
+import instagram from "@/assets/insta23.png";
 import linked from "@/assets/linked23.png";
 import telegram from "@/assets/telega23.png";
-import donat from "@/assets/heartRed23.png";
-import feedback from "@/assets/feedbackIcon.svg";
+import twitter from "@/assets/twiter23.png";
+import Image from "next/image";
+import type { ReactNode } from "react";
 
-import { PATH } from "@/utils";
 import LanguageSelector from "@/components/languageSelector/LanguageSelector";
+import { PATH } from "@/utils";
 import { Globe } from "lucide-react";
 
 type SocialButtonProps = {
@@ -24,18 +24,15 @@ type SocialButtonProps = {
 // React Compiler handles memoization automatically
 function SocialButton({ children, label, href, w, h, target }: SocialButtonProps) {
   return (
-    <a href={href} target={target || "_blank"} rel="noopener noreferrer">
-      <button
-        className="rounded-full w-9 h-9 cursor-pointer inline-flex items-center justify-center"
-        aria-label={label}
-        style={{
-          width: w ? `${w * 0.25}rem` : undefined,
-          height: h ? `${h * 0.25}rem` : undefined,
-        }}
-      >
-        <span className="sr-only">{label}</span>
-        {children}
-      </button>
+    <a
+      href={href}
+      target={target || "_blank"}
+      rel="noopener noreferrer"
+      className="inline-flex size-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      aria-label={label}
+      style={{ width: w ? `${w * 0.25}rem` : undefined, height: h ? `${h * 0.25}rem` : undefined }}
+    >
+      {children}
     </a>
   );
 }
@@ -44,13 +41,13 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="fixed bottom-0 z-[1] w-full border-t border-border/30 text-foreground py-1 px-7 xl:px-20 gpu glass">
-      <div className="flex flex-col md:flex-row justify-center md:justify-between items-center gap-2">
-        <div className="flex items-center gap-4">
-          <p className="text-base md:text-[16px] text-[10px]">
+    <footer className="w-full border-t border-border bg-background px-4 py-6 text-foreground sm:px-6 lg:px-10">
+      <div className="mx-auto flex max-w-[1440px] flex-col items-center justify-between gap-4 xl:flex-row">
+        <div className="flex flex-col items-center gap-3 sm:flex-row">
+          <p className="text-center text-sm text-muted-foreground">
             © {currentYear} Foodshare Club, Limited. All rights reserved
           </p>
-          <div className="hidden md:flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
             <Globe className="w-4 h-4 text-muted-foreground" />
             <LanguageSelector />
           </div>

@@ -36,7 +36,12 @@ export default async function ProductsPage(props: PageProps) {
     }
   }
 
-  return <CategoryPageContent type="food" searchParams={props.searchParams} />;
+  return (
+    <CategoryPageContent
+      type={productType === "all" ? "all" : "food"}
+      searchParams={props.searchParams}
+    />
+  );
 }
 
 const REDIRECT_TARGETS = [

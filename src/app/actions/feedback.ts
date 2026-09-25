@@ -9,14 +9,19 @@
  * - Proper admin auth via user_roles
  */
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { type ServerActionResult, serverActionError, successVoid } from "@/lib/errors";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
-import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { requireAdmin } from "@/lib/data/admin-check";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import {
+  type ServerActionResult,
+  isPrerenderInterruption,
+  serverActionError,
+  successVoid,
+} from "@/lib/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 // ============================================================================
 // Zod Schemas
@@ -339,6 +344,9 @@ export async function getCurrentUserInfo(): Promise<ServerActionResult<UserInfo 
       },
     };
   } catch (error) {
+    if (isPrerenderInterruption(error)) {
+      throw error;
+    }
     console.error("Failed to get user info:", error);
     return serverActionError("Failed to get user info", "UNKNOWN_ERROR");
   }

@@ -38,6 +38,7 @@ export interface NearbyPostsOptions {
    * page. null on the first page. Replaces the old OFFSET integer cursor, which
    * was unstable under concurrent writes (skips/dupes). */
   cursor?: NearbyCursor | null;
+  searchTerm?: string;
 }
 
 /** Keyset position resuming after a (distance_meters, id) pair. */
@@ -136,7 +137,8 @@ const VALID_POST_TYPES = new Set([
 export function normalizePostType(postType: string | null | undefined): string | null {
   if (!postType) return null;
   const normalized = postType.toLowerCase().trim();
-  if (normalized === "challenge") return null;
+  if (normalized === "challenge" || normalized === "all") return null;
+  if (normalized === "organisation") return "business";
   if (!VALID_POST_TYPES.has(normalized)) {
     throw new Error(`Invalid post type: ${postType}`);
   }
@@ -174,12 +176,47 @@ export async function getNearbyPosts(options: NearbyPostsOptions): Promise<Nearb
     postType = null,
     limit = DEFAULT_LIMIT,
     cursor = null,
+    searchTerm = "",
   } = options;
 
   // Validate post type up front so an unknown type fails loudly, not silently.
   const validatedType = normalizePostType(postType);
 
   const supabase = await createClient();
+
+  if (searchTerm.trim()) {
+    // The deployed RPC has no keyword argument. Scan bounded keyset pages so
+    // matching listings beyond the first source page remain reachable. Resume
+    // after the last consumed source row, including on an empty result page.
+    const needle = searchTerm.trim().toLocaleLowerCase();
+    const matches: NearbyPost[] = [];
+    let scanCursor = cursor;
+    const batchSize = 100;
+    for (let batch = 0; batch < 4; batch++) {
+      const { data, error } = await supabase.rpc("get_nearby_posts", {
+        user_lat: lat,
+        user_lng: lng,
+        radius_meters: radiusMeters,
+        post_type_filter: validatedType,
+        cursor_distance: scanCursor?.distance ?? null,
+        cursor_id: scanCursor?.id ?? null,
+        page_limit: batchSize + 1,
+      });
+      if (error) throw new Error(`Failed to fetch nearby posts: ${error.message}`);
+      const rows = (data ?? []) as NearbyPost[];
+      for (let index = 0; index < Math.min(rows.length, batchSize); index++) {
+        const row = rows[index];
+        scanCursor = { distance: row.distance_meters, id: row.id };
+        if (row.post_name?.toLocaleLowerCase().includes(needle)) matches.push(row);
+        if (matches.length === limit) {
+          const hasMore = index < rows.length - 1;
+          return { data: matches, hasMore, nextCursor: hasMore ? scanCursor : null };
+        }
+      }
+      if (rows.length <= batchSize) return { data: matches, hasMore: false, nextCursor: null };
+    }
+    return { data: matches, hasMore: true, nextCursor: scanCursor };
+  }
 
   // page_limit is limit+1 so we can detect hasMore without a second round-trip;
   // the RPC's keyset predicate handles resume via cursor_distance/cursor_id.

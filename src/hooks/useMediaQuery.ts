@@ -1,48 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
+
+const getServerSnapshot = () => false;
 
 function useMediaQuery(query: string): boolean {
-  const getMatches = (query: string): boolean => {
-    // Prevents SSR issues
-    if (typeof window !== "undefined") {
-      return window.matchMedia(query).matches;
-    }
-    return false;
-  };
-
-  const [matches, setMatches] = useState<boolean>(getMatches(query));
-
-  function handleChange() {
-    setMatches(getMatches(query));
-  }
-
-  useEffect(() => {
-    const matchMedia = window.matchMedia(query);
-
-    // Triggered at the first client-side load and if query changes
-    setTimeout(() => {
-      handleChange();
-    }, 0);
-
-    // Listen matchMedia
-    if (matchMedia.addListener) {
-      matchMedia.addListener(handleChange);
-    } else {
-      matchMedia.addEventListener("change", handleChange);
-    }
-
-    return () => {
-      if (matchMedia.removeListener) {
-        matchMedia.removeListener(handleChange);
-      } else {
-        matchMedia.removeEventListener("change", handleChange);
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      const media = window.matchMedia(query);
+      if (media.addEventListener) {
+        media.addEventListener("change", onChange);
+        return () => media.removeEventListener("change", onChange);
       }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query]);
+      media.addListener(onChange);
+      return () => media.removeListener(onChange);
+    },
+    [query]
+  );
 
-  return matches;
+  const getSnapshot = useCallback(() => window.matchMedia(query).matches, [query]);
+  // Use the same snapshot for SSR and the first hydration render. React then
+  // subscribes to the actual viewport, including subsequent breakpoint changes.
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 export default useMediaQuery;

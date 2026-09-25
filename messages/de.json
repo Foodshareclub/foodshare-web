@@ -1,4 +1,9 @@
 {
+  "search_filters": {
+    "any_distance": "Beliebige Entfernung",
+    "within_km": "Im Umkreis von {distance} km",
+    "location_error": "Der Standort ist nicht verfügbar. Erlaube den Standortzugriff und versuche es erneut oder wähle eine beliebige Entfernung."
+  },
   "0": "{0}",
   "categories": {
     "food": "Essen",

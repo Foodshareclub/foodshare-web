@@ -11,7 +11,14 @@ export const CONFIGURED_IMAGE_HOSTS = [
   "supabase.co",
   "foodshare.club",
   "firebasestorage.googleapis.com",
+  "r2.cloudflarestorage.com",
 ] as const;
+
+/** Next's wildcard matcher does not include the bare hostname. Allow both explicitly. */
+export const CONFIGURED_IMAGE_PATTERNS = CONFIGURED_IMAGE_HOSTS.flatMap((host) => [
+  { protocol: "https" as const, hostname: host },
+  { protocol: "https" as const, hostname: `**.${host}` },
+]);
 
 /**
  * Check if an image URL is valid and from a configured host
@@ -19,24 +26,26 @@ export const CONFIGURED_IMAGE_HOSTS = [
  * @returns true if the URL is valid and from a configured host
  */
 export function isValidImageUrl(url: string | undefined): boolean {
-  if (!url) return false;
-  if (url.startsWith("/")) return true; // Local images are always valid
-
-  try {
-    // Auto-prepend https:// if it looks like a domain without a protocol
-    const urlToTest = url.includes("://") ? url : `https://${url}`;
-    const urlObj = new URL(urlToTest);
-    return urlObj.protocol === "http:" || urlObj.protocol === "https:";
-  } catch {
-    return false;
-  }
+  return normalizeImageUrl(url) !== undefined;
 }
 
 export function normalizeImageUrl(url: string | undefined): string | undefined {
-  if (!url) return undefined;
-  if (url.startsWith("/")) return url;
-  if (!url.includes("://")) return `https://${url}`;
-  return url;
+  const value = url?.trim();
+  if (!value || value.includes("\\")) return undefined;
+  if (value.startsWith("/")) return value.startsWith("//") ? undefined : value;
+
+  try {
+    const parsed = new URL(value.includes("://") ? value : `https://${value}`);
+    const supportedHost = CONFIGURED_IMAGE_HOSTS.some(
+      (host) => parsed.hostname === host || parsed.hostname.endsWith(`.${host}`)
+    );
+    if (parsed.protocol !== "https:" || parsed.username || parsed.password || !supportedHost) {
+      return undefined;
+    }
+    return parsed.href;
+  } catch {
+    return undefined;
+  }
 }
 
 /**

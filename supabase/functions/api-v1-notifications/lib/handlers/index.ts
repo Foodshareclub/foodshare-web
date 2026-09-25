@@ -767,7 +767,7 @@ export async function handleDigestProcess(
         } else {
           pushFailed++;
         }
-      } catch (_e) {
+      } catch {
         pushFailed++;
       }
     }

@@ -2,7 +2,7 @@
  * Image storage utilities — rate limiting and upload with R2/Supabase fallback.
  */
 
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "../../_shared/logger.ts";
 import { ServerError } from "../../_shared/errors.ts";
 import { isR2Configured, uploadToR2 } from "../../_shared/r2-storage.ts";

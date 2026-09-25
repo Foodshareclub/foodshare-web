@@ -25,9 +25,15 @@ export const metadata = generatePageMetadata({
  * Promise.all, and the entire section streams to the client once
  * all promises resolve.
  */
-async function ChallengeContent() {
+async function ChallengeContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ key_word?: string }>;
+}) {
+  const params = await searchParams;
+  const searchTerm = typeof params.key_word === "string" ? params.key_word.trim() : "";
   const [challenges, user, stats, leaderboard, userRank] = await Promise.all([
-    getChallenges(),
+    getChallenges(searchTerm),
     getUser(),
     getChallengeStats(),
     getChallengeLeaderboard(),
@@ -62,6 +68,8 @@ async function ChallengeContent() {
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(itemListJsonLd) }}
       />
       <ChallengesClient
+        key={searchTerm}
+        searchTerm={searchTerm}
         challenges={challenges}
         user={user}
         stats={stats}
@@ -76,10 +84,14 @@ async function ChallengeContent() {
  * Challenge Page - renders the skeleton immediately while
  * ChallengeContent streams in with all data.
  */
-export default function ChallengePage() {
+export default function ChallengePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ key_word?: string }>;
+}) {
   return (
     <Suspense fallback={<ChallengeContentSkeleton />}>
-      <ChallengeContent />
+      <ChallengeContent searchParams={searchParams} />
     </Suspense>
   );
 }

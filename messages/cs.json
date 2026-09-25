@@ -1,4 +1,9 @@
 {
+  "search_filters": {
+    "any_distance": "Libovolná vzdálenost",
+    "within_km": "Do {distance} km",
+    "location_error": "Poloha není dostupná. Povolte přístup k poloze a zkuste to znovu, nebo zvolte libovolnou vzdálenost."
+  },
   "0": "{0}",
   "categories": {
     "food": "Jídlo",

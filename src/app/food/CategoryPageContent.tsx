@@ -6,9 +6,12 @@ import { getNearbyPosts } from "@/lib/data/nearby-posts";
 import { getAuthSession } from "@/lib/data/auth";
 import { HomeClient } from "@/app/HomeClient";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
+import { LISTING_CONTAINER, LISTING_GRID } from "@/components/productCard/listing-layout";
+import { cn } from "@/lib/utils";
 import { categoryMetadata, generatePageMetadata, siteConfig } from "@/lib/metadata";
 import { generateItemListJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import { createRequestLogger } from "@/lib/structured-logger";
+import { parseSearchLocation, parseSearchRadius } from "@/lib/listing-search";
 
 export const CATEGORY_PATHS = [
   "food",
@@ -50,9 +53,11 @@ export const categoryKeyMap: Record<string, keyof typeof categoryMetadata> = {
 export interface PageProps {
   searchParams: Promise<{
     type?: string;
+    key_word?: string;
     lat?: string;
     lng?: string;
     radius?: string;
+    distance?: string;
   }>;
 }
 
@@ -67,28 +72,8 @@ export function parseLocationParams(
   },
   defaultRadius: number = 5000
 ): { lat: number; lng: number; radius: number } | null {
-  const lat = params.lat ? parseFloat(params.lat) : null;
-  const lng = params.lng ? parseFloat(params.lng) : null;
-  const radius = params.radius ? parseInt(params.radius, 10) : defaultRadius;
-
-  // Validate coordinates
-  if (
-    lat === null ||
-    lng === null ||
-    isNaN(lat) ||
-    isNaN(lng) ||
-    lat < -90 ||
-    lat > 90 ||
-    lng < -180 ||
-    lng > 180
-  ) {
-    return null;
-  }
-
-  // Clamp radius to reasonable bounds (100m to 100km)
-  const clampedRadius = Math.max(100, Math.min(100000, radius));
-
-  return { lat, lng, radius: clampedRadius };
+  const location = parseSearchLocation({ get: (name) => params[name as "lat" | "lng"] ?? null });
+  return location ? { ...location, radius: parseSearchRadius(params.radius, defaultRadius) } : null;
 }
 
 export async function generateCategoryMetadata(
@@ -113,17 +98,20 @@ export default async function CategoryPageContent({
   const logger = await createRequestLogger({ action: "CategoryPageContent", type });
   const params = await searchParams;
   const productType = type;
+  const searchTerm = typeof params.key_word === "string" ? params.key_word.trim() : "";
 
   // Fetch session to get user settings (like search radius)
   const session = await getAuthSession();
   const userRadiusMeters = (session.user?.profile?.search_radius_km || 5) * 1000;
 
   // Parse location params for nearby filtering
-  const locationParams = parseLocationParams(params, userRadiusMeters);
+  const locationParams =
+    params.distance === "any" ? null : parseLocationParams(params, userRadiusMeters);
   const isLocationFiltered = locationParams !== null;
 
   // If location params provided, fetch nearby posts using PostGIS
   if (isLocationFiltered) {
+    let initialLoadFailed = false;
     let nearbyResult: Awaited<ReturnType<typeof getNearbyPosts>> = {
       data: [],
       hasMore: false,
@@ -137,16 +125,21 @@ export default async function CategoryPageContent({
         // page is genuinely local. Expansion on scroll is handled client-side.
         radiusMeters: locationParams.radius,
         postType: productType === "challenge" ? null : productType,
+        searchTerm,
         limit: 20,
       });
     } catch (error) {
+      initialLoadFailed = true;
       logger.error("Failed to fetch nearby posts", error);
     }
 
     return (
       <Suspense fallback={<ProductsPageSkeleton />}>
         <HomeClient
+          key={`${productType}:${searchTerm}:${locationParams.lat}:${locationParams.lng}:${locationParams.radius}:${params.distance}`}
           initialProducts={[]}
+          initialLoadFailed={initialLoadFailed}
+          searchTerm={searchTerm}
           productType={productType}
           nearbyPosts={nearbyResult.data}
           isLocationFiltered={true}
@@ -159,6 +152,7 @@ export default async function CategoryPageContent({
   }
 
   // No location filter - fetch paginated products of type
+  let initialLoadFailed = false;
   let paginatedResult: Awaited<ReturnType<typeof getProductsPaginated>> = {
     data: [],
     hasMore: false,
@@ -169,9 +163,10 @@ export default async function CategoryPageContent({
       const challengeData = await getChallenges();
       paginatedResult = { data: challengeData, hasMore: false, nextCursor: null };
     } else {
-      paginatedResult = await getProductsPaginated(productType, { limit: 20 });
+      paginatedResult = await getProductsPaginated(productType, { limit: 20, searchTerm });
     }
   } catch (error) {
+    initialLoadFailed = true;
     logger.error("Failed to fetch products", error);
   }
 
@@ -197,7 +192,10 @@ export default async function CategoryPageContent({
       />
       <Suspense fallback={<ProductsPageSkeleton />}>
         <HomeClient
+          key={`${productType}:${searchTerm}`}
           initialProducts={paginatedResult.data}
+          initialLoadFailed={initialLoadFailed}
+          searchTerm={searchTerm}
           productType={productType}
           radiusMeters={userRadiusMeters}
           initialHasMore={paginatedResult.hasMore}
@@ -211,9 +209,8 @@ export default async function CategoryPageContent({
 export function ProductsPageSkeleton() {
   return (
     <div className="min-h-screen bg-background">
-      <div className="h-[140px] bg-card border-b border-border animate-pulse" />
-      <div className="@container px-7 py-7 xl:px-20">
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] auto-rows-[auto_1fr] gap-x-10 gap-y-0">
+      <div className={cn(LISTING_CONTAINER, "py-6 sm:py-8")}>
+        <div className={LISTING_GRID}>
           {[...Array(10)].map((_, i) => (
             <SkeletonCard key={i} isLoaded={false} />
           ))}

@@ -1,10 +1,11 @@
-import Image from "next/image";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { InitialProductStateType } from "@/types/product.types";
+import { getProductDetailUrl } from "@/utils/categoryMapping";
+import { Bus, Clock, MapPin } from "lucide-react";
+import Link from "next/link";
+import { ImageCarousel } from "./ImageCarousel";
 import { ProductCardActions } from "./ProductCardActions";
 import { ProductCardWrapper } from "./ProductCardWrapper";
-import { ImageCarousel } from "./ImageCarousel";
-import { getProductDetailUrl } from "@/utils/categoryMapping";
-import type { InitialProductStateType } from "@/types/product.types";
-import bus from "@/assets/busIcon.png";
 
 type ProductCardProps = {
   product: InitialProductStateType;
@@ -21,11 +22,15 @@ type ProductCardProps = {
 export function ProductCard({ product, onMouseEnter, onMouseLeave, onClick }: ProductCardProps) {
   // Product detail URL - use category-specific path based on post_type
   const productUrl = getProductDetailUrl(product.post_type, product.id);
+  // Legacy imports use punctuation for missing metadata; keep it out of the layout.
+  const hasContent = (value: string | null | undefined) =>
+    Boolean(value?.trim().replace(/[\s,.-]/g, ""));
+  const hasPickup = hasContent(product.available_hours);
+  const hasTransport = hasContent(product.transportation);
 
   const cardContent = (
-    <div className="group animate-on-scroll relative col-span-1 row-span-2 grid grid-rows-subgrid gap-0 h-full cursor-pointer min-w-0">
-      {/* Image section - Airbnb uses near-square 20:19 ratio with rounded corners */}
-      <div className="relative rounded-xl overflow-hidden bg-muted">
+    <Card variant="listing" className="group relative flex h-full min-w-0 flex-col">
+      <div className="relative isolate overflow-hidden rounded-2xl bg-muted">
         {/* Client-side action buttons (auth-dependent) */}
         <ProductCardActions product={product} />
 
@@ -38,47 +43,41 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave, onClick }: Pr
         />
       </div>
 
-      {/* Content section - Modern Airbnb-style tight typography (no container padding) */}
-      <div className="mt-3 flex flex-col gap-[2px] min-w-0">
-        <div className="flex justify-between items-start gap-2">
-          <h3 className="text-[15px] font-medium text-[#222222] dark:text-[#E8E8E8] leading-[19px] line-clamp-1">
-            {product.post_name}
+      <CardHeader className="gap-1.5">
+        <CardTitle>
+          <h3 className="text-base leading-snug">
+            <Link
+              href={productUrl}
+              className="line-clamp-2 rounded-sm hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+            >
+              {product.post_name}
+            </Link>
           </h3>
-        </div>
-        <p className="text-[15px] text-[#717171] dark:text-[#A0A0A0] leading-[19px] line-clamp-1">
-          {product.post_stripped_address}
-        </p>
-
-        {/* Third line: Available hours + Transportation combined (Airbnb-style inline metadata) */}
-        <div className="flex gap-1.5 items-center mt-[1px] overflow-hidden">
-          <p className="text-[15px] text-[#717171] dark:text-[#A0A0A0] leading-[19px] truncate">
-            {product.available_hours}
-          </p>
-
-          {product.transportation && product.transportation !== "-" && (
-            <>
-              <span className="text-[15px] text-[#717171] dark:text-[#A0A0A0] leading-[19px] shrink-0">
-                ·
-              </span>
-              <div className="flex gap-1 items-center shrink-0">
-                <div className="relative w-[13px] h-[13px] opacity-70">
-                  <Image
-                    src={bus}
-                    alt="bus"
-                    fill
-                    sizes="13px"
-                    className="object-contain dark:invert"
-                  />
-                </div>
-                <p className="text-[15px] font-medium text-[#222222] dark:text-[#E8E8E8] leading-[19px] truncate">
-                  {product.transportation}
-                </p>
-              </div>
-            </>
+        </CardTitle>
+        {hasContent(product.post_stripped_address) && (
+          <CardDescription className="flex items-start gap-2">
+            <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <span className="line-clamp-2">{product.post_stripped_address}</span>
+          </CardDescription>
+        )}
+      </CardHeader>
+      {(hasPickup || hasTransport) && (
+        <CardContent className="flex flex-col gap-1.5">
+          {hasPickup && (
+            <p className="flex items-start gap-2 text-sm leading-relaxed text-muted-foreground">
+              <Clock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <span className="line-clamp-2">{product.available_hours}</span>
+            </p>
           )}
-        </div>
-      </div>
-    </div>
+          {hasTransport && (
+            <p className="flex items-start gap-2 text-sm leading-relaxed text-muted-foreground">
+              <Bus className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <span className="line-clamp-2">{product.transportation}</span>
+            </p>
+          )}
+        </CardContent>
+      )}
+    </Card>
   );
 
   // If event handlers are provided, wrap in client component for interactivity

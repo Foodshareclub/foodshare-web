@@ -3,8 +3,9 @@
  * Real-time monitoring data for the email monitor page
  */
 
-import { createAdminClient } from "@/lib/supabase/admin";
 import type { EmailProvider, EmailType } from "@/lib/email/types";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "../admin-check";
 
 // ============================================================================
 // Types
@@ -65,6 +66,7 @@ export interface EmailMonitoringData {
  * Uses admin client to bypass RLS for admin-only tables
  */
 export async function getEmailMonitoringData(): Promise<EmailMonitoringData> {
+  await requireAdmin();
   const supabase = createAdminClient();
   const today = new Date().toISOString().split("T")[0];
   const PROVIDER_LIMITS: Record<string, number> = {
@@ -139,7 +141,7 @@ export async function getEmailMonitoringData(): Promise<EmailMonitoringData> {
 
   // Add defaults if no data
   if (providerStatus.length === 0) {
-    ["resend", "brevo", "mailersend", "aws_ses"].forEach((p) => {
+    for (const p of ["resend", "brevo", "mailersend", "aws_ses"]) {
       providerStatus.push({
         provider: p,
         state: "closed",
@@ -151,11 +153,11 @@ export async function getEmailMonitoringData(): Promise<EmailMonitoringData> {
         successful_requests: 0,
         failed_requests: 0,
       });
-    });
+    }
   }
 
   if (quotaStatus.length === 0) {
-    ["resend", "brevo", "mailersend", "aws_ses"].forEach((p) => {
+    for (const p of ["resend", "brevo", "mailersend", "aws_ses"]) {
       const limit = PROVIDER_LIMITS[p] || 100;
       quotaStatus.push({
         provider: p,
@@ -165,7 +167,7 @@ export async function getEmailMonitoringData(): Promise<EmailMonitoringData> {
         percentage_used: 0,
         date: today,
       });
-    });
+    }
   }
 
   return { providerStatus, quotaStatus, recentEmails, healthEvents };
@@ -181,6 +183,7 @@ export async function getEmailLogs(params: {
   status?: string;
   hours?: number;
 }) {
+  await requireAdmin();
   const supabase = createAdminClient();
   const hoursAgo = params.hours || 24;
   const since = new Date(Date.now() - hoursAgo * 60 * 60 * 1000).toISOString();

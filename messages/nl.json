@@ -1,4 +1,9 @@
 {
+  "search_filters": {
+    "any_distance": "Elke afstand",
+    "within_km": "Binnen {distance} km",
+    "location_error": "Locatie is niet beschikbaar. Sta locatietoegang toe en probeer opnieuw, of kies elke afstand."
+  },
   "0": "{0}",
   "categories": {
     "food": "Eten",

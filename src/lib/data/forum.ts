@@ -4,8 +4,9 @@
  * Server-side data fetching functions for forum posts, categories, and tags.
  */
 
+import type { ForumCategory, ForumPost, ForumTag } from "@/api/forumAPI";
 import { createCachedClient } from "@/lib/supabase/server";
-import type { ForumPost, ForumCategory, ForumTag } from "@/api/forumAPI";
+import { connection } from "next/server";
 
 // ============================================================================
 // Constants
@@ -80,8 +81,8 @@ export function computeLeaderboard(
 ): LeaderboardUser[] {
   const userMap = new Map<string, LeaderboardUser>();
 
-  posts.forEach((post) => {
-    if (!post.profile_id || !post.profiles) return;
+  for (const post of posts) {
+    if (!post.profile_id || !post.profiles) continue;
 
     const existing = userMap.get(post.profile_id);
     const likes = post.forum_likes_counter || 0;
@@ -109,7 +110,7 @@ export function computeLeaderboard(
         score: calculateScore(1, likes, comments),
       });
     }
-  });
+  }
 
   return Array.from(userMap.values())
     .sort((a, b) => b.score - a.score)
@@ -156,6 +157,7 @@ export function calculateStatsFromPosts(posts: ForumPost[]): Pick<ForumStats, "a
  * Get forum stats from database (accurate totals)
  */
 export async function getForumStats(): Promise<ForumStats> {
+  await connection();
   const supabase = createCachedClient();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -175,7 +177,7 @@ export async function getForumStats(): Promise<ForumStats> {
   ]);
 
   const uniqueUsers = new Set(
-    activeUsersResult.data?.map((p: any) => p.profile_id).filter(Boolean)
+    activeUsersResult.data?.map((p: Pick<ForumPost, "profile_id">) => p.profile_id).filter(Boolean)
   );
 
   return {

@@ -1,10 +1,11 @@
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import { getProductById } from "@/lib/data/products";
 import { getChallengeById } from "@/lib/data/challenges";
+import { getProductById } from "@/lib/data/products";
+import { isPrerenderInterruption } from "@/lib/errors";
 import type { InitialProductStateType } from "@/types/product.types";
-import { InterceptingUserActions } from "./InterceptingUserActions";
 import { Loader2 } from "lucide-react";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { InterceptingUserActions } from "./InterceptingUserActions";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -45,10 +46,10 @@ export default async function ProductInterceptPage({ params, searchParams }: Pag
 
   try {
     const [{ id }, search] = await Promise.all([params, searchParams]);
-    const productId = parseInt(id, 10);
+    const productId = Number.parseInt(id, 10);
     const isChallenge = search.type === "challenge";
 
-    if (isNaN(productId)) {
+    if (Number.isNaN(productId)) {
       notFound();
     }
 
@@ -60,6 +61,16 @@ export default async function ProductInterceptPage({ params, searchParams }: Pag
       notFound();
     }
   } catch (error) {
+    if (isPrerenderInterruption(error)) {
+      throw error;
+    }
+    const digest =
+      error && typeof error === "object" && "digest" in error
+        ? (error as { digest?: unknown }).digest
+        : null;
+    if (typeof digest === "string" && digest.startsWith("NEXT_")) {
+      throw error;
+    }
     console.error("Failed to fetch intercepted product details:", error);
     notFound();
   }

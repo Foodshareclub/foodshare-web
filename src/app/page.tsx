@@ -1,13 +1,15 @@
 import { Suspense } from "react";
 
-import { HomeClient } from "./HomeClient";
-import { getProductsPaginated } from "@/lib/data/products";
-import { getNearbyPosts } from "@/lib/data/nearby-posts";
-import { getAuthSession } from "@/lib/data/auth";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
+import { LISTING_CONTAINER, LISTING_GRID } from "@/components/productCard/listing-layout";
+import { getAuthSession } from "@/lib/data/auth";
+import { getNearbyPosts } from "@/lib/data/nearby-posts";
+import { getProductsPaginated } from "@/lib/data/products";
 import { generateBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
-import { createRequestLogger } from "@/lib/structured-logger";
 import { siteConfig } from "@/lib/metadata";
+import { createRequestLogger } from "@/lib/structured-logger";
+import { cn } from "@/lib/utils";
+import { HomeClient } from "./HomeClient";
 
 interface PageProps {
   searchParams: Promise<{
@@ -26,11 +28,11 @@ function parseLocationParams(
     lng?: string;
     radius?: string;
   },
-  defaultRadius: number = 5000
+  defaultRadius = 5000
 ): { lat: number; lng: number; radius: number } | null {
-  const lat = params.lat ? parseFloat(params.lat) : null;
-  const lng = params.lng ? parseFloat(params.lng) : null;
-  const radius = params.radius ? parseInt(params.radius, 10) : defaultRadius;
+  const lat = params.lat ? Number.parseFloat(params.lat) : null;
+  const lng = params.lng ? Number.parseFloat(params.lng) : null;
+  const radius = params.radius ? Number.parseInt(params.radius, 10) : defaultRadius;
 
   if (
     lat === null ||
@@ -163,11 +165,12 @@ export default async function Home({ searchParams }: PageProps) {
 function HomePageSkeleton() {
   return (
     <div className="min-h-screen bg-background">
-      <div className="h-[140px] bg-card border-b border-border animate-pulse" />
-      <div className="grid gap-10 px-7 py-7 xl:px-20 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-        {[...Array(10)].map((_, i) => (
-          <SkeletonCard key={i} isLoaded={false} />
-        ))}
+      <div className={cn(LISTING_CONTAINER, "py-6 sm:py-8")}>
+        <div className={LISTING_GRID}>
+          {Array.from({ length: 8 }, (_, i) => (
+            <SkeletonCard key={i} isLoaded={false} />
+          ))}
+        </div>
       </div>
     </div>
   );

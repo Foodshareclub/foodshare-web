@@ -1,4 +1,9 @@
 {
+  "search_filters": {
+    "any_distance": "Any distance",
+    "within_km": "Within {distance} km",
+    "location_error": "Location is unavailable. Allow location access and try again, or choose any distance."
+  },
   "0": "{0}",
   "categories": {
     "food": "Food",

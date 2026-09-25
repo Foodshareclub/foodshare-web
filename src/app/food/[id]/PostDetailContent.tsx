@@ -18,7 +18,7 @@ import { PostDetailSection } from "@/components/post/PostDetailSection";
 import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
 import type { AuthUser } from "@/lib/data/auth";
-import { isValidImageUrl } from "@/lib/image";
+import { normalizeImageUrl } from "@/lib/image";
 
 interface PostDetailContentProps {
   post: InitialProductStateType;
@@ -43,6 +43,11 @@ export function PostDetailContent({
 
   const [rating, setRating] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+  const validImages = [
+    ...new Set(post.images?.map(normalizeImageUrl).filter((url): url is string => !!url)),
+  ];
+  const heroImage = validImages.find((url) => !failedImages[url]);
 
   useEffect(() => {
     const frameId = requestAnimationFrame(() => setIsLoaded(true));
@@ -81,16 +86,16 @@ export function PostDetailContent({
 
         {/* Hero Image */}
         <div className="relative w-full group" style={{ aspectRatio: "16/9" }}>
-          {post.images?.[0] && isValidImageUrl(post.images[0]) ? (
+          {heroImage ? (
             <Image
-              src={post.images[0]}
+              src={heroImage}
               alt={post.post_name}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               style={{ viewTransitionName: `product-hero-${post.id}` }}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
               priority
-              quality={90}
+              onError={() => setFailedImages((previous) => ({ ...previous, [heroImage]: true }))}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
@@ -102,9 +107,9 @@ export function PostDetailContent({
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
           {/* Photo count badge */}
-          {post.images && post.images.length > 1 && (
+          {validImages.length > 1 && (
             <Badge className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-sm text-white border-0 px-3 py-1.5">
-              📷 {post.images.length} photos
+              📷 {validImages.length} photos
             </Badge>
           )}
 

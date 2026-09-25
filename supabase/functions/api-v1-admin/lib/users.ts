@@ -303,7 +303,7 @@ async function handleUpdateRoles(
 
   // Insert new roles
   const rolesToInsert = Object.entries(input.roles)
-    .filter(([_, enabled]) => enabled)
+    .filter(([, enabled]) => enabled)
     .map(([roleName]) => roleMap.get(roleName))
     .filter((roleId): roleId is number => roleId !== undefined)
     .map((roleId) => ({ profile_id: userId, role_id: roleId }));

@@ -2,19 +2,20 @@
 
 import { useState } from "react";
 
+import { updateRoom } from "@/app/actions/chat";
+import { updateProduct } from "@/app/actions/products";
+import bus from "@/assets/busIcon.png";
+import likes from "@/assets/likes.svg";
+import loc from "@/assets/location-red.svg";
+import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
+import PopupNotificationModal from "@/components/modals/PopupNotificationModal";
+import TopTips from "@/components/topTips/TopTips";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import type { InitialProductStateType } from "@/types/product.types";
+import { StarIcon } from "@/utils/icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import loc from "@/assets/location-red.svg";
-import likes from "@/assets/likes.svg";
-import bus from "@/assets/busIcon.png";
-import { useAuth } from "@/hooks/useAuth";
-import { updateProduct } from "@/app/actions/products";
-import { updateRoom } from "@/app/actions/chat";
-import { AuthenticationUserModal, PopupNotificationModal } from "@/components";
-import TopTips from "@/components/topTips/TopTips";
-import type { InitialProductStateType } from "@/types/product.types";
-import { Button } from "@/components/ui/button";
-import { StarIcon } from "@/utils/icons";
 
 export type OneProductType = {
   product: InitialProductStateType;
@@ -45,6 +46,7 @@ export function OneProduct({
   const [rating, setRating] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   // Auth state from Zustand
   const { isAuthenticated } = useAuth();
@@ -59,22 +61,30 @@ export function OneProduct({
 
     if (buttonValue === "approval pending") {
       setIsUpdating(true);
+      setUpdateError(null);
       try {
         const formData = new FormData();
         formData.set("is_active", "false");
-        if (product.images) formData.set("images", JSON.stringify(product.images));
+        formData.set("version", String(product.version ?? ""));
 
-        await updateProduct(product.id, formData);
+        const result = await updateProduct(product.id, formData);
+        if (!result.success) throw new Error(result.error.message);
 
         if (roomId && requesterId) {
           const roomFormData = new FormData();
           roomFormData.set("post_arranged_to", requesterId);
-          await updateRoom(roomId, roomFormData);
+          const roomResult = await updateRoom(roomId, roomFormData);
+          if (!roomResult.success) throw new Error(roomResult.error.message);
         }
 
         router.refresh();
       } catch (error) {
         console.error("Failed to update:", error);
+        setUpdateError(
+          error instanceof Error
+            ? error.message
+            : "Could not update this listing. Please try again."
+        );
       } finally {
         setIsUpdating(false);
       }
@@ -161,16 +171,14 @@ export function OneProduct({
 
         {/* Rating */}
         <div className="flex justify-center gap-1 mb-4">
-          {Array(5)
-            .fill("")
-            .map((_, i) => (
-              <StarIcon
-                key={i}
-                onClick={() => onStarClick(i)}
-                color={i < rating ? "teal.500" : "gray.300"}
-                cursor="pointer"
-              />
-            ))}
+          {[0, 1, 2, 3, 4].map((star) => (
+            <StarIcon
+              key={star}
+              onClick={() => onStarClick(star)}
+              color={star < rating ? "teal.500" : "gray.300"}
+              cursor="pointer"
+            />
+          ))}
         </div>
 
         <hr className="my-4 border-border" />
@@ -213,12 +221,18 @@ export function OneProduct({
 
         {/* Action Button */}
         <div className="mt-6">
+          {updateError && (
+            <p role="alert" className="mb-3 text-sm text-destructive">
+              {updateError}
+            </p>
+          )}
           {!isAuthenticated ? (
             <AuthenticationUserModal oneProductComponent buttonValue="Login" />
           ) : (
             <Button
               variant="glass"
               onClick={onClick}
+              disabled={isUpdating || isDisabled}
               className={`w-full uppercase font-semibold py-3 ${
                 variant === "accentGreen" ? "glass-accent-primary" : "glass-accent-orange"
               } ${isDisabled ? "opacity-50 pointer-events-none" : ""}`}

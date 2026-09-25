@@ -5,10 +5,23 @@
  * Wrapper around the shared rich-text-editor component
  */
 
-import { useCallback } from "react";
 import { FeatureErrorBoundary } from "@/components/ErrorBoundary";
-import { RichTextEditor as TiptapEditor } from "@/components/ui/rich-text-editor";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
+import { useCallback } from "react";
+import { RichTextViewer } from "./RichTextViewer";
+
+const TiptapEditor = dynamic(
+  () => import("@/components/ui/rich-text-editor").then((mod) => mod.RichTextEditor),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center border border-border rounded-lg p-8 text-sm text-muted-foreground animate-pulse">
+        Loading editor...
+      </div>
+    ),
+  }
+);
 
 type RichTextEditorProps = {
   content?: string;
@@ -46,8 +59,9 @@ export function RichTextEditor({
           className
         )}
         style={{ minHeight }}
-        dangerouslySetInnerHTML={{ __html: content }}
-      />
+      >
+        <RichTextViewer content={content} />
+      </div>
     );
   }
 

@@ -25,7 +25,8 @@
 
   /* Muted */
   --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
+  /* Maintain readable contrast on both white and muted control backgrounds. */
+  --muted-foreground: 240 3.8% 43%;
 
   /* Accent */
   --accent: 240 4.8% 95.9%;
@@ -111,7 +112,7 @@
     --primary: 345 85% 60%;
     --primary-foreground: 0 0% 100%;
     --muted: 22 10% 20%;
-    --muted-foreground: 25 12% 55%;
+    --muted-foreground: 25 12% 65%;
     --border: 25 10% 24%;
   }
 }
@@ -139,7 +140,7 @@
 
   /* Muted - warm gray-brown */
   --muted: 22 10% 20%;
-  --muted-foreground: 25 12% 55%;
+  --muted-foreground: 25 12% 65%;
 
   /* Accent - warm terracotta hint */
   --accent: 25 15% 24%;

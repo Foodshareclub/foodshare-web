@@ -228,7 +228,7 @@ const DANGEROUS_PATTERNS = [
   /javascript:/gi,
   /on\w+=/gi,
   // deno-lint-ignore no-control-regex
-  /[\x00-\x1f\x7f]/g,
+  /[\x00-\x1f\x7f]/g, // oxlint-disable-line no-control-regex
 ];
 
 export function sanitizeInput(input: string): string {

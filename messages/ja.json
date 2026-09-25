@@ -1,4 +1,9 @@
 {
+  "search_filters": {
+    "any_distance": "距離の制限なし",
+    "within_km": "{distance} km以内",
+    "location_error": "位置情報を取得できません。位置情報へのアクセスを許可して再試行するか、距離の制限なしを選択してください。"
+  },
   "0": "{0}",
   "categories": {
     "food": "食べ物",

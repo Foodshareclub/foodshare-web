@@ -1,5 +1,13 @@
 import { test, expect } from "@playwright/test";
 
+test("map loads without server rendering or browser runtime failures", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/map/food");
+  await expect(page.locator(".leaflet-control-zoom-in")).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 // 1x1 transparent PNG used to fulfill tile requests deterministically
 // (external tile CDN availability from CI runners is flaky)
 const TILE_PNG =
@@ -67,7 +75,7 @@ test.describe("Map Page", () => {
       // Click zoom in
       await zoomIn.click();
       // Wait for zoom animation to complete
-      await page.waitForSelector(":matches(.leaflet-anim-zooming, .leaflet-zoom-animated)", {
+      await page.waitForSelector(":is(.leaflet-anim-zooming, .leaflet-zoom-animated)", {
         timeout: 2000,
         state: "hidden",
       });
@@ -149,7 +157,7 @@ test.describe("Map Page", () => {
 
     // Wait for flyTo/setView animations (up to ~2s) to settle so markers
     // stop moving before we interact with them
-    await page.waitForSelector(":matches(.leaflet-anim-zooming, .leaflet-zoom-animated)", {
+    await page.waitForSelector(":is(.leaflet-anim-zooming, .leaflet-zoom-animated)", {
       state: "hidden",
       timeout: 2000,
     });
@@ -203,7 +211,7 @@ test.describe("Map with Location", () => {
     await page.waitForSelector(".leaflet-container", { timeout: 30000 });
 
     // Wait for map to initialize and potentially center
-    await page.waitForSelector(":matches(.leaflet-anim-zooming, .leaflet-zoom-animated)", {
+    await page.waitForSelector(":is(.leaflet-anim-zooming, .leaflet-zoom-animated)", {
       state: "hidden",
       timeout: 2000,
     });

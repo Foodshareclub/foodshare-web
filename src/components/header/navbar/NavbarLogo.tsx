@@ -25,7 +25,7 @@ export default function NavbarLogo({ onNavigate, isCompact = false }: NavbarLogo
       type="button"
       onClick={handleClick}
       className={cn(
-        "flex items-center gap-3 cursor-pointer",
+        "flex min-h-12 min-w-12 items-center gap-3 cursor-pointer motion-reduce:transition-none motion-reduce:transform-none",
         "transition-all duration-200 ease-in-out",
         "hover:opacity-80 hover:scale-[1.02]",
         "active:scale-[0.98]",

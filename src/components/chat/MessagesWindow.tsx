@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import React, { memo, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import type { RoomParticipantsType, CustomRoomType } from "@/api/chatAPI";
+import type { CustomRoomType, RoomParticipantsType } from "@/api/chatAPI";
+import { InputSection } from "@/components/chat/InputSection";
 import { useMediaQuery } from "@/hooks";
-import { InputSection } from "@/components";
+import { useRouter } from "next/navigation";
+import type React from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 import MessageItem from "./MessageItem";
 
 type MessagesWindowType = {
@@ -35,6 +36,7 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(
     const userImg = userAvatarUrl;
 
     // Auto-scroll to latest message when messages change
+    // biome-ignore lint/correctness/useExhaustiveDependencies: New messages are the signal to scroll the anchor again.
     useEffect(() => {
       messagesAnchorRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);

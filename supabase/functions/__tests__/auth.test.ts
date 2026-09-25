@@ -52,6 +52,7 @@ function createMockAuthContext(profile: MockProfile | null, options: {
       }
       return { data: profile, error: null };
     },
+    // oxlint-disable-next-line unicorn/no-thenable
     then: (resolve: (r: unknown) => void) => {
       if (options.updateError) {
         resolve({ data: null, error: { message: "Update failed" } });

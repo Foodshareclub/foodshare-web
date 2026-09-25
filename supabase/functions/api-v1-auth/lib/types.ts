@@ -2,7 +2,7 @@
  * Auth API shared types
  */
 
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface AuthContext {
   supabase: SupabaseClient;

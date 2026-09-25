@@ -7,10 +7,10 @@
  * cookies() cannot be called inside cached functions.
  */
 
-import { createCachedClient } from "@/lib/supabase/server";
 import { PAGINATION } from "@/lib/constants";
+import { createCachedClient } from "@/lib/supabase/server";
 import type { InitialProductStateType, LocationType } from "@/types/product.types";
-import { approximateGeoJSON } from "@/utils/postgis";
+import { approximateGeoJSON, parsePostGISPoint } from "@/utils/postgis";
 
 // Re-export types for consumers
 export type { InitialProductStateType, LocationType };
@@ -27,10 +27,21 @@ export type { InitialProductStateType, LocationType };
 function applyLocationPrivacy<T extends { id: number; location_json?: unknown }>(
   products: T[]
 ): T[] {
-  return products.map((item) => ({
-    ...item,
-    location_json: approximateGeoJSON(item.location_json, item.id),
-  }));
+  return products.map(approximateProductLocation);
+}
+
+function approximateProductLocation<T extends { id: number; location_json?: unknown }>(
+  product: T
+): T {
+  const locationJson = approximateGeoJSON(product.location_json, product.id);
+  const coordinates = parsePostGISPoint(locationJson);
+  return {
+    ...product,
+    location_json: locationJson,
+    ...("location" in product ? { location: null } : {}),
+    ...("latitude" in product ? { latitude: coordinates?.latitude ?? null } : {}),
+    ...("longitude" in product ? { longitude: coordinates?.longitude ?? null } : {}),
+  };
 }
 
 /**
@@ -40,10 +51,7 @@ function applyLocationPrivacySingle<T extends { id: number; location_json?: unkn
   product: T | null
 ): T | null {
   if (!product) return null;
-  return {
-    ...product,
-    location_json: approximateGeoJSON(product.location_json, product.id),
-  };
+  return approximateProductLocation(product);
 }
 
 // ============================================================================
@@ -60,6 +68,7 @@ export interface PaginatedResult<T> {
 export interface PaginationOptions {
   cursor?: number | null;
   limit?: number;
+  searchTerm?: string;
 }
 
 // ============================================================================
@@ -143,19 +152,23 @@ export async function getProductsPaginated(
   const supabase = createCachedClient();
 
   // Order by id DESC for stable cursor pagination
-  let query = supabase
-    .from("posts_with_location")
-    .select("*")
-    .eq("post_type", normalizedType)
-    .eq("is_active", true)
-    .order("id", { ascending: false })
-    .limit(limit + 1); // Fetch one extra to check hasMore
+  let query = supabase.from("posts_with_location").select("*").eq("is_active", true);
+
+  if (normalizedType !== "all")
+    query = query.eq("post_type", normalizedType === "organisation" ? "business" : normalizedType);
+
+  const searchTerm = typeof options?.searchTerm === "string" ? options.searchTerm.trim() : "";
+  if (searchTerm) {
+    // Treat user-entered wildcard characters literally, including on later pages.
+    const pattern = searchTerm.replace(/[\\%_]/g, "\\$&");
+    query = query.ilike("post_name", `%${pattern}%`);
+  }
 
   if (cursor) {
     query = query.lt("id", cursor);
   }
 
-  const { data, error } = await query;
+  const { data, error } = await query.order("id", { ascending: false }).limit(limit + 1);
 
   if (error) throw new Error(error.message);
 
@@ -300,7 +313,7 @@ export async function searchProducts(
  * Get popular product IDs for static generation
  * Returns most recently created active products
  */
-export async function getPopularProductIds(limit: number = 50): Promise<number[]> {
+export async function getPopularProductIds(limit = 50): Promise<number[]> {
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
@@ -311,5 +324,5 @@ export async function getPopularProductIds(limit: number = 50): Promise<number[]
     .limit(limit);
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map((p: any) => p.id);
+  return (data ?? []).map((p: { id: number }) => p.id);
 }

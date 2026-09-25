@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { FileText, HelpCircle, Info, List, LogOut, MessageSquare, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { FileText, MessageSquare, Settings, LogOut, HelpCircle, Info, List } from "lucide-react";
+import { useState } from "react";
 
-import { cn } from "@/lib/utils";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { DEFAULT_AVATAR_URL } from "@/constants/storage";
+import type { ProfileSettingsProps } from "@/components/header/navbar/types";
+import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,8 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { ProfileSettingsProps } from "@/components/header/navbar/types";
-import { AuthenticationUserModal } from "@/components";
+import { DEFAULT_AVATAR_URL } from "@/constants/storage";
+import { cn } from "@/lib/utils";
 
 export default function ProfileSettings({
   signalOfNewMessage,

@@ -10,7 +10,7 @@
  * - Backwards compatible with pure utility functions
  */
 
-import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { cache, CACHE_KEYS, CACHE_TTLS, cacheThrough } from "../cache.ts";
 import { logger } from "../logger.ts";
 import {

@@ -1,4 +1,9 @@
 {
+  "search_filters": {
+    "any_distance": "Her mesafe",
+    "within_km": "{distance} km içinde",
+    "location_error": "Konum kullanılamıyor. Konum erişimine izin verip tekrar deneyin veya her mesafeyi seçin."
+  },
   "0": "{0}",
   "categories": {
     "food": "Yiyecek",

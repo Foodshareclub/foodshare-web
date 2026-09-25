@@ -1,4 +1,9 @@
 {
+  "search_filters": {
+    "any_distance": "不限距离",
+    "within_km": "{distance} 公里以内",
+    "location_error": "无法获取位置信息。请允许访问位置后重试，或选择不限距离。"
+  },
   "0": "{0}",
   "categories": {
     "food": "食物",

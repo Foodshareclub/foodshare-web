@@ -20,8 +20,9 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AuthenticationUserModal } from "@/components";
+import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
 import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
+import { Button } from "@/components/ui/button";
 
 // Lucide icons
 
@@ -98,7 +99,13 @@ export function DesktopMenu({
       <div className="self-center p-0 text-foreground">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-lg"
+              className="rounded-full"
+              aria-label="See menu"
+            >
               <NavbarAvatar
                 src={imgUrl}
                 alt="User profile"
@@ -107,7 +114,7 @@ export function DesktopMenu({
                 hasNotification={hasNotifications}
                 size="md"
               />
-            </div>
+            </Button>
           </DropdownMenuTrigger>
 
           <DropdownMenuContent
@@ -196,7 +203,7 @@ export function DesktopMenu({
             )}
 
             {/* Divider */}
-            <div className="my-1 h-px bg-border" role="separator" />
+            <hr className="my-1 border-border" />
 
             <MenuItem
               label={"Help"}
@@ -212,7 +219,7 @@ export function DesktopMenu({
             />
 
             {/* Theme Switcher */}
-            <div className="my-1 h-px bg-border" role="separator" />
+            <hr className="my-1 border-border" />
             <div className="px-2 py-2">
               <p className="text-xs text-muted-foreground mb-2 px-1">Appearance</p>
               <ThemeToggleInline className="w-full" />

@@ -1,4 +1,9 @@
 {
+  "search_filters": {
+    "any_distance": "أي مسافة",
+    "within_km": "ضمن {distance} كم",
+    "location_error": "الموقع غير متاح. اسمح بالوصول إلى الموقع وحاول مجددًا، أو اختر أي مسافة."
+  },
   "0": "{0}",
   "categories": {
     "food": "طعام",

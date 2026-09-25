@@ -4,8 +4,9 @@
  * Returns email templates
  */
 
-import { NextResponse } from "next/server";
 import { getEmailTemplates } from "@/lib/data/automations";
+import { isPrerenderInterruption } from "@/lib/errors";
+import { NextResponse } from "next/server";
 import { requireAdmin } from "../_shared/requireAdmin";
 
 export async function GET() {
@@ -16,6 +17,9 @@ export async function GET() {
     const templates = await getEmailTemplates();
     return NextResponse.json(templates);
   } catch (error) {
+    if (isPrerenderInterruption(error)) {
+      throw error;
+    }
     console.error("Error fetching email templates:", error);
     return NextResponse.json([], { status: 500 });
   }

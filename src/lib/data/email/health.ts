@@ -3,8 +3,9 @@
  * Bounce stats, provider health, circuit breakers, templates
  */
 
-import { createCachedClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createCachedClient } from "@/lib/supabase/server";
+import { requireAdmin } from "../admin-check";
 
 // ============================================================================
 // Types
@@ -62,6 +63,7 @@ export interface EmailTemplate {
 // ============================================================================
 
 export async function getBounceStats(): Promise<BounceStats> {
+  await requireAdmin();
   const supabase = createCachedClient();
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -93,15 +95,15 @@ export async function getBounceStats(): Promise<BounceStats> {
   const suppressionData = suppressionRes.data || [];
   const dailyBounces = dailyBouncesRes.data || [];
   const emailsSent = (emailsSentRes.data || []).reduce(
-    (sum: any, q: any) => sum + (q.emails_sent || 0),
+    (sum: number, q: { emails_sent: number | null }) => sum + (q.emails_sent || 0),
     0
   );
 
   // Count by type
-  let hardBounces = 0,
-    softBounces = 0,
-    complaints = 0,
-    unsubscribes = 0;
+  let hardBounces = 0;
+  let softBounces = 0;
+  let complaints = 0;
+  let unsubscribes = 0;
 
   for (const event of bounceEvents) {
     if (event.event_type === "bounce") {

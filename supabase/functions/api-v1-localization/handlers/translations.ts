@@ -20,7 +20,7 @@
  * - experiment: A/B test experiment ID
  */
 
-import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "../../_shared/logger.ts";
 
 // =============================================================================
