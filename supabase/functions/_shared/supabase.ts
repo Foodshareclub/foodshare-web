@@ -5,7 +5,7 @@
  * 3x throughput increase, 25% faster cold starts
  */
 
-import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 let supabaseClient: SupabaseClient | null = null;
 
