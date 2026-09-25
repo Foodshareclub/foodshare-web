@@ -558,11 +558,6 @@ export async function proxy(request: NextRequest) {
   response.headers.set("x-correlation-id", correlationId);
   response.headers.set("x-request-duration", `${Date.now() - startTime}ms`);
 
-  // Add aggressive caching for static-like routes to reduce function invocations
-  if (pathname.match(/^\/(food|forum|about|privacy|terms)/)) {
-    response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
-  }
-
   // Locale cookie (migrated from legacy `middleware.ts` — Next 16 uses `proxy.ts` only):
   // ensure a `locale` cookie exists so server components can resolve i18n without
   // reading the `Accept-Language` header on every request.

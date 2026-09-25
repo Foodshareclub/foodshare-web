@@ -14,7 +14,7 @@
  */
 
 import { useState, useMemo, useTransition, useEffect, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Globe,
@@ -31,6 +31,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useLocale } from "next-intl";
+import { useChangeLocale } from "@/app/providers";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -89,9 +90,10 @@ function calculateArea(radiusKm: number): string {
 }
 
 export function LanguageRegionClient() {
-  const currentLocale = useLocale() as Locale;
+  const nextIntlLocale = useLocale() as Locale;
+  const { changeLocale, locale: contextLocale } = useChangeLocale();
+  const currentLocale = contextLocale || nextIntlLocale;
   const router = useRouter();
-  const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
@@ -159,20 +161,16 @@ export function LanguageRegionClient() {
   }, [searchQuery, selectedRegion, currentLocale]);
 
   const handleLanguageChange = useCallback(
-    (locale: Locale) => {
+    async (locale: Locale) => {
       if (locale === currentLocale) return;
 
-      startTransition(() => {
-        // Update cookie and redirect to new locale
-        document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000; SameSite=Lax`;
+      await changeLocale(locale);
 
-        // Replace current locale in pathname
-        const newPathname = pathname.replace(`/${currentLocale}`, `/${locale}`);
-        router.push(newPathname);
+      startTransition(() => {
         router.refresh();
       });
     },
-    [currentLocale, pathname, router]
+    [changeLocale, currentLocale, router]
   );
 
   const handleRadiusChange = useCallback(

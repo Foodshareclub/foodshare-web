@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { OAUTH_PROVIDERS, hasEnabledProviders } from "@/lib/config/oauth";
+import { safeInternalPath } from "@/lib/security/redirect";
 import { FloatingOrbs } from "@/components/gpu/FloatingOrbs";
 import { GradientBackground } from "@/components/gpu/GradientBackground";
 
@@ -67,7 +68,7 @@ export default function LoginPage() {
   const [isPending, startTransition] = useTransition();
 
   // Get redirect URL from query params
-  const from = searchParams.get("from") || "/";
+  const from = safeInternalPath(searchParams.get("from"));
 
   // Redirect if already authenticated
   useEffect(() => {

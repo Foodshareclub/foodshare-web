@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS } from "@/lib/data/cache-keys";
 import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { safeInternalPath } from "@/lib/security/redirect";
 import { trackEvent } from "@/app/actions/analytics";
 
 /**
@@ -18,7 +19,7 @@ import { trackEvent } from "@/app/actions/analytics";
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const next = requestUrl.searchParams.get("next") ?? "/";
+  const next = safeInternalPath(requestUrl.searchParams.get("next"));
   const type = requestUrl.searchParams.get("type");
   const origin = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin;
 

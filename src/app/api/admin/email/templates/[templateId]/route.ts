@@ -1,6 +1,7 @@
 import { readFile } from "fs/promises";
 import { join } from "path";
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "../../_shared/requireAdmin";
 
 // Sample data for each template
 const sampleData: Record<string, Record<string, string>> = {
@@ -101,6 +102,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ templateId: string }> }
 ) {
+  const auth = await requireAdmin();
+  if (!auth.authorized) return auth.response;
+
   try {
     const { templateId } = await params;
 
