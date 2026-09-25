@@ -73,7 +73,9 @@ jobs:
     name: Build
     runs-on: [self-hosted, Linux]
     needs: validate
-    timeout-minutes: 30
+    # Cold builds (no nextjs-* cache on refs/heads/main) need far longer than
+    # warm ones; the previous 30m cap cancelled a run that was still working.
+    timeout-minutes: 60
     outputs:
       build-artifact: build-output
     steps:
@@ -99,7 +101,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Restore Next.js build cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ github.workspace }}/.next/cache
           key: nextjs-${{ hashFiles('bun.lock', 'next.config.ts', 'package.json') }}-${{ github.sha }}
@@ -128,6 +130,16 @@ jobs:
           NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED }}
           NEXT_PUBLIC_OAUTH_APPLE_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_APPLE_ENABLED }}
           NEXT_PUBLIC_OAUTH_GITHUB_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED }}
+
+      # Persist the incremental cache even when the build step fails. Otherwise
+      # every main build starts cold, exceeds the runner budget, and never gets
+      # far enough to save a cache — an unrecoverable cold-start deadlock.
+      - name: Save Next.js build cache
+        if: ${{ !cancelled() }}
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ github.workspace }}/.next/cache
+          key: nextjs-${{ hashFiles('bun.lock', 'next.config.ts', 'package.json') }}-${{ github.sha }}
 
       - name: Tar build output
         run: tar -cvf build-output.tar .next public messages package.json bun.lock
