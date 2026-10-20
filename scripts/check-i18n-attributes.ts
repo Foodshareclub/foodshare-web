@@ -49,7 +49,7 @@
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "bun:fs";
 import { join } from "bun:path";
-import ts from "typescript";
+import * as ts from "./lib/ts-ast";
 
 import { isUserFacing } from "./lib/user-facing";
 
@@ -115,9 +115,9 @@ const literal = (attribute: ts.JsxAttribute): string | null => {
   return null;
 };
 
-function inspect(file: string): Finding[] {
+async function inspect(file: string): Promise<Finding[]> {
   const relative = file.replace(`${ROOT}/`, "");
-  const source = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.ESNext, true, ts.ScriptKind.TSX);
+  const { sourceFile, lineOf } = await ts.parseSourceFile(file, readFileSync(file, "utf8"));
   const findings: Finding[] = [];
 
   const visit = (node: ts.Node, insideSvg: boolean) => {
@@ -129,7 +129,7 @@ function inspect(file: string): Finding[] {
         if (text && isUserFacing(text, { insideSvg })) {
           findings.push({
             file: relative,
-            line: source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1,
+            line: lineOf(node),
             attribute: name,
             text: truncate(text),
           });
@@ -144,7 +144,7 @@ function inspect(file: string): Finding[] {
     ts.forEachChild(node, (child) => visit(child, inSvg));
   };
 
-  visit(source, false);
+  visit(sourceFile, false);
   return findings;
 }
 
@@ -159,6 +159,7 @@ function files(dir: string, out: string[] = []): string[] {
 
 if (!existsSync(SRC)) {
   console.error(`  ${RED}No src at ${SRC}${RESET}`);
+  await ts.closeAstClient();
   process.exit(1);
 }
 
@@ -168,7 +169,7 @@ const findings: Finding[] = [];
 
 for (const file of files(SRC)) {
   if (file.includes(".test.") || file.includes(".stories.") || file.includes("emails/templates")) continue;
-  const found = inspect(file);
+  const found = await inspect(file);
   if (found.length === 0) continue;
   const relative = file.replace(`${ROOT}/`, "");
   perFile.set(relative, found.length);
@@ -186,6 +187,7 @@ if (process.argv.includes("--write-baseline")) {
   console.log(
     `\n${GREEN}✓${RESET} Baseline written: ${total} untranslated attribute(s) across ${perFile.size} file(s).\n`,
   );
+  await ts.closeAstClient();
   process.exit(0);
 }
 
@@ -212,6 +214,7 @@ if (process.argv.includes("--worklist")) {
       "",
     ].join("\n"),
   );
+  await ts.closeAstClient();
   process.exit(0);
 }
 
@@ -241,6 +244,7 @@ if (process.argv.includes("--report")) {
       "",
     ].join("\n"),
   );
+  await ts.closeAstClient();
   process.exit(0);
 }
 
@@ -252,6 +256,7 @@ if (baseline === null) {
   console.error(
     `  ${RED}No baseline at scripts/check-i18n-attributes-baseline.json. Create it with:${RESET}\n      bun run check:i18n-attributes -- --write-baseline\n`,
   );
+  await ts.closeAstClient();
   process.exit(1);
 }
 
@@ -280,6 +285,7 @@ if (regressions.length > 0) {
       "",
     ].join("\n"),
   );
+  await ts.closeAstClient();
   process.exit(1);
 }
 
@@ -292,3 +298,7 @@ if (fixed > 0)
     `  ${GREEN}✓${RESET} ${fixed} file(s) are clear since the baseline, of ${Object.keys(baseline).length} recorded.`,
   );
 console.log(`  ${YELLOW}·${RESET} Run 'bun run check:i18n-attributes -- --report' for the list.\n`);
+
+// The compiler process is a child, and it keeps the event loop alive. Without
+// this the script prints its result and then hangs.
+await ts.closeAstClient();

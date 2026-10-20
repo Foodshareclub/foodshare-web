@@ -39,7 +39,7 @@
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "bun:fs";
 import { join } from "bun:path";
-import ts from "typescript";
+import * as ts from "./lib/ts-ast";
 
 const ROOT = process.env.ADORNMENT_CHECK_ROOT ?? join(import.meta.dir, "..");
 const SRC = join(ROOT, "src");
@@ -84,7 +84,9 @@ function openingOf(node: ts.Node): ts.JsxOpeningElement | ts.JsxSelfClosingEleme
 }
 
 function classNameAttributeOf(node: ts.Node): ts.JsxAttribute | undefined {
-  return openingOf(node)?.attributes.properties.find(
+  const opening = openingOf(node);
+  if (!opening) return undefined;
+  return ts.jsxAttributes(opening).find(
     (property): property is ts.JsxAttribute => ts.isJsxAttribute(property) && property.name.text === "className",
   );
 }
@@ -147,9 +149,9 @@ interface Finding {
   padding: string;
 }
 
-function inspect(file: string): Finding[] {
+async function inspect(file: string): Promise<Finding[]> {
   const relative = file.replace(`${ROOT}/`, "");
-  const source = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.ESNext, true, ts.ScriptKind.TSX);
+  const { sourceFile, lineOf } = await ts.parseSourceFile(file, readFileSync(file, "utf8"));
   const findings: Finding[] = [];
 
   const openers: ts.Node[] = [];
@@ -157,7 +159,7 @@ function inspect(file: string): Finding[] {
     if (openingOf(node) && classNameAttributeOf(node)) openers.push(node);
     ts.forEachChild(node, collect);
   };
-  collect(source);
+  collect(sourceFile);
 
   for (const node of openers) {
     const own = classNamesOf(node).join(" ");
@@ -218,10 +220,9 @@ function inspect(file: string): Finding[] {
     ts.forEachChild(parent, walk);
 
     if (reservesFor(side, leadingPadding, trailingPadding)) {
-      const { line } = source.getLineAndCharacterOfPosition(node.getStart(source));
       findings.push({
         file: relative,
-        line: line + 1,
+        line: lineOf(node),
         adornment,
         side,
         padding: side === "trailing" ? trailingPadding : leadingPadding,
@@ -243,18 +244,22 @@ function files(dir: string, out: string[] = []): string[] {
 
 if (!existsSync(SRC)) {
   console.error(`  ${RED}No src at ${SRC}${RESET}`);
+  await ts.closeAstClient();
   process.exit(1);
 }
 
-const findings = files(SRC)
-  .filter((file) => !file.includes(".test.") && !file.includes(".stories."))
-  .flatMap(inspect)
-  .sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
+const findings: Finding[] = [];
+for (const file of files(SRC)) {
+  if (file.includes(".test.") || file.includes(".stories.")) continue;
+  findings.push(...(await inspect(file)));
+}
+findings.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
 
 if (process.argv.includes("--write-baseline")) {
   mkdirSync(join(ROOT, "scripts"), { recursive: true });
   writeFileSync(BASELINE_PATH, `${JSON.stringify({ total: findings.length }, null, 2)}\n`);
   console.log(`\n${GREEN}✓${RESET} Baseline written: ${findings.length} finding(s).\n`);
+  await ts.closeAstClient();
   process.exit(0);
 }
 
@@ -272,6 +277,7 @@ if (process.argv.includes("--report")) {
       "",
     ].join("\n"),
   );
+  await ts.closeAstClient();
   process.exit(0);
 }
 
@@ -283,6 +289,7 @@ if (baseline === null) {
   console.error(
     `  ${RED}No baseline at scripts/check-adornments-baseline.json. Create it with:${RESET}\n      bun run check:adornments -- --write-baseline\n`,
   );
+  await ts.closeAstClient();
   process.exit(1);
 }
 
@@ -303,6 +310,7 @@ if (findings.length > baseline.total) {
       "",
     ].join("\n"),
   );
+  await ts.closeAstClient();
   process.exit(1);
 }
 
@@ -310,3 +318,7 @@ console.log(
   `  ${GREEN}✓${RESET} No half-converted adornments (${findings.length} finding(s), baseline ${baseline.total}).`,
 );
 console.log(`  ${YELLOW}·${RESET} Run 'bun run check:adornments -- --report' for the list.\n`);
+
+// The compiler process is a child, and it keeps the event loop alive. Without
+// this the script prints its result and then hangs.
+await ts.closeAstClient();

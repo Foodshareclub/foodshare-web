@@ -57,7 +57,7 @@
 
 import { readFileSync, readdirSync, statSync } from "bun:fs";
 import { join } from "bun:path";
-import ts from "typescript";
+import * as ts from "./lib/ts-ast";
 
 const ROOT = process.env.NAMESPACE_KEYS_ROOT ?? join(import.meta.dir, "..");
 const SRC = join(ROOT, "src");
@@ -125,14 +125,11 @@ function files(dir: string, out: string[] = []): string[] {
 
 const findings: Finding[] = [];
 
-const lineOf = (source: ts.SourceFile, node: ts.Node): number =>
-  source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1;
-
 const relative = (file: string): string => file.replace(`${ROOT}/`, "");
 
 for (const file of files(SRC)) {
   if (file.includes(".test.") || file.includes(".stories.")) continue;
-  const source = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.ESNext, true, ts.ScriptKind.TSX);
+  const { sourceFile, lineOf } = await ts.parseSourceFile(file, readFileSync(file, "utf8"));
 
   /**
    * Translator bindings, read from the AST so that a mention of the pattern in a
@@ -163,7 +160,7 @@ for (const file of files(SRC)) {
     }
     ts.forEachChild(node, visit);
   };
-  visit(source);
+  visit(sourceFile);
 
   if (bindings.size === 0) continue;
 
@@ -183,7 +180,7 @@ for (const file of files(SRC)) {
     }
     ts.forEachChild(node, collect);
   };
-  collect(source);
+  collect(sourceFile);
 
   for (const call of calls) {
     // Resolves correctly, or the key is simply missing and `translations:check`
@@ -191,7 +188,7 @@ for (const file of files(SRC)) {
     if (inCatalogue.has(`${call.bound}.${call.key}`) || !inCatalogue.has(call.key)) continue;
     findings.push({
       file: relative(file),
-      line: lineOf(source, call.node),
+      line: lineOf(call.node),
       bound: call.bound,
       key: call.key,
       resolves: `${call.bound}.${call.key}`,
@@ -233,6 +230,7 @@ if (findings.length > 0) {
       "",
     ].join("\n"),
   );
+  await ts.closeAstClient();
   process.exit(1);
 }
 
@@ -241,3 +239,7 @@ const note = `  ${YELLOW}·${RESET} ${inCatalogue.size} catalogue paths read fro
 console.log(`  ${GREEN}✓${RESET} No namespaced t() is called with a key that names a namespace.`);
 console.log(note);
 console.log();
+
+// The compiler process is a child, and it keeps the event loop alive. Without
+// this the script prints its result and then hangs.
+await ts.closeAstClient();
