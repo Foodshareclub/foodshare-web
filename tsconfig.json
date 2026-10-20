@@ -14,10 +14,16 @@
     "noEmit": true,
 
     // Bun's ambient types: the `Bun` global, `bun:test` and the `bun:*`
-    // builtin modules that `bun check` resolves natively. "node" keeps the
-    // Node-compat globals (`process`, `Buffer`) that the Next.js server
-    // runtime still relies on.
-    "types": ["bun", "node"],
+    // builtin modules that `bun check` resolves natively.
+    //
+    // "node" is deliberately absent. The Node-compat globals this project
+    // relies on (`process`, `Buffer`) are declared by `bun-types` itself, so
+    // they are still in scope — but the *ambient surface* the project type-checks
+    // against is Bun's, not Node's. Listing "node" here would let a stray
+    // Node-only global slip into the tree without anyone noticing; a project
+    // that runs on Bun should not be able to type-check against Node's API by
+    // accident.
+    "types": ["bun"],
 
     // Strict type checking
     "strict": true,

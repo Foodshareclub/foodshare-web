@@ -122,17 +122,65 @@ const BARE_NODE_BUILTINS = new Set([
   "zlib",
 ]);
 
-const ROOT_FILES = [
-  "package.json",
-  "bunfig.toml",
-  "lefthook.yml",
+/**
+ * Root-level files that carry the toolchain, found rather than listed.
+ *
+ * A hard-coded list goes stale the moment someone adds a Dockerfile or a
+ * compose file, and the gap is invisible in review — the new file looks
+ * covered because a sibling file is. Every file in the repo root that could
+ * name a runtime is scanned instead.
+ */
+const ROOT_EXACT_NAMES = new Set([
+  "Caddyfile",
+  "Containerfile",
   "Dockerfile",
-  "docker-compose.yml",
-  "foodshare-web.container",
-  "foodshare-cloudflared-web.container",
-  "playwright.config.ts",
-  "next.config.ts",
-];
+  "Makefile",
+  "Procfile",
+  "justfile",
+]);
+
+/**
+ * True when a root file's name marks it as a candidate for the scan.
+ *
+ * A function rather than a constant because `SCAN_EXTENSIONS` is declared
+ * further down the file, and a module-level constant would read it too early.
+ */
+function isRootCandidate(path: string): boolean {
+  if (path.endsWith(".container")) return true;
+  return SCAN_EXTENSIONS.some((extension) => path.endsWith(extension));
+}
+
+/**
+ * True when a root file with no extension is a script.
+ *
+ * `gradlew` and its neighbours carry no extension, but they are shell
+ * scripts and can call anything. A `#!` on the first line is what makes a
+ * file executable, so that is what is looked for.
+ */
+async function isExecutableRootFile(path: string): Promise<boolean> {
+  const head = await Bun.file(path).slice(0, 2).text();
+  return head === "#!";
+}
+
+/** Every file in the repo root that could name a runtime. */
+async function collectRootFiles(): Promise<string[]> {
+  const files: string[] = [];
+
+  for await (const path of new Bun.Glob("*").scan({ cwd: "." })) {
+    if (path.includes("/")) continue;
+    if (ROOT_EXACT_NAMES.has(path)) {
+      files.push(path);
+      continue;
+    }
+    if (isRootCandidate(path)) {
+      files.push(path);
+      continue;
+    }
+    if (await isExecutableRootFile(path)) files.push(path);
+  }
+
+  return files;
+}
 
 // `.github/workflows` is scanned because CI is where Node used to hide: a
 // workflow can install a Node toolchain (`actions/setup-node`) and run a
@@ -149,6 +197,82 @@ type Violation = { file: string; line: number; text: string; reason: string };
 function isCommentLine(line: string): boolean {
   const trimmed = line.trimStart();
   return trimmed.startsWith("#") || trimmed.startsWith("//") || trimmed.startsWith("*");
+}
+
+/**
+ * Node subcommands that name an invocation rather than a concept.
+ *
+ * "the node runtime" is prose. "npm install" is an instruction, and an
+ * instruction written in a comment is still an instruction — it is what the
+ * next developer copy-pastes. The two are told apart by what follows the
+ * tool name.
+ */
+const NODE_SUBCOMMANDS = new Set([
+  "add",
+  "audit",
+  "build",
+  "cache",
+  "ci",
+  "create",
+  "dedupe",
+  "dev",
+  "dlx",
+  "doctor",
+  "exec",
+  "fund",
+  "help",
+  "init",
+  "install",
+  "link",
+  "ls",
+  "outdated",
+  "pack",
+  "ping",
+  "pr",
+  "publish",
+  "remove",
+  "run",
+  "start",
+  "test",
+  "unlink",
+  "update",
+  "upgrade",
+  "why",
+  "x",
+]);
+
+/**
+ * True when the text after a Node tool name is a command target.
+ *
+ * A path, a script file or a known subcommand all name something to run. An
+ * ordinary word names nothing, so "node runtime" stays prose.
+ */
+function isCommandTarget(text: string): boolean {
+  const token = text.trim().split(/\s+/)[0] ?? "";
+  if (!token) return false;
+  if (NODE_SUBCOMMANDS.has(token)) return true;
+  if (token.includes("/")) return true;
+  return /\.(?:m?js|cjs|ts|tsx|sh|bash|zsh)$/.test(token);
+}
+
+/**
+ * Node tools named in a comment with a command target after them.
+ *
+ * A comment can still be an instruction. "Run with: node scripts/x.ts" is
+ * what the next developer copy-pastes, so it is a violation like any other.
+ */
+function commentCommandCandidates(line: string): { tool: string; target: string }[] {
+  const found: { tool: string; target: string }[] = [];
+  for (const tool of NODE_TOOLS) {
+    const pattern = new RegExp(`(^|[^-\\w])(${tool})(?=\\s|$|["'])`, "g");
+    for (const match of line.matchAll(pattern)) {
+      const index = match.index + match[1].length;
+      const target = line.slice(index + tool.length).trim().split(/\s+/)[0] ?? "";
+      if (!isCommandTarget(target)) continue;
+      found.push({ tool, target });
+    }
+  }
+  return found;
 }
 
 /** True when the token at `index` sits where a shell would start a command. */
@@ -310,7 +434,30 @@ function nodeBuiltinImports(line: string): string[] {
 }
 
 function checkLine(file: string, lineNumber: number, line: string, violations: Violation[]): void {
-  if (isCommentLine(line)) return;
+  // A shebang pins the file to a runtime. It is a comment by syntax, but
+  // it is an instruction about which runtime to use, so it is checked before
+  // the comment rules below.
+  if (/^#!\s*\/usr\/bin\/env\s+node\b/.test(line.trim())) {
+    violations.push({
+      file,
+      line: lineNumber,
+      text: line.trim(),
+      reason: "node shebang — use `#!/usr/bin/env bun`",
+    });
+  }
+
+  // A comment can still be an instruction.
+  if (isCommentLine(line)) {
+    for (const candidate of commentCommandCandidates(line)) {
+      violations.push({
+        file,
+        line: lineNumber,
+        text: line.trim(),
+        reason: `\`${candidate.tool} ${candidate.target}\` is a Node.js command — this project runs on Bun`,
+      });
+    }
+    return;
+  }
 
   const isScript = SCRIPT_EXTENSIONS.some((extension) => file.endsWith(extension));
   const isYaml = /\.(ya?ml)$/.test(file);
@@ -351,16 +498,6 @@ function checkLine(file: string, lineNumber: number, line: string, violations: V
         : "`bunx` without `--bun` runs on Node — use `bunx --bun <tool>`",
     });
   }
-  // A `#!/usr/bin/env node` shebang pins the file to the Node runtime.
-  if (/^#!\s*\/usr\/bin\/env\s+node\b/.test(line.trim())) {
-    violations.push({
-      file,
-      line: lineNumber,
-      text: line.trim(),
-      reason: "node shebang — use `#!/usr/bin/env bun`",
-    });
-  }
-
   // A workflow that installs Node is a Node toolchain, however it is spelled.
   if (/actions\/setup-node\b/.test(line)) {
     violations.push({
@@ -401,11 +538,7 @@ function checkLine(file: string, lineNumber: number, line: string, violations: V
 }
 
 async function collectFiles(): Promise<string[]> {
-  const files: string[] = [];
-
-  for (const file of ROOT_FILES) {
-    if (await Bun.file(file).exists()) files.push(file);
-  }
+  const files = await collectRootFiles();
 
   for (const dir of SCANNED_DIRS) {
     const glob = new Bun.Glob(`${dir}/**/*`);

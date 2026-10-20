@@ -1,8 +1,7 @@
-import * as dotenv from "dotenv";
 import { MotherDuckService } from "../src/lib/analytics/motherduck";
 
-// Load env vars
-dotenv.config();
+// Environment variables come from Bun's own loader: `bun` reads `.env`,
+// `.env.{NODE_ENV}` and `.env.local` before the script runs.
 
 async function setupEventsTable() {
   console.log("Setting up MotherDuck events table...");

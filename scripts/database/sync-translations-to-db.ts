@@ -12,11 +12,10 @@
 
 import { join } from "bun:path";
 import { createClient } from "@supabase/supabase-js";
-import { config } from "dotenv";
 
-// Load environment variables
-config({ path: ".env.local" });
-config({ path: ".env" });
+// Environment variables come from Bun's own loader: `bun` reads `.env`,
+// `.env.{NODE_ENV}` and `.env.local` before the script runs, and `.env.local`
+// takes precedence over `.env`.
 
 // Configuration
 const LOCALES_DIR = join(process.cwd(), "src/locales");

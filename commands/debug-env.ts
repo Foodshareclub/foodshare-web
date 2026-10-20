@@ -1,9 +1,10 @@
-import path from "bun:path";
-import * as dotenv from "dotenv";
+// Environment variables come from Bun's own loader: `bun` reads `.env`,
+// `.env.{NODE_ENV}` and `.env.local` before the script runs, and `.env.local`
+// takes precedence over `.env`.
 
-// Load environment variables
-dotenv.config({ path: path.resolve(process.cwd(), ".env") });
-dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
+// This file is a module, not a global script, so its top-level declarations
+// stay out of the global scope shared with the sibling commands.
+export {};
 
 function debugEnv() {
   const keyId = process.env.AWS_ACCESS_KEY_ID;

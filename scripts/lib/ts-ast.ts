@@ -134,15 +134,16 @@ export async function parseSourceFile(fileName: string, text: string): Promise<P
 /**
  * Visits the children of a node.
  *
- * `typescript`'s `forEachChild` skipped punctuation and other trivia; the
- * `tsrs` equivalent is `getChildren`, which returns them. The guards
- * inspect the shape of the tree rather than counting nodes, so the extra
- * token nodes change nothing for them.
+ * `ts.forEachChild` skipped punctuation and other trivia, and so does the
+ * remote node's own `forEachChild` — which is what this uses. `getChildren`
+ * returns the tokens as well, so a walk built on it visits roughly half
+ * again as many nodes, over a channel, for nothing: the guards inspect the
+ * shape of the tree rather than counting nodes.
  */
 export function forEachChild(node: ast.Node, callback: (child: ast.Node) => void): void {
-  for (const child of ast.getChildren(node)) {
-    callback(child);
-  }
+  node.forEachChild((child) => {
+    callback(child as ast.Node);
+  });
 }
 
 /**

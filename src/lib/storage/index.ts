@@ -78,20 +78,3 @@ export type {
 // MotherDuck (Analytics)
 export { getMotherDuckConfig, ANALYTICS_QUERIES, MOTHERDUCK_ENV } from "./motherduck";
 export type { MotherDuckConfig, AnalyticsResult, AnalyticsQueryKey } from "./motherduck";
-
-// Image Optimization (Sharp)
-export {
-  optimizeImage,
-  quickOptimize,
-  createResponsiveSet,
-  generateBlurPlaceholder,
-  getImageDimensions,
-  validateImageInput,
-  IMAGE_SIZES,
-} from "./image-optimization";
-export type {
-  ImageSize,
-  OptimizedImage,
-  ImageOptimizationResult,
-  OptimizationOptions,
-} from "./image-optimization";

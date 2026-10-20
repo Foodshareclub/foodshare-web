@@ -1,8 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
-import { config } from "dotenv";
 
-config({ path: ".env" });
-config({ path: ".env.local" });
+// Environment variables come from Bun's own loader: `bun` reads `.env`,
+// `.env.{NODE_ENV}` and `.env.local` before the script runs, and `.env.local`
+// takes precedence over `.env`.
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || "", process.env.SUPABASE_SERVICE_ROLE_KEY || "");
 

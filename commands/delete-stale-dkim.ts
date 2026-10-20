@@ -1,9 +1,11 @@
-import path from "bun:path";
-import * as dotenv from "dotenv";
+// Environment variables come from Bun's own loader: `bun` reads `.env`,
+// `.env.{NODE_ENV}` and `.env.local` before the script runs, and `.env.local`
+// takes precedence over `.env`.
 
-// Load environment variables
-dotenv.config({ path: path.resolve(process.cwd(), ".env") });
-dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
+// This file is a module, not a global script. Without the marker, every
+// top-level `const` here lands in the global scope and collides with the
+// identically named constants in the sibling commands.
+export {};
 
 const ZONE_ID = process.env.CLOUDFLARE_ZONE_ID;
 const TOKEN = process.env.CLOUDFLARE_API_TOKEN;

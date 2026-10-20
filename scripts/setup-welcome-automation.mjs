@@ -1,17 +1,16 @@
 /**
  * Setup Welcome Automation Script
- * Run with: node scripts/setup-welcome-automation.mjs
+ * Run with: bun scripts/setup-welcome-automation.mjs
  *
  * This script seeds email templates and creates the welcome automation
  * using the Supabase service role key (bypasses RLS).
  */
 
 import { createClient } from "@supabase/supabase-js";
-import dotenv from "dotenv";
 
-// Load env files
-dotenv.config({ path: ".env" });
-dotenv.config({ path: ".env.local" });
+// Environment variables come from Bun's own loader: `bun` reads `.env`,
+// `.env.{NODE_ENV}` and `.env.local` before the script runs, and `.env.local`
+// takes precedence over `.env`.
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

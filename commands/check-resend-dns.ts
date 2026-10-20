@@ -1,10 +1,8 @@
-import path from "bun:path";
-import * as dotenv from "dotenv";
 import { Resend } from "resend";
 
-// Load environment variables
-dotenv.config({ path: path.resolve(process.cwd(), ".env") });
-dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
+// Environment variables come from Bun's own loader: `bun` reads `.env`,
+// `.env.{NODE_ENV}` and `.env.local` before the script runs, and `.env.local`
+// takes precedence over `.env`.
 
 async function checkResendDNS() {
   const apiKey = process.env.RESEND_API_KEY;

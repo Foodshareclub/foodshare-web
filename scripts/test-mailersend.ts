@@ -5,13 +5,9 @@
  * Usage: bun scripts/test-mailersend.ts
  */
 
-// Load environment variables
-import { resolve } from "bun:path";
-import { config } from "dotenv";
-
-// Load .env.local first (higher priority), then .env
-config({ path: resolve(process.cwd(), ".env.local") });
-config({ path: resolve(process.cwd(), ".env") });
+// Environment variables come from Bun's own loader: `bun` reads `.env`,
+// `.env.{NODE_ENV}` and `.env.local` before the script runs, and `.env.local`
+// takes precedence over `.env`.
 
 import { createUnifiedEmailService } from "@/lib/email/unified-service";
 

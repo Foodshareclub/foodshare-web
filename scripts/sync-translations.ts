@@ -15,10 +15,10 @@
 import * as fs from "bun:fs";
 import * as path from "bun:path";
 import { createClient } from "@supabase/supabase-js";
-import { config } from "dotenv";
 
-// Load environment variables
-config();
+// Environment variables come from Bun's own loader: `bun` reads `.env`,
+// `.env.{NODE_ENV}` and `.env.local` before the script runs, so there is
+// nothing to load here.
 
 // Configuration
 const MESSAGES_DIR = path.join(__dirname, "../messages");

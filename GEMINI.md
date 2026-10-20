@@ -1,11 +1,25 @@
 # Foodshare Web
 
-Next.js 16 App Router + React 19 + TypeScript 5 + Tailwind CSS 4 + Self-hosted Supabase + shadcn/ui
+Next.js 16 App Router + React 19 + TypeScript 7 + Tailwind CSS 4 + Self-hosted Supabase + shadcn/ui
 
 Bun is the only runtime: package manager, script runner, TypeScript executor,
 type checker, test runner and Next.js runtime. Node.js is not part of this
 project's toolchain — `bun scripts/check-no-node.ts` fails the build if it
 creeps back in, and it scans the CI workflows as well as the source tree.
+
+**Type checking is `tsrs`, not `tsc`.** `tsrs` is the Rust port of the
+TypeScript 7 compiler, from the Oxc project; it checks this tree in about
+half a second against a few minutes for TypeScript 5. `bun run type-check`
+runs it, and `bun run type-check:tsc` runs `tsc` on TypeScript 7.1 as a
+strict parity gate — both run in CI, so a difference between the two fails
+the build rather than hiding in a comment.
+
+TypeScript 7 has no JavaScript compiler API, so the guard scripts that read
+the *shape* of the source — `scripts/lib/ts-ast.ts` and the four that use it
+— get their AST from `tsrs/unstable/ast` instead of `typescript`. The
+synchronous channel of `tsrs` reads the compiler's stdout through
+`stdout._handle.fd`, a Node internal Bun does not implement, so the
+asynchronous API is the one that works here.
 
 **Playwright runs on Bun too.** `bunx --bun playwright test` works because
 `patches/playwright@1.62.1.patch` stops Playwright from overwriting Bun's
@@ -33,8 +47,9 @@ All deployments are **fully automated** via GitHub Actions in full scale. **Neve
 | --------------------------- | --------------------------------------------------------------- |
 | `bun run dev`               | Dev server (Turbopack, port 3000)                               |
 | `bun run build`             | Production build                                                |
-| `bun run type-check`        | TypeScript checking (`bun check`)                               |
-| `bun run type-check:tsc`    | Same check via `tsc` (strict parity gate, also run in CI)       |
+| `bun run type-check`        | TypeScript checking (`tsrs`, the Rust port of `tsc`)            |
+| `bun run type-check:tsc`    | Same check via `tsc` on TypeScript 7.1 (strict parity gate)    |
+| `bun run check:no-node`     | Fail if Node.js creeps back into the toolchain                 |
 | `bun run lint:fix`          | oxlint (primary) + biome format; runs both                      |
 | `bun run test:ci`           | Run all tests with bun:test                                     |
 | `bun run e2e`               | Playwright end-to-end tests (`bunx --bun playwright test`)      |

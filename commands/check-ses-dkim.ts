@@ -1,15 +1,13 @@
 import { resolveCname } from "bun:dns/promises";
-import path from "bun:path";
 import {
   GetIdentityDkimAttributesCommand,
   GetIdentityVerificationAttributesCommand,
   SESClient,
 } from "@aws-sdk/client-ses";
-import * as dotenv from "dotenv";
 
-// Load environment variables
-dotenv.config({ path: path.resolve(process.cwd(), ".env") });
-dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
+// Environment variables come from Bun's own loader: `bun` reads `.env`,
+// `.env.{NODE_ENV}` and `.env.local` before the script runs, and `.env.local`
+// takes precedence over `.env`.
 
 async function checkSESDkim() {
   const region = process.env.AWS_REGION || "us-east-1";

@@ -13,7 +13,13 @@ const nextConfig: NextConfig = {
   // Don't leak framework fingerprinting header (security + bytes)
   poweredByHeader: false,
 
-  // Keep native binary deps external to the server bundle (smaller images)
+  // Keep native binary deps external to the server bundle (smaller images).
+  //
+  // `sharp` is not a dependency of this app's own code — nothing imports it —
+  // but Next's image optimizer `require`s it at runtime for every `/_next/image`
+  // request, and it has no fallback. It stays a direct dependency for that
+  // reason, and stays external so it is loaded from `node_modules` rather
+  // than bundled.
   serverExternalPackages: ["sharp"],
 
   // Standalone output for minimal container images (Dockerfile copies

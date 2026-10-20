@@ -14,7 +14,6 @@
 
 import { parseArgs } from "bun:util";
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
-import { config } from "dotenv";
 
 import { COUNTRIES, DEFAULT_BATCH_SIZE, SUPPORTED_COUNTRIES, SYSTEM_USER_ID } from "./config";
 import { type FacilityType, fetchOSMFoodbanks, fetchOSMFridges } from "./sources/osm-source";
@@ -29,8 +28,9 @@ interface ExtendedImportOptions extends ImportOptions {
 }
 
 // Load environment variables
-config({ path: ".env.local" });
-config({ path: ".env" });
+// Environment variables come from Bun's own loader: `bun` reads `.env`,
+// `.env.{NODE_ENV}` and `.env.local` before the script runs, and `.env.local`
+// takes precedence over `.env`.
 
 /**
  * Parse CLI arguments
