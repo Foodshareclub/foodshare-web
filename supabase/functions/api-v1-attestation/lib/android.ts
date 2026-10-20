@@ -325,72 +325,46 @@ export async function verifyPlayIntegrity(
 }
 
 // =============================================================================
-// SafetyNet Verification (Deprecated)
+// SafetyNet Verification (Retired)
 // =============================================================================
 
+/**
+ * SafetyNet attestation, retired.
+ *
+ * The previous implementation split the attestation on `.`, decoded the
+ * payload and read `ctsProfileMatch` / `basicIntegrity` out of it **without
+ * ever looking at the signature**. Because the payload is ordinary
+ * base64url JSON, anyone could mint `{"ctsProfileMatch":true,
+ * "basicIntegrity":true}` and be handed a verified Android device — the same
+ * self-service bypass as the DeviceCheck path.
+ *
+ * Fixing that properly is possible in principle: the token is an ES256 JWS
+ * over a chain rooted in Google's hardware attestation CA, which is exactly
+ * the shape `fs-verify` already validates. It is not worth doing, because
+ * Google retired the SafetyNet Attestation API and required migration to
+ * Play Integrity by June 2024. Verifying tokens from an API that has stopped
+ * issuing them would be security theatre, and keeping a verifier alive for a
+ * retired protocol is how this bug class reappeared in the first place.
+ *
+ * The route and schema stay so existing clients receive an actionable
+ * verdict instead of a schema rejection; the verdict is always a refusal.
+ *
+ * @param _attestation - Unused. Kept so the call site reads as before.
+ */
 export async function verifySafetyNet(
-  attestation: string,
-): Promise<
-  {
-    verified: boolean;
-    trustLevel: TrustLevel;
-    riskScore: number;
-    message?: string;
-  }
-> {
-  if (!attestation || attestation.length < 100) {
-    return {
-      verified: false,
-      trustLevel: "unknown",
-      riskScore: 100,
-      message: "Invalid SafetyNet attestation",
-    };
-  }
-
-  try {
-    const parts = attestation.split(".");
-    if (parts.length !== 3) {
-      return {
-        verified: false,
-        trustLevel: "unknown",
-        riskScore: 100,
-        message: "Invalid attestation format",
-      };
-    }
-
-    const payloadJson = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
-    const payload = JSON.parse(payloadJson);
-
-    if (!payload.ctsProfileMatch && !payload.basicIntegrity) {
-      return {
-        verified: false,
-        trustLevel: "suspicious",
-        riskScore: 80,
-        message: "Device failed integrity checks",
-      };
-    }
-
-    let riskScore = 40;
-    if (payload.ctsProfileMatch) riskScore -= 15;
-    if (payload.basicIntegrity) riskScore -= 10;
-
-    logger.warn("SafetyNet attestation accepted (deprecated API)");
-    return {
-      verified: true,
-      trustLevel: riskScore <= 30 ? "trusted" : "unknown",
-      riskScore,
-      message: "SafetyNet is deprecated - please update to Play Integrity",
-    };
-  } catch (error) {
-    logger.error(
-      "SafetyNet verification error",
-      error instanceof Error ? error : new Error(String(error)),
-    );
-    return {
-      verified: false,
-      trustLevel: "unknown",
-      riskScore: 100,
-      message: "SafetyNet verification failed",
-    };
-  }
+  _attestation: string,
+): Promise<{
+  verified: boolean;
+  trustLevel: TrustLevel;
+  riskScore: number;
+  message?: string;
+}> {
+  logger.warn("SafetyNet attestation declined: API retired by Google");
+  return {
+    verified: false,
+    trustLevel: "unknown",
+    riskScore: 100,
+    message: 'SafetyNet attestation is no longer supported. Send `type: "integrity"` ' +
+      "(Play Integrity) instead.",
+  };
 }

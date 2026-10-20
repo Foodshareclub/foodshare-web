@@ -319,7 +319,11 @@ async function trackAnalytics(
       cached: params.cached,
       delta_sync: params.deltaSync,
       status_code: params.statusCode,
-      created_at: new Date().toISOString(),
+      // The column is `timestamp`. `translation_analytics` has no `created_at`,
+      // so the insert was rejected in full — which is invisible, because the
+      // catch is empty by design: analytics are best-effort, and this made them
+      // best-effort by never recording anything.
+      timestamp: new Date().toISOString(),
     });
   } catch {
     // Non-blocking analytics

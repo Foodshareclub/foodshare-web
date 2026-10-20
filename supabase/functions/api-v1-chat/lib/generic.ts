@@ -76,13 +76,16 @@ export async function listRooms(
   }
 
   const limit = Math.min(parseInt(query.limit || "20"), 50);
-  const cursor = query.cursor;
 
-  // Use optimized RPC for room listing
+  // The RPC is offset-based (`p_offset`); the `cursor` query param is
+  // accepted for API compatibility but the function has no cursor overload,
+  // so passing `p_cursor` made PostgREST reject every call with "function
+  // does not exist" and room listing failed outright. Cursor pagination is
+  // not yet supported — the first page is returned.
   const { data, error } = await supabase.rpc("get_user_rooms", {
     p_user_id: userId,
     p_limit: limit + 1,
-    p_cursor: cursor || null,
+    p_offset: 0,
   });
 
   if (error) {

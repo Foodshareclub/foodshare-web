@@ -26,6 +26,34 @@ export async function handleProxy(ctx: HandlerContext): Promise<Response> {
     throw new ValidationError(`Invalid image URL: ${urlValidation.reason}`);
   }
 
+  // Additional SSRF protection: block private IPs and localhost even if
+  // validation passed (defense-in-depth). The URL hostname is available
+  // after validateImageUrl ran its checks.
+  const parsedUrl = new URL(imageUrl);
+  const blockedHostnames = [
+    "localhost",
+    "127.0.0.1",
+    "::1",
+    "[::1]",
+    "0.0.0.0",
+    "169.254.169.254", // AWS metadata
+    "fd00:ec2::254", // AWS IPv6 metadata
+    "metadata.google.internal",
+    "metadata.goog",
+    "kubernetes.default",
+    "kubernetes.default.svc",
+    "host.docker.internal",
+    "host.containers.internal",
+  ];
+  if (blockedHostnames.includes(parsedUrl.hostname.toLowerCase())) {
+    throw new ValidationError("Access to local/private endpoints is not allowed");
+  }
+
+  // Enforce HTTPS only for image proxy
+  if (parsedUrl.protocol !== "https:") {
+    throw new ValidationError("Only HTTPS URLs are allowed for image proxy");
+  }
+
   const response = await fetch(imageUrl, {
     headers: { "User-Agent": "FoodShare-ImageAPI/1.0" },
     signal: AbortSignal.timeout(10000),
@@ -89,6 +117,38 @@ export async function handleUploadFromUrl(
 
   if (!imageUrl) {
     throw new ValidationError("Missing imageUrl");
+  }
+
+  // SSRF protection: block private IPs and localhost
+  try {
+    const parsedUrl = new URL(imageUrl);
+    const blockedHostnames = [
+      "localhost",
+      "127.0.0.1",
+      "::1",
+      "[::1]",
+      "0.0.0.0",
+      "169.254.169.254", // AWS metadata
+      "fd00:ec2::254", // AWS IPv6 metadata
+      "metadata.google.internal",
+      "metadata.goog",
+      "kubernetes.default",
+      "kubernetes.default.svc",
+      "host.docker.internal",
+      "host.containers.internal",
+    ];
+    if (blockedHostnames.includes(parsedUrl.hostname.toLowerCase())) {
+      throw new ValidationError("Access to local/private endpoints is not allowed");
+    }
+    // Enforce HTTPS only
+    if (parsedUrl.protocol !== "https:") {
+      throw new ValidationError("Only HTTPS URLs are allowed for image upload");
+    }
+  } catch (e: any) {
+    if (e instanceof ValidationError) {
+      throw e;
+    }
+    throw new ValidationError(`Invalid URL format: ${e.message}`);
   }
 
   const { supabase } = ctx;

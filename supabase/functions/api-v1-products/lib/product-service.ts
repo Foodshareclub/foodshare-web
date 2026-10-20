@@ -2,6 +2,25 @@
  * Product Service
  *
  * Business logic for product/listing operations.
+ *
+ * ## Not wired up, and not runnable as written
+ *
+ * Nothing imports this module — `api-v1-products/index.ts` uses the
+ * handlers in `lib/handlers/` directly, and the reachable reachability
+ * analysis in `__tests__/rpc-signatures.test.ts` asserts that this file is
+ * unreachable. Two things in here also do not exist in the schema:
+ *
+ *   * the `products` table. The word `products` appears in no migration;
+ *     listings are `posts` / `posts_with_location`.
+ *   * `get_nearby_products`. The nearby search that does exist is
+ *     `get_nearby_posts`, which takes metres rather than kilometres — the
+ *     sibling handler `lib/nearby-products.ts` calls it correctly.
+ *
+ * It is kept rather than deleted because production may have diverged from
+ * the migrations (see `docs/rpc-signature-audit.md`), and that is a
+ * question about the running database rather than about this file. What is
+ * not kept is the pretence that it works: before wiring it up, reconcile the
+ * two names above against production.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";

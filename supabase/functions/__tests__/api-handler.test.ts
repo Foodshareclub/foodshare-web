@@ -6,7 +6,7 @@
 
 import { assertEquals, assertExists } from "https://deno.land/std@0.208.0/assert/mod.ts";
 import { createAPIHandler, created, ok, paginated } from "../_shared/api-handler.ts";
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { z } from "zod";
 
 // Set up test environment variables required by createSupabaseClient
 Deno.env.set("SUPABASE_URL", "http://localhost:54321");

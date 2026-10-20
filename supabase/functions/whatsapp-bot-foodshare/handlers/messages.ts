@@ -359,7 +359,7 @@ async function createFoodPost(
 
   await setUserState(phoneNumber, null);
 
-  const postUrl = `${getAppUrl()}/food/${post.id}`;
+  const postUrl = `${getAppUrl()}/product/${post.id}`;
   await sendTextMessage(
     phoneNumber,
     `${emoji.CELEBRATE} *${t(lang, "share.success")}*\n\n${emoji.LINK} ${postUrl}`,

@@ -8,7 +8,11 @@ import { logger } from "../../_shared/logger.ts";
 import { getSecretSync } from "../../_shared/vault.ts";
 
 export async function analyzeImage(imageUrl: string): Promise<AIData | null> {
-  const HF_TOKEN = getSecretSync("HUGGINGFACE_TOKEN");
+  // HUGGINGFACE_ACCESS_TOKEN, not HUGGINGFACE_TOKEN: this file was the only
+  // reader using the shorter name, so deploy.sh's `HUGGINGFACE_` prefix synced
+  // the credential under a key nothing looked up, and this call could only ever
+  // have been satisfied by a hand-written env entry.
+  const HF_TOKEN = getSecretSync("HUGGINGFACE_ACCESS_TOKEN");
 
   if (!HF_TOKEN) {
     logger.warn("HuggingFace token not configured, skipping AI analysis");

@@ -208,6 +208,31 @@ export async function checkDistributedRateLimit(
       };
     }
 
+    // A successful call that matched no row is `{ data: null, error: null }`.
+    // Reaching the field access below with a null `data` threw a TypeError that
+    // the catch turned into a fail-open anyway, so the limiter was disabled
+    // silently and logged under the misleading reason "Rate limit error".
+    // Failing open is still the right call here for availability, but it is now
+    // a decision this function makes on purpose.
+    //
+    // `check_rate_limit` is overloaded three times in PostgreSQL, so the
+    // generated return type is a union that also admits the scalar shapes a
+    // `RETURNS TABLE` overload can produce. Anything that is not an object is
+    // therefore not a limiter verdict, and reading `.allowed` off it would yield
+    // undefined — which is falsy, so a blocked request would have been let
+    // through. Reject the shape rather than the truthiness.
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      logger.error("Distributed rate limit check returned no verdict; failing open", {
+        key: fullKey,
+      });
+      return {
+        allowed: true,
+        remaining: config.limit,
+        resetAt: Date.now() + config.windowMs,
+        retryAfterMs: 0,
+      };
+    }
+
     return {
       allowed: data.allowed,
       remaining: data.remaining,

@@ -26,6 +26,11 @@ Deno.serve(createAPIHandler({
   version: CONFIG.version,
   requireAuth: false,
   csrf: true,
+  rateLimit: {
+    limit: 100,
+    windowMs: 60000,
+    keyBy: "ip",
+  },
   routes: {
     GET: {
       handler: handleGetRequest,
@@ -33,6 +38,7 @@ Deno.serve(createAPIHandler({
     POST: {
       schema: cacheOperationSchema,
       handler: handleCacheOperation,
+      idempotent: true,
     },
   },
 }));

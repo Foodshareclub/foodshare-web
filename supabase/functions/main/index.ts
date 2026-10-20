@@ -17,16 +17,21 @@ async function getCachedVaultSecrets(): Promise<[string, string][]> {
 
   try {
     const supabase = getAdminClient();
+    // `vault.decrypted_secrets` is the view that decrypts; `vault.secrets`
+    // stores the ciphertext, so reading `secret` from it hands every worker
+    // an encrypted blob that no amount of comparing will ever match.
     const { data: secrets, error } = await supabase
       .schema("vault")
-      .from("secrets")
-      .select("name,secret");
+      .from("decrypted_secrets")
+      .select("name,decrypted_secret");
 
     if (!error && secrets) {
       const newSecrets: [string, string][] = [];
-      for (const { name, secret } of secrets) {
-        if (name && secret) {
-          newSecrets.push([name, secret]);
+      for (const s of secrets) {
+        const name = (s as { name?: string | null }).name;
+        const value = (s as { decrypted_secret?: string | null }).decrypted_secret;
+        if (name && value) {
+          newSecrets.push([name, value]);
         }
       }
       cachedVaultSecrets = newSecrets;
@@ -98,23 +103,47 @@ Deno.serve(async (req: Request) => {
     });
   };
 
-  const callWorker = async (): Promise<Response> => {
+  const callWorker = async (attempts = 0): Promise<Response> => {
     try {
       const worker = await createWorker();
       const controller = new AbortController();
       return await worker.fetch(req, { signal: controller.signal });
     } catch (e) {
-      logger.error("Worker fetch failed", { error: e, serviceName, pathname });
+      logger.error("Worker fetch failed", { error: e, serviceName, pathname, attempts });
       // @ts-ignore: WorkerAlreadyRetired is specific to Deno Deploy / Supabase Edge Functions
-      if (e instanceof Deno.errors.WorkerAlreadyRetired) {
-        return await callWorker();
+      if (
+        typeof Deno !== "undefined" && (e as any)?.name === "WorkerAlreadyRetired" && attempts < 2
+      ) {
+        return await callWorker(attempts + 1);
       }
+      const errorMessage = e instanceof Error ? e.message : String(e);
       return new Response(
-        JSON.stringify({ msg: String(e) }),
+        JSON.stringify({
+          success: false,
+          error: {
+            code: "WORKER_EXECUTION_FAILED",
+            message: errorMessage,
+            service: serviceName,
+          },
+        }),
         { status: 500, headers },
       );
     }
   };
 
-  return callWorker();
+  try {
+    return await callWorker();
+  } catch (fatalError) {
+    logger.error("Fatal unhandled error in edge main router", { error: fatalError, pathname });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: {
+          code: "EDGE_RUNTIME_FATAL_ERROR",
+          message: "Internal Edge Runtime error",
+        },
+      }),
+      { status: 500, headers },
+    );
+  }
 });

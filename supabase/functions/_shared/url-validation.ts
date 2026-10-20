@@ -47,8 +47,9 @@ const BLOCKED_HOSTNAMES = [
   // Kubernetes
   "kubernetes.default",
   "kubernetes.default.svc",
-  // Docker
+  // Container runtimes (Docker Desktop + Podman)
   "host.docker.internal",
+  "host.containers.internal",
   // Local
   "localhost",
   "127.0.0.1",
@@ -287,7 +288,9 @@ export function validateImageUrl(
   const hasImageExtension = imageExtensions.some((ext) => pathname.endsWith(ext));
 
   // Known CDN/image hosting domains
-  const knownImageHosts = [
+  // Use exact matching only — endsWith() would allow subdomain spoofing
+  // (e.g. attacker.cloudinary.com would match "cloudinary.com")
+  const knownImageHosts = new Set<string>([
     "cloudinary.com",
     "imgix.net",
     "imagekit.io",
@@ -300,10 +303,8 @@ export function validateImageUrl(
     Deno.env.get("CDN_DOMAIN") || "cdn.foodshare.club",
     Deno.env.get("SITE_DOMAIN") || "foodshare.club",
     "images.foodshare.app",
-  ];
-  const isKnownHost = knownImageHosts.some((host) =>
-    url.hostname.endsWith(host) || url.hostname === host
-  );
+  ]);
+  const isKnownHost = knownImageHosts.has(url.hostname);
 
   // Must have image extension or be from known host
   if (!hasImageExtension && !isKnownHost) {

@@ -112,12 +112,13 @@ export async function updateDeviceRecord(
 
 export function calculateTrustLevel(
   verified: boolean,
-  riskScore: number,
+  _riskScore: number,
   verificationCount: number,
 ): TrustLevel {
   if (!verified) return "suspicious";
-  if (riskScore >= 80) return "suspicious";
-  if (riskScore >= 50) return "unknown";
-  if (verificationCount > 5 && riskScore < 20) return "verified";
+  // A verified attestation always has riskScore 0 — there is no longer a
+  // "verified with a caveat" middle state. The riskScore parameter is
+  // retained for call-site compatibility but no longer branches on it.
+  if (verificationCount > 5) return "verified";
   return "trusted";
 }

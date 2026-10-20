@@ -11,10 +11,11 @@
  * @module api-v1-notifications/auth
  */
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
+import { createClient } from "@supabase/supabase-js";
 import { getSupabaseClient } from "../../_shared/supabase.ts";
 import type { AuthMode, AuthResult } from "./types.ts";
 import { logger } from "../../_shared/logger.ts";
+import { getSecret } from "../../_shared/vault.ts";
 
 const getSupabaseUrl = () => Deno.env.get("SUPABASE_URL")!;
 const getSupabaseServiceRoleKey = () => Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -52,7 +53,7 @@ export async function authenticate(
       return await authenticateJWT(req);
 
     case "service":
-      return authenticateService(req);
+      return await authenticateService(req);
 
     case "webhook":
       return await authenticateWebhook(req, provider, rawBody);
@@ -112,13 +113,12 @@ async function authenticateJWT(req: Request): Promise<AuthResult> {
  * Service authentication (internal service-to-service)
  * Validates service role key or internal secret
  */
-function authenticateService(req: Request): AuthResult {
+async function authenticateService(req: Request): Promise<AuthResult> {
   const authHeader = req.headers.get("Authorization");
   const apiKey = req.headers.get("apikey") || req.headers.get("x-api-key") ||
     req.headers.get("x-webhook-secret");
   const serviceKey = getSupabaseServiceRoleKey();
-  const anonKey = getSupabaseAnonKey();
-  const internalSecret = Deno.env.get("INTERNAL_SERVICE_SECRET") || Deno.env.get("WEBHOOK_SECRET");
+  const internalSecret = await resolveInternalSecret();
 
   // Check for service role key in Authorization header
   if (serviceKey && authHeader === `Bearer ${serviceKey}`) {
@@ -130,16 +130,11 @@ function authenticateService(req: Request): AuthResult {
     return { authenticated: true };
   }
 
-  // Check for anon key in Authorization header
-  if (anonKey && authHeader === `Bearer ${anonKey}`) {
-    return { authenticated: true };
-  }
-
-  // Check apikey / x-api-key / x-webhook-secret header
+  // ⚠️ REMOVED: anon key was previously accepted as service credential –\n  // this allowed unauthenticated callers to access service-mode routes.\n  // Service authentication now requires either the service role key or the\n  // internal service secret passed in the Authorization header.\n / x-api-key / x-webhook-secret header
   if (apiKey) {
     if (serviceKey && apiKey === serviceKey) return { authenticated: true };
     if (internalSecret && apiKey === internalSecret) return { authenticated: true };
-    if (anonKey && apiKey === anonKey) return { authenticated: true };
+    return { authenticated: false, error: "Invalid service credentials" }; // anon key no longer accepted
   }
 
   if (!authHeader && !apiKey) {
@@ -153,6 +148,22 @@ function authenticateService(req: Request): AuthResult {
   }
 
   return { authenticated: false, error: "Invalid service credentials" };
+}
+
+/**
+ * The internal service secret, from the environment or the Vault.
+ *
+ * The database triggers read the same secret from `vault.decrypted_secrets`
+ * to authenticate the webhook they post, so the two sides must agree on one
+ * value. The environment is checked first because it is the copy that is
+ * already in the worker; the Vault is the fallback, and it is the only copy
+ * the database can reach.
+ */
+async function resolveInternalSecret(): Promise<string | undefined> {
+  const fromEnv = Deno.env.get("INTERNAL_SERVICE_SECRET") ||
+    Deno.env.get("WEBHOOK_SECRET");
+  if (fromEnv) return fromEnv;
+  return await getSecret("INTERNAL_SERVICE_SECRET");
 }
 
 /**
@@ -236,23 +247,31 @@ async function authenticateAdmin(req: Request): Promise<AuthResult> {
   try {
     const supabase = getServiceClient();
 
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", jwtResult.userId)
-      .single();
+    // Roles live in `user_roles` (profile_id → role_id → roles.name), not
+    // as a `role` column on `profiles`. The old query raised a column error,
+    // which this code reported as "Profile not found" — so every admin
+    // notification was refused, including to actual administrators.
+    const { data: userRoles, error } = await supabase
+      .from("user_roles")
+      .select("roles!inner(name)")
+      .eq("profile_id", jwtResult.userId);
 
-    if (error || !profile) {
-      logger.warn("Admin check failed - profile not found", {
+    if (error) {
+      logger.warn("Admin check failed - role lookup error", {
         userId: jwtResult.userId,
+        error: error.message,
       });
-      return { authenticated: false, error: "Profile not found" };
+      return { authenticated: false, error: "Role lookup failed" };
     }
 
-    if (profile.role !== "admin" && profile.role !== "superadmin") {
+    const roles = (userRoles ?? [])
+      .map((r) => (r as { roles?: { name?: string } | null }).roles?.name)
+      .filter((n): n is string => typeof n === "string");
+
+    if (!roles.includes("admin") && !roles.includes("superadmin")) {
       logger.warn("Admin check failed - insufficient permissions", {
         userId: jwtResult.userId,
-        role: profile.role,
+        roles,
       });
       return { authenticated: false, error: "Admin access required" };
     }

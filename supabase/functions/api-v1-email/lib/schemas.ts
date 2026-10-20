@@ -2,7 +2,7 @@
  * Zod schemas for api-v1-email request validation
  */
 
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { z } from "zod";
 
 // =============================================================================
 // Schemas
@@ -11,7 +11,15 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 export const processSchema = z.object({
   batchSize: z.number().int().min(1).max(200).optional().default(50),
   dryRun: z.boolean().optional().default(false),
-  provider: z.string().optional(),
+  // Constrained to the four real provider names. This was `z.string()`, and
+  // the value was then ignored entirely — so an operator asking for a
+  // provider got whichever the chain picked, and a typo was not even
+  // diagnosable. Now that the queue honours it, an unvalidated string would
+  // become a runtime "Provider xyz not found" from the service instead of a
+  // 400 with the allowed list.
+  provider: z
+    .enum(["resend", "brevo", "aws_ses", "mailersend"])
+    .optional(),
 });
 
 export const emailTypeEnum = z.enum([
@@ -79,5 +87,8 @@ export const goTrueEmailHookSchema = z.object({
       "reauthentication",
     ]),
     site_url: z.string().optional(),
+    // The address the change is to. GoTrue sends it for the email-change
+    // actions; without it the template can only show the current address.
+    email: z.string().optional(),
   }),
 });

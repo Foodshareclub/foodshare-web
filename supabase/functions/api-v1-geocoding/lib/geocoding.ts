@@ -14,7 +14,7 @@
 
 import { z } from "../../_shared/schemas/common.ts";
 import { latitudeSchema, longitudeSchema } from "../../_shared/schemas/geo.ts";
-import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
+import { Webhook } from "standardwebhooks";
 import { logger } from "../../_shared/logger.ts";
 import { type Coordinates, geocodeAddress } from "../../_shared/geocoding.ts";
 import { getSupabaseClient } from "../../_shared/supabase.ts";
@@ -146,6 +146,15 @@ function recordIpApiFailure(): void {
 // =============================================================================
 
 function isPrivateIP(ipAddress: string): boolean {
+  // Only accept literal IPv4/IPv6 address forms — reject anything else
+  // (hostnames, path fragments, URL parts) so untrusted webhook metadata
+  // can never be interpolated into the outbound request path.
+  const isIPv4 = /^\d{1,3}(\.\d{1,3}){3}$/.test(ipAddress);
+  const isIPv6 = /^[\da-fA-F:]+$/.test(ipAddress) && ipAddress.includes(":");
+  if (!isIPv4 && !isIPv6) {
+    return true;
+  }
+
   return (
     ipAddress === "127.0.0.1" ||
     ipAddress === "::1" ||
@@ -168,9 +177,15 @@ function isPrivateIP(ipAddress: string): boolean {
     ipAddress.startsWith("172.29.") ||
     ipAddress.startsWith("172.30.") ||
     ipAddress.startsWith("172.31.") ||
+    ipAddress.startsWith("169.254.") ||
+    ipAddress.startsWith("100.64.") ||
+    ipAddress.startsWith("0.") ||
     ipAddress.startsWith("fe80:") ||
     ipAddress.startsWith("fc00:") ||
-    ipAddress.startsWith("fd00:")
+    ipAddress.startsWith("fd00:") ||
+    ipAddress.startsWith("::ffff:127.") ||
+    ipAddress.startsWith("::ffff:10.") ||
+    ipAddress.startsWith("::ffff:192.168.")
   );
 }
 

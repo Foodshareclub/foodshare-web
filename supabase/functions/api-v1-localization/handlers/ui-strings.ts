@@ -11,6 +11,7 @@ import { logger } from "../../_shared/logger.ts";
  */
 
 import { getSupabaseClient } from "../../_shared/supabase.ts";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // ============================================================================
 // Types
@@ -139,7 +140,7 @@ function cleanExpiredCache(): void {
 }
 
 async function checkRateLimit(
-  supabase: ReturnType<typeof getSupabaseClient>,
+  supabase: SupabaseClient,
   identifier: string,
 ): Promise<boolean> {
   try {

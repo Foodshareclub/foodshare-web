@@ -23,7 +23,7 @@ export async function handleAppleSignIn(
 
   // 1. Validate body
   const parsed = appleSignInSchema.parse(body);
-  const { identityToken, email: providedEmail, firstName, lastName } = parsed;
+  const { identityToken, firstName, lastName } = parsed;
 
   try {
     // 2. Fetch Apple secrets from Vault
@@ -49,7 +49,6 @@ export async function handleAppleSignIn(
     });
 
     const appleSub = payload.sub as string;
-    const appleEmail = (payload.email as string) || providedEmail;
 
     if (!appleSub) {
       throw new AppError(
@@ -59,7 +58,26 @@ export async function handleAppleSignIn(
       );
     }
 
-    logger.info("Apple token verified", { sub: appleSub, email: appleEmail });
+    // The email has to come from the verified token. Falling back to a
+    // caller-supplied address let anyone with a valid Apple identity token
+    // that carries no email claim sign in as whichever existing account
+    // matched the address they sent, because the lookup below falls back to
+    // matching on email.
+    const claimedEmail = typeof payload.email === "string" ? payload.email : null;
+    const emailVerified = payload.email_verified === true ||
+      payload.email_verified === "true";
+
+    if (claimedEmail && !emailVerified) {
+      throw new AppError(
+        "Apple token carries an unverified email claim",
+        "INVALID_TOKEN",
+        400,
+      );
+    }
+
+    const appleEmail = claimedEmail;
+
+    logger.info("Apple token verified", { sub: appleSub, hasEmail: Boolean(appleEmail) });
 
     // 4. Find or Create User in auth.users
     // We use the admin client (which is already in ctx.supabase as it's the Service Role client)
@@ -73,10 +91,21 @@ export async function handleAppleSignIn(
     // For now, we search existing users.
 
     let existingUser = (user?.users || []).find((u) =>
-      u.user_metadata?.sub === appleSub || u.email === appleEmail
+      u.user_metadata?.sub === appleSub ||
+      (appleEmail !== null && u.email === appleEmail)
     );
 
     if (!existingUser) {
+      if (!appleEmail) {
+        // Nothing to key an account on: refusing here is what stops a token
+        // without an email claim from being paired with an arbitrary address.
+        throw new AppError(
+          "Apple token contains no email claim and no account is linked to this Apple ID",
+          "INVALID_TOKEN",
+          400,
+        );
+      }
+
       logger.info("Creating new user for Apple Sign-In", { email: appleEmail });
       const { data: newUser, error: createError } = await supabase.auth.admin
         .createUser({

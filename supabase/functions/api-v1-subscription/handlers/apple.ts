@@ -12,7 +12,8 @@
  * - Performance tracking for verification operations
  */
 
-import { decodeJWS, verifyAppleJWS } from "../../_shared/subscriptions/apple-jws.ts";
+import { verifyAppleJWS } from "../../_shared/subscriptions/apple-jws.ts";
+import { logVerificationFailure } from "../../_shared/internal-services.ts";
 import {
   JWSRenewalInfoDecodedPayload,
   JWSTransactionDecodedPayload,
@@ -38,7 +39,12 @@ import { measureAsync, PerformanceTimer } from "../../_shared/performance.ts";
 // =============================================================================
 
 const getAppBundleId = () => Deno.env.get("APP_BUNDLE_ID") || "com.flutterflow.foodshare";
-const isStrictVerification = () => Deno.env.get("APPLE_STRICT_VERIFICATION") !== "false";
+// `APPLE_STRICT_VERIFICATION` is gone. It used to select whether a failed
+// verification fell back to an *unverified* decode of a nested JWS, which
+// is precisely how a forged `signedTransactionInfo` could grant a paid
+// subscription. The fallback has no replacement: if verification fails,
+// the nested JWS is treated as absent. The env var is no longer read, so
+// setting it to "false" in any leftover configuration has no effect.
 
 // Cache verified payloads to avoid re-verification in parseEvent
 const verifiedPayloadCache = new Map<string, ResponseBodyV2DecodedPayload>();
@@ -172,22 +178,22 @@ async function verifyNestedJWS<T>(
       context,
     );
   } catch (error) {
-    logger.warn(`Failed to verify Apple ${name}`, {
-      error: error instanceof Error ? error.message : String(error),
+    // A nested JWS is supplementary context: the outer
+    // `signedPayload` carries enough to act on. So a verification failure
+    // here degrades to "no supplementary data" rather than failing the
+    // whole notification.
+    //
+    // It does NOT degrade to an unverified decode. The previous
+    // implementation did exactly that behind
+    // `APPLE_STRICT_VERIFICATION=false`, which meant anyone able to set one
+    // environment variable could read — and act on — the contents of a
+    // forged `signedTransactionInfo`.
+    logVerificationFailure(`apple-${name}`, error, {
       ...context,
+      // Never the payload: it is a bearer credential for whatever it
+      // grants.
+      jwsLength: signedData.length,
     });
-
-    // Fall back to unverified decode for data extraction
-    if (!isStrictVerification()) {
-      try {
-        const decoded = decodeJWS<T>(signedData);
-        logger.info(`Using unverified ${name} data`, context);
-        return decoded.payload;
-      } catch {
-        return null;
-      }
-    }
-
     return null;
   }
 }

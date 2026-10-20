@@ -1,0 +1,557 @@
+{
+  "_comment": "Known type errors in supabase/functions, produced by `deno check` over every function entry point. `__tests__/typecheck-baseline.test.ts` fails if an error appears that is not here, and fails if one here no longer occurs, so this file can only shrink.",
+  "errors": [
+    {
+      "file": "_shared/bot/rate-limiter.ts",
+      "code": "TS2339",
+      "message": "Property 'request_count' does not exist on type 'SelectQueryError<\"Referencing missing column `window_start`\">'. if (existing.request_count >= maxRequests) {",
+      "count": 1
+    },
+    {
+      "file": "_shared/bot/rate-limiter.ts",
+      "code": "TS2339",
+      "message": "Property 'request_count' does not exist on type 'SelectQueryError<\"Referencing missing column `window_start`\">'. remaining: maxRequests - existing.request_count - 1,",
+      "count": 1
+    },
+    {
+      "file": "_shared/bot/rate-limiter.ts",
+      "code": "TS2339",
+      "message": "Property 'request_count' does not exist on type 'SelectQueryError<\"Referencing missing column `window_start`\">'. request_count: existing.request_count + 1,",
+      "count": 1
+    },
+    {
+      "file": "_shared/bot/rate-limiter.ts",
+      "code": "TS2339",
+      "message": "Property 'window_start' does not exist on type 'SelectQueryError<\"Referencing missing column `window_start`\">'. const existingWindowStart = new Date(existing.window_start);",
+      "count": 1
+    },
+    {
+      "file": "_shared/bot/rate-limiter.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(tableName)",
+      "count": 3
+    },
+    {
+      "file": "_shared/bot/rate-limiter.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(tableName).insert({",
+      "count": 1
+    },
+    {
+      "file": "_shared/bot/rate-limiter.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(tableName).upsert({",
+      "count": 1
+    },
+    {
+      "file": "_shared/bot/user-state.ts",
+      "code": "TS2339",
+      "message": "Property 'expires_at' does not exist on type 'SelectQueryError<\"Referencing missing column `expires_at`\">'. const expiresAt = new Date(data.expires_at);",
+      "count": 1
+    },
+    {
+      "file": "_shared/bot/user-state.ts",
+      "code": "TS2339",
+      "message": "Property 'expires_at' does not exist on type 'SelectQueryError<\"Referencing missing column `expires_at`\">'. if (data.expires_at) {",
+      "count": 1
+    },
+    {
+      "file": "_shared/bot/user-state.ts",
+      "code": "TS2339",
+      "message": "Property 'state' does not exist on type 'SelectQueryError<\"Referencing missing column `expires_at`\">'. return data.state as TState;",
+      "count": 1
+    },
+    {
+      "file": "_shared/bot/user-state.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(tableName)",
+      "count": 2
+    },
+    {
+      "file": "_shared/bot/user-state.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(tableName).delete().eq(idColumn, id);",
+      "count": 1
+    },
+    {
+      "file": "_shared/bot/user-state.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(tableName).upsert({",
+      "count": 1
+    },
+    {
+      "file": "_shared/email/email-service.ts",
+      "code": "TS2352",
+      "message": "Conversion of type '{ id: string; slug: string; name: string; category: string; subject: string; html_content: string; text_content: string | null; variables: Json; metadata: Json; version: number | null; }' to type 'EmailTemplate' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first. Types of property 'variables' are incompatible. Type 'Json' is not comparable to type 'TemplateVariable[]'. Type 'Json[]' is not comparable to type 'TemplateVariable[]'. Type 'Json' is not comparable to type 'TemplateVariable'. Type 'Json[]' is missing the following properties from type 'TemplateVariable': name, type, required return data as EmailTemplate;",
+      "count": 1
+    },
+    {
+      "file": "_shared/metrics.ts",
+      "code": "TS2345",
+      "message": "Argument of type '\"record_function_call\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 549 more ... | \"verify_phone_for_sms\"'. await supabase.rpc(\"record_function_call\", {",
+      "count": 1
+    },
+    {
+      "file": "_shared/metrics.ts",
+      "code": "TS2345",
+      "message": "Argument of type '\"update_circuit_status\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 549 more ... | \"verify_phone_for_sms\"'. await supabase.rpc(\"update_circuit_status\", {",
+      "count": 1
+    },
+    {
+      "file": "_shared/metrics.ts",
+      "code": "TS2345",
+      "message": "Argument of type 'unknown' is not assignable to parameter of type 'string'. errorRate: parseFloat(errorData.error_rate) || 0,",
+      "count": 1
+    },
+    {
+      "file": "_shared/metrics.ts",
+      "code": "TS2345",
+      "message": "Argument of type 'unknown' is not assignable to parameter of type 'string'. totalRequests: parseInt(errorData.total_requests) || 0,",
+      "count": 1
+    },
+    {
+      "file": "_shared/metrics.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"metrics.health_checks\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"metrics.health_checks\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(\"metrics.health_checks\").insert({",
+      "count": 1
+    },
+    {
+      "file": "_shared/metrics.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(values: { address_line_1?: string | undefined; address_line_2?: string | undefined; address_line_3?: string | undefined; city?: string | undefined; country?: string | undefined; country_id?: number | undefined; ... 14 more ...; updated_at?: string | undefined; } | ... 204 more ... | { ...; }, options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error. Object literal may only specify known properties, and 'service' does not exist in type '{ address_line_1?: string | undefined; address_line_2?: string | undefined; address_line_3?: string | undefined; city?: string | undefined; country?: string | undefined; country_id?: number | undefined; ... 14 more ...; updated_at?: string | undefined; } | ... 204 more ... | { ...; }'. Overload 2 of 2, '(values: ({ address_line_1?: string | undefined; address_line_2?: string | undefined; address_line_3?: string | undefined; city?: string | undefined; country?: string | undefined; country_id?: number | undefined; ... 14 more ...; updated_at?: string | undefined; } | ... 204 more ... | { ...; })[], options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error. Object literal may only specify known properties, and 'service' does not exist in type '({ address_line_1?: string | undefined; address_line_2?: string | undefined; address_line_3?: string | undefined; city?: string | undefined; country?: string | undefined; country_id?: number | undefined; ... 14 more ...; updated_at?: string | undefined; } | ... 204 more ... | { ...; })[]'. service,",
+      "count": 1
+    },
+    {
+      "file": "_shared/rate-limiter.ts",
+      "code": "TS2322",
+      "message": "Type 'Json | undefined' is not assignable to type 'boolean'. Type 'undefined' is not assignable to type 'boolean'. allowed: data.allowed,",
+      "count": 1
+    },
+    {
+      "file": "_shared/rate-limiter.ts",
+      "code": "TS2322",
+      "message": "Type 'Json | undefined' is not assignable to type 'number'. Type 'undefined' is not assignable to type 'number'. remaining: data.remaining,",
+      "count": 1
+    },
+    {
+      "file": "_shared/rate-limiter.ts",
+      "code": "TS2322",
+      "message": "Type 'Json | undefined' is not assignable to type 'number'. Type 'undefined' is not assignable to type 'number'. resetAt: data.reset_at,",
+      "count": 1
+    },
+    {
+      "file": "_shared/rate-limiter.ts",
+      "code": "TS2322",
+      "message": "Type 'Json | undefined' is not assignable to type 'number'. Type 'undefined' is not assignable to type 'number'. retryAfterMs: data.retry_after_ms,",
+      "count": 1
+    },
+    {
+      "file": "api-v1-email/lib/queue.ts",
+      "code": "TS2322",
+      "message": "Type 'string | null' is not assignable to type 'string | undefined'. Type 'null' is not assignable to type 'string | undefined'. text: template.text_content,",
+      "count": 1
+    },
+    {
+      "file": "api-v1-email/lib/queue.ts",
+      "code": "TS2345",
+      "message": "Argument of type 'string | null' is not assignable to parameter of type 'string'. Type 'null' is not assignable to type 'string'. campaign.html_content,",
+      "count": 1
+    },
+    {
+      "file": "api-v1-email/lib/queue.ts",
+      "code": "TS2352",
+      "message": "Conversion of type 'Record<string, unknown>[]' to type 'QueuedEmail[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first. Type 'Record<string, unknown>' is missing the following properties from type 'QueuedEmail': id, user_id, campaign_id, email_type, and 5 more. const emails = pendingEmails as QueuedEmail[];",
+      "count": 1
+    },
+    {
+      "file": "api-v1-geocoding/lib/handlers.ts",
+      "code": "TS18047",
+      "message": "'item.max_retries' is possibly 'null'. if (item.retry_count < item.max_retries) stats.failed_retryable++;",
+      "count": 1
+    },
+    {
+      "file": "api-v1-geocoding/lib/handlers.ts",
+      "code": "TS18047",
+      "message": "'item.retry_count' is possibly 'null'. if (item.retry_count < item.max_retries) stats.failed_retryable++;",
+      "count": 1
+    },
+    {
+      "file": "api-v1-geocoding/lib/handlers.ts",
+      "code": "TS2322",
+      "message": "Type 'unknown' is not assignable to type 'number'. post_id: item.post_id,",
+      "count": 1
+    },
+    {
+      "file": "api-v1-geocoding/lib/handlers.ts",
+      "code": "TS2322",
+      "message": "Type 'unknown' is not assignable to type 'number'. queue_id: item.id,",
+      "count": 1
+    },
+    {
+      "file": "api-v1-geocoding/lib/handlers.ts",
+      "code": "TS2339",
+      "message": "Property 'length' does not exist on type '{}'. if (!hotspots?.length) {",
+      "count": 1
+    },
+    {
+      "file": "api-v1-geocoding/lib/handlers.ts",
+      "code": "TS2339",
+      "message": "Property 'map' does not exist on type '{}'. const formattedMatches: UserMatch[] = (matches || []).map((",
+      "count": 1
+    },
+    {
+      "file": "api-v1-geocoding/lib/handlers.ts",
+      "code": "TS2345",
+      "message": "Argument of type '\"calculate_user_matches\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 549 more ... | \"verify_phone_for_sms\"'. \"calculate_user_matches\",",
+      "count": 1
+    },
+    {
+      "file": "api-v1-geocoding/lib/handlers.ts",
+      "code": "TS2345",
+      "message": "Argument of type '\"detect_map_hotspots\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 549 more ... | \"verify_phone_for_sms\"'. const { data, error } = await supabase.rpc(\"detect_map_hotspots\", {",
+      "count": 1
+    },
+    {
+      "file": "api-v1-geocoding/lib/handlers.ts",
+      "code": "TS2345",
+      "message": "Argument of type '\"detect_map_hotspots\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 549 more ... | \"verify_phone_for_sms\"'. const { data: hotspots } = await supabase.rpc(\"detect_map_hotspots\", {",
+      "count": 1
+    },
+    {
+      "file": "api-v1-geocoding/lib/handlers.ts",
+      "code": "TS2345",
+      "message": "Argument of type '\"update_network_profile\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 549 more ... | \"verify_phone_for_sms\"'. const { data, error } = await supabase.rpc(\"update_network_profile\", {",
+      "count": 1
+    },
+    {
+      "file": "api-v1-geocoding/lib/handlers.ts",
+      "code": "TS2352",
+      "message": "Conversion of type '{ campaign_id: string | null; clicked_at: string | null; created_at: string; delivered_at: string | null; email_type: string; error_code: string | null; error_message: string | null; ... 11 more ...; user_id: string; } | ... 204 more ... | { ...; }' to type '{ preferred_tile_quality: string; enable_retina: boolean; enable_vector_tiles: boolean; max_concurrent_tiles: number; avg_bandwidth_mbps: number; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first. Type '{ expires_at: string; phone_number: string; state: Json; updated_at: string | null; }' is missing the following properties from type '{ preferred_tile_quality: string; enable_retina: boolean; enable_vector_tiles: boolean; max_concurrent_tiles: number; avg_bandwidth_mbps: number; }': preferred_tile_quality, enable_retina, enable_vector_tiles, max_concurrent_tiles, avg_bandwidth_mbps const profile = data as {",
+      "count": 1
+    },
+    {
+      "file": "api-v1-geocoding/lib/handlers.ts",
+      "code": "TS2352",
+      "message": "Conversion of type 'Record<string, unknown>' to type 'QueueItem' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first. Type 'Record<string, unknown>' is missing the following properties from type 'QueueItem': id, post_id, post_address, retry_count const result = await processQueueItem(supabase, item as QueueItem);",
+      "count": 1
+    },
+    {
+      "file": "api-v1-geocoding/lib/handlers.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"map_interaction_events\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"map_interaction_events\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. const { error } = await supabase.from(\"map_interaction_events\").insert(event);",
+      "count": 1
+    },
+    {
+      "file": "api-v1-geocoding/lib/handlers.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"user_map_preferences\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"user_map_preferences\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(\"user_map_preferences\")",
+      "count": 2
+    },
+    {
+      "file": "api-v1-geocoding/lib/handlers.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"user_network_profiles\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"user_network_profiles\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(\"user_network_profiles\")",
+      "count": 2
+    },
+    {
+      "file": "api-v1-localization/handlers/backfill-challenges.ts",
+      "code": "TS2322",
+      "message": "Type 'Record<string, unknown>[]' is not assignable to type '{ id: number; challenge_title: string; challenge_description: string | null; }[]'. Type 'Record<string, unknown>' is missing the following properties from type '{ id: number; challenge_title: string; challenge_description: string | null; }': id, challenge_title, challenge_description challenges = data;",
+      "count": 1
+    },
+    {
+      "file": "api-v1-localization/handlers/backfill-forum-posts.ts",
+      "code": "TS2322",
+      "message": "Type '{ id: number; forum_post_name: string | null; forum_post_description: string | null; }[] | null' is not assignable to type '{ id: number; forum_post_name: string; forum_post_description: string | null; }[] | null'. Type '{ id: number; forum_post_name: string | null; forum_post_description: string | null; }[]' is not assignable to type '{ id: number; forum_post_name: string; forum_post_description: string | null; }[]'. Type '{ id: number; forum_post_name: string | null; forum_post_description: string | null; }' is not assignable to type '{ id: number; forum_post_name: string; forum_post_description: string | null; }'. Types of property 'forum_post_name' are incompatible. Type 'string | null' is not assignable to type 'string'. Type 'null' is not assignable to type 'string'. forumPosts = result.data;",
+      "count": 1
+    },
+    {
+      "file": "api-v1-localization/handlers/backfill-forum-posts.ts",
+      "code": "TS2322",
+      "message": "Type 'Record<string, unknown>[]' is not assignable to type '{ id: number; forum_post_name: string; forum_post_description: string | null; }[]'. Type 'Record<string, unknown>' is missing the following properties from type '{ id: number; forum_post_name: string; forum_post_description: string | null; }': id, forum_post_name, forum_post_description forumPosts = data;",
+      "count": 1
+    },
+    {
+      "file": "api-v1-localization/handlers/backfill-posts.ts",
+      "code": "TS2322",
+      "message": "Type 'Record<string, unknown>[]' is not assignable to type '{ id: number; post_name: string; post_description: string | null; }[]'. Type 'Record<string, unknown>' is missing the following properties from type '{ id: number; post_name: string; post_description: string | null; }': id, post_name, post_description posts = data;",
+      "count": 1
+    },
+    {
+      "file": "api-v1-localization/handlers/generate-infoplist-strings.ts",
+      "code": "TS2339",
+      "message": "Property 'translations' does not exist on type 'SelectQueryError<\"Referencing missing column `translations`\">'. return data.translations as Record<string, string>;",
+      "count": 1
+    },
+    {
+      "file": "api-v1-localization/handlers/generate-infoplist-strings.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"infoplist_translation_cache\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"infoplist_translation_cache\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(CACHE_TABLE)",
+      "count": 1
+    },
+    {
+      "file": "api-v1-localization/handlers/generate-infoplist-strings.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"infoplist_translation_cache\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"infoplist_translation_cache\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(CACHE_TABLE).upsert({",
+      "count": 1
+    },
+    {
+      "file": "api-v1-localization/handlers/get-translations.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(tableName)",
+      "count": 1
+    },
+    {
+      "file": "api-v1-localization/handlers/translate-content.ts",
+      "code": "TS2345",
+      "message": "Argument of type 'unknown' is not assignable to parameter of type 'string'. updateMemoryCache(cacheKey, translatedText, quality);",
+      "count": 1
+    },
+    {
+      "file": "api-v1-localization/handlers/ui-batch-translate.ts",
+      "code": "TS2322",
+      "message": "Type 'Record<string, unknown>' is not assignable to type 'Json | undefined'. Type 'Record<string, unknown>' is missing the following properties from type 'Json[]': length, pop, push, concat, and 35 more. messages: mergedMessages,",
+      "count": 1
+    },
+    {
+      "file": "api-v1-localization/handlers/ui-strings.ts",
+      "code": "TS2322",
+      "message": "Type 'Json' is not assignable to type 'Record<string, string>'. Type 'null' is not assignable to type 'Record<string, string>'. messages: fallbackTranslation.messages,",
+      "count": 1
+    },
+    {
+      "file": "api-v1-localization/handlers/ui-strings.ts",
+      "code": "TS2322",
+      "message": "Type 'Json' is not assignable to type 'Record<string, string>'. Type 'null' is not assignable to type 'Record<string, string>'. messages: translation.messages,",
+      "count": 1
+    },
+    {
+      "file": "api-v1-localization/handlers/update.ts",
+      "code": "TS2322",
+      "message": "Type 'Record<string, unknown>' is not assignable to type 'Json | undefined'. Type 'Record<string, unknown>' is missing the following properties from type 'Json[]': length, pop, push, concat, and 35 more. messages: mergedMessages,",
+      "count": 1
+    },
+    {
+      "file": "api-v1-metrics/lib/queries.ts",
+      "code": "TS2322",
+      "message": "Type '{}' is not assignable to type 'number'. return data || 0;",
+      "count": 1
+    },
+    {
+      "file": "api-v1-metrics/lib/queries.ts",
+      "code": "TS2322",
+      "message": "Type 'Record<string, unknown>[]' is not assignable to type 'number'. return data || 0;",
+      "count": 1
+    },
+    {
+      "file": "api-v1-metrics/lib/queries.ts",
+      "code": "TS2345",
+      "message": "Argument of type '\"get_request_count\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 549 more ... | \"verify_phone_for_sms\"'. \"get_request_count\",",
+      "count": 1
+    },
+    {
+      "file": "api-v1-metrics/lib/queries.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"api_requests\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"api_requests\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(\"api_requests\")",
+      "count": 1
+    },
+    {
+      "file": "api-v1-subscription/index.ts",
+      "code": "TS2339",
+      "message": "Property 'deleted_dlq' does not exist on type 'string | number | boolean | { [key: string]: Json | undefined; } | Json[]'. Property 'deleted_dlq' does not exist on type 'string'. deleted: (data?.deleted_events || 0) + (data?.deleted_dlq || 0),",
+      "count": 1
+    },
+    {
+      "file": "api-v1-subscription/index.ts",
+      "code": "TS2339",
+      "message": "Property 'deleted_events' does not exist on type 'string | number | boolean | { [key: string]: Json | undefined; } | Json[]'. Property 'deleted_events' does not exist on type 'string'. deleted: (data?.deleted_events || 0) + (data?.deleted_dlq || 0),",
+      "count": 1
+    },
+    {
+      "file": "api-v1-subscription/index.ts",
+      "code": "TS2339",
+      "message": "Property 'expired' does not exist on type 'string | number | boolean | { [key: string]: Json | undefined; } | Json[]'. Property 'expired' does not exist on type 'string'. expired: data?.expired || 0,",
+      "count": 1
+    },
+    {
+      "file": "api-v1-subscription/index.ts",
+      "code": "TS2339",
+      "message": "Property 'processed' does not exist on type 'string | number | boolean | { [key: string]: Json | undefined; } | Json[]'. Property 'processed' does not exist on type 'string'. processed: data?.processed || 0,",
+      "count": 1
+    },
+    {
+      "file": "api-v1-subscription/index.ts",
+      "code": "TS2345",
+      "message": "Argument of type 'Json' is not assignable to parameter of type 'Record<string, unknown> | undefined'. Type 'null' is not assignable to type 'Record<string, unknown> | undefined'. logger.info(\"Old events cleaned up\", data);",
+      "count": 1
+    },
+    {
+      "file": "api-v1-subscription/webhook.ts",
+      "code": "TS2322",
+      "message": "Type '{ platform: SubscriptionPlatform; eventType: SubscriptionEventType; subscription: SubscriptionData; environment: SubscriptionEnvironment; }' is not assignable to type 'Json'. Types of property 'subscription' are incompatible. Type 'SubscriptionData' is not assignable to type 'Json | undefined'. Type 'SubscriptionData' is not assignable to type '{ [key: string]: Json | undefined; }'. Index signature for type 'string' is missing in type 'SubscriptionData'. p_decoded_payload: {",
+      "count": 1
+    },
+    {
+      "file": "api-v1-subscription/webhook.ts",
+      "code": "TS2322",
+      "message": "Type '{ valid: boolean; currentStatus: string | null; }' is not assignable to type '{ valid: boolean; currentStatus: string; }'. Types of property 'currentStatus' are incompatible. Type 'string | null' is not assignable to type 'string'. Type 'null' is not assignable to type 'string'. return await withCircuitBreaker(\"subscription-db\", async () => {",
+      "count": 1
+    },
+    {
+      "file": "api-v1-subscription/webhook.ts",
+      "code": "TS2339",
+      "message": "Property 'already_processed' does not exist on type 'string | number | boolean | { [key: string]: Json | undefined; } | Json[]'. Property 'already_processed' does not exist on type 'string'. alreadyProcessed: data?.already_processed ?? false,",
+      "count": 1
+    },
+    {
+      "file": "api-v1-subscription/webhook.ts",
+      "code": "TS2339",
+      "message": "Property 'event_id' does not exist on type 'string | number | boolean | { [key: string]: Json | undefined; } | Json[]'. Property 'event_id' does not exist on type 'string'. eventId: data?.event_id || null,",
+      "count": 1
+    },
+    {
+      "file": "api-v1-subscription/webhook.ts",
+      "code": "TS2339",
+      "message": "Property 'subscription_id' does not exist on type 'string | number | boolean | { [key: string]: Json | undefined; } | Json[]'. Property 'subscription_id' does not exist on type 'string'. subscriptionId: data?.subscription_id || null,",
+      "count": 1
+    },
+    {
+      "file": "api-v1-subscription/webhook.ts",
+      "code": "TS2339",
+      "message": "Property 'success' does not exist on type 'string | number | boolean | { [key: string]: Json | undefined; } | Json[]'. Property 'success' does not exist on type 'string'. success: data?.success ?? false,",
+      "count": 1
+    },
+    {
+      "file": "telegram-bot-foodshare/handlers/auth.ts",
+      "code": "TS2339",
+      "message": "Property 'email' does not exist on type 'string | number | true | { [key: string]: Json | undefined; } | Json[]'. Property 'email' does not exist on type 'string'. const userEmail = data.email || \"\";",
+      "count": 1
+    },
+    {
+      "file": "telegram-bot-foodshare/handlers/auth.ts",
+      "code": "TS2339",
+      "message": "Property 'error' does not exist on type 'string | number | boolean | { [key: string]: Json | undefined; } | Json[]'. Property 'error' does not exist on type 'string'. const errMsg = data?.error || error?.message || \"Invalid or expired link token.\";",
+      "count": 1
+    },
+    {
+      "file": "telegram-bot-foodshare/handlers/auth.ts",
+      "code": "TS2339",
+      "message": "Property 'first_name' does not exist on type 'string | number | true | { [key: string]: Json | undefined; } | Json[]'. Property 'first_name' does not exist on type 'string'. const userName = data.first_name || telegramUser.first_name || \"FoodSharer\";",
+      "count": 1
+    },
+    {
+      "file": "telegram-bot-foodshare/handlers/auth.ts",
+      "code": "TS2339",
+      "message": "Property 'success' does not exist on type 'string | number | true | { [key: string]: Json | undefined; } | Json[]'. Property 'success' does not exist on type 'string'. if (error || !data || data.success === false) {",
+      "count": 1
+    },
+    {
+      "file": "telegram-bot-foodshare/handlers/commands.ts",
+      "code": "TS2339",
+      "message": "Property 'substring' does not exist on type '{}'. 📝 ${food.post_description?.substring(0, 100) || \"No description\"}",
+      "count": 1
+    },
+    {
+      "file": "telegram-bot-foodshare/handlers/commands.ts",
+      "code": "TS2339",
+      "message": "Property 'toFixed' does not exist on type '{}'. 📍 ${food.distance_km?.toFixed(1)}km away",
+      "count": 1
+    },
+    {
+      "file": "telegram-bot-foodshare/handlers/commands.ts",
+      "code": "TS2345",
+      "message": "Argument of type '{}' is not assignable to parameter of type 'string'. const coords = await extractCoordinates(food.location);",
+      "count": 1
+    },
+    {
+      "file": "telegram-bot-foodshare/handlers/commands.ts",
+      "code": "TS7053",
+      "message": "Element implicitly has an 'any' type because expression of type '0' can't be used to index type '{}'. Property '0' does not exist on type '{}'. await sendPhoto(chatId, food.images[0], text);",
+      "count": 1
+    },
+    {
+      "file": "telegram-bot-foodshare/handlers/commands.ts",
+      "code": "TS7053",
+      "message": "Element implicitly has an 'any' type because expression of type '0' can't be used to index type '{}'. Property '0' does not exist on type '{}'. if (food.images?.[0]) {",
+      "count": 1
+    },
+    {
+      "file": "telegram-bot-foodshare/handlers/messages.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(values: { admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }, options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error. Argument of type '{ profile_id: string; post_name: string; post_description: string | undefined; location: string; post_type: string; is_active: true; images: string[]; }' is not assignable to parameter of type '{ admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }'. Property 'id' is missing in type '{ profile_id: string; post_name: string; post_description: string | undefined; location: string; post_type: string; is_active: true; images: string[]; }' but required in type '{ admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }'. Overload 2 of 2, '(values: { admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }[], options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error. Object literal may only specify known properties, and 'profile_id' does not exist in type '{ admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }[]'. .insert({",
+      "count": 1
+    },
+    {
+      "file": "telegram-bot-foodshare/handlers/messages.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(values: { admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }, options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error. Argument of type '{ profile_id: string; post_name: string; post_description: string | undefined; post_address: string; location: string; post_type: string; is_active: true; images: string[]; }' is not assignable to parameter of type '{ admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }'. Property 'id' is missing in type '{ profile_id: string; post_name: string; post_description: string | undefined; post_address: string; location: string; post_type: string; is_active: true; images: string[]; }' but required in type '{ admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }'. Overload 2 of 2, '(values: { admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }[], options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error. Object literal may only specify known properties, and 'profile_id' does not exist in type '{ admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }[]'. .insert({",
+      "count": 1
+    },
+    {
+      "file": "telegram-bot-foodshare/services/impact.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"messages\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"messages\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(\"messages\")",
+      "count": 1
+    },
+    {
+      "file": "telegram-bot-foodshare/services/profile.ts",
+      "code": "TS2345",
+      "message": "Argument of type 'Partial<Profile>' is not assignable to parameter of type '{ about_me?: string | undefined; available_days?: Json | undefined; avatar_url?: string | undefined; ban_reason?: string | null | undefined; bio?: string | null | undefined; ... 40 more ...; whatsapp_phone?: string | ... 1 more ... | undefined; }'. Types of property 'first_name' are incompatible. Type 'string | null | undefined' is not assignable to type 'string | undefined'. Type 'null' is not assignable to type 'string | undefined'. const { error } = await supabase.from(\"profiles\").update(updates).eq(",
+      "count": 1
+    },
+    {
+      "file": "telegram-bot-foodshare/services/profile.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(values: { about_me?: string | undefined; available_days?: Json | undefined; avatar_url?: string | undefined; ban_reason?: string | undefined; bio?: string | undefined; birth_date?: string | undefined; ... 39 more ...; whatsapp_phone?: string | undefined; }, options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error. Argument of type '{ email_verified: false; id: string; telegram_id: number; first_name: string; nickname: string | null; email: string; verification_code: string; verification_code_expires_at: string; }' is not assignable to parameter of type '{ about_me?: string | undefined; available_days?: Json | undefined; avatar_url?: string | undefined; ban_reason?: string | undefined; bio?: string | undefined; birth_date?: string | undefined; ... 39 more ...; whatsapp_phone?: string | undefined; }'. Types of property 'nickname' are incompatible. Type 'string | null' is not assignable to type 'string | undefined'. Type 'null' is not assignable to type 'string | undefined'. Overload 2 of 2, '(values: { about_me?: string | undefined; available_days?: Json | undefined; avatar_url?: string | undefined; ban_reason?: string | undefined; bio?: string | undefined; birth_date?: string | undefined; ... 39 more ...; whatsapp_phone?: string | undefined; }[], options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error. Object literal may only specify known properties, and 'email_verified' does not exist in type '{ about_me?: string | undefined; available_days?: Json | undefined; avatar_url?: string | undefined; ban_reason?: string | undefined; bio?: string | undefined; birth_date?: string | undefined; ... 39 more ...; whatsapp_phone?: string | undefined; }[]'. .insert({",
+      "count": 1
+    },
+    {
+      "file": "whatsapp-bot-foodshare/handlers/interactive.ts",
+      "code": "TS2322",
+      "message": "Type 'string | null' is not assignable to type 'string | undefined'. Type 'null' is not assignable to type 'string | undefined'. description: post.post_description,",
+      "count": 1
+    },
+    {
+      "file": "whatsapp-bot-foodshare/handlers/interactive.ts",
+      "code": "TS2339",
+      "message": "Property 'address' does not exist on type '{ available_hours: string | null; canonical_slug: string | null; category_id: number | null; condition: string | null; created_at: string | null; expires_at: string | null; fridge_id: string | null; ... 27 more ...; version: number | null; }'. address: post.address,",
+      "count": 1
+    },
+    {
+      "file": "whatsapp-bot-foodshare/handlers/messages.ts",
+      "code": "TS2322",
+      "message": "Type 'string | null' is not assignable to type 'string | undefined'. Type 'null' is not assignable to type 'string | undefined'. description: post.post_description,",
+      "count": 1
+    },
+    {
+      "file": "whatsapp-bot-foodshare/handlers/messages.ts",
+      "code": "TS2339",
+      "message": "Property 'address' does not exist on type '{ available_hours: string | null; canonical_slug: string | null; category_id: number | null; condition: string | null; created_at: string | null; expires_at: string | null; fridge_id: string | null; ... 27 more ...; version: number | null; }'. address: post.address,",
+      "count": 1
+    },
+    {
+      "file": "whatsapp-bot-foodshare/handlers/messages.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(values: { admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }, options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error. Argument of type 'Record<string, unknown>' is not assignable to parameter of type '{ admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }'. Type 'Record<string, unknown>' is missing the following properties from type '{ admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }': id, profile_id Overload 2 of 2, '(values: { admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }[], options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error. Argument of type 'Record<string, unknown>' is not assignable to parameter of type '{ admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }[]'. Type 'Record<string, unknown>' is missing the following properties from type '{ admin_notes?: string | undefined; available_hours?: string | undefined; category_id?: number | undefined; condition?: string | undefined; contact_preferences?: string[] | undefined; ... 43 more ...; website?: string | undefined; }[]': length, pop, push, concat, and 35 more. const { data: post, error } = await supabase.from(\"posts\").insert(postData)",
+      "count": 1
+    },
+    {
+      "file": "whatsapp-bot-foodshare/services/impact.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"messages\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"messages\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(\"messages\")",
+      "count": 1
+    },
+    {
+      "file": "whatsapp-bot-foodshare/services/profile.ts",
+      "code": "TS2345",
+      "message": "Argument of type 'Partial<Profile>' is not assignable to parameter of type '{ about_me?: string | undefined; available_days?: Json | undefined; avatar_url?: string | undefined; ban_reason?: string | null | undefined; bio?: string | null | undefined; ... 40 more ...; whatsapp_phone?: string | ... 1 more ... | undefined; }'. Types of property 'first_name' are incompatible. Type 'string | null | undefined' is not assignable to type 'string | undefined'. Type 'null' is not assignable to type 'string | undefined'. const { error } = await supabase.from(\"profiles\").update(updates).eq(",
+      "count": 1
+    },
+    {
+      "file": "whatsapp-bot-foodshare/services/profile.ts",
+      "code": "TS2769",
+      "message": "No overload matches this call. Overload 1 of 2, '(values: { about_me?: string | undefined; available_days?: Json | undefined; avatar_url?: string | undefined; ban_reason?: string | undefined; bio?: string | undefined; birth_date?: string | undefined; ... 39 more ...; whatsapp_phone?: string | undefined; }, options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error. Argument of type '{ email_verified: false; id: string; whatsapp_phone: string; first_name: string; nickname: string | null; email: string; verification_code: string; verification_code_expires_at: string; }' is not assignable to parameter of type '{ about_me?: string | undefined; available_days?: Json | undefined; avatar_url?: string | undefined; ban_reason?: string | undefined; bio?: string | undefined; birth_date?: string | undefined; ... 39 more ...; whatsapp_phone?: string | undefined; }'. Types of property 'nickname' are incompatible. Type 'string | null' is not assignable to type 'string | undefined'. Type 'null' is not assignable to type 'string | undefined'. Overload 2 of 2, '(values: { about_me?: string | undefined; available_days?: Json | undefined; avatar_url?: string | undefined; ban_reason?: string | undefined; bio?: string | undefined; birth_date?: string | undefined; ... 39 more ...; whatsapp_phone?: string | undefined; }[], options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error. Object literal may only specify known properties, and 'email_verified' does not exist in type '{ about_me?: string | undefined; available_days?: Json | undefined; avatar_url?: string | undefined; ban_reason?: string | undefined; bio?: string | undefined; birth_date?: string | undefined; ... 39 more ...; whatsapp_phone?: string | undefined; }[]'. .insert({",
+      "count": 1
+    }
+  ]
+}

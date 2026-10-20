@@ -12,6 +12,7 @@ import {
   getMetricsSummary as getMetricsSummaryFromDB,
   recordHealthCheck as recordHealthCheckToDB,
 } from "../metrics.ts";
+import { fetchTrustAnchors } from "../internal-services.ts";
 
 import {
   FunctionHealthResult,
@@ -87,6 +88,11 @@ export class HealthService {
     uptime: number;
     services: ServiceHealth[];
     circuitBreakers: { name: string; state: string; failureCount: number }[];
+    trustAnchors?: {
+      configured: boolean;
+      count: number;
+      fingerprints: string[];
+    };
     metrics?: {
       requestsLast5Min: number;
       errorRateLast5Min: number;
@@ -96,10 +102,16 @@ export class HealthService {
     const supabase = getSupabaseClient();
 
     // Run all checks in parallel
-    const [dbHealth, storageHealth, metrics] = await Promise.all([
+    const [dbHealth, storageHealth, metrics, trustAnchors] = await Promise.all([
       checkDatabase(supabase),
       checkStorage(supabase),
       getMetricsSummaryFromDB(5).catch(() => null),
+      fetchTrustAnchors().catch((error) => {
+        logger.warn("Failed to fetch trust anchors", {
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return null;
+      }),
     ]);
 
     // Get circuit breaker statuses
@@ -142,6 +154,7 @@ export class HealthService {
       uptime: this.getUptime(),
       services,
       circuitBreakers,
+      trustAnchors: trustAnchors ?? undefined,
       metrics: metrics
         ? {
           requestsLast5Min: metrics.totalRequests,

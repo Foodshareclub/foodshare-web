@@ -16,13 +16,30 @@ import type {
 } from "../types.ts";
 import { sendNotification } from "../orchestrator.ts";
 import { logger } from "../../../_shared/logger.ts";
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { z } from "zod";
 import {
   batchSendRequestSchema,
   sendRequestSchema,
   templateSendRequestSchema,
 } from "../validation.ts";
 import { interpolateTemplate, loadTemplate } from "../template-engine.ts";
+
+/**
+ * The orchestrator writes with the service client, so the recipient in the body
+ * was trusted: any authenticated user could target another user's email, SMS
+ * and push channels. Only admins may address someone else.
+ */
+function unauthorizedRecipient(
+  context: NotificationContext,
+  userId: string,
+): string | null {
+  if (context.isAdmin) return null;
+  if (!context.userId) return "Authentication required";
+  if (userId !== context.userId) {
+    return "Not allowed to send notifications to another user";
+  }
+  return null;
+}
 
 /**
  * POST /send - Send single notification
@@ -34,6 +51,16 @@ export async function handleSend(
   try {
     // Validate request
     const request = sendRequestSchema.parse(body) as SendRequest;
+
+    const recipientError = unauthorizedRecipient(context, request.userId);
+    if (recipientError) {
+      logger.warn("Rejected cross-user notification send", {
+        requestId: context.requestId,
+        caller: context.userId,
+        target: request.userId,
+      });
+      return { success: false, error: recipientError };
+    }
 
     // Send notification
     const result = await sendNotification(request, context);
@@ -77,6 +104,18 @@ export async function handleSendBatch(
   try {
     // Validate request
     const request = batchSendRequestSchema.parse(body) as BatchSendRequest;
+
+    for (const notification of request.notifications) {
+      const recipientError = unauthorizedRecipient(context, notification.userId);
+      if (recipientError) {
+        logger.warn("Rejected cross-user notification batch", {
+          requestId: context.requestId,
+          caller: context.userId,
+          target: notification.userId,
+        });
+        return { success: false, error: recipientError };
+      }
+    }
 
     logger.info("Processing batch send", {
       requestId: context.requestId,
@@ -188,6 +227,16 @@ export async function handleSendTemplate(
     const request = templateSendRequestSchema.parse(
       _body,
     ) as TemplateSendRequest;
+
+    const recipientError = unauthorizedRecipient(context, request.userId);
+    if (recipientError) {
+      logger.warn("Rejected cross-user template notification", {
+        requestId: context.requestId,
+        caller: context.userId,
+        target: request.userId,
+      });
+      return { success: false, error: recipientError };
+    }
 
     logger.info("Sending template notification", {
       requestId: context.requestId,

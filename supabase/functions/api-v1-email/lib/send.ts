@@ -8,7 +8,7 @@
  * - GET  /health — Health check (no auth)
  */
 
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { z } from "zod";
 import { type HandlerContext, ok } from "../../_shared/api-handler.ts";
 import { AppError, ValidationError } from "../../_shared/errors.ts";
 import { logger } from "../../_shared/logger.ts";
@@ -17,6 +17,7 @@ import {
   getEmailService,
   type SendTemplateEmailParams,
 } from "../../_shared/email/index.ts";
+import { getSupabaseClient } from "../../_shared/supabase.ts";
 import { escapeHtml, requireServiceAuth, VERSION } from "./utils.ts";
 import type {
   goTrueEmailHookSchema,
@@ -101,7 +102,66 @@ export async function handleSend(
     throw new ValidationError("Authentication required");
   }
 
+  // Look up the authenticated user's email from Supabase
+  const supabase = getSupabaseClient();
+  // `profiles`, not `users`. There is no `users` table in this database -- the
+  // application table is `profiles`, and the authentication users live in
+  // `auth.users`, which PostgREST does not expose through this client at all.
+  // So this lookup has always thrown a 500, and it is the lookup that decides
+  // who may send email and to whom: the endpoint has been failing closed for
+  // every request rather than checking the recipient.
+  //
+  // Found by the compiler, not by a read of this function: `users` is not a
+  // relation in the catalog, so `from("users")` does not type-check once
+  // `Database` is passed to `createClient`.
+  const { data: user, error } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("id", ctx.userId)
+    .single();
+
+  if (error || !user) {
+    throw new AppError(
+      "Failed to retrieve user email",
+      "AUTH_FAILED",
+      500,
+    );
+  }
+
+  // `profiles.email` is nullable, and a profile without one cannot be used as
+  // the sender or compared as the sole permitted recipient. Failing here is
+  // correct: silently sending from a null address is not.
+  if (!user.email) {
+    throw new AppError(
+      "Account has no email address",
+      "AUTH_FAILED",
+      400,
+    );
+  }
+
+  const senderEmail = user.email;
   const { to, subject, html, text, replyTo, tags, emailType } = ctx.body;
+
+  // Security: restrict recipients to the authenticated user's verified email
+  // Prevent arbitrary email sending / queue draining.
+  if (Array.isArray(to)) {
+    // Reject if any recipient is not the sender's own email
+    if (to.some((r) => r !== senderEmail)) {
+      logger.warn("Unauthorized email recipients attempted", { userId: ctx.userId, to });
+      throw new AppError(
+        "Recipient email not allowed for sending",
+        "EMAIL_RECIPIENT_NOT_ALLOWED",
+        403,
+      );
+    }
+  } else if (to !== senderEmail) {
+    logger.warn("Unauthorized email recipient attempted", { userId: ctx.userId, to });
+    throw new AppError(
+      "Recipient email not allowed for sending",
+      "EMAIL_RECIPIENT_NOT_ALLOWED",
+      403,
+    );
+  }
 
   const emailService = getEmailService();
   const result = await emailService.sendEmail(
@@ -136,6 +196,37 @@ export async function handleSendTemplate(
   }
 
   const { to, slug, variables, emailType } = ctx.body;
+
+  // Same restriction as POST /send: a template is not an escape hatch for
+  // addressing arbitrary recipients.
+  const supabase = getSupabaseClient();
+  // `profiles`, not `users` -- see the note in `sendEmail`.
+  const { data: templateUser, error: templateUserError } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("id", ctx.userId)
+    .single();
+
+  if (templateUserError || !templateUser?.email) {
+    throw new AppError(
+      "Failed to retrieve user email",
+      "AUTH_FAILED",
+      500,
+    );
+  }
+
+  const templateRecipients = Array.isArray(to) ? to : [to];
+  if (templateRecipients.some((recipient) => recipient !== templateUser.email)) {
+    logger.warn("Unauthorized template email recipients attempted", {
+      userId: ctx.userId,
+      to,
+    });
+    throw new AppError(
+      "Recipient email not allowed for sending",
+      "EMAIL_RECIPIENT_NOT_ALLOWED",
+      403,
+    );
+  }
 
   const emailService = getEmailService();
   const params: SendTemplateEmailParams = { to, slug, variables };
@@ -298,6 +389,15 @@ export async function handleGoTrueWebhook(
   }
   const actionLink = `${apiUrl}/auth/v1/verify?${urlParams.toString()}`;
 
+  // The variables the auth templates in email_templates are written against.
+  // The Go-style names the templates used to carry ({{ .SiteURL }},
+  // {{ .ConfirmationURL }}, {{ .Token }}, {{ .Email }}, {{ .NewEmail }}) were
+  // never in the variable set, so every one of them rendered empty — and a
+  // template that renders to nothing is a signup that never sends.
+  const siteUrl = Deno.env.get("APP_URL") ||
+    email_data.site_url ||
+    "https://foodshare.club";
+
   const variables = {
     user: {
       email: user.email,
@@ -306,6 +406,9 @@ export async function handleGoTrueWebhook(
     action_link: actionLink,
     token: email_data.token,
     redirect_to: email_data.redirect_to,
+    site_url: siteUrl,
+    email: user.email,
+    new_email: email_data.email || user.email,
   };
 
   const params: SendTemplateEmailParams = {

@@ -15,6 +15,7 @@
  */
 
 import { getSupabaseClient } from "../../_shared/supabase.ts";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { logger as sharedLogger } from "../../_shared/logger.ts";
 
 // ============================================================================
@@ -374,9 +375,8 @@ class LLMTranslationService {
     amazon: 2000000,
   };
 
-  // Supabase client for quota tracking. Typed from the shared factory so the
-  // esm.sh and npm: type identities stay aligned.
-  private supabase: ReturnType<typeof getSupabaseClient> | null = null;
+  // Supabase client for quota tracking
+  private supabase: SupabaseClient | null = null;
 
   // Exhausted services cache (fail-safe quota enforcement)
   private exhaustedServices: Map<string, number> = new Map();
@@ -603,7 +603,7 @@ class LLMTranslationService {
     if (!this.supabase) {
       this.supabase = getSupabaseClient();
     }
-    return this.supabase!;
+    return this.supabase;
   }
 
   /**

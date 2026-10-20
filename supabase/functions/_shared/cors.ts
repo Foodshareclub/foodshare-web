@@ -22,14 +22,8 @@
 export const DEFAULT_ALLOWED_ORIGINS = [
   "https://foodshare.app",
   "https://www.foodshare.app",
-  `https://${
-    Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
-    "foodshare.club"
-  }`,
-  `https://www.${
-    Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
-    "foodshare.club"
-  }`,
+  `https://${Deno.env.get("SITE_DOMAIN") || "foodshare.club"}`,
+  `https://www.${Deno.env.get("SITE_DOMAIN") || "foodshare.club"}`,
   "http://localhost:3000", // React dev
   "http://localhost:5173", // Vite dev
   "http://localhost:8000", // Alternative dev
@@ -122,12 +116,14 @@ function computeCorsHeaders(
     allowedOrigin = DEFAULT_ALLOWED_ORIGINS[0];
   }
 
+  // Bleeding edge: never send credentials for file:// (invalid, R30)
+  const isFileOrigin = allowedOrigin === "file://";
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Headers":
       "authorization, x-client-info, apikey, content-type, x-correlation-id, x-request-id, x-client-platform, x-app-version",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Credentials": "true",
+    ...(isFileOrigin ? {} : { "Access-Control-Allow-Credentials": "true" }),
     "Access-Control-Max-Age": "3600",
     "Access-Control-Expose-Headers":
       "x-request-id, x-correlation-id, x-response-time, retry-after, x-ratelimit-limit, x-ratelimit-remaining, x-ratelimit-reset",

@@ -935,7 +935,11 @@ export async function handleListNotifications(
       .limit(limit);
 
     if (unreadOnly) {
-      query = query.eq("is_read", false);
+      // Not a rename. `in_app_notifications` records read state as the
+      // `read_at` timestamp, with NULL meaning unread — there is no
+      // `is_read` boolean, so the old filter was rejected by PostgREST and
+      // the unread-only variant returned every notification.
+      query = query.is("read_at", null);
     }
 
     const { data: notifications, error } = await query;
@@ -950,7 +954,7 @@ export async function handleListNotifications(
         .from("in_app_notifications")
         .select("*", { count: "exact", head: true })
         .eq("user_id", context.userId)
-        .eq("is_read", false);
+        .is("read_at", null);
 
       return {
         success: true,

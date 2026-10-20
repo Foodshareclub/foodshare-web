@@ -13,10 +13,31 @@ import * as Sentry from "@sentry/deno";
 
 // Initialize Sentry
 // Note: SENTRY_DSN should be set in the Supabase Edge Function Secrets
+// (flows from the SENTRY_DSN repo secret via deploy). Without it this block
+// is skipped and capture* calls below become silent no-ops.
 if (Deno.env.get("SENTRY_DSN")) {
+  const branch = Deno.env.get("GIT_BRANCH") || Deno.env.get("GITHUB_REF_NAME") || "";
+  const isProd = (Deno.env.get("SENTRY_ENVIRONMENT") ||
+    Deno.env.get("ENVIRONMENT") || "production").toLowerCase() === "production";
   Sentry.init({
     dsn: Deno.env.get("SENTRY_DSN"),
-    tracesSampleRate: 1.0,
+    environment: Deno.env.get("SENTRY_ENVIRONMENT") ||
+      Deno.env.get("ENVIRONMENT") ||
+      (branch === "main" ? "production" : branch ? "staging" : "production"),
+    // Release links events to commits/PRs (suspect commits, resolve-on-merge).
+    // Injected at deploy time (SENTRY_RELEASE = git SHA via backend.yml); unset locally.
+    release: Deno.env.get("SENTRY_RELEASE"),
+    // 10% tracing in prod (errors still capture at 100%), 100% elsewhere.
+    tracesSampleRate: isProd ? 0.1 : 1.0,
+    // Enrich every event with release/PR metadata for Sentry → GitHub linking.
+    beforeSend(event) {
+      event.tags = {
+        ...event.tags,
+        release: Deno.env.get("SENTRY_RELEASE") || "local",
+        service: Deno.env.get("SERVICE_NAME") || "edge-function",
+      };
+      return event;
+    },
   });
 }
 

@@ -17,7 +17,6 @@ import type { TelegramUser } from "../telegram-bot-foodshare/types/index.ts";
 // Set environment variables for tests
 Deno.env.set("SUPABASE_URL", "http://127.0.0.1:54321");
 Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key");
-Deno.env.set("TELEGRAM_BOT_TOKEN", "test-bot-token");
 
 const mockUser: TelegramUser = {
   id: 11223344,

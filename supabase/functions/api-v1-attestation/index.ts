@@ -4,9 +4,14 @@
  * Enterprise-grade device integrity verification consolidating ALL attestation operations:
  * - iOS App Attest: Initial device registration
  * - iOS Assertion: Subsequent request verification
- * - iOS DeviceCheck: Fallback for older devices
  * - Android Play Integrity: Primary Android verification
- * - Android SafetyNet: Deprecated fallback
+ *
+ * Two previously advertised types are retired and always refuse:
+ * `device_check` (needs a round trip to Apple that is not configured, and
+ * used to accept any 50-character string as trusted) and `safetynet`
+ * (Google retired the API, and the payload was read without checking its
+ * signature). Both were self-service bypasses of this gate; see
+ * `docs/rust-migration.md` §2.
  *
  * Routes:
  * - GET    /health           - Health check
@@ -19,7 +24,7 @@
  * @version 1.0.0
  */
 
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { z } from "zod";
 import { createAPIHandler, type HandlerContext, ok } from "../_shared/api-handler.ts";
 import { parseRoute } from "../_shared/routing.ts";
 import { AppError, ValidationError } from "../_shared/errors.ts";
@@ -28,7 +33,7 @@ import { AppError, ValidationError } from "../_shared/errors.ts";
 import type { AttestationResponse } from "./lib/types.ts";
 import { androidAttestationSchema, iosAttestationSchema } from "./lib/types.ts";
 import { getBundleId, verifyAppAttest } from "./lib/app-attest.ts";
-import { verifyAssertion } from "./lib/assertion.ts";
+import { verifyAssertion } from "./lib/app-attest.ts";
 import { verifyDeviceCheck } from "./lib/device-check.ts";
 import { getAndroidPackageName, verifyPlayIntegrity, verifySafetyNet } from "./lib/android.ts";
 import {
@@ -95,9 +100,13 @@ async function handleIOSAttestation(
   }
 
   if (body.type === "assertion") {
-    if (!body.keyId || !body.assertion || !body.clientDataHash) {
+    // `clientDataHash` is a WebAuthn concept. An App Attest assertion is
+    // CBOR `{authData, signature}` and carries no client data, so the old
+    // requirement was rejecting valid requests while the value itself was
+    // never used.
+    if (!body.keyId || !body.assertion) {
       throw new ValidationError(
-        "Missing required assertion fields: keyId, assertion, clientDataHash",
+        "Missing required assertion fields: keyId, assertion",
       );
     }
 
@@ -123,7 +132,7 @@ async function handleIOSAttestation(
     const result = await verifyAssertion(
       body.keyId,
       body.assertion,
-      body.clientDataHash,
+      bundleId,
       deviceRecord.assertion_counter,
       deviceRecord.public_key,
     );
@@ -283,8 +292,12 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
       timestamp: new Date().toISOString(),
       platforms: ["ios", "android"],
       types: {
-        ios: ["attestation", "assertion", "device_check"],
-        android: ["integrity", "safetynet"],
+        ios: ["attestation", "assertion"],
+        android: ["integrity"],
+        // Still routable, but they always refuse. Listed so a client
+        // migrating knows these were removed deliberately rather than
+        // mistyped, and so no client discovers them by probing.
+        retired: ["device_check", "safetynet"],
       },
       routes: ["health", "certificate-pins", "ios", "android"],
     }, ctx);
@@ -340,7 +353,8 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
     }
 
     throw new ValidationError(
-      "Invalid attestation request. Provide iOS type (attestation/assertion/device_check) or Android type (integrity/safetynet)",
+      "Invalid attestation request. Provide iOS type (attestation/assertion) or Android type (integrity). " +
+        "device_check and safetynet are retired: they were removed because they accepted unverified input.",
     );
   }
 

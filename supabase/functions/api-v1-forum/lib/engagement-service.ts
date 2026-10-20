@@ -66,15 +66,33 @@ export class EngagementService {
   }
 
   async toggleReaction(forumId: number, reactionType: string) {
+    // `forum_reactions` stores `reaction_type_id`, not a `reaction_type`
+    // text column. The old statements named the text column throughout, so
+    // the select returned nothing, every call fell through to the insert
+    // branch, and the insert itself failed — the toggle never added,
+    // removed or changed a reaction, and returned success while doing so.
+    // `reaction_types(id, name)` is the lookup the schema intends.
+    const { data: typeRow } = await this.supabase
+      .from("reaction_types")
+      .select("id")
+      .eq("name", reactionType)
+      .maybeSingle();
+
+    if (!typeRow) {
+      logger.warn("Unknown reaction type", { forumId, reactionType });
+      return { reacted: false, reactionType: null };
+    }
+    const reactionTypeId = typeRow.id as number;
+
     const { data: existing } = await this.supabase
       .from("forum_reactions")
-      .select("id,reaction_type")
+      .select("id,reaction_type_id")
       .eq("forum_id", forumId)
       .eq("profile_id", this.userId)
       .maybeSingle();
 
     if (existing) {
-      if (existing.reaction_type === reactionType) {
+      if (existing.reaction_type_id === reactionTypeId) {
         await this.supabase
           .from("forum_reactions")
           .delete()
@@ -85,7 +103,7 @@ export class EngagementService {
       } else {
         await this.supabase
           .from("forum_reactions")
-          .update({ reaction_type: reactionType })
+          .update({ reaction_type_id: reactionTypeId })
           .eq("id", existing.id);
 
         logger.info("Reaction updated", { forumId, reactionType });
@@ -97,7 +115,7 @@ export class EngagementService {
         .insert({
           forum_id: forumId,
           profile_id: this.userId,
-          reaction_type: reactionType,
+          reaction_type_id: reactionTypeId,
         });
 
       logger.info("Reaction added", { forumId, reactionType });
@@ -152,7 +170,9 @@ export class EngagementService {
       .from("forum_drafts")
       .select("*")
       .eq("profile_id", this.userId)
-      .order("updated_at", { ascending: false })
+      // `last_saved_at`, not `updated_at`: forum_drafts has no updated_at,
+      // so the ordering column was rejected and drafts were never listed.
+      .order("last_saved_at", { ascending: false })
       .limit(limit);
 
     if (error) throw error;
@@ -167,9 +187,12 @@ export class EngagementService {
       .upsert({
         profile_id: this.userId,
         title: input.title,
-        content: input.content,
+        // `forum_drafts` stores `rich_content` and `last_saved_at`; `content`
+        // and `updated_at` are neither of them, and PostgREST rejects the whole
+        // upsert when one key is wrong — so saving a draft failed outright.
+        rich_content: input.content,
         category_id: input.categoryId || null,
-        updated_at: new Date().toISOString(),
+        last_saved_at: new Date().toISOString(),
       })
       .select("*")
       .single();
@@ -207,7 +230,9 @@ export class EngagementService {
         comment_id: input.commentId || null,
         reporter_id: this.userId,
         reason: input.reason,
-        details: input.details || null,
+        // The column is `description`. `details` is not a column of
+        // `forum_reports`, so every report was rejected by PostgREST.
+        description: input.details || null,
       })
       .select("*")
       .single();

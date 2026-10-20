@@ -22,7 +22,7 @@ import { getSupabaseClient } from "../_shared/supabase.ts";
 import { logger } from "../_shared/logger.ts";
 import { AppError, ValidationError } from "../_shared/errors.ts";
 import { parseRoute } from "../_shared/routing.ts";
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { z } from "zod";
 import {
   rateCheckSchema,
   rateRecordSchema,

@@ -1,4 +1,24 @@
 /**
+ * Attempts before a queued email is abandoned.
+ *
+ * Matches `mark_email_as_failed`, which gives up once `retry_count >= 2`.
+ * The old claim filtered `retry_count < 3`, but a row at 2 is already
+ * `failed` and was never claimable, so 3 was unreachable — one predicate for
+ * both ends of the lifecycle is the fix.
+ */
+const MAX_ATTEMPTS = 2;
+
+/**
+ * A claimed email left in `processing` longer than this is assumed to belong
+ * to a trigger that died mid-send.
+ *
+ * 15 minutes, comfortably longer than a provider round trip for a batch of
+ * 50, so a slow send is never mistaken for a dead one — recovering early is a
+ * duplicate send.
+ */
+const STALE_CLAIM_SECONDS = 900;
+
+/**
  * Email queue processing handlers
  *
  * - GET  / — Queue stats (service/cron auth)
@@ -6,11 +26,15 @@
  * - POST /process/automation — Process automation drip queue (service/cron auth)
  */
 
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { z } from "zod";
 import { type HandlerContext, ok } from "../../_shared/api-handler.ts";
 import { AppError, ServerError } from "../../_shared/errors.ts";
 import { logger } from "../../_shared/logger.ts";
-import { type EmailType, getEmailService } from "../../_shared/email/index.ts";
+import {
+  type EmailProviderName,
+  type EmailType,
+  getEmailService,
+} from "../../_shared/email/index.ts";
 import {
   type AutomationQueueItem,
   escapeHtml,
@@ -34,17 +58,34 @@ async function processEmailQueue(
 ): Promise<ProcessResult> {
   const supabase = getServiceRoleClient();
 
+  // `claim_email_queue` claims atomically: it marks each row `processing` in
+  // the same transaction that selects it.
+  //
+  // The function this replaces, `get_pending_emails_for_processing`, was
+  // `LANGUAGE sql`, so its `FOR UPDATE SKIP LOCKED` locks were released when
+  // the statement returned — before the provider call below, which is two
+  // more transactions later. Two triggers could therefore read the same
+  // `queued` rows and both send them. See
+  // supabase/migrations/20260929000000_atomic_email_claim_for_deno.sql.
+  //
+  // A `dryRun` still claims, deliberately. It has to: a preview that leaves
+  // the rows claimable would be reading the queue as it will be after the next
+  // real trigger has taken it, and the report would describe work this run
+  // then competes with rather than observes. The rows are released at the
+  // end of the loop, which puts them back in `queued` and restores the
+  // attempt count — so a dry run is invisible to the queue afterwards.
   const { data: pendingEmails, error: fetchError } = await supabase.rpc(
-    "get_pending_emails_for_processing",
+    "claim_email_queue",
     {
       p_batch_size: batchSize,
-      p_provider: provider || null,
+      p_max_attempts: MAX_ATTEMPTS,
+      p_stale_after_seconds: STALE_CLAIM_SECONDS,
     },
   );
 
   if (fetchError) {
     throw new AppError(
-      `Failed to fetch pending emails: ${fetchError.message}`,
+      `Failed to claim pending emails: ${fetchError.message}`,
       "QUEUE_FETCH_FAILED",
       500,
     );
@@ -59,9 +100,16 @@ async function processEmailQueue(
   let failed = 0;
   let skipped = 0;
   const errors: string[] = [];
+  const toRelease: string[] = [];
 
   const emailService = getEmailService();
 
+  // Every claimed row is now `processing`, so every path through this loop
+  // owes the queue an outcome: a send, a recorded failure, or a release. The
+  // three `continue` paths below each used to leave the row `queued`, which
+  // was harmless while the claim did not mark anything and is a permanent
+  // strand now. `toRelease` collects them and is flushed after the loop, so
+  // one call handles a dry run of a hundred rows.
   for (const email of emails) {
     if (dryRun) {
       logger.info("Dry run: would send email", {
@@ -71,43 +119,69 @@ async function processEmailQueue(
         recipient: email.user_email,
       });
       skipped++;
+      toRelease.push(email.id);
+      continue;
+    }
+
+    if (!email.user_email) {
+      // Permanent, not a release. The claim now resolves the recipient with a
+      // LEFT join, so this row reached the loop at all; a profile with no
+      // address will not acquire one, and leaving it queued retried it on
+      // every pass forever. Recorded so the backlog is visible.
+      logger.warn("Email permanently undeliverable: no recipient address", {
+        deliveryId: email.id,
+        userId: email.user_id,
+      });
+      await supabase.rpc("mark_email_as_failed", {
+        p_delivery_id: email.id,
+        p_error_code: "NO_RECIPIENT",
+        p_error_message: "profile has no email address",
+        p_should_retry: false,
+      });
+      failed++;
+      errors.push(`${email.id}: no recipient address`);
       continue;
     }
 
     try {
-      if (!email.user_email) {
-        logger.warn("Skipping email: no recipient address", {
-          deliveryId: email.id,
-          userId: email.user_id,
-        });
-        skipped++;
-        continue;
-      }
-
       const emailContent = await buildEmailContent(supabase, email);
 
       if (!emailContent) {
-        logger.warn("Skipping email: could not build content", {
+        // Released rather than failed. `buildEmailContent` returns null both
+        // when a template is genuinely absent and when the read errored, and
+        // treating a transient read error as permanent would destroy a real
+        // email. The log is the signal for a genuinely missing template;
+        // `buildEmailContent` logs the slug itself.
+        logger.warn("Could not build content; releasing for retry", {
           deliveryId: email.id,
           emailType: email.email_type,
+          templateSlug: email.template_slug,
         });
         skipped++;
+        toRelease.push(email.id);
         continue;
       }
 
-      const result = await emailService.sendEmail(
-        {
-          to: email.user_email,
-          subject: emailContent.subject,
-          html: emailContent.html,
-          text: emailContent.text,
-          replyTo: emailContent.replyTo,
-          tags: [email.email_type, email.template_slug || "default"].filter(
-            Boolean,
-          ) as string[],
-        },
-        email.email_type as EmailType,
-      );
+      const params = {
+        to: email.user_email,
+        subject: emailContent.subject,
+        html: emailContent.html,
+        text: emailContent.text,
+        replyTo: emailContent.replyTo,
+        tags: [email.email_type, email.template_slug || "default"].filter(
+          Boolean,
+        ) as string[],
+      };
+
+      // `provider` was accepted by the schema and applied to the claim, which
+      // ignored it, so an operator asking for one provider silently got
+      // whichever the chain picked. It is honoured here.
+      const result = provider
+        ? await emailService.sendEmailWithProvider(
+          params,
+          provider as EmailProviderName,
+        )
+        : await emailService.sendEmail(params, email.email_type as EmailType);
 
       if (result.success && result.messageId) {
         await supabase.rpc("mark_email_as_sent", {
@@ -137,7 +211,22 @@ async function processEmailQueue(
         deliveryId: email.id,
         error: errorMessage,
         retryCount: email.retry_count,
-        willRetry: shouldRetry && email.retry_count < 2,
+        willRetry: shouldRetry && email.retry_count < MAX_ATTEMPTS,
+      });
+    }
+  }
+
+  if (toRelease.length > 0) {
+    const { error: releaseError } = await supabase.rpc("release_email_claims", {
+      p_ids: toRelease,
+    });
+    if (releaseError) {
+      // Not fatal: the stale window returns them, so the cost is a delay
+      // rather than a lost email. Logged loudly because a persistent failure
+      // here means every dry run strands its batch for 15 minutes.
+      logger.error("Failed to release email claims; they return after the stale window", {
+        count: toRelease.length,
+        error: releaseError.message,
       });
     }
   }
@@ -167,11 +256,18 @@ async function buildEmailContent(
     replyTo?: string;
   } | null
 > {
-  // Newsletter emails with a campaign
+  // Newsletter emails with a campaign.
+  //
+  // `plain_text_content`, not `text_content`: that is the column this table
+  // has. Selecting `text_content` raised a column error for every newsletter
+  // campaign, and the caller treated the failed read as "content could not be
+  // built" — released for retry, forever, with a log line rather than a
+  // failure. The Rust port in `fs-db` selects the right column; this Deno
+  // copy never got the fix.
   if (email.email_type === "newsletter" && email.campaign_id) {
     const { data: campaign, error } = await supabase
       .from("newsletter_campaigns")
-      .select("subject,html_content,text_content")
+      .select("subject,html_content,plain_text_content")
       .eq("id", email.campaign_id)
       .single();
 
@@ -191,9 +287,9 @@ async function buildEmailContent(
       email.user_first_name,
       email.user_email,
     );
-    const personalizedText = campaign.text_content
+    const personalizedText = campaign.plain_text_content
       ? personalizeContent(
-        campaign.text_content,
+        campaign.plain_text_content,
         email.user_first_name,
         email.user_email,
       )
@@ -375,24 +471,58 @@ Open FoodShare: https://foodshare.app`;
 // Error Classification
 // =============================================================================
 
-function isHardBounce(error: string): boolean {
+/**
+ * Whether a send error is permanent, so the queue should give up rather than
+ * retry.
+ *
+ * Exported for tests because it is the highest-consequence untestable
+ * decision in this file: getting it wrong in one direction gives up on a
+ * deliverable email, and in the other retries an address that will never
+ * accept mail until the budget is gone. It decides, per email, whether a real
+ * person ever receives the message.
+ */
+export function isHardBounce(error: string): boolean {
+  // Order-independent wherever the two halves of a phrase can legitimately
+  // appear either way round.
+  //
+  // `invalid.*email` and `not.*exist` were both written in one order only,
+  // which meant a real provider message worded the other way round —
+  // "The email address is invalid", "the user no longer exists" — did not
+  // match, and was therefore treated as *retryable*. A permanently invalid
+  // address was retried until the attempt budget ran out, three provider
+  // calls per address per cycle, and only then given up. Getting this
+  // backwards in the other direction is worse: it discards deliverable mail
+  // on a transient blip. Both directions are pinned in
+  // `__tests__/email-queue.test.ts`.
   const hardBouncePatterns = [
-    /invalid.*email/i,
-    /not.*exist/i,
-    /mailbox.*not.*found/i,
-    /user.*unknown/i,
-    /550.*5\.1\.1/i,
-    /550.*5\.1\.2/i,
-    /unsubscribed/i,
-    /complained/i,
-    /blocked/i,
-    /blacklist/i,
+    // Both halves anywhere: covers "invalid email", "email is invalid" and
+    // "invalid recipient address".
+    /(?=.*invalid)(?=.*(?:email|address|recipient))/i,
+    // "does not exist", "user not exist", "no longer exists", "doesn't exist".
+    /\b(?:does|do|did|doesn't|don't)\s+not\s+exist\b/i,
+    /\bnot\s+exist\b/i,
+    /\bno\s+longer\s+exist/i,
+    /\bmailbox\s+not\s+found\b/i,
+    // "user unknown", "unknown user", "unknown recipient".
+    /\bunknown\s+(?:user|recipient|address|mailbox)\b/i,
+    /\buser\s+unknown\b/i,
+    // Enhanced status codes, which are the unambiguous form when present.
+    /550[^\d]*5\.1\.1/i,
+    /550[^\d]*5\.1\.2/i,
+    /\bunsubscrib/i,
+    /\bcomplain/i,
+    /\bblock(?:ed|ing|list)\b|\bblack\s*list/i,
   ];
 
   return hardBouncePatterns.some((pattern) => pattern.test(error));
 }
 
-function getErrorCode(error: string): string {
+/**
+ * A short, stable classification for `error_code`, so a dashboard can group
+ * on it without depending on any provider's wording. Exported for the same
+ * reason as `isHardBounce`.
+ */
+export function getErrorCode(error: string): string {
   const smtpMatch = error.match(/\b(4\d{2}|5\d{2})\b/);
   if (smtpMatch) return smtpMatch[1];
 
@@ -409,18 +539,46 @@ function getErrorCode(error: string): string {
 // Automation Queue Processing (merged from process-automation-queue)
 // =============================================================================
 
-async function resolveAutomationEmailContent(
+/**
+ * The outcome of resolving an automation step's content.
+ *
+ * The two failure reasons are not interchangeable: a profile with no address
+ * will not acquire one, so retrying spends the budget on an email that will
+ * never be delivered, while a template that is missing today may exist by
+ * the next tick. The distinction is what lets the processor choose between
+ * a permanent failure and a release.
+ */
+type AutomationContent =
+  | { ok: true; content: { subject: string; html: string; to: string } }
+  | { ok: false; reason: "no_recipient" | "no_content" };
+
+/**
+ * Resolve an automation step's content.
+ *
+ * Exported for tests because the two failure reasons decide, per row,
+ * whether the queue gives up or retries: a profile with no address will
+ * not acquire one, so retrying spends the budget on an email that will
+ * never be delivered, while a template missing today may exist by the
+ * next tick. Getting that distinction wrong in either direction either
+ * abandons a deliverable email or burns the whole retry budget — the same
+ * reasoning as `isHardBounce`.
+ */
+export async function resolveAutomationEmailContent(
   supabase: ReturnType<typeof getServiceRoleClient>,
   emailData: AutomationQueueItem["email_data"],
   profileId: string,
-): Promise<{ subject: string; html: string; to: string } | null> {
+): Promise<AutomationContent> {
   const { data: profile } = await supabase
     .from("profiles")
     .select("email,first_name,nickname")
     .eq("id", profileId)
     .single();
 
-  if (!profile?.email) return null;
+  if (!profile?.email) {
+    return { ok: false, reason: "no_recipient" };
+  }
+
+  const name = profile.first_name || profile.nickname || "there";
 
   if (emailData.template_slug) {
     const { data: template } = await supabase
@@ -431,31 +589,44 @@ async function resolveAutomationEmailContent(
       .single();
 
     if (template) {
-      const name = profile.first_name || profile.nickname || "there";
       return {
-        subject: template.subject.replace(/\{\{name\}\}/g, name),
-        html: template.html_content
-          .replace(/\{\{name\}\}/g, name)
-          .replace(/\{\{email\}\}/g, profile.email),
-        to: profile.email,
+        ok: true,
+        content: {
+          subject: template.subject.replace(/\{\{name\}\}/g, name),
+          html: template.html_content
+            .replace(/\{\{name\}\}/g, name)
+            .replace(/\{\{email\}\}/g, profile.email),
+          to: profile.email,
+        },
       };
     }
   }
 
   if (emailData.subject && emailData.html) {
-    const name = profile.first_name || profile.nickname || "there";
     return {
-      subject: emailData.subject.replace(/\{\{name\}\}/g, name),
-      html: emailData.html
-        .replace(/\{\{name\}\}/g, name)
-        .replace(/\{\{email\}\}/g, profile.email),
-      to: profile.email,
+      ok: true,
+      content: {
+        subject: emailData.subject.replace(/\{\{name\}\}/g, name),
+        html: emailData.html
+          .replace(/\{\{name\}\}/g, name)
+          .replace(/\{\{email\}\}/g, profile.email),
+        to: profile.email,
+      },
     };
   }
 
-  return null;
+  return { ok: false, reason: "no_content" };
 }
 
+/**
+ * Process one claimed automation row.
+ *
+ * The caller has already claimed the batch through `claim_automation_queue`,
+ * so every row arrives `processing` and every path through this function
+ * owes the queue an outcome: a send, a recorded failure, or a release. The
+ * three write-backs are scoped to `processing` in the database, so a late
+ * or duplicate call cannot overwrite a delivery.
+ */
 async function processAutomationQueueItem(
   supabase: ReturnType<typeof getServiceRoleClient>,
   item: AutomationQueueItem,
@@ -470,40 +641,44 @@ async function processAutomationQueueItem(
   }
 > {
   const startTime = performance.now();
-  const maxAttempts = 3;
 
   try {
-    if (!dryRun) {
-      await supabase
-        .from("email_automation_queue")
-        .update({
-          status: "processing",
-          attempts: item.attempts + 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", item.id);
-    }
-
-    const emailContent = await resolveAutomationEmailContent(
+    const resolved = await resolveAutomationEmailContent(
       supabase,
       item.email_data,
       item.profile_id,
     );
-    if (!emailContent) {
+
+    if (!resolved.ok) {
       if (!dryRun) {
-        await supabase
-          .from("email_automation_queue")
-          .update({
-            status: "failed",
-            error_message: "Could not resolve email content or recipient",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", item.id);
+        if (resolved.reason === "no_recipient") {
+          // Permanent: a profile with no address will not acquire one.
+          await supabase.rpc("fail_automation_attempts", {
+            p_ids: [item.id],
+            p_error_message: "profile has no email address",
+            p_should_retry: false,
+          });
+        } else {
+          // Released rather than failed: the template may be created after
+          // this flow was enrolled, and a permanent failure here would
+          // destroy a real email. The log is the signal for a genuinely
+          // missing template.
+          logger.warn("Could not resolve automation content; releasing for retry", {
+            queueId: item.id,
+            templateSlug: item.email_data.template_slug,
+          });
+          await supabase.rpc("release_automation_claims", {
+            p_ids: [item.id],
+            p_error_message: "could not resolve email content",
+          });
+        }
       }
       return {
         id: item.id,
         success: false,
-        error: "Could not resolve email content or recipient",
+        error: resolved.reason === "no_recipient"
+          ? "profile has no email address"
+          : "could not resolve email content",
         latencyMs: Math.round(performance.now() - startTime),
       };
     }
@@ -520,19 +695,39 @@ async function processAutomationQueueItem(
     const emailService = getEmailService();
     const result = await emailService.sendEmail(
       {
-        to: emailContent.to,
-        subject: emailContent.subject,
-        html: emailContent.html,
+        to: resolved.content.to,
+        subject: resolved.content.subject,
+        html: resolved.content.html,
       },
       "notification" as EmailType,
     );
 
     if (result.success && result.messageId) {
-      await supabase.rpc("mark_automation_email_sent", {
-        p_queue_id: item.id,
-        p_provider: result.provider || "unknown",
-        p_message_id: result.messageId,
-      });
+      const { error: markError } = await supabase.rpc(
+        "mark_automation_email_sent",
+        {
+          p_queue_id: item.id,
+          p_provider: result.provider || "unknown",
+          p_message_id: result.messageId,
+        },
+      );
+
+      if (markError) {
+        // The email was delivered but the queue was not told. Releasing the
+        // row would resend it on the next tick; leaving it `processing`
+        // means the stale window recovers it — the same duplicate either
+        // way, but the failure is visible rather than silent, and the row
+        // is not lost. Logged loudly because a persistent failure here
+        // means every send strands its row.
+        logger.error(
+          "Failed to record automation send; the row returns after the stale window",
+          {
+            queueId: item.id,
+            error: markError.message,
+          },
+        );
+      }
+
       return {
         id: item.id,
         success: true,
@@ -541,33 +736,38 @@ async function processAutomationQueueItem(
       };
     }
 
-    const newStatus = item.attempts + 1 >= maxAttempts ? "failed" : "pending";
-    await supabase
-      .from("email_automation_queue")
-      .update({
-        status: newStatus,
-        error_message: result.error || "Unknown error",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", item.id);
+    const errorMessage = result.error || "Unknown error";
+
+    if (isHardBounce(errorMessage)) {
+      // Permanent: retrying spends the budget on an address that will
+      // never accept mail.
+      await supabase.rpc("fail_automation_attempts", {
+        p_ids: [item.id],
+        p_error_message: errorMessage.slice(0, 500),
+        p_should_retry: false,
+      });
+    } else {
+      // Retryable until the row's own max_attempts, which the database
+      // decides — the old code hardcoded 3 and ignored the column.
+      await supabase.rpc("release_automation_claims", {
+        p_ids: [item.id],
+        p_error_message: errorMessage.slice(0, 500),
+      });
+    }
 
     return {
       id: item.id,
       success: false,
-      error: result.error,
+      error: errorMessage,
       latencyMs: Math.round(performance.now() - startTime),
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     if (!dryRun) {
-      await supabase
-        .from("email_automation_queue")
-        .update({
-          status: "failed",
-          error_message: errorMessage,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", item.id);
+      await supabase.rpc("release_automation_claims", {
+        p_ids: [item.id],
+        p_error_message: errorMessage.slice(0, 500),
+      });
     }
     return {
       id: item.id,
@@ -666,25 +866,32 @@ export async function handleProcessAutomation(
   });
 
   const supabase = getServiceRoleClient();
-  const now = new Date().toISOString();
 
-  const { data: queueItems, error: fetchError } = await supabase
-    .from("email_automation_queue")
-    .select("*")
-    .eq("status", "pending")
-    .lte("scheduled_for", now)
-    .order("scheduled_for", { ascending: true })
-    .limit(batchSize);
+  // `claim_automation_queue` claims atomically: it marks each row
+  // `processing` in the same transaction that selects it, and returns rows
+  // stranded by a crashed run to the queue first. The select it replaces
+  // was a plain `.eq("status", "pending")` with no lock and no claim, so
+  // two overlapping cron ticks read the same rows and both sent. See
+  // supabase/migrations/20261001000000_automation_queue_claims.sql.
+  const { data: claimed, error: fetchError } = await supabase.rpc(
+    "claim_automation_queue",
+    {
+      p_batch_size: batchSize,
+      p_stale_after_seconds: STALE_CLAIM_SECONDS,
+    },
+  );
 
   if (fetchError) {
     throw new AppError(
-      `Failed to fetch automation queue: ${fetchError.message}`,
+      `Failed to claim automation queue: ${fetchError.message}`,
       "QUEUE_FETCH_FAILED",
       500,
     );
   }
 
-  if (!queueItems?.length) {
+  const queueItems = (claimed ?? []) as AutomationQueueItem[];
+
+  if (!queueItems.length) {
     return ok({
       success: true,
       message: "No pending automation emails to process",
@@ -703,12 +910,36 @@ export async function handleProcessAutomation(
       chunk.map((item) =>
         processAutomationQueueItem(
           supabase,
-          item as AutomationQueueItem,
+          item,
           dryRun,
         )
       ),
     );
     results.push(...chunkResults);
+  }
+
+  // Every claimed row owes the queue an outcome. A dry run has sent nothing,
+  // so its rows are released in one call — the same obligation the email
+  // queue's dry run meets with `release_email_claims`.
+  if (dryRun) {
+    const { error: releaseError } = await supabase.rpc(
+      "release_automation_claims",
+      {
+        p_ids: queueItems.map((item) => item.id),
+      },
+    );
+    if (releaseError) {
+      // Not fatal: the stale window returns them, so the cost is a delay
+      // rather than a lost email. Logged loudly because a persistent
+      // failure here means every dry run strands its batch for 15 minutes.
+      logger.error(
+        "Failed to release automation claims; they return after the stale window",
+        {
+          count: queueItems.length,
+          error: releaseError.message,
+        },
+      );
+    }
   }
 
   const successful = results.filter((r) => r.success);

@@ -3,6 +3,7 @@
  */
 
 import { sendLocation, sendMessage, sendPhoto } from "../../_shared/telegram-client.ts";
+import { logger } from "../../_shared/logger.ts";
 import { setUserState } from "../services/user-state.ts";
 import { getProfileByTelegramId, requiresEmailVerification } from "../services/profile.ts";
 import { getBadges, getUserImpactStats } from "../services/impact.ts";
@@ -392,16 +393,38 @@ export async function handleNearbyCommand(
 
   const radius = profile.search_radius_km || 5;
 
+  // `p_post_type`, not `post_type`: the function's third parameter is named
+  // `p_post_type`, so passing `post_type` matched no overload and
+  // PostgREST rejected the call with "function does not exist". The error
+  // was swallowed by the branch below, which reported "no food found" — so
+  // this search never returned anything and never said why.
   const { data: nearbyFoods, error } = await supabase.rpc(
     "find_nearby_posts_geography",
     {
       user_location: profile.location,
       radius_km: radius,
-      post_type: "food",
+      p_post_type: "food",
     },
   );
 
-  if (error || !nearbyFoods || nearbyFoods.length === 0) {
+  // An error is not an empty result. The single branch that handled both
+  // told the user "no food found" when the query had failed, which is a
+  // claim about the map that the database never made — and it is why the
+  // argument-name defect above could sit unnoticed: the user-visible symptom
+  // was a plausible empty result rather than an error.
+  if (error) {
+    logger.error("find_nearby_posts_geography failed", error, {
+      telegramUserId: userId,
+      radiusKm: radius,
+    });
+    await sendMessage(
+      chatId,
+      "📍 The nearby search failed. Please try again in a moment.",
+    );
+    return;
+  }
+
+  if (!nearbyFoods || nearbyFoods.length === 0) {
     await sendMessage(
       chatId,
       `📍 No food found within ${radius}km of your location.\n\n` +

@@ -2,7 +2,7 @@
  * Shared types, configuration, schemas, and in-memory state for api-v1-cache.
  */
 
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { z } from "zod";
 
 // =============================================================================
 // Configuration

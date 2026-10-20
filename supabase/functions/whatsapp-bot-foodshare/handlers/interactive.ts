@@ -209,7 +209,7 @@ async function handleFind(phoneNumber: string): Promise<void> {
     .select("*")
     .eq("post_type", "food")
     .eq("is_active", true)
-    .order("created_time", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(5);
 
   if (error || !posts || posts.length === 0) {
@@ -447,7 +447,7 @@ async function handleViewPost(
   phoneNumber: string,
   postId: string,
 ): Promise<void> {
-  const postUrl = `${getAppUrl()}/food/${postId}`;
+  const postUrl = `${getAppUrl()}/product/${postId}`;
   await sendTextMessage(phoneNumber, `${emoji.LINK} View post:\n${postUrl}`);
 }
 
@@ -458,7 +458,7 @@ async function handleClaimPost(
   phoneNumber: string,
   postId: string,
 ): Promise<void> {
-  const postUrl = `${getAppUrl()}/food/${postId}`;
+  const postUrl = `${getAppUrl()}/product/${postId}`;
 
   await sendTextMessage(
     phoneNumber,

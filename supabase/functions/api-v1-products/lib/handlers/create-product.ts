@@ -4,7 +4,7 @@
 
 import type { HandlerContext } from "../../../_shared/api-handler.ts";
 import { created } from "../../../_shared/api-handler.ts";
-import { AuthenticationError, ValidationError } from "../../../_shared/errors.ts";
+import { AuthenticationError, ServerError, ValidationError } from "../../../_shared/errors.ts";
 import { logger } from "../../../_shared/logger.ts";
 import { sanitizeHtml } from "../../../_shared/validation-rules.ts";
 import { validateProductImageUrls } from "../../../_shared/storage-urls.ts";
@@ -36,22 +36,43 @@ export async function createProduct(
   const sanitizedPickupAddress = body.pickupAddress ? sanitizeHtml(body.pickupAddress) : undefined;
   const sanitizedPickupTime = body.pickupTime ? sanitizeHtml(body.pickupTime) : undefined;
 
+  // `validate_listing_content` does not exist — no migration defines it, so
+  // PostgREST rejected the call, `validation` was always null, and the gate
+  // below never ran. The function that does exist is `validate_listing`,
+  // which returns `{ valid, errors[], sanitized }`.
+  //
+  // Two details matter and both were wrong before:
+  //
+  //   * the result fields are `valid` and `errors`, not `is_valid` and
+  //     `issues` — reading the old names would have made `!validation.valid`
+  //     true for every listing and rejected all of them;
+  //   * `p_images` is required by the rules ("at least one image is
+  //     required") and has no default, so calling without it would have
+  //     failed every listing for the wrong reason.
   const { data: validation, error: validationError } = await supabase.rpc(
-    "validate_listing_content",
+    "validate_listing",
     {
       p_title: sanitizedTitle,
       p_description: sanitizedDescription || "",
+      p_images: body.images ?? null,
+      p_post_type: body.postType ?? "food",
+      p_pickup_address: sanitizedPickupAddress ?? null,
+      p_pickup_time: sanitizedPickupTime ?? null,
     },
   );
 
   if (validationError) {
-    logger.warn("Content validation failed", {
+    // Fail closed. The alternative — logging a warning and continuing — is
+    // what made this gate invisible in the first place: the RPC had been
+    // failing on every request and creation carried on regardless.
+    logger.error("Content validation unavailable", {
       error: validationError.message,
     });
+    throw new ServerError("Content validation is unavailable");
   }
 
-  if (validation && !validation.is_valid) {
-    throw new ValidationError("Content validation failed", validation.issues);
+  if (validation && validation.valid === false) {
+    throw new ValidationError("Content validation failed", validation.errors);
   }
 
   const classification = await classifyListing({

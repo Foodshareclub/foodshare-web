@@ -2,7 +2,7 @@
  * FCM (Firebase Cloud Messaging) Provider - HTTP v1 API
  */
 
-import * as jose from "https://deno.land/x/jose@v5.2.0/index.ts";
+import * as jose from "jose";
 import { CircuitBreakerError, withCircuitBreaker } from "../../../_shared/circuit-breaker.ts";
 import { withOperationTimeout } from "../../../_shared/timeout.ts";
 import type { DeviceToken, Platform, PushPayload, SendResult } from "./types.ts";

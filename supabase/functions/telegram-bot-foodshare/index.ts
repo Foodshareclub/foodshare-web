@@ -254,7 +254,25 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
   const url = new URL(ctx.request.url);
   const pathname = url.pathname;
 
-  // Webhook setup endpoint
+  // Admin endpoint protection – require adminSecret query param
+  const adminSecret = url.searchParams.get("adminSecret");
+  const expectedSecret = Deno.env.get("ADMIN_SECRET");
+  if (
+    pathname.endsWith("/setup-webhook") || pathname.endsWith("/metrics") ||
+    pathname.endsWith("/chat-id")
+  ) {
+    if (!expectedSecret) {
+      if (isDevelopment()) {
+        logger.warn("ADMIN_SECRET not configured – allowing admin endpoints in dev mode");
+      } else {
+        logger.error("ADMIN_SECRET required for admin endpoints");
+        return jsonOk({ error: "Admin secret required" }, ctx, 401);
+      }
+    } else if (adminSecret !== expectedSecret) {
+      logger.warn("Invalid admin secret");
+      return jsonOk({ error: "Invalid admin secret" }, ctx, 401);
+    }
+  } // Webhook setup endpoint
   if (pathname.endsWith("/setup-webhook")) {
     const webhookUrl = url.searchParams.get("url");
     if (!webhookUrl) {
@@ -263,15 +281,6 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
 
     const webhookSecret = await ctx.getSecret("TELEGRAM_WEBHOOK_SECRET") ||
       Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
-
-    // TEMPORARY DEBUGGING
-    const token = await ctx.getSecret("TELEGRAM_BOT_TOKEN") ||
-      await ctx.getSecret("BOT_TOKEN") || Deno.env.get("TELEGRAM_BOT_TOKEN") ||
-      Deno.env.get("BOT_TOKEN");
-    logger.error("DEBUG_TOKEN_IS", {
-      token: String(token),
-      trimmed: String(token?.trim()),
-    });
 
     const result = await setWebhook(webhookUrl, webhookSecret);
     const success = result.ok;

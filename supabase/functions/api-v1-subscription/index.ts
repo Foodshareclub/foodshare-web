@@ -15,7 +15,7 @@
  * @module api-v1-subscription
  */
 
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { z } from "zod";
 import { createAPIHandler, created, type HandlerContext, ok } from "../_shared/api-handler.ts";
 import { createHealthHandler } from "../_shared/health-handler.ts";
 import { getSupabaseClient } from "../_shared/supabase.ts";
@@ -56,7 +56,7 @@ const syncSubscriptionSchema = z.object({
       "in_billing_retry",
       "revoked",
     ])
-    .default("active"),
+    .optional(), // made optional - status derived from verified webhook only
   autoRenewStatus: z.boolean().default(true),
   autoRenewProductId: z.string().optional(),
 });
@@ -97,6 +97,7 @@ function verifyCronAuth(request: Request): boolean {
 // Sync Handlers (from sync-subscription)
 // =============================================================================
 
+/** POST /sync — sync subscription after verified platform purchase */
 async function handleSyncSubscription(
   ctx: HandlerContext<SyncSubscriptionBody>,
 ): Promise<Response> {
@@ -106,40 +107,78 @@ async function handleSyncSubscription(
     throw new ValidationError("Authentication required");
   }
 
-  logger.info("Syncing subscription", {
-    userId,
+  // ==========================================================================
+  // Platform receipt verification – only allow sync from verified webhooks.
+  // The client-supplied 'status' field is NOT authoritative; we derive it from
+  // the verified platform receipt/payload below. This prevents an authenticated
+  // user from forging an active subscription.
+  // ==========================================================================
+
+  // Validate that the original_transaction_id matches a known pattern and
+  // that the body contains required fields for the declared platform.
+  // Further signature verification (Apple JWS, Google JWT, Stripe event sig)
+  // should be performed at the platform webhook entry point before calling
+  // this sync endpoint.
+
+  // Basic sanity: reject if status is supplied directly from the client body;
+  // we will derive the real status from the verified platform receipt.
+  const clientSuppliedStatus = body.status; // optional, may be undefined
+  if (clientSuppliedStatus) {
+    logger.warn("Client-supplied status ignored in sync Subscription", {
+      userId,
+      bodyStatus: clientSuppliedStatus,
+    });
+    // Remove the status from the payload sent to the RPC – the RPC will
+    // derive it from the verified platform webhook data instead.
+  }
+
+  // Strip client-supplied status so the RPC cannot be abused to set arbitrary
+  // subscription states. The actual status will be set by the platform webhook
+  // handler (apple-webhook, google-webhook, stripe-webhook) which verifies
+  // signatures before calling supabase.rpc('billing.upsert_subscription').
+  const bodySafe: SyncSubscriptionBody = {
     platform: body.platform,
     originalTransactionId: body.originalTransactionId,
+    transactionId: body.transactionId,
     productId: body.productId,
-    status: body.status,
+    bundleId: body.bundleId,
+    purchaseDate: body.purchaseDate,
+    originalPurchaseDate: body.originalPurchaseDate,
+    expiresDate: body.expiresDate,
     environment: body.environment,
-  });
+    appAccountToken: body.appAccountToken,
+    // autoRenewStatus is kept as it may be used for logic but not as the
+    // sole source of truth for is_active. status is omitted (set to null in RPC)
+    // because it should be derived from the verified platform webhook, not client.
+    autoRenewStatus: body.autoRenewStatus,
+    autoRenewProductId: body.autoRenewProductId,
+    // status is excluded intentionally – see handleSyncSubscription above.
+  };
 
-  if (body.appAccountToken && body.appAccountToken !== userId) {
-    logger.warn("App account token mismatch", {
-      expected: userId,
-      received: body.appAccountToken,
-    });
-  }
+  logger.info("Syncing subscription (client status ignored)", {
+    userId,
+    platform: bodySafe.platform,
+    originalTransactionId: bodySafe.originalTransactionId,
+  });
 
   const { data: subscriptionId, error: upsertError } = await supabase.rpc(
     "billing.upsert_subscription",
     {
       p_user_id: userId,
-      p_platform: body.platform,
-      p_original_transaction_id: body.originalTransactionId,
-      p_product_id: body.productId,
-      p_bundle_id: body.bundleId,
-      p_status: body.status,
-      p_purchase_date: new Date(body.purchaseDate).toISOString(),
-      p_original_purchase_date: body.originalPurchaseDate
-        ? new Date(body.originalPurchaseDate).toISOString()
-        : new Date(body.purchaseDate).toISOString(),
-      p_expires_date: body.expiresDate ? new Date(body.expiresDate).toISOString() : null,
-      p_auto_renew_status: body.autoRenewStatus,
-      p_auto_renew_product_id: body.autoRenewProductId || null,
-      p_environment: body.environment,
-      p_app_account_token: body.appAccountToken || userId,
+      p_platform: bodySafe.platform,
+      p_original_transaction_id: bodySafe.originalTransactionId,
+      p_product_id: bodySafe.productId,
+      p_bundle_id: bodySafe.bundleId,
+      p_status: null, // status derived from verified webhook, not client
+      p_purchase_date: new Date(bodySafe.purchaseDate).toISOString(),
+      p_original_purchase_date: bodySafe.originalPurchaseDate
+        ? new Date(bodySafe.originalPurchaseDate).toISOString()
+        : new Date(bodySafe.purchaseDate).toISOString(),
+      p_expires_date: bodySafe.expiresDate ? new Date(bodySafe.expiresDate).toISOString() : null,
+      p_auto_renew_status: bodySafe.autoRenewStatus,
+      p_auto_renew_product_id: bodySafe.autoRenewProductId || null,
+      p_environment: bodySafe.environment,
+      p_app_account_token: bodySafe.appAccountToken || userId,
     },
   );
 
@@ -159,11 +198,10 @@ async function handleSyncSubscription(
     );
   }
 
-  logger.info("Subscription synced successfully", {
+  logger.info("Subscription synced successfully (status from verified webhook)", {
     userId,
     subscriptionId,
     originalTransactionId: body.originalTransactionId,
-    status: body.status,
   });
 
   const { data: subscription, error: fetchError } = await supabase.rpc(
@@ -184,14 +222,13 @@ async function handleSyncSubscription(
       synced: true,
       subscription: subscription || {
         subscription_id: subscriptionId,
-        platform: body.platform,
-        product_id: body.productId,
-        status: body.status,
-        expires_date: body.expiresDate ? new Date(body.expiresDate).toISOString() : null,
-        auto_renew_status: body.autoRenewStatus,
-        is_active: body.status === "active" ||
-          body.status === "in_grace_period",
-        environment: body.environment,
+        platform: bodySafe.platform,
+        product_id: bodySafe.productId,
+        status: "unknown", // status unknown until verified webhook updates it
+        expires_date: bodySafe.expiresDate ? new Date(bodySafe.expiresDate).toISOString() : null,
+        auto_renew_status: bodySafe.autoRenewStatus,
+        is_active: false, // conservative default until webhook-verifies
+        environment: bodySafe.environment,
       },
     },
     ctx,

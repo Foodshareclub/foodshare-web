@@ -33,6 +33,20 @@ const getAppUrl = () =>
     "foodshare.club"
   }`;
 
+/**
+ * Configuration that, when missing, makes every Telegram send fail without
+ * saying why. A trigger that cannot name its missing configuration returns
+ * an opaque "failed", and the failure is only visible in the edge runtime's
+ * logs — the database drops the response body, so nothing surfaces it.
+ */
+function missingTelegramConfig(): string | null {
+  if (!getAdminChatId()) return "ADMIN_CHAT_ID is not configured";
+  if (!Deno.env.get("TELEGRAM_BOT_TOKEN")) {
+    return "TELEGRAM_BOT_TOKEN is not configured";
+  }
+  return null;
+}
+
 // =============================================================================
 // Emoji Mappings
 // =============================================================================
@@ -126,7 +140,13 @@ export async function handleTriggerNewPost(
 
   const emoji = postTypeEmoji[(record.post_type as string) || "default"] ||
     postTypeEmoji.default;
-  const postUrl = `${getAppUrl()}/food/${record.id}`;
+  const slug = String(record.post_name || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60) || "item";
+  const postUrl = `${getAppUrl()}/product/${record.id}-${slug}`;
   const isVolunteer = record.post_type === "volunteer";
 
   let message: string;
@@ -240,11 +260,28 @@ export async function handleTriggerNewUser(
     return { success: false, error: "Missing record data" };
   }
 
+  const configError = missingTelegramConfig();
+  if (configError) {
+    logger.error("New user trigger aborted", {
+      requestId: context.requestId,
+      error: configError,
+    });
+    return { success: false, error: configError };
+  }
+
   const message = renderNewUserTelegramMessage(record);
   const sentId = await sendMessage(getAdminChatId(), message, {
     disable_web_page_preview: true,
   });
   const sent = !!sentId;
+
+  if (!sent) {
+    logger.error("New user notification was not delivered", {
+      requestId: context.requestId,
+      profileId: record.id,
+      chatId: getAdminChatId(),
+    });
+  }
 
   logger.info("New user trigger processed", {
     requestId: context.requestId,
@@ -434,7 +471,15 @@ export async function handleTriggerNewReport(
         imageUrl = (post.images as string[])[0];
       }
 
-      message += `\n🔗 <a href="${getAppUrl()}/food/${post.id}">View Post</a>\n`;
+      {
+        const slug = String((post as Record<string, unknown>).post_name || "")
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .slice(0, 60) || "item";
+        message += `\n🔗 <a href="${getAppUrl()}/product/${post.id}-${slug}">View Post</a>\n`;
+      }
     }
 
     message += `\n<b>👤 Reported by:</b> ${getProfileName(reporter)}`;

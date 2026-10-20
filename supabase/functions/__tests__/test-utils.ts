@@ -1,4 +1,3 @@
-/* oxlint-disable unicorn/no-thenable -- Supabase query builder mocks must be thenable. */
 /**
  * Edge Function Test Utilities
  *
@@ -139,6 +138,7 @@ export function createMockSupabaseClient(config: {
       const data = queryResults.get(currentTable)?.[0] || null;
       return { data, error: null };
     },
+    // oxlint-disable-next-line unicorn/no-thenable
     then: (resolve) => {
       const error = queryErrors.get(currentTable);
       if (error) {

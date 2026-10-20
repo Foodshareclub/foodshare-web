@@ -84,7 +84,7 @@ export async function foodListRooms(
       `
       id, post_id, sharer, requester,
       last_message, last_message_sent_by, last_message_seen_by, last_message_time,
-      post_arranged_to, post_arranged_at, is_archived, created_at,
+      post_arranged_to, sync_version,
       posts:post_id (id, post_name, images, post_type),
       sharer_profile:sharer (id, first_name, second_name, avatar_url),
       requester_profile:requester (id, first_name, second_name, avatar_url)
@@ -145,7 +145,7 @@ export async function foodGetRoom(
     .select(`
       id, post_id, sharer, requester,
       last_message, last_message_sent_by, last_message_seen_by, last_message_time,
-      post_arranged_to, post_arranged_at, is_archived, created_at,
+      post_arranged_to, sync_version,
       posts:post_id (id, post_name, post_address, images, post_type, profile_id),
       sharer_profile:sharer (id, first_name, second_name, avatar_url, email),
       requester_profile:requester (id, first_name, second_name, avatar_url, email)

@@ -4,7 +4,8 @@
  * Handles all user-related admin operations.
  */
 
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { z } from "zod";
+import type { Json } from "../../_shared/database.types.ts";
 import { logger } from "../../_shared/logger.ts";
 import type { AdminContext } from "../index.ts";
 
@@ -67,7 +68,10 @@ async function logAdminAction(
   ctx: AdminContext,
   action: string,
   resourceId: string,
-  metadata: Record<string, unknown> = {},
+  // The object form of `Json`, not `Record<string, unknown>`: the generated
+  // column type admits Json-or-undefined per key, and `unknown` is wider than
+  // that, so the wider annotation was the thing failing to typecheck.
+  metadata: { [key: string]: Json | undefined } = {},
 ): Promise<void> {
   try {
     await ctx.supabase.rpc("log_audit_event", {

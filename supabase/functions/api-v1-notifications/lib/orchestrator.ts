@@ -97,7 +97,7 @@ export async function sendNotification(
       logger.warn("No channels available for notification", {
         requestId: context.requestId,
         userId: request.userId,
-        type: request.type,
+        notification_type: request.type,
       });
 
       return {
@@ -288,7 +288,8 @@ async function determineChannels(
       channels.push("sms");
     }
     if (
-      data.settings?.telegram_enabled !== false && categoryPrefs?.telegram?.enabled !== false
+      data.settings?.telegram_enabled !== false &&
+      categoryPrefs?.telegram?.enabled !== false
     ) {
       channels.push("telegram");
     }
@@ -485,7 +486,8 @@ async function buildChannelPayload(
         title: request.title,
         body: request.body,
         imageUrl: request.imageUrl,
-        actionUrl: request.data?.actionUrl || request.data?.url || request.data?.link,
+        actionUrl: request.data?.actionUrl || request.data?.url ||
+          request.data?.link,
         actionText: request.data?.actionText,
         category: mapTypeToCategory(request.type),
         data: request.data,
@@ -548,7 +550,10 @@ async function scheduleNotification(
   try {
     await context.supabase.from("notification_queue").insert({
       user_id: request.userId,
-      type: request.type,
+      // The column is `notification_type`. `type` is not a column of
+      // `notification_queue`, so the insert was rejected in full and the
+      // scheduled notification was never queued.
+      notification_type: request.type,
       payload: request,
       status: "pending",
       scheduled_for: scheduledFor,
