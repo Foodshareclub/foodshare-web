@@ -1,0 +1,16 @@
+# Toolchain pinned for this repository.
+#
+# Bun is the only runtime: package manager, script runner, TypeScript
+# executor, type checker, test runner and the Next.js server runtime.
+# `bun scripts/check-no-node.ts` fails the build if Node creeps back in.
+#
+# The version is tracked as the canary channel, so a local checkout always
+# runs the newest canary. The *exact* build is pinned twice, where it
+# matters for reproducibility:
+#
+#   package.json  ->  "packageManager": "bun@1.4.3-canary.20261019.1"
+#   .github/workflows/web.yml  ->  BUN_VERSION: "1.4.3-canary.20261019.1"
+#
+# Keep all three in step when the canary is refreshed.
+[tools]
+"npm:bun" = "canary"

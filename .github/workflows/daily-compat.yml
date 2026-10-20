@@ -20,7 +20,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  BUN_VERSION: "latest"
+  # The canary channel. `bun` is pinned to an exact canary build so a CI run
+  # and a local run execute the same binary.
+  BUN_VERSION: "1.4.3-canary.20261019.1"
   # Third-party GitHub Actions are JavaScript and run on the runner's own Node
   # runtime. That is the platform's requirement, not this project's toolchain —
   # everything below runs on Bun.
