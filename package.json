@@ -57,6 +57,7 @@
     "test:build": "bun run check:no-node && bun run check:tsconfig-shape && bun run type-check && bun run lint && bun run build && bun run --parallel check:catalogue check:locale-coverage check:i18n-text check:i18n-attributes check:namespace-keys translations:check",
     "test:ci": "bun test --ci --isolate --coverage src/",
     "test:coverage": "bun test --isolate --coverage --coverage-reporter=text --coverage-reporter=lcov src/",
+    "test:order": "bun test --ci --isolate --randomize src/",
     "test:watch": "bun test --isolate --watch src/",
     "translations:check": "bun scripts/check-translations.ts",
     "translations:sync": "bun scripts/sync-translations.ts",

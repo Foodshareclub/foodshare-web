@@ -18,6 +18,7 @@ library: `bun test` runs the suite, and happy-dom provides the DOM.
 bun run test           # the whole suite, each file in its own process
 bun run test:watch     # re-run on change
 bun run test:ci        # as CI runs it: --ci --isolate --coverage
+bun run test:order     # the same suite in a random order
 bun run test:coverage  # text + lcov reports into coverage/
 bun run e2e            # Playwright, against a running app
 bun run e2e:ui         # Playwright's UI
@@ -25,6 +26,13 @@ bun run e2e:ui         # Playwright's UI
 
 `--isolate` is what makes the suite trustworthy: each test file gets its own
 process, so a module mock in one file cannot leak into the next.
+
+`test:order` is the same suite with `--randomize`. A test that passes only
+because of what ran before it is a test that will fail on someone else's
+machine, and the order it happened to pass in is not the order the next run
+uses. Bun prints the seed it chose, so a failure is reproducible with
+`--seed=<n>`. CI runs both: the deterministic suite as the gate, and this
+one as the check that the gate is not resting on an accident.
 
 ## How the suite is wired
 

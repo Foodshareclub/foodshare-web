@@ -44,6 +44,12 @@ jobs:
           - "type-check:tsc"
           - "check:no-node"
           - test
+          # The same suite in a random order. A test that passes only
+          # because of what ran before it is a test that will fail on
+          # someone else's machine, and the order it happened to pass in is
+          # not the order the next run uses. Bun prints the seed it chose,
+          # so a failure is reproducible with `--seed=<n>`.
+          - test:order
     steps:
       - uses: actions/checkout@v4
         with:
