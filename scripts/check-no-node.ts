@@ -35,13 +35,34 @@
 //
 // Usage: bun scripts/check-no-node.ts
 
-const NATIVE_BUNX = [
-  // Biome ships a Rust binary per platform; the npm package is only a
-  // launcher, so `bunx @biomejs/biome` never touches Node.
-  "@biomejs/biome",
-  // Oxlint is a Rust binary too.
-  "oxlint",
-];
+/**
+ * Packages whose `bunx` invocation is allowed without `--bun`.
+ *
+ * Empty, and deliberately so.
+ *
+ * This list used to exempt Biome and oxlint on the grounds that they "ship a
+ * Rust binary per platform; the npm package is only a launcher, so `bunx`
+ * never touches Node". The conclusion was wrong, and it was wrong in the
+ * direction that matters: the launcher *is* the thing that runs, and it is
+ * JavaScript.
+ *
+ *   @biomejs/biome/bin/biome   #!/usr/bin/env node
+ *     const { platform, arch, env, version, release } = process;
+ *     const { execSync } = require("child_process");
+ *
+ *   oxlint/bin/oxlint           #!/usr/bin/env node
+ *     import "../dist/cli.js";
+ *
+ * Both spawn a native binary, but only after a Node script has already run.
+ * `bunx` honours the shebang of the package it resolves — `[run] bun = true`
+ * in `bunfig.toml` does not reach it — so `bunx @biomejs/biome` executes that
+ * launcher on Node.js.
+ *
+ * There is no package that earns this exemption: a native binary that is
+ * invoked directly (`bun node_modules/<pkg>/bin/<native>`) is not launched by
+ * a script at all, and a package with a Node launcher needs `--bun`.
+ */
+const NATIVE_BUNX: string[] = [];
 
 const NODE_TOOLS = ["node", "npm", "npx", "pnpm", "yarn"];
 
@@ -58,7 +79,17 @@ const NODE_TOOLS = ["node", "npm", "npx", "pnpm", "yarn"];
  * modules mirroring their `node:` counterparts, so the two spellings share one
  * set of types and cannot drift apart.
  */
-const BUN_ONLY_DIRS = ["scripts", "commands", "e2e", "tools", "lib", "src/__tests__"];
+const BUN_ONLY_DIRS = [
+  "scripts",
+  "commands",
+  "e2e",
+  "tools",
+  "lib",
+  "src/__tests__",
+  // The testing library: it drives `Bun.serve`, `Bun.sleep` and `bun:test`,
+  // so it runs nowhere but Bun.
+  "src/lib/testing",
+];
 
 /** The `bun:` module that replaces each `node:` builtin. */
 const BUN_MODULE_FOR: Record<string, string> = {
@@ -130,14 +161,7 @@ const BARE_NODE_BUILTINS = new Set([
  * covered because a sibling file is. Every file in the repo root that could
  * name a runtime is scanned instead.
  */
-const ROOT_EXACT_NAMES = new Set([
-  "Caddyfile",
-  "Containerfile",
-  "Dockerfile",
-  "Makefile",
-  "Procfile",
-  "justfile",
-]);
+const ROOT_EXACT_NAMES = new Set(["Caddyfile", "Containerfile", "Dockerfile", "Makefile", "Procfile", "justfile"]);
 
 /**
  * True when a root file's name marks it as a candidate for the scan.
@@ -267,7 +291,11 @@ function commentCommandCandidates(line: string): { tool: string; target: string 
     const pattern = new RegExp(`(^|[^-\\w])(${tool})(?=\\s|$|["'])`, "g");
     for (const match of line.matchAll(pattern)) {
       const index = match.index + match[1].length;
-      const target = line.slice(index + tool.length).trim().split(/\s+/)[0] ?? "";
+      const target =
+        line
+          .slice(index + tool.length)
+          .trim()
+          .split(/\s+/)[0] ?? "";
       if (!isCommandTarget(target)) continue;
       found.push({ tool, target });
     }
@@ -509,12 +537,28 @@ function checkLine(file: string, lineNumber: number, line: string, violations: V
   }
 
   // `engines.node` in package.json is a promise that the project runs on Node.
-  if (file === "package.json" && /"node"\s*:/.test(line)) {
+  if (file.endsWith("package.json") && /"node"\s*:/.test(line)) {
     violations.push({
       file,
       line: lineNumber,
       text: line.trim(),
       reason: "`engines.node` declares a Node.js requirement — this project runs on Bun",
+    });
+  }
+
+  // A direct `@types/node` dependency contradicts the Bun-only type surface.
+  //
+  // `bun-types` depends on `@types/node` — Bun's own definitions are built
+  // on Node's — so it is in the tree whether or not a manifest declares it.
+  // Declaring it says the project needs Node's type definitions in its own
+  // right, which is exactly what `"types": ["bun"]` in tsconfig.json denies.
+  if (file.endsWith("package.json") && /"@types\/node"\s*:/.test(line)) {
+    violations.push({
+      file,
+      line: lineNumber,
+      text: line.trim(),
+      reason:
+        '`@types/node` is a direct dependency — the type surface is Bun\'s (`"types": ["bun"]`); `bun-types` already brings Node\'s definitions in transitively',
     });
   }
 
@@ -599,9 +643,7 @@ async function checkBunfig(): Promise<Violation[]> {
   // The `[run]` table ends at the next table header. `afterRunTable` starts
   // with the `[run]` line itself, so search for the next header *after* it.
   const nextTable = /^\s*\[/m.exec(afterRunTable.slice(runTable[0].length));
-  const runSection = nextTable
-    ? afterRunTable.slice(0, runTable[0].length + nextTable.index)
-    : afterRunTable;
+  const runSection = nextTable ? afterRunTable.slice(0, runTable[0].length + nextTable.index) : afterRunTable;
 
   if (!/^\s*bun\s*=\s*true\s*$/m.test(runSection)) {
     violations.push({

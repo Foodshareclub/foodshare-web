@@ -183,7 +183,7 @@ pre-commit:
             case "$f" in supabase/*) continue ;; esac
             FILES="$FILES $f"
           done
-          [ -n "$FILES" ] && bunx --bun @biomejs/biome@1.9.4 check --write $FILES 2>/dev/null || true
+          [ -n "$FILES" ] && bun run biome check --write $FILES 2>/dev/null || true
           true
         fi
       stage_fixed: true
@@ -279,7 +279,7 @@ pre-push:
       run: |
         if [ -f package.json ] && [ -d src ]; then
           echo "🎨 Verifying Biome linting and formatting before push..."
-          bunx --bun @biomejs/biome@1.9.4 check src/
+          bun run biome check src/
         fi
 
     # This was `bun run translations:sync || true`, which despite the name was

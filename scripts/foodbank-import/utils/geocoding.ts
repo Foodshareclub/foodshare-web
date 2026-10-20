@@ -33,7 +33,7 @@ async function enforceRateLimit(): Promise<void> {
 
   if (timeSinceLastRequest < API_DELAY_MS) {
     const delay = API_DELAY_MS - timeSinceLastRequest;
-    await new Promise((resolve) => setTimeout(resolve, delay));
+    await Bun.sleep(delay);
   }
 
   lastRequestTime = Date.now();

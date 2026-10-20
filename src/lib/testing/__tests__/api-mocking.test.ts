@@ -1,10 +1,8 @@
 /**
  * API Mocking Tests
  *
- * Demonstrates MSW-based API mocking for testing.
- *
- * NOTE: These tests require Node.js 18+ with native fetch support.
- * Run with: bun test
+ * Covers the response envelopes and the mock data factories the Edge
+ * Function mock routes are built from.
  */
 
 import { mockError, mockFactories, mockSuccess } from "../mock-factories";

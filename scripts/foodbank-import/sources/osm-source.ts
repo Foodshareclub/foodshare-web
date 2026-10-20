@@ -233,7 +233,7 @@ export async function fetchAllFoodbanks(
       }
 
       // Small delay between country requests to be nice to the API
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await Bun.sleep(2000);
     } catch (error) {
       console.error(`   Error fetching ${code}:`, error);
       results.set(code, []);

@@ -2,16 +2,16 @@
 // named imports to `import type` or inline `type` qualifiers.
 // Usage: bun scripts/fix-verbatim-imports.ts
 
-// This file has no imports or exports of its own, so without this it is a
-// script rather than a module — and a module is what allows the top-level
-// `await` below.
-export {};
+import { $ } from "bun";
 
-const tsc = Bun.spawnSync(["bun", "node_modules/typescript/bin/tsc", "--noEmit", "--verbatimModuleSyntax"], {
-  stdout: "pipe",
-  stderr: "pipe",
-});
-const out = `${tsc.stdout?.toString() ?? ""}${tsc.stderr?.toString() ?? ""}`;
+// `bun run tsc` rather than a path into `node_modules`: the local TypeScript
+// CLI runs on Bun because `bunfig.toml` sets `[run] bun = true`, and the
+// repository's own script is the one that knows which compiler to use.
+//
+// The compiler is *expected* to fail here — this script is reading its
+// errors — so the shell must not throw on a non-zero exit.
+const { stdout, stderr } = await $`bun run tsc --noEmit --verbatimModuleSyntax`.nothrow();
+const out = `${stdout}${stderr}`;
 
 // file -> line(1-based) -> Set<flagged names>
 const flagged = new Map<string, Map<number, Set<string>>>();

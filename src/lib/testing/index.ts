@@ -2,19 +2,16 @@
  * Testing Infrastructure Module
  *
  * Provides comprehensive testing utilities for the FoodShare application:
- * - Mock data factories (MSW-independent)
+ * - Mock data factories
  * - Contract testing with Zod schemas
  * - Custom render functions with providers
  * - Enterprise module test utilities
- *
- * NOTE: MSW handlers are in a separate file (msw-handlers.ts) to avoid
- * import issues in jsdom environments. Import them directly when needed:
- * import { defaultHandlers } from '@/lib/testing/msw-handlers';
+ * - A mock Edge Function server, on Bun's own `Bun.serve`
  *
  * @module lib/testing
  */
 
-// Mock Factories (MSW-independent)
+// Mock Factories
 export {
   mockSuccess,
   mockError,
@@ -99,21 +96,23 @@ export {
 } from "./enterprise-test-utils";
 
 // =============================================================================
-// MSW Exports (lazy-loaded to avoid jsdom issues)
+// Mock Edge Function server
 // =============================================================================
 
-/**
- * Get MSW handlers and utilities
- * Import directly from msw-handlers.ts for full MSW support:
- *
- * ```ts
- * import { defaultHandlers, errorHandlers } from '@/lib/testing/msw-handlers';
- * import { setupServer } from 'msw/node';
- *
- * const server = setupServer(...defaultHandlers);
- * ```
- */
-export const getMSWHandlers = async () => {
-  const handlers = await import("./msw-handlers");
-  return handlers;
-};
+// The routes: the API surface, as plain objects that can be called directly.
+export {
+  defaultRoutes,
+  errorRoutes,
+  createRoute,
+  createSequenceRoute,
+  jsonResponse,
+  noContentResponse,
+} from "./mock-routes";
+export type { MockMethod, MockRequestContext, MockRoute } from "./mock-routes";
+
+// The server: the routes behind `Bun.serve`.
+export { startMockServer, startEmptyMockServer } from "./mock-server";
+export type { MockServer } from "./mock-server";
+
+// The lifecycle.
+export { setupMockServer, teardownMockServer, getMockServer } from "./setup";

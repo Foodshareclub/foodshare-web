@@ -89,6 +89,8 @@ test.describe("Map Page", () => {
     await page.route("**/*.basemaps.cartocdn.com/**", async (route) => {
       await route.fulfill({
         contentType: "image/png",
+        // Playwright's `fulfill` takes a `string | Buffer`, and Bun provides
+        // `Buffer` natively — so this is not a Node dependency.
         body: Buffer.from(TILE_PNG, "base64"),
       });
     });

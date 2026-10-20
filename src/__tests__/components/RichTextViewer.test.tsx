@@ -1,7 +1,16 @@
 import { afterAll, expect, mock, test } from "bun:test";
 import createDOMPurify from "dompurify";
 import { JSDOM } from "jsdom";
-// DOMPurify recommends jsdom for Node; Happy DOM is only the React rendering harness.
+// DOMPurify sanitises against a `window`, and it will only do so against one
+// it recognises as a DOM. The test runner preloads happy-dom, and its
+// `window` is not one DOMPurify accepts: handed that instead of a real DOM,
+// DOMPurify returns its input *unchanged* — no throw, no warning, and every
+// `onerror` and `<script>` still in the output.
+//
+// That failure is silent, which makes it the worst kind: the test would keep
+// passing while asserting nothing, if it asserted on the sanitised string
+// instead of on the absence of the payload. So the sanitizer is pointed at a
+// JSDOM window, and the assertions below are what prove it worked.
 const documentWindow = new JSDOM("").window;
 const sanitizer = createDOMPurify(documentWindow);
 mock.module("dompurify", () => ({ default: sanitizer }));

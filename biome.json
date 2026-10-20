@@ -46,7 +46,11 @@
       ".check-classes-*/**",
       ".check-adornments-*/**",
       ".check-i18n-text-*/**",
-      "test-results/**"
+      "test-results/**",
+      ".agents/**",
+      ".claude/**",
+      ".kiro/**",
+      ".snapshots/**"
     ]
   },
   "overrides": [

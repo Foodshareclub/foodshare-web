@@ -2,7 +2,7 @@
  * Mock Data Factories
  *
  * Factory functions for creating test data.
- * These are MSW-independent and can be used in any test environment.
+ * These are independent of any HTTP mock and can be used in any test environment.
  *
  * @module lib/testing/mock-factories
  */

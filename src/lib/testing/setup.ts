@@ -1,116 +1,44 @@
 /**
- * MSW Test Setup
+ * Mock server setup.
  *
- * Configures Mock Service Worker for testing environments.
- * Import this in your test setup file.
+ * A thin lifecycle around `mock-server.ts`: start a server for a set of
+ * routes, hand back its origin, and stop it when the test is done.
  *
  * @module lib/testing/setup
  */
 
-import { afterAll, afterEach, beforeAll } from "bun:test";
-import { defaultHandlers } from "./msw-handlers";
+import { type MockRoute, defaultRoutes } from "./mock-routes";
+import { type MockServer, startMockServer } from "./mock-server";
 
-// =============================================================================
-// Server Setup (Lazy initialization)
-// =============================================================================
-
-let _server: ReturnType<typeof import("msw/node").setupServer> | null = null;
+let running: MockServer | null = null;
 
 /**
- * Get or create MSW server instance
- * Lazy initialization to avoid issues with missing globals
+ * Start the mock Edge Function server.
+ *
+ * The returned `url` is the origin to point the API client at: the client
+ * builds `${SUPABASE_URL}/functions/v1/<edge-function>`, so
+ * `process.env.NEXT_PUBLIC_SUPABASE_URL = server.url` routes it to the mock.
+ *
+ * Starting a second server stops the first, so a test that replaces the
+ * routes does not leave the old one listening.
  */
-async function getServer() {
-  if (!_server) {
-    const { setupServer } = await import("msw/node");
-    _server = setupServer(...defaultHandlers);
-  }
-  return _server;
+export function setupMockServer(routes: MockRoute[] = defaultRoutes): MockServer {
+  running?.stop();
+  running = startMockServer(routes);
+  return running;
 }
 
 /**
- * MSW server instance for Node.js testing
- * Note: Use setupMSW() in your test setup instead of accessing this directly
+ * Stop the mock server, if one is running.
  */
-export const server = {
-  listen: async (options?: { onUnhandledRequest?: "warn" | "error" | "bypass" }) => {
-    const s = await getServer();
-    s.listen(options);
-  },
-  resetHandlers: async () => {
-    const s = await getServer();
-    s.resetHandlers();
-  },
-  close: async () => {
-    const s = await getServer();
-    s.close();
-  },
-  use: async (...handlers: Parameters<Awaited<ReturnType<typeof getServer>>["use"]>) => {
-    const s = await getServer();
-    s.use(...handlers);
-  },
-};
-
-/**
- * Setup function for bun:test
- * Call this in your test setup file
- */
-export function setupMSW() {
-  // Start server before all tests
-  beforeAll(async () => {
-    await server.listen({
-      onUnhandledRequest: "warn",
-    });
-  });
-
-  // Reset handlers after each test
-  afterEach(async () => {
-    await server.resetHandlers();
-  });
-
-  // Clean up after all tests
-  afterAll(async () => {
-    await server.close();
-  });
+export function teardownMockServer(): void {
+  running?.stop();
+  running = null;
 }
 
 /**
- * Add custom handlers for a specific test
+ * The server that is running, if any.
  */
-export async function useHandlers(...handlers: Parameters<typeof server.use>) {
-  await server.use(...handlers);
-}
-
-/**
- * Reset to default handlers
- */
-export async function resetHandlers() {
-  await server.resetHandlers();
-}
-
-// =============================================================================
-// Browser Setup (for Storybook/E2E)
-// =============================================================================
-
-/**
- * Initialize MSW in browser environment
- * Use this for Storybook or browser-based testing
- */
-export async function initBrowserMSW() {
-  if (typeof window === "undefined") {
-    console.warn("initBrowserMSW should only be called in browser environment");
-    return;
-  }
-
-  const { setupWorker } = await import("msw/browser");
-  const worker = setupWorker(...defaultHandlers);
-
-  await worker.start({
-    onUnhandledRequest: "bypass",
-    serviceWorker: {
-      url: "/mockServiceWorker.js",
-    },
-  });
-
-  return worker;
+export function getMockServer(): MockServer | null {
+  return running;
 }

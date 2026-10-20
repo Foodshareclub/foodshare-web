@@ -1,4 +1,4 @@
-import { describe, expect, it, mock } from "bun:test";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 const apiPost = mock(async (_endpoint: string, _body: unknown) => ({
   success: true,
@@ -10,6 +10,16 @@ const apiPut = mock(async (_endpoint: string, _body: unknown, _query: unknown) =
 }));
 mock.module("@/lib/api/client", () => ({ apiPost, apiPut, apiDelete: mock() }));
 const { createProductAPI, updateProductAPI } = await import("@/lib/api/products");
+
+// The mocks are shared by the whole file, so each case has to start from an
+// empty call list. Without this, the assertions below read a call by its
+// position in the file — and the position belongs to whichever case happened
+// to run first. The suite passed in one order and failed in another, with a
+// different set of failures each time.
+beforeEach(() => {
+  apiPost.mockClear();
+  apiPut.mockClear();
+});
 
 describe("product classification API contract", () => {
   it("preserves omitted coordinates and returns the saved category", async () => {
@@ -47,7 +57,7 @@ describe("product classification API contract", () => {
       latitude: 0,
       longitude: 0,
     });
-    expect(apiPost.mock.calls[1][1]).toMatchObject({
+    expect(apiPost.mock.calls[0][1]).toMatchObject({
       categoryMode: "manual",
       postType: "thing",
       latitude: 0,

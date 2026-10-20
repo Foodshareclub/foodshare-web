@@ -16,7 +16,8 @@ foodshare-web/
 ├── .env.example         # Environment variables template
 ├── .dockerignore        # Docker build ignore rules
 ├── .gitignore           # Git ignore rules
-├── .prettierrc          # Prettier configuration
+├── biome.json           # Biome formatter and linter configuration
+├── .oxlintrc.json       # Oxlint linter configuration
 ├── bun.lock             # Bun lockfile
 ├── bunfig.toml          # Bun configuration
 ├── components.json      # shadcn/ui configuration

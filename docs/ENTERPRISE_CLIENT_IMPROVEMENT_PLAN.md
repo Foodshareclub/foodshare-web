@@ -18,7 +18,7 @@
 | 5. Security Hardening | ✅ COMPLETE | `security/token-manager.ts`, `security/sensitive-data.ts` |
 | 6. Caching Strategy | ✅ COMPLETE | `cache/multi-layer.ts`, `cache/invalidation.ts` |
 | 7. Error Recovery | ✅ COMPLETE | `errors/recovery.ts`, `ErrorBoundary/FeatureErrorBoundary.tsx` |
-| 8. Testing | ✅ COMPLETE | `testing/msw-handlers.ts`, `testing/contract-testing.ts`, `testing/enterprise-test-utils.ts` |
+| 8. Testing | ✅ COMPLETE | `testing/mock-routes.ts`, `testing/contract-testing.ts`, `testing/enterprise-test-utils.ts` |
 
 ---
 
@@ -505,7 +505,7 @@ type RecoveryStrategy =
 
 ```typescript
 /**
- * MSW-based API Mocking
+ * Bun-native API Mocking
  * 
  * Consistent mocking across unit/integration/e2e tests.
  * Matches Edge Function response format.
@@ -671,8 +671,11 @@ src/lib/security/
 └── index.ts                # Updated module exports
 
 src/lib/testing/
-├── msw-handlers.ts         # MSW request handlers & mock factories
-├── setup.ts                # MSW server setup for Jest
+├── mock-routes.ts          # The Edge Function API surface, as routes
+├── mock-server.ts          # The `Bun.serve` adapter for those routes
+├── mock-factories.ts       # Product / user / room / message factories
+├── native.ts               # Bun's Response & fetch, before happy-dom takes them
+├── setup.ts                # Mock server lifecycle
 ├── test-utils.tsx          # Custom render & test utilities
 ├── contract-testing.ts     # Zod-based contract validation
 ├── enterprise-test-utils.ts # Circuit breaker, retry, cache test helpers
@@ -700,7 +703,7 @@ src/components/ErrorBoundary/
 10. **Token Manager** - Proactive refresh before expiry
 11. **Sensitive Data** - Redaction, secure storage, cleanup on logout
 12. **Error Boundaries** - Feature-level isolation with recovery options
-13. **MSW API Mocking** - Mock handlers matching Edge Function response format
+13. **Bun-native API Mocking** - Mock routes matching Edge Function response format
 14. **Contract Testing** - Zod-based request/response validation
 15. **Enterprise Test Utils** - Circuit breaker, retry, cache, realtime test helpers
 
@@ -760,11 +763,11 @@ startTokenManager({
   onSessionExpired: () => redirectToLogin(),
 });
 
-// Testing - MSW Mocking
-import { server, mockSuccess, mockFactories, errorHandlers } from "@/lib/testing";
+// Testing - API Mocking
+import { mockFactories, errorRoutes, setupMockServer } from "@/lib/testing";
 
-// Override handler for specific test
-server.use(errorHandlers.rateLimit("api-v1-products"));
+// Serve the failure mode instead of the happy path
+const server = setupMockServer([errorRoutes.rateLimit("api-v1-products")]);
 
 // Create mock data
 const product = mockFactories.product({ title: "Test" });

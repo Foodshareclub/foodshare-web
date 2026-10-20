@@ -417,7 +417,7 @@ async function main(): Promise<void> {
       results.push(result);
 
       // Small delay between countries to be nice to APIs
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await Bun.sleep(1000);
     }
   }
 

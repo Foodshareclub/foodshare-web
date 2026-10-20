@@ -13,7 +13,7 @@ import { join } from "bun:path";
  * The guard is a script, not a module, so it is exercised the way CI runs it:
  * as a subprocess against a temporary source tree.
  */
-import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { runScript } from "./run-script";
 
 const SCRIPT = join(import.meta.dir, "..", "..", "..", "scripts", "check-rtl.ts");
@@ -22,7 +22,20 @@ let root: string;
 let src: string;
 const trees: string[] = [];
 
-/** A fresh tree per group, so one case's violation cannot rescue another's. */
+/**
+ * A fresh tree for the next case.
+ *
+ * Per *case*, not per group. The guard's baseline is replaced every time it
+ * is written, so a tree that is shared between cases cannot work: the first
+ * case that adds a real violation baselines it, the second case writes a
+ * baseline that no longer mentions it, and the first case's file is still
+ * sitting in the tree — reported as a new violation, and the second case
+ * fails for a reason that has nothing to do with what it is testing.
+ *
+ * The order the cases happen to run in decided which ones failed, which is
+ * worse than a flake: the suite passed in one order and failed in another,
+ * and the failing set was not the same each time.
+ */
 function freshTree(): void {
   root = mkdtempSync(join(tmpdir(), "fs-rtl-"));
   trees.push(root);
@@ -65,7 +78,7 @@ describe("check-rtl", () => {
   });
 
   describe("the shared primitives", () => {
-    beforeAll(freshTree);
+    beforeEach(freshTree);
     it("fails on a physical utility, with no ratchet escape", () => {
       write("components/ui/dialog.tsx", 'export const D = () => <i className="absolute right-4" />;\n');
       run("--write-baseline");
@@ -81,7 +94,7 @@ describe("check-rtl", () => {
   });
 
   describe("the ratchet", () => {
-    beforeAll(freshTree);
+    beforeEach(freshTree);
     it("fails when a new file adds physical utilities", () => {
       // Baseline first, then the violation. Writing the baseline after adding
       // the file would record the violation as acceptable, which is the exact
@@ -113,7 +126,7 @@ describe("check-rtl", () => {
   });
 
   describe("idioms that must not be reported", () => {
-    beforeAll(freshTree);
+    beforeEach(freshTree);
     // Each of these is a place where a physical side is the correct answer.
     // Reporting them is how a guard teaches reviewers to ignore it.
     it("allows the centring idiom", () => {

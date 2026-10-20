@@ -193,8 +193,8 @@ foodshare/frontend/
 ├── lefthook.yml          # Git hooks configuration
 ├── vite.config.ts        # Vite build configuration
 ├── tsconfig.json         # TypeScript configuration
-├── .eslintrc.json        # ESLint configuration
-├── .prettierrc           # Prettier configuration
+├── biome.json            # Biome formatter and linter configuration
+├── .oxlintrc.json        # Oxlint linter configuration
 └── package.json          # Dependencies and scripts
 ```
 
@@ -216,23 +216,28 @@ TypeScript compiler options:
 - Strict type checking enabled
 - Path aliases configured
 - React JSX support
+- `"types": ["bun"]` — the type surface is Bun's, not Node's
 
-### ESLint (`.eslintrc.json`)
+### Biome (`biome.json`)
 
-Code quality rules:
-
-- React and React Hooks rules
-- TypeScript-specific rules
-- Prettier integration
-
-### Prettier (`.prettierrc`)
-
-Code formatting settings:
+Code formatting and lint:
 
 - 2-space indentation
 - Double quotes
-- 100 character line width
+- 120 character line width
 - Semicolons enabled
+
+### Oxlint (`.oxlintrc.json`)
+
+Linter rules — the fast Rust linter that replaced ESLint:
+
+- React and React Hooks rules
+- TypeScript-specific rules
+- Accessibility rules
+
+Biome and Oxlint are the project's linters and formatter. ESLint and Prettier
+are not part of the toolchain: their configuration files were removed rather
+than left behind as a second opinion that nothing reads.
 
 ### Lefthook (`lefthook.yml`)
 

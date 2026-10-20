@@ -7,6 +7,28 @@ type checker, test runner and Next.js runtime. Node.js is not part of this
 project's toolchain — `bun scripts/check-no-node.ts` fails the build if it
 creeps back in, and it scans the CI workflows as well as the source tree.
 
+**The type surface is Bun's, not Node's.** `tsconfig.json` sets
+`"types": ["bun"]`. The Node-compat globals this code uses (`process`,
+`Buffer`) are declared by `bun-types` itself, so they are in scope — but
+listing `"node"` would let a Node-only global type-check by accident, and a
+project that runs on Bun should not be able to reach for Node's API without
+someone noticing. `@types/node` is not a direct dependency: `bun-types`
+brings it in, and the guard fails the build if a manifest declares it.
+
+**Environment variables come from Bun.** `bun` reads `.env`, `.env.{NODE_ENV}`
+and `.env.local` before the script runs, with `.env.local` taking precedence
+and an already-set shell variable beating both. There is no `dotenv` package
+in this tree, and a script that needs an environment variable just reads
+`process.env`.
+
+**Biome and Oxlint are the linters and the formatter.** ESLint and Prettier
+are not part of the toolchain and their configuration files are gone. Biome
+is a locked devDependency, so the version that formats the code is the
+version the repository pinned — and `bun run biome` runs it on Bun, where
+`bunx @biomejs/biome` would not: Biome's npm entry point is a
+`#!/usr/bin/env node` launcher that spawns the real binary, and `bunx`
+honours that shebang.
+
 **Type checking is `tsrs`, not `tsc`.** `tsrs` is the Rust port of the
 TypeScript 7 compiler, from the Oxc project; it checks this tree in about
 half a second against a few minutes for TypeScript 5. `bun run type-check`
