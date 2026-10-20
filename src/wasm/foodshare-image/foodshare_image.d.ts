@@ -1,4 +1,5 @@
 /* tslint:disable */
+/* eslint-disable */
 
 /**
  * Calculate optimal resized target width based on raw file size tiers and current dimensions.
@@ -19,7 +20,7 @@ export function calculate_smart_width(file_size_bytes: number, current_width: nu
 export function detect_image_format(data: Uint8Array): string | undefined;
 
 /**
- * Extract image metadata (dimensions, format, aspect ratio, orientation) as a JSON string.
+ * Extract image metadata (dimensions, format, aspect ratio, orientation) as a JS object.
  *
  * Supports instant zero-allocation parsing for JPEG, PNG, and GIF.
  *
@@ -27,9 +28,9 @@ export function detect_image_format(data: Uint8Array): string | undefined;
  * * `data` - Image byte buffer
  *
  * # Returns
- * JSON string with metadata object, or None if extraction failed.
+ * JS object with metadata, or null if extraction failed.
  */
-export function extract_image_metadata_json(data: Uint8Array): string | undefined;
+export function extract_image_metadata_json(data: Uint8Array): any;
 
 /**
  * Get the standard MIME type for an image byte buffer.

@@ -1,4 +1,5 @@
 /* tslint:disable */
+/* eslint-disable */
 
 /**
  * Batch distance calculation with sorting.
@@ -6,18 +7,13 @@
  * # Arguments
  * * `user_lat` - User's latitude
  * * `user_lng` - User's longitude
- * * `products_json` - JSON string of products
+ * * `products` - JS array of products
  * * `max_results` - Maximum results to return (0 for all)
  *
  * # Returns
- * JSON string of sorted results
+ * JS array of sorted results
  */
-export function calculate_distances_sorted(
-  user_lat: number,
-  user_lng: number,
-  products_json: string,
-  max_results: number,
-): string;
+export function calculate_distances_sorted(user_lat: number, user_lng: number, products: any, max_results: number): any;
 
 /**
  * Calculate distances from user location to multiple products.
@@ -27,12 +23,12 @@ export function calculate_distances_sorted(
  * # Arguments
  * * `user_lat` - User's latitude
  * * `user_lng` - User's longitude
- * * `products_json` - JSON string of products with id and location fields
+ * * `products` - JS array of products with id and location fields
  *
  * # Returns
- * JSON string of products with added distance field
+ * JS array of products with added distance field
  */
-export function calculate_product_distances(user_lat: number, user_lng: number, products_json: string): string;
+export function calculate_product_distances(user_lat: number, user_lng: number, products: any): any;
 
 /**
  * Calculate distance between two coordinates.
@@ -54,26 +50,21 @@ export function distance(lat1: number, lng1: number, lat2: number, lng2: number)
  * # Arguments
  * * `user_lat` - User's latitude
  * * `user_lng` - User's longitude
- * * `products_json` - JSON string of products
+ * * `products` - JS array of products
  * * `radius_km` - Maximum distance in kilometers
  *
  * # Returns
- * JSON string of filtered and sorted results
+ * JS array of filtered and sorted results
  */
-export function filter_within_radius(
-  user_lat: number,
-  user_lng: number,
-  products_json: string,
-  radius_km: number,
-): string;
+export function filter_within_radius(user_lat: number, user_lng: number, products: any, radius_km: number): any;
 
 /**
  * Parse a PostGIS location and return coordinates.
  *
  * # Arguments
- * * `location_json` - JSON string of location (GeoJSON or WKT string)
+ * * `location` - JS value holding the location (GeoJSON object or WKT string)
  *
  * # Returns
- * JSON string with lat/lng, or null if parsing fails
+ * JS object with lat/lng, or null if parsing fails
  */
-export function parse_location(location_json: string): string;
+export function parse_location(location: any): any;

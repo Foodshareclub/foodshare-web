@@ -8,7 +8,7 @@ import {
   generateETag,
 } from "@/lib/wasm-compression";
 import { buildOtpAuthUri, constantTimeEquals, generateTotp, verifyTotp } from "@/lib/wasm-crypto";
-import { calculateHaversineDistance } from "@/lib/wasm-geo";
+import { calculateHaversineDistance, filterItemsWithinRadius, parsePostGisLocation } from "@/lib/wasm-geo";
 import {
   calculateSmartWidth,
   detectImageFormat,
@@ -127,15 +127,24 @@ describe("WebAssembly Geospatial Bridges", () => {
     expect(dist).toBeLessThan(346);
   });
 
-  it.skip("filters items within radius", () => {
-    // Skip: pre-existing WASM module bug - Reflect.get requires object argument
-    // Error: WASM filterItemsWithinRadius failed: parse error: TypeError: Reflect.get requires the first argument be an object
-    // This is a bug in the compiled foodshare-geo WASM module binary, not fixable from JS bridge
+  it("filters items within radius", () => {
+    const items = [
+      { id: "near", location: { coordinates: [8.6821, 50.1109] } },
+      { id: "far", location: { coordinates: [13.405, 52.52] } },
+    ];
+
+    const filtered = filterItemsWithinRadius(50.1109, 8.6821, items, 50);
+
+    expect(filtered.length).toBe(1);
+    expect(filtered[0].id).toBe("near");
   });
 
-  it.skip("parses PostGIS WKT points", () => {
-    // Skip: pre-existing WASM module bug - parse_location returns null for WKT format
-    // The compiled foodshare-geo WASM module's parse_location doesn't handle WKT format correctly
+  it("parses PostGIS WKT points", () => {
+    const parsed = parsePostGisLocation("POINT(8.6821 50.1109)");
+
+    expect(parsed).not.toBeNull();
+    expect(parsed?.latitude).toBeCloseTo(50.1109, 4);
+    expect(parsed?.longitude).toBeCloseTo(8.6821, 4);
   });
 });
 

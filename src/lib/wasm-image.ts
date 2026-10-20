@@ -55,12 +55,14 @@ export function isValidImage(data: Uint8Array): boolean {
 
 /**
  * Extract image metadata (dimensions, format, size) directly from raw bytes.
+ *
+ * The module returns the metadata as a JS object; there is no JSON
+ * roundtrip.
  */
 export function extractImageMetadata(data: Uint8Array): ImageMetadata | null {
-  const jsonStr = WasmImage.extract_image_metadata_json(data);
-  if (!jsonStr) return null;
+  const parsed = WasmImage.extract_image_metadata_json(data);
+  if (!parsed) return null;
   try {
-    const parsed = JSON.parse(jsonStr);
     return {
       ...parsed,
       aspect_ratio: parsed.width > 0 && parsed.height > 0 ? parsed.width / parsed.height : 1,

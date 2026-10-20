@@ -45,11 +45,12 @@ export function normalizeVectorDimensions(v: Float32Array | number[], targetDim 
 
 /**
  * Merge multiple ranked result lists using Reciprocal Rank Fusion (RRF).
+ *
+ * The module takes and returns JS arrays; there is no JSON roundtrip.
  */
 export function fuseRankedLists(lists: string[][], k = 60.0): RrfFusedItem[] {
   try {
-    const rawJson = WasmSearch.rrf_merge(JSON.stringify(lists), k);
-    return JSON.parse(rawJson) as RrfFusedItem[];
+    return WasmSearch.rrf_merge(lists, k) as RrfFusedItem[];
   } catch (error) {
     console.error("WASM RRF merge error:", error);
     return [];

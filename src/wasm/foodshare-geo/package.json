@@ -1,6 +1,8 @@
 {
   "name": "foodshare-geo",
-  "collaborators": ["Foodshare Team <engineering@foodshare.club>"],
+  "collaborators": [
+    "Foodshare Team <engineering@foodshare.club>"
+  ],
   "description": "High-performance geospatial utilities for distance calculations and PostGIS parsing",
   "version": "1.4.0",
   "license": "MIT",
@@ -8,8 +10,18 @@
     "type": "git",
     "url": "https://github.com/Foodshareclub/foodshare-tools"
   },
-  "files": ["foodshare_geo_bg.wasm", "foodshare_geo.js", "foodshare_geo.d.ts"],
+  "files": [
+    "foodshare_geo_bg.wasm",
+    "foodshare_geo.js",
+    "foodshare_geo.d.ts"
+  ],
   "main": "foodshare_geo.js",
   "types": "foodshare_geo.d.ts",
-  "keywords": ["geospatial", "distance", "haversine", "postgis", "coordinates"]
+  "keywords": [
+    "geospatial",
+    "distance",
+    "haversine",
+    "postgis",
+    "coordinates"
+  ]
 }

@@ -38,6 +38,8 @@ export function calculateHaversineDistance(lat1: number, lng1: number, lat2: num
 
 /**
  * Calculate distance from user location to a batch of items.
+ *
+ * The module takes and returns JS arrays; there is no JSON roundtrip.
  */
 export function calculateItemDistances<T extends GeoItem>(
   userLat: number,
@@ -45,9 +47,9 @@ export function calculateItemDistances<T extends GeoItem>(
   items: T[],
 ): (T & { distance?: number })[] {
   try {
-    const rawJson = JSON.stringify(items);
-    const resultJson = WasmGeo.calculate_product_distances(userLat, userLng, rawJson);
-    return JSON.parse(resultJson);
+    return WasmGeo.calculate_product_distances(userLat, userLng, items) as (T & {
+      distance?: number;
+    })[];
   } catch (error) {
     console.error("WASM calculateItemDistances failed, falling back:", error);
     return items.map((item) => {
@@ -72,9 +74,9 @@ export function filterItemsWithinRadius<T extends GeoItem>(
   radiusKm: number,
 ): (T & { distance: number })[] {
   try {
-    const rawJson = JSON.stringify(items);
-    const resultJson = WasmGeo.filter_within_radius(userLat, userLng, rawJson, radiusKm);
-    return JSON.parse(resultJson);
+    return WasmGeo.filter_within_radius(userLat, userLng, items, radiusKm) as (T & {
+      distance: number;
+    })[];
   } catch (error) {
     console.error("WASM filterItemsWithinRadius failed:", error);
     return [];
@@ -87,14 +89,17 @@ export function filterItemsWithinRadius<T extends GeoItem>(
 export function parsePostGisLocation(location: unknown): GeoCoordinate | null {
   if (!location) return null;
   try {
-    const rawJson = typeof location === "string" ? location : JSON.stringify(location);
-    const resultJson = WasmGeo.parse_location(rawJson);
-    if (!resultJson || resultJson === "null") return null;
-    const parsed = JSON.parse(resultJson);
-    return {
-      latitude: parsed.lat ?? parsed.latitude,
-      longitude: parsed.lng ?? parsed.longitude,
-    };
+    const parsed = WasmGeo.parse_location(location) as {
+      lat?: number;
+      lng?: number;
+      latitude?: number;
+      longitude?: number;
+    } | null;
+    if (!parsed) return null;
+    const latitude = parsed.lat ?? parsed.latitude;
+    const longitude = parsed.lng ?? parsed.longitude;
+    if (latitude == null || longitude == null) return null;
+    return { latitude, longitude };
   } catch {
     return null;
   }

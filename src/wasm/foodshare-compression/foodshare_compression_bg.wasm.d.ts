@@ -1,5 +1,5 @@
 /* tslint:disable */
-
+/* eslint-disable */
 export const memory: WebAssembly.Memory;
 export const brotli_compress: (a: number, b: number, c: number, d: number) => void;
 export const brotli_decompress: (a: number, b: number, c: number) => void;
