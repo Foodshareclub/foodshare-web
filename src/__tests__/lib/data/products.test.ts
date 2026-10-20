@@ -1,9 +1,10 @@
+/* oxlint-disable unicorn/no-thenable -- Supabase query builder mocks must be thenable. */
 /**
  * Products Data Functions Tests
  * Unit tests for product-related data fetching functions
  */
 
-import { mock, describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 // Shared mock state
 const mockState = {
@@ -12,74 +13,100 @@ const mockState = {
   locations: [] as Array<Record<string, unknown>>,
   productIds: [] as Array<{ id: number }>,
   error: null as { message: string; code?: string } | null,
+  /** Tables the data layer actually asked for, in order. */
+  queried: [] as string[],
+  /** Terminal call used on the most recent query. */
+  terminal: null as string | null,
+  /** Columns passed to the most recent `.select()`. */
+  selected: null as string | null,
 };
 
-// Mock the approximateGeoJSON utility BEFORE any imports
+const resetQueryLog = () => {
+  mockState.queried = [];
+  mockState.terminal = null;
+  mockState.selected = null;
+};
+
+// Mock the location-approximation utility BEFORE any imports
 mock.module("@/utils/postgis", () => ({
   approximateGeoJSON: mock((location: unknown, _id: unknown) => location),
 }));
 
 // Mock Supabase client
 const createMockSupabaseClient = () => {
-  const createProductsChain = () => {
+  const createProductsChain = (table: string) => {
+    mockState.queried.push(table);
     const chain: Record<string, unknown> = {};
-    chain.select = mock(() => chain);
+    // Deliberately does not touch `terminal`: the caller that reaches
+    // resolution is the thing under test (limit vs range vs awaited).
+    const resolve = (payload: unknown) => Promise.resolve({ data: payload, error: mockState.error });
+    chain.select = mock((columns?: string) => {
+      mockState.selected = columns ?? "*";
+      // `posts` is queried two ways: for a list of ids (getPopularProductIds,
+      // which selects just `id`) and for rows. Disambiguate on the columns
+      // rather than hard-coding a per-call-site shape, so a new query against
+      // `posts` does not silently get the other one's payload.
+      const wantsIds = table === "posts" && mockState.selected === "id";
+      return selectChain(wantsIds ? mockState.productIds : mockState.products);
+    });
     chain.eq = mock(() => chain);
     chain.lt = mock(() => chain);
     chain.order = mock(() => chain);
-    chain.limit = mock(() =>
-      Promise.resolve({
-        data: mockState.products,
-        error: mockState.error,
-      })
-    );
-    chain.range = mock(() =>
-      Promise.resolve({
-        data: mockState.products,
-        error: mockState.error,
-      })
-    );
-    chain.textSearch = mock(() =>
-      Promise.resolve({
-        data: mockState.products,
-        error: mockState.error,
-      })
-    );
-    chain.single = mock(() =>
-      Promise.resolve({
-        data: mockState.product,
-        error: mockState.error,
-      })
-    );
-    // eslint-disable-next-line unicorn/no-thenable
-    chain.then = (resolve: (value: unknown) => void) =>
-      resolve({
-        data: mockState.products,
-        error: mockState.error,
-      });
+    chain.limit = mock((n?: number) => {
+      mockState.terminal = n === undefined ? "limit" : `limit:${n}`;
+      return resolve(mockState.selected === "id" ? mockState.productIds : mockState.products);
+    });
+    chain.range = mock(() => {
+      mockState.terminal = "range";
+      return resolve(mockState.products);
+    });
+    chain.textSearch = mock(() => {
+      mockState.terminal = "textSearch";
+      return resolve(mockState.products);
+    });
+    chain.single = mock(() => {
+      mockState.terminal = "single";
+      return Promise.resolve({ data: mockState.product, error: mockState.error });
+    });
+    chain.then = (resolveFn: (value: unknown) => void) => {
+      mockState.terminal = "await";
+      resolveFn({ data: mockState.products, error: mockState.error });
+    };
+    return chain;
+  };
+
+  const selectChain = (payload: unknown): Record<string, unknown> => {
+    const chain: Record<string, unknown> = {};
+    const resolve = () => Promise.resolve({ data: payload, error: mockState.error });
+    chain.eq = mock(() => chain);
+    chain.lt = mock(() => chain);
+    chain.order = mock(() => chain);
+    chain.limit = mock((n?: number) => {
+      mockState.terminal = n === undefined ? "limit" : `limit:${n}`;
+      return resolve();
+    });
+    chain.range = mock(() => {
+      mockState.terminal = "range";
+      return resolve();
+    });
+    chain.textSearch = mock(() => {
+      mockState.terminal = "textSearch";
+      return resolve();
+    });
+    chain.single = mock(() => {
+      mockState.terminal = "single";
+      return Promise.resolve({ data: mockState.product, error: mockState.error });
+    });
+    chain.then = (resolveFn: (value: unknown) => void) => {
+      mockState.terminal = "await";
+      resolveFn({ data: payload, error: mockState.error });
+    };
     return chain;
   };
 
   return {
-    from: mock((table: string) => {
-      if (table === "posts") {
-        return {
-          select: mock(() => ({
-            eq: mock(() => ({
-              order: mock(() => ({
-                limit: mock(() =>
-                  Promise.resolve({
-                    data: mockState.productIds,
-                    error: mockState.error,
-                  })
-                ),
-              })),
-            })),
-          })),
-        };
-      }
-      return createProductsChain();
-    }),
+    from: mock((table: string) => createProductsChain(table)),
+    rpc: mock(() => Promise.resolve({ data: [], error: null })),
   };
 };
 
@@ -92,15 +119,15 @@ mock.module("@/lib/supabase/server", () => ({
 
 // Import AFTER mocks are set up
 import {
-  getProducts,
-  getProductsPaginated,
+  getAllProductLocations,
   getAllProducts,
+  getPopularProductIds,
   getProductById,
   getProductLocations,
-  getAllProductLocations,
+  getProducts,
+  getProductsPaginated,
   getUserProducts,
   searchProducts,
-  getPopularProductIds,
 } from "@/lib/data/products";
 
 describe("Products Data Functions", () => {
@@ -110,6 +137,7 @@ describe("Products Data Functions", () => {
     mockState.locations = [];
     mockState.productIds = [];
     mockState.error = null;
+    resetQueryLog();
   });
 
   describe("getProducts", () => {
@@ -356,6 +384,38 @@ describe("Products Data Functions", () => {
       const result = await getUserProducts("user-123");
 
       expect(result).toHaveLength(3);
+    });
+
+    it("reads the base table, not the active-only view", async () => {
+      // `posts_with_location` carries `WHERE is_active = true`. Querying it
+      // here meant a listing the owner had hidden was unreachable from
+      // /my-posts: it vanished from the page they hid it on, the "Inactive"
+      // filter could never match, and only Supabase Studio could bring it
+      // back. `posts_select_policy` allows the owner their own rows
+      // regardless of `is_active`, so the base table is the right source.
+      mockState.products = [{ id: 1, post_name: "Hidden", profile_id: "user-123", is_active: false }];
+
+      const result = await getUserProducts("user-123");
+
+      expect(mockState.queried).toEqual(["posts"]);
+      expect(result).toHaveLength(1);
+      expect(result[0].is_active).toBe(false);
+    });
+
+    it("bounds the result instead of asking for ten thousand rows", async () => {
+      mockState.products = [];
+
+      await getUserProducts("user-123");
+
+      // A `limit`, not a `range` starting at 9999.
+      expect(mockState.terminal).toMatch(/^limit:/);
+    });
+
+    it("returns nothing rather than querying for an empty user id", async () => {
+      const result = await getUserProducts("");
+
+      expect(result).toEqual([]);
+      expect(mockState.queried).toEqual([]);
     });
 
     it("should return empty array for user with no products", async () => {

@@ -1,5 +1,4 @@
 /* tslint:disable */
-/* eslint-disable */
 
 /**
  * Generate standard otpauth URI for MFA QR Code generation.
@@ -38,7 +37,7 @@ export function verify_totp_code(
   secret: string,
   code: string,
   time_seconds?: bigint | null,
-  window_steps?: bigint | null
+  window_steps?: bigint | null,
 ): boolean;
 
 /**

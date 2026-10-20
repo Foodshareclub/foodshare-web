@@ -7,9 +7,9 @@
 
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useUIStore } from "@/store/zustand/useUIStore";
 import { usePosition } from "@/hooks/usePosition";
+import { useUIStore } from "@/store/zustand/useUIStore";
+import { useCallback, useEffect, useState } from "react";
 
 export interface LocationFilterState {
   // Current location (from store or browser)
@@ -45,8 +45,7 @@ const DEFAULT_RADIUS_KM = 5;
 const KM_TO_METERS = 1000;
 
 export function useLocationFilter(): UseLocationFilterReturn {
-  const { userLocation, setUserLocation, clearUserLocation, geoDistance, setGeoDistance } =
-    useUIStore();
+  const { userLocation, setUserLocation, clearUserLocation, geoDistance, setGeoDistance } = useUIStore();
 
   const [isEnabled, setIsEnabled] = useState(false);
   const [hasRequested, setHasRequested] = useState(false);
@@ -94,7 +93,7 @@ export function useLocationFilter(): UseLocationFilterReturn {
         requestLocation();
       }
     },
-    [userLocation, hasRequested, requestLocation]
+    [userLocation, hasRequested, requestLocation],
   );
 
   const setRadiusKm = useCallback(
@@ -102,7 +101,7 @@ export function useLocationFilter(): UseLocationFilterReturn {
       const clampedKm = Math.min(Math.max(km, 1), 100);
       setGeoDistance(clampedKm * KM_TO_METERS);
     },
-    [setGeoDistance]
+    [setGeoDistance],
   );
 
   const clearLocation = useCallback(() => {

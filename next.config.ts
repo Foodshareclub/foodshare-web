@@ -1,7 +1,8 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
-import { withSentryConfig } from "@sentry/nextjs";
 import { CONFIGURED_IMAGE_PATTERNS } from "./src/lib/image";
+import { buildContentSecurityPolicy } from "./src/lib/security/csp";
 
 const withNextIntl = createNextIntlPlugin();
 
@@ -19,16 +20,14 @@ const nextConfig: NextConfig = {
   // .next/standalone). Required for Quadlet/Podman deployment.
   output: "standalone",
 
-  // Trim client bundles: tree-shake large icon/data libs via modular imports
+  // Trim client bundles: tree-shake large icon/data libs via modular imports.
+  //
+  // Only the three TipTap packages are listed because the other three used to
+  // be here and did nothing: `lucide-react`, `date-fns` and `lodash-es` are
+  // already in Next's default optimizePackageImports list, so naming them again
+  // was a no-op that read as if it were doing work.
   experimental: {
-    optimizePackageImports: [
-      "lucide-react",
-      "date-fns",
-      "lodash-es",
-      "@tiptap/core",
-      "@tiptap/react",
-      "@tiptap/pm",
-    ],
+    optimizePackageImports: ["@tiptap/core", "@tiptap/react", "@tiptap/pm"],
   },
 
   // Match URL validation, including the legacy Firebase photos still in listings.
@@ -47,8 +46,22 @@ const nextConfig: NextConfig = {
   htmlLimitedBots:
     /Googlebot|Bingbot|Yandex|YandexBot|DuckDuckBot|Slurp|Baiduspider|facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Applebot|PinterestBot|Discordbot|GPTBot|ChatGPT-User|PerplexityBot|Google-Extended|anthropic-ai|CCBot/,
 
-  // Enable incremental static regeneration (ISR) with cacheComponents
+  // Cache Components (PPR). Requires the static shell of a route to be
+  // prerenderable and everything request-scoped to sit behind a Suspense
+  // boundary; see the layout-level note in src/app/layout.tsx.
   cacheComponents: true,
+
+  // Partial Prefetching. The companion half of cacheComponents and it was
+  // never switched on, so every prefetched a link's *whole* route payload
+  // rather than the static part of it — the part that would actually let the
+  // navigation commit instantly. It requires cacheComponents; the config
+  // validation throws without it.
+  //
+  // Measured caveat: with the root layout's boundary currently above the whole
+  // page tree, the static shell of a route is close to empty, so there is less
+  // to prefetch than there should be. Fixing the boundary is what makes this
+  // setting worth much; both are tracked by the same route-by-route work.
+  partialPrefetching: true,
 
   // Full caching profile — revalidation times per data layer resource
   cacheLife: {
@@ -60,6 +73,11 @@ const nextConfig: NextConfig = {
     "product-detail": { stale: 300, revalidate: 120, expire: 3600 },
     // Product locations — 300s revalidation
     "product-locations": { stale: 300, revalidate: 300, expire: 3600 },
+    // Public stats — homepage hero and category counts. Counts move as
+    // listings are posted and arranged, so a short revalidate keeps them
+    // fresh without a query per request. Prerender-eligible: the homepage
+    // is the highest-traffic route and the counts belong in its static shell.
+    "public-stats": { stale: 300, revalidate: 120, expire: 1800 },
     // Profiles — 300s revalidation
     profiles: { stale: 300, revalidate: 300, expire: 3600 },
     // Profile stats — 600s revalidation
@@ -80,6 +98,30 @@ const nextConfig: NextConfig = {
     "post-activity": { stale: 60, revalidate: 60, expire: 600 },
     // Long-lived (rarely changing, evergreen content)
     long: { stale: 3600, revalidate: 3600, expire: 86400 },
+    /**
+     * Deliberately *not* prerender-eligible.
+     *
+     * Per the bundled Next.js docs, a cache life with `expire` under 5 minutes
+     * is excluded from prerenders and becomes a dynamic hole resolved at request
+     * time. That is exactly what a read needs when the build cannot reach the
+     * database: the function never runs during the build, so nothing can be
+     * baked into a prerendered segment, and at runtime the entry is still
+     * reused for `stale` seconds — so a repeat visitor within the window skips
+     * Postgres entirely.
+     *
+     * Why not just let the build fetch? Because then a build needs the database
+     * to be reachable, and a prerendered segment captures whatever the build
+     * saw. This was measured, not assumed: with a build-time stub returning
+     * empty, the prerendered `__PAGE__` segment contained `"children":"[]"` and
+     * a production server served that empty value for the full revalidate
+     * window. A cached read that returns a placeholder at build time does not
+     * fail the build — it ships the placeholder.
+     *
+     * Switching a profile to a prerender-eligible one (`products`, `long`) is
+     * the whole difference between "data cached across requests" and "data in
+     * the static shell", and it requires the build to have real data.
+     */
+    "request-time": { stale: 60, revalidate: 60, expire: 240 },
   },
 
   // WGSL shaders for GPU-accelerated features (if enabled)
@@ -91,12 +133,6 @@ const nextConfig: NextConfig = {
         as: "*.js",
       },
     },
-  },
-
-  // Custom webpack rules for legacy support
-  webpack: (config) => {
-    // Add your custom webpack configuration here
-    return config;
   },
 
   // Custom redirects — 308 permanent for SEO reindex to agnostic /product/[id]-[slug]
@@ -332,6 +368,10 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=(self)",
           },
+          {
+            key: "Content-Security-Policy",
+            value: buildContentSecurityPolicy({ isDev: process.env.NODE_ENV !== "production" }),
+          },
         ],
       },
     ];
@@ -344,16 +384,34 @@ const sentryWebpackPluginOptions = {
   org: process.env.SENTRY_ORG || "organicnz-7v",
   project: process.env.SENTRY_PROJECT || "foodshare-web",
   authToken: process.env.SENTRY_AUTH_TOKEN,
-  disableServerWebpackPlugin: process.env.NODE_ENV !== "production",
-  disableClientWebpackPlugin: process.env.NODE_ENV !== "production",
-  hideSourceMaps: true,
   tunnelRoute: "/monitoring",
+  // Webpack-only, and this project builds with `--turbopack`, so it currently
+  // has no effect. Kept because it is correct the moment anyone switches back,
+  // and the Sentry logger's debug output is worth removing in that world.
   webpack: {
     treeshake: {
       removeDebugLogging: true,
     },
   },
 };
+
+/**
+ * Three options that used to be here do nothing at all in @sentry/nextjs
+ * 10.71, and were silently discarded rather than rejected:
+ *
+ *   hideSourceMaps, disableServerWebpackPlugin, disableClientWebpackPlugin
+ *
+ * None of them is a key of `SentryBuildOptions` in the installed version —
+ * verified against node_modules/@sentry/nextjs/build/types/config/types.d.ts,
+ * where the equivalent live under `sourcemaps: { disable }` and
+ * `webpack.disableSentryConfig`. The nearest correct replacements are already
+ * the defaults here: `useRunAfterProductionCompileHook` defaults to true under
+ * Turbopack, which is why the build log shows a `runAfterProductionCompile`
+ * step consolidating the upload.
+ *
+ * They are removed rather than translated because a silently-ignored option is
+ * worse than a missing one: it looks like a control that is holding.
+ */
 
 // Chain: nextIntl -> sentry
 export default withSentryConfig(withNextIntl(nextConfig), sentryWebpackPluginOptions);

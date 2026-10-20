@@ -1,9 +1,9 @@
-import Link from "next/link";
-import Image from "next/image";
+import { isValidImageUrl } from "@/lib/image";
 import type { InitialProductStateType } from "@/types/product.types";
 import { getProductDetailUrl } from "@/utils/categoryMapping";
 import { gpu120Image } from "@/utils/gpuStyles";
-import { isValidImageUrl } from "@/lib/image";
+import Image from "next/image";
+import Link from "next/link";
 
 interface VolunteerPostcardProps {
   volunteer: InitialProductStateType;
@@ -39,7 +39,7 @@ export function VolunteerPostcard({ volunteer, isFeatured = false }: VolunteerPo
       <div className="glass rounded-2xl p-5 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl relative overflow-hidden">
         {/* Featured Badge */}
         {isFeatured && (
-          <div className="absolute top-3 right-3 bg-gradient-to-r from-amber-400 to-orange-400 text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
+          <div className="absolute top-3 end-3 bg-gradient-to-r from-amber-400 to-orange-400 text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
             <span>Featured</span>
           </div>
         )}
@@ -50,9 +50,7 @@ export function VolunteerPostcard({ volunteer, isFeatured = false }: VolunteerPo
             {/* Gradient ring around avatar */}
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 p-1">
               <div className="w-full h-full rounded-full overflow-hidden bg-background">
-                {volunteer.images &&
-                volunteer.images.length > 0 &&
-                isValidImageUrl(volunteer.images[0]) ? (
+                {volunteer.images && volunteer.images.length > 0 && isValidImageUrl(volunteer.images[0]) ? (
                   <Image
                     src={volunteer.images[0]}
                     alt={name}
@@ -86,6 +84,7 @@ export function VolunteerPostcard({ volunteer, isFeatured = false }: VolunteerPo
           <div className="flex flex-wrap justify-center gap-1.5 mb-4">
             {skills.slice(0, 3).map((skill, index) => (
               <span
+                // biome-ignore lint/suspicious/noArrayIndexKey: skills come from a raw comma-separated field a user typed, so the same tag can repeat; the capped list is read-only and never reorders
                 key={index}
                 className="text-xs px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/30"
               >
@@ -93,9 +92,7 @@ export function VolunteerPostcard({ volunteer, isFeatured = false }: VolunteerPo
               </span>
             ))}
             {skills.length > 3 && (
-              <span className="text-xs px-2 py-1 text-muted-foreground">
-                +{skills.length - 3} more
-              </span>
+              <span className="text-xs px-2 py-1 text-muted-foreground">+{skills.length - 3} more</span>
             )}
           </div>
         )}
@@ -146,7 +143,7 @@ function getAvailabilityDisplay(availableHours: string | null): string {
   if (lower === "flexible") return "Flexible";
 
   // Return original if it's a custom value
-  return availableHours.length > 12 ? availableHours.slice(0, 12) + "..." : availableHours;
+  return availableHours.length > 12 ? `${availableHours.slice(0, 12)}...` : availableHours;
 }
 
 /**

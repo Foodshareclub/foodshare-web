@@ -1,5 +1,5 @@
-import React from 'react';
-import { DeleteConfirmationModal } from './ConfirmationModal';
+import type React from "react";
+import { DeleteConfirmationModal } from "./ConfirmationModal";
 
 type ConfirmDeleteModalType = {
   isOpen: boolean;

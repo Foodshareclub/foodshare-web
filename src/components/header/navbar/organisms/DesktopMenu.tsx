@@ -2,27 +2,24 @@
 
 import { useState } from "react";
 
-import {
-  ClipboardList,
-  MessageCircle,
-  Settings,
-  LogOut,
-  LogIn,
-  UserPlus,
-  HelpCircle,
-  Info,
-  LayoutGrid,
-} from "lucide-react";
-import { MenuItem, NavbarAvatar } from "../atoms";
 import type { CustomRoomType } from "@/api/chatAPI";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
 import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  ClipboardList,
+  HelpCircle,
+  Info,
+  LayoutGrid,
+  LogIn,
+  LogOut,
+  MessageCircle,
+  Settings,
+  UserPlus,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import { DropdownMenuEntry, NavbarAvatar } from "../atoms";
 
 // Lucide icons
 
@@ -83,6 +80,13 @@ export function DesktopMenu({
   isAuth,
   isAdmin = false,
 }: DesktopMenuProps) {
+  // Every label in this menu was an English literal, in a menu that is the
+  // primary navigation for every signed-in user in 21 locales. The Chat row
+  // also built its own count string by concatenation, which is ungrammatical in
+  // ja/ko/ar/zh where word order and counters differ — hence the ICU plural in
+  // messages/en.json rather than another template literal.
+  const t = useTranslations("nav");
+
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
@@ -99,16 +103,10 @@ export function DesktopMenu({
       <div className="self-center p-0 text-foreground">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-lg"
-              className="rounded-full"
-              aria-label="See menu"
-            >
+            <Button type="button" variant="ghost" size="icon-lg" className="rounded-full" aria-label={t("seeMenu")}>
               <NavbarAvatar
                 src={imgUrl}
-                alt="User profile"
+                alt={t("userProfilePhoto")}
                 firstName={firstName}
                 secondName={secondName}
                 hasNotification={hasNotifications}
@@ -117,18 +115,14 @@ export function DesktopMenu({
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent
-            variant="glass"
-            className="glass-strong rounded-xl min-w-[220px]"
-            align="end"
-          >
+          <DropdownMenuContent variant="glass" className="glass-strong rounded-xl min-w-[220px]" align="end">
             {isAuth ? (
               <>
                 {/* User Profile Info Header */}
                 <div className="px-3 py-3 border-b border-border/50 mb-1 flex items-center gap-3">
                   <NavbarAvatar
                     src={imgUrl}
-                    alt="User profile"
+                    alt={t("userProfilePhoto")}
                     firstName={firstName}
                     secondName={secondName}
                     size="md"
@@ -141,26 +135,26 @@ export function DesktopMenu({
 
                 {/* Admin Dashboard */}
                 {isAdmin && onNavigateToDashboard && (
-                  <MenuItem
-                    label="Admin Dashboard"
+                  <DropdownMenuEntry
+                    label={t("adminDashboard")}
                     icon={<LayoutGrid className="w-5 h-5" />}
-                    onClick={onNavigateToDashboard}
+                    onSelect={onNavigateToDashboard}
                     variant="accent"
                     testId="menu-admin"
                   />
                 )}
 
-                <MenuItem
-                  label="My listings"
+                <DropdownMenuEntry
+                  label={t("myListings")}
                   icon={<ClipboardList className="w-5 h-5" />}
-                  onClick={onNavigateToMyLists}
+                  onSelect={onNavigateToMyLists}
                   testId="menu-my-listings"
                 />
 
-                <MenuItem
-                  label={hasNotifications ? `Chat (${notificationCount} new)` : "Chat"}
+                <DropdownMenuEntry
+                  label={t("chatWithUnread", { count: notificationCount })}
                   icon={<MessageCircle className="w-5 h-5" />}
-                  onClick={onNavigateToMyMessages}
+                  onSelect={onNavigateToMyMessages}
                   variant={hasNotifications ? "accent" : "default"}
                   badge={
                     hasNotifications ? (
@@ -171,32 +165,32 @@ export function DesktopMenu({
                   }
                   testId="menu-chat"
                 />
-                <MenuItem
-                  label="Account settings"
+                <DropdownMenuEntry
+                  label={t("accountSettings")}
                   icon={<Settings className="w-5 h-5" />}
-                  onClick={onNavigateToAccSettings}
+                  onSelect={onNavigateToAccSettings}
                   testId="menu-account-settings"
                 />
-                <MenuItem
-                  label="Log Out"
+                <DropdownMenuEntry
+                  label={t("logOut")}
                   icon={<LogOut className="w-5 h-5" />}
-                  onClick={onNavigateToLogout}
+                  onSelect={onNavigateToLogout}
                   variant="danger"
                   testId="menu-logout"
                 />
               </>
             ) : (
               <>
-                <MenuItem
-                  label={"Login"}
+                <DropdownMenuEntry
+                  label={t("login")}
                   icon={<LogIn className="w-5 h-5" />}
-                  onClick={() => setIsLoginOpen(true)}
+                  onSelect={() => setIsLoginOpen(true)}
                   testId="menu-login"
                 />
-                <MenuItem
-                  label={"Registration"}
+                <DropdownMenuEntry
+                  label={t("registration")}
                   icon={<UserPlus className="w-5 h-5" />}
-                  onClick={() => setIsRegisterOpen(true)}
+                  onSelect={() => setIsRegisterOpen(true)}
                   testId="menu-register"
                 />
               </>
@@ -205,23 +199,23 @@ export function DesktopMenu({
             {/* Divider */}
             <hr className="my-1 border-border" />
 
-            <MenuItem
-              label={"Help"}
+            <DropdownMenuEntry
+              label={t("help")}
               icon={<HelpCircle className="w-5 h-5" />}
-              onClick={onNavigateToHelp}
+              onSelect={onNavigateToHelp}
               testId="menu-help"
             />
-            <MenuItem
-              label={"About Foodshare"}
+            <DropdownMenuEntry
+              label={t("about")}
               icon={<Info className="w-5 h-5" />}
-              onClick={onNavigateToAboutUs}
+              onSelect={onNavigateToAboutUs}
               testId="menu-about"
             />
 
             {/* Theme Switcher */}
             <hr className="my-1 border-border" />
             <div className="px-2 py-2">
-              <p className="text-xs text-muted-foreground mb-2 px-1">Appearance</p>
+              <p className="text-xs text-muted-foreground mb-2 px-1">{t("appearance")}</p>
               <ThemeToggleInline className="w-full" />
             </div>
           </DropdownMenuContent>
@@ -230,12 +224,14 @@ export function DesktopMenu({
 
       {/* Auth Modals - Rendered outside dropdown */}
       <AuthenticationUserModal
-        buttonValue="Login"
+        mode="login"
+        buttonLabel={t("login")}
         isOpen={isLoginOpen}
         onClose={() => setIsLoginOpen(false)}
       />
       <AuthenticationUserModal
-        buttonValue="Registration"
+        mode="signup"
+        buttonLabel={t("registration")}
         isOpen={isRegisterOpen}
         onClose={() => setIsRegisterOpen(false)}
       />

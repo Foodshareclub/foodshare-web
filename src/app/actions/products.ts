@@ -7,11 +7,7 @@ import { invalidatePostActivityCaches, invalidateTag } from "@/lib/data/cache-in
 import { CACHE_TAGS, getProductTags } from "@/lib/data/cache-keys";
 import { embedProduct } from "@/lib/embeddings";
 import { type ActionResult, validateWithSchema, withErrorHandling } from "@/lib/errors";
-import {
-  type ProductSearchDocument,
-  indexProduct,
-  removeProductFromSearch,
-} from "@/lib/storage/search";
+import { type ProductSearchDocument, indexProduct, removeProductFromSearch } from "@/lib/storage/search";
 import { createActionLogger } from "@/lib/structured-logger";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
@@ -36,7 +32,7 @@ async function indexProductForSearch(
     post_address?: string;
     profile_id: string;
     is_active?: boolean;
-  }
+  },
 ): Promise<void> {
   try {
     const searchDoc: ProductSearchDocument = {
@@ -117,9 +113,7 @@ const updateProductSchema = createProductSchema.partial().extend({
  * Every new listing passes through the shared Edge Function classifier.
  * Missing coordinates remain absent; they never become a fictional (0, 0) location.
  */
-export async function createProduct(
-  formData: FormData
-): Promise<ActionResult<{ id: number; post_type: string }>> {
+export async function createProduct(formData: FormData): Promise<ActionResult<{ id: number; post_type: string }>> {
   const logger = await createActionLogger("createProduct");
   logger.info("Starting product creation");
 
@@ -237,10 +231,7 @@ export async function createProduct(
  * Uses the revision loaded by the edit form so concurrent web and mobile
  * updates cannot silently overwrite each other.
  */
-export async function updateProduct(
-  id: number,
-  formData: FormData
-): Promise<ActionResult<undefined>> {
+export async function updateProduct(id: number, formData: FormData): Promise<ActionResult<undefined>> {
   const logger = await createActionLogger("updateProduct");
   logger.info("Starting product update", { id });
 
@@ -316,9 +307,7 @@ export async function updateProduct(
     if (fields.post_type && fields.post_type !== currentProduct.post_type) {
       updates.category_id = null;
       updates.metadata = {
-        ...(currentProduct.metadata && typeof currentProduct.metadata === "object"
-          ? currentProduct.metadata
-          : {}),
+        ...(currentProduct.metadata && typeof currentProduct.metadata === "object" ? currentProduct.metadata : {}),
         classification: {
           version: "2026-09-19.1",
           source: "manual",
@@ -446,8 +435,16 @@ export async function deleteProduct(id: number): Promise<ActionResult<undefined>
       throw new Error("Unauthorized: You can only delete your own listings");
     }
 
-    // Soft delete: set is_active = false
-    const { error } = await supabase.from("posts").update({ is_active: false }).eq("id", id);
+    // Soft delete: set is_active = false.
+    //
+    // The ownership predicate is repeated on the UPDATE, not just checked above.
+    // A read-then-write is a TOCTOU: the check and the mutation are two
+    // statements, and anything that changes `profile_id` between them — a
+    // listing transferred, a concurrent admin action — turns the second
+    // statement into an unconditional write by id. `updateProduct` already
+    // filters by `profile_id` here; this one relied on RLS to be the real
+    // check while reading as though it were the first.
+    const { error } = await supabase.from("posts").update({ is_active: false }).eq("id", id).eq("profile_id", user.id);
 
     if (error) {
       throw new Error(error.message);
@@ -465,59 +462,27 @@ export async function deleteProduct(id: number): Promise<ActionResult<undefined>
 }
 
 /**
- * Refresh user listings cache
- * Call this to force a cache refresh for the current user's listings
+ * Invalidate the caller's own listing caches, so the next render re-reads them.
+ *
+ * The user id is resolved here rather than taken as an argument. As a parameter
+ * it was whatever the client passed, and this action is reachable without any
+ * check at all — a caller could invalidate another member's tags on demand. The
+ * damage is bounded (it is a cache miss, not a data leak) but "bounded damage
+ * from an unchecked argument" is still an unchecked argument.
  */
-export async function refreshUserListingsCache(userId: string): Promise<ActionResult<undefined>> {
+export async function refreshUserListingsCache(): Promise<ActionResult<undefined>> {
   return withErrorHandling(async () => {
-    // Invalidate user-specific cache
-    invalidateTag(CACHE_TAGS.USER_PRODUCTS(userId));
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error("You must be signed in to refresh your listings");
+    }
+
+    invalidateTag(CACHE_TAGS.USER_PRODUCTS(user.id));
     invalidateTag(CACHE_TAGS.PRODUCTS);
     return undefined;
   }, "refreshUserListingsCache");
-}
-
-/**
- * Toggle product favorite status
- */
-export async function toggleProductFavorite(
-  productId: number,
-  userId: string
-): Promise<ActionResult<{ isFavorited: boolean }>> {
-  return withErrorHandling(async () => {
-    const supabase = await createClient();
-
-    // Check if already favorited
-    const { data: existing } = await supabase
-      .from("favorites")
-      .select("id")
-      .eq("product_id", productId)
-      .eq("user_id", userId)
-      .single();
-
-    if (existing) {
-      // Remove favorite
-      const { error } = await supabase.from("favorites").delete().eq("id", existing.id);
-
-      if (error) throw new Error(error.message);
-
-      // Invalidate caches for immediate UI update
-      invalidateTag(CACHE_TAGS.PRODUCT(productId));
-      invalidateTag(CACHE_TAGS.USER_PRODUCTS(userId));
-
-      return { isFavorited: false };
-    }
-    // Add favorite
-    const { error } = await supabase
-      .from("favorites")
-      .insert({ product_id: productId, user_id: userId });
-
-    if (error) throw new Error(error.message);
-
-    // Invalidate caches for immediate UI update
-    invalidateTag(CACHE_TAGS.PRODUCT(productId));
-    invalidateTag(CACHE_TAGS.USER_PRODUCTS(userId));
-
-    return { isFavorited: true };
-  }, "toggleProductFavorite");
 }

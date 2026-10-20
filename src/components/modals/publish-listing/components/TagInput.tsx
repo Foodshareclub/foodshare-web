@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
 import { X } from "lucide-react";
+import type React from "react";
+import { useCallback, useState } from "react";
 
 interface TagInputProps {
   tags: string[];
@@ -23,14 +24,14 @@ export const TagInput: React.FC<TagInputProps> = ({ tags, onTagsChange, maxTags 
       }
       setInputValue("");
     },
-    [tags, onTagsChange, maxTags]
+    [tags, onTagsChange, maxTags],
   );
 
   const removeTag = useCallback(
     (tagToRemove: string) => {
       onTagsChange(tags.filter((t) => t !== tagToRemove));
     },
-    [tags, onTagsChange]
+    [tags, onTagsChange],
   );
 
   const handleKeyDown = useCallback(
@@ -42,7 +43,7 @@ export const TagInput: React.FC<TagInputProps> = ({ tags, onTagsChange, maxTags 
         removeTag(tags[tags.length - 1]);
       }
     },
-    [inputValue, addTag, removeTag, tags]
+    [inputValue, addTag, removeTag, tags],
   );
 
   return (
@@ -54,11 +55,7 @@ export const TagInput: React.FC<TagInputProps> = ({ tags, onTagsChange, maxTags 
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
           >
             #{tag}
-            <button
-              type="button"
-              onClick={() => removeTag(tag)}
-              className="hover:text-destructive transition-colors"
-            >
+            <button type="button" onClick={() => removeTag(tag)} className="hover:text-destructive transition-colors">
               <X className="h-3 w-3" />
             </button>
           </span>

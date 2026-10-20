@@ -18,8 +18,8 @@
  * ```
  */
 
-import type { NotificationType, NotificationChannel, PriorityLevel } from "./types";
 import { createClient } from "@/lib/supabase/server";
+import type { NotificationChannel, NotificationType, PriorityLevel } from "./types";
 
 // ============================================================================
 // Request Types
@@ -119,7 +119,7 @@ function getNotificationApiUrl(): string {
  */
 async function callNotificationApi<T>(
   endpoint: string,
-  body: unknown
+  body: unknown,
 ): Promise<{ success: boolean; data?: T; error?: string }> {
   try {
     const supabase = await createClient();
@@ -186,7 +186,7 @@ async function callNotificationApi<T>(
  * });
  */
 export async function sendNotification(
-  request: SendNotificationRequest
+  request: SendNotificationRequest,
 ): Promise<{ success: boolean; data?: DeliveryResult; error?: string }> {
   return callNotificationApi<DeliveryResult>("/send", request);
 }
@@ -204,7 +204,7 @@ export async function sendNotification(
  * });
  */
 export async function sendBatchNotifications(
-  request: BatchNotificationRequest
+  request: BatchNotificationRequest,
 ): Promise<{ success: boolean; data?: BatchDeliveryResult; error?: string }> {
   return callNotificationApi<BatchDeliveryResult>("/send/batch", request);
 }
@@ -221,7 +221,7 @@ export async function sendBatchNotifications(
  * });
  */
 export async function sendTemplateNotification(
-  request: SendTemplateNotificationRequest
+  request: SendTemplateNotificationRequest,
 ): Promise<{ success: boolean; data?: DeliveryResult; error?: string }> {
   return callNotificationApi<DeliveryResult>("/send/template", request);
 }
@@ -243,7 +243,7 @@ export async function sendTemplateNotification(
  * });
  */
 export async function sendEmailNotification(
-  request: Omit<SendNotificationRequest, "channels">
+  request: Omit<SendNotificationRequest, "channels">,
 ): Promise<{ success: boolean; data?: DeliveryResult; error?: string }> {
   return sendNotification({
     ...request,
@@ -265,7 +265,7 @@ export async function sendEmailNotification(
  */
 export async function sendBatchEmailNotifications(
   notifications: Omit<SendNotificationRequest, "channels">[],
-  parallel = true
+  parallel = true,
 ): Promise<{ success: boolean; data?: BatchDeliveryResult; error?: string }> {
   return sendBatchNotifications({
     notifications: notifications.map((n) => ({ ...n, channels: ["email"] })),

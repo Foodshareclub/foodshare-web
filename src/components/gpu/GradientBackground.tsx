@@ -15,10 +15,7 @@ export function GradientBackground({ className, scroll = 0 }: GradientBackground
 
   return (
     <div aria-hidden="true" className={cn("pointer-events-none absolute inset-0 -z-10", className)}>
-      <div
-        className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-primary/5"
-        hidden={ready}
-      />
+      <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-primary/5" hidden={ready} />
       <canvas
         ref={canvasRef}
         data-gpu-effect="gradient"

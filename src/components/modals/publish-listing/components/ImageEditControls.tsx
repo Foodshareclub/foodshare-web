@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { RotateCw, FlipHorizontal, FlipVertical } from "lucide-react";
+import { FlipHorizontal, FlipVertical, RotateCw } from "lucide-react";
+import type React from "react";
 
 interface ImageEditControlsProps {
   onRotate: () => void;
@@ -9,12 +9,8 @@ interface ImageEditControlsProps {
   onFlipV: () => void;
 }
 
-export const ImageEditControls: React.FC<ImageEditControlsProps> = ({
-  onRotate,
-  onFlipH,
-  onFlipV,
-}) => (
-  <div className="absolute bottom-1 left-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+export const ImageEditControls: React.FC<ImageEditControlsProps> = ({ onRotate, onFlipH, onFlipV }) => (
+  <div className="absolute bottom-1 start-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
     <button
       type="button"
       onClick={(e) => {

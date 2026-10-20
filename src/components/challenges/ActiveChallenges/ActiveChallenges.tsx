@@ -7,20 +7,20 @@
 
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { CheckCircle2, Clock, Flame, Trophy, Loader2, Sparkles } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useActiveChallenges, useCompleteChallenge } from "@/hooks/queries/useActiveChallenges";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
+import { useActiveChallenges, useCompleteChallenge } from "@/hooks/queries/useActiveChallenges";
+import { cn } from "@/lib/utils";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { CheckCircle2, Clock, Flame, Loader2, Sparkles, Trophy } from "lucide-react";
+import { useState } from "react";
 
 // Animation variants
 const containerVariants = {
@@ -95,10 +95,7 @@ export function ActiveChallenges({ className }: ActiveChallengesProps) {
   return (
     <>
       <motion.div
-        className={cn(
-          "rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden",
-          className
-        )}
+        className={cn("rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden", className)}
         variants={shouldReduceMotion ? undefined : containerVariants}
         initial="hidden"
         animate="visible"
@@ -129,7 +126,7 @@ export function ActiveChallenges({ className }: ActiveChallengesProps) {
                   "relative flex items-center gap-3 p-3 rounded-lg",
                   "bg-muted/30 hover:bg-muted/50 transition-colors",
                   "group cursor-pointer",
-                  celebratingId === challenge.challengeId && "bg-green-500/10"
+                  celebratingId === challenge.challengeId && "bg-green-500/10",
                 )}
               >
                 {/* Celebration overlay */}
@@ -162,10 +159,10 @@ export function ActiveChallenges({ className }: ActiveChallengesProps) {
                   {/* Difficulty badge */}
                   <div
                     className={cn(
-                      "absolute bottom-0 right-0 px-1 py-0.5 text-[10px] font-bold rounded-tl",
+                      "absolute bottom-0 end-0 px-1 py-0.5 text-[10px] font-bold rounded-es",
                       challenge.difficulty === "Easy" && "bg-green-500 text-white",
                       challenge.difficulty === "Medium" && "bg-yellow-500 text-black",
-                      challenge.difficulty === "Hard" && "bg-red-500 text-white"
+                      challenge.difficulty === "Hard" && "bg-red-500 text-white",
                     )}
                   >
                     {challenge.difficulty[0]}
@@ -192,7 +189,7 @@ export function ActiveChallenges({ className }: ActiveChallengesProps) {
                   className={cn(
                     "shrink-0 gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity",
                     "border-green-500/50 text-green-600 hover:bg-green-500/10 hover:text-green-600",
-                    "focus:opacity-100"
+                    "focus:opacity-100",
                   )}
                   onClick={() => setConfirmingId(challenge.challengeId)}
                   disabled={isPending || celebratingId === challenge.challengeId}
@@ -219,10 +216,8 @@ export function ActiveChallenges({ className }: ActiveChallengesProps) {
               Complete Challenge?
             </DialogTitle>
             <DialogDescription>
-              Are you sure you&apos;ve completed &quot;{confirmingChallenge?.title}&quot;?
-              You&apos;ll earn{" "}
-              <strong className="text-primary">{confirmingChallenge?.score} XP</strong> and move up
-              on the leaderboard!
+              Are you sure you&apos;ve completed &quot;{confirmingChallenge?.title}&quot;? You&apos;ll earn{" "}
+              <strong className="text-primary">{confirmingChallenge?.score} XP</strong> and move up on the leaderboard!
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">

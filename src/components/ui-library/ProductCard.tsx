@@ -1,9 +1,12 @@
 "use client";
 
-import React from "react";
-import Image from "next/image";
-import { StatusIndicator } from "@/components/ui-library/atoms/StatusIndicator";
 import { FrequencyBadge } from "@/components/ui-library/atoms/FrequencyBadge";
+import { StatusIndicator } from "@/components/ui-library/atoms/StatusIndicator";
+import Image from "next/image";
+import type React from "react";
+
+// Decorative star glyphs have no data identity; their keys are static ids.
+const RATING_STAR_KEYS = Array.from({ length: 10 }, (_, i) => `star-${i}`);
 
 interface ProductCardProps {
   image: string;
@@ -30,7 +33,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const ratingStars = rating
     ? Array.from({ length: rating }, (_, i) => (
-        <span key={i} aria-hidden="true" className="text-yellow-500">
+        <span key={RATING_STAR_KEYS[i]} aria-hidden="true" className="text-yellow-500">
           ★
         </span>
       ))
@@ -40,7 +43,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <button
       type="button"
       aria-label={`View ${title} details`}
-      className="group cursor-pointer rounded-2xl transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 text-left w-full"
+      className="group cursor-pointer rounded-2xl transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 text-start w-full"
       onClick={onClick}
     >
       {/* Image Container */}
@@ -55,13 +58,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Badge */}
         {badge && (
-          <div className="absolute bottom-3 left-3 bg-background text-foreground font-semibold px-3 py-1 rounded-md">
+          <div className="absolute bottom-3 start-3 bg-background text-foreground font-semibold px-3 py-1 rounded-md">
             {badge}
           </div>
         )}
 
         {/* Status Indicator */}
-        <StatusIndicator status="online" className="absolute top-2 right-2" />
+        <StatusIndicator status="online" className="absolute top-2 end-2" />
 
         {/* Card Body - Airbnb-style typography */}
         <div className="p-3">

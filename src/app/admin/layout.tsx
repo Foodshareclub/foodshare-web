@@ -1,13 +1,10 @@
-import { redirect } from "next/navigation";
+import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
+import { AdminMobileHeader, AdminSidebar } from "@/components/admin/AdminSidebar";
 import { getAuthSession } from "@/lib/data/auth";
 import { generateNoIndexMetadata } from "@/lib/metadata";
-import { AdminSidebar, AdminMobileHeader } from "@/components/admin/AdminSidebar";
-import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
+import { redirect } from "next/navigation";
 
-export const metadata = generateNoIndexMetadata(
-  "Admin Dashboard",
-  "FoodShare administration panel"
-);
+export const metadata = generateNoIndexMetadata("Admin Dashboard", "FoodShare administration panel");
 
 /**
  * Admin Layout with Server-Side Protection

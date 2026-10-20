@@ -1,7 +1,7 @@
-import { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/metadata";
 import { createCachedClient } from "@/lib/supabase/server";
-import { slugify } from "@/lib/utils";
+import { getProductCanonicalUrl } from "@/utils/categoryMapping";
+import type { MetadataRoute } from "next";
 
 /**
  * Dynamic sitemap — Cache Components mode: no legacy `revalidate`/`dynamic`
@@ -18,15 +18,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
 
   // Fetch all dynamic data for sitemap
-  const [forumPosts, forumCategories, foodProducts, challenges, publicProfiles] = await Promise.all(
-    [
-      getForumPostsForSitemap(),
-      getForumCategoriesForSitemap(),
-      getFoodProductsForSitemap(),
-      getChallengesForSitemap(),
-      getPublicProfilesForSitemap(),
-    ]
-  );
+  const [forumPosts, forumCategories, foodProducts, challenges, publicProfiles] = await Promise.all([
+    getForumPostsForSitemap(),
+    getForumCategoriesForSitemap(),
+    getFoodProductsForSitemap(),
+    getChallengesForSitemap(),
+    getPublicProfilesForSitemap(),
+  ]);
 
   // Static routes
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -195,7 +193,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(category.updated_at),
       changeFrequency: "daily" as const,
       priority: 0.7,
-    })
+    }),
   );
 
   // Forum post routes
@@ -215,15 +213,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       created_at: string;
       updated_at: string | null;
     }) => {
-      const slug =
-        (product.post_slug as string) || slugify((product.post_name as string) || "item");
+      // Shared with /product/[id]/page.tsx so the sitemap can never advertise
+      // a slug the page would redirect away from. Note this also re-slugifies an
+      // existing post_slug, which the previous inline version did not.
       return {
-        url: `${baseUrl}/product/${product.id}-${slug}`,
+        url: getProductCanonicalUrl(product, baseUrl),
         lastModified: new Date(product.updated_at || product.created_at),
         changeFrequency: "weekly" as const,
         priority: 0.7,
       };
-    }
+    },
   );
 
   // Challenge routes
@@ -237,7 +236,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(challenge.challenge_updated_at || challenge.challenge_created_at),
       changeFrequency: "weekly" as const,
       priority: 0.7,
-    })
+    }),
   );
 
   // Public profile routes
@@ -284,10 +283,7 @@ async function getForumPostsForSitemap() {
 
       if (error) {
         // Silent during build — cert may not be available, return partial/empty
-        if (
-          process.env.NODE_ENV !== "production" ||
-          !String(error.message).includes("certificate")
-        ) {
+        if (process.env.NODE_ENV !== "production" || !String(error.message).includes("certificate")) {
           console.warn("Failed to fetch forum posts for sitemap:", error.message);
         }
         return all;
@@ -355,10 +351,7 @@ async function getFoodProductsForSitemap() {
         .range(from, from + pageSize - 1);
 
       if (error) {
-        if (
-          process.env.NODE_ENV !== "production" ||
-          !String(error.message).includes("certificate")
-        ) {
+        if (process.env.NODE_ENV !== "production" || !String(error.message).includes("certificate")) {
           console.warn("Failed to fetch food posts for sitemap:", error.message);
         }
         return all;

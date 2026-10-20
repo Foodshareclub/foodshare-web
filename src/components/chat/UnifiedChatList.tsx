@@ -7,29 +7,29 @@
  * Supports dark/light themes with glassmorphism effects
  */
 
-import React, { useState, useMemo, useCallback, memo } from "react";
-import { useTranslations } from "next-intl";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Search,
-  MessageCircle,
-  Package,
-  X,
-  User,
-  LayoutGrid,
-  ShoppingBag,
-  RefreshCw,
-  Heart,
-  Home,
-  Users,
-  Leaf,
-  Warehouse,
-} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Heart,
+  Home,
+  LayoutGrid,
+  Leaf,
+  MessageCircle,
+  Package,
+  RefreshCw,
+  Search,
+  ShoppingBag,
+  User,
+  Users,
+  Warehouse,
+  X,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import Image from "next/image";
+import React, { useState, useMemo, useCallback, memo } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -48,19 +48,6 @@ const FiUsers = Users;
 const LuLeaf = Leaf;
 const LuWarehouse = Warehouse;
 import type { UnifiedChatRoom } from "@/lib/data/chat";
-
-const FALLBACK = {
-  messages: "Messages",
-  searchConversations: "Search conversations...",
-  noConversations: "No conversations found",
-  yesterday: "Yesterday",
-  noMessages: "No messages yet",
-  newChat: "New Chat",
-  startNewConversation: "Start a new conversation",
-  chattingWith: "Chatting with",
-  about: "About",
-  allListings: "All",
-};
 
 // Category configuration with icons and labels
 const CATEGORIES = [
@@ -94,16 +81,12 @@ export function UnifiedChatList({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  const getText = useCallback(
-    (key: keyof typeof FALLBACK) => {
-      try {
-        return t(key);
-      } catch {
-        return FALLBACK[key];
-      }
-    },
-    [t]
-  );
+  // A memoized child cannot call useTranslations itself, so the translator is
+  // threaded down as a prop. There is no try/catch fallback here on purpose:
+  // next-intl never throws for a missing key — it returns the key path — so a
+  // catch block would be unreachable, and the English catalog is layered under
+  // every locale anyway (see src/i18n/merge.ts).
+  const getText = t;
 
   // Get available categories from chat rooms (only show tabs for categories that have chats)
   const availableCategories = useMemo(() => {
@@ -135,7 +118,7 @@ export function UnifiedChatList({
           chat.participants.some(
             (p) =>
               p.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              p.secondName.toLowerCase().includes(searchQuery.toLowerCase())
+              p.secondName.toLowerCase().includes(searchQuery.toLowerCase()),
           );
 
         return matchesCategory && matchesSearch;
@@ -158,15 +141,16 @@ export function UnifiedChatList({
 
       if (diffDays === 0) {
         return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      } else if (diffDays === 1) {
-        return getText("yesterday");
-      } else if (diffDays < 7) {
-        return date.toLocaleDateString([], { weekday: "short" });
-      } else {
-        return date.toLocaleDateString([], { month: "short", day: "numeric" });
       }
+      if (diffDays === 1) {
+        return getText("yesterday");
+      }
+      if (diffDays < 7) {
+        return date.toLocaleDateString([], { weekday: "short" });
+      }
+      return date.toLocaleDateString([], { month: "short", day: "numeric" });
     },
-    [getText]
+    [getText],
   );
 
   const totalUnread = useMemo(() => chatRooms.filter((c) => c.hasUnread).length, [chatRooms]);
@@ -198,18 +182,18 @@ export function UnifiedChatList({
 
         {/* Search */}
         <div className="relative">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <FiSearch className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={getText("searchConversations")}
-            className="pl-9 pr-9 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50 rounded-xl h-10"
+            className="ps-9 pe-9 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50 rounded-xl h-10"
           />
           {searchQuery && (
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 hover:bg-transparent"
+              className="absolute end-1 top-1/2 -translate-y-1/2 h-7 w-7 hover:bg-transparent"
               onClick={() => setSearchQuery("")}
               aria-label="Clear search"
             >
@@ -230,6 +214,7 @@ export function UnifiedChatList({
 
               return (
                 <button
+                  type="button"
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
                   className={cn(
@@ -237,7 +222,7 @@ export function UnifiedChatList({
                     "hover:bg-muted/70 active:scale-95",
                     isActive
                       ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Icon className="h-3.5 w-3.5 flex-shrink-0" />
@@ -245,10 +230,10 @@ export function UnifiedChatList({
                   {count > 0 && (
                     <span
                       className={cn(
-                        "ml-0.5 px-1.5 py-0.5 text-[10px] rounded-full font-semibold",
+                        "ms-0.5 px-1.5 py-0.5 text-[10px] rounded-full font-semibold",
                         isActive
                           ? "bg-primary-foreground/20 text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
+                          : "bg-muted text-muted-foreground",
                       )}
                     >
                       {count}
@@ -274,9 +259,7 @@ export function UnifiedChatList({
                 <FiMessageCircle className="h-8 w-8 opacity-50" />
               </div>
               <p className="text-sm font-medium">{getText("noConversations")}</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">
-                Start sharing food to begin chatting
-              </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Start sharing food to begin chatting</p>
             </motion.div>
           ) : (
             <div className="space-y-1">
@@ -314,7 +297,7 @@ type ChatListItemProps = {
   isOnline: boolean;
   onClick: () => void;
   formatTime: (timestamp: string | null) => string;
-  getText: (key: keyof typeof FALLBACK) => string;
+  getText: (key: string) => string;
   currentUserId?: string;
 };
 
@@ -339,12 +322,13 @@ const ChatListItem = memo(
 
     return (
       <button
+        type="button"
         onClick={onClick}
         className={cn(
           "w-full flex items-start gap-3 p-3 rounded-xl transition-all duration-200",
           "hover:bg-muted/70 active:scale-[0.98]",
           isActive && "bg-primary/10 hover:bg-primary/15 ring-1 ring-primary/20",
-          chat.hasUnread && !isActive && "bg-muted/40"
+          chat.hasUnread && !isActive && "bg-muted/40",
         )}
       >
         {/* Avatar / Image */}
@@ -365,26 +349,26 @@ const ChatListItem = memo(
 
           {/* Online indicator */}
           {isOnline && (
-            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-background shadow-sm" />
+            <span className="absolute -bottom-0.5 -end-0.5 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-background shadow-sm" />
           )}
 
           {/* Food chat badge */}
           {!isOnline && (
-            <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center shadow-sm border-2 border-background bg-green-500">
+            <div className="absolute -bottom-1 -end-1 h-5 w-5 rounded-full flex items-center justify-center shadow-sm border-2 border-background bg-green-500">
               <FiPackage className="h-2.5 w-2.5 text-white" />
             </div>
           )}
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-w-0 text-left">
+        <div className="flex-1 min-w-0 text-start">
           {/* Post name / Title with role badge */}
           <div className="flex items-center justify-between gap-2 mb-0.5">
             <div className="flex items-center gap-1.5 min-w-0">
               <span
                 className={cn(
                   "truncate text-sm",
-                  chat.hasUnread ? "font-bold text-foreground" : "font-semibold text-foreground/90"
+                  chat.hasUnread ? "font-bold text-foreground" : "font-semibold text-foreground/90",
                 )}
               >
                 {chat.title}
@@ -394,7 +378,7 @@ const ChatListItem = memo(
                   "px-1.5 py-0.5 text-[9px] font-medium rounded flex-shrink-0",
                   isSharer
                     ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400"
-                    : "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400"
+                    : "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400",
                 )}
               >
                 {roleLabel}
@@ -403,7 +387,7 @@ const ChatListItem = memo(
             <span
               className={cn(
                 "text-[10px] flex-shrink-0 font-medium",
-                chat.hasUnread ? "text-primary" : "text-muted-foreground"
+                chat.hasUnread ? "text-primary" : "text-muted-foreground",
               )}
             >
               {formatTime(chat.lastMessageTime)}
@@ -428,14 +412,12 @@ const ChatListItem = memo(
             <p
               className={cn(
                 "text-xs truncate",
-                chat.hasUnread ? "text-foreground/80 font-medium" : "text-muted-foreground"
+                chat.hasUnread ? "text-foreground/80 font-medium" : "text-muted-foreground",
               )}
             >
               {chat.lastMessage || getText("noMessages")}
             </p>
-            {chat.hasUnread && (
-              <span className="h-2.5 w-2.5 rounded-full bg-primary flex-shrink-0 animate-pulse" />
-            )}
+            {chat.hasUnread && <span className="h-2.5 w-2.5 rounded-full bg-primary flex-shrink-0 animate-pulse" />}
           </div>
         </div>
       </button>
@@ -451,5 +433,5 @@ const ChatListItem = memo(
       prevProps.isActive === nextProps.isActive &&
       prevProps.isOnline === nextProps.isOnline
     );
-  }
+  },
 );

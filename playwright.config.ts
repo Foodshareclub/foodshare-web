@@ -115,8 +115,7 @@ export default defineConfig({
             SENTRY_PROJECT: process.env.SENTRY_PROJECT || "",
             SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN || "",
             NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED: process.env.NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED || "",
-            NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED:
-              process.env.NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED || "",
+            NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED: process.env.NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED || "",
             NEXT_PUBLIC_OAUTH_APPLE_ENABLED: process.env.NEXT_PUBLIC_OAUTH_APPLE_ENABLED || "",
             NEXT_PUBLIC_OAUTH_GITHUB_ENABLED: process.env.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED || "",
           },

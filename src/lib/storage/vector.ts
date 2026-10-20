@@ -64,11 +64,7 @@ export async function upsertVectors(vectors: VectorUpsertItem[]): Promise<boolea
 /**
  * Upsert a single vector
  */
-export async function upsertVector(
-  id: string,
-  vector: number[],
-  metadata?: VectorMetadata
-): Promise<boolean> {
+export async function upsertVector(id: string, vector: number[], metadata?: VectorMetadata): Promise<boolean> {
   return upsertVectors([{ id, vector, metadata }]);
 }
 
@@ -83,17 +79,11 @@ export async function querySimilar(
     includeMetadata?: boolean;
     includeVectors?: boolean;
     minScore?: number;
-  }
+  },
 ): Promise<VectorQueryResult[]> {
   try {
     const index = getVectorIndex();
-    const {
-      topK = 10,
-      filter,
-      includeMetadata = true,
-      includeVectors = false,
-      minScore = 0,
-    } = options || {};
+    const { topK = 10, filter, includeMetadata = true, includeVectors = false, minScore = 0 } = options || {};
 
     const results = await index.query({
       vector,
@@ -112,7 +102,7 @@ export async function querySimilar(
         vector: result.vector,
       }));
   } catch (error) {
-    console.error(`[Vector] Query failed:`, error);
+    console.error("[Vector] Query failed:", error);
     return [];
   }
 }
@@ -123,7 +113,7 @@ export async function querySimilar(
 export async function querySimilarByType(
   vector: number[],
   type: VectorContentType,
-  options?: { topK?: number; minScore?: number }
+  options?: { topK?: number; minScore?: number },
 ): Promise<VectorQueryResult[]> {
   return querySimilar(vector, {
     ...options,
@@ -137,7 +127,7 @@ export async function querySimilarByType(
  */
 export async function fetchVectors(
   ids: string[],
-  options?: { includeMetadata?: boolean; includeVectors?: boolean }
+  options?: { includeMetadata?: boolean; includeVectors?: boolean },
 ): Promise<Array<VectorQueryResult | null>> {
   if (ids.length === 0) return [];
 
@@ -158,10 +148,10 @@ export async function fetchVectors(
             metadata: result.metadata as VectorMetadata | undefined,
             vector: result.vector,
           }
-        : null
+        : null,
     );
   } catch (error) {
-    console.error(`[Vector] Failed to fetch vectors:`, error);
+    console.error("[Vector] Failed to fetch vectors:", error);
     return ids.map(() => null);
   }
 }
@@ -177,7 +167,7 @@ export async function deleteVectors(ids: string[]): Promise<boolean> {
     await index.delete(ids);
     return true;
   } catch (error) {
-    console.error(`[Vector] Failed to delete vectors:`, error);
+    console.error("[Vector] Failed to delete vectors:", error);
     return false;
   }
 }
@@ -227,7 +217,7 @@ export async function getIndexStats(): Promise<{
       dimension: info.dimension,
     };
   } catch (error) {
-    console.error(`[Vector] Failed to get index stats:`, error);
+    console.error("[Vector] Failed to get index stats:", error);
     return null;
   }
 }

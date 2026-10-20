@@ -1,22 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import type { ForumComment } from "@/api/forumAPI";
+import { useAuth } from "@/hooks/useAuth";
+import { cn, formatDate } from "@/lib/utils";
 import {
   Award,
   CheckCircle,
   ChevronDown,
-  MessageCircle,
-  Pencil,
-  MoreHorizontal,
   Flag,
   Heart,
+  MessageCircle,
+  MoreHorizontal,
+  Pencil,
   Reply,
   Trash2,
 } from "lucide-react";
+import { useState } from "react";
 import { RichTextViewer } from "./RichTextViewer";
-import { cn, formatDate } from "@/lib/utils";
-import type { ForumComment } from "@/api/forumAPI";
-import { useAuth } from "@/hooks/useAuth";
 
 type ForumCommentCardProps = {
   comment: ForumComment;
@@ -72,8 +72,8 @@ export function ForumCommentCard({
   // Dynamic indentation based on depth
   const getIndentation = () => {
     if (comment.depth === 0) return "";
-    if (comment.depth === 1) return "ml-6 md:ml-10";
-    return "ml-10 md:ml-16";
+    if (comment.depth === 1) return "ms-6 md:ms-10";
+    return "ms-10 md:ms-16";
   };
 
   return (
@@ -81,7 +81,7 @@ export function ForumCommentCard({
       {/* Thread connector for nested comments */}
       {comment.depth > 0 && (
         <div className="flex items-start mb-2">
-          <Reply className="w-4 h-4 text-muted-foreground/50 mr-2 mt-1 flex-shrink-0" />
+          <Reply className="w-4 h-4 text-muted-foreground/50 me-2 mt-1 flex-shrink-0" />
           <span className="text-xs text-muted-foreground">&quot;Reply&quot;</span>
         </div>
       )}
@@ -92,7 +92,7 @@ export function ForumCommentCard({
             "rounded-2xl p-0 mb-3 overflow-hidden transition-all duration-300",
             comment.is_best_answer ? "glass-accent-primary" : "glass-subtle",
             comment.is_pinned && "ring-2 ring-amber-400/50",
-            isHighlighted && "ring-2 ring-green-400/50 shadow-lg"
+            isHighlighted && "ring-2 ring-green-400/50 shadow-lg",
           )}
         >
           {/* Best Answer Banner */}
@@ -100,7 +100,7 @@ export function ForumCommentCard({
             <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 flex items-center gap-2 animate-in slide-in-from-top duration-300">
               <Award className="w-4 h-4 text-white" />
               <span className="text-white text-sm font-semibold">&quot;Best Answer&quot;</span>
-              <CheckCircle className="w-4 h-4 text-white ml-auto" />
+              <CheckCircle className="w-4 h-4 text-white ms-auto" />
             </div>
           )}
 
@@ -127,7 +127,7 @@ export function ForumCommentCard({
                   {/* eslint-enable @next/next/no-img-element */}
                   {/* Post author badge */}
                   {isPostAuthor && (
-                    <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
+                    <span className="absolute -bottom-1 -end-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
                       <CheckCircle className="w-3 h-3 text-white" />
                     </span>
                   )}
@@ -145,9 +145,7 @@ export function ForumCommentCard({
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>
-                      {formatDate(comment.comment_created_at, { format: "relative-short" })}
-                    </span>
+                    <span>{formatDate(comment.comment_created_at, { format: "relative-short" })}</span>
                     {comment.is_edited && (
                       <span className="italic flex items-center gap-1">
                         <Pencil className="w-3 h-3" />
@@ -161,6 +159,7 @@ export function ForumCommentCard({
               {/* Actions Menu */}
               <div className="relative">
                 <button
+                  type="button"
                   className="p-2 rounded-full hover:bg-gray-100 hover:scale-110 active:scale-95 transition-all"
                   onClick={() => setShowMenu(!showMenu)}
                 >
@@ -170,11 +169,21 @@ export function ForumCommentCard({
                 {showMenu && (
                   <>
                     {/* Backdrop to close menu */}
-                    <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-                    <div className="absolute right-0 top-10 bg-popover rounded-xl shadow-xl border border-border py-2 z-20 min-w-[160px] overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-150">
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowMenu(false)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") setShowMenu(false);
+                      }}
+                      onKeyUp={(e) => {
+                        if (e.key === "Enter" || e.key === " ") setShowMenu(false);
+                      }}
+                    />
+                    <div className="absolute end-0 top-10 bg-popover rounded-xl shadow-xl border border-border py-2 z-20 min-w-[160px] overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-150">
                       {isOwnComment && onEdit && (
                         <button
-                          className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted/50 flex items-center gap-3 transition-colors"
+                          type="button"
+                          className="w-full px-4 py-2.5 text-start text-sm hover:bg-muted/50 flex items-center gap-3 transition-colors"
                           onClick={() => {
                             onEdit(comment);
                             setShowMenu(false);
@@ -186,7 +195,8 @@ export function ForumCommentCard({
                       )}
                       {isOwnComment && onDelete && (
                         <button
-                          className="w-full px-4 py-2.5 text-left text-sm hover:bg-red-50 flex items-center gap-3 text-red-600 transition-colors"
+                          type="button"
+                          className="w-full px-4 py-2.5 text-start text-sm hover:bg-red-50 flex items-center gap-3 text-red-600 transition-colors"
                           onClick={() => {
                             onDelete(comment.id);
                             setShowMenu(false);
@@ -198,7 +208,8 @@ export function ForumCommentCard({
                       )}
                       {!isOwnComment && onReport && (
                         <button
-                          className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted/50 flex items-center gap-3 transition-colors"
+                          type="button"
+                          className="w-full px-4 py-2.5 text-start text-sm hover:bg-muted/50 flex items-center gap-3 transition-colors"
                           onClick={() => {
                             onReport(comment.id);
                             setShowMenu(false);
@@ -212,7 +223,8 @@ export function ForumCommentCard({
                         <>
                           <div className="h-px bg-gray-100 my-1" />
                           <button
-                            className="w-full px-4 py-2.5 text-left text-sm hover:bg-green-50 flex items-center gap-3 text-green-600 transition-colors"
+                            type="button"
+                            className="w-full px-4 py-2.5 text-start text-sm hover:bg-green-50 flex items-center gap-3 text-green-600 transition-colors"
                             onClick={() => {
                               onMarkBestAnswer(comment.id);
                               setShowMenu(false);
@@ -230,7 +242,7 @@ export function ForumCommentCard({
             </div>
 
             {/* Comment Content */}
-            <div className="text-foreground/80 leading-relaxed mb-4 pl-[52px]">
+            <div className="text-foreground/80 leading-relaxed mb-4 ps-[52px]">
               {comment.rich_content &&
               typeof comment.rich_content === "object" &&
               Object.keys(comment.rich_content as Record<string, unknown>).length > 0 ? (
@@ -241,26 +253,26 @@ export function ForumCommentCard({
             </div>
 
             {/* Footer: Actions */}
-            <div className="flex items-center gap-1 pl-[52px]">
+            <div className="flex items-center gap-1 ps-[52px]">
               {onLike && (
                 <button
+                  type="button"
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all hover:scale-105 active:scale-95",
                     isLiked
                       ? "bg-red-500/10 text-red-600 dark:text-red-400"
-                      : "text-muted-foreground hover:bg-muted hover:text-red-500"
+                      : "text-muted-foreground hover:bg-muted hover:text-red-500",
                   )}
                   onClick={handleLike}
                 >
                   <Heart className={cn("w-4 h-4", isLiked && "fill-current")} />
-                  <span className="font-medium">
-                    {(comment.likes_count || 0) + (isLiked ? 1 : 0)}
-                  </span>
+                  <span className="font-medium">{(comment.likes_count || 0) + (isLiked ? 1 : 0)}</span>
                 </button>
               )}
 
               {onReply && comment.depth < 2 && (
                 <button
+                  type="button"
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition-all hover:scale-105 active:scale-95"
                   onClick={() => onReply(comment.id)}
                 >
@@ -271,14 +283,13 @@ export function ForumCommentCard({
 
               {comment.replies_count > 0 && (
                 <button
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:bg-muted transition-all hover:scale-105 active:scale-95 ml-auto"
+                  type="button"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:bg-muted transition-all hover:scale-105 active:scale-95 ms-auto"
                   onClick={handleToggleReplies}
                 >
                   <MessageCircle className="w-4 h-4" />
                   <span className="font-medium">{comment.replies_count}</span>
-                  <span
-                    className={cn("transition-transform duration-200", expanded && "rotate-180")}
-                  >
+                  <span className={cn("transition-transform duration-200", expanded && "rotate-180")}>
                     <ChevronDown className="w-4 h-4" />
                   </span>
                 </button>
@@ -292,7 +303,7 @@ export function ForumCommentCard({
       {expanded && replies.length > 0 && (
         <div className="relative animate-in fade-in slide-in-from-top-2 duration-300">
           {/* Vertical thread line */}
-          <div className="absolute left-5 top-0 bottom-4 w-0.5 bg-gradient-to-b from-gray-200 to-transparent" />
+          <div className="absolute start-5 top-0 bottom-4 w-0.5 bg-gradient-to-b from-gray-200 to-transparent" />
 
           <div className="space-y-2">
             {replies.map((reply, index) => (

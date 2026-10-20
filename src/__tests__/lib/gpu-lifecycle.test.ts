@@ -60,9 +60,9 @@ test("a failed surface releases its own acquisition while preserving another can
   createSurface = () => {
     throw new Error("Canvas unavailable");
   };
-  await expect(
-    initGPURender({ canvasRef: { current: document.createElement("canvas") } })
-  ).rejects.toThrow("Canvas unavailable");
+  await expect(initGPURender({ canvasRef: { current: document.createElement("canvas") } })).rejects.toThrow(
+    "Canvas unavailable",
+  );
   expect(getPoolState().refCount).toBe(1);
   expect(existing.gpu.dispose).not.toHaveBeenCalled();
   existing.release();

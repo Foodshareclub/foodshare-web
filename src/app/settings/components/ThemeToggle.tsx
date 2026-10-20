@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
-import { Sun, Moon, Monitor } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { Monitor, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -28,12 +28,13 @@ export function ThemeToggle() {
           <Tooltip key={value}>
             <TooltipTrigger asChild>
               <button
+                type="button"
                 onClick={() => setTheme(value)}
                 className={cn(
                   "p-1.5 rounded-md transition-all duration-200",
                   theme === value
                     ? "bg-background shadow-sm text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <Icon className="w-4 h-4" />

@@ -185,9 +185,7 @@ class MetricsCollector {
           const entries = list.getEntries();
           if (entries.length > 0) {
             const firstEntry = entries[0] as PerformanceEntry & { processingStart?: number };
-            this.webVitals.fid = firstEntry.processingStart
-              ? firstEntry.processingStart - firstEntry.startTime
-              : null;
+            this.webVitals.fid = firstEntry.processingStart ? firstEntry.processingStart - firstEntry.startTime : null;
           }
         });
         fidObserver.observe({ type: "first-input", buffered: true });
@@ -236,8 +234,7 @@ class MetricsCollector {
     if (endpointData.latencies.length > 100) {
       endpointData.latencies.shift();
     }
-    endpointData.avgLatencyMs =
-      endpointData.latencies.reduce((a, b) => a + b, 0) / endpointData.latencies.length;
+    endpointData.avgLatencyMs = endpointData.latencies.reduce((a, b) => a + b, 0) / endpointData.latencies.length;
 
     if (success) {
       endpointData.successCount++;
@@ -339,9 +336,7 @@ class MetricsCollector {
         errorCount: this.errorCount,
         errorRate: this.requestCount > 0 ? this.errorCount / this.requestCount : 0,
         avgLatencyMs:
-          this.apiLatencies.length > 0
-            ? this.apiLatencies.reduce((a, b) => a + b, 0) / this.apiLatencies.length
-            : 0,
+          this.apiLatencies.length > 0 ? this.apiLatencies.reduce((a, b) => a + b, 0) / this.apiLatencies.length : 0,
         p50LatencyMs: this.percentile(this.apiLatencies, 50),
         p95LatencyMs: this.percentile(this.apiLatencies, 95),
         p99LatencyMs: this.percentile(this.apiLatencies, 99),
@@ -350,16 +345,14 @@ class MetricsCollector {
         byErrorCode,
       },
       realtime: {
-        uptimePercent:
-          totalRealtimeTime > 0 ? (currentConnectedMs / totalRealtimeTime) * 100 : 100,
+        uptimePercent: totalRealtimeTime > 0 ? (currentConnectedMs / totalRealtimeTime) * 100 : 100,
         totalConnectionTimeMs: currentConnectedMs,
         totalDisconnectionTimeMs: this.realtimeTotalDisconnectedMs,
         reconnectCount: this.realtimeReconnectCount,
         messagesReceived: this.realtimeMessageCount,
         avgMessageLatencyMs:
           this.realtimeMessageLatencies.length > 0
-            ? this.realtimeMessageLatencies.reduce((a, b) => a + b, 0) /
-              this.realtimeMessageLatencies.length
+            ? this.realtimeMessageLatencies.reduce((a, b) => a + b, 0) / this.realtimeMessageLatencies.length
             : 0,
       },
       webVitals: { ...this.webVitals },
@@ -409,12 +402,7 @@ export function getMetricsCollector(): MetricsCollector {
 /**
  * Record an API request
  */
-export function recordAPIRequest(
-  endpoint: string,
-  latencyMs: number,
-  success: boolean,
-  errorCode?: string
-): void {
+export function recordAPIRequest(endpoint: string, latencyMs: number, success: boolean, errorCode?: string): void {
   getMetricsCollector().recordAPIRequest(endpoint, latencyMs, success, errorCode);
 }
 

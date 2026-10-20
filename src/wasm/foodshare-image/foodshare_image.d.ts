@@ -1,16 +1,11 @@
 /* tslint:disable */
-/* eslint-disable */
 
 /**
  * Calculate optimal resized target width based on raw file size tiers and current dimensions.
  *
  * Returns target width in pixels (0 means no resize needed).
  */
-export function calculate_smart_width(
-  file_size_bytes: number,
-  current_width: number,
-  current_height: number
-): number;
+export function calculate_smart_width(file_size_bytes: number, current_width: number, current_height: number): number;
 
 /**
  * Detect image format from magic bytes (JPEG, PNG, GIF, WebP, AVIF, BMP, TIFF, HEIC).

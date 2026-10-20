@@ -3,7 +3,7 @@
  * All email providers must implement this interface
  */
 
-import type { SendEmailRequest, SendEmailResponse, EmailProvider, ProviderQuota } from "../types";
+import type { EmailProvider, ProviderQuota, SendEmailRequest, SendEmailResponse } from "../types";
 
 export interface IEmailProvider {
   /**

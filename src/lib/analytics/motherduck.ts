@@ -7,7 +7,7 @@
 // type DatabaseInstance = Awaited<ReturnType<DuckDBModule["Database"]["create"]>>;
 // let dbInstance: DatabaseInstance | null = null;
 
-type DatabaseInstance = any;
+type DatabaseInstance = unknown;
 // const dbInstance: DatabaseInstance | null = null;
 
 export class MotherDuckService {
@@ -45,10 +45,7 @@ export class MotherDuckService {
     // }
   }
 
-  static async runQuery<T = Record<string, unknown>>(
-    _query: string,
-    _params: unknown[] = []
-  ): Promise<T[]> {
+  static async runQuery<T = Record<string, unknown>>(_query: string, _params: unknown[] = []): Promise<T[]> {
     throw new Error("MotherDuck is temporarily disabled due to ARM64 compatibility");
     // const db = await this.getConnection();
     // // duckdb-async 'all' returns a promise

@@ -9,8 +9,9 @@
  * @module hooks/useViewTracking
  */
 
-import { useEffect, useRef, useCallback, useState } from "react";
 import { incrementPostView, recordDetailedView } from "@/app/actions/post-views";
+import type { TimerHandle } from "@/types/timer.types";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // ============================================================================
 // Types
@@ -120,7 +121,7 @@ export function useViewTracking(options: UseViewTrackingOptions) {
     const element = ref.current;
     if (!element) return;
 
-    let visibilityTimer: NodeJS.Timeout | null = null;
+    let visibilityTimer: TimerHandle | null = null;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -137,7 +138,7 @@ export function useViewTracking(options: UseViewTrackingOptions) {
           visibilityTimer = null;
         }
       },
-      { threshold: 0.5 } // 50% visible
+      { threshold: 0.5 }, // 50% visible
     );
 
     observer.observe(element);

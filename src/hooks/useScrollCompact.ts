@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * Custom hook to detect scroll position and return compact state for header
@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
  *   - isCompact: boolean indicating if header should be compact
  *   - scrollY: current scroll position in pixels
  */
-export const useScrollCompact = (threshold: number = 80) => {
+export const useScrollCompact = (threshold = 80) => {
   const [scrollY, setScrollY] = useState(0);
   const [isCompact, setIsCompact] = useState(false);
 

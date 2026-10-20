@@ -1,9 +1,9 @@
-import foodRed from "../assets/foodRed.svg";
-import thingsRed from "../assets/thingsRed.png";
 import borrowRed from "../assets/borrowRed.svg";
-import wantedRed from "../assets/wantedRed.svg";
-import fridgesRed from "../assets/fridgesRed.svg";
+import foodRed from "../assets/foodRed.svg";
 import foodBanksRed from "../assets/foodbanksRed.svg";
+import fridgesRed from "../assets/fridgesRed.svg";
+import thingsRed from "../assets/thingsRed.png";
+import wantedRed from "../assets/wantedRed.svg";
 
 type N = Record<string, string>;
 

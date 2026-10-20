@@ -188,7 +188,7 @@ export function renderTemplateContent(content: string, variables: Record<string,
  */
 export function prepareVariables(
   templateVars: TemplateVariable[],
-  providedVars: Record<string, unknown>
+  providedVars: Record<string, unknown>,
 ): { variables: Record<string, unknown>; missing: string[] } {
   const variables: Record<string, unknown> = {};
   const missing: string[] = [];
@@ -212,7 +212,7 @@ export function prepareVariables(
  */
 export async function renderDatabaseTemplate(
   slug: string,
-  providedVars: Record<string, unknown>
+  providedVars: Record<string, unknown>,
 ): Promise<RenderedTemplate | null> {
   const template = await fetchDatabaseTemplate(slug);
 

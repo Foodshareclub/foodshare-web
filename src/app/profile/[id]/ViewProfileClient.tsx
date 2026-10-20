@@ -4,13 +4,14 @@
  * Action buttons are extracted to ProfileActions client wrapper
  */
 
-import Image from "next/image";
-import { MapPin, Calendar } from "lucide-react";
-import { ProfileActions } from "./ProfileActions";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import peak from "@/assets/peakpx-min.jpg";
-import type { PublicProfile } from "@/lib/data/profiles";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { AuthUser } from "@/lib/data/auth";
+import type { PublicProfile } from "@/lib/data/profiles";
+import { coarseAreaLabel, parsePostGISPoint } from "@/utils/postgis";
+import { Calendar, MapPin } from "lucide-react";
+import Image from "next/image";
+import { ProfileActions } from "./ProfileActions";
 
 interface ViewProfileClientProps {
   profile: PublicProfile;
@@ -22,8 +23,13 @@ interface ViewProfileClientProps {
 export function ViewProfileClient({ profile, user, isVolunteer = false }: ViewProfileClientProps) {
   const isAuthenticated = !!user;
 
-  const initials =
-    `${profile.first_name?.[0] || ""}${profile.second_name?.[0] || ""}`.toUpperCase();
+  // Null when the member opted out, when there is no point, or when the
+  // value is a shape we cannot read. Absent beats wrong: the card simply
+  // does not render.
+  const coarseArea =
+    profile.location_sharing_enabled === false ? null : coarseAreaLabel(parsePostGISPoint(profile.location));
+
+  const initials = `${profile.first_name?.[0] || ""}${profile.second_name?.[0] || ""}`.toUpperCase();
   const joinDate = profile.created_time
     ? new Date(profile.created_time).toLocaleDateString("en-US", {
         year: "numeric",
@@ -45,10 +51,7 @@ export function ViewProfileClient({ profile, user, isVolunteer = false }: ViewPr
             {/* Avatar */}
             <div className="flex justify-center -mt-20 mb-6">
               <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
-                <AvatarImage
-                  src={profile.avatar_url || undefined}
-                  alt={profile.first_name || "User"}
-                />
+                <AvatarImage src={profile.avatar_url || undefined} alt={profile.first_name || "User"} />
                 <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-emerald-400 to-emerald-600 text-white">
                   {initials || "?"}
                 </AvatarFallback>
@@ -60,18 +63,14 @@ export function ViewProfileClient({ profile, user, isVolunteer = false }: ViewPr
               <h1 className="text-3xl font-bold text-foreground mb-2">
                 {profile.first_name} {profile.second_name}
               </h1>
-              {profile.nickname && (
-                <p className="text-lg text-muted-foreground">@{profile.nickname}</p>
-              )}
+              {profile.nickname && <p className="text-lg text-muted-foreground">@{profile.nickname}</p>}
             </div>
 
             {/* Volunteer Badge */}
             {isVolunteer && (
               <div className="flex justify-center mb-6">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
-                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-sm">
-                    🤝 Volunteer
-                  </span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-sm">🤝 Volunteer</span>
                 </div>
               </div>
             )}
@@ -95,26 +94,27 @@ export function ViewProfileClient({ profile, user, isVolunteer = false }: ViewPr
                     <Calendar className="text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase font-medium">
-                      Member Since
-                    </p>
+                    <p className="text-xs text-muted-foreground uppercase font-medium">Member Since</p>
                     <p className="text-foreground font-semibold">{joinDate}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Location */}
-              {profile.location && (
+              {/* Location — coarse area only, and only if they allow it */}
+              {coarseArea && (
                 <div className="glass-subtle rounded-xl p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0 p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                       <MapPin className="text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground uppercase font-medium">
-                        Location
-                      </p>
-                      <p className="text-foreground font-semibold">{String(profile.location)}</p>
+                      <p className="text-xs text-muted-foreground uppercase font-medium">Location</p>
+                      {/* An ~11 km cell, not a pin. The raw point was rendered
+                          here, which both printed "[object Object]" whenever
+                          PostgREST returned GeoJSON and published a member's
+                          home coordinates on a public page. */}
+                      <p className="text-foreground font-semibold">{coarseArea}</p>
+                      <p className="text-xs text-muted-foreground">Approximate area</p>
                     </div>
                   </div>
                 </div>

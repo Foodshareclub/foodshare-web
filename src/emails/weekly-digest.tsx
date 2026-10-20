@@ -4,8 +4,8 @@
  * Sent weekly with user stats and nearby listings.
  */
 
-import { Text, Section, Img, Row, Column, Link } from "@react-email/components";
-import { EmailLayout, EmailCard, EmailButton, colors } from "./components/base";
+import { Column, Img, Link, Row, Section, Text } from "@react-email/components";
+import { EmailButton, EmailCard, EmailLayout, colors } from "./components/base";
 
 interface ListingPreview {
   title: string;
@@ -94,9 +94,7 @@ export function WeeklyDigestEmail({
                 padding: "25px 15px",
               }}
             >
-              <Text style={{ margin: 0, fontSize: "36px", fontWeight: 800, color: colors.primary }}>
-                {itemsShared}
-              </Text>
+              <Text style={{ margin: 0, fontSize: "36px", fontWeight: 800, color: colors.primary }}>{itemsShared}</Text>
               <Text
                 style={{
                   margin: "8px 0 0",
@@ -119,9 +117,7 @@ export function WeeklyDigestEmail({
                 padding: "25px 15px",
               }}
             >
-              <Text style={{ margin: 0, fontSize: "36px", fontWeight: 800, color: colors.teal }}>
-                {foodSaved}
-              </Text>
+              <Text style={{ margin: 0, fontSize: "36px", fontWeight: 800, color: colors.teal }}>{foodSaved}</Text>
               <Text
                 style={{
                   margin: "8px 0 0",
@@ -144,9 +140,7 @@ export function WeeklyDigestEmail({
                 padding: "25px 15px",
               }}
             >
-              <Text style={{ margin: 0, fontSize: "36px", fontWeight: 800, color: colors.orange }}>
-                {co2Saved}
-              </Text>
+              <Text style={{ margin: 0, fontSize: "36px", fontWeight: 800, color: colors.orange }}>{co2Saved}</Text>
               <Text
                 style={{
                   margin: "8px 0 0",
@@ -170,12 +164,11 @@ export function WeeklyDigestEmail({
 
         {displayListings.map((listing, index) => (
           <Section
-            key={index}
+            key={listing.url}
             style={{
               marginBottom: index < displayListings.length - 1 ? "15px" : 0,
               paddingBottom: index < displayListings.length - 1 ? "15px" : 0,
-              borderBottom:
-                index < displayListings.length - 1 ? `1px solid ${colors.border}` : "none",
+              borderBottom: index < displayListings.length - 1 ? `1px solid ${colors.border}` : "none",
             }}
           >
             <Row>

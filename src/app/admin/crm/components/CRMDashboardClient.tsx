@@ -5,44 +5,10 @@
  * Modern UI with customer management, engagement tracking, and analytics
  */
 
-import React, { useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import {
-  Users,
-  TrendingUp,
-  AlertTriangle,
-  Search,
-  MoreHorizontal,
-  Mail,
-  MessageSquare,
-  Tag,
-  UserPlus,
-  Download,
-  RefreshCw,
-  Activity,
-  Target,
-  Heart,
-  Award,
-  Clock,
-  ArrowUpRight,
-  ArrowDownRight,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,8 +16,37 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { CRMCustomerWithProfile, CRMCustomerTag, CRMDashboardStats } from "@/types/crm.types";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import type { CRMCustomerTag, CRMCustomerWithProfile, CRMDashboardStats } from "@/types/crm.types";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Activity,
+  AlertTriangle,
+  ArrowDownRight,
+  ArrowUpRight,
+  Award,
+  Clock,
+  Download,
+  Heart,
+  Mail,
+  MessageSquare,
+  MoreHorizontal,
+  RefreshCw,
+  Search,
+  Tag,
+  Target,
+  TrendingUp,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import type React from "react";
+import { useState, useTransition } from "react";
 
 // ============================================================================
 // Types
@@ -83,8 +78,7 @@ export function CRMDashboardClient({ initialCustomers, stats, tags }: CRMDashboa
     const matchesSearch =
       customer.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.email?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesLifecycle =
-      lifecycleFilter === "all" || customer.lifecycle_stage === lifecycleFilter;
+    const matchesLifecycle = lifecycleFilter === "all" || customer.lifecycle_stage === lifecycleFilter;
     return matchesSearch && matchesLifecycle;
   });
 
@@ -103,13 +97,14 @@ export function CRMDashboardClient({ initialCustomers, stats, tags }: CRMDashboa
           <nav className="flex gap-1">
             {(["overview", "customers", "segments", "engagement"] as TabType[]).map((tab) => (
               <button
+                type="button"
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={cn(
                   "px-4 py-3 text-sm font-medium border-b-2 transition-colors",
                   activeTab === tab
                     ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
                 {t(tab)}
@@ -221,36 +216,11 @@ function OverviewTab({
             Customer Lifecycle
           </h3>
           <div className="space-y-3">
-            <LifecycleBar
-              label="Leads"
-              count={stats.leadCount}
-              total={stats.totalCustomers}
-              color="slate"
-            />
-            <LifecycleBar
-              label="Active"
-              count={stats.activeCount}
-              total={stats.totalCustomers}
-              color="blue"
-            />
-            <LifecycleBar
-              label="Champions"
-              count={stats.championCount}
-              total={stats.totalCustomers}
-              color="emerald"
-            />
-            <LifecycleBar
-              label="At Risk"
-              count={stats.atRiskCount}
-              total={stats.totalCustomers}
-              color="amber"
-            />
-            <LifecycleBar
-              label="Churned"
-              count={stats.churnedCount}
-              total={stats.totalCustomers}
-              color="rose"
-            />
+            <LifecycleBar label="Leads" count={stats.leadCount} total={stats.totalCustomers} color="slate" />
+            <LifecycleBar label="Active" count={stats.activeCount} total={stats.totalCustomers} color="blue" />
+            <LifecycleBar label="Champions" count={stats.championCount} total={stats.totalCustomers} color="emerald" />
+            <LifecycleBar label="At Risk" count={stats.atRiskCount} total={stats.totalCustomers} color="amber" />
+            <LifecycleBar label="Churned" count={stats.churnedCount} total={stats.totalCustomers} color="rose" />
           </div>
         </div>
 
@@ -286,9 +256,7 @@ function OverviewTab({
                   {tag.name}
                 </Badge>
               ))}
-              {tags.length === 0 && (
-                <p className="text-xs text-muted-foreground">No tags defined</p>
-              )}
+              {tags.length === 0 && <p className="text-xs text-muted-foreground">No tags defined</p>}
             </div>
           </div>
         </div>
@@ -309,9 +277,7 @@ function OverviewTab({
           {customers.slice(0, 5).map((customer) => (
             <CustomerRow key={customer.id} customer={customer} compact />
           ))}
-          {customers.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-6">No customers yet</p>
-          )}
+          {customers.length === 0 && <p className="text-sm text-muted-foreground text-center py-6">No customers yet</p>}
         </div>
       </div>
     </motion.div>
@@ -351,12 +317,12 @@ function CustomersTab({
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search customers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9 bg-background/50"
+            className="ps-9 h-9 bg-background/50"
           />
         </div>
         <Select value={lifecycleFilter} onValueChange={setLifecycleFilter}>
@@ -372,13 +338,7 @@ function CustomersTab({
             <SelectItem value="churned">Churned</SelectItem>
           </SelectContent>
         </Select>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 gap-2"
-          onClick={onRefresh}
-          disabled={isPending}
-        >
+        <Button variant="outline" size="sm" className="h-9 gap-2" onClick={onRefresh} disabled={isPending}>
           <RefreshCw className={cn("h-4 w-4", isPending && "animate-spin")} />
           Refresh
         </Button>
@@ -393,12 +353,12 @@ function CustomersTab({
         <table className="w-full">
           <thead className="bg-muted/30">
             <tr className="text-xs text-muted-foreground uppercase tracking-wider">
-              <th className="text-left py-3 px-4">Customer</th>
-              <th className="text-left py-3 px-4">Stage</th>
+              <th className="text-start py-3 px-4">Customer</th>
+              <th className="text-start py-3 px-4">Stage</th>
               <th className="text-center py-3 px-4">Engagement</th>
               <th className="text-center py-3 px-4">Churn Risk</th>
-              <th className="text-left py-3 px-4">Last Active</th>
-              <th className="text-right py-3 px-4">Actions</th>
+              <th className="text-start py-3 px-4">Last Active</th>
+              <th className="text-end py-3 px-4">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/50">
@@ -407,6 +367,12 @@ function CustomersTab({
                 key={customer.id}
                 className="hover:bg-muted/30 cursor-pointer transition-colors"
                 onClick={() => onSelectCustomer(customer)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    onSelectCustomer(customer);
+                  }
+                }}
+                tabIndex={0}
               >
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-3">
@@ -417,9 +383,7 @@ function CustomersTab({
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium text-foreground text-sm">
-                        {customer.full_name || "Unknown"}
-                      </p>
+                      <p className="font-medium text-foreground text-sm">{customer.full_name || "Unknown"}</p>
                       <p className="text-xs text-muted-foreground">{customer.email}</p>
                     </div>
                   </div>
@@ -430,20 +394,16 @@ function CustomersTab({
                 <td className="py-3 px-4 text-center">
                   <div className="flex items-center justify-center gap-2">
                     <Progress value={customer.engagement_score || 50} className="w-16 h-1.5" />
-                    <span className="text-xs text-muted-foreground">
-                      {customer.engagement_score || 50}%
-                    </span>
+                    <span className="text-xs text-muted-foreground">{customer.engagement_score || 50}%</span>
                   </div>
                 </td>
                 <td className="py-3 px-4 text-center">
                   <ChurnRiskBadge score={customer.churn_risk_score || 0} />
                 </td>
                 <td className="py-3 px-4 text-sm text-muted-foreground">
-                  {customer.last_interaction_at
-                    ? new Date(customer.last_interaction_at).toLocaleDateString()
-                    : "Never"}
+                  {customer.last_interaction_at ? new Date(customer.last_interaction_at).toLocaleDateString() : "Never"}
                 </td>
-                <td className="py-3 px-4 text-right">
+                <td className="py-3 px-4 text-end">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -452,16 +412,16 @@ function CustomersTab({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem>
-                        <Mail className="h-4 w-4 mr-2" />
+                        <Mail className="h-4 w-4 me-2" />
                         Send Email
                       </DropdownMenuItem>
                       <DropdownMenuItem>
-                        <MessageSquare className="h-4 w-4 mr-2" />
+                        <MessageSquare className="h-4 w-4 me-2" />
                         Add Note
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem>
-                        <Tag className="h-4 w-4 mr-2" />
+                        <Tag className="h-4 w-4 me-2" />
                         Manage Tags
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -568,22 +528,15 @@ function SegmentsTab({ stats, tags }: { stats: CRMDashboardStats; tags: CRMCusto
               key={tag.id}
               className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
             >
-              <div
-                className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ backgroundColor: tag.color }}
-              />
+              <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: tag.color }} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{tag.name}</p>
-                {tag.description && (
-                  <p className="text-xs text-muted-foreground truncate">{tag.description}</p>
-                )}
+                {tag.description && <p className="text-xs text-muted-foreground truncate">{tag.description}</p>}
               </div>
             </div>
           ))}
           {tags.length === 0 && (
-            <p className="col-span-full text-sm text-muted-foreground text-center py-6">
-              No custom tags yet
-            </p>
+            <p className="col-span-full text-sm text-muted-foreground text-center py-6">No custom tags yet</p>
           )}
         </div>
       </div>
@@ -614,9 +567,7 @@ function EngagementTab({
     >
       <div>
         <h2 className="text-lg font-semibold text-foreground">Engagement Analytics</h2>
-        <p className="text-sm text-muted-foreground">
-          Track user engagement and identify opportunities
-        </p>
+        <p className="text-sm text-muted-foreground">Track user engagement and identify opportunities</p>
       </div>
 
       {/* Engagement Metrics */}
@@ -655,10 +606,7 @@ function EngagementTab({
         </h3>
         <div className="space-y-2">
           {stats.topChampions.map((champion, index) => (
-            <div
-              key={champion.customer_id}
-              className="flex items-center gap-3 p-3 rounded-lg bg-muted/30"
-            >
+            <div key={champion.customer_id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
               <span className="text-lg font-bold text-muted-foreground w-6">#{index + 1}</span>
               <div className="flex-1">
                 <p className="font-medium text-foreground">{champion.full_name}</p>
@@ -737,9 +685,7 @@ function CustomerDetailModal({
           <DialogTitle className="flex items-center gap-3">
             <Avatar className="h-12 w-12">
               <AvatarImage src={customer.avatar_url || undefined} />
-              <AvatarFallback>
-                {customer.full_name?.slice(0, 2).toUpperCase() || "??"}
-              </AvatarFallback>
+              <AvatarFallback>{customer.full_name?.slice(0, 2).toUpperCase() || "??"}</AvatarFallback>
             </Avatar>
             <div>
               <p className="text-lg font-semibold">{customer.full_name || "Unknown"}</p>
@@ -752,9 +698,7 @@ function CustomerDetailModal({
           {/* Quick Stats */}
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-lg bg-muted/50 p-3 text-center">
-              <p className="text-2xl font-bold text-foreground">
-                {customer.engagement_score || 50}%
-              </p>
+              <p className="text-2xl font-bold text-foreground">{customer.engagement_score || 50}%</p>
               <p className="text-xs text-muted-foreground">Engagement</p>
             </div>
             <div className="rounded-lg bg-muted/50 p-3 text-center">
@@ -775,9 +719,7 @@ function CustomerDetailModal({
             </div>
             <div className="flex justify-between py-2 border-b border-border/50">
               <span className="text-sm text-muted-foreground">Customer Type</span>
-              <span className="text-sm font-medium capitalize">
-                {customer.customer_type || "both"}
-              </span>
+              <span className="text-sm font-medium capitalize">{customer.customer_type || "both"}</span>
             </div>
             <div className="flex justify-between py-2 border-b border-border/50">
               <span className="text-sm text-muted-foreground">Churn Risk</span>
@@ -790,9 +732,7 @@ function CustomerDetailModal({
             <div className="flex justify-between py-2">
               <span className="text-sm text-muted-foreground">Member Since</span>
               <span className="text-sm font-medium">
-                {customer.created_at
-                  ? new Date(customer.created_at).toLocaleDateString()
-                  : "Unknown"}
+                {customer.created_at ? new Date(customer.created_at).toLocaleDateString() : "Unknown"}
               </span>
             </div>
           </div>
@@ -941,7 +881,7 @@ function LifecycleBar({
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <span className="text-sm font-medium text-foreground w-12 text-right">{count}</span>
+      <span className="text-sm font-medium text-foreground w-12 text-end">{count}</span>
     </div>
   );
 }
@@ -969,14 +909,10 @@ function CustomerRow({
     <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors">
       <Avatar className={compact ? "h-8 w-8" : "h-10 w-10"}>
         <AvatarImage src={customer.avatar_url || undefined} />
-        <AvatarFallback className="text-xs">
-          {customer.full_name?.slice(0, 2).toUpperCase() || "??"}
-        </AvatarFallback>
+        <AvatarFallback className="text-xs">{customer.full_name?.slice(0, 2).toUpperCase() || "??"}</AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">
-          {customer.full_name || "Unknown"}
-        </p>
+        <p className="text-sm font-medium text-foreground truncate">{customer.full_name || "Unknown"}</p>
         <p className="text-xs text-muted-foreground truncate">{customer.email}</p>
       </div>
       <LifecycleBadge stage={customer.lifecycle_stage || "lead"} />

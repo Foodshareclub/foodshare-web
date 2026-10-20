@@ -34,28 +34,21 @@ const ListingPersonCards: React.FC<PropsType> = ({ children, settings, profile }
   const uploadAvatarHandler = async (event: ChangeEvent<HTMLInputElement>) => {
     if (!profile?.id) return;
 
-    const { file, url } = createPhotoUrl(event);
-    setPastUrl(url);
+    const photo = createPhotoUrl(event);
+    if (!photo) return;
+    setPastUrl(photo.url);
 
-    if (file) {
-      // Upload avatar using Server Action
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("userId", profile.id);
-      await uploadProfileAvatar(formData);
-    }
+    // Upload avatar using Server Action
+    const formData = new FormData();
+    formData.append("file", photo.file);
+    formData.append("userId", profile.id);
+    await uploadProfileAvatar(formData);
   };
 
   return (
     <div className="glass rounded-xl p-0 overflow-hidden">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        className="h-[200px] w-full object-cover"
-        src={peak.src}
-        alt="Cover"
-        loading="lazy"
-        decoding="async"
-      />
+      <img className="h-[200px] w-full object-cover" src={peak.src} alt="Cover" loading="lazy" decoding="async" />
 
       <div className="flex justify-center -mt-12">
         <AvatarWithRipple img={pastUrl || profile?.avatar_url || undefined} />
@@ -76,7 +69,7 @@ const ListingPersonCards: React.FC<PropsType> = ({ children, settings, profile }
             {profile?.first_name} {profile?.second_name}
           </h2>
           <input
-            className="w-0 opacity-0 absolute h-[22%] left-0 top-[9%]"
+            className="w-0 opacity-0 absolute h-[22%] start-0 top-[9%]"
             accept={ALLOWED_MIME_TYPES.PROFILES.join(",")}
             ref={inputFileRef}
             type="file"

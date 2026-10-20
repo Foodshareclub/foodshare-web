@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import type { ImageItem } from "../types";
+import { useCallback, useRef, useState } from "react";
 import { MAX_FILE_SIZE_MB, MAX_IMAGES } from "../constants";
+import type { ImageItem } from "../types";
 
 interface UseImageUploadOptions {
   maxImages?: number;
@@ -86,7 +86,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
         onImageAdded?.();
       }
     },
-    [images.length, maxImages, processImage, onImageAdded]
+    [images.length, maxImages, processImage, onImageAdded],
   );
 
   const handleChangeFile = useCallback(
@@ -101,7 +101,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
         inputFileRef.current.value = "";
       }
     },
-    [addImage, images.length, maxImages]
+    [addImage, images.length, maxImages],
   );
 
   const handleDrop = useCallback(
@@ -115,7 +115,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
         }
       }
     },
-    [addImage, images.length, maxImages]
+    [addImage, images.length, maxImages],
   );
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -141,22 +141,16 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
 
   const rotateImage = useCallback((imageId: string) => {
     setImages((prev) =>
-      prev.map((img) =>
-        img.id === imageId ? { ...img, rotation: ((img.rotation || 0) + 90) % 360 } : img
-      )
+      prev.map((img) => (img.id === imageId ? { ...img, rotation: ((img.rotation || 0) + 90) % 360 } : img)),
     );
   }, []);
 
   const flipImageH = useCallback((imageId: string) => {
-    setImages((prev) =>
-      prev.map((img) => (img.id === imageId ? { ...img, flipH: !img.flipH } : img))
-    );
+    setImages((prev) => prev.map((img) => (img.id === imageId ? { ...img, flipH: !img.flipH } : img)));
   }, []);
 
   const flipImageV = useCallback((imageId: string) => {
-    setImages((prev) =>
-      prev.map((img) => (img.id === imageId ? { ...img, flipV: !img.flipV } : img))
-    );
+    setImages((prev) => prev.map((img) => (img.id === imageId ? { ...img, flipV: !img.flipV } : img)));
   }, []);
 
   const handleImageDragStart = useCallback((imageId: string) => {
@@ -177,7 +171,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
         });
       }
     },
-    [draggedImageId]
+    [draggedImageId],
   );
 
   const handleImageDragEnd = useCallback(() => {
@@ -197,7 +191,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
           file: null,
           filePath: "",
           isExisting: true,
-        }))
+        })),
       );
     } else {
       setImages([]);

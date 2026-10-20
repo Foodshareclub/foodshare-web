@@ -21,7 +21,9 @@ concurrency:
 
 env:
   BUN_VERSION: "latest"
-  NODE_VERSION: "20"
+  # Third-party GitHub Actions are JavaScript and run on the runner's own Node
+  # runtime. That is the platform's requirement, not this project's toolchain —
+  # everything below runs on Bun.
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
@@ -48,9 +50,6 @@ jobs:
           command -v deno >/dev/null 2>&1 || { curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/opt/deno sh -s -- -y; echo "/opt/deno/bin" >> "$GITHUB_PATH"; } || true
           command -v bun >/dev/null 2>&1 || { curl -fsSL https://bun.sh/install | BUN_INSTALL=/opt/bun bash >/dev/null; echo "/opt/bun/bin" >> "$GITHUB_PATH"; } || true
           command -v cargo >/dev/null 2>&1 || { [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env" && echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"; } || true
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
@@ -107,9 +106,6 @@ jobs:
       NEXT_PUBLIC_OAUTH_GITHUB_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
@@ -128,13 +124,13 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
 
       - name: Install Playwright browsers
-        run: bunx playwright install --with-deps chromium
+        run: bunx --bun playwright install --with-deps chromium
 
       - name: Build production bundle
         run: bun run build
 
       - name: Run Playwright shard
-        run: bunx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: bunx --bun playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload blob report
         if: failure()

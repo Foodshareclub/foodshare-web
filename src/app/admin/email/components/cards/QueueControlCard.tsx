@@ -4,14 +4,14 @@
  * QueueControlCard - Admin controls for automation email queue
  */
 
-import React, { useState, useTransition, useEffect } from "react";
-import { Clock, Play, RefreshCw, XCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useActionToast } from "@/hooks/useActionToast";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useActionToast } from "@/hooks/useActionToast";
+import { cn } from "@/lib/utils";
+import { Clock, Play, RefreshCw, XCircle } from "lucide-react";
+import React, { useState, useTransition, useEffect } from "react";
 
 interface QueueControlCardProps {
   onRefresh: () => void;
@@ -141,13 +141,7 @@ export function QueueControlCard({ onRefresh }: QueueControlCardProps) {
         <div className="flex flex-wrap gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={handleProcessNow}
-                disabled={isPending}
-              >
+              <Button variant="outline" size="sm" className="gap-2" onClick={handleProcessNow} disabled={isPending}>
                 {actionType === "process" ? (
                   <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                 ) : (

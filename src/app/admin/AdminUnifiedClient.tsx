@@ -5,24 +5,18 @@
  * Industry-standard tabbed interface combining all admin functions
  */
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { LayoutDashboard, Users, ClipboardList, Mail, UserCircle, BarChart3 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { importProfilesAsCRMCustomers } from "@/app/actions/crm";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { importProfilesAsCRMCustomers } from "@/app/actions/crm";
-import type { DashboardStats, AuditLog } from "@/lib/data/admin";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { AuditLog, DashboardStats } from "@/lib/data/admin";
+import { cn } from "@/lib/utils";
+import { BarChart3, ClipboardList, LayoutDashboard, Mail, UserCircle, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 
 // ============================================================================
 // Types
@@ -99,11 +93,7 @@ function LifecycleBadge({ stage }: { stage: string }) {
     at_risk: "bg-orange-100 text-orange-800",
     churned: "bg-red-100 text-red-800",
   };
-  return (
-    <Badge className={cn("capitalize", colors[stage] || "bg-gray-100")}>
-      {stage.replace("_", " ")}
-    </Badge>
-  );
+  return <Badge className={cn("capitalize", colors[stage] || "bg-gray-100")}>{stage.replace("_", " ")}</Badge>;
 }
 
 function EngagementBar({ score }: { score: number }) {
@@ -132,8 +122,7 @@ function OverviewTab({
   onNavigate: (tab: TabId) => void;
 }) {
   const t = useTranslations();
-  const approvalRate =
-    stats.totalProducts > 0 ? ((stats.activeProducts / stats.totalProducts) * 100).toFixed(1) : "0";
+  const approvalRate = stats.totalProducts > 0 ? ((stats.activeProducts / stats.totalProducts) * 100).toFixed(1) : "0";
   const activeRate = Math.round((stats.activeProducts / (stats.totalProducts || 1)) * 100);
 
   return (
@@ -265,9 +254,7 @@ function CustomersTab({
         <div
           className={cn(
             "p-4 rounded-lg",
-            importMessage.startsWith("Error")
-              ? "bg-red-100 text-red-800"
-              : "bg-green-100 text-green-800"
+            importMessage.startsWith("Error") ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800",
           )}
         >
           {importMessage}
@@ -322,11 +309,11 @@ function CustomersTab({
         <table className="w-full">
           <thead className="bg-muted/50">
             <tr>
-              <th className="text-left p-4 font-medium">Customer</th>
-              <th className="text-left p-4 font-medium">Stage</th>
-              <th className="text-left p-4 font-medium">Engagement</th>
-              <th className="text-left p-4 font-medium">Churn Risk</th>
-              <th className="text-left p-4 font-medium">Last Activity</th>
+              <th className="text-start p-4 font-medium">Customer</th>
+              <th className="text-start p-4 font-medium">Stage</th>
+              <th className="text-start p-4 font-medium">Engagement</th>
+              <th className="text-start p-4 font-medium">Churn Risk</th>
+              <th className="text-start p-4 font-medium">Last Activity</th>
             </tr>
           </thead>
           <tbody>
@@ -345,9 +332,7 @@ function CustomersTab({
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={customer.avatar_url || undefined} />
-                        <AvatarFallback>
-                          {customer.full_name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
+                        <AvatarFallback>{customer.full_name.charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div>
                         <p className="font-medium">{customer.full_name}</p>
@@ -369,7 +354,7 @@ function CustomersTab({
                           ? "text-red-600"
                           : customer.churn_risk_score >= 40
                             ? "text-orange-600"
-                            : "text-green-600"
+                            : "text-green-600",
                       )}
                     >
                       {customer.churn_risk_score}%
@@ -415,13 +400,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: "analytics", label: "Analytics", icon: <BarChart3 className="w-4 h-4" /> },
 ];
 
-export function AdminUnifiedClient({
-  dashboardStats,
-  auditLogs,
-  customers,
-  tags,
-  crmStats,
-}: AdminUnifiedClientProps) {
+export function AdminUnifiedClient({ dashboardStats, auditLogs, customers, tags, crmStats }: AdminUnifiedClientProps) {
   const t = useTranslations();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("overview");
@@ -460,13 +439,14 @@ export function AdminUnifiedClient({
         <nav className="flex gap-1" aria-label="Admin sections">
           {TABS.map((tab) => (
             <button
+              type="button"
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
               className={cn(
                 "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors",
                 activeTab === tab.id
                   ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border",
               )}
             >
               {tab.icon}
@@ -481,9 +461,7 @@ export function AdminUnifiedClient({
         {activeTab === "overview" && (
           <OverviewTab stats={dashboardStats} auditLogs={auditLogs} onNavigate={handleTabChange} />
         )}
-        {activeTab === "customers" && (
-          <CustomersTab customers={customers} tags={tags} stats={crmStats} />
-        )}
+        {activeTab === "customers" && <CustomersTab customers={customers} tags={tags} stats={crmStats} />}
         {activeTab === "listings" && <PlaceholderTab title="Listings" href="/admin/listings" />}
         {activeTab === "users" && <PlaceholderTab title="Users" href="/admin/users" />}
         {activeTab === "email" && <PlaceholderTab title="Email" href="/admin/email" />}

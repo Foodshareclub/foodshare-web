@@ -9,8 +9,8 @@
  * @module hooks/useOptimisticActivity
  */
 
-import { useOptimistic, useTransition } from "react";
 import type { PostActivityCounts, PostActivityType } from "@/types/post-activity.types";
+import { useOptimistic, useTransition } from "react";
 
 // ============================================================================
 // Types
@@ -41,18 +41,18 @@ interface OptimisticAction {
 export function useOptimisticActivityCounts(initialCounts: PostActivityCounts) {
   const [isPending, startTransition] = useTransition();
 
-  const [optimisticCounts, updateOptimisticCounts] = useOptimistic<
-    PostActivityCounts,
-    OptimisticAction
-  >(initialCounts, (state, action) => {
-    const currentCount = state[action.activityType] || 0;
-    const newCount = action.type === "increment" ? currentCount + 1 : Math.max(0, currentCount - 1);
+  const [optimisticCounts, updateOptimisticCounts] = useOptimistic<PostActivityCounts, OptimisticAction>(
+    initialCounts,
+    (state, action) => {
+      const currentCount = state[action.activityType] || 0;
+      const newCount = action.type === "increment" ? currentCount + 1 : Math.max(0, currentCount - 1);
 
-    return {
-      ...state,
-      [action.activityType]: newCount,
-    };
-  });
+      return {
+        ...state,
+        [action.activityType]: newCount,
+      };
+    },
+  );
 
   const incrementCount = (activityType: PostActivityType): void => {
     startTransition(() => {
@@ -94,10 +94,7 @@ export function useOptimisticActivityCounts(initialCounts: PostActivityCounts) {
 export function useOptimisticViews(initialViews: number) {
   const [isPending, startTransition] = useTransition();
 
-  const [optimisticViews, updateOptimisticViews] = useOptimistic<number, void>(
-    initialViews,
-    (state) => state + 1
-  );
+  const [optimisticViews, updateOptimisticViews] = useOptimistic<number, void>(initialViews, (state) => state + 1);
 
   const recordView = (): void => {
     startTransition(() => {
@@ -140,13 +137,10 @@ interface LikeState {
 export function useOptimisticLike(initialState: LikeState) {
   const [isPending, startTransition] = useTransition();
 
-  const [optimisticState, updateOptimisticState] = useOptimistic<LikeState, void>(
-    initialState,
-    (state) => ({
-      isLiked: !state.isLiked,
-      count: state.isLiked ? state.count - 1 : state.count + 1,
-    })
-  );
+  const [optimisticState, updateOptimisticState] = useOptimistic<LikeState, void>(initialState, (state) => ({
+    isLiked: !state.isLiked,
+    count: state.isLiked ? state.count - 1 : state.count + 1,
+  }));
 
   const toggleLike = (): void => {
     startTransition(() => {
@@ -172,10 +166,7 @@ export function useOptimisticLike(initialState: LikeState) {
 export function useOptimisticBookmark(initialIsBookmarked: boolean) {
   const [isPending, startTransition] = useTransition();
 
-  const [isBookmarked, updateOptimisticBookmark] = useOptimistic<boolean, void>(
-    initialIsBookmarked,
-    (state) => !state
-  );
+  const [isBookmarked, updateOptimisticBookmark] = useOptimistic<boolean, void>(initialIsBookmarked, (state) => !state);
 
   const toggleBookmark = (): void => {
     startTransition(() => {
@@ -238,13 +229,11 @@ export function useOptimisticComments<T extends OptimisticComment>(initialCommen
         case "remove":
           return state.filter((c) => c.id !== action.id);
         case "update":
-          return state.map((c) =>
-            c.id === action.id ? { ...c, ...action.updates, isPending: false } : c
-          );
+          return state.map((c) => (c.id === action.id ? { ...c, ...action.updates, isPending: false } : c));
         default:
           return state;
       }
-    }
+    },
   );
 
   const addComment = (comment: T): void => {
@@ -295,23 +284,18 @@ export function useOptimisticList<T extends { id: string | number }>(initialItem
     | { type: "remove"; id: string | number }
     | { type: "update"; id: string | number; updates: Partial<T> };
 
-  const [optimisticItems, updateOptimisticItems] = useOptimistic<T[], ListAction>(
-    initialItems,
-    (state, action) => {
-      switch (action.type) {
-        case "add":
-          return [...state, action.item];
-        case "remove":
-          return state.filter((item) => item.id !== action.id);
-        case "update":
-          return state.map((item) =>
-            item.id === action.id ? { ...item, ...action.updates } : item
-          );
-        default:
-          return state;
-      }
+  const [optimisticItems, updateOptimisticItems] = useOptimistic<T[], ListAction>(initialItems, (state, action) => {
+    switch (action.type) {
+      case "add":
+        return [...state, action.item];
+      case "remove":
+        return state.filter((item) => item.id !== action.id);
+      case "update":
+        return state.map((item) => (item.id === action.id ? { ...item, ...action.updates } : item));
+      default:
+        return state;
     }
-  );
+  });
 
   const addItem = (item: T): void => {
     startTransition(() => {

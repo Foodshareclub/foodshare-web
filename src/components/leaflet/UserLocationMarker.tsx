@@ -1,10 +1,10 @@
 "use client";
 
-import { Circle, FeatureGroup, Marker, Popup, useMapEvents } from "react-leaflet";
-import type { FC } from "react";
-import { useState, useEffect } from "react";
 import type { Icon, IconOptions, LatLng } from "leaflet";
-import { MapPin, X, Loader2 } from "lucide-react";
+import { Loader2, MapPin, X } from "lucide-react";
+import type { FC } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { Circle, FeatureGroup, Marker, Popup, useMapEvents } from "react-leaflet";
 
 type LocationMarkerType = {
   icon: Icon<IconOptions>;
@@ -31,7 +31,7 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
     },
   });
 
-  const requestLocation = () => {
+  const requestLocation = useCallback(() => {
     setIsLoading(true);
     setError(null);
     setHasAsked(true);
@@ -42,15 +42,14 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
       timeout: 10000,
       maximumAge: 30000,
     });
-  };
+  }, [map]);
 
   // Request location on mount
   useEffect(() => {
     setTimeout(() => {
       requestLocation();
     }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally run once on mount
-  }, []);
+  }, [requestLocation]);
 
   return (
     <>
@@ -75,8 +74,9 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
       )}
 
       {/* Locate Me Button - Fixed position above footer */}
-      <div className="fixed bottom-24 md:bottom-20 right-4 z-[1000]">
+      <div className="fixed bottom-24 md:bottom-20 end-4 z-[1000]">
         <button
+          type="button"
           onClick={requestLocation}
           disabled={isLoading}
           className={`
@@ -121,9 +121,7 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
         {error && hasAsked && (
           <div className="mt-2 bg-popover p-3 rounded-lg shadow-sm max-w-[250px]">
             <p className="text-xs text-red-600 dark:text-red-400 font-medium">{error}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Please enable location access in your browser settings
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Please enable location access in your browser settings</p>
           </div>
         )}
       </div>

@@ -8,7 +8,7 @@
  * Standard format for geographic points
  */
 export interface GeoJSONPoint {
-  type: 'Point';
+  type: "Point";
   coordinates: [longitude: number, latitude: number];
 }
 
@@ -33,20 +33,20 @@ export type PostGISGeography = string | GeoJSONPoint | null;
  * @returns Coordinates or null if invalid
  */
 export function parseGeoJSON(geojson: GeoJSONPoint | null | undefined): Coordinates | null {
-  if (!geojson || geojson.type !== 'Point' || !Array.isArray(geojson.coordinates)) {
+  if (!geojson || geojson.type !== "Point" || !Array.isArray(geojson.coordinates)) {
     return null;
   }
-  
+
   const [longitude, latitude] = geojson.coordinates;
-  
-  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+
+  if (typeof latitude !== "number" || typeof longitude !== "number") {
     return null;
   }
-  
+
   if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
     return null;
   }
-  
+
   return { lat: latitude, lng: longitude };
 }
 
@@ -57,7 +57,7 @@ export function parseGeoJSON(geojson: GeoJSONPoint | null | undefined): Coordina
  */
 export function toGeoJSON(coords: Coordinates): GeoJSONPoint {
   return {
-    type: 'Point',
+    type: "Point",
     coordinates: [coords.lng, coords.lat],
   };
 }
@@ -72,17 +72,17 @@ export function parsePostGISGeography(geography: PostGISGeography): Coordinates 
   if (!geography) {
     return null;
   }
-  
+
   // If it's already a GeoJSON object
-  if (typeof geography === 'object' && geography.type === 'Point') {
+  if (typeof geography === "object" && geography.type === "Point") {
     return parseGeoJSON(geography);
   }
-  
+
   // If it's a string, try to parse as JSON (some databases return stringified GeoJSON)
-  if (typeof geography === 'string') {
+  if (typeof geography === "string") {
     try {
       const parsed = JSON.parse(geography);
-      if (parsed && parsed.type === 'Point') {
+      if (parsed && parsed.type === "Point") {
         return parseGeoJSON(parsed);
       }
     } catch {
@@ -91,7 +91,7 @@ export function parsePostGISGeography(geography: PostGISGeography): Coordinates 
       return null;
     }
   }
-  
+
   return null;
 }
 
@@ -102,14 +102,14 @@ export function parsePostGISGeography(geography: PostGISGeography): Coordinates 
  */
 export function isValidCoordinates(coords: Coordinates | null | undefined): coords is Coordinates {
   if (!coords) return false;
-  
+
   const { lat, lng } = coords;
-  
+
   return (
-    typeof lat === 'number' &&
-    typeof lng === 'number' &&
-    !isNaN(lat) &&
-    !isNaN(lng) &&
+    typeof lat === "number" &&
+    typeof lng === "number" &&
+    !Number.isNaN(lat) &&
+    !Number.isNaN(lng) &&
     lat >= -90 &&
     lat <= 90 &&
     lng >= -180 &&
@@ -124,15 +124,8 @@ export function isValidCoordinates(coords: Coordinates | null | undefined): coor
  * @param tolerance - Maximum difference in degrees (default: 0.0001 ≈ 11 meters)
  * @returns true if coordinates are within tolerance
  */
-export function coordinatesEqual(
-  a: Coordinates | null,
-  b: Coordinates | null,
-  tolerance: number = 0.0001
-): boolean {
+export function coordinatesEqual(a: Coordinates | null, b: Coordinates | null, tolerance = 0.0001): boolean {
   if (!a || !b) return false;
-  
-  return (
-    Math.abs(a.lat - b.lat) < tolerance &&
-    Math.abs(a.lng - b.lng) < tolerance
-  );
+
+  return Math.abs(a.lat - b.lat) < tolerance && Math.abs(a.lng - b.lng) < tolerance;
 }

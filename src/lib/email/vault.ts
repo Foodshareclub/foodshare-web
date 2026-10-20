@@ -3,7 +3,7 @@
  *
  * Retrieves credentials and API keys from environment variables.
  * In production, these are injected into `.env.production` during the deployment
- * process by fetching them from the backend's `supabase/functions/.env.functions` 
+ * process by fetching them from the backend's `supabase/functions/.env.functions`
  * and the database vault.
  */
 

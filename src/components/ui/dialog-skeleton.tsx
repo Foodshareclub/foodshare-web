@@ -1,5 +1,8 @@
-import { Skeleton } from "./skeleton";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "./skeleton";
+
+// Pool of stable placeholder ids; `rows` only ever needs a small subset of these.
+const DIALOG_ROW_SKELETON_KEYS = Array.from({ length: 12 }, (_, i) => `dialog-row-${i}`);
 
 export interface DialogSkeletonProps {
   /** Show title skeleton */
@@ -45,7 +48,7 @@ export function DialogSkeleton({
       {/* Content rows */}
       <div className="space-y-3 pt-2">
         {Array.from({ length: rows }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full" style={{ opacity: 1 - i * 0.1 }} />
+          <Skeleton key={DIALOG_ROW_SKELETON_KEYS[i]} className="h-10 w-full" style={{ opacity: 1 - i * 0.1 }} />
         ))}
       </div>
 

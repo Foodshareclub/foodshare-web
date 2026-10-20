@@ -10,23 +10,13 @@
  * - Circuit breaker state
  */
 
-import { motion } from "framer-motion";
-import {
-  Inbox,
-  Clock,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  RefreshCw,
-  Trash2,
-  Activity,
-  Shield,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { CircuitBreakerState, QueueStats } from "@/lib/data/admin-email";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { Activity, AlertTriangle, CheckCircle2, Clock, Inbox, RefreshCw, Shield, Trash2, XCircle } from "lucide-react";
 
 interface QueueTabProps {
   queueStats: QueueStats;
@@ -109,9 +99,7 @@ export function QueueTab({ queueStats, circuitBreakers }: QueueTabProps) {
           </CardHeader>
           <CardContent>
             {circuitBreakers.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No circuit breaker data available
-              </p>
+              <p className="text-sm text-muted-foreground text-center py-4">No circuit breaker data available</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {circuitBreakers.map((cb) => (
@@ -139,11 +127,11 @@ export function QueueTab({ queueStats, circuitBreakers }: QueueTabProps) {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm">
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                  <RefreshCw className="h-4 w-4 me-2" />
                   Retry Failed
                 </Button>
                 <Button variant="outline" size="sm" className="text-destructive">
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash2 className="h-4 w-4 me-2" />
                   Clear DLQ
                 </Button>
               </div>
@@ -316,7 +304,7 @@ function CircuitBreakerCard({ breaker }: { breaker: CircuitBreakerState }) {
       <div className="flex items-center justify-between">
         <span className="font-medium text-sm">{providerNames[breaker.provider]}</span>
         <Badge variant="outline" className={cn("text-[10px] px-1.5", config.color)}>
-          <Icon className="h-3 w-3 mr-1" />
+          <Icon className="h-3 w-3 me-1" />
           {config.label}
         </Badge>
       </div>

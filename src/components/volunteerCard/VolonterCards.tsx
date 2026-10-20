@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import navIcon from "@/assets/map.svg";
 import type { AllValuesType } from "@/api/profileAPI";
-import { StarIcon } from "@/utils/icons";
 import HeartGrayImg from "@/assets/likesGray.svg";
+import navIcon from "@/assets/map.svg";
+import { StarIcon } from "@/utils/icons";
 
 type VolunteerCardsProps = {
   volunteer: AllValuesType;
@@ -48,7 +48,8 @@ export function VolunteerCards({ volunteer, indicator }: VolunteerCardsProps) {
           <div className="relative">
             <div className="text-center z-10 absolute">
               <button
-                className="ml-10 cursor-pointer rounded-full p-2 border border-border bg-background"
+                type="button"
+                className="ms-10 cursor-pointer rounded-full p-2 border border-border bg-background"
                 aria-label="volunteer"
               >
                 <Image
@@ -57,8 +58,7 @@ export function VolunteerCards({ volunteer, indicator }: VolunteerCardsProps) {
                   width={20}
                   height={20}
                   style={{
-                    filter:
-                      "invert(27%) sepia(95%) saturate(6943%) hue-rotate(358deg) brightness(96%) contrast(117%)",
+                    filter: "invert(27%) sepia(95%) saturate(6943%) hue-rotate(358deg) brightness(96%) contrast(117%)",
                   }}
                 />
               </button>
@@ -79,9 +79,7 @@ export function VolunteerCards({ volunteer, indicator }: VolunteerCardsProps) {
           </div>
           <div className="mt-3">
             <div className="flex justify-between items-center text-2xl">
-              <h3 className="text-xl font-body font-medium line-clamp-1">
-                {volunteer.first_name.toUpperCase()}
-              </h3>
+              <h3 className="text-xl font-body font-medium line-clamp-1">{volunteer.first_name.toUpperCase()}</h3>
               <StarIcon color="black" />
             </div>
             <div className="flex pt-3 justify-between items-center self-center">

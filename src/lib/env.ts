@@ -122,7 +122,7 @@ export function getEnv(): Env {
       .join("\n");
 
     throw new Error(
-      `Environment validation failed:\n${errorMessages}\n\nPlease check your .env file or environment configuration.`
+      `Environment validation failed:\n${errorMessages}\n\nPlease check your .env file or environment configuration.`,
     );
   }
 

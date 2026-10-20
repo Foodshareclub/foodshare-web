@@ -13,17 +13,11 @@
  * @module app/actions/post-activity
  */
 
-import { z } from "zod";
-import { headers } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
-import {
-  type ActionResult,
-  withErrorHandling,
-  validateWithSchema,
-  failure,
-  createError,
-} from "@/lib/errors";
 import { invalidatePostActivityCaches } from "@/lib/data/cache-invalidation";
+import { type ActionResult, createError, failure, validateWithSchema, withErrorHandling } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
+import { headers } from "next/headers";
+import { z } from "zod";
 
 // ============================================================================
 // Rate Limiting (In-Memory for Edge Runtime)
@@ -181,9 +175,7 @@ const getTimelineSchema = z.object({
 /**
  * Log a post activity with rate limiting and deduplication
  */
-export async function logPostActivity(
-  input: z.infer<typeof logActivitySchema>
-): Promise<ActionResult<{ id: string }>> {
+export async function logPostActivity(input: z.infer<typeof logActivitySchema>): Promise<ActionResult<{ id: string }>> {
   const validation = validateWithSchema(logActivitySchema, input);
   if (!validation.success) return validation;
 
@@ -207,11 +199,7 @@ export async function logPostActivity(
     // Request deduplication for high-frequency events (views, likes)
     const highFrequencyTypes = ["viewed", "liked", "unliked"];
     if (highFrequencyTypes.includes(validation.data.activityType)) {
-      const dedupeKey = getDedupeKey(
-        validation.data.postId,
-        validation.data.activityType,
-        user?.id
-      );
+      const dedupeKey = getDedupeKey(validation.data.postId, validation.data.activityType, user?.id);
 
       const pending = pendingRequests.get(dedupeKey);
       if (pending) {
@@ -258,7 +246,7 @@ export async function logPostActivity(
  */
 export async function logPostView(
   postId: number,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<ActionResult<{ id: string }>> {
   return logPostActivity({
     postId,
@@ -276,7 +264,7 @@ export async function logPostView(
 export async function logPostContact(
   postId: number,
   roomId: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<ActionResult<{ id: string }>> {
   return logPostActivity({
     postId,
@@ -296,7 +284,7 @@ export async function logPostArrangement(
   postId: number,
   arrangedToProfileId: string,
   roomId?: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<ActionResult<{ id: string }>> {
   return logPostActivity({
     postId,
@@ -316,7 +304,7 @@ export async function logPostArrangement(
 export async function logArrangementCancelled(
   postId: number,
   reason?: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<ActionResult<{ id: string }>> {
   return logPostActivity({
     postId,
@@ -335,7 +323,7 @@ export async function logArrangementCancelled(
 export async function logPostCollected(
   postId: number,
   collectorProfileId: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<ActionResult<{ id: string }>> {
   return logPostActivity({
     postId,
@@ -354,7 +342,7 @@ export async function logPostCollected(
 export async function logPostNotCollected(
   postId: number,
   reason?: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<ActionResult<{ id: string }>> {
   return logPostActivity({
     postId,
@@ -373,7 +361,7 @@ export async function logPostNotCollected(
 export async function logPostShared(
   postId: number,
   shareMethod: "link" | "social" | "email" | "other",
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<ActionResult<{ id: string }>> {
   return logPostActivity({
     postId,
@@ -403,7 +391,7 @@ export async function logAdminPostAction(
     | "unhidden",
   changes?: Record<string, unknown>,
   notes?: string,
-  reason?: string
+  reason?: string,
 ): Promise<ActionResult<{ id: string }>> {
   return logPostActivity({
     postId,
@@ -422,7 +410,7 @@ export async function logAdminPostAction(
  * Get post activity timeline
  */
 export async function getPostActivityTimeline(
-  input: z.infer<typeof getTimelineSchema>
+  input: z.infer<typeof getTimelineSchema>,
 ): Promise<ActionResult<PostActivityTimelineItem[]>> {
   const validation = validateWithSchema(getTimelineSchema, input);
   if (!validation.success) return validation;
@@ -447,7 +435,7 @@ export async function getPostActivityTimeline(
  */
 export async function getUserPostActivitySummary(
   userId?: string,
-  days: number = 30
+  days = 30,
 ): Promise<ActionResult<UserActivitySummary[]>> {
   return withErrorHandling(async () => {
     const supabase = await createClient();
@@ -475,10 +463,7 @@ export async function getUserPostActivitySummary(
 /**
  * Get recent activities for a post (simplified)
  */
-export async function getRecentPostActivities(
-  postId: number,
-  limit: number = 10
-): Promise<ActionResult<PostActivityLog[]>> {
+export async function getRecentPostActivities(postId: number, limit = 10): Promise<ActionResult<PostActivityLog[]>> {
   return withErrorHandling(async () => {
     const supabase = await createClient();
 
@@ -497,16 +482,11 @@ export async function getRecentPostActivities(
 /**
  * Get activity counts for a post
  */
-export async function getPostActivityCounts(
-  postId: number
-): Promise<ActionResult<Record<PostActivityType, number>>> {
+export async function getPostActivityCounts(postId: number): Promise<ActionResult<Record<PostActivityType, number>>> {
   return withErrorHandling(async () => {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
-      .from("post_activity_logs")
-      .select("activity_type")
-      .eq("post_id", postId);
+    const { data, error } = await supabase.from("post_activity_logs").select("activity_type").eq("post_id", postId);
 
     if (error) throw new Error(error.message);
 
@@ -529,7 +509,7 @@ export async function bulkLogPostActivities(
     activityType: PostActivityType;
     metadata?: Record<string, unknown>;
     reason?: string;
-  }>
+  }>,
 ): Promise<ActionResult<{ count: number }>> {
   return withErrorHandling(async () => {
     const supabase = await createClient();

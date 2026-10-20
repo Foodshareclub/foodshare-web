@@ -11,24 +11,24 @@
  * - Rich status indicators and unlinking workflow
  */
 
-import React, { useState, useEffect, useTransition } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Send,
-  ExternalLink,
-  QrCode,
-  Unlink,
-  Copy,
-  Check,
-  RefreshCw,
-  Bell,
-  MessageSquare,
-  Sparkles,
-  ShieldCheck,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { generateTelegramLink, unlinkTelegram } from "@/app/actions/telegram";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Bell,
+  Check,
+  Copy,
+  ExternalLink,
+  MessageSquare,
+  QrCode,
+  RefreshCw,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  Unlink,
+} from "lucide-react";
+import React, { useState, useEffect, useTransition } from "react";
 
 export interface TelegramIntegrationCardProps {
   userId?: string;
@@ -57,11 +57,17 @@ export function TelegramIntegrationCard({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  // Sync prop updates
-  useEffect(() => {
+  // Sync prop updates — adjust state during render when props change
+  // (React: "storing information from previous renders")
+  const [prevInitial, setPrevInitial] = useState({
+    linked: initialLinked,
+    username: initialUsername,
+  });
+  if (initialLinked !== prevInitial.linked || initialUsername !== prevInitial.username) {
+    setPrevInitial({ linked: initialLinked, username: initialUsername });
     setIsLinked(initialLinked);
     setUsername(initialUsername);
-  }, [initialLinked, initialUsername]);
+  }
 
   // Realtime status detection when a link token has been generated
   useEffect(() => {
@@ -132,9 +138,7 @@ export function TelegramIntegrationCard({
         setDeepLink(null);
         onStatusChange?.(false);
       } else {
-        setErrorMessage(
-          !res.success ? res.error.message : "Failed to disconnect Telegram account."
-        );
+        setErrorMessage(!res.success ? res.error.message : "Failed to disconnect Telegram account.");
       }
     });
   };
@@ -144,8 +148,8 @@ export function TelegramIntegrationCard({
       className={`relative overflow-hidden rounded-2xl border border-white/20 dark:border-white/10 bg-white/60 dark:bg-black/40 backdrop-blur-xl p-6 shadow-xl transition-all duration-300 ${className}`}
     >
       {/* Background ambient glow */}
-      <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#229ED9]/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-24 -end-24 w-48 h-48 bg-[#229ED9]/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -start-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/50">
@@ -155,9 +159,7 @@ export function TelegramIntegrationCard({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold tracking-tight text-foreground">
-                Telegram Integration
-              </h3>
+              <h3 className="text-lg font-semibold tracking-tight text-foreground">Telegram Integration</h3>
               {isLinked ? (
                 <Badge
                   variant="outline"
@@ -167,10 +169,7 @@ export function TelegramIntegrationCard({
                   Connected
                 </Badge>
               ) : (
-                <Badge
-                  variant="outline"
-                  className="bg-muted text-muted-foreground border-border/50"
-                >
+                <Badge variant="outline" className="bg-muted text-muted-foreground border-border/50">
                   Not Linked
                 </Badge>
               )}
@@ -255,9 +254,9 @@ export function TelegramIntegrationCard({
                     className="h-8 text-xs"
                   >
                     {isUnlinking ? (
-                      <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+                      <RefreshCw className="h-3 w-3 animate-spin me-1" />
                     ) : (
-                      <Unlink className="h-3 w-3 mr-1" />
+                      <Unlink className="h-3 w-3 me-1" />
                     )}
                     Confirm
                   </Button>
@@ -278,7 +277,7 @@ export function TelegramIntegrationCard({
                   onClick={() => setIsConfirmingUnlink(true)}
                   className="text-xs text-muted-foreground hover:text-destructive"
                 >
-                  <Unlink className="h-3.5 w-3.5 mr-1.5" />
+                  <Unlink className="h-3.5 w-3.5 me-1.5" />
                   Disconnect
                 </Button>
               )}
@@ -297,13 +296,10 @@ export function TelegramIntegrationCard({
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-amber-500" />
-                  <p className="text-sm font-medium text-foreground">
-                    Connect Telegram with 1-Click
-                  </p>
+                  <p className="text-sm font-medium text-foreground">Connect Telegram with 1-Click</p>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Tap below to open Telegram and bind your account securely without passwords or
-                  OTPs.
+                  Tap below to open Telegram and bind your account securely without passwords or OTPs.
                 </p>
               </div>
 
@@ -382,15 +378,13 @@ export function TelegramIntegrationCard({
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="flex flex-col items-center justify-center p-6 rounded-xl bg-white/80 dark:bg-black/60 border border-white/20 shadow-lg text-center"
               >
-                <p className="text-xs font-semibold text-foreground mb-3">
-                  Scan with your phone to open Telegram
-                </p>
+                <p className="text-xs font-semibold text-foreground mb-3">Scan with your phone to open Telegram</p>
                 <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
                   {/* High quality QR code via standard QR endpoint */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
-                      deepLink || "https://t.me/foodshare_club_bot"
+                      deepLink || "https://t.me/foodshare_club_bot",
                     )}`}
                     alt="Telegram Link QR Code"
                     width={180}
@@ -398,9 +392,7 @@ export function TelegramIntegrationCard({
                     className="rounded"
                   />
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-3">
-                  Link expires in 10 minutes • Safe & encrypted
-                </p>
+                <p className="text-[11px] text-muted-foreground mt-3">Link expires in 10 minutes • Safe & encrypted</p>
               </motion.div>
             )}
           </motion.div>

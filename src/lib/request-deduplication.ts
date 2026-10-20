@@ -18,7 +18,7 @@
  * ```
  */
 
-import { isRequestInFlight, markRequestInFlight, clearRequestInFlight, REDIS_TTL } from "./redis";
+import { REDIS_TTL, clearRequestInFlight, isRequestInFlight, markRequestInFlight } from "./redis";
 
 interface PendingRequest<T> {
   promise: Promise<T>;
@@ -49,9 +49,7 @@ interface RequestDeduplicator<T> {
  * Create a request deduplicator with configurable TTL
  * Supports both in-memory and Redis-based deduplication
  */
-export function createRequestDeduplicator<T = unknown>(
-  config: DeduplicatorConfig = {}
-): RequestDeduplicator<T> {
+export function createRequestDeduplicator<T = unknown>(config: DeduplicatorConfig = {}): RequestDeduplicator<T> {
   const { ttl = 10000 } = config;
   const pendingRequests = new Map<string, PendingRequest<T>>();
 
@@ -135,11 +133,7 @@ export function createRequestDeduplicator<T = unknown>(
  * const key = getWindowedKey("user", [userId, "anon"], 5000);
  * ```
  */
-export function getWindowedKey(
-  prefix: string,
-  parts: (string | number | undefined)[],
-  windowMs: number
-): string {
+export function getWindowedKey(prefix: string, parts: (string | number | undefined)[], windowMs: number): string {
   const windowId = Math.floor(Date.now() / windowMs);
   const partString = parts.map((p) => p ?? "").join("-");
   return `${prefix}-${partString}-${windowId}`;

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectValue } from "@/components/ui/select";
+import { useCallback, useEffect, useState } from "react";
 
 interface RepoConfig {
   id: string;
@@ -76,7 +76,7 @@ export default function ReposPage() {
           custom_instructions: "",
         });
       } else {
-        alert("Failed to save: " + (data.error || "Unknown error"));
+        alert(`Failed to save: ${data.error || "Unknown error"}`);
       }
     } catch {
       alert("Error saving repository configuration");
@@ -89,14 +89,14 @@ export default function ReposPage() {
     if (!confirm(`Delete repository ${fullName}?`)) return;
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/repos/config?full_name=" + fullName, {
+      const res = await fetch(`/api/admin/repos/config?full_name=${fullName}`, {
         method: "DELETE",
       });
       const data = await res.json();
       if (res.ok) {
         loadConfigs();
       } else {
-        alert("Failed to delete: " + (data.error || "Unknown error"));
+        alert(`Failed to delete: ${data.error || "Unknown error"}`);
       }
     } catch {
       alert("Error deleting repository");
@@ -135,15 +135,12 @@ export default function ReposPage() {
           ) : (
             <div className="space-y-3">
               {configs.map((config) => (
-                <Card
-                  key={config.id}
-                  className="bg-zinc-800/50 border-zinc-800/50 hover:bg-zinc-800 transition-colors"
-                >
+                <Card key={config.id} className="bg-zinc-800/50 border-zinc-800/50 hover:bg-zinc-800 transition-colors">
                   <CardHeader className="flex flex-row items-center justify-between pb-1">
                     <div className="flex items-center gap-2">
                       <span className="text-white truncate">{config.full_name.split("/")[1]}</span>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <Badge
                         variant="outline"
                         className={`text-sm ${config.enabled ? "border-emerald-500 text-emerald-400" : "border-zinc-600 text-zinc-400"}`}
@@ -162,10 +159,7 @@ export default function ReposPage() {
                     <p className="text-zinc-400 mb-1">Focus Areas:</p>
                     <div className="flex flex-wrap gap-1">
                       {config.categories.map((cat: string) => (
-                        <span
-                          key={cat}
-                          className="px-2 py-0.5 rounded bg-zinc-700 text-zinc-300 text-xs"
-                        >
+                        <span key={cat} className="px-2 py-0.5 rounded bg-zinc-700 text-zinc-300 text-xs">
                           {cat}
                         </span>
                       ))}
@@ -173,10 +167,7 @@ export default function ReposPage() {
                     <p className="text-zinc-400 mb-1">Ignore Paths:</p>
                     <div className="flex flex-wrap gap-1">
                       {config.ignore_paths.map((path: string) => (
-                        <span
-                          key={path}
-                          className="px-2 py-0.5 rounded bg-zinc-700 text-zinc-300 text-xs"
-                        >
+                        <span key={path} className="px-2 py-0.5 rounded bg-zinc-700 text-zinc-300 text-xs">
                           {path}
                         </span>
                       ))}
@@ -194,10 +185,7 @@ export default function ReposPage() {
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-white text-base md:text-lg">Connect Repository</CardTitle>
-            <Button
-              onClick={() => setEditing(null)}
-              className="bg-zinc-700 hover:bg-zinc-600 text-sm px-2 py-1"
-            >
+            <Button onClick={() => setEditing(null)} className="bg-zinc-700 hover:bg-zinc-600 text-sm px-2 py-1">
               Cancel
             </Button>
           </CardHeader>
@@ -210,10 +198,11 @@ export default function ReposPage() {
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm text-zinc-400 block mb-1">
+                  <label htmlFor="repo-full-name" className="text-sm text-zinc-400 block mb-1">
                     Repository (owner/repo)
                   </label>
                   <Input
+                    id="repo-full-name"
                     value={formData.full_name}
                     onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                     placeholder="foodshare/foodshare-web"
@@ -222,7 +211,7 @@ export default function ReposPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-zinc-400 block mb-1">Auto-Review PRs</label>
+                  <span className="text-sm text-zinc-400 block mb-1">Auto-Review PRs</span>
                   <Select
                     onValueChange={(v) => setFormData({ ...formData, auto_review: v === "true" })}
                     disabled={loading}
@@ -234,11 +223,9 @@ export default function ReposPage() {
               </div>
 
               <div>
-                <label className="text-sm text-zinc-400 block mb-1">Focus Areas</label>
+                <span className="text-sm text-zinc-400 block mb-1">Focus Areas</span>
                 <Select
-                  onValueChange={(v) =>
-                    setFormData({ ...formData, categories: v.split(", ").filter(Boolean) })
-                  }
+                  onValueChange={(v) => setFormData({ ...formData, categories: v.split(", ").filter(Boolean) })}
                   disabled={loading}
                 >
                   <SelectValue>Security</SelectValue>
@@ -249,10 +236,11 @@ export default function ReposPage() {
               </div>
 
               <div>
-                <label className="text-sm text-zinc-400 block mb-1">
+                <label htmlFor="repo-ignore-paths" className="text-sm text-zinc-400 block mb-1">
                   Ignore Paths (comma-separated)
                 </label>
                 <Input
+                  id="repo-ignore-paths"
                   value={
                     formData.ignore_paths
                       .join(", ")
@@ -273,12 +261,13 @@ export default function ReposPage() {
               </div>
 
               <div>
-                <label className="text-sm text-zinc-400 block mb-1">Custom Instructions</label>
+                <label htmlFor="repo-custom-instructions" className="text-sm text-zinc-400 block mb-1">
+                  Custom Instructions
+                </label>
                 <Input
+                  id="repo-custom-instructions"
                   value={formData.custom_instructions || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, custom_instructions: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, custom_instructions: e.target.value })}
                   placeholder="e.g. Focus on security vulnerabilities and performance bottlenecks"
                   disabled={loading}
                   className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"

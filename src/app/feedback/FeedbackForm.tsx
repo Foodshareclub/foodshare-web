@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
-import { CheckCircle, AlertCircle, Send } from "lucide-react";
-import { submitFeedback, type FeedbackType } from "@/app/actions/feedback";
+import { type FeedbackType, submitFeedback } from "@/app/actions/feedback";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AlertCircle, CheckCircle, Send } from "lucide-react";
+import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
 
 interface FeedbackFormData {
   name: string;
@@ -78,7 +78,7 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
       {/* Success/Error Messages */}
       {submitStatus && (
         <div
-          className={`mb-4 border-l-[3px] ${
+          className={`mb-4 border-s-[3px] ${
             submitStatus === "success"
               ? "border-green-500 bg-green-50 dark:bg-green-950"
               : "border-red-500 bg-red-50 dark:bg-red-950"
@@ -92,9 +92,7 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
                 <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
               )}
               <span className="font-semibold text-sm text-foreground">
-                {submitStatus === "success"
-                  ? "Feedback sent successfully!"
-                  : "Failed to send feedback"}
+                {submitStatus === "success" ? "Feedback sent successfully!" : "Failed to send feedback"}
               </span>
             </div>
           </div>
@@ -108,8 +106,11 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
             <div className="flex flex-col gap-4">
               {/* Feedback Type */}
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-foreground">Type</label>
+                <label htmlFor="feedback-type" className="block text-xs font-semibold mb-1.5 text-foreground">
+                  Type
+                </label>
                 <select
+                  id="feedback-type"
                   {...register("feedback_type")}
                   className="w-full h-10 px-3 border border-input rounded-lg text-sm text-foreground bg-background cursor-pointer hover:border-muted-foreground focus:outline-none focus:border-foreground focus:ring-1 focus:ring-foreground"
                 >
@@ -123,8 +124,11 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
               {/* Name & Email - Two columns */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5 text-foreground">Name</label>
+                  <label htmlFor="feedback-name" className="block text-xs font-semibold mb-1.5 text-foreground">
+                    Name
+                  </label>
                   <Input
+                    id="feedback-name"
                     {...register("name", {
                       required: "Required",
                       minLength: { value: 2, message: "Too short" },
@@ -132,16 +136,15 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
                     placeholder="Your name"
                     className={`h-10 rounded-lg ${errors.name ? "border-destructive" : ""}`}
                   />
-                  {errors.name && (
-                    <p className="text-destructive text-xs mt-0.5">{errors.name.message}</p>
-                  )}
+                  {errors.name && <p className="text-destructive text-xs mt-0.5">{errors.name.message}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5 text-foreground">
+                  <label htmlFor="feedback-email" className="block text-xs font-semibold mb-1.5 text-foreground">
                     Email
                   </label>
                   <Input
+                    id="feedback-email"
                     {...register("email", {
                       required: "Required",
                       pattern: {
@@ -153,18 +156,17 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
                     placeholder="your@email.com"
                     className={`h-10 rounded-lg ${errors.email ? "border-destructive" : ""}`}
                   />
-                  {errors.email && (
-                    <p className="text-destructive text-xs mt-0.5">{errors.email.message}</p>
-                  )}
+                  {errors.email && <p className="text-destructive text-xs mt-0.5">{errors.email.message}</p>}
                 </div>
               </div>
 
               {/* Subject */}
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-foreground">
+                <label htmlFor="feedback-subject" className="block text-xs font-semibold mb-1.5 text-foreground">
                   Subject
                 </label>
                 <Input
+                  id="feedback-subject"
                   {...register("subject", {
                     required: "Required",
                     minLength: { value: 5, message: "Too short" },
@@ -172,17 +174,16 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
                   placeholder="Brief description"
                   className={`h-10 rounded-lg ${errors.subject ? "border-destructive" : ""}`}
                 />
-                {errors.subject && (
-                  <p className="text-destructive text-xs mt-0.5">{errors.subject.message}</p>
-                )}
+                {errors.subject && <p className="text-destructive text-xs mt-0.5">{errors.subject.message}</p>}
               </div>
 
               {/* Message */}
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-foreground">
+                <label htmlFor="feedback-message" className="block text-xs font-semibold mb-1.5 text-foreground">
                   Message
                 </label>
                 <textarea
+                  id="feedback-message"
                   {...register("message", {
                     required: "Required",
                     minLength: { value: 10, message: "Too short" },
@@ -191,25 +192,19 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
                   rows={5}
                   className={`w-full px-3 py-2 rounded-lg border bg-background text-foreground ${
                     errors.message ? "border-destructive" : "border-input"
-                  } resize-vertical text-sm hover:border-muted-foreground focus:outline-none focus:border-foreground focus:ring-1 focus:ring-foreground`}
+                  } resize-y text-sm hover:border-muted-foreground focus:outline-none focus:border-foreground focus:ring-1 focus:ring-foreground`}
                 />
-                {errors.message && (
-                  <p className="text-destructive text-xs mt-0.5">{errors.message.message}</p>
-                )}
+                {errors.message && <p className="text-destructive text-xs mt-0.5">{errors.message.message}</p>}
               </div>
 
               {/* Submit Button */}
-              <Button
-                type="submit"
-                disabled={isPending}
-                className="font-semibold rounded-lg h-[42px]"
-              >
+              <Button type="submit" disabled={isPending} className="font-semibold rounded-lg h-[42px]">
                 {isPending ? (
                   "Sending..."
                 ) : (
                   <>
                     Send feedback
-                    <Send className="ml-2 w-4 h-4" />
+                    <Send className="ms-2 w-4 h-4" />
                   </>
                 )}
               </Button>

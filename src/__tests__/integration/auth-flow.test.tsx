@@ -3,9 +3,9 @@
  * Tests authentication hook interface and behavior
  */
 
-import { mock, describe, it, expect, beforeEach } from "bun:test";
-import { renderHook, act } from "@testing-library/react";
-import React from "react";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { act, renderHook } from "@testing-library/react";
+import type React from "react";
 
 // Create a shared mock state
 const mockAuthState = {
@@ -168,7 +168,7 @@ describe("Auth Flow Integration Tests", () => {
   describe("Login with Password Flow", () => {
     it("should return failure result on invalid credentials", async () => {
       mockSignInWithPassword.mockImplementation(() =>
-        Promise.resolve({ success: false, error: "Invalid login credentials" })
+        Promise.resolve({ success: false, error: "Invalid login credentials" }),
       );
 
       const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
@@ -195,9 +195,7 @@ describe("Auth Flow Integration Tests", () => {
 
   describe("Registration Flow", () => {
     it("should return failure result on registration error", async () => {
-      mockSignUp.mockImplementation(() =>
-        Promise.resolve({ success: false, error: "User already registered" })
-      );
+      mockSignUp.mockImplementation(() => Promise.resolve({ success: false, error: "User already registered" }));
 
       const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
 

@@ -373,7 +373,6 @@ export interface RelatedPost {
   commentsCount: number;
 }
 
-
 // MARK: - Cache
 
 interface CacheEntry<T> {
@@ -689,7 +688,6 @@ export const bffQueryKeys = {
   challenge: (id: number) => ["bff", "challenge", id] as const,
   forumPost: (id: number) => ["bff", "forumPost", id] as const,
 };
-
 
 // MARK: - Forum Feed Types
 

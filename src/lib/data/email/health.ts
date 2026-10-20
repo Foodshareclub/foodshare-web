@@ -77,7 +77,9 @@ export async function getBounceStats(): Promise<BounceStats> {
       .select("event_type,bounce_type")
       .gte("created_at", thirtyDaysAgo.toISOString()),
     // Suppression list by reason
-    supabase.from("email_suppression_list").select("reason"),
+    supabase
+      .from("email_suppression_list")
+      .select("reason"),
     // Daily bounces (last 7 days)
     supabase
       .from("email_bounce_events")
@@ -96,7 +98,7 @@ export async function getBounceStats(): Promise<BounceStats> {
   const dailyBounces = dailyBouncesRes.data || [];
   const emailsSent = (emailsSentRes.data || []).reduce(
     (sum: number, q: { emails_sent: number | null }) => sum + (q.emails_sent || 0),
-    0
+    0,
   );
 
   // Count by type
@@ -211,10 +213,7 @@ export async function getProviderHealth(): Promise<ProviderHealth[]> {
   return data.map((m) => ({
     provider: m.provider as "resend" | "brevo" | "mailersend" | "aws_ses",
     healthScore: m.health_score || 100,
-    successRate:
-      m.total_requests > 0
-        ? Math.round((m.successful_requests / m.total_requests) * 1000) / 10
-        : 100,
+    successRate: m.total_requests > 0 ? Math.round((m.successful_requests / m.total_requests) * 1000) / 10 : 100,
     avgLatencyMs: Number(m.average_latency_ms) || 0,
     totalRequests: m.total_requests || 0,
     status: m.health_score >= 80 ? "healthy" : m.health_score >= 50 ? "degraded" : "down",
@@ -237,10 +236,7 @@ export async function getProviderHealth(): Promise<ProviderHealth[]> {
 export async function getCircuitBreakerStates(): Promise<CircuitBreakerState[]> {
   const supabase = createAdminClient();
 
-  const { data, error } = await supabase
-    .from("email_circuit_breaker_state")
-    .select("*")
-    .order("provider");
+  const { data, error } = await supabase.from("email_circuit_breaker_state").select("*").order("provider");
 
   if (error) {
     console.error("[getCircuitBreakerStates] Error:", error);
@@ -270,11 +266,7 @@ export async function getCircuitBreakerStates(): Promise<CircuitBreakerState[]> 
 export async function getEmailTemplates(): Promise<EmailTemplate[]> {
   const supabase = createAdminClient();
 
-  const { data, error } = await supabase
-    .from("email_templates")
-    .select("*")
-    .order("category")
-    .order("name");
+  const { data, error } = await supabase.from("email_templates").select("*").order("category").order("name");
 
   if (error) {
     console.error("[getEmailTemplates] Error:", error);

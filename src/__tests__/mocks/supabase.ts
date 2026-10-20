@@ -31,13 +31,13 @@ export function createMockSupabaseClient() {
         Promise.resolve({
           data: { session: mockAuthState.session },
           error: null,
-        })
+        }),
       ),
       getUser: jest.fn(() =>
         Promise.resolve({
           data: { user: mockAuthState.user },
           error: null,
-        })
+        }),
       ),
       signInWithPassword: jest.fn(() => Promise.resolve(mockAuthState.signInResult)),
       signUp: jest.fn(() => Promise.resolve(mockAuthState.signUpResult)),
@@ -72,16 +72,16 @@ export function createMockSupabaseClient() {
     })),
     storage: {
       from: jest.fn(() => ({
-        upload: jest.fn(() => Promise.resolve({ data: { path: 'test-path' }, error: null })),
-        getPublicUrl: jest.fn(() => ({ data: { publicUrl: 'https://example.com/test.jpg' } })),
+        upload: jest.fn(() => Promise.resolve({ data: { path: "test-path" }, error: null })),
+        getPublicUrl: jest.fn(() => ({ data: { publicUrl: "https://example.com/test.jpg" } })),
         remove: jest.fn(() => Promise.resolve({ data: null, error: null })),
       })),
     },
     channel: jest.fn(() => {
       const channelMock = {
         on: jest.fn(() => channelMock),
-        subscribe: jest.fn(() => Promise.resolve({ status: 'SUBSCRIBED' })),
-        unsubscribe: jest.fn(() => Promise.resolve({ status: 'UNSUBSCRIBED' })),
+        subscribe: jest.fn(() => Promise.resolve({ status: "SUBSCRIBED" })),
+        unsubscribe: jest.fn(() => Promise.resolve({ status: "UNSUBSCRIBED" })),
       };
       return channelMock;
     }),

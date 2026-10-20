@@ -4,9 +4,10 @@
  * Prevents white screen of death in production
  */
 
-import type { ReactNode } from "react";
-import React, { Component } from "react";
 import { createLogger } from "@/lib/logger";
+import type { ReactNode } from "react";
+import type React from "react";
+import { Component } from "react";
 
 const logger = createLogger("AppErrorBoundary");
 
@@ -84,7 +85,7 @@ export class AppErrorBoundary extends Component<Props, State> {
           Sentry.captureException(error, {
             contexts: { react: { componentStack: errorInfo.componentStack } },
             tags: { module: "AppErrorBoundary" },
-          })
+          }),
         )
         .catch(() => undefined);
     } catch (e) {
@@ -196,9 +197,7 @@ export class AppErrorBoundary extends Component<Props, State> {
             <div className="p-6 space-y-4">
               {/* Error Message */}
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <h3 className="font-semibold text-red-900 dark:text-red-300 mb-2">
-                  Error Message:
-                </h3>
+                <h3 className="font-semibold text-red-900 dark:text-red-300 mb-2">Error Message:</h3>
                 <p className="text-red-700 dark:text-red-400 font-mono text-sm break-words">
                   {error.message || "Unknown error"}
                 </p>
@@ -240,6 +239,7 @@ export class AppErrorBoundary extends Component<Props, State> {
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <button
+                  type="button"
                   onClick={this.resetError}
                   className="flex-1 bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-red-600 hover:to-orange-600 transition-all shadow-md hover:shadow-lg"
                 >
@@ -247,6 +247,7 @@ export class AppErrorBoundary extends Component<Props, State> {
                 </button>
 
                 <button
+                  type="button"
                   onClick={this.reloadApp}
                   className="flex-1 bg-muted text-foreground px-6 py-3 rounded-lg font-semibold hover:bg-muted/80 transition-all border border-border"
                 >
@@ -257,6 +258,7 @@ export class AppErrorBoundary extends Component<Props, State> {
               {/* Advanced Actions */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
+                  type="button"
                   onClick={this.clearCacheAndReload}
                   className="flex-1 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-all border border-yellow-200 dark:border-yellow-800"
                 >
@@ -264,6 +266,7 @@ export class AppErrorBoundary extends Component<Props, State> {
                 </button>
 
                 <button
+                  type="button"
                   onClick={this.copyErrorDetails}
                   className="flex-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all border border-blue-200 dark:border-blue-800"
                 >
@@ -273,9 +276,7 @@ export class AppErrorBoundary extends Component<Props, State> {
 
               {/* Help Text */}
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mt-4">
-                <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">
-                  💡 What can you do?
-                </h4>
+                <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">💡 What can you do?</h4>
                 <ul className="text-sm text-blue-800 dark:text-blue-400 space-y-1 list-disc list-inside">
                   <li>Try clicking &quot;Try Again&quot; to recover without reloading</li>
                   <li>Reload the page to start fresh</li>

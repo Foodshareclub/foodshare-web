@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { Zap, Target } from "lucide-react";
+import { Target, Zap } from "lucide-react";
+import type React from "react";
 
 interface ValidationHintProps {
   field: string;
@@ -10,12 +10,7 @@ interface ValidationHintProps {
   isValid: boolean;
 }
 
-export const ValidationHint: React.FC<ValidationHintProps> = ({
-  field,
-  value,
-  minLength,
-  isValid,
-}) => {
+export const ValidationHint: React.FC<ValidationHintProps> = ({ field, value, minLength, isValid }) => {
   if (isValid || !value) return null;
 
   const hints: Record<string, string[]> = {
@@ -24,18 +19,11 @@ export const ValidationHint: React.FC<ValidationHintProps> = ({
       "Include key details (brand, size, color)",
       "Keep it concise but descriptive",
     ],
-    description: [
-      "Explain why you're sharing it",
-      "Mention the condition",
-      "Add pickup/availability details",
-    ],
+    description: ["Explain why you're sharing it", "Mention the condition", "Add pickup/availability details"],
   };
 
   const fieldHints = hints[field] || [];
-  const lengthHint =
-    minLength && value.length < minLength
-      ? `Add ${minLength - value.length} more characters`
-      : null;
+  const lengthHint = minLength && value.length < minLength ? `Add ${minLength - value.length} more characters` : null;
 
   return (
     <div className="flex items-start gap-2 p-2 rounded-md bg-amber-500/10 border border-amber-500/20 animate-in slide-in-from-top-1 duration-200">
@@ -44,8 +32,8 @@ export const ValidationHint: React.FC<ValidationHintProps> = ({
         {lengthHint && <p className="text-xs text-amber-700 font-medium">{lengthHint}</p>}
         {fieldHints.length > 0 && (
           <ul className="text-xs text-amber-600/80 space-y-0.5">
-            {fieldHints.slice(0, 2).map((hint, i) => (
-              <li key={i} className="flex items-center gap-1">
+            {fieldHints.slice(0, 2).map((hint) => (
+              <li key={hint} className="flex items-center gap-1">
                 <Zap className="h-2.5 w-2.5" />
                 {hint}
               </li>

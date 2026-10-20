@@ -3,7 +3,7 @@
  * Beautiful, structured logging with error tracking for production debugging
  */
 
-import type { LogLevel, LogContext, ErrorLog } from "./types";
+import type { ErrorLog, LogContext, LogLevel } from "./types";
 
 // Store recent errors for debugging
 const errorHistory: ErrorLog[] = [];
@@ -38,12 +38,7 @@ function getTimestamp(): string {
 /**
  * Create a structured log entry
  */
-function createLogEntry(
-  level: LogLevel,
-  message: string,
-  context?: LogContext,
-  error?: Error
-): ErrorLog {
+function createLogEntry(level: LogLevel, message: string, context?: LogContext, error?: Error): ErrorLog {
   return {
     timestamp: new Date().toISOString(),
     level,
@@ -82,10 +77,7 @@ function formatLog(level: LogLevel, message: string, context?: LogContext, data?
 
   // Use console group for better organization
   if (data || context) {
-    console.groupCollapsed(
-      `%c${prefix} ${message}${contextStr}`,
-      `color: ${color}; font-weight: bold;`
-    );
+    console.groupCollapsed(`%c${prefix} ${message}${contextStr}`, `color: ${color}; font-weight: bold;`);
 
     if (context) {
       console.log("%cContext:", "color: #8B5CF6; font-weight: bold;", context);
@@ -154,12 +146,7 @@ export class Logger {
       console.error("Error details:", error);
     }
 
-    const logEntry = createLogEntry(
-      "error",
-      message,
-      { ...context, component: this.component },
-      error
-    );
+    const logEntry = createLogEntry("error", message, { ...context, component: this.component }, error);
     storeError(logEntry);
 
     // Send to analytics in production
@@ -177,7 +164,7 @@ export class Logger {
       console.log(
         `%c${emoji} [${getTimestamp()}] ${this.component || "Component"} ${event}`,
         "color: #8B5CF6; font-weight: bold;",
-        context || ""
+        context || "",
       );
     }
   }
@@ -186,18 +173,12 @@ export class Logger {
    * Log API calls
    */
   api(method: string, endpoint: string, status?: number, duration?: number) {
-    const emoji =
-      status && status >= 200 && status < 300 ? "✅" : status && status >= 400 ? "❌" : "🔄";
-    const color =
-      status && status >= 200 && status < 300
-        ? "#10B981"
-        : status && status >= 400
-          ? "#EF4444"
-          : "#3B82F6";
+    const emoji = status && status >= 200 && status < 300 ? "✅" : status && status >= 400 ? "❌" : "🔄";
+    const color = status && status >= 200 && status < 300 ? "#10B981" : status && status >= 400 ? "#EF4444" : "#3B82F6";
 
     console.log(
       `%c${emoji} [${getTimestamp()}] ${method} ${endpoint}${status ? ` → ${status}` : ""}${duration ? ` (${duration}ms)` : ""}`,
-      `color: ${color}; font-weight: bold;`
+      `color: ${color}; font-weight: bold;`,
     );
   }
 

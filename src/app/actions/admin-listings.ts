@@ -9,23 +9,23 @@
  * - Direct Supabase path (fallback)
  */
 
-import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
-import { invalidateTag } from "@/lib/data/cache-invalidation";
-import { requireAdmin, logAdminAction } from "@/lib/data/admin-check";
-import { createAdminClient } from "@/lib/supabase/admin";
 import {
-  updateListingAPI,
   activateListingAPI,
-  deactivateListingAPI,
-  deleteListingAPI as deleteListingEdge,
-  updateAdminNotesAPI,
   bulkActivateListingsAPI,
   bulkDeactivateListingsAPI,
   bulkDeleteListingsAPI,
-  updateUserRolesAPI,
+  deactivateListingAPI,
+  deleteListingAPI as deleteListingEdge,
   toUpdateListingRequest,
+  updateAdminNotesAPI,
+  updateListingAPI,
+  updateUserRolesAPI,
 } from "@/lib/api";
+import { logAdminAction, requireAdmin } from "@/lib/data/admin-check";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 // Feature flag for Edge Function migration
 const USE_EDGE_FUNCTIONS = process.env.USE_EDGE_FUNCTIONS_FOR_ADMIN === "true";
@@ -50,6 +50,26 @@ interface ActionResult {
   error?: string;
 }
 
+type AdminGuard = { ok: true; adminId: string } | { ok: false; error: string };
+
+/**
+ * Resolve the caller's admin identity, or the reason they don't have one.
+ *
+ * This MUST run before anything else in every action below. Previously the
+ * `USE_EDGE_FUNCTIONS` branch returned before `requireAdmin()` was ever reached,
+ * so with `USE_EDGE_FUNCTIONS_FOR_ADMIN=true` none of these actions authorized
+ * anyone — including `updateUserRoles`, which grants `admin`/`superadmin`, and
+ * including the self-demotion guard that lives below it. Authorization must not
+ * depend on a remote function re-implementing it.
+ */
+async function guardAdmin(): Promise<AdminGuard> {
+  try {
+    return { ok: true, adminId: await requireAdmin() };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Admin access required" };
+  }
+}
+
 // ============================================================================
 // Server Actions
 // ============================================================================
@@ -58,6 +78,9 @@ interface ActionResult {
  * Update a listing (admin can edit any listing)
  */
 export async function updateListing(id: number, data: UpdateListingData): Promise<ActionResult> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
   // ==========================================================================
   // Edge Function Path (when enabled)
   // ==========================================================================
@@ -78,7 +101,7 @@ export async function updateListing(id: number, data: UpdateListingData): Promis
   // Direct Supabase Path (fallback)
   // ==========================================================================
   try {
-    const adminId = await requireAdmin();
+    const { adminId } = auth;
     const supabase = await createClient();
 
     const { error } = await supabase
@@ -109,6 +132,9 @@ export async function updateListing(id: number, data: UpdateListingData): Promis
  * Activate a listing (approve)
  */
 export async function activateListing(id: number): Promise<ActionResult> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
   if (USE_EDGE_FUNCTIONS) {
     const result = await activateListingAPI(id);
 
@@ -123,7 +149,7 @@ export async function activateListing(id: number): Promise<ActionResult> {
   }
 
   try {
-    const adminId = await requireAdmin();
+    const { adminId } = auth;
     const supabase = await createClient();
 
     const { error } = await supabase
@@ -149,6 +175,9 @@ export async function activateListing(id: number): Promise<ActionResult> {
  * Deactivate a listing
  */
 export async function deactivateListing(id: number, reason?: string): Promise<ActionResult> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
   if (USE_EDGE_FUNCTIONS) {
     const result = await deactivateListingAPI(id, reason);
 
@@ -163,7 +192,7 @@ export async function deactivateListing(id: number, reason?: string): Promise<Ac
   }
 
   try {
-    const adminId = await requireAdmin();
+    const { adminId } = auth;
     const supabase = await createClient();
 
     const { error } = await supabase
@@ -193,6 +222,9 @@ export async function deactivateListing(id: number, reason?: string): Promise<Ac
  * Delete a listing permanently
  */
 export async function deleteListing(id: number): Promise<ActionResult> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
   if (USE_EDGE_FUNCTIONS) {
     const result = await deleteListingEdge(id);
 
@@ -206,7 +238,7 @@ export async function deleteListing(id: number): Promise<ActionResult> {
   }
 
   try {
-    const adminId = await requireAdmin();
+    const { adminId } = auth;
     const supabase = await createClient();
 
     const { error } = await supabase.from("posts").delete().eq("id", id);
@@ -228,6 +260,9 @@ export async function deleteListing(id: number): Promise<ActionResult> {
  * Bulk activate listings
  */
 export async function bulkActivateListings(ids: number[]): Promise<ActionResult> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
   if (USE_EDGE_FUNCTIONS) {
     const result = await bulkActivateListingsAPI(ids);
 
@@ -241,7 +276,7 @@ export async function bulkActivateListings(ids: number[]): Promise<ActionResult>
   }
 
   try {
-    const adminId = await requireAdmin();
+    const { adminId } = auth;
     const supabase = await createClient();
 
     const { error } = await supabase
@@ -267,10 +302,10 @@ export async function bulkActivateListings(ids: number[]): Promise<ActionResult>
 /**
  * Bulk deactivate listings
  */
-export async function bulkDeactivateListings(
-  ids: number[],
-  reason?: string
-): Promise<ActionResult> {
+export async function bulkDeactivateListings(ids: number[], reason?: string): Promise<ActionResult> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
   if (USE_EDGE_FUNCTIONS) {
     const result = await bulkDeactivateListingsAPI(ids, reason);
 
@@ -284,7 +319,7 @@ export async function bulkDeactivateListings(
   }
 
   try {
-    const adminId = await requireAdmin();
+    const { adminId } = auth;
     const supabase = await createClient();
 
     const { error } = await supabase
@@ -316,6 +351,9 @@ export async function bulkDeactivateListings(
  * Bulk delete listings
  */
 export async function bulkDeleteListings(ids: number[]): Promise<ActionResult> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
   if (USE_EDGE_FUNCTIONS) {
     const result = await bulkDeleteListingsAPI(ids);
 
@@ -329,7 +367,7 @@ export async function bulkDeleteListings(ids: number[]): Promise<ActionResult> {
   }
 
   try {
-    const adminId = await requireAdmin();
+    const { adminId } = auth;
     const supabase = await createClient();
 
     const { error } = await supabase.from("posts").delete().in("id", ids);
@@ -353,6 +391,9 @@ export async function bulkDeleteListings(ids: number[]): Promise<ActionResult> {
  * Update admin notes for a listing
  */
 export async function updateAdminNotes(id: number, notes: string): Promise<ActionResult> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
   if (USE_EDGE_FUNCTIONS) {
     const result = await updateAdminNotesAPI(id, notes);
 
@@ -365,7 +406,7 @@ export async function updateAdminNotes(id: number, notes: string): Promise<Actio
   }
 
   try {
-    const adminId = await requireAdmin();
+    const { adminId } = auth;
     const supabase = await createClient();
 
     const { error } = await supabase
@@ -388,10 +429,17 @@ export async function updateAdminNotes(id: number, notes: string): Promise<Actio
 /**
  * Update user roles via user_roles junction table
  */
-export async function updateUserRoles(
-  userId: string,
-  roles: Record<string, boolean>
-): Promise<ActionResult> {
+export async function updateUserRoles(userId: string, roles: Record<string, boolean>): Promise<ActionResult> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+  const { adminId } = auth;
+
+  // Prevent self-demotion. Checked on both paths — an admin who can strip their
+  // own admin role locks every other admin out of role management.
+  if (userId === adminId && roles.admin === false) {
+    return { success: false, error: "Cannot remove your own admin role" };
+  }
+
   if (USE_EDGE_FUNCTIONS) {
     const result = await updateUserRolesAPI(userId, roles);
 
@@ -405,13 +453,7 @@ export async function updateUserRoles(
   }
 
   try {
-    const adminId = await requireAdmin();
     const supabase = createAdminClient();
-
-    // Prevent self-demotion
-    if (userId === adminId && roles.admin === false) {
-      return { success: false, error: "Cannot remove your own admin role" };
-    }
 
     // Get all role IDs from roles table
     const { data: allRoles, error: rolesError } = await supabase.from("roles").select("id,name");
@@ -421,10 +463,7 @@ export async function updateUserRoles(
     const roleMap = new Map(allRoles?.map((r) => [r.name, r.id]) ?? []);
 
     // Delete existing user roles
-    const { error: deleteError } = await supabase
-      .from("user_roles")
-      .delete()
-      .eq("profile_id", userId);
+    const { error: deleteError } = await supabase.from("user_roles").delete().eq("profile_id", userId);
 
     if (deleteError) return { success: false, error: deleteError.message };
 

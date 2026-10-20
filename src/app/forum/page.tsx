@@ -1,21 +1,19 @@
-import { Suspense } from "react";
-import { getForumPageData } from "@/lib/data/forum";
 import { ForumPageClient } from "@/components/forum";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getForumPageData } from "@/lib/data/forum";
+import { generateBreadcrumbJsonLd, generateItemListJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import { generatePageMetadata, siteConfig } from "@/lib/metadata";
-import {
-  generateBreadcrumbJsonLd,
-  generateItemListJsonLd,
-  safeJsonLdStringify,
-} from "@/lib/jsonld";
+import { Suspense } from "react";
 
 export const metadata = generatePageMetadata({
   title: "Community Forum",
-  description:
-    "Join the FoodShare community forum to share ideas, ask questions, and connect with other food sharers.",
+  description: "Join the FoodShare community forum to share ideas, ask questions, and connect with other food sharers.",
   keywords: ["forum", "community", "discussion", "food sharing tips"],
   path: "/forum",
 });
+
+const FORUM_STAT_SKELETON_KEYS = ["a", "b", "c", "d"] as const;
+const FORUM_THREAD_SKELETON_KEYS = ["a", "b", "c", "d", "e", "f"] as const;
 
 function ForumSkeleton() {
   return (
@@ -25,8 +23,8 @@ function ForumSkeleton() {
           <Skeleton className="h-10 w-64 bg-white/20 mb-2" />
           <Skeleton className="h-6 w-96 bg-white/20" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-2xl bg-white/10" />
+            {FORUM_STAT_SKELETON_KEYS.map((k) => (
+              <Skeleton key={k} className="h-24 rounded-2xl bg-white/10" />
             ))}
           </div>
         </div>
@@ -44,8 +42,8 @@ function ForumSkeleton() {
           <main className="flex-1">
             <Skeleton className="h-16 rounded-2xl mb-6" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="rounded-xl overflow-hidden bg-card">
+              {FORUM_THREAD_SKELETON_KEYS.map((k) => (
+                <div key={k} className="rounded-xl overflow-hidden bg-card">
                   <Skeleton className="h-48 w-full" />
                   <div className="p-4 space-y-3">
                     <Skeleton className="h-4 w-20" />
@@ -66,14 +64,14 @@ async function ForumContent() {
   const data = await getForumPageData();
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
     { name: "Home", url: siteConfig.url },
-    { name: "Forum", url: siteConfig.url + "/forum" },
+    { name: "Forum", url: `${siteConfig.url}/forum` },
   ]);
   const itemListJsonLd = generateItemListJsonLd({
     name: "FoodShare Community Forum",
     description: "Community discussions about food sharing, sustainability, and reducing waste.",
     items: data.posts.slice(0, 10).map((post, index) => ({
       name: post.forum_post_name || "Forum Post",
-      url: siteConfig.url + "/forum/" + (post.slug || post.id),
+      url: `${siteConfig.url}/forum/${post.slug || post.id}`,
       image: post.forum_post_image || undefined,
       position: index + 1,
     })),
@@ -82,10 +80,12 @@ async function ForumContent() {
     <>
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD needs a raw script tag; safeJsonLdStringify escapes angle brackets and ampersands so a script-tag breakout is impossible
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
       />
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD needs a raw script tag; safeJsonLdStringify escapes angle brackets and ampersands so a script-tag breakout is impossible
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(itemListJsonLd) }}
       />
       <ForumPageClient

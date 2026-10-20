@@ -5,18 +5,18 @@
  * Save and delete email templates
  */
 
-import { z } from "zod";
-import { EmailTemplateSchema } from "./schemas";
-import { success, error, type ActionResult } from "./types";
-import { requireAuth, logAuditEvent, invalidateAutomationCache } from "./helpers";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
+import { invalidateAutomationCache, logAuditEvent, requireAuth } from "./helpers";
+import { EmailTemplateSchema } from "./schemas";
+import { type ActionResult, error, success } from "./types";
 
 // ============================================================================
 // Email Template Management
 // ============================================================================
 
 export async function saveEmailTemplate(
-  input: z.infer<typeof EmailTemplateSchema>
+  input: z.infer<typeof EmailTemplateSchema>,
 ): Promise<ActionResult<{ id: string; slug: string }>> {
   try {
     const validated = EmailTemplateSchema.safeParse(input);
@@ -65,31 +65,30 @@ export async function saveEmailTemplate(
       await logAuditEvent(supabase, user.id, "UPDATE", "email_template", updated.id);
       invalidateAutomationCache();
       return success({ id: updated.id, slug: updated.slug });
-    } else {
-      // Create new
-      const { data: created, error: dbError } = await supabase
-        .from("email_templates")
-        .insert({
-          name: validated.data.name,
-          slug: validated.data.slug,
-          subject: validated.data.subject,
-          html_content: validated.data.html_content,
-          plain_text_content: validated.data.plain_text_content || null,
-          category: validated.data.category || "automation",
-          variables: validated.data.variables || [],
-          created_by: user.id,
-        })
-        .select("id,slug")
-        .single();
-
-      if (dbError) {
-        return error("Failed to create template", "DB_ERROR");
-      }
-
-      await logAuditEvent(supabase, user.id, "CREATE", "email_template", created.id);
-      invalidateAutomationCache();
-      return success({ id: created.id, slug: created.slug });
     }
+    // Create new
+    const { data: created, error: dbError } = await supabase
+      .from("email_templates")
+      .insert({
+        name: validated.data.name,
+        slug: validated.data.slug,
+        subject: validated.data.subject,
+        html_content: validated.data.html_content,
+        plain_text_content: validated.data.plain_text_content || null,
+        category: validated.data.category || "automation",
+        variables: validated.data.variables || [],
+        created_by: user.id,
+      })
+      .select("id,slug")
+      .single();
+
+    if (dbError) {
+      return error("Failed to create template", "DB_ERROR");
+    }
+
+    await logAuditEvent(supabase, user.id, "CREATE", "email_template", created.id);
+    invalidateAutomationCache();
+    return success({ id: created.id, slug: created.slug });
   } catch (err) {
     if (err instanceof Error) {
       if (err.message === "UNAUTHORIZED") return error("Please sign in", "UNAUTHORIZED");
@@ -116,10 +115,7 @@ export async function deleteEmailTemplate(id: string): Promise<ActionResult<{ id
       .contains("steps", [{ template_slug: id }]);
 
     if (flows && flows.length > 0) {
-      return error(
-        `Template is used by ${flows.length} automation(s). Remove references first.`,
-        "IN_USE"
-      );
+      return error(`Template is used by ${flows.length} automation(s). Remove references first.`, "IN_USE");
     }
 
     const { error: dbError } = await supabase.from("email_templates").delete().eq("id", id);

@@ -7,12 +7,12 @@
  * Bleeding-edge React 19 patterns.
  */
 
-import { useTransition } from "react";
-import { Heart, Bookmark, Share2 } from "lucide-react";
+import { recordPostShare, togglePostBookmark, togglePostLike } from "@/app/actions/post-engagement";
 import { Button } from "@/components/ui/button";
+import { useOptimisticBookmark, useOptimisticLike } from "@/hooks/useOptimisticActivity";
 import { cn } from "@/lib/utils";
-import { useOptimisticLike, useOptimisticBookmark } from "@/hooks/useOptimisticActivity";
-import { togglePostLike, togglePostBookmark, recordPostShare } from "@/app/actions/post-engagement";
+import { Bookmark, Heart, Share2 } from "lucide-react";
+import { useTransition } from "react";
 
 interface PostEngagementButtonsProps {
   postId: number;
@@ -47,11 +47,7 @@ export function PostEngagementButtons({
   });
 
   // Optimistic bookmark state
-  const {
-    isBookmarked,
-    toggleBookmark,
-    isPending: isBookmarkPending,
-  } = useOptimisticBookmark(initialIsBookmarked);
+  const { isBookmarked, toggleBookmark, isPending: isBookmarkPending } = useOptimisticBookmark(initialIsBookmarked);
 
   const handleLike = async () => {
     toggleLike();
@@ -88,7 +84,7 @@ export function PostEngagementButtons({
         aria-label={isLiked ? "Unlike" : "Like"}
       >
         <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
-        {showCounts && likeCount > 0 && <span className="ml-1 text-xs">{likeCount}</span>}
+        {showCounts && likeCount > 0 && <span className="ms-1 text-xs">{likeCount}</span>}
       </Button>
 
       {/* Bookmark Button */}
@@ -104,13 +100,7 @@ export function PostEngagementButtons({
       </Button>
 
       {/* Share Button */}
-      <Button
-        variant="ghost"
-        size={buttonSize}
-        onClick={handleShare}
-        disabled={isSharePending}
-        aria-label="Share"
-      >
+      <Button variant="ghost" size={buttonSize} onClick={handleShare} disabled={isSharePending} aria-label="Share">
         <Share2 className="h-4 w-4" />
       </Button>
     </div>

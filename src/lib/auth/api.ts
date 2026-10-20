@@ -4,10 +4,10 @@
  * Centralized error handling and validation
  */
 
-import { supabase } from "./client";
-import type { AuthProvider, AuthCredentials, SignUpData } from "./types";
-import type { AuthResponse, OAuthResponse } from "@supabase/supabase-js";
 import { createLogger } from "@/lib/logger";
+import type { AuthResponse, OAuthResponse } from "@supabase/supabase-js";
+import { supabase } from "./client";
+import type { AuthCredentials, AuthProvider, SignUpData } from "./types";
 
 const logger = createLogger("AuthAPI");
 
@@ -189,12 +189,7 @@ export const auth = {
   /**
    * Subscribe to auth state changes
    */
-  onAuthStateChange(
-    callback: (
-      event: string,
-      session: import("@supabase/supabase-js").Session | null
-    ) => void
-  ) {
+  onAuthStateChange(callback: (event: string, session: import("@supabase/supabase-js").Session | null) => void) {
     return supabase.auth.onAuthStateChange(callback);
   },
 } as const;

@@ -4,11 +4,11 @@
  * Optimized with custom hooks and request cancellation
  */
 
-import React from "react";
-import { useTranslations } from "next-intl";
 import { useProviderQuotas } from "@/hooks/useEmailManagement";
 import { PROVIDER_NAMES } from "@/lib/email/constants";
 import type { ProviderQuotaStatus } from "@/types/email-management.types";
+import { useTranslations } from "next-intl";
+import React from "react";
 
 // Re-export for backwards compatibility
 export type { ProviderQuotaStatus } from "@/types/email-management.types";
@@ -49,17 +49,9 @@ function QuotaMeter({ quota }: QuotaMeterProps) {
     <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-bold text-gray-800">
-          {getProviderDisplayName(quota.provider)}
-        </h3>
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-medium uppercase ${getStatusBadgeColor()}`}
-        >
-          {quota.status === "exhausted"
-            ? t("exhausted")
-            : quota.status === "warning"
-              ? t("warning")
-              : t("ok")}
+        <h3 className="text-lg font-bold text-gray-800">{getProviderDisplayName(quota.provider)}</h3>
+        <span className={`px-3 py-1 rounded-full text-xs font-medium uppercase ${getStatusBadgeColor()}`}>
+          {quota.status === "exhausted" ? t("exhausted") : quota.status === "warning" ? t("warning") : t("ok")}
         </span>
       </div>
 
@@ -115,7 +107,7 @@ export function EmailQuotaDashboard() {
   if (loading && quotas.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-500" />
         <p className="mt-4 text-gray-600">Loading quota data...</p>
       </div>
     );
@@ -127,6 +119,7 @@ export function EmailQuotaDashboard() {
         <p className="text-red-800 font-medium">Error loading quota data</p>
         <p className="text-red-600 text-sm mt-2">{error}</p>
         <button
+          type="button"
           onClick={refetch}
           className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
         >
@@ -142,11 +135,10 @@ export function EmailQuotaDashboard() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Email Provider Quotas</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Last updated: {lastUpdated.toLocaleTimeString()}
-          </p>
+          <p className="text-sm text-gray-500 mt-1">Last updated: {lastUpdated.toLocaleTimeString()}</p>
         </div>
         <button
+          type="button"
           onClick={refetch}
           disabled={loading}
           className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"

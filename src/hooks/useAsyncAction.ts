@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition, useCallback, useState } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { useActionToast } from "./useActionToast";
 
 export interface AsyncActionOptions {
@@ -53,10 +53,7 @@ export interface AsyncActionResult<T> {
  *   }
  * );
  */
-export function useAsyncAction<T>(
-  action: () => Promise<T>,
-  options: AsyncActionOptions = {}
-): AsyncActionResult<T> {
+export function useAsyncAction<T>(action: () => Promise<T>, options: AsyncActionOptions = {}): AsyncActionResult<T> {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<Error | null>(null);
   const toast = useActionToast();

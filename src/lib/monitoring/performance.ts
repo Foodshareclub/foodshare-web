@@ -7,7 +7,7 @@
 
 import { apiCache } from "@/lib/api-cache";
 import { createLogger } from "@/lib/logger";
-import type { PerformanceMemory, PerformanceEventTiming } from "@/types/web-apis.types";
+import type { PerformanceEventTiming, PerformanceMemory } from "@/types/web-apis.types";
 import { getPerformanceMemory } from "@/types/web-apis.types";
 
 const logger = createLogger("PerformanceMonitor");
@@ -27,7 +27,7 @@ class PerformanceMonitor {
   /**
    * Start monitoring (dev only)
    */
-  start(intervalMs: number = 30000) {
+  start(intervalMs = 30000) {
     if (process.env.NODE_ENV !== "production") return;
 
     logger.debug("📊 Performance monitoring started");

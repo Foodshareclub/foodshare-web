@@ -1,9 +1,9 @@
 "use client";
 
-import { fetchNearbyListings, fetchProductsPaginated } from "@/app/actions/nearby-listings";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 import { ProductGrid } from "@/components/productCard/ProductGrid";
 import { Button } from "@/components/ui/button";
+import { encodeNearbyCursor } from "@/lib/api/listing-cursor";
 import type { NearbyCursor, NearbyPost } from "@/lib/data/nearby-posts";
 import { useUIStore } from "@/store/zustand/useUIStore";
 import type { InitialProductStateType } from "@/types/product.types";
@@ -30,6 +30,82 @@ function formatDistance(meters: number, locale: string): string {
  */
 function nextRadiusStep(currentRadius: number): number {
   return Math.min(currentRadius * 2, MAX_RADIUS_METERS);
+}
+
+// ============================================================================
+// Feed requests
+//
+// Both feeds are reads served by GET routes, not Server Actions. A read behind
+// a POST is billed against the 30/minute mutation limiter in proxy.ts, which
+// has no path filter, so scrolling the feed exhausted the same budget real
+// writes share. `success: false` on failure is load-bearing: the client keeps
+// the products it already has, whereas an empty `data` array would blank the
+// feed.
+// ============================================================================
+
+interface NearbyListingsResponse {
+  success: boolean;
+  data: NearbyPost[];
+  hasMore: boolean;
+  nextCursor: string | null;
+  radius: number;
+  error?: string;
+}
+
+async function requestNearbyListings(params: {
+  lat: number;
+  lng: number;
+  radius: number;
+  postType: string;
+  searchTerm?: string;
+  cursor: string | null;
+}): Promise<NearbyListingsResponse> {
+  const query = new URLSearchParams({
+    lat: String(params.lat),
+    lng: String(params.lng),
+    radius: String(params.radius),
+    type: params.postType,
+  });
+  if (params.searchTerm) query.set("q", params.searchTerm);
+  if (params.cursor) query.set("cursor", params.cursor);
+
+  try {
+    const response = await fetch(`/api/listings/nearby?${query.toString()}`);
+    if (!response.ok) {
+      return { success: false, data: [], hasMore: false, nextCursor: null, radius: params.radius };
+    }
+    return (await response.json()) as NearbyListingsResponse;
+  } catch {
+    return { success: false, data: [], hasMore: false, nextCursor: null, radius: params.radius };
+  }
+}
+
+interface ListingPageResponse {
+  success: boolean;
+  data: InitialProductStateType[];
+  hasMore: boolean;
+  nextCursor: number | null;
+  error?: string;
+}
+
+async function requestListingPage(
+  productType: string,
+  cursor: number | null,
+  searchTerm?: string,
+): Promise<ListingPageResponse> {
+  const query = new URLSearchParams({ type: productType });
+  if (cursor !== null) query.set("cursor", String(cursor));
+  if (searchTerm) query.set("q", searchTerm);
+
+  try {
+    const response = await fetch(`/api/listings?${query.toString()}`);
+    if (!response.ok) {
+      return { success: false, data: [], hasMore: false, nextCursor: null };
+    }
+    return (await response.json()) as ListingPageResponse;
+  } catch {
+    return { success: false, data: [], hasMore: false, nextCursor: null };
+  }
 }
 
 interface HomeClientProps {
@@ -100,11 +176,15 @@ export function HomeClient({
   // Only one is ever active depending on effectiveIsLocationFiltered.
   const [extraProducts, setExtraProducts] = useState<InitialProductStateType[]>([]);
   const [hasMore, setHasMore] = useState(initialHasMore);
-  const [nearbyCursor, setNearbyCursor] = useState<NearbyCursor | number | null>(
-    initialNextCursor ?? null
+  // Held as the opaque wire form so a value can be handed straight back to
+  // the route. The server-rendered cursor arrives as an object and is encoded
+  // once, here, rather than keeping a union of "object from the server" and
+  // "string from the client" and branching on which is which at every use.
+  const [nearbyCursor, setNearbyCursor] = useState<string | null>(() =>
+    encodeNearbyCursor(typeof initialNextCursor === "object" ? initialNextCursor : null),
   );
   const [productsCursor, setProductsCursor] = useState<number | null>(
-    isLocationFiltered ? null : (initialNextCursor as unknown as number | null)
+    isLocationFiltered ? null : (initialNextCursor as unknown as number | null),
   );
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [paginationFailed, setPaginationFailed] = useState(false);
@@ -124,7 +204,7 @@ export function HomeClient({
           lng: Number.parseFloat(searchParams.get("lng") as string),
           queryRadius: radiusMeters,
         }
-      : null
+      : null,
   );
 
   // Use server-rendered nearby posts if available, otherwise use client-fetched ones
@@ -140,30 +220,34 @@ export function HomeClient({
   // Combine base products with extra pages loaded via infinite scroll
   const products = [...baseProducts, ...extraProducts];
 
-  // Fetch nearby posts via Server Action (no server re-render)
-  const fetchNearby = useCallback(
-    async (lat: number, lng: number, radius: number, postType: string) => {
-      setIsFetchingNearby(true);
-      try {
-        const result = await fetchNearbyListings({ lat, lng, radius, postType });
-        if (result.success) {
-          setClientNearbyPosts(result.data);
-          setIsClientLocationFiltered(true);
-          // displayRadius captures the user's configured radius at first load.
-          setDisplayRadius(radius);
-          setHasMore(result.hasMore);
-          setNearbyCursor(result.nextCursor);
-          setProductsCursor(null);
-          setExtraProducts([]);
-          setHasAttemptedLoadMore(false);
-          locationRef.current = { lat, lng, queryRadius: radius };
-        }
-      } finally {
-        setIsFetchingNearby(false);
+  // Fetch nearby posts from the read route (no server re-render).
+  //
+  // This was a Server Action, and a read behind a POST spends one of the
+  // 30/minute mutation-limiter calls in proxy.ts — a limiter with no path
+  // filter, so it counted reads as writes. Infinite scroll in location mode
+  // exhausted it within a few pages and the feed showed "Something went
+  // wrong" instead of the next page. The same bucket is what real writes
+  // share, so scrolling also rate-limited the user's next actual mutation.
+  const fetchNearby = useCallback(async (lat: number, lng: number, radius: number, postType: string) => {
+    setIsFetchingNearby(true);
+    try {
+      const result = await requestNearbyListings({ lat, lng, radius, postType, cursor: null });
+      if (result.success) {
+        setClientNearbyPosts(result.data);
+        setIsClientLocationFiltered(true);
+        // displayRadius captures the user's configured radius at first load.
+        setDisplayRadius(radius);
+        setHasMore(result.hasMore);
+        setNearbyCursor(result.nextCursor);
+        setProductsCursor(null);
+        setExtraProducts([]);
+        setHasAttemptedLoadMore(false);
+        locationRef.current = { lat, lng, queryRadius: radius };
       }
-    },
-    []
-  );
+    } finally {
+      setIsFetchingNearby(false);
+    }
+  }, []);
 
   const effectiveHasMore = hasMore && !paginationFailed && !initialFetchFailed;
 
@@ -175,13 +259,11 @@ export function HomeClient({
     (incoming: NearbyPost[]) => {
       setExtraProducts((prev) => {
         const existingIds = new Set([...baseProducts, ...prev].map((p) => p.id));
-        const newProducts = (incoming as unknown as InitialProductStateType[]).filter(
-          (p) => !existingIds.has(p.id)
-        );
+        const newProducts = (incoming as unknown as InitialProductStateType[]).filter((p) => !existingIds.has(p.id));
         return [...prev, ...newProducts];
       });
     },
-    [baseProducts]
+    [baseProducts],
   );
 
   /**
@@ -216,16 +298,19 @@ export function HomeClient({
         // Tier drained: widen the radius and re-query from the SAME cursor —
         // the keyset predicate excludes all already-seen rows, so a wider net
         // can only surface farther items (no dupes, no skips).
-        const usingCursor = canPageCurrentTier ? nearbyCursor : nearbyCursor;
+        // Same cursor either way: paging forward and widening the radius both
+        // resume from the last row the client has seen, which is what keeps
+        // the already-seen rows out of the wider query.
+        const usingCursor = nearbyCursor;
         const radius = canPageCurrentTier ? queryRadius : nextRadiusStep(queryRadius);
 
-        const result = await fetchNearbyListings({
+        const result = await requestNearbyListings({
           lat,
           lng,
           radius,
           postType: productType,
           searchTerm,
-          cursor: usingCursor as NearbyCursor | null,
+          cursor: usingCursor,
         });
 
         if (result.success) {
@@ -238,12 +323,7 @@ export function HomeClient({
 
           // Tier drained but a larger radius remains: keep infinite scroll
           // armed so the next trigger expands the net again.
-          if (
-            !result.hasMore &&
-            radius < MAX_RADIUS_METERS &&
-            !hasExplicitDistance &&
-            !searchTerm
-          ) {
+          if (!result.hasMore && radius < MAX_RADIUS_METERS && !hasExplicitDistance && !searchTerm) {
             setHasMore(true);
           }
         } else {
@@ -262,7 +342,7 @@ export function HomeClient({
       setIsFetchingMore(true);
       setHasAttemptedLoadMore(true);
       try {
-        const result = await fetchProductsPaginated(productType, productsCursor, searchTerm);
+        const result = await requestListingPage(productType, productsCursor, searchTerm);
         if (result.success) {
           setExtraProducts((prev) => {
             const existingIds = new Set([...baseProducts, ...prev].map((p) => p.id));
@@ -348,22 +428,13 @@ export function HomeClient({
           enableHighAccuracy: false,
           timeout: 10000,
           maximumAge: 300000, // 5 minutes cache
-        }
+        },
       );
     }
     return () => {
       cancelled = true;
     };
-  }, [
-    searchParams,
-    searchTerm,
-    userLocation,
-    setUserLocation,
-    geoDistance,
-    fetchNearby,
-    productType,
-    radiusMeters,
-  ]);
+  }, [searchParams, searchTerm, userLocation, setUserLocation, geoDistance, fetchNearby, productType, radiusMeters]);
 
   return (
     <>
@@ -378,10 +449,7 @@ export function HomeClient({
       {(initialFetchFailed || paginationFailed) && (
         <div role="alert" className="flex flex-col items-center gap-3 px-4 py-8">
           <p className="text-muted-foreground">{t("something_went_wrong")}</p>
-          <Button
-            variant="outline"
-            onClick={() => (initialFetchFailed ? router.refresh() : handleLoadMore())}
-          >
+          <Button variant="outline" onClick={() => (initialFetchFailed ? router.refresh() : handleLoadMore())}>
             {t("try_again")}
           </Button>
         </div>
@@ -393,9 +461,7 @@ export function HomeClient({
         !isFetchingMore &&
         !hasMore &&
         !effectiveIsLocationFiltered && (
-          <p role="status" className="px-4 py-8 text-center text-muted-foreground">
-            {t("no_listings_found")}
-          </p>
+          <output className="block px-4 py-8 text-center text-muted-foreground">{t("no_listings_found")}</output>
         )}
       {!initialFetchFailed &&
         !paginationFailed &&

@@ -5,19 +5,19 @@
 
 import {
   Apple,
-  HandHelping,
-  LampDesk,
-  PackageSearch,
-  Warehouse,
-  Refrigerator,
-  Recycle,
   BarChart3,
-  Sprout,
-  Landmark,
+  HandHelping,
   HeartHandshake,
-  Trophy,
-  MessageSquare,
+  LampDesk,
+  Landmark,
   type LucideIcon,
+  MessageSquare,
+  PackageSearch,
+  Recycle,
+  Refrigerator,
+  Sprout,
+  Trophy,
+  Warehouse,
 } from "lucide-react";
 
 // Order: Food basics → Community resources → Lifestyle → Engagement → Forum

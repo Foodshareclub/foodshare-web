@@ -4,16 +4,10 @@
  * Using conservative 100/day limit for safety
  */
 
-import { SESClient, SendEmailCommand, VerifyEmailIdentityCommand } from "@aws-sdk/client-ses";
-import type {
-  SendEmailRequest,
-  SendEmailResponse,
-  AWSSESConfig,
-  ProviderQuota,
-  EmailAddress,
-} from "../types";
-import { BaseEmailProvider } from "./base";
 import { supabase } from "@/lib/supabase/client";
+import { SESClient, SendEmailCommand, VerifyEmailIdentityCommand } from "@aws-sdk/client-ses";
+import type { AWSSESConfig, EmailAddress, ProviderQuota, SendEmailRequest, SendEmailResponse } from "../types";
+import { BaseEmailProvider } from "./base";
 
 export class AWSSESProvider extends BaseEmailProvider {
   readonly provider = "aws_ses" as const;
@@ -39,9 +33,7 @@ export class AWSSESProvider extends BaseEmailProvider {
       const { content, options } = request;
 
       // Format recipients
-      const toAddresses = Array.isArray(options.to)
-        ? options.to.map((addr) => addr.email)
-        : [options.to.email];
+      const toAddresses = Array.isArray(options.to) ? options.to.map((addr) => addr.email) : [options.to.email];
 
       const ccAddresses = options.cc
         ? Array.isArray(options.cc)

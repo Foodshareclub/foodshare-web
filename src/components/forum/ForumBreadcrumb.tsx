@@ -1,6 +1,6 @@
-import Link from "next/link";
-import { Home, ChevronRight } from "lucide-react";
 import type { ForumCategory } from "@/api/forumAPI";
+import { ChevronRight, Home } from "lucide-react";
+import Link from "next/link";
 
 interface ForumBreadcrumbProps {
   category?: ForumCategory | null;
@@ -24,11 +24,7 @@ export function ForumBreadcrumb({ category, postTitle }: ForumBreadcrumbProps) {
           itemScope
           itemType="https://schema.org/ListItem"
         >
-          <Link
-            href="/"
-            className="hover:text-foreground transition-colors flex items-center gap-1"
-            itemProp="item"
-          >
+          <Link href="/" className="hover:text-foreground transition-colors flex items-center gap-1" itemProp="item">
             <Home className="w-3.5 h-3.5" />
             <span itemProp="name">Home</span>
           </Link>

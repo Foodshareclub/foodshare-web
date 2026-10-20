@@ -1,9 +1,10 @@
+/* oxlint-disable unicorn/no-thenable -- Supabase query builder mocks must be thenable. */
 /**
  * Email Campaign Integration Tests
  * Tests email and newsletter functionality including sending, scheduling, and tracking
  */
 
-import { mock, describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 // Mock state for controlling test behavior
 const mockState = {
@@ -96,7 +97,6 @@ mock.module("@/lib/supabase/server", () => ({
       // Handle user_roles table
       if (tableName === "user_roles") {
         Object.assign(chain, {
-          // eslint-disable-next-line unicorn/no-thenable
           then: (resolve: (value: unknown) => void) =>
             resolve({
               data: mockState.userRoles,
@@ -114,7 +114,7 @@ mock.module("@/lib/supabase/server", () => ({
           Promise.resolve({
             data: { user: mockState.user },
             error: mockState.authError,
-          })
+          }),
         ),
       },
       from: mock((tableName: string) => createChain(tableName)),
@@ -154,9 +154,7 @@ describe("Email Campaign Integration", () => {
       mockState.userRoles = [{ roles: { name: "user" } }];
 
       // Regular users should not manage campaigns
-      const isAdmin = mockState.userRoles.some(
-        (r) => r.roles.name === "admin" || r.roles.name === "superadmin"
-      );
+      const isAdmin = mockState.userRoles.some((r) => r.roles.name === "admin" || r.roles.name === "superadmin");
       expect(isAdmin).toBe(false);
     });
 
@@ -164,9 +162,7 @@ describe("Email Campaign Integration", () => {
       mockState.user = { id: "admin-123", email: "admin@example.com" };
       mockState.userRoles = [{ roles: { name: "admin" } }];
 
-      const isAdmin = mockState.userRoles.some(
-        (r) => r.roles.name === "admin" || r.roles.name === "superadmin"
-      );
+      const isAdmin = mockState.userRoles.some((r) => r.roles.name === "admin" || r.roles.name === "superadmin");
       expect(isAdmin).toBe(true);
     });
   });

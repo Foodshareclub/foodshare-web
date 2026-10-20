@@ -11,8 +11,7 @@ import type { EmailTemplateName, EmailTemplateProps } from "./types";
 
 // Lazy import templates to enable tree-shaking
 const templates = {
-  "welcome-confirmation": () =>
-    import("./welcome-confirmation").then((m) => m.WelcomeConfirmationEmail),
+  "welcome-confirmation": () => import("./welcome-confirmation").then((m) => m.WelcomeConfirmationEmail),
   "password-reset": () => import("./password-reset").then((m) => m.PasswordResetEmail),
   "magic-link": () => import("./magic-link").then((m) => m.MagicLinkEmail),
   "new-message": () => import("./new-message").then((m) => m.NewMessageEmail),
@@ -22,6 +21,11 @@ const templates = {
   "listing-expired": () => import("./listing-expired").then((m) => m.ListingExpiredEmail),
   "weekly-digest": () => import("./weekly-digest").then((m) => m.WeeklyDigestEmail),
 } as const;
+
+const renderToHtml: (name: EmailTemplateName, props: EmailTemplateProps["props"]) => Promise<string> =
+  renderEmailToHtml;
+const renderToText: (name: EmailTemplateName, props: EmailTemplateProps["props"]) => Promise<string> =
+  renderEmailToText;
 
 /**
  * Render an email template to HTML string
@@ -33,7 +37,7 @@ const templates = {
  */
 export async function renderEmailToHtml<T extends EmailTemplateName>(
   templateName: T,
-  props: Extract<EmailTemplateProps, { template: T }>["props"]
+  props: Extract<EmailTemplateProps, { template: T }>["props"],
 ): Promise<string> {
   const getTemplate = templates[templateName];
   if (!getTemplate) {
@@ -56,7 +60,7 @@ export async function renderEmailToHtml<T extends EmailTemplateName>(
  */
 export async function renderEmailToText<T extends EmailTemplateName>(
   templateName: T,
-  props: Extract<EmailTemplateProps, { template: T }>["props"]
+  props: Extract<EmailTemplateProps, { template: T }>["props"],
 ): Promise<string> {
   const getTemplate = templates[templateName];
   if (!getTemplate) {
@@ -81,12 +85,9 @@ export async function renderEmailToText<T extends EmailTemplateName>(
  */
 export async function renderEmail<T extends EmailTemplateName>(
   templateName: T,
-  props: Extract<EmailTemplateProps, { template: T }>["props"]
+  props: Extract<EmailTemplateProps, { template: T }>["props"],
 ): Promise<{ html: string; text: string }> {
-  const [html, text] = await Promise.all([
-    renderEmailToHtml(templateName, props as any),
-    renderEmailToText(templateName, props as any),
-  ]);
+  const [html, text] = await Promise.all([renderToHtml(templateName, props), renderToText(templateName, props)]);
 
   return { html, text };
 }
@@ -95,10 +96,7 @@ export async function renderEmail<T extends EmailTemplateName>(
  * Get subject line for a template
  * Useful for programmatic email sending
  */
-export function getEmailSubject(
-  templateName: EmailTemplateName,
-  props?: Record<string, string>
-): string {
+export function getEmailSubject(templateName: EmailTemplateName, props?: Record<string, string>): string {
   const subjects: Record<EmailTemplateName, string | ((p: Record<string, string>) => string)> = {
     "welcome-confirmation": "Welcome to Foodshare! Please confirm your email",
     "password-reset": "Reset your Foodshare password",
@@ -106,8 +104,7 @@ export function getEmailSubject(
     "new-message": (p) => `${p.senderName || "Someone"} sent you a message on Foodshare`,
     "listing-interest": (p) => `${p.interestedUserName || "Someone"} is interested in your listing`,
     "pickup-reminder": (p) => `Reminder: Pickup scheduled for ${p.pickupTime || "today"}`,
-    "review-request": (p) =>
-      `How was your experience with ${p.sharerName || "your recent pickup"}?`,
+    "review-request": (p) => `How was your experience with ${p.sharerName || "your recent pickup"}?`,
     "listing-expired": (p) => `Your listing "${p.listingTitle || ""}" has expired`,
     "weekly-digest": (p) => `Your Foodshare weekly digest - ${p.weekRange || "This Week"}`,
   };
@@ -125,7 +122,7 @@ export function getEmailSubject(
  */
 export function validateTemplateProps(
   templateName: EmailTemplateName,
-  props: Record<string, unknown>
+  props: Record<string, unknown>,
 ): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 

@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useFormStatus } from "react-dom";
-import { useTranslations } from "next-intl";
-import { Flag, AlertTriangle, Check, Loader2 } from "lucide-react";
+import { type ReportReason, createPostReport } from "@/app/actions/reports";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,12 +11,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { createPostReport, type ReportReason } from "@/app/actions/reports";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { AlertTriangle, Check, Flag, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { useFormStatus } from "react-dom";
 
 interface ReportPostDialogProps {
   postId: number;
@@ -46,12 +46,12 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
     <Button type="submit" disabled={disabled || pending} className="min-w-[120px]">
       {pending ? (
         <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2 className="me-2 h-4 w-4 animate-spin" />
           {t("submitting")}
         </>
       ) : (
         <>
-          <Flag className="mr-2 h-4 w-4" />
+          <Flag className="me-2 h-4 w-4" />
           {t("submitReport")}
         </>
       )}
@@ -113,7 +113,7 @@ export function ReportPostDialog({ postId, postName, trigger, onReported }: Repo
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="ghost" size="sm" className="text-muted-foreground">
-            <Flag className="mr-2 h-4 w-4" />
+            <Flag className="me-2 h-4 w-4" />
             {t("report")}
           </Button>
         )}
@@ -125,9 +125,7 @@ export function ReportPostDialog({ postId, postName, trigger, onReported }: Repo
             {t("reportPost")}
           </DialogTitle>
           <DialogDescription>
-            {postName
-              ? t("reportPostDescription", { name: postName })
-              : t("reportPostDescriptionGeneric")}
+            {postName ? t("reportPostDescription", { name: postName }) : t("reportPostDescriptionGeneric")}
           </DialogDescription>
         </DialogHeader>
 
@@ -156,7 +154,7 @@ export function ReportPostDialog({ postId, postName, trigger, onReported }: Repo
                       className={cn(
                         "flex cursor-pointer items-center gap-2 rounded-lg border-2 border-muted p-3 transition-colors",
                         "hover:bg-accent hover:text-accent-foreground",
-                        "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
+                        "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5",
                       )}
                     >
                       <span>{item.icon}</span>
@@ -181,9 +179,7 @@ export function ReportPostDialog({ postId, postName, trigger, onReported }: Repo
             </div>
 
             {status === "error" && (
-              <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-                {errorMessage}
-              </div>
+              <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{errorMessage}</div>
             )}
 
             <DialogFooter>

@@ -1,117 +1,140 @@
 /**
- * Auth Error Handling
- * User-friendly error messages for authentication flows
+ * Auth errors: stable codes, not sentences.
+ *
+ * This module used to be a table of English sentences — `AUTH_ERRORS`, with
+ * `getAuthErrorMessage()` matching Supabase's error strings against them and
+ * `getErrorSuggestion()`, `isNetworkError()`, `isAuthError()` and
+ * `isRecoverableError()` doing further matching on the *result*. Every one of
+ * those was a heuristic over English prose, and every one of them exported a
+ * string that a UI could put on screen.
+ *
+ * **None of them was ever called.** `getAuthErrorMessage` was re-exported from
+ * `@/lib/auth` and `@/lib/errors` and imported by nothing; `src/app/actions/auth.ts`
+ * passed `error.message` — Supabase's own English — straight to the client, and
+ * `useAuth` fell back to its own English `"Login failed"`. So the auth flow's
+ * *error path*, the strings a reader sees most often when something goes wrong,
+ * were English in all 21 locales, and the module written to prevent exactly that
+ * sat unused next to them.
+ *
+ * A code instead of a sentence fixes the class rather than the instance: the
+ * client resolves `AuthFlow.errors.invalidCredentials` through `t()`, so the
+ * message is translated, and a Supabase upgrade that rewords its errors changes
+ * a mapping table rather than the text every reader sees.
  */
-
 import type { AuthError } from "@supabase/supabase-js";
 
 /**
- * Auth error message constants
+ * Every auth failure the UI can be told about.
+ *
+ * Deliberately coarse. The purpose is to pick a translation, and a code per
+ * Supabase error string would be a translation per Supabase error string — which
+ * means every Supabase upgrade becomes a copy change. Two Supabase messages
+ * mapping to one code is the right amount of resolution.
  */
-export const AUTH_ERRORS = {
-  // Login errors
-  INVALID_CREDENTIALS: "Incorrect email or password. Please try again.",
-  EMAIL_NOT_CONFIRMED: "Please check your email and confirm your account before logging in.",
-  USER_NOT_FOUND: "No account found with this email address.",
+export const AUTH_ERROR_CODES = [
+  "invalidCredentials",
+  "emailNotConfirmed",
+  "emailExists",
+  "weakPassword",
+  "invalidEmail",
+  "rateLimited",
+  "providerNotConfigured",
+  "oauthFailed",
+  "networkError",
+  "fieldRequired",
+  "fieldTooLong",
+  "signInFailed",
+  "signUpFailed",
+  "passwordUpdateFailed",
+  "passwordRecoveryFailed",
+  "unknown",
+] as const;
 
-  // Registration errors
-  EMAIL_ALREADY_EXISTS: "An account with this email already exists. Try logging in instead.",
-  WEAK_PASSWORD: "Password does not meet minimum length requirement.",
-  INVALID_EMAIL: "Please enter a valid email address.",
+export type AuthErrorCode = (typeof AUTH_ERROR_CODES)[number];
 
-  // Rate limiting
-  RATE_LIMIT_EXCEEDED: "Too many attempts. Please try again in a few minutes.",
-
-  // Session errors
-  SESSION_EXPIRED: "Your session has expired. Please log in again.",
-  SESSION_NOT_FOUND: "No active session found. Please log in.",
-  SESSION_INVALID: "Your session is invalid. Please log in again.",
-
-  // OAuth errors
-  OAUTH_CANCELLED: "Sign-in was cancelled. Please try again.",
-  OAUTH_FAILED: "Sign-in failed. Please try another method.",
-  OAUTH_STATE_MISMATCH: "Security verification failed. Please try again.",
-  OAUTH_REDIRECT_ERROR: "Authentication redirect error. Please contact support.",
-
-  // Network errors
-  NETWORK_ERROR: "Network error. Please check your connection and try again.",
-  TIMEOUT: "Request timed out. Please try again.",
-
-  // Generic
-  UNKNOWN_ERROR: "Something went wrong. Please try again.",
-} as const;
+const isCode = (value: string): value is AuthErrorCode => (AUTH_ERROR_CODES as readonly string[]).includes(value);
 
 /**
- * Error message mapping for Supabase auth errors
+ * The catalogue key for a code, so callers write one thing rather than two.
+ *
+ * `AuthFlow.errors.<code>` — the namespace is not optional. A bare code would
+ * work until the second namespace needed one, and next-intl's missing-key
+ * fallback renders the key path literally, so a code that lost its prefix would
+ * put `invalidCredentials` on screen in the shape next-intl renders rather than
+ * in a sentence anyone can read.
  */
-const ERROR_MESSAGES: Record<string, string> = {
-  // Invalid credentials
-  "Invalid login credentials": AUTH_ERRORS.INVALID_CREDENTIALS,
-  "Email not confirmed": AUTH_ERRORS.EMAIL_NOT_CONFIRMED,
-  "User already registered": AUTH_ERRORS.EMAIL_ALREADY_EXISTS,
+export const authErrorKey = (code: AuthErrorCode): string => `AuthFlow.errors.${code}`;
 
-  // Password errors
-  "Password should be at least 6 characters": AUTH_ERRORS.WEAK_PASSWORD,
-  "Password is too weak": AUTH_ERRORS.WEAK_PASSWORD,
+/** Coerce anything reaching the client into a code, never a raw message. */
+export const toAuthErrorCode = (value: unknown): AuthErrorCode =>
+  typeof value === "string" && isCode(value) ? value : "unknown";
 
-  // Email errors
-  "Unable to validate email address: invalid format": AUTH_ERRORS.INVALID_EMAIL,
-  "Email address is invalid": AUTH_ERRORS.INVALID_EMAIL,
-
-  // Rate limiting
-  "Email rate limit exceeded": AUTH_ERRORS.RATE_LIMIT_EXCEEDED,
-  "SMS rate limit exceeded": AUTH_ERRORS.RATE_LIMIT_EXCEEDED,
-
-  // Network errors
-  "Failed to fetch": AUTH_ERRORS.NETWORK_ERROR,
-  "Network request failed": AUTH_ERRORS.NETWORK_ERROR,
-
-  // OAuth errors
-  "Invalid redirect URL": AUTH_ERRORS.OAUTH_REDIRECT_ERROR,
-  "redirect_to URL is not allowed": AUTH_ERRORS.OAUTH_REDIRECT_ERROR,
-
-  // Session errors
-  "No session found": AUTH_ERRORS.SESSION_NOT_FOUND,
-  "Invalid session": AUTH_ERRORS.SESSION_INVALID,
-  "Session expired": AUTH_ERRORS.SESSION_EXPIRED,
+/**
+ * Supabase's error strings, mapped to codes.
+ *
+ * Exact matches first, then substring, because Supabase varies both — some paths
+ * return "Invalid login credentials" and some "Invalid login credentials." —
+ * and a user-visible code that only resolves for the exact spelling is worse
+ * than the generic "sign-in failed" it was meant to replace.
+ *
+ * Lower-cased keys, and the incoming message is lower-cased to match. Matching
+ * case-sensitively is how a mapping table ends up with a `// unreachable`
+ * branch that a machine translation nobody reads assumes is impossible.
+ */
+const SUPABASE_MESSAGES: Record<string, AuthErrorCode> = {
+  "invalid login credentials": "invalidCredentials",
+  "email not confirmed": "emailNotConfirmed",
+  "user already registered": "emailExists",
+  "user already exists": "emailExists",
+  "password should be at least": "weakPassword",
+  "password is too weak": "weakPassword",
+  "unable to validate email address": "invalidEmail",
+  "email address": "invalidEmail",
+  "email rate limit exceeded": "rateLimited",
+  "sms rate limit exceeded": "rateLimited",
+  "too many requests": "rateLimited",
+  "failed to fetch": "networkError",
+  "network request failed": "networkError",
+  network: "networkError",
+  pkce: "oauthFailed",
+  code_verifier: "oauthFailed",
+  "invalid redirect url": "providerNotConfigured",
+  "redirect_to url is not allowed": "providerNotConfigured",
+  "missing oauth secret": "providerNotConfigured",
+  "unsupported provider": "providerNotConfigured",
+  invalid_client: "providerNotConfigured",
 };
 
 /**
- * Convert auth error to user-friendly message
+ * Map an auth error to a code.
+ *
+ * `oauthFailed` is checked before the table because its signals ("pkce",
+ * "code_verifier") are substrings of messages that also carry a more specific
+ * cause, and the generic OAuth answer is the safer of the two when both match.
  */
-export function getAuthErrorMessage(error: AuthError | Error | unknown): string {
-  if (!error) return AUTH_ERRORS.UNKNOWN_ERROR;
+export function getAuthErrorCode(error: AuthError | Error | unknown): AuthErrorCode {
+  const message = typeof error === "string" ? error : ((error as Error)?.message ?? "");
+  const needle = message.toLowerCase();
+  if (!needle) return "unknown";
 
-  const errorMessage =
-    typeof error === "string" ? error : (error as Error).message || "Unknown error";
+  if (needle.includes("pkce") || needle.includes("code_verifier")) return "oauthFailed";
+  if (needle.includes("state") && needle.includes("mismatch")) return "oauthFailed";
 
-  // Check for OAuth-specific errors
-  if (errorMessage.includes("pkce") || errorMessage.includes("code_verifier")) {
-    return AUTH_ERRORS.OAUTH_FAILED;
-  }
+  const exact = SUPABASE_MESSAGES[needle];
+  if (exact) return exact;
 
-  if (errorMessage.includes("state") && errorMessage.includes("mismatch")) {
-    return AUTH_ERRORS.OAUTH_STATE_MISMATCH;
-  }
+  for (const [fragment, code] of Object.entries(SUPABASE_MESSAGES)) if (needle.includes(fragment)) return code;
 
-  // Check for exact matches
-  if (ERROR_MESSAGES[errorMessage]) {
-    return ERROR_MESSAGES[errorMessage];
-  }
-
-  // Check for partial matches
-  for (const [key, value] of Object.entries(ERROR_MESSAGES)) {
-    if (errorMessage.toLowerCase().includes(key.toLowerCase())) {
-      return value;
-    }
-  }
-
-  // Return sanitized original error
-  return sanitizeErrorMessage(errorMessage);
+  return "unknown";
 }
 
 /**
- * Remove sensitive information from error messages
+ * Strip anything that should not reach a log or a client from a free-text error.
+ *
+ * Kept from the previous version of this module, and the only part of it that was
+ * ever a utility rather than a heuristic. Still not a substitute for the code
+ * table — it redacts, it does not classify — so callers that want a message to
+ * *show* should resolve `authErrorKey(getAuthErrorCode(error))` instead.
  */
 export function sanitizeErrorMessage(message: string): string {
   return (
@@ -123,76 +146,4 @@ export function sanitizeErrorMessage(message: string): string {
       // Remove email addresses
       .replace(/[\w.-]+@[\w.-]+\.\w+/g, "[email]")
   );
-}
-
-/**
- * Check if error is network-related
- */
-export function isNetworkError(error: unknown): boolean {
-  const message = getAuthErrorMessage(error).toLowerCase();
-  return (
-    message.includes("network") ||
-    message.includes("fetch") ||
-    message.includes("internet") ||
-    message.includes("connection")
-  );
-}
-
-/**
- * Check if error is auth-related (credentials, permissions)
- */
-export function isAuthError(error: unknown): boolean {
-  const message = getAuthErrorMessage(error).toLowerCase();
-  return (
-    message.includes("credentials") ||
-    message.includes("password") ||
-    message.includes("email") ||
-    message.includes("unauthorized") ||
-    message.includes("forbidden")
-  );
-}
-
-/**
- * Check if error is recoverable (user can retry)
- */
-export function isRecoverableError(error: unknown): boolean {
-  const errorMessage = (error as { message?: string })?.message?.toLowerCase() || "";
-  const errorCode = (error as { code?: string })?.code?.toLowerCase() || "";
-
-  // Non-recoverable errors
-  const nonRecoverable = ["email_not_confirmed", "user_already_exists", "invalid_email"];
-
-  return !nonRecoverable.some((code) => errorCode.includes(code) || errorMessage.includes(code));
-}
-
-/**
- * Get helpful suggestion for error
- */
-export function getErrorSuggestion(error: unknown): string | null {
-  const message = getAuthErrorMessage(error).toLowerCase();
-
-  if (message.includes("credentials")) {
-    return "Double-check your email and password, or try resetting your password.";
-  }
-
-  if (message.includes("email not confirmed") || message.includes("confirm")) {
-    return "Check your email inbox for a confirmation link, or request a new one.";
-  }
-
-  if (message.includes("redirect")) {
-    if (process.env.NODE_ENV !== "production") {
-      return "Add http://localhost:3000/auth/callback to Supabase allowed redirect URLs.";
-    }
-    return "Please contact support for assistance.";
-  }
-
-  if (message.includes("network") || message.includes("connection")) {
-    return "Check your internet connection and try again.";
-  }
-
-  if (message.includes("rate limit") || message.includes("too many")) {
-    return "Please wait a few minutes before trying again.";
-  }
-
-  return null;
 }

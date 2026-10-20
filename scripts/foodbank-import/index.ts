@@ -12,26 +12,16 @@
  *   bun run import:foodbanks -- --country=all --type=all
  */
 
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { parseArgs } from "bun:util";
+import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 import { config } from "dotenv";
-import { parseArgs } from "util";
 
-import { SYSTEM_USER_ID, SUPPORTED_COUNTRIES, COUNTRIES, DEFAULT_BATCH_SIZE } from "./config";
-import type {
-  RawFoodbankData,
-  FoodbankImportRecord,
-  ImportResult,
-  ImportOptions,
-  Coordinates,
-} from "./types";
-import { fetchOSMFoodbanks, fetchOSMFridges, type FacilityType } from "./sources/osm-source";
-import { geocodeAddress, isValidCoordinates, getGeocodeStats } from "./utils/geocoding";
-import {
-  deduplicateFoodbanks,
-  findExistingDuplicate,
-  type ExistingFoodbank,
-} from "./utils/deduplication";
+import { COUNTRIES, DEFAULT_BATCH_SIZE, SUPPORTED_COUNTRIES, SYSTEM_USER_ID } from "./config";
+import { type FacilityType, fetchOSMFoodbanks, fetchOSMFridges } from "./sources/osm-source";
+import type { Coordinates, FoodbankImportRecord, ImportOptions, ImportResult, RawFoodbankData } from "./types";
+import { type ExistingFoodbank, deduplicateFoodbanks, findExistingDuplicate } from "./utils/deduplication";
 import { toImportRecord } from "./utils/formatting";
+import { geocodeAddress, getGeocodeStats, isValidCoordinates } from "./utils/geocoding";
 
 // Extended import options with facility type
 interface ExtendedImportOptions extends ImportOptions {
@@ -59,10 +49,11 @@ function parseCliArgs(): ExtendedImportOptions {
 
   // Parse countries
   let countries: string[];
-  if (values.country === "all") {
+  const countryInput = values.country ?? "US";
+  if (countryInput === "all") {
     countries = SUPPORTED_COUNTRIES;
   } else {
-    countries = values.country!.split(",").map((c) => c.trim().toUpperCase());
+    countries = countryInput.split(",").map((c) => c.trim().toUpperCase());
 
     // Validate country codes
     for (const code of countries) {
@@ -85,7 +76,7 @@ function parseCliArgs(): ExtendedImportOptions {
     facilityType = "foodbank";
   } else {
     console.error(`Unknown facility type: ${typeInput}`);
-    console.error(`Supported: food_bank, fridge, all`);
+    console.error("Supported: food_bank, fridge, all");
     process.exit(1);
   }
 
@@ -94,7 +85,7 @@ function parseCliArgs(): ExtendedImportOptions {
     facilityType,
     dryRun: values["dry-run"] ?? false,
     verbose: values.verbose ?? false,
-    batchSize: parseInt(values["batch-size"]!, 10) || DEFAULT_BATCH_SIZE,
+    batchSize: Number.parseInt(values["batch-size"] ?? String(DEFAULT_BATCH_SIZE), 10) || DEFAULT_BATCH_SIZE,
   };
 }
 
@@ -122,11 +113,7 @@ async function ensureSystemUser(supabase: SupabaseClient, verbose: boolean): Pro
     console.log("Checking system user...");
   }
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("id", SYSTEM_USER_ID)
-    .single();
+  const { data, error } = await supabase.from("profiles").select("id").eq("id", SYSTEM_USER_ID).single();
 
   if (error && error.code !== "PGRST116") {
     console.error("Error checking system user:", error.message);
@@ -159,12 +146,9 @@ async function ensureSystemUser(supabase: SupabaseClient, verbose: boolean): Pro
  */
 async function fetchExistingFacilities(
   supabase: SupabaseClient,
-  postType: "foodbank" | "fridge"
+  postType: "foodbank" | "fridge",
 ): Promise<ExistingFoodbank[]> {
-  const { data, error } = await supabase
-    .from("posts")
-    .select("id, post_name, location")
-    .eq("post_type", postType);
+  const { data, error } = await supabase.from("posts").select("id, post_name, location").eq("post_type", postType);
 
   if (error) {
     console.error(`Error fetching existing ${postType}s:`, error.message);
@@ -199,7 +183,7 @@ async function fetchExistingFacilities(
 async function processFoodbanks(
   rawData: RawFoodbankData[],
   verbose: boolean,
-  postType: "foodbank" | "fridge" = "foodbank"
+  postType: "foodbank" | "fridge" = "foodbank",
 ): Promise<{ records: FoodbankImportRecord[]; geocoded: number }> {
   const records: FoodbankImportRecord[] = [];
   let geocodedCount = 0;
@@ -214,11 +198,7 @@ async function processFoodbanks(
     let coords: Coordinates | null = null;
 
     // Use existing coordinates if valid
-    if (
-      fb.latitude !== undefined &&
-      fb.longitude !== undefined &&
-      isValidCoordinates(fb.latitude, fb.longitude)
-    ) {
+    if (fb.latitude !== undefined && fb.longitude !== undefined && isValidCoordinates(fb.latitude, fb.longitude)) {
       coords = { latitude: fb.latitude, longitude: fb.longitude };
     } else if (fb.address) {
       // Try geocoding
@@ -248,7 +228,7 @@ async function batchInsert(
   supabase: SupabaseClient,
   records: FoodbankImportRecord[],
   batchSize: number,
-  verbose: boolean
+  verbose: boolean,
 ): Promise<{ inserted: number; errors: Array<{ name: string; error: string }> }> {
   let inserted = 0;
   const errors: Array<{ name: string; error: string }> = [];
@@ -257,15 +237,13 @@ async function batchInsert(
     const batch = records.slice(i, i + batchSize);
 
     if (verbose) {
-      console.log(
-        `   Inserting batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(records.length / batchSize)}...`
-      );
+      console.log(`   Inserting batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(records.length / batchSize)}...`);
     }
 
     const { data, error } = await supabase.from("posts").insert(batch).select("id");
 
     if (error) {
-      console.error(`   Batch insert error:`, error.message);
+      console.error("   Batch insert error:", error.message);
 
       // Try inserting one by one to identify failures
       for (const record of batch) {
@@ -293,7 +271,7 @@ async function importCountry(
   countryCode: string,
   existingFacilities: ExistingFoodbank[],
   options: ExtendedImportOptions,
-  facilityType: FacilityType
+  facilityType: FacilityType,
 ): Promise<ImportResult> {
   const { dryRun, verbose, batchSize } = options;
   const typeName = facilityType === "fridge" ? "community fridges" : "foodbanks";
@@ -321,7 +299,7 @@ async function importCountry(
     result.total = rawData.length;
     console.log(`   Fetched ${rawData.length} ${typeName} from OSM`);
   } catch (error) {
-    console.error(`   Error fetching data:`, error);
+    console.error("   Error fetching data:", error);
     result.errors = 1;
     result.errorDetails.push({
       name: "FETCH_ERROR",
@@ -355,16 +333,14 @@ async function importCountry(
     }
   }
 
-  console.log(
-    `   ${newFacilities.length} new ${typeName} to import (${result.duplicates} duplicates skipped)`
-  );
+  console.log(`   ${newFacilities.length} new ${typeName} to import (${result.duplicates} duplicates skipped)`);
 
   if (newFacilities.length === 0) {
     return result;
   }
 
   // Process and geocode
-  console.log(`   Processing and geocoding...`);
+  console.log("   Processing and geocoding...");
   const { records, geocoded } = await processFoodbanks(newFacilities, verbose, postType);
   result.geocoded = geocoded;
 
@@ -382,7 +358,7 @@ async function importCountry(
   }
 
   // Insert into database
-  console.log(`   Inserting into database...`);
+  console.log("   Inserting into database...");
   const { inserted, errors } = await batchInsert(supabase, records, batchSize, verbose);
 
   result.inserted = inserted;
@@ -437,13 +413,7 @@ async function main(): Promise<void> {
 
     // Import each country
     for (const countryCode of options.countries) {
-      const result = await importCountry(
-        supabase,
-        countryCode,
-        existingFacilities,
-        options,
-        facilityType
-      );
+      const result = await importCountry(supabase, countryCode, existingFacilities, options, facilityType);
       results.push(result);
 
       // Small delay between countries to be nice to APIs
@@ -452,7 +422,7 @@ async function main(): Promise<void> {
   }
 
   // Summary
-  console.log("\n" + "═".repeat(60));
+  console.log(`\n${"═".repeat(60)}`);
   console.log("IMPORT SUMMARY");
   console.log("═".repeat(60));
 
@@ -477,7 +447,7 @@ async function main(): Promise<void> {
     totalGeocoded += r.geocoded;
 
     if (r.errorDetails.length > 0 && options.verbose) {
-      console.log(`   Error details:`);
+      console.log("   Error details:");
       for (const e of r.errorDetails.slice(0, 5)) {
         console.log(`      - ${e.name}: ${e.error}`);
       }
@@ -487,7 +457,7 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log("\n" + "─".repeat(60));
+  console.log(`\n${"─".repeat(60)}`);
   console.log("TOTALS:");
   console.log(`   Total fetched:  ${totalTotal}`);
   console.log(`   Inserted:       ${totalInserted}`);

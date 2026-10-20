@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
 import { Lightbulb, X } from "lucide-react";
+import type React from "react";
+import { useEffect, useState } from "react";
 
 interface SmartTipsProps {
   tips: string[];
@@ -25,11 +26,7 @@ export const SmartTips: React.FC<SmartTipsProps> = ({ tips, onDismiss }) => {
         <p className="text-xs font-medium text-primary mb-1">Tip</p>
         <p className="text-xs text-muted-foreground">{tips[currentTip]}</p>
       </div>
-      <button
-        type="button"
-        onClick={onDismiss}
-        className="p-1 rounded hover:bg-primary/10 transition-colors"
-      >
+      <button type="button" onClick={onDismiss} className="p-1 rounded hover:bg-primary/10 transition-colors">
         <X className="h-3 w-3 text-muted-foreground" />
       </button>
     </div>

@@ -5,59 +5,59 @@
 
 // Brand colors
 export const COLORS = {
-  primary: '#FF2D55',
-  teal: '#00A699',
-  orange: '#FC642D',
-  
+  primary: "#FF2D55",
+  teal: "#00A699",
+  orange: "#FC642D",
+
   // Log levels
-  debug: '#6B7280',
-  info: '#3B82F6',
-  warn: '#F59E0B',
-  error: '#EF4444',
-  success: '#10B981',
-  
+  debug: "#6B7280",
+  info: "#3B82F6",
+  warn: "#F59E0B",
+  error: "#EF4444",
+  success: "#10B981",
+
   // Accents
-  purple: '#8B5CF6',
-  cyan: '#06B6D4',
-  pink: '#EC4899',
-  
+  purple: "#8B5CF6",
+  cyan: "#06B6D4",
+  pink: "#EC4899",
+
   // Neutral
-  muted: '#9CA3AF',
-  dark: '#1F2937',
-  light: '#F3F4F6',
+  muted: "#9CA3AF",
+  dark: "#1F2937",
+  light: "#F3F4F6",
 } as const;
 
 // Emoji mapping
 export const EMOJI = {
-  debug: '🔍',
-  info: 'ℹ️',
-  warn: '⚠️',
-  error: '❌',
-  success: '✅',
-  
+  debug: "🔍",
+  info: "ℹ️",
+  warn: "⚠️",
+  error: "❌",
+  success: "✅",
+
   // Actions
-  api: '🌐',
-  db: '🗄️',
-  auth: '🔐',
-  cache: '💾',
-  render: '🎨',
-  
+  api: "🌐",
+  db: "🗄️",
+  auth: "🔐",
+  cache: "💾",
+  render: "🎨",
+
   // Performance
-  fast: '⚡',
-  slow: '🐢',
-  critical: '🐌',
-  
+  fast: "⚡",
+  slow: "🐢",
+  critical: "🐌",
+
   // Events
-  mount: '🎬',
-  unmount: '🎬',
-  update: '🔄',
-  click: '👆',
-  
+  mount: "🎬",
+  unmount: "🎬",
+  update: "🔄",
+  click: "👆",
+
   // Status
-  loading: '⏳',
-  complete: '✨',
-  network: '📡',
-  memory: '🧠',
+  loading: "⏳",
+  complete: "✨",
+  network: "📡",
+  memory: "🧠",
 } as const;
 
 // Console style presets
@@ -69,15 +69,17 @@ export const STYLES = {
     padding: 4px 8px;
     border-radius: 4px;
     font-weight: bold;
-  `.replace(/\s+/g, ' ').trim(),
-  
+  `
+    .replace(/\s+/g, " ")
+    .trim(),
+
   // Log levels
   debug: `color: ${COLORS.debug}; font-weight: normal;`,
   info: `color: ${COLORS.info}; font-weight: bold;`,
   warn: `color: ${COLORS.warn}; font-weight: bold;`,
   error: `color: ${COLORS.error}; font-weight: bold;`,
   success: `color: ${COLORS.success}; font-weight: bold;`,
-  
+
   // Labels
   label: `
     background: ${COLORS.dark};
@@ -86,8 +88,10 @@ export const STYLES = {
     border-radius: 3px;
     font-size: 11px;
     font-weight: 600;
-  `.replace(/\s+/g, ' ').trim(),
-  
+  `
+    .replace(/\s+/g, " ")
+    .trim(),
+
   labelPrimary: `
     background: ${COLORS.primary};
     color: white;
@@ -95,8 +99,10 @@ export const STYLES = {
     border-radius: 3px;
     font-size: 11px;
     font-weight: 600;
-  `.replace(/\s+/g, ' ').trim(),
-  
+  `
+    .replace(/\s+/g, " ")
+    .trim(),
+
   labelSuccess: `
     background: ${COLORS.success};
     color: white;
@@ -104,8 +110,10 @@ export const STYLES = {
     border-radius: 3px;
     font-size: 11px;
     font-weight: 600;
-  `.replace(/\s+/g, ' ').trim(),
-  
+  `
+    .replace(/\s+/g, " ")
+    .trim(),
+
   labelWarning: `
     background: ${COLORS.warn};
     color: white;
@@ -113,8 +121,10 @@ export const STYLES = {
     border-radius: 3px;
     font-size: 11px;
     font-weight: 600;
-  `.replace(/\s+/g, ' ').trim(),
-  
+  `
+    .replace(/\s+/g, " ")
+    .trim(),
+
   labelError: `
     background: ${COLORS.error};
     color: white;
@@ -122,10 +132,12 @@ export const STYLES = {
     border-radius: 3px;
     font-size: 11px;
     font-weight: 600;
-  `.replace(/\s+/g, ' ').trim(),
-  
+  `
+    .replace(/\s+/g, " ")
+    .trim(),
+
   // Text styles
-  bold: 'font-weight: bold;',
+  bold: "font-weight: bold;",
   muted: `color: ${COLORS.muted};`,
   code: `
     background: ${COLORS.dark};
@@ -133,8 +145,10 @@ export const STYLES = {
     padding: 2px 4px;
     border-radius: 3px;
     font-family: monospace;
-  `.replace(/\s+/g, ' ').trim(),
-  
+  `
+    .replace(/\s+/g, " ")
+    .trim(),
+
   // Timing
   fast: `color: ${COLORS.success}; font-weight: bold;`,
   medium: `color: ${COLORS.warn}; font-weight: bold;`,
@@ -143,28 +157,28 @@ export const STYLES = {
 
 // Server-side ANSI colors
 export const ANSI = {
-  reset: '\x1b[0m',
-  bold: '\x1b[1m',
-  dim: '\x1b[2m',
-  
+  reset: "\x1b[0m",
+  bold: "\x1b[1m",
+  dim: "\x1b[2m",
+
   // Colors
-  black: '\x1b[30m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  magenta: '\x1b[35m',
-  cyan: '\x1b[36m',
-  white: '\x1b[37m',
-  gray: '\x1b[90m',
-  
+  black: "\x1b[30m",
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  magenta: "\x1b[35m",
+  cyan: "\x1b[36m",
+  white: "\x1b[37m",
+  gray: "\x1b[90m",
+
   // Backgrounds
-  bgRed: '\x1b[41m',
-  bgGreen: '\x1b[42m',
-  bgYellow: '\x1b[43m',
-  bgBlue: '\x1b[44m',
-  bgMagenta: '\x1b[45m',
-  bgCyan: '\x1b[46m',
+  bgRed: "\x1b[41m",
+  bgGreen: "\x1b[42m",
+  bgYellow: "\x1b[43m",
+  bgBlue: "\x1b[44m",
+  bgMagenta: "\x1b[45m",
+  bgCyan: "\x1b[46m",
 } as const;
 
 /**

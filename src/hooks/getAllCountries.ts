@@ -9,7 +9,6 @@ const ROWS_PER_PAGE = 100; // Adjust to control the amount of data loaded per sc
 export async function getAllCountries() {
   let allCountries: CountryType[] = [];
   let nextPageToken = 0;
-  let pageCount = 1;
 
   while (nextPageToken < MAX_FETCH_SIZE) {
     const { data, error } = await supabase
@@ -24,9 +23,6 @@ export async function getAllCountries() {
 
     allCountries = [...allCountries, ...data];
     nextPageToken += ROWS_PER_PAGE;
-    pageCount++;
-
-
   }
 
   return allCountries;

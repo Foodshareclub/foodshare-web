@@ -1,9 +1,6 @@
-import { generateNoIndexMetadata } from '@/lib/metadata';
+import { generateNoIndexMetadata } from "@/lib/metadata";
 
-export const metadata = generateNoIndexMetadata(
-  'My Listings',
-  'Manage your food and item listings'
-);
+export const metadata = generateNoIndexMetadata("My Listings", "Manage your food and item listings");
 
 export default function UserListingsLayout({
   children,

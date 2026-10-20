@@ -55,6 +55,10 @@ export interface ReportStats {
   highSeverity: number;
 }
 
+interface ReportStatusRow {
+  status: string;
+}
+
 // ============================================================================
 // Cached Data Functions
 // ============================================================================
@@ -72,7 +76,7 @@ export async function getPendingReports(limit = 50): Promise<PostReport[]> {
       *,
       post:posts(id, post_name, post_type, profile_id),
       reporter:profiles!post_reports_reporter_id_fkey(id, nickname, avatar_url)
-    `
+    `,
     )
     .in("status", ["pending", "ai_reviewed"])
     .order("ai_severity_score", { ascending: false, nullsFirst: false })
@@ -91,7 +95,7 @@ export async function getReports(
     status?: string;
     limit?: number;
     offset?: number;
-  } = {}
+  } = {},
 ): Promise<PostReport[]> {
   const { status, limit = 50, offset = 0 } = options;
 
@@ -104,7 +108,7 @@ export async function getReports(
       *,
       post:posts(id, post_name, post_type, profile_id),
       reporter:profiles!post_reports_reporter_id_fkey(id, nickname, avatar_url)
-    `
+    `,
     )
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
@@ -129,13 +133,13 @@ export async function getReportStats(): Promise<ReportStats> {
   const { data: statusCounts, error: statusError } = await supabase
     .from("post_reports")
     .select("status")
-    .then(({ data, error }: any) => {
+    .then(({ data, error }: { data: ReportStatusRow[] | null; error: { message: string } | null }) => {
       if (error) return { data: null, error };
       const counts = {
         total: data?.length || 0,
-        pending: data?.filter((r: any) => r.status === "pending").length || 0,
-        aiReviewed: data?.filter((r: any) => r.status === "ai_reviewed").length || 0,
-        resolved: data?.filter((r: any) => r.status === "resolved").length || 0,
+        pending: data?.filter((r) => r.status === "pending").length || 0,
+        aiReviewed: data?.filter((r) => r.status === "ai_reviewed").length || 0,
+        resolved: data?.filter((r) => r.status === "resolved").length || 0,
       };
       return { data: counts, error: null };
     });
@@ -169,7 +173,7 @@ export async function getPostReports(postId: number): Promise<PostReport[]> {
       `
       *,
       reporter:profiles!post_reports_reporter_id_fkey(id, nickname, avatar_url)
-    `
+    `,
     )
     .eq("post_id", postId)
     .order("created_at", { ascending: false });

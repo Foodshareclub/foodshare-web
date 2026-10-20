@@ -5,10 +5,10 @@
  * Marks a challenge as completed for the authenticated user
  */
 
+import { completeChallenge } from "@/app/actions/challenges";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
-import { completeChallenge } from "@/app/actions/challenges";
 
 // Schema validation for request body
 const completeChallengeSchema = z.object({
@@ -32,10 +32,7 @@ export async function POST(request: Request) {
     const parseResult = completeChallengeSchema.safeParse(body);
 
     if (!parseResult.success) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: parseResult.error.format() },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid request body", details: parseResult.error.format() }, { status: 400 });
     }
 
     const { challengeId } = parseResult.data;
@@ -43,10 +40,7 @@ export async function POST(request: Request) {
     const result = await completeChallenge(challengeId);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || "Failed to complete challenge" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: result.error || "Failed to complete challenge" }, { status: 400 });
     }
 
     return NextResponse.json({ success: true });

@@ -1,42 +1,33 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import {
-  Plus,
-  Search,
-  ChevronDown,
-  Check,
-  Sparkles,
-  SlidersHorizontal,
-  X,
-  Filter,
-  RefreshCw,
-} from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
+
+import { refreshUserListingsCache } from "@/app/actions/products";
 import { ProductCard } from "@/components/productCard/ProductCard";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import { type Locale, getLocaleDirection } from "@/i18n/config";
 import { getPostTypeConfig } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
-import type { AuthUser } from "@/lib/data/auth";
-import { refreshUserListingsCache } from "@/app/actions/products";
+import { Check, ChevronDown, Filter, Plus, RefreshCw, Search, SlidersHorizontal, Sparkles, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface UserListingsClientProps {
   listings: InitialProductStateType[];
-  user: AuthUser;
 }
 
 type FilterStatus = "all" | "active" | "inactive";
@@ -55,7 +46,148 @@ const SORT_OPTIONS = [
   { value: "views" as const, label: "Most Popular", icon: "👁️" },
 ];
 
-export function UserListingsClient({ listings, user }: UserListingsClientProps) {
+interface FilterContentProps {
+  postTypes: string[];
+  filterType: string;
+  onFilterTypeChange: (type: string) => void;
+  filterStatus: FilterStatus;
+  onFilterStatusChange: (status: FilterStatus) => void;
+  sortBy: SortOption;
+  onSortByChange: (sort: SortOption) => void;
+  hasActiveFilters: boolean;
+  onClearFilters: () => void;
+  onClose: () => void;
+}
+
+function FilterContent({
+  postTypes,
+  filterType,
+  onFilterTypeChange,
+  filterStatus,
+  onFilterStatusChange,
+  sortBy,
+  onSortByChange,
+  hasActiveFilters,
+  onClearFilters,
+  onClose,
+}: FilterContentProps) {
+  return (
+    <div className="space-y-4">
+      {/* Type Filter */}
+      {postTypes.length > 0 && (
+        <div>
+          <span className="text-xs font-medium text-muted-foreground mb-2 block">Type</span>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                onFilterTypeChange("all");
+                onClose();
+              }}
+              className={cn(
+                "px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200",
+                filterType === "all"
+                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/25"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted",
+              )}
+            >
+              All
+            </button>
+            {postTypes.map((type) => (
+              <button
+                type="button"
+                key={type}
+                onClick={() => {
+                  onFilterTypeChange(type);
+                  onClose();
+                }}
+                className={cn(
+                  "px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200",
+                  filterType === type
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/25"
+                    : "bg-muted/50 text-muted-foreground hover:bg-muted",
+                )}
+              >
+                {getPostTypeConfig(type).emoji} {getPostTypeConfig(type).label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Status Filter */}
+      <div>
+        <span className="text-xs font-medium text-muted-foreground mb-2 block">Status</span>
+        <div className="flex flex-wrap gap-2">
+          {STATUS_OPTIONS.map((option) => (
+            <button
+              type="button"
+              key={option.value}
+              onClick={() => {
+                onFilterStatusChange(option.value);
+                onClose();
+              }}
+              className={cn(
+                "px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200",
+                filterStatus === option.value
+                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/25"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted",
+              )}
+            >
+              {option.icon} {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Sort */}
+      <div>
+        <span className="text-xs font-medium text-muted-foreground mb-2 block">Sort by</span>
+        <div className="flex flex-wrap gap-2">
+          {SORT_OPTIONS.map((option) => (
+            <button
+              type="button"
+              key={option.value}
+              onClick={() => {
+                onSortByChange(option.value);
+                onClose();
+              }}
+              className={cn(
+                "px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200",
+                sortBy === option.value
+                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/25"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted",
+              )}
+            >
+              {option.icon} {option.label.split(" ")[0]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {hasActiveFilters && (
+        <Button
+          variant="outline"
+          onClick={() => {
+            onClearFilters();
+            onClose();
+          }}
+          className="w-full mt-4 rounded-xl"
+        >
+          <X className="h-4 w-4 me-2" />
+          Clear all filters
+        </Button>
+      )}
+    </div>
+  );
+}
+
+export function UserListingsClient({ listings }: UserListingsClientProps) {
+  // The filter sidebar slides in from the inline start on mount. A physical
+  // `-translate-x-8` slid it in from the left while the content it reveals is on
+  // the right in Arabic, so the offset follows the locale.
+  const offscreen = getLocaleDirection(useLocale() as Locale) === "rtl" ? "translate-x-8" : "-translate-x-8";
+
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
@@ -68,7 +200,7 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await refreshUserListingsCache(user.id);
+      await refreshUserListingsCache();
       router.refresh();
     } finally {
       setIsRefreshing(false);
@@ -118,10 +250,8 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
   // Explicitly check for boolean true/false to handle potential null values
   const activeListings = listings.filter((l) => l.is_active === true);
   const inactiveListings = listings.filter((l) => l.is_active === false);
-  const hasActiveFilters = searchQuery || filterStatus !== "all" || filterType !== "all";
-  const activeFilterCount = [searchQuery, filterStatus !== "all", filterType !== "all"].filter(
-    Boolean
-  ).length;
+  const hasActiveFilters = Boolean(searchQuery) || filterStatus !== "all" || filterType !== "all";
+  const activeFilterCount = [searchQuery, filterStatus !== "all", filterType !== "all"].filter(Boolean).length;
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -132,113 +262,6 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
   const currentSort = SORT_OPTIONS.find((o) => o.value === sortBy);
   const currentStatus = STATUS_OPTIONS.find((o) => o.value === filterStatus);
 
-  // Mobile filter content (reusable)
-  const FilterContent = () => (
-    <div className="space-y-4">
-      {/* Type Filter */}
-      {postTypes.length > 0 && (
-        <div>
-          <label className="text-xs font-medium text-muted-foreground mb-2 block">Type</label>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => {
-                setFilterType("all");
-                setMobileFiltersOpen(false);
-              }}
-              className={cn(
-                "px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200",
-                filterType === "all"
-                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/25"
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted"
-              )}
-            >
-              All
-            </button>
-            {postTypes.map((type) => (
-              <button
-                key={type}
-                onClick={() => {
-                  setFilterType(type);
-                  setMobileFiltersOpen(false);
-                }}
-                className={cn(
-                  "px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200",
-                  filterType === type
-                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/25"
-                    : "bg-muted/50 text-muted-foreground hover:bg-muted"
-                )}
-              >
-                {getPostTypeConfig(type).emoji} {getPostTypeConfig(type).label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Status Filter */}
-      <div>
-        <label className="text-xs font-medium text-muted-foreground mb-2 block">Status</label>
-        <div className="flex flex-wrap gap-2">
-          {STATUS_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => {
-                setFilterStatus(option.value);
-                setMobileFiltersOpen(false);
-              }}
-              className={cn(
-                "px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200",
-                filterStatus === option.value
-                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/25"
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted"
-              )}
-            >
-              {option.icon} {option.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Sort */}
-      <div>
-        <label className="text-xs font-medium text-muted-foreground mb-2 block">Sort by</label>
-        <div className="flex flex-wrap gap-2">
-          {SORT_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => {
-                setSortBy(option.value);
-                setMobileFiltersOpen(false);
-              }}
-              className={cn(
-                "px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200",
-                sortBy === option.value
-                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/25"
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted"
-              )}
-            >
-              {option.icon} {option.label.split(" ")[0]}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {hasActiveFilters && (
-        <Button
-          variant="outline"
-          onClick={() => {
-            clearFilters();
-            setMobileFiltersOpen(false);
-          }}
-          className="w-full mt-4 rounded-xl"
-        >
-          <X className="h-4 w-4 mr-2" />
-          Clear all filters
-        </Button>
-      )}
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
       <div className="flex flex-col lg:flex-row pt-20">
@@ -247,21 +270,19 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
           className={cn(
             "hidden lg:block w-72 xl:w-80 lg:h-[calc(100vh-5rem)] lg:sticky lg:top-20 lg:overflow-hidden p-4 lg:p-6",
             "transform transition-all duration-500",
-            isLoaded ? "translate-x-0 opacity-100" : "-translate-x-8 opacity-0"
+            isLoaded ? "translate-x-0 opacity-100" : `${offscreen} opacity-0`,
           )}
         >
           <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-card/80 backdrop-blur-xl p-6 shadow-sm hover:shadow-lg transition-shadow duration-300">
             {/* Decorative gradient - animated */}
-            <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/10 blur-3xl animate-pulse" />
+            <div className="absolute -top-24 -end-24 h-48 w-48 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/10 blur-3xl animate-pulse" />
 
             <div className="relative">
               {/* Header */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                      My Listings
-                    </h1>
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">My Listings</h1>
                     <Sparkles className="h-5 w-5 text-emerald-500 animate-pulse" />
                   </div>
                   <Button
@@ -285,9 +306,7 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                 <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-background to-muted/50 p-4 text-center transition-all duration-300 hover:shadow-md hover:scale-105 cursor-default">
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="relative">
-                    <div className="text-2xl font-bold text-foreground tabular-nums">
-                      {listings.length}
-                    </div>
+                    <div className="text-2xl font-bold text-foreground tabular-nums">{listings.length}</div>
                     <div className="text-xs font-medium text-muted-foreground">Total</div>
                   </div>
                 </div>
@@ -297,9 +316,7 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                     <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                       {activeListings.length}
                     </div>
-                    <div className="text-xs font-medium text-emerald-600/70 dark:text-emerald-400/70">
-                      Active
-                    </div>
+                    <div className="text-xs font-medium text-emerald-600/70 dark:text-emerald-400/70">Active</div>
                   </div>
                 </div>
                 <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-background to-muted/50 p-4 text-center transition-all duration-300 hover:shadow-md hover:scale-105 cursor-default">
@@ -319,9 +336,9 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
         {/* Main Content */}
         <main
           className={cn(
-            "flex-1 p-4 lg:p-6 lg:pl-2",
+            "flex-1 p-4 lg:p-6 lg:ps-2",
             "transform transition-all duration-500 delay-100",
-            isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+            isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
           )}
         >
           {/* Mobile Header - visible only on mobile */}
@@ -350,14 +367,10 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                 <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                   {activeListings.length}
                 </div>
-                <div className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70">
-                  Active
-                </div>
+                <div className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70">Active</div>
               </div>
               <div className="flex-1 rounded-xl bg-muted/50 p-3 text-center">
-                <div className="text-lg font-bold text-muted-foreground tabular-nums">
-                  {inactiveListings.length}
-                </div>
+                <div className="text-lg font-bold text-muted-foreground tabular-nums">{inactiveListings.length}</div>
                 <div className="text-[10px] text-muted-foreground">Inactive</div>
               </div>
             </div>
@@ -368,23 +381,24 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
             className={cn(
               "mb-6 rounded-2xl border border-border/40 bg-card/60 backdrop-blur-sm p-4",
               "transform transition-all duration-500 delay-200",
-              isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+              isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
             )}
           >
             <div className="flex flex-wrap items-center gap-3">
               {/* Search */}
               <div className="relative w-full sm:w-72 order-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors" />
+                <Search className="absolute start-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors" />
                 <Input
                   placeholder="Search your listings..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-11 pl-11 pr-10 rounded-xl border-border/50 bg-background/80 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500/50 transition-all duration-200"
+                  className="h-11 ps-11 pe-10 rounded-xl border-border/50 bg-background/80 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500/50 transition-all duration-200"
                 />
                 {searchQuery && (
                   <button
+                    type="button"
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 hover:scale-110"
+                    className="absolute end-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 hover:scale-110"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -417,7 +431,18 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                       Filter & Sort
                     </SheetTitle>
                   </SheetHeader>
-                  <FilterContent />
+                  <FilterContent
+                    postTypes={postTypes}
+                    filterType={filterType}
+                    onFilterTypeChange={setFilterType}
+                    filterStatus={filterStatus}
+                    onFilterStatusChange={setFilterStatus}
+                    sortBy={sortBy}
+                    onSortByChange={setSortBy}
+                    hasActiveFilters={hasActiveFilters}
+                    onClearFilters={clearFilters}
+                    onClose={() => setMobileFiltersOpen(false)}
+                  />
                 </SheetContent>
               </Sheet>
 
@@ -430,7 +455,7 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                       className={cn(
                         "hidden lg:flex h-11 gap-2 rounded-xl border-border/50 bg-background/80 px-4 font-medium transition-all duration-200 hover:bg-background hover:border-border hover:scale-[1.02] order-3",
                         filterType !== "all" &&
-                          "border-emerald-500/50 bg-emerald-50/80 text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                          "border-emerald-500/50 bg-emerald-50/80 text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/40",
                       )}
                     >
                       <span>
@@ -445,9 +470,7 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                     align="start"
                     className="w-52 p-2 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2"
                   >
-                    <DropdownMenuLabel className="text-xs text-muted-foreground px-2">
-                      Filter by type
-                    </DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-xs text-muted-foreground px-2">Filter by type</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => setFilterType("all")}
@@ -480,7 +503,7 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                     className={cn(
                       "hidden lg:flex h-11 gap-2 rounded-xl border-border/50 bg-background/80 px-4 font-medium transition-all duration-200 hover:bg-background hover:border-border hover:scale-[1.02] order-4",
                       filterStatus !== "all" &&
-                        "border-emerald-500/50 bg-emerald-50/80 text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                        "border-emerald-500/50 bg-emerald-50/80 text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/40",
                     )}
                   >
                     <span>
@@ -493,9 +516,7 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                   align="start"
                   className="w-48 p-2 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2"
                 >
-                  <DropdownMenuLabel className="text-xs text-muted-foreground px-2">
-                    Filter by status
-                  </DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground px-2">Filter by status</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {STATUS_OPTIONS.map((option) => (
                     <DropdownMenuItem
@@ -505,9 +526,7 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                     >
                       <span className="text-base">{option.icon}</span>
                       <span className="flex-1 font-medium">{option.label}</span>
-                      {filterStatus === option.value && (
-                        <Check className="h-4 w-4 text-emerald-600" />
-                      )}
+                      {filterStatus === option.value && <Check className="h-4 w-4 text-emerald-600" />}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -530,9 +549,7 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                   align="start"
                   className="w-48 p-2 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2"
                 >
-                  <DropdownMenuLabel className="text-xs text-muted-foreground px-2">
-                    Sort listings
-                  </DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground px-2">Sort listings</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {SORT_OPTIONS.map((option) => (
                     <DropdownMenuItem
@@ -558,14 +575,14 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                 >
                   <X className="h-4 w-4" />
                   Clear
-                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                  <Badge variant="secondary" className="ms-1 h-5 px-1.5 text-xs">
                     {activeFilterCount}
                   </Badge>
                 </Button>
               )}
 
               {/* Results Count */}
-              <div className="ml-auto flex items-center gap-2 order-last">
+              <div className="ms-auto flex items-center gap-2 order-last">
                 <Badge variant="outline" className="h-7 px-3 font-medium tabular-nums">
                   {filteredListings.length} of {listings.length}
                 </Badge>
@@ -577,13 +594,11 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
           {listings.length === 0 ? (
             <div className="flex items-center justify-center min-h-[400px]">
               <div className="relative overflow-hidden rounded-3xl border border-border/40 bg-card/80 backdrop-blur-xl p-8 sm:p-12 text-center max-w-md mx-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/10 blur-3xl animate-pulse" />
-                <div className="absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-gradient-to-br from-teal-500/10 to-emerald-500/20 blur-3xl animate-pulse delay-1000" />
+                <div className="absolute -top-20 -end-20 h-40 w-40 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/10 blur-3xl animate-pulse" />
+                <div className="absolute -bottom-20 -start-20 h-40 w-40 rounded-full bg-gradient-to-br from-teal-500/10 to-emerald-500/20 blur-3xl animate-pulse delay-1000" />
                 <div className="relative">
                   <div className="text-6xl sm:text-7xl mb-6 animate-bounce">📦</div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">
-                    No listings yet
-                  </h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">No listings yet</h2>
                   <p className="text-sm sm:text-base text-muted-foreground mb-8 leading-relaxed">
                     Start sharing food or items with your community and make a difference!
                   </p>
@@ -604,9 +619,7 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
               <div className="relative overflow-hidden rounded-3xl border border-border/40 bg-card/80 backdrop-blur-xl p-8 sm:p-12 text-center max-w-md mx-4 shadow-lg">
                 <div className="relative">
                   <div className="text-6xl sm:text-7xl mb-6 animate-pulse">🔍</div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">
-                    No matches found
-                  </h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">No matches found</h2>
                   <p className="text-sm sm:text-base text-muted-foreground mb-8 leading-relaxed">
                     Try adjusting your filters to find what you&apos;re looking for.
                   </p>
@@ -628,17 +641,13 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                   key={listing.id}
                   className={cn(
                     "transform transition-all duration-300 hover:scale-[1.02] hover:z-10",
-                    !listing.is_active &&
-                      "opacity-50 grayscale-[30%] hover:opacity-70 hover:grayscale-0"
+                    !listing.is_active && "opacity-50 grayscale-[30%] hover:opacity-70 hover:grayscale-0",
                   )}
                 >
                   <div className="relative group">
                     {!listing.is_active && (
-                      <div className="absolute top-3 left-3 z-10">
-                        <Badge
-                          variant="secondary"
-                          className="bg-background/90 backdrop-blur-sm text-xs"
-                        >
+                      <div className="absolute top-3 start-3 z-10">
+                        <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm text-xs">
                           ⏸️ Inactive
                         </Badge>
                       </div>

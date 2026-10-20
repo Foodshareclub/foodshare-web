@@ -9,16 +9,18 @@
  * - Edge Function routing (when enabled)
  */
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
-import { invalidateTag, invalidatePostActivityCaches } from "@/lib/data/cache-invalidation";
 import { trackEvent } from "@/app/actions/analytics";
-import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
-import { logPostContact, logPostArrangement } from "@/app/actions/post-activity";
+import { logPostArrangement, logPostContact } from "@/app/actions/post-activity";
 import { createRoomAPI, sendMessageAPI } from "@/lib/api/chat";
-import { submitReviewAPI, formDataToReviewInput } from "@/lib/api/reviews";
+import { formDataToReviewInput, submitReviewAPI } from "@/lib/api/reviews";
+import { invalidatePostActivityCaches, invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { sendExchangeCompletionEmail } from "@/lib/email/exchange-completion";
+import { type ServerActionResult, serverActionError, successVoid } from "@/lib/errors";
+import { logger } from "@/lib/logger";
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 // Feature flags for Edge Function migration
 const USE_EDGE_FUNCTIONS = process.env.USE_EDGE_FUNCTIONS_FOR_CHAT === "true";
@@ -121,9 +123,7 @@ export async function sendFoodChatMessage(formData: FormData): Promise<ServerAct
         invalidateTag(CACHE_TAGS.USER_NOTIFICATIONS(user.id));
       }
 
-      return result.success
-        ? successVoid()
-        : serverActionError(result.error.message, result.error.code);
+      return result.success ? successVoid() : serverActionError(result.error.message, result.error.code);
     }
 
     // Fallback: Direct Supabase path
@@ -207,10 +207,7 @@ export async function markFoodChatAsRead(roomId: string): Promise<ServerActionRe
       return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
     }
 
-    const { error } = await supabase
-      .from("rooms")
-      .update({ last_message_seen_by: user.id })
-      .eq("id", roomId);
+    const { error } = await supabase.from("rooms").update({ last_message_seen_by: user.id }).eq("id", roomId);
 
     if (error) {
       console.error("Failed to mark as read:", error);
@@ -233,10 +230,7 @@ export async function markFoodChatAsRead(roomId: string): Promise<ServerActionRe
  *
  * Routes to Edge Function when USE_EDGE_FUNCTIONS_FOR_CHAT is enabled.
  */
-export async function createFoodChatRoom(
-  postId: number,
-  sharerId: string
-): Promise<ServerActionResult<RoomResult>> {
+export async function createFoodChatRoom(postId: number, sharerId: string): Promise<ServerActionResult<RoomResult>> {
   try {
     // Validate inputs
     const validated = CreateRoomSchema.safeParse({ postId, sharerId });
@@ -252,10 +246,7 @@ export async function createFoodChatRoom(
 
     // Prevent self-chat: user cannot chat with themselves
     if (user.id === validated.data.sharerId) {
-      return serverActionError(
-        "You cannot chat with yourself about your own listing",
-        "VALIDATION_ERROR"
-      );
+      return serverActionError("You cannot chat with yourself about your own listing", "VALIDATION_ERROR");
     }
 
     // Use Edge Function when enabled
@@ -294,11 +285,7 @@ export async function createFoodChatRoom(
 
     // Fallback: Direct Supabase path
     // Verify the post belongs to the sharer (prevent requesting own posts)
-    const { data: post } = await supabase
-      .from("posts")
-      .select("profile_id")
-      .eq("id", validated.data.postId)
-      .single();
+    const { data: post } = await supabase.from("posts").select("profile_id").eq("id", validated.data.postId).single();
 
     if (post && post.profile_id === user.id) {
       return serverActionError("You cannot request your own listing", "VALIDATION_ERROR");
@@ -370,10 +357,7 @@ export async function createFoodChatRoom(
 /**
  * Update a food sharing chat room
  */
-export async function updateRoom(
-  roomId: string,
-  formData: FormData
-): Promise<ServerActionResult<void>> {
+export async function updateRoom(roomId: string, formData: FormData): Promise<ServerActionResult<void>> {
   try {
     // Validate ID
     if (!roomId || !z.string().uuid().safeParse(roomId).success) {
@@ -385,11 +369,43 @@ export async function updateRoom(
       return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
     }
 
+    // `post_arranged_to` is the authorization input to the DB-side
+    // deactivate_post / cancel_arrangement functions, so writing it is a
+    // privilege action, not a chat edit. Only the sharer may set it — the same
+    // rule `acceptRequestAndShareAddress` enforces. Without this check any
+    // participant of any room could point an arrangement at an arbitrary UUID.
+    const setsArrangement = formData.has("post_arranged_to");
+    if (setsArrangement) {
+      const { data: room, error: roomError } = await supabase
+        .from("rooms")
+        .select("sharer, requester, post_arranged_to")
+        .eq("id", roomId)
+        .single();
+
+      if (roomError || !room) {
+        return serverActionError("Chat room not found", "NOT_FOUND");
+      }
+
+      if (room.sharer !== user.id) {
+        return serverActionError("Only the food owner can mark an exchange as arranged", "FORBIDDEN");
+      }
+
+      if (room.post_arranged_to) {
+        return serverActionError("This request has already been accepted", "CONFLICT");
+      }
+    }
+
     // Build update object from form data
     const updateData: Record<string, unknown> = {};
 
     const postArrangedTo = formData.get("post_arranged_to");
-    if (postArrangedTo) updateData.post_arranged_to = postArrangedTo;
+    if (postArrangedTo) {
+      const arrangedTo = z.string().uuid().safeParse(postArrangedTo);
+      if (!arrangedTo.success) {
+        return serverActionError("Invalid user ID", "VALIDATION_ERROR");
+      }
+      updateData.post_arranged_to = arrangedTo.data;
+    }
 
     const postArrangedAt = formData.get("post_arranged_at");
     if (postArrangedAt) updateData.post_arranged_at = postArrangedAt;
@@ -411,11 +427,7 @@ export async function updateRoom(
     // Track if food was arranged
     if (updateData.post_arranged_to) {
       // Get post_id from room for activity logging
-      const { data: roomData } = await supabase
-        .from("rooms")
-        .select("post_id")
-        .eq("id", roomId)
-        .single();
+      const { data: roomData } = await supabase.from("rooms").select("post_id").eq("id", roomId).single();
 
       if (roomData?.post_id) {
         await logPostArrangement(roomData.post_id, updateData.post_arranged_to as string, roomId);
@@ -532,9 +544,7 @@ export async function writeReview(formData: FormData): Promise<ServerActionResul
  * Accept a food request and share pickup address
  * Only the sharer can accept requests
  */
-export async function acceptRequestAndShareAddress(
-  roomId: string
-): Promise<ServerActionResult<{ address: string }>> {
+export async function acceptRequestAndShareAddress(roomId: string): Promise<ServerActionResult<{ address: string }>> {
   try {
     const validated = AcceptRequestSchema.safeParse({ roomId });
     if (!validated.success) {
@@ -553,7 +563,7 @@ export async function acceptRequestAndShareAddress(
         `
         id, sharer, requester, post_id, post_arranged_to,
         posts:post_id (id, post_name, post_address, profile_id)
-      `
+      `,
       )
       .eq("id", validated.data.roomId)
       .single();
@@ -615,7 +625,7 @@ export async function acceptRequestAndShareAddress(
     await supabase
       .from("rooms")
       .update({
-        last_message: addressMessage.substring(0, 100) + "...",
+        last_message: `${addressMessage.substring(0, 100)}...`,
         last_message_sent_by: user.id,
         last_message_seen_by: user.id,
         last_message_time: new Date().toISOString(),
@@ -672,7 +682,7 @@ export async function completeExchange(roomId: string): Promise<ServerActionResu
         posts:post_id (id, post_name, images),
         sharer_profile:sharer (id, first_name, second_name, email),
         requester_profile:requester (id, first_name, second_name, email)
-      `
+      `,
       )
       .eq("id", roomId)
       .single();
@@ -730,34 +740,35 @@ export async function completeExchange(roomId: string): Promise<ServerActionResu
       })
       .eq("id", roomId);
 
-    // Send completion emails to both parties
+    // Send completion emails to both parties. Recipients are read from the room
+    // row above (already verified as the caller's own room), not from arguments.
     if (sharerProfile?.email && requesterProfile?.email && post) {
-      // Queue emails (using existing email infrastructure)
-      try {
-        const { sendExchangeCompletionEmail } = await import("@/app/actions/email");
-
-        // Email to sharer
-        await sendExchangeCompletionEmail({
+      const [sharerEmail, requesterEmail] = await Promise.all([
+        sendExchangeCompletionEmail({
           to: sharerProfile.email,
           recipientName: sharerProfile.first_name,
           otherPartyName: `${requesterProfile.first_name} ${requesterProfile.second_name}`,
           itemName: post.post_name,
           role: "sharer",
           roomId,
-        });
-
-        // Email to requester
-        await sendExchangeCompletionEmail({
+        }),
+        sendExchangeCompletionEmail({
           to: requesterProfile.email,
           recipientName: requesterProfile.first_name,
           otherPartyName: `${sharerProfile.first_name} ${sharerProfile.second_name}`,
           itemName: post.post_name,
           role: "requester",
           roomId,
+        }),
+      ]);
+
+      // Best-effort: a delivery failure must not fail the completion itself.
+      if (!sharerEmail.success || !requesterEmail.success) {
+        logger.warn("Some exchange completion emails failed", {
+          roomId,
+          sharer: sharerEmail.success ? "sent" : sharerEmail.reason,
+          requester: requesterEmail.success ? "sent" : requesterEmail.reason,
         });
-      } catch (emailError) {
-        console.error("Failed to send completion emails:", emailError);
-        // Don't fail the whole operation if emails fail
       }
     }
 
@@ -801,11 +812,7 @@ export async function archiveChatRoom(roomId: string): Promise<ServerActionResul
     }
 
     // Verify user is part of the room
-    const { data: room } = await supabase
-      .from("rooms")
-      .select("sharer,requester")
-      .eq("id", roomId)
-      .single();
+    const { data: room } = await supabase.from("rooms").select("sharer,requester").eq("id", roomId).single();
 
     if (!room) {
       return serverActionError("Chat room not found", "NOT_FOUND");

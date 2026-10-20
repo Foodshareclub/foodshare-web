@@ -1,10 +1,10 @@
 "use client";
 
-import { Users, Package, MessageSquare, AlertTriangle, Sparkles, Zap } from "lucide-react";
 import { GrokAssistant } from "@/app/admin/ai-insights/GrokAssistant";
 import { Card } from "@/components/ui/card";
-import { useState, useEffect } from "react";
-import { AIInsightsData } from "@/lib/data/admin-ai-insights";
+import type { AIInsightsData } from "@/lib/data/admin-ai-insights";
+import { AlertTriangle, MessageSquare, Package, Sparkles, Users, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface Props {
   initialData: AIInsightsData;
@@ -26,8 +26,7 @@ export function AIInsightsClient({ initialData }: Props) {
     activeRepos: 0,
   });
 
-  const activeUserPercent =
-    data.totalUsers > 0 ? ((data.activeUsers7d / data.totalUsers) * 100).toFixed(1) : "0";
+  const activeUserPercent = data.totalUsers > 0 ? ((data.activeUsers7d / data.totalUsers) * 100).toFixed(1) : "0";
 
   useEffect(() => {
     fetch("/api/admin/reviews?limit=100")
@@ -37,19 +36,17 @@ export function AIInsightsClient({ initialData }: Props) {
         const allIssues = reviews.reduce(
           (acc: number, r: { result: { line_comments?: Array<{ severity?: string }> } }) =>
             acc + (r.result?.line_comments?.length || 0),
-          0
+          0,
         );
         const critical = reviews.reduce(
           (acc: number, r: { result: { line_comments?: Array<{ severity?: string }> } }) =>
             acc +
             (r.result?.line_comments?.filter(
-              (c: { severity?: string }) => c.severity === "critical" || c.severity === "high"
+              (c: { severity?: string }) => c.severity === "critical" || c.severity === "high",
             ).length || 0),
-          0
+          0,
         );
-        const activeRepos = new Set(
-          reviews.map((r: { repo_full_name: string }) => r.repo_full_name)
-        ).size;
+        const activeRepos = new Set(reviews.map((r: { repo_full_name: string }) => r.repo_full_name)).size;
         setReviewStats({
           totalReviews: reviews.length,
           totalIssues: allIssues,
@@ -57,9 +54,7 @@ export function AIInsightsClient({ initialData }: Props) {
           activeRepos,
         });
       })
-      .catch(() =>
-        setReviewStats({ totalReviews: 0, totalIssues: 0, criticalIssues: 0, activeRepos: 0 })
-      );
+      .catch(() => setReviewStats({ totalReviews: 0, totalIssues: 0, criticalIssues: 0, activeRepos: 0 }));
   }, []);
 
   return (
@@ -156,16 +151,16 @@ export function AIInsightsClient({ initialData }: Props) {
             <h3 className="font-semibold text-foreground mb-3">Example Questions</h3>
             <ul className="space-y-2 text-sm">
               <li className="p-2 bg-muted rounded hover:bg-muted/80 cursor-pointer text-muted-foreground">
-                "What time should I send emails for best engagement?"
+                &ldquo;What time should I send emails for best engagement?&rdquo;
               </li>
               <li className="p-2 bg-muted rounded hover:bg-muted/80 cursor-pointer text-muted-foreground">
-                "Which food categories are trending?"
+                &ldquo;Which food categories are trending?&rdquo;
               </li>
               <li className="p-2 bg-muted rounded hover:bg-muted/80 cursor-pointer text-muted-foreground">
-                "How can I reduce user churn?"
+                &ldquo;How can I reduce user churn?&rdquo;
               </li>
               <li className="p-2 bg-muted rounded hover:bg-muted/80 cursor-pointer text-muted-foreground">
-                "Predict next week&apos;s listing volume"
+                &ldquo;Predict next week&apos;s listing volume&rdquo;
               </li>
             </ul>
           </div>

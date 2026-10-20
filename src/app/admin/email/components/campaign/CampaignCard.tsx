@@ -1,7 +1,3 @@
-import { Eye, Edit, Copy, Trash2, MoreVertical, Calendar } from "lucide-react";
-import { GlassCard } from "../shared/GlassCard";
-import type { RecentCampaign } from "../types";
-import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +7,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import { Calendar, Copy, Edit, Eye, MoreVertical, Trash2 } from "lucide-react";
+import { GlassCard } from "../shared/GlassCard";
+import type { RecentCampaign } from "../types";
 
 export function CampaignCard({ campaign }: { campaign: RecentCampaign }) {
   const statusColors = {
@@ -22,10 +22,8 @@ export function CampaignCard({ campaign }: { campaign: RecentCampaign }) {
     cancelled: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
   };
 
-  const openRate =
-    campaign.totalSent > 0 ? Math.round((campaign.totalOpened / campaign.totalSent) * 100) : 0;
-  const clickRate =
-    campaign.totalOpened > 0 ? Math.round((campaign.totalClicked / campaign.totalOpened) * 100) : 0;
+  const openRate = campaign.totalSent > 0 ? Math.round((campaign.totalOpened / campaign.totalSent) * 100) : 0;
+  const clickRate = campaign.totalOpened > 0 ? Math.round((campaign.totalClicked / campaign.totalOpened) * 100) : 0;
 
   return (
     <GlassCard className="hover:shadow-md transition-shadow">
@@ -35,23 +33,23 @@ export function CampaignCard({ campaign }: { campaign: RecentCampaign }) {
         </Badge>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 -mr-2 -mt-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7 -me-2 -mt-1">
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem>
-              <Eye className="h-4 w-4 mr-2" /> View
+              <Eye className="h-4 w-4 me-2" /> View
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Edit className="h-4 w-4 mr-2" /> Edit
+              <Edit className="h-4 w-4 me-2" /> Edit
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Copy className="h-4 w-4 mr-2" /> Duplicate
+              <Copy className="h-4 w-4 me-2" /> Duplicate
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-rose-600">
-              <Trash2 className="h-4 w-4 mr-2" /> Delete
+              <Trash2 className="h-4 w-4 me-2" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

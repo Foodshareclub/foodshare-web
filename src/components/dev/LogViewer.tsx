@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { getErrorHistory, clearErrorHistory, type ErrorLog } from "@/lib/logger";
+import { type ErrorLog, clearErrorHistory, getErrorHistory } from "@/lib/logger";
 import { cn } from "@/lib/utils";
+import { useEffect, useRef, useState } from "react";
 
 interface LogViewerProps {
   className?: string;
@@ -72,6 +72,7 @@ export function LogViewer({ className, position = "bottom-right" }: LogViewerPro
   }, []);
 
   // Auto-scroll to bottom when new logs arrive
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `logs.length` is the trigger — the body only touches the ref, and each new log line must re-pin the scroll position
   useEffect(() => {
     if (listRef.current && !isMinimized) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
@@ -119,6 +120,7 @@ export function LogViewer({ className, position = "bottom-right" }: LogViewerPro
     <>
       {/* Floating Toggle Button */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "fixed z-[9999] p-3 rounded-full shadow-lg transition-all duration-200",
@@ -128,7 +130,7 @@ export function LogViewer({ className, position = "bottom-right" }: LogViewerPro
           errorCount > 0 && "from-red-600 to-red-700 animate-pulse",
           isOpen && "opacity-0 pointer-events-none",
           positionClass,
-          className
+          className,
         )}
         title={`Toggle Log Viewer (${logs.length} logs)`}
       >
@@ -136,8 +138,8 @@ export function LogViewer({ className, position = "bottom-right" }: LogViewerPro
         {logs.length > 0 && (
           <span
             className={cn(
-              "absolute -top-1 -right-1 text-white text-[10px] font-bold rounded-full min-w-5 h-5 flex items-center justify-center px-1",
-              errorCount > 0 ? "bg-red-500" : warnCount > 0 ? "bg-amber-500" : "bg-blue-500"
+              "absolute -top-1 -end-1 text-white text-[10px] font-bold rounded-full min-w-5 h-5 flex items-center justify-center px-1",
+              errorCount > 0 ? "bg-red-500" : warnCount > 0 ? "bg-amber-500" : "bg-blue-500",
             )}
           >
             {logs.length > 99 ? "99+" : logs.length}
@@ -152,11 +154,11 @@ export function LogViewer({ className, position = "bottom-right" }: LogViewerPro
             "fixed z-[9999] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200",
             isMinimized ? "w-80 h-12" : "w-[420px] max-h-[70vh]",
             isPinned ? "opacity-100" : "opacity-95 hover:opacity-100",
-            positionClass
+            positionClass,
           )}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-800">
             <div className="flex items-center gap-2">
               <span className="text-lg">🍽️</span>
               <span className="font-semibold text-sm bg-gradient-to-r from-[#FF2D55] to-[#FC642D] bg-clip-text text-transparent">
@@ -170,18 +172,18 @@ export function LogViewer({ className, position = "bottom-right" }: LogViewerPro
             </div>
             <div className="flex items-center gap-1">
               <button
+                type="button"
                 onClick={() => setIsPinned(!isPinned)}
                 className={cn(
                   "p-1.5 rounded-md transition-colors text-sm",
-                  isPinned
-                    ? "bg-blue-100 dark:bg-blue-900 text-blue-600"
-                    : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                  isPinned ? "bg-blue-100 dark:bg-blue-900 text-blue-600" : "hover:bg-gray-200 dark:hover:bg-gray-700",
                 )}
                 title={isPinned ? "Unpin" : "Pin"}
               >
                 📌
               </button>
               <button
+                type="button"
                 onClick={() => setIsMinimized(!isMinimized)}
                 className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm"
                 title={isMinimized ? "Expand" : "Minimize"}
@@ -189,6 +191,7 @@ export function LogViewer({ className, position = "bottom-right" }: LogViewerPro
                 {isMinimized ? "🔼" : "🔽"}
               </button>
               <button
+                type="button"
                 onClick={handleExport}
                 className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm"
                 title="Export logs"
@@ -196,6 +199,7 @@ export function LogViewer({ className, position = "bottom-right" }: LogViewerPro
                 📥
               </button>
               <button
+                type="button"
                 onClick={handleClear}
                 className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm"
                 title="Clear logs"
@@ -203,6 +207,7 @@ export function LogViewer({ className, position = "bottom-right" }: LogViewerPro
                 🗑️
               </button>
               <button
+                type="button"
                 onClick={() => setIsOpen(false)}
                 className="p-1.5 rounded-md hover:bg-red-100 dark:hover:bg-red-900 hover:text-red-600 transition-colors text-sm"
                 title="Close"
@@ -225,20 +230,19 @@ export function LogViewer({ className, position = "bottom-right" }: LogViewerPro
                 />
                 <div className="flex gap-1 overflow-x-auto pb-1">
                   {["all", "error", "warn", "info", "success", "debug"].map((level) => {
-                    const config =
-                      level === "all" ? null : LEVEL_CONFIG[level as keyof typeof LEVEL_CONFIG];
-                    const count =
-                      level === "all" ? logs.length : logs.filter((l) => l.level === level).length;
+                    const config = level === "all" ? null : LEVEL_CONFIG[level as keyof typeof LEVEL_CONFIG];
+                    const count = level === "all" ? logs.length : logs.filter((l) => l.level === level).length;
 
                     return (
                       <button
+                        type="button"
                         key={level}
                         onClick={() => setFilter(level)}
                         className={cn(
                           "px-2 py-1 text-xs rounded-md transition-all flex items-center gap-1 whitespace-nowrap",
                           filter === level
                             ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm"
-                            : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+                            : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700",
                         )}
                       >
                         {config ? config.emoji : "📋"}
@@ -256,18 +260,12 @@ export function LogViewer({ className, position = "bottom-right" }: LogViewerPro
                   <div className="p-8 text-center">
                     <div className="text-4xl mb-2">🍽️</div>
                     <p className="text-gray-500 text-sm">No logs yet</p>
-                    <p className="text-gray-400 text-xs mt-1">
-                      Logs will appear here as they occur
-                    </p>
+                    <p className="text-gray-400 text-xs mt-1">Logs will appear here as they occur</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100 dark:divide-gray-800">
                     {filteredLogs.map((log, i) => (
-                      <LogEntry
-                        key={`${log.timestamp}-${i}`}
-                        log={log}
-                        onCopy={() => handleCopyLog(log)}
-                      />
+                      <LogEntry key={`${log.timestamp}-${i}`} log={log} onCopy={() => handleCopyLog(log)} />
                     ))}
                   </div>
                 )}
@@ -280,9 +278,7 @@ export function LogViewer({ className, position = "bottom-right" }: LogViewerPro
                     {errorCount > 0 && <span className="text-red-500">❌ {errorCount}</span>}
                     {warnCount > 0 && <span className="text-amber-500">⚠️ {warnCount}</span>}
                   </div>
-                  <span>
-                    Last: {new Date(logs[logs.length - 1]?.timestamp).toLocaleTimeString()}
-                  </span>
+                  <span>Last: {new Date(logs[logs.length - 1]?.timestamp).toLocaleTimeString()}</span>
                 </div>
               )}
             </>
@@ -310,10 +306,17 @@ function LogEntry({ log, onCopy }: { log: ErrorLog; onCopy: () => void }) {
         "text-xs cursor-pointer transition-colors",
         config.bg,
         config.text,
-        "hover:brightness-95 dark:hover:brightness-110"
+        "hover:brightness-95 dark:hover:brightness-110",
       )}
     >
-      <div className="flex items-start gap-2 p-2" onClick={() => setIsExpanded(!isExpanded)}>
+      <div
+        className="flex items-start gap-2 p-2"
+        onClick={() => setIsExpanded(!isExpanded)}
+        onKeyDown={(e) => {
+          if (e.target !== e.currentTarget) return;
+          if (e.key === "Enter" || e.key === " ") setIsExpanded(!isExpanded);
+        }}
+      >
         <span className="text-sm">{config.emoji}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -328,6 +331,7 @@ function LogEntry({ log, onCopy }: { log: ErrorLog; onCopy: () => void }) {
         </div>
         <div className="flex items-center gap-1">
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onCopy();
@@ -342,28 +346,22 @@ function LogEntry({ log, onCopy }: { log: ErrorLog; onCopy: () => void }) {
       </div>
 
       {isExpanded && (
-        <div className="px-2 pb-2 pl-8 space-y-2">
+        <div className="px-2 pb-2 ps-8 space-y-2">
           {log.context && Object.keys(log.context).filter((k) => k !== "component").length > 0 && (
             <div>
-              <span className="font-semibold text-[10px] uppercase tracking-wide opacity-60">
-                Context
-              </span>
+              <span className="font-semibold text-[10px] uppercase tracking-wide opacity-60">Context</span>
               <pre className="mt-1 p-2 bg-black/5 dark:bg-white/5 rounded text-[10px] overflow-x-auto font-mono">
                 {JSON.stringify(
-                  Object.fromEntries(
-                    Object.entries(log.context).filter(([k]) => k !== "component")
-                  ),
+                  Object.fromEntries(Object.entries(log.context).filter(([k]) => k !== "component")),
                   null,
-                  2
+                  2,
                 )}
               </pre>
             </div>
           )}
           {log.stack && (
             <div>
-              <span className="font-semibold text-[10px] uppercase tracking-wide opacity-60">
-                Stack Trace
-              </span>
+              <span className="font-semibold text-[10px] uppercase tracking-wide opacity-60">Stack Trace</span>
               <pre className="mt-1 p-2 bg-black/5 dark:bg-white/5 rounded text-[10px] overflow-x-auto whitespace-pre-wrap font-mono max-h-40">
                 {log.stack}
               </pre>

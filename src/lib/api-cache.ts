@@ -23,10 +23,8 @@ interface CacheOptions {
 }
 
 class APICache {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private cache = new Map<string, CacheEntry<any>>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private pendingRequests = new Map<string, PendingRequest<any>>();
+  private cache = new Map<string, CacheEntry<unknown>>();
+  private pendingRequests = new Map<string, PendingRequest<unknown>>();
   private stats = {
     hits: 0,
     misses: 0,
@@ -48,7 +46,7 @@ class APICache {
     // Check if we have valid cached data
     if (cached && cached.expiresAt > now) {
       this.stats.hits++;
-      return cached.data;
+      return cached.data as T;
     }
 
     // Check if we have stale data and stale-while-revalidate is enabled
@@ -61,14 +59,14 @@ class APICache {
         // Silently fail - we already have stale data
       });
 
-      return cached.data;
+      return cached.data as T;
     }
 
     // Check if there's already a pending request for this key
     const pending = this.pendingRequests.get(key);
     if (pending) {
       this.stats.deduped++;
-      return pending.promise;
+      return pending.promise as Promise<T>;
     }
 
     // Fetch fresh data
@@ -108,7 +106,7 @@ class APICache {
   /**
    * Manually set cache entry
    */
-  set<T>(key: string, data: T, ttl: number = 300000): void {
+  set<T>(key: string, data: T, ttl = 300000): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
@@ -155,7 +153,7 @@ class APICache {
       ...this.stats,
       size: this.cache.size,
       pending: this.pendingRequests.size,
-      hitRate: hitRate.toFixed(2) + "%",
+      hitRate: `${hitRate.toFixed(2)}%`,
     };
   }
 
@@ -183,7 +181,7 @@ class APICache {
   /**
    * Prefetch data (cache without returning)
    */
-  async prefetch<T>(key: string, fetcher: () => Promise<T>, ttl: number = 300000): Promise<void> {
+  async prefetch<T>(key: string, fetcher: () => Promise<T>, ttl = 300000): Promise<void> {
     // Don't prefetch if already cached
     if (this.cache.has(key)) return;
 

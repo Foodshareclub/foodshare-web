@@ -1,17 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useUIStore } from "@/store/zustand/useUIStore";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import { useUIStore } from "@/store/zustand/useUIStore";
+import { useEffect, useState } from "react";
 
 /**
  * FiltersModal Component
@@ -49,11 +43,7 @@ export default function FiltersModal() {
 
   return (
     <>
-      <Button
-        className={cn("hidden md:block absolute right-7 xl:right-20 self-center")}
-        variant="outline"
-        onClick={onOpen}
-      >
+      <Button className={cn("hidden md:block absolute end-7 xl:end-20 self-center")} variant="outline" onClick={onOpen}>
         Filter
       </Button>
 
@@ -67,21 +57,13 @@ export default function FiltersModal() {
             <p className="text-center font-bold">How far from you to show the products?</p>
 
             <div className="relative mb-12">
-              <div className="absolute -top-10 left-0 right-0 text-center text-xs text-foreground">
-                {sliderValue}km
-              </div>
-              <Slider
-                value={[sliderValue]}
-                onValueChange={onSliderChange}
-                max={10000}
-                step={200}
-                className="w-full"
-              />
+              <div className="absolute -top-10 inset-x-0 text-center text-xs text-foreground">{sliderValue}km</div>
+              <Slider value={[sliderValue]} onValueChange={onSliderChange} max={10000} step={200} className="w-full" />
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="default" className="mr-3" onClick={cancel}>
+            <Button variant="default" className="me-3" onClick={cancel}>
               Cancel
             </Button>
             <Button onClick={applyFilterMode} variant="ghost">

@@ -6,13 +6,13 @@
 import { createClient } from "@/lib/supabase/server";
 import type {
   CRMCustomer,
-  CRMCustomerWithProfile,
   CRMCustomerNote,
   CRMCustomerNoteWithAdmin,
-  CRMCustomerTag,
   CRMCustomerSummary,
-  CRMDashboardStats,
+  CRMCustomerTag,
+  CRMCustomerWithProfile,
   CRMCustomersFilter,
+  CRMDashboardStats,
 } from "@/types/crm.types";
 
 // ============================================================================
@@ -61,9 +61,7 @@ interface RawNote extends CRMCustomerNote {
 /**
  * Fetch all CRM customers with profile data
  */
-export async function getCRMCustomers(
-  filters?: Partial<CRMCustomersFilter>
-): Promise<CRMCustomerWithProfile[]> {
+export async function getCRMCustomers(filters?: Partial<CRMCustomersFilter>): Promise<CRMCustomerWithProfile[]> {
   const supabase = await createClient();
 
   let query = supabase.from("crm_customers").select(`
@@ -140,9 +138,7 @@ export async function getCRMCustomers(
   const customers: CRMCustomerWithProfile[] =
     data?.map((customer: RawCustomer) => ({
       ...customer,
-      full_name:
-        [customer.profiles?.first_name, customer.profiles?.second_name].filter(Boolean).join(" ") ||
-        "",
+      full_name: [customer.profiles?.first_name, customer.profiles?.second_name].filter(Boolean).join(" ") || "",
       email: customer.profiles?.email || "",
       avatar_url: customer.profiles?.avatar_url || null,
       items_shared: customer.profile_stats?.items_shared || 0,
@@ -158,8 +154,7 @@ export async function getCRMCustomers(
     const searchLower = filters.searchTerm.toLowerCase();
     return customers.filter(
       (customer) =>
-        customer.full_name?.toLowerCase().includes(searchLower) ||
-        customer.email?.toLowerCase().includes(searchLower)
+        customer.full_name?.toLowerCase().includes(searchLower) || customer.email?.toLowerCase().includes(searchLower),
     );
   }
 
@@ -210,7 +205,7 @@ export async function getCustomerNotes(customerId: string): Promise<CRMCustomerN
         email,
         avatar_url
       )
-    `
+    `,
     )
     .eq("customer_id", customerId)
     .order("created_at", { ascending: false });
@@ -283,7 +278,7 @@ export async function getCRMDashboardStats(): Promise<CRMDashboardStats> {
         profile_id,
         ltv_score,
         profiles:profile_id (first_name, second_name)
-      `
+      `,
       )
       .eq("lifecycle_stage", "champion")
       .order("ltv_score", { ascending: false })
@@ -321,9 +316,7 @@ export async function getCRMDashboardStats(): Promise<CRMDashboardStats> {
     (championsRes.data as unknown as ChampionData[] | null)?.map((item) => ({
       customer_id: item.id,
       full_name:
-        [item.profiles?.[0]?.first_name, item.profiles?.[0]?.second_name]
-          .filter(Boolean)
-          .join(" ") || "Unknown",
+        [item.profiles?.[0]?.first_name, item.profiles?.[0]?.second_name].filter(Boolean).join(" ") || "Unknown",
       ltv_score: item.ltv_score,
     })) || [];
 
@@ -411,6 +404,24 @@ export interface AdminCRMStats {
   newThisWeek: number;
 }
 
+interface AdminCustomerRow {
+  id: string;
+  profile_id: string;
+  status: string;
+  lifecycle_stage: string;
+  engagement_score: number;
+  churn_risk_score: number;
+  total_transactions: number;
+  last_interaction_at: string | null;
+  created_at: string;
+  profiles: {
+    first_name?: string;
+    second_name?: string;
+    email?: string;
+    avatar_url?: string;
+  } | null;
+}
+
 /**
  * Fetch customers for admin dashboard (lightweight version)
  */
@@ -436,7 +447,7 @@ export async function getAdminCustomers(limit = 100): Promise<AdminCustomer[]> {
         email,
         avatar_url
       )
-    `
+    `,
     )
     .eq("is_archived", false)
     .order("created_at", { ascending: false })
@@ -447,7 +458,7 @@ export async function getAdminCustomers(limit = 100): Promise<AdminCustomer[]> {
     return [];
   }
 
-  return (data || []).map((c: any) => {
+  return ((data || []) as AdminCustomerRow[]).map((c) => {
     const profile = c.profiles as {
       first_name?: string;
       second_name?: string;
@@ -492,10 +503,7 @@ export async function getAdminCRMStats(): Promise<AdminCRMStats> {
       .from("crm_customers")
       .select("*", { count: "exact", head: true })
       .in("lifecycle_stage", ["active", "champion"]),
-    supabase
-      .from("crm_customers")
-      .select("*", { count: "exact", head: true })
-      .eq("lifecycle_stage", "at_risk"),
+    supabase.from("crm_customers").select("*", { count: "exact", head: true }).eq("lifecycle_stage", "at_risk"),
     supabase
       .from("crm_customers")
       .select("*", { count: "exact", head: true })

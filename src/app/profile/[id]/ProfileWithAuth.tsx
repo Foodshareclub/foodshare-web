@@ -1,7 +1,7 @@
-import { ViewProfileClient } from "./ViewProfileClient";
 import { getUser } from "@/app/actions/auth";
 import { hasUserRole } from "@/lib/data/profiles";
 import type { PublicProfile } from "@/lib/data/profiles";
+import { ViewProfileClient } from "./ViewProfileClient";
 
 interface ProfileWithAuthProps {
   profile: PublicProfile;
@@ -17,10 +17,7 @@ interface ProfileWithAuthProps {
  * render before auth resolves.
  */
 export async function ProfileWithAuth({ profile, profileId }: ProfileWithAuthProps) {
-  const [user, isVolunteer] = await Promise.all([
-    getUser(),
-    hasUserRole(profileId, "volunteer"),
-  ]);
+  const [user, isVolunteer] = await Promise.all([getUser(), hasUserRole(profileId, "volunteer")]);
 
   return <ViewProfileClient profile={profile} user={user} isVolunteer={isVolunteer} />;
 }

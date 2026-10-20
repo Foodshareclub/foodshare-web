@@ -1,8 +1,10 @@
-import { Suspense } from "react";
-import { getTranslations } from "next-intl/server";
 import { AIInsightsClient } from "@/app/admin/ai-insights/AIInsightsClient";
-import { getAIInsightsData } from "@/lib/data/admin-ai-insights";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getAIInsightsData } from "@/lib/data/admin-ai-insights";
+import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
+
+const SKELETON_KEYS = ["stats-1", "stats-2", "stats-3", "stats-4"] as const;
 
 async function AIInsightsContent() {
   const data = await getAIInsightsData();
@@ -13,8 +15,8 @@ function AIInsightsSkeleton() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-28 rounded-lg" />
+        {SKELETON_KEYS.map((skeletonKey) => (
+          <Skeleton key={skeletonKey} className="h-28 rounded-lg" />
         ))}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

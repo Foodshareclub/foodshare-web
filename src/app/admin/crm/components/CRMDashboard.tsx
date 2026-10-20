@@ -5,54 +5,48 @@
  * Features: Sticky header, sidebar navigation, scrollable panels
  */
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Users,
-  Mail,
-  Target,
-  TrendingUp,
-  Zap,
-  BarChart3,
-  UserPlus,
-  Search,
-  MoreHorizontal,
-  Send,
-  Megaphone,
-  Activity,
-  Bell,
-  ChevronRight,
-  Sparkles,
-  Heart,
-  MessageSquare,
-  Star,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  UserCheck,
-  Workflow,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { importProfilesAsCRMCustomers } from "@/app/actions/crm";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { importProfilesAsCRMCustomers } from "@/app/actions/crm";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Activity,
+  AlertTriangle,
+  BarChart3,
+  Bell,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  Heart,
+  Mail,
+  Megaphone,
+  MessageSquare,
+  MoreHorizontal,
+  Search,
+  Send,
+  Sparkles,
+  Star,
+  Target,
+  TrendingUp,
+  UserCheck,
+  UserPlus,
+  Users,
+  Workflow,
+  Zap,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 
 // Types
 interface Customer {
@@ -164,22 +158,13 @@ function MetricCard({
       <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50", colorClasses[color])} />
       <div className="relative">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            {label}
-          </span>
-          <div className={cn("p-1.5 rounded-lg bg-gradient-to-br", colorClasses[color])}>
-            {icon}
-          </div>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
+          <div className={cn("p-1.5 rounded-lg bg-gradient-to-br", colorClasses[color])}>{icon}</div>
         </div>
         <div className="flex items-end gap-2">
           <span className="text-2xl font-bold text-foreground">{value}</span>
           {change !== undefined && (
-            <span
-              className={cn(
-                "text-xs font-medium mb-1",
-                change >= 0 ? "text-emerald-600" : "text-rose-600"
-              )}
-            >
+            <span className={cn("text-xs font-medium mb-1", change >= 0 ? "text-emerald-600" : "text-rose-600")}>
               {change >= 0 ? "+" : ""}
               {change}%
             </span>
@@ -234,10 +219,7 @@ function EngagementScore({ score }: { score: number }) {
   return (
     <div className="flex items-center gap-2 min-w-[100px]">
       <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-        <div
-          className={cn("h-full rounded-full transition-all", color)}
-          style={{ width: `${score}%` }}
-        />
+        <div className={cn("h-full rounded-full transition-all", color)} style={{ width: `${score}%` }} />
       </div>
       <span className="text-xs font-medium text-muted-foreground w-8">{score}</span>
     </div>
@@ -266,7 +248,7 @@ function CustomerRow({
       </div>
       <LifecycleBadge stage={customer.lifecycle_stage} />
       <EngagementScore score={customer.engagement_score} />
-      <div className="text-right min-w-[80px]">
+      <div className="text-end min-w-[80px]">
         <span
           className={cn(
             "text-sm font-medium",
@@ -274,7 +256,7 @@ function CustomerRow({
               ? "text-rose-600"
               : customer.churn_risk_score >= 40
                 ? "text-amber-600"
-                : "text-emerald-600"
+                : "text-emerald-600",
           )}
         >
           {customer.churn_risk_score}% risk
@@ -282,27 +264,15 @@ function CustomerRow({
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
+          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => onAction("view", customer.id)}>
-            View Profile
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onAction("email", customer.id)}>
-            Send Email
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onAction("note", customer.id)}>
-            Add Note
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onAction("tag", customer.id)}>
-            Manage Tags
-          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onAction("view", customer.id)}>View Profile</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onAction("email", customer.id)}>Send Email</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onAction("note", customer.id)}>Add Note</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onAction("tag", customer.id)}>Manage Tags</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
@@ -326,18 +296,13 @@ function SegmentCard({
   return (
     <div
       className={cn(
-        "p-4 rounded-xl border border-border/50 bg-card hover:shadow-md transition-all cursor-pointer group"
+        "p-4 rounded-xl border border-border/50 bg-card hover:shadow-md transition-all cursor-pointer group",
       )}
     >
       <div className="flex items-start justify-between mb-3">
         <div className={cn("p-2 rounded-lg", color)}>{icon}</div>
         {growth !== undefined && (
-          <span
-            className={cn(
-              "text-xs font-medium",
-              growth >= 0 ? "text-emerald-600" : "text-rose-600"
-            )}
-          >
+          <span className={cn("text-xs font-medium", growth >= 0 ? "text-emerald-600" : "text-rose-600")}>
             {growth >= 0 ? "↑" : "↓"} {Math.abs(growth)}%
           </span>
         )}
@@ -383,11 +348,7 @@ function CampaignCard({
       <div className="flex items-start justify-between mb-3">
         <div>
           <p className="font-semibold text-foreground">{name}</p>
-          <Badge
-            className={cn("mt-1 capitalize", statusConfig[status].bg, statusConfig[status].text)}
-          >
-            {status}
-          </Badge>
+          <Badge className={cn("mt-1 capitalize", statusConfig[status].bg, statusConfig[status].text)}>{status}</Badge>
         </div>
         <Button variant="ghost" size="icon" className="h-8 w-8">
           <MoreHorizontal className="h-4 w-4" />
@@ -438,7 +399,7 @@ function AutomationCard({
                 ? "bg-emerald-100 text-emerald-600"
                 : status === "paused"
                   ? "bg-amber-100 text-amber-600"
-                  : "bg-slate-100 text-slate-600"
+                  : "bg-slate-100 text-slate-600",
             )}
           >
             <Workflow className="h-4 w-4" />
@@ -455,7 +416,7 @@ function AutomationCard({
               ? "bg-emerald-100 text-emerald-700"
               : status === "paused"
                 ? "bg-amber-100 text-amber-700"
-                : "bg-slate-100 text-slate-700"
+                : "bg-slate-100 text-slate-700",
           )}
         >
           {status}
@@ -618,10 +579,7 @@ export function CRMDashboard({
           status: a.status as "active" | "paused" | "draft",
           enrolled: a.total_enrolled,
           completed: a.total_completed,
-          rate:
-            a.total_enrolled > 0
-              ? Math.round((a.total_converted / a.total_enrolled) * 1000) / 10
-              : 0,
+          rate: a.total_enrolled > 0 ? Math.round((a.total_converted / a.total_enrolled) * 1000) / 10 : 0,
         }))
       : [
           {
@@ -665,9 +623,7 @@ export function CRMDashboard({
         <div className="flex items-center justify-between p-4">
           <div>
             <h1 className="text-xl font-bold text-foreground">Customer Engagement</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage relationships and drive engagement
-            </p>
+            <p className="text-sm text-muted-foreground">Manage relationships and drive engagement</p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleImport} disabled={isPending}>
@@ -683,13 +639,14 @@ export function CRMDashboard({
         <div className="flex gap-1 px-4 pb-2">
           {navItems.map((item) => (
             <button
+              type="button"
               key={item.id}
               onClick={() => setActiveView(item.id)}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all",
                 activeView === item.id
                   ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted",
               )}
             >
               {item.icon}
@@ -708,9 +665,7 @@ export function CRMDashboard({
             exit={{ opacity: 0, y: -10 }}
             className={cn(
               "mx-4 mt-4 p-3 rounded-lg text-sm font-medium",
-              importMessage.startsWith("Error")
-                ? "bg-rose-100 text-rose-800"
-                : "bg-emerald-100 text-emerald-800"
+              importMessage.startsWith("Error") ? "bg-rose-100 text-rose-800" : "bg-emerald-100 text-emerald-800",
             )}
           >
             {importMessage}
@@ -767,7 +722,7 @@ export function CRMDashboard({
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-foreground">Quick Segments</h2>
                     <Button variant="ghost" size="sm" onClick={() => setActiveView("segments")}>
-                      View All <ChevronRight className="h-4 w-4 ml-1" />
+                      View All <ChevronRight className="h-4 w-4 ms-1" />
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -783,7 +738,7 @@ export function CRMDashboard({
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-lg font-semibold text-foreground">Recent Campaigns</h2>
                       <Button variant="ghost" size="sm" onClick={() => setActiveView("campaigns")}>
-                        View All <ChevronRight className="h-4 w-4 ml-1" />
+                        View All <ChevronRight className="h-4 w-4 ms-1" />
                       </Button>
                     </div>
                     <div className="space-y-3">
@@ -797,7 +752,7 @@ export function CRMDashboard({
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-lg font-semibold text-foreground">Active Automations</h2>
                       <Button variant="ghost" size="sm" onClick={() => setActiveView("automation")}>
-                        View All <ChevronRight className="h-4 w-4 ml-1" />
+                        View All <ChevronRight className="h-4 w-4 ms-1" />
                       </Button>
                     </div>
                     <div className="space-y-3">
@@ -813,16 +768,12 @@ export function CRMDashboard({
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-foreground">Top Customers</h2>
                     <Button variant="ghost" size="sm" onClick={() => setActiveView("customers")}>
-                      View All <ChevronRight className="h-4 w-4 ml-1" />
+                      View All <ChevronRight className="h-4 w-4 ms-1" />
                     </Button>
                   </div>
                   <div className="rounded-xl border border-border/50 bg-card overflow-hidden">
                     {customers.slice(0, 5).map((customer) => (
-                      <CustomerRow
-                        key={customer.id}
-                        customer={customer}
-                        onAction={handleCustomerAction}
-                      />
+                      <CustomerRow key={customer.id} customer={customer} onAction={handleCustomerAction} />
                     ))}
                   </div>
                 </div>
@@ -840,12 +791,12 @@ export function CRMDashboard({
                 {/* Filters */}
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="relative flex-1 min-w-[200px] max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Search customers..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 h-9"
+                      className="ps-9 h-9"
                     />
                   </div>
                   <Select value={lifecycleFilter} onValueChange={setLifecycleFilter}>
@@ -894,11 +845,7 @@ export function CRMDashboard({
                     </div>
                   ) : (
                     filteredCustomers.map((customer) => (
-                      <CustomerRow
-                        key={customer.id}
-                        customer={customer}
-                        onAction={handleCustomerAction}
-                      />
+                      <CustomerRow key={customer.id} customer={customer} onAction={handleCustomerAction} />
                     ))
                   )}
                 </div>
@@ -914,9 +861,7 @@ export function CRMDashboard({
                 className="space-y-6"
               >
                 <div className="flex items-center justify-between">
-                  <p className="text-muted-foreground">
-                    Create targeted segments for personalized engagement
-                  </p>
+                  <p className="text-muted-foreground">Create targeted segments for personalized engagement</p>
                   <Button size="sm" className="gap-2">
                     <Target className="h-4 w-4" /> Create Segment
                   </Button>
@@ -1017,9 +962,10 @@ export function CRMDashboard({
                     <CampaignCard key={c.name} {...c} />
                   ))}
                   {/* Create New Campaign Card */}
-                  <div
+                  <button
+                    type="button"
                     onClick={() => router.push("/admin/email")}
-                    className="p-6 rounded-xl border-2 border-dashed border-border/50 bg-muted/20 flex flex-col items-center justify-center hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer min-h-[180px]"
+                    className="p-6 rounded-xl border-2 border-dashed border-border/50 bg-muted/20 flex flex-col items-center justify-center hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer min-h-[180px] w-full"
                   >
                     <div className="p-3 rounded-full bg-muted mb-3">
                       <Megaphone className="h-6 w-6 text-muted-foreground" />
@@ -1028,7 +974,7 @@ export function CRMDashboard({
                     <p className="text-xs text-muted-foreground text-center mt-1">
                       Send newsletters, announcements, or promotions
                     </p>
-                  </div>
+                  </button>
                 </div>
 
                 {/* Quick Templates */}
@@ -1056,9 +1002,7 @@ export function CRMDashboard({
                         key={template.name}
                         className="flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-card hover:shadow-md transition-all cursor-pointer"
                       >
-                        <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                          {template.icon}
-                        </div>
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary">{template.icon}</div>
                         <div className="flex-1">
                           <p className="font-medium text-foreground text-sm">{template.name}</p>
                           <p className="text-xs text-muted-foreground">{template.desc}</p>
@@ -1080,9 +1024,7 @@ export function CRMDashboard({
                 className="space-y-6"
               >
                 <div className="flex items-center justify-between">
-                  <p className="text-muted-foreground">
-                    Set up automated workflows to engage users at the right time
-                  </p>
+                  <p className="text-muted-foreground">Set up automated workflows to engage users at the right time</p>
                   <Button size="sm" className="gap-2">
                     <Zap className="h-4 w-4" /> Create Automation
                   </Button>
@@ -1093,8 +1035,7 @@ export function CRMDashboard({
                   <MetricCard
                     label="Active Flows"
                     value={
-                      newsletterStats?.activeAutomations ||
-                      automations.filter((a) => a.status === "active").length
+                      newsletterStats?.activeAutomations || automations.filter((a) => a.status === "active").length
                     }
                     icon={<Workflow className="h-4 w-4" />}
                     color="emerald"
@@ -1154,10 +1095,7 @@ export function CRMDashboard({
                         desc: "Notify users of nearby food",
                       },
                     ].map((idea) => (
-                      <div
-                        key={idea.name}
-                        className="p-3 rounded-lg bg-white/50 dark:bg-slate-800/50"
-                      >
+                      <div key={idea.name} className="p-3 rounded-lg bg-white/50 dark:bg-slate-800/50">
                         <div className="flex items-center justify-between mb-1">
                           <p className="font-medium text-foreground text-sm">{idea.name}</p>
                           <Button variant="ghost" size="sm">
@@ -1165,9 +1103,7 @@ export function CRMDashboard({
                           </Button>
                         </div>
                         <p className="text-xs text-muted-foreground">{idea.trigger}</p>
-                        <p className="text-xs text-violet-600 dark:text-violet-400 mt-1">
-                          {idea.desc}
-                        </p>
+                        <p className="text-xs text-violet-600 dark:text-violet-400 mt-1">{idea.desc}</p>
                       </div>
                     ))}
                   </div>

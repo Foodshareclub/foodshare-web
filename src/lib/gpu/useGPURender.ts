@@ -79,8 +79,7 @@ export async function initGPURender(options: GPURenderOptions): Promise<GPURende
   try {
     const { surface: createSurface } = await import("vgpu");
     signal?.throwIfAborted();
-    if (canvasRef.current !== canvas)
-      throw new Error("initGPURender: canvas detached during initialization");
+    if (canvasRef.current !== canvas) throw new Error("initGPURender: canvas detached during initialization");
     canvasSurface = createSurface(gpu, canvas, {
       dpr: surfaceOptions?.dpr ?? [1, 2],
       autoResize: surfaceOptions?.autoResize ?? true,

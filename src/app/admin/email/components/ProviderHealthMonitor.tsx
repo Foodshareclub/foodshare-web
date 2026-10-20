@@ -8,22 +8,19 @@
  * Mutations are handled via Server Actions.
  */
 
-import { useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
-import type { EmailProvider } from "@/lib/email/types";
-import { PROVIDER_NAMES } from "@/lib/email/constants";
 import { resetCircuitBreaker, updateProviderAvailability } from "@/app/actions/admin-email";
 import type { ProviderHealth } from "@/lib/data/admin-email";
+import { PROVIDER_NAMES } from "@/lib/email/constants";
+import type { EmailProvider } from "@/lib/email/types";
+import { useTranslations } from "next-intl";
+import { useState, useTransition } from "react";
 
 interface ProviderHealthMonitorProps {
   initialData: ProviderHealth[];
   onRefresh?: () => void;
 }
 
-export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
-  initialData,
-  onRefresh,
-}) => {
+export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({ initialData, onRefresh }) => {
   const _t = useTranslations();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -107,13 +104,12 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Provider Health Monitor</h2>
-          <p className="text-sm text-gray-500">
-            Real-time circuit breaker status and health metrics
-          </p>
+          <p className="text-sm text-gray-500">Real-time circuit breaker status and health metrics</p>
         </div>
         <div className="flex gap-3">
           {onRefresh && (
             <button
+              type="button"
               onClick={onRefresh}
               disabled={isPending}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -136,16 +132,11 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
                 : "border-red-200";
 
           return (
-            <div
-              key={health.provider}
-              className={`bg-white rounded-lg border-2 p-6 transition-all ${statusColor}`}
-            >
+            <div key={health.provider} className={`bg-white rounded-lg border-2 p-6 transition-all ${statusColor}`}>
               {/* Provider Name & Status */}
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-800">
-                    {PROVIDER_NAMES[health.provider]}
-                  </h3>
+                  <h3 className="text-lg font-bold text-gray-800">{PROVIDER_NAMES[health.provider]}</h3>
                   <p className="text-sm text-gray-500">Health Status</p>
                 </div>
                 <div className="flex flex-col gap-2">
@@ -160,9 +151,7 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-600">Health Score</span>
-                  <span className="text-sm font-medium text-gray-800">
-                    {health.healthScore}/100
-                  </span>
+                  <span className="text-sm font-medium text-gray-800">{health.healthScore}/100</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
@@ -176,15 +165,11 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-xs text-gray-500 mb-1">Success Rate</p>
-                  <p className="text-xl font-bold text-gray-800">
-                    {health.successRate.toFixed(1)}%
-                  </p>
+                  <p className="text-xl font-bold text-gray-800">{health.successRate.toFixed(1)}%</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-xs text-gray-500 mb-1">Avg Latency</p>
-                  <p className="text-xl font-bold text-gray-800">
-                    {health.avgLatencyMs.toFixed(0)}ms
-                  </p>
+                  <p className="text-xl font-bold text-gray-800">{health.avgLatencyMs.toFixed(0)}ms</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-xs text-gray-500 mb-1">Total Requests</p>
@@ -209,6 +194,7 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
               {/* Action Buttons */}
               <div className="flex gap-2 pt-4 border-t border-gray-200">
                 <button
+                  type="button"
                   onClick={() => handleReset(health.provider)}
                   disabled={isPending || health.status === "healthy"}
                   className="flex-1 px-3 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -216,6 +202,7 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
                   Reset
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleDisable(health.provider)}
                   disabled={isPending}
                   className="flex-1 px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -233,9 +220,7 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
 
               {health.status === "degraded" && (
                 <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded">
-                  <p className="text-xs text-orange-800 font-medium">
-                    ⚠️ Provider is experiencing degraded performance
-                  </p>
+                  <p className="text-xs text-orange-800 font-medium">⚠️ Provider is experiencing degraded performance</p>
                 </div>
               )}
             </div>
@@ -257,9 +242,7 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
             <p className="text-sm opacity-90 mb-1">Average Success Rate</p>
             <p className="text-3xl font-bold">
               {initialData.length > 0
-                ? (
-                    initialData.reduce((sum, h) => sum + h.successRate, 0) / initialData.length
-                  ).toFixed(1)
+                ? (initialData.reduce((sum, h) => sum + h.successRate, 0) / initialData.length).toFixed(1)
                 : "0.0"}
               %
             </p>
@@ -268,9 +251,7 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
             <p className="text-sm opacity-90 mb-1">System Latency</p>
             <p className="text-3xl font-bold">
               {initialData.length > 0
-                ? (
-                    initialData.reduce((sum, h) => sum + h.avgLatencyMs, 0) / initialData.length
-                  ).toFixed(0)
+                ? (initialData.reduce((sum, h) => sum + h.avgLatencyMs, 0) / initialData.length).toFixed(0)
                 : "0"}
               ms
             </p>

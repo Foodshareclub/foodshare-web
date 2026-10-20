@@ -10,30 +10,30 @@
  * - Performance charts
  */
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import {
-  Send,
-  Users,
-  Eye,
-  MousePointerClick,
-  Megaphone,
-  Zap,
   Activity,
-  ChevronRight,
-  TrendingUp,
-  TrendingDown,
-  Mail,
   AlertTriangle,
+  ChevronRight,
+  Eye,
+  Mail,
+  Megaphone,
+  MousePointerClick,
+  Send,
   Sparkles,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  Zap,
 } from "lucide-react";
-import { EmptyState } from "../shared/EmptyState";
-import { CampaignListItem } from "../cards/CampaignListItem";
 import { AutomationListItem } from "../cards/AutomationListItem";
+import { CampaignListItem } from "../cards/CampaignListItem";
+import { EmptyState } from "../shared/EmptyState";
 import type { OverviewTabProps, ProviderHealth } from "../types";
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 const PROVIDER_CONFIG = {
   resend: { name: "Resend", color: "from-zinc-600 to-zinc-800", icon: "✉️" },
@@ -120,18 +120,16 @@ export function OverviewTab({ stats, campaigns, automations, providerHealth }: O
                 Email Providers
               </CardTitle>
               <Badge variant="outline" className="text-xs font-normal">
-                <Sparkles className="h-3 w-3 mr-1" />
+                <Sparkles className="h-3 w-3 me-1" />
                 Smart Routing Active
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {(providerHealth.length > 0 ? providerHealth : defaultProviderHealth).map(
-                (provider) => (
-                  <ProviderCard key={provider.provider} provider={provider} />
-                )
-              )}
+              {(providerHealth.length > 0 ? providerHealth : defaultProviderHealth).map((provider) => (
+                <ProviderCard key={provider.provider} provider={provider} />
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -179,7 +177,7 @@ export function OverviewTab({ stats, campaigns, automations, providerHealth }: O
                     description="Create your first email campaign to reach your audience"
                     action={
                       <Button size="sm" variant="outline" className="mt-3">
-                        <Megaphone className="h-3.5 w-3.5 mr-1.5" />
+                        <Megaphone className="h-3.5 w-3.5 me-1.5" />
                         Create Campaign
                       </Button>
                     }
@@ -230,7 +228,7 @@ export function OverviewTab({ stats, campaigns, automations, providerHealth }: O
                     description="Set up automated flows to engage users"
                     action={
                       <Button size="sm" variant="outline" className="mt-3">
-                        <Zap className="h-3.5 w-3.5 mr-1.5" />
+                        <Zap className="h-3.5 w-3.5 me-1.5" />
                         Create Automation
                       </Button>
                     }
@@ -253,9 +251,7 @@ export function OverviewTab({ stats, campaigns, automations, providerHealth }: O
         <QuickStat
           label="Unsubscribe Rate"
           value={`${stats.unsubscribeRate}%`}
-          status={
-            stats.unsubscribeRate < 0.5 ? "good" : stats.unsubscribeRate < 1 ? "warning" : "bad"
-          }
+          status={stats.unsubscribeRate < 0.5 ? "good" : stats.unsubscribeRate < 1 ? "warning" : "bad"}
           icon={<Users className="h-4 w-4" />}
         />
         <QuickStat
@@ -324,7 +320,7 @@ function MetricCard({
       <Card
         className={cn(
           "relative overflow-hidden border-border/50 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm",
-          "hover:shadow-lg hover:shadow-black/5 transition-all duration-300 hover:-translate-y-0.5"
+          "hover:shadow-lg hover:shadow-black/5 transition-all duration-300 hover:-translate-y-0.5",
         )}
       >
         <CardContent className="p-4">
@@ -340,13 +336,13 @@ function MetricCard({
                         "flex items-center text-xs font-medium",
                         trend.direction === "up"
                           ? "text-emerald-600 dark:text-emerald-400"
-                          : "text-rose-600 dark:text-rose-400"
+                          : "text-rose-600 dark:text-rose-400",
                       )}
                     >
                       {trend.direction === "up" ? (
-                        <TrendingUp className="h-3 w-3 mr-0.5" />
+                        <TrendingUp className="h-3 w-3 me-0.5" />
                       ) : (
-                        <TrendingDown className="h-3 w-3 mr-0.5" />
+                        <TrendingDown className="h-3 w-3 me-0.5" />
                       )}
                       {trend.value}
                     </span>
@@ -359,7 +355,7 @@ function MetricCard({
           </div>
         </CardContent>
         {/* Decorative gradient */}
-        <div className={cn("absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r", colors.bg)} />
+        <div className={cn("absolute bottom-0 inset-x-0 h-0.5 bg-gradient-to-r", colors.bg)} />
       </Card>
     </motion.div>
   );
@@ -418,11 +414,7 @@ function ProviderCard({ provider }: { provider: ProviderHealth }) {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className={cn(
               "h-full rounded-full",
-              quotaPercent > 90
-                ? "bg-rose-500"
-                : quotaPercent > 70
-                  ? "bg-amber-500"
-                  : "bg-emerald-500"
+              quotaPercent > 90 ? "bg-rose-500" : quotaPercent > 70 ? "bg-amber-500" : "bg-emerald-500",
             )}
           />
         </div>
@@ -432,7 +424,7 @@ function ProviderCard({ provider }: { provider: ProviderHealth }) {
       <div
         className={cn(
           "absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none",
-          `bg-gradient-to-br ${config.color} opacity-5`
+          `bg-gradient-to-br ${config.color} opacity-5`,
         )}
       />
     </div>
@@ -458,10 +450,7 @@ function QuickStat({
   };
 
   return (
-    <motion.div
-      variants={item}
-      className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-card/50"
-    >
+    <motion.div variants={item} className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-card/50">
       <div className={cn("rounded-lg p-2", statusColors[status])}>{icon}</div>
       <div>
         <p className="text-xs text-muted-foreground">{label}</p>

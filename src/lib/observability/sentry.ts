@@ -21,11 +21,7 @@ export interface CaptureContext {
 }
 
 function release(): string | undefined {
-  return (
-    process.env.NEXT_PUBLIC_SENTRY_RELEASE ||
-    process.env.SENTRY_RELEASE ||
-    process.env.NEXT_PUBLIC_APP_VERSION
-  );
+  return process.env.NEXT_PUBLIC_SENTRY_RELEASE || process.env.SENTRY_RELEASE || process.env.NEXT_PUBLIC_APP_VERSION;
 }
 
 function baseContext(context: CaptureContext = {}) {
@@ -53,7 +49,7 @@ export function captureError(error: unknown, context: CaptureContext = {}): stri
 export function captureLog(
   message: string,
   level: "info" | "warning" | "error" | "fatal" = "info",
-  context: CaptureContext = {}
+  context: CaptureContext = {},
 ): string | undefined {
   return Sentry.captureMessage(message, { level, ...baseContext(context) });
 }

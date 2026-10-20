@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import type React from "react";
+import { useState } from "react";
 
 interface CollapsibleSectionProps {
   title: string;
@@ -25,16 +26,12 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors text-left"
+        className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors text-start"
       >
         <span className="flex items-center gap-2 text-sm font-medium">
           {icon}
           {title}
-          {badge && (
-            <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-primary/10 text-primary">
-              {badge}
-            </span>
-          )}
+          {badge && <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-primary/10 text-primary">{badge}</span>}
         </span>
         {isOpen ? (
           <ChevronUp className="h-4 w-4 text-muted-foreground" />

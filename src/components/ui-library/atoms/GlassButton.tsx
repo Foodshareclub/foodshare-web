@@ -1,5 +1,5 @@
-import React from "react";
 import { cn } from "@/lib/utils";
+import type React from "react";
 
 interface GlassButtonProps {
   children: React.ReactNode;
@@ -47,7 +47,7 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
         sizeMap[size],
         variantMap[variant],
         disabled && "opacity-50 cursor-not-allowed",
-        className
+        className,
       )}
     >
       {children}

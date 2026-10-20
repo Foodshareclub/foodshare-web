@@ -115,7 +115,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
           user_agent: navigator.userAgent,
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "profile_id,platform" }
+        { onConflict: "profile_id,platform" },
       );
 
       if (dbError) {
@@ -154,11 +154,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         } = await supabase.auth.getUser();
 
         if (user) {
-          await supabase
-            .from("device_tokens")
-            .delete()
-            .eq("profile_id", user.id)
-            .eq("platform", "web");
+          await supabase.from("device_tokens").delete().eq("profile_id", user.id).eq("platform", "web");
         }
       }
 

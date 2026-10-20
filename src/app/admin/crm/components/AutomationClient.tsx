@@ -1,31 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
-import {
-  Workflow,
-  Search,
-  Plus,
-  Play,
-  MoreHorizontal,
-  Zap,
-  Clock,
-  Users,
-  CheckCircle2,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
 import type { ActiveAutomation, EmailDashboardStats } from "@/lib/data/admin-email";
+import { cn } from "@/lib/utils";
+import { CheckCircle2, Clock, MoreHorizontal, Play, Plus, Search, Users, Workflow, Zap } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
 
 interface AutomationClientProps {
   automations: ActiveAutomation[];
@@ -102,45 +92,48 @@ export function AutomationClient({ automations, stats: _stats }: AutomationClien
           {/* Toolbar */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t("search_automations")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9 bg-background/50"
+                className="ps-9 h-9 bg-background/50"
               />
             </div>
             <div className="flex gap-2">
               <div className="flex rounded-lg border border-border/50 bg-background/50 p-0.5">
                 <button
+                  type="button"
                   onClick={() => setStatusFilter("all")}
                   className={cn(
                     "px-3 py-1 text-xs font-medium rounded-md transition-colors",
                     statusFilter === "all"
                       ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {t("all")}
                 </button>
                 <button
+                  type="button"
                   onClick={() => setStatusFilter("active")}
                   className={cn(
                     "px-3 py-1 text-xs font-medium rounded-md transition-colors",
                     statusFilter === "active"
                       ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {t("active")}
                 </button>
                 <button
+                  type="button"
                   onClick={() => setStatusFilter("paused")}
                   className={cn(
                     "px-3 py-1 text-xs font-medium rounded-md transition-colors",
                     statusFilter === "paused"
                       ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {t("paused")}
@@ -183,7 +176,7 @@ export function AutomationClient({ automations, stats: _stats }: AutomationClien
                               ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                               : automation.status === "paused"
                                 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                                : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
+                                : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400",
                           )}
                         >
                           {automation.status}
@@ -220,9 +213,7 @@ export function AutomationClient({ automations, stats: _stats }: AutomationClien
                           <DropdownMenuItem>{t("edit")}</DropdownMenuItem>
                           <DropdownMenuItem>{t("duplicate")}</DropdownMenuItem>
                           <DropdownMenuItem>{t("view_analytics")}</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            {t("delete")}
-                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive">{t("delete")}</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

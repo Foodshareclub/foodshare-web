@@ -2,15 +2,9 @@
 
 import React, { useState } from "react";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 function VolunteerInfoModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,35 +35,48 @@ function VolunteerInfoModal() {
 
           <div className="pb-6">
             <div>
-              <label className="text-sm font-medium">Full Name</label>
-              <Input ref={initialRef} placeholder="Full Name" />
+              <label htmlFor="volunteer-full-name" className="text-sm font-medium">
+                Full Name
+              </label>
+              <Input id="volunteer-full-name" ref={initialRef} placeholder="Full Name" />
             </div>
 
             <div className="mt-4">
-              <label className="text-sm font-medium">Email Address</label>
-              <Input placeholder="Email Address" />
+              <label htmlFor="volunteer-email" className="text-sm font-medium">
+                Email Address
+              </label>
+              <Input id="volunteer-email" placeholder="Email Address" />
             </div>
 
             <div className="mt-4">
-              <label className="text-sm font-medium">Phone Number</label>
-              <Input placeholder="Phone Number" />
+              <label htmlFor="volunteer-phone" className="text-sm font-medium">
+                Phone Number
+              </label>
+              <Input id="volunteer-phone" placeholder="Phone Number" />
             </div>
 
             <div className="flex gap-4">
               <div className="mt-4 flex-1">
-                <label className="text-sm font-medium">Vehicle Make</label>
-                <Input placeholder="Honda" />
+                <label htmlFor="volunteer-make" className="text-sm font-medium">
+                  Vehicle Make
+                </label>
+                <Input id="volunteer-make" placeholder="Honda" />
               </div>
 
               <div className="mt-4 flex-1">
-                <label className="text-sm font-medium">Vehicle Model</label>
-                <Input placeholder="Civic" />
+                <label htmlFor="volunteer-model" className="text-sm font-medium">
+                  Vehicle Model
+                </label>
+                <Input id="volunteer-model" placeholder="Civic" />
               </div>
             </div>
 
             <div className="mt-4">
-              <label className="text-sm font-medium">Vehicle Model</label>
+              <label htmlFor="volunteer-vehicle-notes" className="text-sm font-medium">
+                Vehicle Model
+              </label>
               <textarea
+                id="volunteer-vehicle-notes"
                 value={value}
                 onChange={(e) => handleInputChange(e.currentTarget.value)}
                 placeholder="Enter..."

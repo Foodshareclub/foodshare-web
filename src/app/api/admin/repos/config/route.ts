@@ -1,6 +1,6 @@
-import { NextRequest } from "next/server";
+import { handleError, ok } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
-import { ok, handleError } from "@/lib/api";
+import type { NextRequest } from "next/server";
 import { requireAdmin } from "../../_shared/requireAdmin";
 
 export async function GET() {
@@ -9,10 +9,7 @@ export async function GET() {
 
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("repo_configs")
-      .select("*")
-      .order("updated_at", { ascending: false });
+    const { data, error } = await supabase.from("repo_configs").select("*").order("updated_at", { ascending: false });
     if (error) throw error;
     return ok({ configs: data });
   } catch (error) {
@@ -58,7 +55,7 @@ export async function POST(request: NextRequest) {
           custom_instructions,
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "full_name" }
+        { onConflict: "full_name" },
       )
       .select()
       .single();

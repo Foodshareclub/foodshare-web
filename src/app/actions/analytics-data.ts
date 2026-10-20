@@ -9,30 +9,30 @@
 
 import {
   getAnalyticsSummary as _getAnalyticsSummary,
-  getMonthlyGrowth as _getMonthlyGrowth,
-  getDailyActiveUsers as _getDailyActiveUsers,
   getConversionFunnel as _getConversionFunnel,
-  getUserRetentionCohorts as _getUserRetentionCohorts,
+  getDailyActiveUsers as _getDailyActiveUsers,
+  getGeographicHotspots as _getGeographicHotspots,
   getInventoryAging as _getInventoryAging,
   getListingTypeDistribution as _getListingTypeDistribution,
-  getTopSharers as _getTopSharers,
+  getMonthlyGrowth as _getMonthlyGrowth,
   getSyncStatus as _getSyncStatus,
-  getGeographicHotspots as _getGeographicHotspots,
+  getTopSharers as _getTopSharers,
+  getUserRetentionCohorts as _getUserRetentionCohorts,
 } from "@/lib/data/analytics";
 
-import type { ServerActionResult } from "@/lib/errors";
 import type {
   AnalyticsSummary,
-  MonthlyGrowth,
   DailyActiveUsers,
   FunnelStep,
-  RetentionCohort,
+  GeoHotspot,
   InventoryAge,
   ListingTypeDistribution,
-  TopSharer,
+  MonthlyGrowth,
+  RetentionCohort,
   SyncStatus,
-  GeoHotspot,
+  TopSharer,
 } from "@/lib/data/analytics";
+import type { ServerActionResult } from "@/lib/errors";
 
 export async function fetchAnalyticsSummary(): Promise<ServerActionResult<AnalyticsSummary>> {
   return _getAnalyticsSummary();
@@ -58,15 +58,11 @@ export async function fetchInventoryAging(): Promise<ServerActionResult<Inventor
   return _getInventoryAging();
 }
 
-export async function fetchListingTypeDistribution(): Promise<
-  ServerActionResult<ListingTypeDistribution[]>
-> {
+export async function fetchListingTypeDistribution(): Promise<ServerActionResult<ListingTypeDistribution[]>> {
   return _getListingTypeDistribution();
 }
 
-export async function fetchTopSharers(
-  limit: number = 10
-): Promise<ServerActionResult<TopSharer[]>> {
+export async function fetchTopSharers(limit = 10): Promise<ServerActionResult<TopSharer[]>> {
   return _getTopSharers(limit);
 }
 

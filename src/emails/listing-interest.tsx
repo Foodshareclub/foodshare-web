@@ -4,13 +4,13 @@
  * Sent when someone expresses interest in a user's listing.
  */
 
-import { Text, Section, Img, Row, Column } from "@react-email/components";
+import { Column, Img, Row, Section, Text } from "@react-email/components";
 import {
-  EmailLayout,
-  EmailCard,
   EmailButton,
   EmailButtonOutline,
+  EmailCard,
   EmailInfoBox,
+  EmailLayout,
   EmailListingCard,
   colors,
   styles,
@@ -52,8 +52,7 @@ export function ListingInterestEmail({
       <EmailCard>
         <Text style={styles.paragraph}>Great news! 🎉</Text>
         <Text style={styles.paragraph}>
-          <strong style={{ color: colors.orange }}>{interestedUserName}</strong> has expressed
-          interest in your listing:
+          <strong style={{ color: colors.orange }}>{interestedUserName}</strong> has expressed interest in your listing:
         </Text>
 
         {/* Listing Card */}
@@ -106,8 +105,8 @@ export function ListingInterestEmail({
 
       {/* Tip */}
       <EmailInfoBox color="#4caf50" bgColor="#e8f5e9">
-        <strong style={{ color: "#2e7d32" }}>💡 Tip:</strong> Respond quickly! Fast responses lead
-        to successful shares and better ratings.
+        <strong style={{ color: "#2e7d32" }}>💡 Tip:</strong> Respond quickly! Fast responses lead to successful shares
+        and better ratings.
       </EmailInfoBox>
     </EmailLayout>
   );

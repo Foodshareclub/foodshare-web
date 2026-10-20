@@ -6,11 +6,12 @@
  * Includes typing indicators, presence, and read receipts
  */
 
-import { useEffect, useCallback, useRef, useState } from "react";
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import type { RoomParticipantsType } from "@/api/chatAPI";
 import { createClient } from "@/lib/supabase/client";
 import { useChatStore } from "@/store/zustand/useChatStore";
-import type { RoomParticipantsType } from "@/api/chatAPI";
+import type { TimerHandle } from "@/types/timer.types";
+import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type TypingUser = {
   id: string;
@@ -52,7 +53,7 @@ export function useUnifiedChat({
 }: UseUnifiedChatOptions) {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const presenceChannelRef = useRef<RealtimeChannel | null>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<TimerHandle | null>(null);
   const typingUsersRef = useRef<TypingUser[]>([]); // Ref to avoid dependency issues
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
@@ -60,9 +61,9 @@ export function useUnifiedChat({
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<PresenceUser[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<
-    "connected" | "disconnected" | "reconnecting"
-  >("disconnected");
+  const [connectionStatus, setConnectionStatus] = useState<"connected" | "disconnected" | "reconnecting">(
+    "disconnected",
+  );
 
   const { addMessage, setNewMessage, updateRoomInList } = useChatStore();
 
@@ -101,7 +102,7 @@ export function useUnifiedChat({
             setNewMessage(newMessage);
             onNewFoodMessage?.(newMessage);
           }
-        }
+        },
       )
       .subscribe();
 
@@ -162,13 +163,11 @@ export function useUnifiedChat({
         setTypingUsers((prev) => {
           const exists = prev.some((u) => u.id === payload.userId);
           if (payload.isTyping && !exists) {
-            const updated = [
-              ...prev,
-              { id: payload.userId, name: payload.userName, avatarUrl: payload.avatarUrl },
-            ];
+            const updated = [...prev, { id: payload.userId, name: payload.userName, avatarUrl: payload.avatarUrl }];
             onTypingChange?.(updated); // Use fresh value, not stale closure
             return updated;
-          } else if (!payload.isTyping) {
+          }
+          if (!payload.isTyping) {
             const updated = prev.filter((u) => u.id !== payload.userId);
             onTypingChange?.(updated);
             return updated;
@@ -200,7 +199,7 @@ export function useUnifiedChat({
         setConnectionStatus("reconnecting");
         // Exponential backoff reconnection
         if (reconnectAttempts.current < maxReconnectAttempts) {
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
+          const delay = Math.min(1000 * 2 ** reconnectAttempts.current, 30000);
           reconnectAttempts.current++;
           setTimeout(() => {
             if (presenceChannelRef.current) {
@@ -261,7 +260,7 @@ export function useUnifiedChat({
         }, 3000);
       }
     },
-    [userId, userName, userAvatar]
+    [userId, userName, userAvatar],
   );
 
   // Keep ref updated in effect to avoid render-time mutation
@@ -284,7 +283,7 @@ export function useUnifiedChat({
         },
       });
     },
-    [userId]
+    [userId],
   );
 
   // Subscribe to all rooms for unread indicators
@@ -318,7 +317,7 @@ export function useUnifiedChat({
             last_message_sent_by: updatedRoom.last_message_sent_by,
             last_message_seen_by: updatedRoom.last_message_seen_by,
           });
-        }
+        },
       )
       .subscribe();
 
@@ -423,7 +422,7 @@ export function useUnreadCount(userId: string | null) {
         () => {
           // Re-fetch count when any room changes
           fetchUnreadCount();
-        }
+        },
       )
       .subscribe();
 

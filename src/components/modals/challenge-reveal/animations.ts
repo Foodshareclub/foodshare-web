@@ -1,5 +1,5 @@
-import { Variants } from "framer-motion";
-import { DECK_CONFIG, ANIMATION_DURATIONS, SWIPE_CONFIG } from "./constants";
+import type { Variants } from "framer-motion";
+import { ANIMATION_DURATIONS, DECK_CONFIG, SWIPE_CONFIG } from "./constants";
 
 // Modal entrance/exit animations
 export const modalVariants: Variants = {
@@ -33,7 +33,7 @@ export const deckIdleVariants: Variants = {
     y: [0, -2, 0],
     transition: {
       duration: ANIMATION_DURATIONS.IDLE_CYCLE,
-      repeat: Infinity,
+      repeat: Number.POSITIVE_INFINITY,
       ease: "easeInOut",
     },
   },

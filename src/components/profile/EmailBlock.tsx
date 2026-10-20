@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type React from "react";
+import { useState } from "react";
 
 interface EmailBlockProps {
   email: string;
@@ -55,15 +56,11 @@ export const EmailBlock: React.FC<EmailBlockProps> = ({
     <div className="glass rounded-xl p-4 mb-4">
       <div className="flex">
         <div className="w-full max-w-screen-lg">
-          <h2 className="text-2xl font-medium pb-2 text-left text-foreground">Email address</h2>
+          <h2 className="text-2xl font-medium pb-2 text-start text-foreground">Email address</h2>
           {edit ? (
             <>
               <div className="flex justify-between">
-                <Input
-                  variant="glass"
-                  value={email}
-                  onChange={(e) => setEmail(e.currentTarget.value)}
-                />
+                <Input variant="glass" value={email} onChange={(e) => setEmail(e.currentTarget.value)} />
               </div>
               <Button variant="glass-accent" onClick={handleSave} className="my-3">
                 Save
@@ -73,12 +70,7 @@ export const EmailBlock: React.FC<EmailBlockProps> = ({
             <p className="text-foreground">{email}</p>
           )}
         </div>
-        <Button
-          variant="glass"
-          className="self-start"
-          disabled={disableEmailEdit}
-          onClick={toggleEditMode}
-        >
+        <Button variant="glass" className="self-start" disabled={disableEmailEdit} onClick={toggleEditMode}>
           {edit ? "Cancel" : "Edit"}
         </Button>
       </div>

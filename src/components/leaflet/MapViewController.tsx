@@ -5,7 +5,7 @@
  * Handles dynamic map view updates with 120Hz display support
  */
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMap } from "react-leaflet";
 
 interface MapViewControllerProps {
@@ -56,7 +56,9 @@ const MapViewController: React.FC<MapViewControllerProps> = ({ center, zoom, isU
     return () => clearTimeout(timer);
   }, []);
 
-  // Set initial view ONCE on mount, then allow user to freely navigate
+  // Set initial view ONCE on mount, then allow user to freely navigate.
+  // Re-runs on prop/refresh-rate changes are cheap no-ops: the hasSetInitialView
+  // ref bails out, so the user's pan/zoom is never reset.
   useEffect(() => {
     try {
       // Only set view once on initial mount
@@ -104,8 +106,7 @@ const MapViewController: React.FC<MapViewControllerProps> = ({ center, zoom, isU
     } catch (error) {
       console.error("[MapViewController] Error updating map view:", error);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map]); // Only run when map instance is available
+  }, [center, isUserLocation, map, refreshRate, zoom]);
 
   return null;
 };

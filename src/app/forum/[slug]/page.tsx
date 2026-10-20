@@ -1,37 +1,34 @@
-import { cache } from "react";
-import { notFound } from "next/navigation";
-import { Suspense } from "react";
-import { Eye, Heart, Clock, CheckCircle, Pin, Lock } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
-import { createCachedClient } from "@/lib/supabase/server";
-import { formatDate } from "@/lib/utils";
-import { generateArticleJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
-import { siteConfig } from "@/lib/metadata";
+import type { ForumComment, ForumPost } from "@/api/forumAPI";
 import { ForumCategoryBadge, ForumTagBadge, RealtimeComments } from "@/components/forum";
 import { RichTextViewer } from "@/components/forum/RichTextViewer";
 import { BackButton } from "@/components/navigation/BackButton";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ForumPost, ForumComment } from "@/api/forumAPI";
+import { generateArticleJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
+import { siteConfig } from "@/lib/metadata";
+import { createClient } from "@/lib/supabase/server";
+import { createCachedClient } from "@/lib/supabase/server";
+import { formatDate } from "@/lib/utils";
+import { CheckCircle, Clock, Eye, Heart, Lock, Pin } from "lucide-react";
+import { notFound } from "next/navigation";
+import { cache } from "react";
+import { Suspense } from "react";
+
+interface ForumSlugRow {
+  slug: string | null;
+}
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
   // Phase 7: skip live Supabase reads during stubbed CI builds.
   // NOTE (Cache Components): must return >= 1 result; the placeholder slug
   // renders notFound() without network (see getForumPost guard below).
-  if (
-    process.env.SKIP_ENV_VALIDATION === "true" ||
-    process.env.NEXT_PHASE === "phase-production-build"
-  ) {
+  if (process.env.SKIP_ENV_VALIDATION === "true" || process.env.NEXT_PHASE === "phase-production-build") {
     return [{ slug: "__stub__" }];
   }
   try {
     const supabase = createCachedClient();
-    const { data } = await supabase
-      .from("forum")
-      .select("slug")
-      .order("views", { ascending: false })
-      .limit(50);
+    const { data } = await supabase.from("forum").select("slug").order("views", { ascending: false }).limit(50);
 
-    const results = (data ?? []).filter((p: any) => p.slug).map((p: any) => ({ slug: p.slug }));
+    const results = ((data ?? []) as ForumSlugRow[]).filter((p) => p.slug).map((p) => ({ slug: p.slug as string }));
 
     // When using Cache Components, must return at least one result.
     // __stub__ renders notFound() without network (see guard above).
@@ -65,7 +62,7 @@ const getForumPost = cache(async (slugOrId: string): Promise<ForumPost | null> =
     `);
 
   const { data, error } = isNumericId
-    ? await query.eq("id", parseInt(slugOrId, 10)).single()
+    ? await query.eq("id", Number.parseInt(slugOrId, 10)).single()
     : await query.eq("slug", slugOrId).single();
 
   if (error || !data) return null;
@@ -77,9 +74,7 @@ async function getInitialComments(forumId: number): Promise<ForumComment[]> {
 
   const { data } = await supabase
     .from("comments")
-    .select(
-      "*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)"
-    )
+    .select("*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)")
     .eq("forum_id", forumId)
     .is("parent_id", null)
     .order("is_pinned", { ascending: false })
@@ -195,6 +190,7 @@ export default async function ForumPostPage({ params }: PageProps) {
     <>
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD needs a raw script tag; safeJsonLdStringify escapes angle brackets and ampersands so a script-tag breakout is impossible
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(jsonLd) }}
       />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -247,13 +243,11 @@ export default async function ForumPostPage({ params }: PageProps) {
               )}
               {/* eslint-enable @next/next/no-img-element */}
               <div>
-                <p className="font-semibold">
-                  {post.profiles?.nickname || post.profiles?.first_name || "Anonymous"}
-                </p>
+                <p className="font-semibold">{post.profiles?.nickname || post.profiles?.first_name || "Anonymous"}</p>
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   {formatDate(post.forum_post_created_at, { format: "long" })}
-                  {post.is_edited && <span className="italic ml-2">(edited)</span>}
+                  {post.is_edited && <span className="italic ms-2">(edited)</span>}
                 </p>
               </div>
             </div>
@@ -306,11 +300,7 @@ export default async function ForumPostPage({ params }: PageProps) {
         {/* Comments Section */}
         <section className="pt-8 border-t border-border">
           <Suspense fallback={<CommentsSkeleton />}>
-            <RealtimeComments
-              forumId={post.id}
-              postAuthorId={post.profile_id}
-              initialComments={initialComments}
-            />
+            <RealtimeComments forumId={post.id} postAuthorId={post.profile_id} initialComments={initialComments} />
           </Suspense>
         </section>
       </div>

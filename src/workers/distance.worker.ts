@@ -23,9 +23,7 @@ interface WorkerMessage {
 /**
  * Parse PostGIS POINT to lat/lng
  */
-function parsePostGISPoint(
-  location: PostGISPoint | string | null
-): { latitude: number; longitude: number } | null {
+function parsePostGISPoint(location: PostGISPoint | string | null): { latitude: number; longitude: number } | null {
   if (!location) return null;
 
   if (typeof location === "object" && location.coordinates && Array.isArray(location.coordinates)) {
@@ -38,9 +36,9 @@ function parsePostGISPoint(
   if (typeof location === "string") {
     const match = location.match(/POINT\(([^ ]+) ([^ ]+)\)/);
     if (match) {
-      const lng = parseFloat(match[1]);
-      const lat = parseFloat(match[2]);
-      if (!isNaN(lat) && !isNaN(lng)) {
+      const lng = Number.parseFloat(match[1]);
+      const lat = Number.parseFloat(match[2]);
+      if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
         return { latitude: lat, longitude: lng };
       }
     }
@@ -59,10 +57,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
@@ -73,12 +68,12 @@ self.addEventListener("message", (e: MessageEvent<WorkerMessage>) => {
 
   const productsWithDistance = products.map((product: Product) => {
     if (!product.location) {
-      return { ...product, distance: Infinity };
+      return { ...product, distance: Number.POSITIVE_INFINITY };
     }
 
     const coords = parsePostGISPoint(product.location);
     if (!coords) {
-      return { ...product, distance: Infinity };
+      return { ...product, distance: Number.POSITIVE_INFINITY };
     }
 
     const distance = calculateDistance(userLat, userLng, coords.latitude, coords.longitude);

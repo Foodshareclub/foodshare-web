@@ -1,9 +1,10 @@
+/* oxlint-disable unicorn/no-thenable -- Supabase query builder mocks must be thenable. */
 /**
  * Chat Data Functions Tests
  * Unit tests for chat-related data fetching functions
  */
 
-import { mock, describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 // Shared mock state
 const mockState = {
@@ -27,15 +28,14 @@ const createMockSupabaseClient = () => {
       Promise.resolve({
         data: mockState.rooms,
         error: mockState.error,
-      })
+      }),
     );
     chain.single = mock(() =>
       Promise.resolve({
         data: mockState.room,
         error: mockState.error,
-      })
+      }),
     );
-    // eslint-disable-next-line unicorn/no-thenable
     chain.then = (resolve: (value: unknown) => void) =>
       resolve({
         data: mockState.unreadRooms,
@@ -53,7 +53,7 @@ const createMockSupabaseClient = () => {
       Promise.resolve({
         data: mockState.messages,
         error: mockState.error,
-      })
+      }),
     );
     return chain;
   };
@@ -66,7 +66,7 @@ const createMockSupabaseClient = () => {
       Promise.resolve({
         data: mockState.insertedRoom,
         error: mockState.error,
-      })
+      }),
     );
     return chain;
   };
@@ -97,12 +97,12 @@ mock.module("@/lib/supabase/server", () => ({
 
 // Import AFTER mocks are set up
 import {
-  getUserChatRooms,
-  getChatRoom,
-  getChatMessages,
-  getUnreadMessageCount,
   getAllUserChats,
+  getChatMessages,
+  getChatRoom,
   getTotalUnreadCount,
+  getUnreadMessageCount,
+  getUserChatRooms,
 } from "@/lib/data/chat";
 
 describe("Chat Data Functions", () => {

@@ -15,7 +15,8 @@
  */
 
 import { ActionToastProvider } from "@/hooks/useActionToast";
-import { type Locale, getBrowserLocale, getLocaleDirection } from "@/i18n/config";
+import { type Locale, defaultLocale, getBrowserLocale, getLocaleDirection } from "@/i18n/config";
+import { loadMessagesWithFallback } from "@/i18n/merge";
 import { GPUProvider } from "@/lib/gpu";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
@@ -64,15 +65,16 @@ async function loadMessages(locale: Locale): Promise<Messages> {
   if (cached) return cached;
 
   try {
-    // Dynamic import for locale messages
-    const messages = (await import(`../../messages/${locale}.json`)).default;
+    // Layers English underneath so keys the locale is missing render as English
+    // rather than as their own key path (next-intl has no built-in fallback).
+    const messages = await loadMessagesWithFallback(locale);
     messageCache.set(locale, messages);
     return messages;
   } catch (error) {
     console.error(`Failed to load messages for locale "${locale}":`, error);
     // Fallback to English
-    if (locale !== "en") {
-      return loadMessages("en");
+    if (locale !== defaultLocale) {
+      return loadMessages(defaultLocale);
     }
     return {};
   }
@@ -108,6 +110,13 @@ export function Providers({ children, initialLocale, initialMessages }: Provider
     let cancelled = false;
     // Server messages make the first render usable before hydration. Only load
     // another catalog when a browser-only preference differs from the cookie.
+    //
+    // This is now a fallback rather than the normal path: the proxy negotiates
+    // from Accept-Language and persists the result, so on a first visit the
+    // cookie already matches what the browser wants and this returns early
+    // without a second catalogue fetch. It still matters for the case the
+    // cookie cannot cover — a user who changed their *browser's* language
+    // preference after the cookie was set.
     const initLocale = async (): Promise<void> => {
       const browserLocale = getBrowserLocale();
       if (browserLocale === initialLocale) return;
@@ -127,8 +136,15 @@ export function Providers({ children, initialLocale, initialMessages }: Provider
     // Load messages for new locale
     const newMessages = await loadMessages(newLocale);
 
-    // Persist preference in cookie (for server-side reading) and localStorage
-    document.cookie = `locale=${newLocale};path=/;max-age=31536000;samesite=lax`;
+    // Persist in the cookie the *server* reads, and in localStorage.
+    //
+    // `secure` was missing here, so the one cookie that drives server-side
+    // rendering was the only cookie this app set without it. The flag is
+    // derived from the page rather than from NODE_ENV: a production build served
+    // over plain http://localhost would otherwise set a cookie the browser
+    // drops, and a dev build on https would set one it needlessly refuses.
+    const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; secure" : "";
+    document.cookie = `locale=${newLocale};path=/;max-age=31536000;samesite=lax${secure}`;
     if (typeof localStorage !== "undefined") {
       localStorage.setItem("locale", newLocale);
     }

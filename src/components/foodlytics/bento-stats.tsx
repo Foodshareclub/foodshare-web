@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
-import { DollarSign, Scale, Flame, Droplet } from "lucide-react";
 import { Card, CardContent } from "@/components/foodlytics/ui/card";
 import { motion } from "framer-motion";
+import { DollarSign, Droplet, Flame, Scale } from "lucide-react";
+import React from "react";
 
 interface BentoStatsProps {
   totalCost: number;
@@ -50,12 +50,8 @@ export function BentoStats({ totalCost, totalWeight, totalCO2, totalWater }: Ben
               <DollarSign className="h-6 w-6" />
             </div>
             <div className="space-y-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-rose-300/80 block">
-                Financial Loss
-              </span>
-              <h3 className="text-3xl font-extrabold text-white tracking-tight">
-                ${totalCost.toFixed(2)}
-              </h3>
+              <span className="text-xs font-bold uppercase tracking-wider text-rose-300/80 block">Financial Loss</span>
+              <h3 className="text-3xl font-extrabold text-white tracking-tight">${totalCost.toFixed(2)}</h3>
               <p className="text-xs text-stone-400 font-medium">Value of food discarded</p>
             </div>
           </CardContent>
@@ -73,12 +69,9 @@ export function BentoStats({ totalCost, totalWeight, totalCO2, totalWater }: Ben
               <Scale className="h-6 w-6" />
             </div>
             <div className="space-y-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-300/80 block">
-                Wasted Weight
-              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-300/80 block">Wasted Weight</span>
               <h3 className="text-3xl font-extrabold text-white tracking-tight">
-                {totalWeight.toFixed(1)}{" "}
-                <span className="text-sm font-medium text-stone-400">lbs</span>
+                {totalWeight.toFixed(1)} <span className="text-sm font-medium text-stone-400">lbs</span>
               </h3>
               <p className="text-xs text-stone-400 font-medium">Physical mass thrown out</p>
             </div>
@@ -101,13 +94,10 @@ export function BentoStats({ totalCost, totalWeight, totalCO2, totalWater }: Ben
                 Carbon Footprint
               </span>
               <h3 className="text-3xl font-extrabold text-white tracking-tight">
-                {totalCO2.toFixed(1)}{" "}
-                <span className="text-sm font-medium text-stone-400">lbs</span>
+                {totalCO2.toFixed(1)} <span className="text-sm font-medium text-stone-400">lbs</span>
               </h3>
               <div className="space-y-1">
-                <p className="text-[11px] text-emerald-400/90 font-bold tracking-tight">
-                  CO2e emissions created
-                </p>
+                <p className="text-[11px] text-emerald-400/90 font-bold tracking-tight">CO2e emissions created</p>
                 <p className="text-[10px] text-stone-400 font-medium leading-none">
                   ≈ {Math.round(totalCO2 * 1.1)} miles driven in gas car
                 </p>
@@ -128,17 +118,12 @@ export function BentoStats({ totalCost, totalWeight, totalCO2, totalWater }: Ben
               <Droplet className="h-6 w-6" />
             </div>
             <div className="space-y-1.5 w-full">
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-300/80 block">
-                Water Footprint
-              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-300/80 block">Water Footprint</span>
               <h3 className="text-3xl font-extrabold text-white tracking-tight">
-                {totalWater.toLocaleString()}{" "}
-                <span className="text-sm font-medium text-stone-400">gal</span>
+                {totalWater.toLocaleString()} <span className="text-sm font-medium text-stone-400">gal</span>
               </h3>
               <div className="space-y-1">
-                <p className="text-[11px] text-blue-400/90 font-bold tracking-tight">
-                  Ecological freshwater lost
-                </p>
+                <p className="text-[11px] text-blue-400/90 font-bold tracking-tight">Ecological freshwater lost</p>
                 <p className="text-[10px] text-stone-400 font-medium leading-none">
                   ≈ {Math.round(totalWater / 17.2)} hot showers
                 </p>

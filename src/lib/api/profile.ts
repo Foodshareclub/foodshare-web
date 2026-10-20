@@ -5,8 +5,8 @@
  * Used for profile management operations.
  */
 
-import { apiCall, apiGet, apiPut, apiDelete } from "./client";
 import type { ActionResult } from "@/lib/errors";
+import { apiCall, apiDelete, apiGet, apiPut } from "./client";
 
 // =============================================================================
 // Types (match Edge Function schemas)
@@ -91,18 +91,14 @@ export async function getProfileAPI(): Promise<ActionResult<ProfileResponse>> {
 /**
  * Update profile
  */
-export async function updateProfileAPI(
-  input: UpdateProfileRequest
-): Promise<ActionResult<ProfileResponse>> {
+export async function updateProfileAPI(input: UpdateProfileRequest): Promise<ActionResult<ProfileResponse>> {
   return apiPut<ProfileResponse, UpdateProfileRequest>(ENDPOINT, input);
 }
 
 /**
  * Upload avatar
  */
-export async function uploadAvatarAPI(
-  input: UploadAvatarRequest
-): Promise<ActionResult<AvatarUploadResponse>> {
+export async function uploadAvatarAPI(input: UploadAvatarRequest): Promise<ActionResult<AvatarUploadResponse>> {
   return apiCall<AvatarUploadResponse, UploadAvatarRequest>(ENDPOINT, {
     method: "POST",
     body: input,
@@ -127,14 +123,8 @@ export async function getAddressAPI(): Promise<ActionResult<AddressResponse | nu
 /**
  * Update address
  */
-export async function updateAddressAPI(
-  input: UpdateAddressRequest
-): Promise<ActionResult<AddressResponse>> {
-  return apiPut<AddressResponse, UpdateAddressRequest>(
-    ENDPOINT,
-    input,
-    { action: "address" }
-  );
+export async function updateAddressAPI(input: UpdateAddressRequest): Promise<ActionResult<AddressResponse>> {
+  return apiPut<AddressResponse, UpdateAddressRequest>(ENDPOINT, input, { action: "address" });
 }
 
 // =============================================================================
@@ -176,8 +166,8 @@ export function formDataToAddressInput(formData: FormData): UpdateAddressRequest
   let parsedLng: number | undefined;
 
   if (lat && lng) {
-    parsedLat = parseFloat(lat as string);
-    parsedLng = parseFloat(lng as string);
+    parsedLat = Number.parseFloat(lat as string);
+    parsedLng = Number.parseFloat(lng as string);
     // Only use if valid numbers
     if (Number.isNaN(parsedLat)) parsedLat = undefined;
     if (Number.isNaN(parsedLng)) parsedLng = undefined;
@@ -193,9 +183,7 @@ export function formDataToAddressInput(formData: FormData): UpdateAddressRequest
     country: (formData.get("country") as string) || "",
     lat: parsedLat,
     lng: parsedLng,
-    radiusMeters: formData.get("radius_meters")
-      ? parseInt(formData.get("radius_meters") as string)
-      : undefined,
+    radiusMeters: formData.get("radius_meters") ? Number.parseInt(formData.get("radius_meters") as string) : undefined,
   };
 }
 
@@ -205,10 +193,7 @@ export function formDataToAddressInput(formData: FormData): UpdateAddressRequest
 export async function fileToAvatarInput(file: File): Promise<UploadAvatarRequest> {
   const arrayBuffer = await file.arrayBuffer();
   const uint8Array = new Uint8Array(arrayBuffer);
-  const binaryString = uint8Array.reduce(
-    (str, byte) => str + String.fromCharCode(byte),
-    ""
-  );
+  const binaryString = uint8Array.reduce((str, byte) => str + String.fromCharCode(byte), "");
   const base64 = btoa(binaryString);
 
   return {

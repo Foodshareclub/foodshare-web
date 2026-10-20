@@ -32,11 +32,7 @@ export async function getEmailPreferences(): Promise<EmailPreferences | null> {
     return null;
   }
 
-  const { data, error } = await supabase
-    .from("email_preferences")
-    .select("*")
-    .eq("profile_id", user.id)
-    .single();
+  const { data, error } = await supabase.from("email_preferences").select("*").eq("profile_id", user.id).single();
 
   if (error && error.code !== "PGRST116") {
     console.error("Error fetching email preferences:", error);
@@ -49,16 +45,10 @@ export async function getEmailPreferences(): Promise<EmailPreferences | null> {
 /**
  * Get email preferences for a specific user (admin use)
  */
-export async function getEmailPreferencesForUser(
-  profileId: string
-): Promise<EmailPreferences | null> {
+export async function getEmailPreferencesForUser(profileId: string): Promise<EmailPreferences | null> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("email_preferences")
-    .select("*")
-    .eq("profile_id", profileId)
-    .single();
+  const { data, error } = await supabase.from("email_preferences").select("*").eq("profile_id", profileId).single();
 
   if (error && error.code !== "PGRST116") {
     console.error("Error fetching email preferences:", error);

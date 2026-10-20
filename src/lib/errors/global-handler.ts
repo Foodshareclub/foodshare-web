@@ -3,10 +3,10 @@
  * Catches unhandled promise rejections and storage errors at the application level
  */
 
-import { detectStorageError, clearSupabaseStorage, logStorageError, type StorageErrorInfo } from "./storage-handler";
 import { createLogger } from "@/lib/logger";
-import { productionErrorReporter } from "./production-reporter";
 import { autoRecovery } from "./auto-recovery";
+import { productionErrorReporter } from "./production-reporter";
+import { type StorageErrorInfo, clearSupabaseStorage, detectStorageError, logStorageError } from "./storage-handler";
 
 const logger = createLogger("GlobalErrorHandler");
 let storageErrorShown = false;
@@ -46,7 +46,7 @@ export function initializeGlobalErrorHandlers() {
       });
 
       // Report to production error reporter
-      if (process.env.NODE_ENV === 'production') {
+      if (process.env.NODE_ENV === "production") {
         productionErrorReporter.reportError(error, "error", {
           type: "promise_rejection",
         });
@@ -99,7 +99,7 @@ export function initializeGlobalErrorHandlers() {
         });
 
         // Report to production error reporter
-        if (process.env.NODE_ENV === 'production') {
+        if (process.env.NODE_ENV === "production") {
           productionErrorReporter.reportError(error, "error", {
             type: "runtime_error",
             filename: event.filename,
@@ -163,15 +163,13 @@ function showStorageRecoveryUI(storageError: StorageErrorInfo) {
 
   // Message
   const messagePara = document.createElement("p");
-  messagePara.style.cssText =
-    "margin: 0 0 12px 0; color: #2d3748; font-size: 16px; line-height: 1.5;";
+  messagePara.style.cssText = "margin: 0 0 12px 0; color: #2d3748; font-size: 16px; line-height: 1.5;";
   messagePara.textContent = storageError.message;
   contentDiv.appendChild(messagePara);
 
   // Guidance
   const guidancePara = document.createElement("p");
-  guidancePara.style.cssText =
-    "margin: 0 0 20px 0; color: #4a5568; font-size: 14px; line-height: 1.5;";
+  guidancePara.style.cssText = "margin: 0 0 20px 0; color: #4a5568; font-size: 14px; line-height: 1.5;";
   guidancePara.textContent = storageError.userGuidance;
   contentDiv.appendChild(guidancePara);
 

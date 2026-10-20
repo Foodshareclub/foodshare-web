@@ -1,6 +1,3 @@
-import { Eye, Edit, Copy, Trash2, MoreVertical } from "lucide-react";
-import type { RecentCampaign } from "../types";
-import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +7,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import { Copy, Edit, Eye, MoreVertical, Trash2 } from "lucide-react";
+import type { RecentCampaign } from "../types";
 
 export function CampaignRow({
   campaign,
@@ -27,10 +27,8 @@ export function CampaignRow({
     cancelled: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
   };
 
-  const openRate =
-    campaign.totalSent > 0 ? Math.round((campaign.totalOpened / campaign.totalSent) * 100) : 0;
-  const clickRate =
-    campaign.totalOpened > 0 ? Math.round((campaign.totalClicked / campaign.totalOpened) * 100) : 0;
+  const openRate = campaign.totalSent > 0 ? Math.round((campaign.totalOpened / campaign.totalSent) * 100) : 0;
+  const clickRate = campaign.totalOpened > 0 ? Math.round((campaign.totalClicked / campaign.totalOpened) * 100) : 0;
 
   if (compact) {
     return (
@@ -39,13 +37,11 @@ export function CampaignRow({
           <p className="text-sm font-medium truncate">{campaign.name}</p>
           <p className="text-xs text-muted-foreground truncate">{campaign.subject}</p>
         </div>
-        <div className="flex items-center gap-2 ml-3">
+        <div className="flex items-center gap-2 ms-3">
           <Badge variant="outline" className={cn("text-xs", statusColors[campaign.status])}>
             {campaign.status}
           </Badge>
-          {campaign.status === "sent" && (
-            <span className="text-xs text-muted-foreground">{openRate}% open</span>
-          )}
+          {campaign.status === "sent" && <span className="text-xs text-muted-foreground">{openRate}% open</span>}
         </div>
       </div>
     );
@@ -74,7 +70,7 @@ export function CampaignRow({
             ? `Scheduled: ${new Date(campaign.scheduledAt).toLocaleDateString()}`
             : "Draft"}
       </td>
-      <td className="p-4 text-right">
+      <td className="p-4 text-end">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -83,17 +79,17 @@ export function CampaignRow({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem>
-              <Eye className="h-4 w-4 mr-2" /> View
+              <Eye className="h-4 w-4 me-2" /> View
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Edit className="h-4 w-4 mr-2" /> Edit
+              <Edit className="h-4 w-4 me-2" /> Edit
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Copy className="h-4 w-4 mr-2" /> Duplicate
+              <Copy className="h-4 w-4 me-2" /> Duplicate
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-rose-600">
-              <Trash2 className="h-4 w-4 mr-2" /> Delete
+              <Trash2 className="h-4 w-4 me-2" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

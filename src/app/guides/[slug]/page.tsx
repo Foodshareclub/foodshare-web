@@ -1,9 +1,9 @@
-import { notFound } from "next/navigation";
-import Link from "next/link";
 import { PageHeader } from "@/components/navigation/PageHeader";
-import { generatePageMetadata } from "@/lib/metadata";
+import { getAllGuideSlugs, getGuide } from "@/lib/guides";
 import { generateArticleJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
-import { getGuide, getAllGuideSlugs } from "@/lib/guides";
+import { generatePageMetadata } from "@/lib/metadata";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 
 interface Params {
   slug: string;
@@ -31,20 +31,13 @@ function GuideContent({ slug }: { slug: string }) {
       return (
         <>
           <p className="text-muted-foreground mb-6">
-            Last updated: September 2026 — migrated from legacy docs, modernized for current
-            FoodShare.
+            Last updated: September 2026 — migrated from legacy docs, modernized for current FoodShare.
           </p>
           <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">
-              Domestic kitchen — “is it good enough for you?”
-            </h2>
-            <ul className="list-disc list-inside ml-4 space-y-2 text-foreground/80">
-              <li>
-                Only share food you would eat yourself. If you believe it’s unsafe, don’t share it.
-              </li>
-              <li>
-                If requesting: ask about ingredients, when opened and how stored, allergens present.
-              </li>
+            <h2 className="text-xl font-semibold mb-4">Domestic kitchen — “is it good enough for you?”</h2>
+            <ul className="list-disc list-inside ms-4 space-y-2 text-foreground/80">
+              <li>Only share food you would eat yourself. If you believe it’s unsafe, don’t share it.</li>
+              <li>If requesting: ask about ingredients, when opened and how stored, allergens present.</li>
               <li>Don’t collect or eat if you’re worried it’s unsafe.</li>
               <li>
                 See{" "}
@@ -57,18 +50,13 @@ function GuideContent({ slug }: { slug: string }) {
           </section>
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Business donations & Food Waste Heroes</h2>
-            <ul className="list-disc list-inside ml-4 space-y-2 text-foreground/80">
+            <ul className="list-disc list-inside ms-4 space-y-2 text-foreground/80">
               <li>
-                Volunteers are trained in a Food Safety Management System (FSMS, HACCP-based, Food
-                Standards Agency input).
+                Volunteers are trained in a Food Safety Management System (FSMS, HACCP-based, Food Standards Agency
+                input).
               </li>
-              <li>
-                Packaged food should be fully labelled; unlabelled bakery within 24h of collection.
-              </li>
-              <li>
-                Ambient “best before” can be shared beyond date on quality; chilled “best before”
-                within 24h.
-              </li>
+              <li>Packaged food should be fully labelled; unlabelled bakery within 24h of collection.</li>
+              <li>Ambient “best before” can be shared beyond date on quality; chilled “best before” within 24h.</li>
               <li>Report concerns via the flag on a listing or in chat.</li>
             </ul>
           </section>
@@ -90,28 +78,26 @@ function GuideContent({ slug }: { slug: string }) {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Choose who you share with</h2>
             <p className="text-foreground/80 mb-3">
-              Check the requester’s profile (tap photo), message tone, pickup time, and rating (3+
-              ratings). Politely decline others so they’re not left waiting.
+              Check the requester’s profile (tap photo), message tone, pickup time, and rating (3+ ratings). Politely
+              decline others so they’re not left waiting.
             </p>
             <h2 className="text-xl font-semibold mb-4">Check the item</h2>
             <p className="text-foreground/80 mb-3">
-              Look at photo + description. Everything on FoodShare is free. Beware stock photos or
-              too-good-to-be-true non-food listings.
+              Look at photo + description. Everything on FoodShare is free. Beware stock photos or too-good-to-be-true
+              non-food listings.
             </p>
             <h2 className="text-xl font-semibold mb-4">Check rating & profile</h2>
             <p className="text-foreground/80 mb-3">
-              Rating appears after 3+ shares. Read “About” for likes/dislikes. Phone verification is
-              required at signup.
+              Rating appears after 3+ shares. Read “About” for likes/dislikes. Phone verification is required at signup.
             </p>
             <h2 className="text-xl font-semibold mb-4">Assess communication</h2>
             <p className="text-foreground/80 mb-3">
-              Friendly, polite, and responsive = good sign. One of our guidelines is “Courtesy
-              rules”.
+              Friendly, polite, and responsive = good sign. One of our guidelines is “Courtesy rules”.
             </p>
             <h2 className="text-xl font-semibold mb-4">Meet in a safe place</h2>
             <p className="text-foreground/80 mb-3">
-              Doorstep is common, but you can set a public pickup. For doorstep leaves, use a safe
-              space outside. Verify area/time you’re comfortable with.
+              Doorstep is common, but you can set a public pickup. For doorstep leaves, use a safe space outside. Verify
+              area/time you’re comfortable with.
             </p>
           </section>
           <section className="p-4 bg-muted/50 rounded-lg">
@@ -128,9 +114,7 @@ function GuideContent({ slug }: { slug: string }) {
     case "sharing-guidelines":
       return (
         <>
-          <p className="text-muted-foreground mb-6">
-            Five guidelines that keep FoodShare kind and useful.
-          </p>
+          <p className="text-muted-foreground mb-6">Five guidelines that keep FoodShare kind and useful.</p>
           <div className="space-y-6">
             <div className="p-4 bg-card border rounded-xl">
               <h3 className="font-medium mb-1">😆 Good enough for you</h3>
@@ -147,15 +131,12 @@ function GuideContent({ slug }: { slug: string }) {
             <div className="p-4 bg-card border rounded-xl">
               <h3 className="font-medium mb-1">😇 Courtesy rules</h3>
               <p className="text-foreground/80 text-sm">
-                Describe accurately, reply promptly, show up on time. Let people know if you choose
-                someone else.
+                Describe accurately, reply promptly, show up on time. Let people know if you choose someone else.
               </p>
             </div>
             <div className="p-4 bg-card border rounded-xl">
               <h3 className="font-medium mb-1">🤔 Best judgment</h3>
-              <p className="text-foreground/80 text-sm">
-                Use it in every interaction — safety and kindness first.
-              </p>
+              <p className="text-foreground/80 text-sm">Use it in every interaction — safety and kindness first.</p>
             </div>
             <div className="p-4 bg-card border rounded-xl">
               <h3 className="font-medium mb-1">🤩 Have fun</h3>
@@ -169,12 +150,10 @@ function GuideContent({ slug }: { slug: string }) {
     case "what-can-i-share":
       return (
         <>
-          <p className="text-muted-foreground mb-6">
-            Anything edible you’d eat yourself — plus household essentials.
-          </p>
+          <p className="text-muted-foreground mb-6">Anything edible you’d eat yourself — plus household essentials.</p>
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Food you can share</h2>
-            <ul className="list-disc list-inside ml-4 space-y-2 text-foreground/80">
+            <ul className="list-disc list-inside ms-4 space-y-2 text-foreground/80">
               <li>Loose, raw, cooked, opened or unopened — if you’d eat it, it’s okay.</li>
               <li>
                 Past “Best Before” is allowed (quality date, see{" "}
@@ -184,31 +163,24 @@ function GuideContent({ slug }: { slug: string }) {
                 ).
               </li>
               <li>Alcohol: ensure recipient is legal drinking age in your country.</li>
-              <li>
-                Baby formula: only share surplus with informed parents who already use it (not
-                advertised).
-              </li>
+              <li>Baby formula: only share surplus with informed parents who already use it (not advertised).</li>
             </ul>
           </section>
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Non-food you can share</h2>
-            <ul className="list-disc list-inside ml-4 space-y-2 text-foreground/80">
+            <ul className="list-disc list-inside ms-4 space-y-2 text-foreground/80">
               <li>Kitchen knives: legal knives only, list “18+”, verify age (FoodShare is 18+).</li>
-              <li>
-                OTC meds/vitamins within use-by, max store-quantity per person; no prescription meds
-                (see below).
-              </li>
+              <li>OTC meds/vitamins within use-by, max store-quantity per person; no prescription meds (see below).</li>
               <li>Pet food as non-food; used cosmetics within use-by.</li>
             </ul>
           </section>
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">What you cannot share</h2>
-            <ul className="list-disc list-inside ml-4 space-y-2 text-foreground/80">
+            <ul className="list-disc list-inside ms-4 space-y-2 text-foreground/80">
               <li>Food past its “Use By” (safety date — illegal to share).</li>
               <li>
-                Prescription/pharmacy-only meds, fake/counterfeit goods, coupons/vouchers,
-                animals/live pets, controlled substances, weapons/fireworks/solvents, digital
-                content, prescription glasses.
+                Prescription/pharmacy-only meds, fake/counterfeit goods, coupons/vouchers, animals/live pets, controlled
+                substances, weapons/fireworks/solvents, digital content, prescription glasses.
               </li>
               <li>Violent/sexually explicit content (condoms/sex toys/art okay).</li>
             </ul>
@@ -224,25 +196,20 @@ function GuideContent({ slug }: { slug: string }) {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">1️⃣ Use By — safety</h2>
             <p className="text-foreground/80 mb-3">
-              Fresh/chilled/perishable. Illegal to sell or hand over past Use By on FoodShare. Use
-              “List For” to auto-expire at midnight of Use By. Report past-Use-By listings via flag.
+              Fresh/chilled/perishable. Illegal to sell or hand over past Use By on FoodShare. Use “List For” to
+              auto-expire at midnight of Use By. Report past-Use-By listings via flag.
             </p>
             <p className="text-sm font-medium text-red-600">Sharing past Use By: ❌ Not allowed</p>
           </section>
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">2️⃣ Best Before — quality</h2>
             <p className="text-foreground/80 mb-3">
-              Frozen/dried/canned. Safe beyond date (quality only). Government considered scrapping
-              it — it misleads.
+              Frozen/dried/canned. Safe beyond date (quality only). Government considered scrapping it — it misleads.
             </p>
-            <p className="text-sm font-medium text-green-600">
-              Sharing past Best Before: ✅ Allowed
-            </p>
+            <p className="text-sm font-medium text-green-600">Sharing past Best Before: ✅ Allowed</p>
           </section>
           <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">
-              3️⃣ Display Until / Sell By — stock control
-            </h2>
+            <h2 className="text-xl font-semibold mb-4">3️⃣ Display Until / Sell By — stock control</h2>
             <p className="text-foreground/80">
               For shop staff only, not legally required — ignore for sharing decisions.
             </p>
@@ -251,10 +218,7 @@ function GuideContent({ slug }: { slug: string }) {
             <h3 className="font-medium mb-2">Hero rules (volunteers)</h3>
             <ul className="list-disc list-inside text-sm text-foreground/80 space-y-1">
               <li>Never hand over past Use By; always List For → midnight.</li>
-              <li>
-                Ambient best-before beyond date = judgement; chilled best-before & unlabelled bakery
-                within 24h.
-              </li>
+              <li>Ambient best-before beyond date = judgement; chilled best-before & unlabelled bakery within 24h.</li>
               <li>Photo required for safety visibility.</li>
             </ul>
           </section>
@@ -264,7 +228,7 @@ function GuideContent({ slug }: { slug: string }) {
               href="https://www.nhs.uk/live-well/eat-well/food-labelling-terms/"
               className="underline"
               target="_blank"
-              rel="noopener"
+              rel="noreferrer noopener"
             >
               NHS labelling
             </a>{" "}
@@ -273,7 +237,7 @@ function GuideContent({ slug }: { slug: string }) {
               href="https://wrap.org.uk/sites/default/files/2020-07/WRAP-surplus-food-redistribution-labelling-guide-May-2020.pdf"
               className="underline"
               target="_blank"
-              rel="noopener"
+              rel="noreferrer noopener"
             >
               WRAP guide
             </a>
@@ -288,44 +252,33 @@ function GuideContent({ slug }: { slug: string }) {
           </p>
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">General</h2>
-            <ul className="list-disc list-inside ml-4 space-y-2 text-foreground/80">
+            <ul className="list-disc list-inside ms-4 space-y-2 text-foreground/80">
               <li>
-                No FoodShare insurance — lend low-value, non-sentimental items; you may request a
-                cash deposit and restrict to 4★+ / 5+ shares / 2km.
+                No FoodShare insurance — lend low-value, non-sentimental items; you may request a cash deposit and
+                restrict to 4★+ / 5+ shares / 2km.
               </li>
-              <li>
-                Tap “+” → Borrow to list; agree loan period, return date, and deposit in chat before
-                handover.
-              </li>
+              <li>Tap “+” → Borrow to list; agree loan period, return date, and deposit in chat before handover.</li>
               <li>Remove online accounts from devices before lending.</li>
             </ul>
           </section>
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Lender</h2>
-            <ul className="list-disc list-inside ml-4 space-y-2 text-foreground/80">
+            <ul className="list-disc list-inside ms-4 space-y-2 text-foreground/80">
+              <li>Set restrictions when listing; only lend to people you’re comfortable with (rating/profile).</li>
               <li>
-                Set restrictions when listing; only lend to people you’re comfortable with
-                (rating/profile).
+                Agree return via chat; if no return, contact us → if deleted/unresponsive, report theft to police (we
+                assist).
               </li>
-              <li>
-                Agree return via chat; if no return, contact us → if deleted/unresponsive, report
-                theft to police (we assist).
-              </li>
-              <li>
-                Returned damaged? Request borrower fix/replace at their cost. Check items are safe.
-              </li>
+              <li>Returned damaged? Request borrower fix/replace at their cost. Check items are safe.</li>
             </ul>
           </section>
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Borrower</h2>
-            <ul className="list-disc list-inside ml-4 space-y-2 text-foreground/80">
+            <ul className="list-disc list-inside ms-4 space-y-2 text-foreground/80">
+              <li>Borrow via Borrow tab; if “don’t meet requirements”, lender restricted to 4★/5 shares/2km.</li>
               <li>
-                Borrow via Borrow tab; if “don’t meet requirements”, lender restricted to 4★/5
-                shares/2km.
-              </li>
-              <li>
-                Deposits are private cash agreements — FoodShare not liable. Confirm amount in chat.
-                Disputes → “need more help”.
+                Deposits are private cash agreements — FoodShare not liable. Confirm amount in chat. Disputes → “need
+                more help”.
               </li>
               <li>
                 Photo on receipt, check safety, read manual (
@@ -333,7 +286,7 @@ function GuideContent({ slug }: { slug: string }) {
                   href="https://www.makeuseof.com/find-instruction-manuals-free-online/"
                   className="underline"
                   target="_blank"
-                  rel="noopener"
+                  rel="noreferrer noopener"
                 >
                   manuals
                 </a>
@@ -350,11 +303,11 @@ function GuideContent({ slug }: { slug: string }) {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">What are cookies?</h2>
             <p className="text-foreground/80 mb-3">
-              Small text files your browser stores to make the site work, remember preferences
-              (language/region), count visitors, and — with consent — show relevant ads. We share
-              limited targeting data with advertisers/analytics.
+              Small text files your browser stores to make the site work, remember preferences (language/region), count
+              visitors, and — with consent — show relevant ads. We share limited targeting data with
+              advertisers/analytics.
             </p>
-            <ul className="list-disc list-inside ml-4 space-y-2 text-foreground/80">
+            <ul className="list-disc list-inside ms-4 space-y-2 text-foreground/80">
               <li>
                 <strong>Strictly necessary</strong> — login, secure area.
               </li>
@@ -372,16 +325,15 @@ function GuideContent({ slug }: { slug: string }) {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Manage or opt out</h2>
             <p className="text-foreground/80 mb-3">
-              Delete/refuse via browser settings (Options/Tools/Preferences). Some features may
-              break.
+              Delete/refuse via browser settings (Options/Tools/Preferences). Some features may break.
             </p>
-            <ul className="list-disc list-inside ml-4 space-y-2 text-foreground/80">
+            <ul className="list-disc list-inside ms-4 space-y-2 text-foreground/80">
               <li>
                 <a
                   href="https://support.google.com/chrome/answer/95647?hl=en"
                   className="underline"
                   target="_blank"
-                  rel="noopener"
+                  rel="noreferrer noopener"
                 >
                   Chrome
                 </a>{" "}
@@ -390,7 +342,7 @@ function GuideContent({ slug }: { slug: string }) {
                   href="https://support.apple.com/guide/safari/manage-cookies-sfri11471/mac"
                   className="underline"
                   target="_blank"
-                  rel="noopener"
+                  rel="noreferrer noopener"
                 >
                   Safari
                 </a>{" "}
@@ -399,7 +351,7 @@ function GuideContent({ slug }: { slug: string }) {
                   href="https://support.mozilla.org/en-US/kb/cookies-information-websites-store-on-your-computer"
                   className="underline"
                   target="_blank"
-                  rel="noopener"
+                  rel="noreferrer noopener"
                 >
                   Firefox
                 </a>{" "}
@@ -408,7 +360,7 @@ function GuideContent({ slug }: { slug: string }) {
                   href="https://help.opera.com/en/latest/web-preferences/#cookies"
                   className="underline"
                   target="_blank"
-                  rel="noopener"
+                  rel="noreferrer noopener"
                 >
                   Opera
                 </a>{" "}
@@ -417,7 +369,7 @@ function GuideContent({ slug }: { slug: string }) {
                   href="https://support.microsoft.com/en-US/gp/cookies"
                   className="underline"
                   target="_blank"
-                  rel="noopener"
+                  rel="noreferrer noopener"
                 >
                   IE
                 </a>
@@ -464,6 +416,7 @@ export default async function GuidePage({ params }: { params: Promise<Params> })
     <>
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD needs a raw script tag; safeJsonLdStringify escapes angle brackets and ampersands so a script-tag breakout is impossible
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(jsonLd) }}
       />
       <div className="min-h-screen bg-muted/30 dark:bg-background">

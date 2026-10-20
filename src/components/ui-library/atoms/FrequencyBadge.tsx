@@ -1,5 +1,5 @@
-import React from "react";
 import { cn } from "@/lib/utils";
+import type React from "react";
 
 interface FrequencyBadgeProps {
   count: number;
@@ -12,12 +12,7 @@ interface FrequencyBadgeProps {
  * FrequencyBadge - Displays a count with color-coded badge
  * Color provides semantic meaning for different count ranges
  */
-export const FrequencyBadge: React.FC<FrequencyBadgeProps> = ({
-  count,
-  label = "items",
-  size = "md",
-  className,
-}) => {
+export const FrequencyBadge: React.FC<FrequencyBadgeProps> = ({ count, label = "items", size = "md", className }) => {
   const sizeMap = {
     sm: "text-xs text-[0.75rem]",
     md: "text-sm text-[0.875rem]",
@@ -31,14 +26,7 @@ export const FrequencyBadge: React.FC<FrequencyBadgeProps> = ({
   };
 
   return (
-    <span
-      className={cn(
-        "px-2 py-1 rounded text-[0.7rem] font-medium",
-        sizeMap[size],
-        getBadgeClass(),
-        className
-      )}
-    >
+    <span className={cn("px-2 py-1 rounded text-[0.7rem] font-medium", sizeMap[size], getBadgeClass(), className)}>
       {count} {label}
     </span>
   );

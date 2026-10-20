@@ -1,15 +1,23 @@
 "use server";
 
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
-import type { Session } from "@supabase/supabase-js";
-import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
-import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { trackEvent } from "@/app/actions/analytics";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import {
+  type AuthErrorCode,
+  type ServerActionResult,
+  getAuthErrorCode,
+  sanitizeErrorMessage,
+  serverActionError,
+  successVoid,
+  toAuthErrorCode,
+} from "@/lib/errors";
 import { createActionLogger } from "@/lib/structured-logger";
-import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
+import type { Session } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
 
 // Import AuthUser for internal use (don't re-export from server action files)
 import type { AuthUser } from "@/lib/data/auth";
@@ -18,28 +26,31 @@ import type { AuthUser } from "@/lib/data/auth";
 // Validation Schemas
 // ============================================================================
 
-const emailSchema = z
-  .string()
-  .min(1, "Email is required")
-  .email("Invalid email format")
-  .max(254, "Email too long");
+/**
+ * Validation messages are codes for the same reason auth failures are.
+ *
+ * Every one of these was an English sentence handed to the browser and rendered
+ * verbatim, so "Password must be at least 8 characters" appeared in all 21
+ * locales. `weakPassword` is deliberately the *client-facing* message rather
+ * than a field-level one: telling a reader their new password is too short
+ * before they have finished choosing it is worse copy than the same fact told
+ * once, on submit.
+ */
+const emailSchema = z.string().min(1, "fieldRequired").email("invalidEmail").max(254, "fieldTooLong");
 
-const passwordSchema = z
-  .string()
-  .min(8, "Password must be at least 8 characters")
-  .max(128, "Password too long");
+const passwordSchema = z.string().min(8, "weakPassword").max(128, "fieldTooLong");
 
 const signInSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1, "Password is required").max(128, "Password too long"),
+  password: z.string().min(1, "fieldRequired").max(128, "fieldTooLong"),
 });
 
 const signUpSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
-  firstName: z.string().max(100, "First name too long").optional().nullable(),
-  lastName: z.string().max(100, "Last name too long").optional().nullable(),
-  name: z.string().max(200, "Name too long").optional().nullable(),
+  firstName: z.string().max(100, "fieldTooLong").optional().nullable(),
+  lastName: z.string().max(100, "fieldTooLong").optional().nullable(),
+  name: z.string().max(200, "fieldTooLong").optional().nullable(),
 });
 
 const updatePasswordSchema = z.object({
@@ -60,7 +71,7 @@ function isFullUrl(url: string): boolean {
  */
 async function resolveAvatarUrl(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  avatarUrl: string | null
+  avatarUrl: string | null,
 ): Promise<string | null> {
   if (!avatarUrl || avatarUrl.trim() === "") return null;
 
@@ -124,16 +135,12 @@ export async function getUser(): Promise<AuthUser | null> {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select(
-          "id,first_name,second_name,nickname,avatar_url,email,search_radius_km,onboarding_completed"
-        )
+        .select("id,first_name,second_name,nickname,avatar_url,email,search_radius_km,onboarding_completed")
         .eq("id", user.id)
         .single();
 
       // Resolve avatar URL to public URL if needed
-      const resolvedAvatarUrl = profile?.avatar_url
-        ? await resolveAvatarUrl(supabase, profile.avatar_url)
-        : null;
+      const resolvedAvatarUrl = profile?.avatar_url ? await resolveAvatarUrl(supabase, profile.avatar_url) : null;
 
       return {
         id: user.id,
@@ -175,10 +182,21 @@ export async function checkUserIsAdmin(): Promise<boolean> {
 }
 
 /**
- * Sign in with email and password
+ * The result of an auth action.
+ *
+ * `error` is an `AuthErrorCode`, not a message — it is resolved through the
+ * catalogue on the client. It keeps the name `error` because it is a failure
+ * slot and every caller already reads it; what changed is its domain, and the
+ * tests that asserted "an error is defined" now assert *which* error.
  */
-export type AuthActionResult = ServerActionResult<void> & { error?: any };
-export type OAuthUrlResult = { success?: boolean; data?: { url: string }; error?: string | null; url?: string | null };
+export type AuthActionResult = Omit<ServerActionResult<void>, "error"> & { error?: AuthErrorCode };
+export type OAuthUrlResult = {
+  success?: boolean;
+  data?: { url: string };
+  /** Resolved through `authErrorKey()` on the client. */
+  code?: AuthErrorCode;
+  url?: string | null;
+};
 
 /**
  * Sign in with email and password
@@ -194,11 +212,9 @@ export async function signInWithPassword(formData: FormData): Promise<AuthAction
 
   const validation = signInSchema.safeParse(rawData);
   if (!validation.success) {
-    const firstError = validation.error.issues[0];
-    const errMsg = firstError?.message || "Invalid input";
-    logger.warn("Validation failed", { error: errMsg });
-    const errObj = serverActionError(errMsg, "VALIDATION_ERROR");
-    return { ...errObj, error: errMsg };
+    const code = toAuthErrorCode(validation.error.issues[0]?.message);
+    logger.warn("Validation failed", { code });
+    return { ...serverActionError(code, "VALIDATION_ERROR"), error: code };
   }
 
   const { email, password } = validation.data;
@@ -210,9 +226,12 @@ export async function signInWithPassword(formData: FormData): Promise<AuthAction
   });
 
   if (error) {
-    logger.warn("Sign in failed", { error: error.message });
-    const errObj = serverActionError(error.message, "AUTH_ERROR");
-    return { ...errObj, error: error.message };
+    // The raw message goes to the log and nowhere else. It is Supabase's
+    // English, it can change in a patch release, and it has no business being
+    // the last thing between a reader and their own password.
+    const code = getAuthErrorCode(error);
+    logger.warn("Sign in failed", { code, detail: sanitizeErrorMessage(error.message) });
+    return { ...serverActionError(code, "AUTH_ERROR"), error: code };
   }
 
   revalidatePath("/", "layout");
@@ -222,7 +241,7 @@ export async function signInWithPassword(formData: FormData): Promise<AuthAction
   await trackEvent("User Login", { method: "password" });
 
   logger.info("User signed in successfully");
-  return successVoid();
+  return successVoid() as AuthActionResult;
 }
 
 /**
@@ -242,11 +261,9 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
 
   const validation = signUpSchema.safeParse(rawData);
   if (!validation.success) {
-    const firstError = validation.error.issues[0];
-    const errMsg = firstError?.message || "Invalid input";
-    logger.warn("Validation failed", { error: errMsg });
-    const errObj = serverActionError(errMsg, "VALIDATION_ERROR");
-    return { ...errObj, error: errMsg };
+    const code = toAuthErrorCode(validation.error.issues[0]?.message);
+    logger.warn("Validation failed", { code });
+    return { ...serverActionError(code, "VALIDATION_ERROR"), error: code };
   }
 
   const { email, password, firstName, lastName, name } = validation.data;
@@ -268,9 +285,9 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
   });
 
   if (error) {
-    logger.warn("Sign up failed", { error: error.message });
-    const errObj = serverActionError(error.message, "AUTH_ERROR");
-    return { ...errObj, error: error.message };
+    const code = getAuthErrorCode(error);
+    logger.warn("Sign up failed", { code, detail: sanitizeErrorMessage(error.message) });
+    return { ...serverActionError(code, "AUTH_ERROR"), error: code };
   }
 
   revalidatePath("/", "layout");
@@ -281,7 +298,7 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
   await trackEvent("User Signup", { method: "password" });
 
   logger.info("User signed up successfully");
-  return successVoid();
+  return successVoid() as AuthActionResult;
 }
 
 /**
@@ -302,10 +319,8 @@ export async function resetPassword(email: string): Promise<AuthActionResult> {
   // Validate email
   const validation = emailSchema.safeParse(email);
   if (!validation.success) {
-    const firstError = validation.error.issues[0];
-    const errMsg = firstError?.message || "Invalid email";
-    const errObj = serverActionError(errMsg, "VALIDATION_ERROR");
-    return { ...errObj, error: errMsg };
+    const code = toAuthErrorCode(validation.error.issues[0]?.message);
+    return { ...serverActionError(code, "VALIDATION_ERROR"), error: code };
   }
 
   const supabase = await createClient();
@@ -315,11 +330,11 @@ export async function resetPassword(email: string): Promise<AuthActionResult> {
   });
 
   if (error) {
-    const errObj = serverActionError(error.message, "AUTH_ERROR");
-    return { ...errObj, error: error.message };
+    const code = getAuthErrorCode(error);
+    return { ...serverActionError(code, "AUTH_ERROR"), error: code };
   }
 
-  return successVoid();
+  return successVoid() as AuthActionResult;
 }
 
 /**
@@ -333,10 +348,8 @@ export async function updatePassword(formData: FormData): Promise<AuthActionResu
 
   const validation = updatePasswordSchema.safeParse(rawData);
   if (!validation.success) {
-    const firstError = validation.error.issues[0];
-    const errMsg = firstError?.message || "Invalid password";
-    const errObj = serverActionError(errMsg, "VALIDATION_ERROR");
-    return { ...errObj, error: errMsg };
+    const code = toAuthErrorCode(validation.error.issues[0]?.message);
+    return { ...serverActionError(code, "VALIDATION_ERROR"), error: code };
   }
 
   const supabase = await createClient();
@@ -346,19 +359,18 @@ export async function updatePassword(formData: FormData): Promise<AuthActionResu
   });
 
   if (error) {
-    const errObj = serverActionError(error.message, "AUTH_ERROR");
-    return { ...errObj, error: error.message };
+    const code = getAuthErrorCode(error);
+    return { ...serverActionError(code, "AUTH_ERROR"), error: code };
   }
 
-  return successVoid();
+  return successVoid() as AuthActionResult;
 }
 
 /**
  * Get OAuth sign in URL
  */
-export async function getOAuthSignInUrl(
-  provider: "google" | "github" | "facebook" | "apple"
-): Promise<OAuthUrlResult> {
+export async function getOAuthSignInUrl(provider: "google" | "github" | "facebook" | "apple"): Promise<OAuthUrlResult> {
+  const logger = await createActionLogger("getOAuthSignInUrl");
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -372,14 +384,12 @@ export async function getOAuthSignInUrl(
   });
 
   if (error) {
-    // Provide user-friendly error for missing OAuth configuration
-    const errMsg =
-      error.message.includes("missing OAuth secret") ||
-      error.message.includes("Unsupported provider")
-        ? `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not configured yet. Please use email/password or magic link.`
-        : error.message;
-
-    return { url: null, error: errMsg };
+    // The provider name is interpolated by the caller, from its own translated
+    // label, not here: "Google sign-in is not configured yet. Please use
+    // email/password or magic link." was an English template built on the server
+    // and sent to the client, in every locale.
+    logger.warn("OAuth URL unavailable", { provider, detail: sanitizeErrorMessage(error.message) });
+    return { url: null, code: getAuthErrorCode(error) };
   }
 
   return { url: data.url };

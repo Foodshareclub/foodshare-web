@@ -1,4 +1,4 @@
-import path from "path";
+import path from "bun:path";
 import * as dotenv from "dotenv";
 
 // Load environment variables
@@ -13,7 +13,7 @@ function debugEnv() {
   console.log("--- AWS Credentials Debug ---");
 
   if (keyId) {
-    console.log(`AWS_ACCESS_KEY_ID:`);
+    console.log("AWS_ACCESS_KEY_ID:");
     console.log(`  Length: ${keyId.length}`);
     console.log(`  Starts with: '${keyId.slice(0, 4)}'`);
     console.log(`  Ends with: '${keyId.slice(-4)}'`);
@@ -23,7 +23,7 @@ function debugEnv() {
   }
 
   if (secret) {
-    console.log(`AWS_SECRET_ACCESS_KEY:`);
+    console.log("AWS_SECRET_ACCESS_KEY:");
     console.log(`  Length: ${secret.length}`);
     console.log(`  Starts with: '${secret.slice(0, 2)}...'`);
     console.log(`  Ends with: '...${secret.slice(-2)}'`);

@@ -8,7 +8,7 @@
 
 "use client";
 
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useTransition } from "react";
 
 // ============================================================================
@@ -85,7 +85,7 @@ export function useUrlFilters<T extends Record<string, unknown>>(
      * Custom parsers for specific keys
      */
     parsers?: Partial<Record<keyof T, (value: string) => T[keyof T]>>;
-  }
+  },
 ) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -111,7 +111,7 @@ export function useUrlFilters<T extends Record<string, unknown>>(
           // Default parsing based on type
           const defaultValue = defaults[key];
           if (typeof defaultValue === "number") {
-            result[key] = parseInt(urlValue, 10) as T[keyof T];
+            result[key] = Number.parseInt(urlValue, 10) as T[keyof T];
           } else if (typeof defaultValue === "boolean") {
             result[key] = (urlValue === "true") as T[keyof T];
           } else {
@@ -152,7 +152,7 @@ export function useUrlFilters<T extends Record<string, unknown>>(
         router.push(`${pathname}?${params.toString()}`, { scroll: false });
       });
     },
-    [searchParams, pathname, router, defaults, excludeFromUrl, serializers]
+    [searchParams, pathname, router, defaults, excludeFromUrl, serializers],
   );
 
   // Reset all filters to defaults
@@ -167,7 +167,7 @@ export function useUrlFilters<T extends Record<string, unknown>>(
     <K extends keyof T>(key: K, value: T[K]) => {
       setFilters({ [key]: value } as unknown as Partial<T>);
     },
-    [setFilters]
+    [setFilters],
   );
 
   return {
@@ -197,8 +197,8 @@ export function useAdminUrlFilters() {
   return useUrlFilters(defaultAdminFilters, {
     parsers: {
       flaggedOnly: (v) => v === "true",
-      page: (v) => parseInt(v, 10),
-      limit: (v) => parseInt(v, 10),
+      page: (v) => Number.parseInt(v, 10),
+      limit: (v) => Number.parseInt(v, 10),
     },
   });
 }
@@ -214,18 +214,13 @@ export function useAdminUrlFilters() {
 export function createFilteredUrl<T extends Record<string, unknown>>(
   basePath: string,
   filters: Partial<T>,
-  defaults?: T
+  defaults?: T,
 ): string {
   const params = new URLSearchParams();
 
   for (const [key, value] of Object.entries(filters)) {
     // Skip null, undefined, empty, and default values
-    if (
-      value === null ||
-      value === undefined ||
-      value === "" ||
-      (defaults && value === defaults[key as keyof T])
-    ) {
+    if (value === null || value === undefined || value === "" || (defaults && value === defaults[key as keyof T])) {
       continue;
     }
     params.set(key, String(value));

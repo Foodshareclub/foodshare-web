@@ -7,13 +7,13 @@ import { logCacheOperation } from "./cache-keys";
  * @module lib/data/post-activity
  */
 
-import { createClient, createCachedClient } from "@/lib/supabase/server";
+import { createCachedClient, createClient } from "@/lib/supabase/server";
 import type {
+  PostActivityDailyStats,
   PostActivityLog,
   PostActivityTimelineItem,
-  UserActivitySummary,
-  PostActivityDailyStats,
   PostActivityType,
+  UserActivitySummary,
 } from "@/types/post-activity.types";
 
 // ============================================================================
@@ -29,7 +29,7 @@ export async function getPostActivityTimeline(
     limit?: number;
     offset?: number;
     activityTypes?: PostActivityType[];
-  } = {}
+  } = {},
 ): Promise<PostActivityTimelineItem[]> {
   const { limit = 50, offset = 0, activityTypes } = options;
   const cacheKey = `timeline-${postId}-${limit}-${offset}-${activityTypes?.join(",") || "all"}`;
@@ -60,10 +60,7 @@ export async function getPostActivityTimeline(
 /**
  * Get recent activities for a post (raw logs)
  */
-export async function getRecentPostActivities(
-  postId: number,
-  limit: number = 20
-): Promise<PostActivityLog[]> {
+export async function getRecentPostActivities(postId: number, limit = 20): Promise<PostActivityLog[]> {
   const cacheKey = `recent-${postId}-${limit}`;
 
   logCacheOperation("miss", cacheKey);
@@ -92,10 +89,7 @@ export async function getRecentPostActivities(
 /**
  * Get activity summary for a user
  */
-export async function getUserActivitySummary(
-  userId: string,
-  days: number = 30
-): Promise<UserActivitySummary[]> {
+export async function getUserActivitySummary(userId: string, days = 30): Promise<UserActivitySummary[]> {
   const cacheKey = `user-summary-${userId}-${days}`;
 
   logCacheOperation("miss", cacheKey);
@@ -123,9 +117,7 @@ export async function getUserActivitySummary(
  * Get activity counts by type for a post
  * Uses optimized RPC for single-query aggregation
  */
-export async function getPostActivityCounts(
-  postId: number
-): Promise<Partial<Record<PostActivityType, number>>> {
+export async function getPostActivityCounts(postId: number): Promise<Partial<Record<PostActivityType, number>>> {
   const cacheKey = `counts-${postId}`;
 
   logCacheOperation("miss", cacheKey);
@@ -164,7 +156,7 @@ export async function getDailyActivityStats(
     endDate?: string;
     postType?: string;
     limit?: number;
-  } = {}
+  } = {},
 ): Promise<PostActivityDailyStats[]> {
   const { startDate, endDate, postType, limit = 30 } = options;
   const cacheKey = `daily-stats-${startDate || "none"}-${endDate || "none"}-${postType || "all"}-${limit}`;
@@ -172,11 +164,7 @@ export async function getDailyActivityStats(
   logCacheOperation("miss", cacheKey);
   const supabase = createCachedClient();
 
-  let query = supabase
-    .from("post_activity_daily_stats")
-    .select("*")
-    .order("date", { ascending: false })
-    .limit(limit);
+  let query = supabase.from("post_activity_daily_stats").select("*").order("date", { ascending: false }).limit(limit);
 
   if (startDate) {
     query = query.gte("date", startDate);
@@ -216,7 +204,7 @@ export async function getActivityLogs(
     endDate?: string;
     limit?: number;
     offset?: number;
-  } = {}
+  } = {},
 ): Promise<PostActivityLog[]> {
   const { postId, actorId, activityTypes, startDate, endDate, limit = 50, offset = 0 } = options;
   const supabase = await createClient();
@@ -275,7 +263,7 @@ export async function getModerationActivityLogs(
     postId?: number;
     limit?: number;
     offset?: number;
-  } = {}
+  } = {},
 ): Promise<PostActivityLog[]> {
   return getActivityLogs({
     ...options,
@@ -303,7 +291,7 @@ export async function getArrangementActivityLogs(
     postId?: number;
     limit?: number;
     offset?: number;
-  } = {}
+  } = {},
 ): Promise<PostActivityLog[]> {
   return getActivityLogs({
     ...options,
@@ -339,7 +327,10 @@ export async function getActivityDashboardStats(): Promise<ActivityDashboardStat
     // Single RPC replaces 3 COUNT queries
     supabase.rpc("get_activity_dashboard_stats"),
     // Still need separate query for top activity types
-    supabase.from("post_activity_logs").select("activity_type").gte("created_at", monthStart),
+    supabase
+      .from("post_activity_logs")
+      .select("activity_type")
+      .gte("created_at", monthStart),
   ]);
 
   // Aggregate activity types

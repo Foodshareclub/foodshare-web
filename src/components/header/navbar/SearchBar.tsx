@@ -16,17 +16,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CATEGORIES } from "@/constants/categories";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
-import { cn } from "@/lib/utils";
 import {
   buildListingSearchUrl,
   parseSearchLocation,
   parseSearchRadius,
   supportsNearbySearch,
 } from "@/lib/listing-search";
+import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/zustand/useUIStore";
 import { SearchIcon } from "@/utils/icons";
-import { useTranslations } from "next-intl";
 import { MapPin, SlidersHorizontal } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import type React from "react";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
@@ -51,7 +51,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
     () => () => {
       locationAttempt.current += 1;
     },
-    []
+    [],
   );
 
   // Selected values for display
@@ -62,8 +62,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
   const userLocation = useUIStore((state) => state.userLocation);
   const setUserLocation = useUIStore((state) => state.setUserLocation);
   const [selectedCategory, setSelectedCategory] = useState(defaultCategory);
-  const selectedDistance =
-    selectedRadius === null ? t("search_filters.any_distance") : `${selectedRadius / 1000} km`;
+  const selectedDistance = selectedRadius === null ? t("search_filters.any_distance") : `${selectedRadius / 1000} km`;
   const canSearchNearby = supportsNearbySearch(selectedCategory);
   const categoryDefinition = CATEGORIES.find((category) => category.id === selectedCategory);
   const categoryLabel = categoryDefinition
@@ -91,22 +90,43 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
 
   const appliedTerm = searchParams.get("key_word") || "";
   const appliedCategory =
-    searchParams.get("type") === "all"
-      ? "all"
-      : defaultCategory === "business"
-        ? "organisation"
-        : defaultCategory;
+    searchParams.get("type") === "all" ? "all" : defaultCategory === "business" ? "organisation" : defaultCategory;
   const appliedRadius = searchParams.get("radius");
   const appliedDistance = searchParams.get("distance");
-  useEffect(() => {
-    locationAttempt.current += 1;
+
+  // Sync search state from URL params — adjust state during render when
+  // params change (React: "storing information from previous renders").
+  // Null sentinel forces the initial population from the URL on mount.
+  const [prevApplied, setPrevApplied] = useState<{
+    term: string;
+    category: string;
+    radius: string | null;
+    distance: string | null;
+  } | null>(null);
+  if (
+    prevApplied === null ||
+    appliedTerm !== prevApplied.term ||
+    appliedCategory !== prevApplied.category ||
+    appliedRadius !== prevApplied.radius ||
+    appliedDistance !== prevApplied.distance
+  ) {
+    setPrevApplied({
+      term: appliedTerm,
+      category: appliedCategory,
+      radius: appliedRadius,
+      distance: appliedDistance,
+    });
     setIsLocating(false);
     setSearchTerm(appliedTerm);
     setSelectedCategory(appliedCategory);
-    setSelectedRadius(
-      appliedDistance === "any" || !appliedRadius ? null : parseSearchRadius(appliedRadius)
-    );
-  }, [appliedTerm, appliedCategory, appliedRadius, appliedDistance, setSearchTerm]);
+    setSelectedRadius(appliedDistance === "any" || !appliedRadius ? null : parseSearchRadius(appliedRadius));
+  }
+
+  // Invalidate in-flight geolocation when URL params change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the applied* values are the trigger — the body only bumps the attempt counter so a pending geolocation lookup is discarded when the URL changes
+  useEffect(() => {
+    locationAttempt.current += 1;
+  }, [appliedTerm, appliedCategory, appliedRadius, appliedDistance]);
 
   // Keyboard navigation state
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -135,8 +155,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
     const searchValue = (term ?? searchTerm).trim();
     setLocationError(false);
     let location = parseSearchLocation(searchParams);
-    if (!location && userLocation)
-      location = { lat: userLocation.latitude, lng: userLocation.longitude };
+    if (!location && userLocation) location = { lat: userLocation.latitude, lng: userLocation.longitude };
 
     if (selectedRadius !== null && canSearchNearby && !location) {
       setIsLocating(true);
@@ -155,9 +174,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
         if (attempt !== locationAttempt.current) return;
         setLocationError(true);
         setActiveSection("distance");
-        containerRef.current
-          ?.querySelector<HTMLButtonElement>('[data-search-field="distance"]')
-          ?.focus();
+        containerRef.current?.querySelector<HTMLButtonElement>('[data-search-field="distance"]')?.focus();
         return;
       } finally {
         if (attempt === locationAttempt.current) setIsLocating(false);
@@ -171,7 +188,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           term: searchValue,
           radius: selectedRadius,
           location,
-        })
+        }),
       );
     });
     setActiveSection(null);
@@ -224,12 +241,8 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
       >
         <SearchIcon className="size-5 shrink-0 text-primary" aria-hidden="true" />
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="truncate text-sm font-semibold">
-            {searchTerm || t("msgsearchheader")}
-          </span>
-          <span className="truncate text-xs font-normal text-muted-foreground">
-            {t("what_are_you_looking_for")}
-          </span>
+          <span className="truncate text-sm font-semibold">{searchTerm || t("msgsearchheader")}</span>
+          <span className="truncate text-xs font-normal text-muted-foreground">{t("what_are_you_looking_for")}</span>
         </span>
       </Button>
     );
@@ -243,18 +256,16 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
         if (event.key !== "Escape" || !activeSection) return;
         event.preventDefault();
         event.stopPropagation();
-        containerRef.current
-          ?.querySelector<HTMLButtonElement>(`[data-search-field="${activeSection}"]`)
-          ?.focus();
+        containerRef.current?.querySelector<HTMLButtonElement>(`[data-search-field="${activeSection}"]`)?.focus();
         setActiveSection(null);
         setSelectedIndex(-1);
       }}
     >
       <div
         className={cn(
-          "relative flex items-center overflow-hidden rounded-full border bg-background shadow-sm",
-          "transition-colors motion-reduce:transition-none",
-          isHovered || activeSection ? "border-foreground/40" : "border-border"
+          "relative flex items-center overflow-hidden rounded-full border bg-background/80 backdrop-blur-xl backdrop-saturate-150 shadow-[0_2px_8px_rgba(0,0,0,0.04)]",
+          "transition-all duration-300 motion-reduce:transition-none",
+          isHovered || activeSection ? "border-foreground/30 shadow-[0_4px_16px_rgba(0,0,0,0.08)]" : "border-border/50",
         )}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -268,7 +279,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           aria-expanded={activeSection === "what"}
           className={cn(
             "flex h-14 min-w-0 flex-[1.5] flex-col items-start justify-center gap-0.5 rounded-none ps-4 pe-2 text-start sm:h-16 sm:px-5",
-            activeSection === "what" && "bg-muted"
+            activeSection === "what" && "bg-muted",
           )}
           onClick={() => setActiveSection(activeSection === "what" ? null : "what")}
         >
@@ -294,7 +305,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
             aria-expanded={activeSection === "distance"}
             className={cn(
               "flex h-14 w-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-none px-2 text-start sm:h-16 sm:w-auto sm:min-w-0 sm:flex-1 sm:items-start sm:px-5",
-              activeSection === "distance" && "bg-muted"
+              activeSection === "distance" && "bg-muted",
             )}
             onClick={() => setActiveSection(activeSection === "distance" ? null : "distance")}
           >
@@ -318,7 +329,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           aria-label={`${t("category")}: ${categoryLabel}`}
           className={cn(
             "flex h-14 w-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-none px-2 text-start sm:h-16 sm:w-auto sm:min-w-0 sm:flex-1 sm:items-start sm:px-5",
-            activeSection === "category" && "bg-muted"
+            activeSection === "category" && "bg-muted",
           )}
           onClick={() => setActiveSection(activeSection === "category" ? null : "category")}
         >
@@ -348,10 +359,10 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           id={`${searchId}-what`}
           aria-labelledby={`${searchId}-what-trigger`}
           className={cn(
-            "absolute top-[calc(100%+8px)] left-0 right-0 z-10",
+            "absolute top-[calc(100%+8px)] inset-x-0 z-10",
             "bg-popover text-popover-foreground rounded-2xl border border-border p-6",
             "shadow-lg",
-            "max-h-[min(500px,55dvh)] overflow-y-auto overscroll-contain scrollbar-thin"
+            "max-h-[min(500px,55dvh)] overflow-y-auto overscroll-contain scrollbar-thin",
           )}
         >
           {/* Search Input */}
@@ -367,7 +378,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
                 "h-12 ps-12 pe-4 rounded-xl border border-border",
                 "text-base",
                 "hover:border-foreground",
-                "focus:border-primary focus:ring-1 focus:ring-primary"
+                "focus:border-primary focus:ring-1 focus:ring-primary",
               )}
               autoFocus
             />
@@ -386,19 +397,10 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
             <div>
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-semibold text-muted-foreground">
-                  {searchTerm
-                    ? "Suggestions"
-                    : recentSearches.length > 0
-                      ? "Recent searches"
-                      : "Popular searches"}
+                  {searchTerm ? "Suggestions" : recentSearches.length > 0 ? "Recent searches" : "Popular searches"}
                 </p>
                 {!searchTerm && recentSearches.length > 0 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={clearHistory}
-                    className="h-11 text-sm"
-                  >
+                  <Button type="button" variant="ghost" onClick={clearHistory} className="h-11 text-sm">
                     {t("clear_all")}
                   </Button>
                 )}
@@ -410,9 +412,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
                     className={cn(
                       "flex items-center justify-between gap-3 px-3 py-3 rounded-lg cursor-pointer",
                       "transition-all duration-200 ease-in-out",
-                      selectedIndex === index
-                        ? "bg-primary/10 border border-primary"
-                        : "bg-transparent hover:bg-muted"
+                      selectedIndex === index ? "bg-primary/10 border border-primary" : "bg-transparent hover:bg-muted",
                     )}
                     onMouseEnter={() => setSelectedIndex(index)}
                   >
@@ -481,12 +481,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
                           stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </Button>
                     )}
@@ -499,12 +494,8 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           {/* No results */}
           {searchTerm && !isLoading && suggestions.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-sm text-muted-foreground mb-2">
-                No results found for &quot;{searchTerm}&quot;
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Try adjusting your search or browse all categories
-              </p>
+              <p className="text-sm text-muted-foreground mb-2">No results found for &quot;{searchTerm}&quot;</p>
+              <p className="text-xs text-muted-foreground">Try adjusting your search or browse all categories</p>
             </div>
           )}
         </section>
@@ -516,9 +507,9 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           id={`${searchId}-distance`}
           aria-labelledby={`${searchId}-distance-trigger`}
           className={cn(
-            "absolute top-[calc(100%+8px)] left-0 right-0 z-10",
+            "absolute top-[calc(100%+8px)] inset-x-0 z-10",
             "bg-popover text-popover-foreground rounded-2xl border border-border p-6",
-            "shadow-lg max-h-[55dvh] overflow-y-auto overscroll-contain scrollbar-thin"
+            "shadow-lg max-h-[55dvh] overflow-y-auto overscroll-contain scrollbar-thin",
           )}
         >
           <div className="flex justify-between items-center mb-4">
@@ -539,10 +530,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
 
           <p className="text-sm text-muted-foreground mb-4">{t("select_distance_range")}</p>
           {locationError && (
-            <p
-              role="alert"
-              className="mb-4 rounded-xl border border-border bg-muted p-3 text-sm text-foreground"
-            >
+            <p role="alert" className="mb-4 rounded-xl border border-border bg-muted p-3 text-sm text-foreground">
               {t("search_filters.location_error")}
             </p>
           )}
@@ -567,7 +555,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
                   selectedRadius === option.value
                     ? "bg-primary/10 border-primary"
                     : "bg-transparent border-transparent",
-                  "hover:bg-muted hover:border-border"
+                  "hover:bg-muted hover:border-border",
                 )}
                 onClick={() => {
                   setSelectedRadius(option.value);
@@ -588,10 +576,10 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           id={`${searchId}-category`}
           aria-labelledby={`${searchId}-category-trigger`}
           className={cn(
-            "absolute top-[calc(100%+8px)] left-0 right-0 z-10",
+            "absolute top-[calc(100%+8px)] inset-x-0 z-10",
             "bg-popover text-popover-foreground rounded-2xl border border-border p-4",
             "shadow-lg",
-            "max-h-[min(400px,55dvh)] overflow-y-auto overscroll-contain scrollbar-thin"
+            "max-h-[min(400px,55dvh)] overflow-y-auto overscroll-contain scrollbar-thin",
           )}
         >
           <p className="text-sm font-semibold text-foreground mb-3">{t("select_a_category")}</p>
@@ -602,13 +590,13 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
                 label: t.has("forum_all_categories") ? t("forum_all_categories") : "All categories",
                 icon: SearchIcon,
               },
-              ...CATEGORIES.filter(
-                (category) => category.id !== "forum" && category.id !== "foodlytics"
-              ).map((category) => ({
-                id: category.id,
-                label: t(category.labelKey),
-                icon: category.icon,
-              })),
+              ...CATEGORIES.filter((category) => category.id !== "forum" && category.id !== "foodlytics").map(
+                (category) => ({
+                  id: category.id,
+                  label: t(category.labelKey),
+                  icon: category.icon,
+                }),
+              ),
             ].map((category) => (
               <Button
                 type="button"
@@ -619,7 +607,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
                   "h-12 justify-start gap-3 px-3 rounded-lg",
                   "transition-all duration-200 ease-in-out",
                   selectedCategory === category.id ? "bg-primary/10" : "bg-transparent",
-                  "hover:bg-muted"
+                  "hover:bg-muted",
                 )}
                 onClick={() => {
                   setSelectedCategory(category.id);

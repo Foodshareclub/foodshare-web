@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Accessibility", () => {
   test("should have proper page title on all main pages", async ({ page }) => {
@@ -138,9 +138,7 @@ test.describe("Dark Mode", () => {
 
     // Look for theme toggle
     const themeToggle = page
-      .locator(
-        '[class*="theme"], [aria-label*="theme"], [aria-label*="dark"], [aria-label*="mode"]'
-      )
+      .locator('[class*="theme"], [aria-label*="theme"], [aria-label*="dark"], [aria-label*="mode"]')
       .first();
     const hasToggle = await themeToggle.isVisible().catch(() => false);
 

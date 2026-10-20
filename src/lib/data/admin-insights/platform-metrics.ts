@@ -3,8 +3,29 @@
  * Retrieves and calculates platform-wide metrics from the database
  */
 
-import type { PlatformMetrics, ChurnData, EmailCampaignData } from "./types";
 import { createClient } from "@/lib/supabase/server";
+import type { ChurnData, EmailCampaignData, PlatformMetrics } from "./types";
+
+interface ProfileActivityRow {
+  id: string;
+  created_time: string | null;
+  last_seen_at: string | null;
+}
+
+interface PostMetricRow {
+  id: number;
+  created_at: string | null;
+  is_active: boolean | null;
+  post_type: string | null;
+  post_views: number | null;
+}
+
+interface EmailLogRow {
+  id: number;
+  created_at: string | null;
+  status: string | null;
+  provider_used: string | null;
+}
 
 /**
  * Get platform metrics from database
@@ -22,37 +43,36 @@ export async function getPlatformMetrics(): Promise<PlatformMetrics> {
     supabase.from("messages").select("*", { count: "exact", head: true }),
   ]);
 
-  const activeUsers7d =
-    profiles?.filter((u: any) => u.last_seen_at && new Date(u.last_seen_at) > last7Days).length ??
-    0;
+  const profileRows = (profiles ?? []) as ProfileActivityRow[];
+  const postRows = (posts ?? []) as PostMetricRow[];
 
-  const activeUsers30d =
-    profiles?.filter((u: any) => u.last_seen_at && new Date(u.last_seen_at) > last30Days).length ??
-    0;
+  const activeUsers7d = profileRows.filter((u) => u.last_seen_at && new Date(u.last_seen_at) > last7Days).length;
 
-  const newListings7d = posts?.filter((l: any) => new Date(l.created_at) > last7Days).length ?? 0;
+  const activeUsers30d = profileRows.filter((u) => u.last_seen_at && new Date(u.last_seen_at) > last30Days).length;
 
-  const newListings30d = posts?.filter((l: any) => new Date(l.created_at) > last30Days).length ?? 0;
+  const newListings7d = postRows.filter((l) => l.created_at && new Date(l.created_at) > last7Days).length;
 
-  const listingsByCategory = (posts ?? []).reduce((acc: Record<string, number>, l: any) => {
+  const newListings30d = postRows.filter((l) => l.created_at && new Date(l.created_at) > last30Days).length;
+
+  const listingsByCategory = postRows.reduce<Record<string, number>>((acc, l) => {
     const cat = l.post_type || "other";
     acc[cat] = (acc[cat] || 0) + 1;
     return acc;
   }, {});
 
-  const totalViews = (posts ?? []).reduce((sum: any, l: any) => sum + (l.post_views || 0), 0);
+  const totalViews = postRows.reduce((sum, l) => sum + (l.post_views || 0), 0);
 
   return {
-    totalUsers: profiles?.length ?? 0,
+    totalUsers: profileRows.length,
     activeUsers7d,
     activeUsers30d,
-    totalListings: posts?.length ?? 0,
-    activeListings: posts?.filter((l: any) => l.is_active).length ?? 0,
+    totalListings: postRows.length,
+    activeListings: postRows.filter((l) => l.is_active).length,
     newListings7d,
     newListings30d,
     totalMessages: messageCount ?? 0,
     listingsByCategory,
-    averageViews: posts?.length ? totalViews / posts.length : 0,
+    averageViews: postRows.length ? totalViews / postRows.length : 0,
   };
 }
 
@@ -67,9 +87,9 @@ export async function getChurnData(): Promise<ChurnData> {
   const now = new Date();
   const inactiveThreshold = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  const atRiskUsers =
-    profiles?.filter((u: any) => u.last_seen_at && new Date(u.last_seen_at) < inactiveThreshold)
-      .length ?? 0;
+  const profileRows = (profiles ?? []) as ProfileActivityRow[];
+
+  const atRiskUsers = profileRows.filter((u) => u.last_seen_at && new Date(u.last_seen_at) < inactiveThreshold).length;
 
   const totalUsers = profiles?.length ?? 0;
 
@@ -94,26 +114,29 @@ export async function getEmailCampaignData(): Promise<EmailCampaignData | null> 
 
   if (error) return null;
 
-  const successRate = emails?.length
-    ? (emails.filter((e: any) => e.status === "sent").length / emails.length) * 100
+  const emailRows = (emails ?? []) as EmailLogRow[];
+
+  const successRate = emailRows.length
+    ? (emailRows.filter((e) => e.status === "sent").length / emailRows.length) * 100
     : 100;
 
-  const sendTimes = (emails ?? []).reduce((acc: Record<number, number>, email: any) => {
+  const sendTimes = emailRows.reduce<Record<number, number>>((acc, email) => {
+    if (!email.created_at) return acc;
     const hour = new Date(email.created_at).getHours();
     acc[hour] = (acc[hour] || 0) + 1;
     return acc;
   }, {});
 
-  const bestSendTime = Object.entries(sendTimes).sort((a: any, b: any) => b[1] - a[1])[0]?.[0];
+  const bestSendTime = Object.entries(sendTimes).sort((a, b) => b[1] - a[1])[0]?.[0];
 
-  const providerStats = (emails ?? []).reduce((acc: Record<string, number>, e: any) => {
+  const providerStats = emailRows.reduce<Record<string, number>>((acc, e) => {
     const provider = e.provider_used || "unknown";
     acc[provider] = (acc[provider] || 0) + 1;
     return acc;
   }, {});
 
   return {
-    totalEmails: emails?.length ?? 0,
+    totalEmails: emailRows.length,
     successRate,
     bestSendTime: bestSendTime ? `${bestSendTime}:00` : "N/A",
     providerStats,

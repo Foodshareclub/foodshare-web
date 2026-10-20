@@ -1,4 +1,4 @@
-'use server';
+"use server";
 
 /**
  * Email Preferences Server Actions
@@ -26,9 +26,7 @@ export interface ActionResult {
 /**
  * Save email preferences for the current user
  */
-export async function saveEmailPreferences(
-  preferences: EmailPreferencesInput
-): Promise<ActionResult> {
+export async function saveEmailPreferences(preferences: EmailPreferencesInput): Promise<ActionResult> {
   const supabase = await createClient();
 
   const {

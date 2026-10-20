@@ -7,7 +7,7 @@
  * - Deferred notifications (quiet hours)
  */
 
-import { task, schedules } from "@trigger.dev/sdk/v3";
+import { schedules, task } from "@trigger.dev/sdk/v3";
 
 // ============================================================================
 // Types
@@ -34,6 +34,19 @@ export interface PushResult {
   sent: number;
   failed: number;
   errors?: string[];
+}
+
+interface PushSubscriptionRow {
+  token: string;
+  platform: string;
+}
+
+interface DeferredNotificationRow {
+  id: string;
+  user_id: string;
+  title: string;
+  body: string;
+  data?: Record<string, string>;
 }
 
 // ============================================================================
@@ -72,37 +85,33 @@ export const sendPushTask = task({
     }
 
     // If specific token requested, filter to that
-    const tokensToSend = payload.deviceToken
-      ? devices.filter((d: any) => d.token === payload.deviceToken)
-      : devices;
+    const deviceRows = (devices ?? []) as PushSubscriptionRow[];
+    const tokensToSend = payload.deviceToken ? deviceRows.filter((d) => d.token === payload.deviceToken) : deviceRows;
 
     // Send to each device via Edge Function
     const results = await Promise.allSettled(
-      tokensToSend.map(async (device: any) => {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-push-notification`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-            },
-            body: JSON.stringify({
-              token: device.token,
-              platform: device.platform,
-              title: payload.title,
-              body: payload.body,
-              data: payload.data,
-            }),
-          }
-        );
+      tokensToSend.map(async (device) => {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-push-notification`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({
+            token: device.token,
+            platform: device.platform,
+            title: payload.title,
+            body: payload.body,
+            data: payload.data,
+          }),
+        });
 
         if (!response.ok) {
           throw new Error(`Push failed: ${response.status}`);
         }
 
         return response.json();
-      })
+      }),
     );
 
     const sent = results.filter((r) => r.status === "fulfilled").length;
@@ -152,8 +161,8 @@ export const broadcastPushTask = task({
             title,
             body,
             data,
-          })
-        )
+          }),
+        ),
       );
 
       for (const result of results) {
@@ -218,8 +227,9 @@ export const sendDeferredNotificationsTask = schedules.task({
     }
 
     // Send each notification
+    const deferredRows = (deferred ?? []) as DeferredNotificationRow[];
     const results = await Promise.allSettled(
-      deferred.map(async (notification: any) => {
+      deferredRows.map(async (notification) => {
         // Send the notification
         await sendPushTask.triggerAndWait({
           userId: notification.user_id,
@@ -235,7 +245,7 @@ export const sendDeferredNotificationsTask = schedules.task({
           .eq("id", notification.id);
 
         return notification.id;
-      })
+      }),
     );
 
     const sent = results.filter((r) => r.status === "fulfilled").length;

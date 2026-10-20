@@ -58,6 +58,12 @@ export interface NewsletterStats {
   activeAutomations: number;
 }
 
+interface SentCampaignStats {
+  total_sent: number | null;
+  total_opened: number | null;
+  total_clicked: number | null;
+}
+
 // ============================================================================
 // Campaigns
 // ============================================================================
@@ -72,7 +78,7 @@ export async function getCampaigns(limit = 20): Promise<Campaign[]> {
       id, name, subject, preview_text, status, campaign_type,
       scheduled_at, sent_at, total_recipients, total_sent,
       total_opened, total_clicked, created_at
-    `
+    `,
     )
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -88,11 +94,7 @@ export async function getCampaigns(limit = 20): Promise<Campaign[]> {
 export async function getCampaignById(id: string): Promise<Campaign | null> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("newsletter_campaigns")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const { data, error } = await supabase.from("newsletter_campaigns").select("*").eq("id", id).single();
 
   if (error) {
     console.error("Failed to fetch campaign:", error.message);
@@ -123,11 +125,7 @@ export async function calculateSegmentCount(segmentId: string): Promise<number> 
   const supabase = await createClient();
 
   // Get segment criteria
-  const { data: segment } = await supabase
-    .from("audience_segments")
-    .select("criteria")
-    .eq("id", segmentId)
-    .single();
+  const { data: segment } = await supabase.from("audience_segments").select("criteria").eq("id", segmentId).single();
 
   if (!segment) return 0;
 
@@ -150,7 +148,7 @@ export async function getAutomationFlows(): Promise<AutomationFlow[]> {
       `
       id, name, description, trigger_type, status,
       total_enrolled, total_completed, total_converted, created_at
-    `
+    `,
     )
     .order("created_at", { ascending: false });
 
@@ -175,11 +173,12 @@ export async function getNewsletterStats(): Promise<NewsletterStats> {
     .select("total_sent,total_opened,total_clicked")
     .eq("status", "sent");
 
-  const totalCampaigns = campaigns?.length || 0;
-  const totalSent = campaigns?.reduce((sum: any, c: any) => sum + (c.total_sent || 0), 0) || 0;
-  const totalOpened = campaigns?.reduce((sum: any, c: any) => sum + (c.total_opened || 0), 0) || 0;
-  const totalClicked =
-    campaigns?.reduce((sum: any, c: any) => sum + (c.total_clicked || 0), 0) || 0;
+  const sentCampaigns = (campaigns ?? []) as SentCampaignStats[];
+
+  const totalCampaigns = sentCampaigns.length;
+  const totalSent = sentCampaigns.reduce((sum, c) => sum + (c.total_sent || 0), 0);
+  const totalOpened = sentCampaigns.reduce((sum, c) => sum + (c.total_opened || 0), 0);
+  const totalClicked = sentCampaigns.reduce((sum, c) => sum + (c.total_clicked || 0), 0);
 
   const avgOpenRate = totalSent > 0 ? (totalOpened / totalSent) * 100 : 0;
   const avgClickRate = totalOpened > 0 ? (totalClicked / totalOpened) * 100 : 0;

@@ -7,7 +7,7 @@
  * - Updates automation run status
  */
 
-import { task, schedules } from "@trigger.dev/sdk/v3";
+import { schedules, task } from "@trigger.dev/sdk/v3";
 import { sendEmailTask } from "./email-queue";
 
 // ============================================================================
@@ -31,6 +31,10 @@ interface ProcessAutomationResult {
   sent: number;
   failed: number;
   errors?: string[];
+}
+
+interface DueQueueItemRow {
+  id: string;
 }
 
 // ============================================================================
@@ -63,10 +67,7 @@ export const processAutomationEmailTask = task({
     }
 
     // 2. Mark as processing
-    await supabase
-      .from("email_automation_queue")
-      .update({ status: "processing" })
-      .eq("id", payload.queueItemId);
+    await supabase.from("email_automation_queue").update({ status: "processing" }).eq("id", payload.queueItemId);
 
     try {
       // 3. Get automation step details
@@ -172,10 +173,9 @@ export const checkAutomationQueueTask = schedules.task({
     }
 
     // Process each item
+    const dueItemRows = (dueItems ?? []) as DueQueueItemRow[];
     const results = await Promise.allSettled(
-      dueItems.map((item: any) =>
-        processAutomationEmailTask.triggerAndWait({ queueItemId: item.id })
-      )
+      dueItemRows.map((item) => processAutomationEmailTask.triggerAndWait({ queueItemId: item.id })),
     );
 
     let sent = 0;

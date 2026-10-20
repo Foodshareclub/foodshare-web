@@ -9,13 +9,13 @@
  * - Proper admin auth via user_roles
  */
 
+import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { type ServerActionResult, serverActionError, successVoid } from "@/lib/errors";
+import type { ErrorCode } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
-import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
-import { invalidateTag } from "@/lib/data/cache-invalidation";
-import type { ErrorCode } from "@/lib/errors";
 
 // ============================================================================
 // Zod Schemas
@@ -53,6 +53,10 @@ export interface CampaignResult {
   status: string;
 }
 
+interface AdminUserRoleRow {
+  roles: { name: string };
+}
+
 // ============================================================================
 // Helper: Verify Admin Access
 // ============================================================================
@@ -75,14 +79,11 @@ async function verifyAdminAccess(): Promise<AuthError | AuthSuccess> {
     return { error: "You must be logged in", code: "UNAUTHORIZED" };
   }
 
-  const { data: userRoles } = await supabase
-    .from("user_roles")
-    .select("roles!inner(name)")
-    .eq("profile_id", user.id);
+  const { data: userRoles } = await supabase.from("user_roles").select("roles!inner(name)").eq("profile_id", user.id);
 
-  const roles = (userRoles || [])
-    .map((r: any) => (r.roles as unknown as { name: string })?.name)
-    .filter(Boolean);
+  const roleRows = (userRoles ?? []) as AdminUserRoleRow[];
+
+  const roles = roleRows.map((r) => r.roles?.name).filter(Boolean);
 
   const isAdmin = roles.includes("admin") || roles.includes("superadmin");
 
@@ -107,7 +108,7 @@ async function logAuditEvent(
   action: string,
   resourceType: string,
   resourceId: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<void> {
   try {
     await supabase.rpc("log_audit_event", {
@@ -129,9 +130,7 @@ async function logAuditEvent(
 /**
  * Create a new email campaign
  */
-export async function createCampaign(
-  input: CreateCampaignInput
-): Promise<ServerActionResult<CampaignResult>> {
+export async function createCampaign(input: CreateCampaignInput): Promise<ServerActionResult<CampaignResult>> {
   try {
     // Validate with Zod
     const validated = CreateCampaignSchema.safeParse(input);
@@ -194,9 +193,7 @@ export async function createCampaign(
 /**
  * Update an existing campaign
  */
-export async function updateCampaign(
-  input: UpdateCampaignInput
-): Promise<ServerActionResult<CampaignResult>> {
+export async function updateCampaign(input: UpdateCampaignInput): Promise<ServerActionResult<CampaignResult>> {
   try {
     // Validate with Zod
     const validated = UpdateCampaignSchema.safeParse(input);
@@ -217,10 +214,8 @@ export async function updateCampaign(
     if (validated.data.name !== undefined) updates.name = validated.data.name.trim();
     if (validated.data.subject !== undefined) updates.subject = validated.data.subject.trim();
     if (validated.data.content !== undefined) updates.content = validated.data.content;
-    if (validated.data.campaignType !== undefined)
-      updates.campaign_type = validated.data.campaignType;
-    if (validated.data.segmentId !== undefined)
-      updates.segment_id = validated.data.segmentId || null;
+    if (validated.data.campaignType !== undefined) updates.campaign_type = validated.data.campaignType;
+    if (validated.data.segmentId !== undefined) updates.segment_id = validated.data.segmentId || null;
     if (validated.data.scheduledAt !== undefined) {
       updates.scheduled_at = validated.data.scheduledAt || null;
       updates.status = validated.data.scheduledAt ? "scheduled" : "draft";
@@ -279,21 +274,14 @@ export async function deleteCampaign(id: string): Promise<ServerActionResult<voi
     const { supabase, user } = auth;
 
     // Check campaign status - only allow deleting drafts
-    const { data: campaign } = await supabase
-      .from("newsletter_campaigns")
-      .select("status,name")
-      .eq("id", id)
-      .single();
+    const { data: campaign } = await supabase.from("newsletter_campaigns").select("status,name").eq("id", id).single();
 
     if (!campaign) {
       return serverActionError("Campaign not found", "NOT_FOUND");
     }
 
     if (campaign.status === "sending") {
-      return serverActionError(
-        "Cannot delete a campaign that is currently sending",
-        "VALIDATION_ERROR"
-      );
+      return serverActionError("Cannot delete a campaign that is currently sending", "VALIDATION_ERROR");
     }
 
     const { error } = await supabase.from("newsletter_campaigns").delete().eq("id", id);
@@ -351,11 +339,7 @@ export async function duplicateCampaign(id: string): Promise<ServerActionResult<
     let newName = `${original.name} (Copy)`;
     let counter = 1;
     while (true) {
-      const { data: existing } = await supabase
-        .from("newsletter_campaigns")
-        .select("id")
-        .eq("name", newName)
-        .single();
+      const { data: existing } = await supabase.from("newsletter_campaigns").select("id").eq("name", newName).single();
       if (!existing) break;
       counter++;
       newName = `${original.name} (Copy ${counter})`;

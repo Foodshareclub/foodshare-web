@@ -1,8 +1,8 @@
-import { Suspense } from "react";
-import { getTranslations } from "next-intl/server";
-import { getAdminUsers, getUserStats } from "@/lib/data/admin-users";
 import { AdminUsersClient } from "@/app/admin/users/AdminUsersClient";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getAdminUsers, getUserStats } from "@/lib/data/admin-users";
+import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 
 interface PageProps {
   searchParams: Promise<{
@@ -22,10 +22,9 @@ async function UsersContent({ searchParams }: PageProps) {
     search: params.search || "",
     role: params.role || "all",
     isActive: params.isActive === "true" ? true : params.isActive === "false" ? false : undefined,
-    page: parseInt(params.page || "1", 10),
+    page: Number.parseInt(params.page || "1", 10),
     limit: 20,
-    sortBy:
-      (params.sortBy as "created_time" | "last_seen_at" | "first_name" | "email") || "created_time",
+    sortBy: (params.sortBy as "created_time" | "last_seen_at" | "first_name" | "email") || "created_time",
     sortOrder: (params.sortOrder as "asc" | "desc") || "desc",
   };
 
@@ -43,18 +42,21 @@ async function UsersContent({ searchParams }: PageProps) {
   );
 }
 
+const USER_STAT_SKELETON_KEYS = ["a", "b", "c", "d", "e"] as const;
+const USER_ROW_SKELETON_KEYS = ["a", "b", "c", "d", "e"] as const;
+
 function UsersSkeleton() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-5 gap-4">
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-24 rounded-lg" />
+        {USER_STAT_SKELETON_KEYS.map((k) => (
+          <Skeleton key={k} className="h-24 rounded-lg" />
         ))}
       </div>
       <Skeleton className="h-12 w-full" />
       <div className="space-y-3">
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full rounded-lg" />
+        {USER_ROW_SKELETON_KEYS.map((k) => (
+          <Skeleton key={k} className="h-16 w-full rounded-lg" />
         ))}
       </div>
     </div>

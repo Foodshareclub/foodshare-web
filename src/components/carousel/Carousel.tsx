@@ -13,13 +13,7 @@ type PropsType = {
   isCompact?: boolean;
 };
 
-export default function Carousel({
-  getRoute,
-  setPageType,
-  pageType,
-  productType,
-  isCompact = false,
-}: PropsType) {
+export default function Carousel({ getRoute, setPageType, pageType, productType, isCompact = false }: PropsType) {
   const router = useRouter();
 
   const navigateHandler = (name: string) => {

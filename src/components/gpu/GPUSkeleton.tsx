@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { useGPUContext } from "@/lib/gpu";
 import { initGPURender } from "@/lib/gpu/useGPURender";
+import { useEffect, useRef } from "react";
 import type { FrameLoopHandle } from "vgpu";
+
+// Pool of stable placeholder ids; `count` only ever needs a small subset of these.
+const GPU_SKELETON_LIST_KEYS = Array.from({ length: 24 }, (_, i) => `gpu-skeleton-${i}`);
 
 interface GPUSkeletonProps {
   className?: string;
@@ -81,9 +84,7 @@ export function GPUSkeleton({
 
   // CSS fallback
   if (!supported) {
-    return (
-      <div className={`animate-pulse bg-muted ${rounded} ${className}`} style={{ width, height }} />
-    );
+    return <div className={`animate-pulse bg-muted ${rounded} ${className}`} style={{ width, height }} />;
   }
 
   return (
@@ -116,7 +117,7 @@ export function GPUSkeletonList({
   return (
     <div className={`space-y-4 ${className}`}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3">
+        <div key={GPU_SKELETON_LIST_KEYS[i]} className="flex items-center gap-3">
           <GPUSkeleton width="48px" height="48px" rounded="rounded-full" />
           <div className="flex-1 space-y-2">
             <GPUSkeleton width="70%" height="14px" />

@@ -10,6 +10,12 @@
  * Only use in Route Handlers, Server Actions, and server-side code.
  */
 
+// Fails the build if anything reachable from a client component imports this
+// module. Next.js replaces non-NEXT_PUBLIC_ vars with `undefined` in browser
+// bundles, so the key itself would not leak — but it would degrade into a
+// runtime "Missing Supabase admin credentials" bug instead of a build error.
+import "server-only";
+
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 let adminClient: SupabaseClient | null = null;

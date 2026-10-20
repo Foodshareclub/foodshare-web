@@ -37,7 +37,7 @@ export function Kbd({ children, className, ...props }: KbdProps) {
         "border-border/60 bg-muted/50 px-1.5",
         "font-mono text-[10px] font-medium text-muted-foreground",
         "shadow-sm",
-        className
+        className,
       )}
       {...props}
     >
@@ -66,9 +66,7 @@ export function KbdCombo({
       {keys.map((key, index) => (
         <span key={key} className="inline-flex items-center">
           <Kbd>{key}</Kbd>
-          {index < keys.length - 1 && (
-            <span className="mx-0.5 text-muted-foreground/60 text-xs">{separator}</span>
-          )}
+          {index < keys.length - 1 && <span className="mx-0.5 text-muted-foreground/60 text-xs">{separator}</span>}
         </span>
       ))}
     </span>

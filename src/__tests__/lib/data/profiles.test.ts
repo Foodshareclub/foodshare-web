@@ -1,19 +1,24 @@
+/* oxlint-disable unicorn/no-thenable -- Supabase query builder mocks must be thenable. */
 /**
  * Profiles Data Functions Tests
  * Unit tests for profile-related data fetching functions
  */
 
-import { mock, describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 // Shared mock state
 const mockState = {
   profile: null as Record<string, unknown> | null,
+  /** Tables the data layer queried, in order. */
+  queried: [] as string[],
   publicProfile: null as Record<string, unknown> | null,
   products: [] as Array<{ count: number }>,
-  reviews: [] as Array<{ rating: number }>,
+  activeProducts: [] as Array<{ count: number }>,
+  reviews: [] as Array<{ reviewed_rating: number }>,
   userRoles: [] as Array<{ roles: { name: string } }>,
   volunteers: [] as Array<Record<string, unknown>>,
   profileReviews: [] as Array<Record<string, unknown>>,
+  reviewsError: null as { message: string; code?: string } | null,
   error: null as { message: string; code?: string } | null,
 };
 
@@ -29,15 +34,14 @@ const createMockSupabaseClient = () => {
       Promise.resolve({
         data: mockState.userRoles.length > 0 ? mockState.userRoles[0] : null,
         error: null,
-      })
+      }),
     );
     chain.single = mock(() =>
       Promise.resolve({
         data: resolveData,
         error: mockState.error,
-      })
+      }),
     );
-    // eslint-disable-next-line unicorn/no-thenable
     chain.then = (resolve: (value: unknown) => void) =>
       resolve({
         data: resolveData,
@@ -49,20 +53,26 @@ const createMockSupabaseClient = () => {
 
   return {
     from: mock((table: string) => {
+      mockState.queried.push(table);
       switch (table) {
+        // The public projection is a different table with a different column
+        // set, and getPublicProfile reads it. Treating it as `profiles` would
+        // hide a regression where a public read went back to the base table.
         case "profiles":
+        case "profiles_public":
           return createChain(mockState.profile || mockState.volunteers);
         case "posts":
+          // Two distinct queries: unfiltered total, and `.eq(is_active, true)`.
+          // The chain shape is what tells them apart.
           return {
             select: mock(() => ({
               eq: mock(() => ({
                 eq: mock(() =>
                   Promise.resolve({
-                    count: mockState.products.length,
+                    count: mockState.activeProducts.length,
                     error: null,
-                  })
+                  }),
                 ),
-                // eslint-disable-next-line unicorn/no-thenable
                 then: (resolve: (value: unknown) => void) =>
                   resolve({
                     count: mockState.products.length,
@@ -79,13 +89,12 @@ const createMockSupabaseClient = () => {
                   Promise.resolve({
                     data: mockState.profileReviews,
                     error: mockState.error,
-                  })
+                  }),
                 ),
-                // eslint-disable-next-line unicorn/no-thenable
                 then: (resolve: (value: unknown) => void) =>
                   resolve({
                     data: mockState.reviews,
-                    error: null,
+                    error: mockState.reviewsError,
                   }),
               })),
             })),
@@ -99,10 +108,9 @@ const createMockSupabaseClient = () => {
                     Promise.resolve({
                       data: mockState.userRoles.length > 0 ? mockState.userRoles[0] : null,
                       error: null,
-                    })
+                    }),
                   ),
                 })),
-                // eslint-disable-next-line unicorn/no-thenable
                 then: (resolve: (value: unknown) => void) =>
                   resolve({
                     data: mockState.userRoles,
@@ -126,24 +134,21 @@ mock.module("@/lib/supabase/server", () => ({
 }));
 
 // Import AFTER mocks are set up
-import {
-  getProfile,
-  getPublicProfile,
-  getUserStats,
-  getUserRoles,
-  hasUserRole,
-} from "@/lib/data/profiles";
+import { getProfile, getPublicProfile, getUserRoles, getUserStats, hasUserRole } from "@/lib/data/profiles";
 
 describe("Profiles Data Functions", () => {
   beforeEach(() => {
     mockState.profile = null;
     mockState.publicProfile = null;
     mockState.products = [];
+    mockState.activeProducts = [];
     mockState.reviews = [];
     mockState.userRoles = [];
     mockState.volunteers = [];
     mockState.profileReviews = [];
+    mockState.reviewsError = null;
     mockState.error = null;
+    mockState.queried = [];
   });
 
   describe("getProfile", () => {
@@ -185,6 +190,20 @@ describe("Profiles Data Functions", () => {
   });
 
   describe("getPublicProfile", () => {
+    it("reads the public projection, never the base table", async () => {
+      // `profiles` is readable only by its owner or an admin, and carries
+      // email, phone, birth_date and the live verification_code. The public
+      // read goes through `profiles_public`, which is a column projection with
+      // the location already rounded in the database — so a scraper with the
+      // anon key cannot recover the exact point either. Asserting the table is
+      // what makes a silent return to `profiles` a test failure.
+      mockState.profile = { id: "user-123", first_name: "John" };
+
+      await getPublicProfile("user-123");
+
+      expect(mockState.queried).toEqual(["profiles_public"]);
+    });
+
     it("should return public profile fields only", async () => {
       mockState.profile = {
         id: "user-123",
@@ -214,16 +233,47 @@ describe("Profiles Data Functions", () => {
   });
 
   describe("getUserStats", () => {
-    it("should return user statistics", async () => {
-      mockState.products = [{ count: 1 }, { count: 1 }, { count: 1 }];
-      mockState.reviews = [{ rating: 5 }, { rating: 4 }, { rating: 5 }];
+    it("averages reviewed_rating across the user's reviews", async () => {
+      mockState.products = [{ count: 1 }, { count: 2 }, { count: 3 }];
+      mockState.activeProducts = [{ count: 1 }, { count: 2 }];
+      // `reviews` stores the score in `reviewed_rating` and keys the reviewed
+      // user as `profile_id`. Selecting a non-existent column makes PostgREST
+      // return a 400, which previously surfaced as a confident "0 reviews".
+      mockState.reviews = [{ reviewed_rating: 5 }, { reviewed_rating: 4 }, { reviewed_rating: 5 }];
 
       const result = await getUserStats("user-123");
 
-      expect(result).toHaveProperty("totalProducts");
-      expect(result).toHaveProperty("activeProducts");
-      expect(result).toHaveProperty("totalReviews");
-      expect(result).toHaveProperty("averageRating");
+      expect(result).toEqual({
+        totalProducts: 3,
+        activeProducts: 2,
+        totalReviews: 3,
+        averageRating: 4.7,
+      });
+    });
+
+    it("rounds the average to one decimal place", async () => {
+      mockState.products = [{ count: 1 }];
+      mockState.activeProducts = [{ count: 1 }];
+      mockState.reviews = [{ reviewed_rating: 5 }, { reviewed_rating: 4 }, { reviewed_rating: 3 }];
+
+      const result = await getUserStats("user-123");
+
+      expect(result.averageRating).toBe(4);
+    });
+
+    it("ignores non-numeric ratings rather than coercing them to zero", async () => {
+      mockState.products = [];
+      mockState.activeProducts = [];
+      mockState.reviews = [
+        { reviewed_rating: 5 },
+        { reviewed_rating: null as unknown as number },
+        { reviewed_rating: 3 },
+      ];
+
+      const result = await getUserStats("user-123");
+
+      expect(result.totalReviews).toBe(2);
+      expect(result.averageRating).toBe(4);
     });
 
     it("should handle user with no activity", async () => {
@@ -236,6 +286,15 @@ describe("Profiles Data Functions", () => {
       expect(result.activeProducts).toBe(0);
       expect(result.totalReviews).toBe(0);
       expect(result.averageRating).toBe(0);
+    });
+
+    it("throws instead of silently reporting zeroes when the query fails", async () => {
+      mockState.products = [{ count: 1 }];
+      mockState.activeProducts = [{ count: 1 }];
+      mockState.reviews = [{ reviewed_rating: 5 }];
+      mockState.reviewsError = { message: "column reviews.reviewed_user_id does not exist" };
+
+      await expect(getUserStats("user-123")).rejects.toThrow(/Failed to load reviews for user stats/);
     });
   });
 

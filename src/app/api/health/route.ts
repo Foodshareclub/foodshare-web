@@ -7,8 +7,8 @@
  * 4. Redis (Upstash) connectivity when configured
  */
 
-import { NextResponse, connection } from "next/server";
 import { logger } from "@/lib/logger";
+import { NextResponse, connection } from "next/server";
 
 type ServiceState = "up" | "down" | "unknown";
 
@@ -32,10 +32,7 @@ interface HealthStatus {
 
 const PROBE_TIMEOUT_MS = 3000;
 
-async function probe(
-  url: string,
-  init: RequestInit = {}
-): Promise<{ state: ServiceState; ms: number }> {
+async function probe(url: string, init: RequestInit = {}): Promise<{ state: ServiceState; ms: number }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
   const startedAt = Date.now();
@@ -77,7 +74,7 @@ export async function GET(): Promise<NextResponse<HealthStatus>> {
         services,
         message: "Supabase environment is not configured",
       },
-      { status: 503 }
+      { status: 503 },
     );
   }
 
@@ -122,7 +119,7 @@ export async function GET(): Promise<NextResponse<HealthStatus>> {
       services,
       latency,
     },
-    { status: databaseUp ? 200 : 503 }
+    { status: databaseUp ? 200 : 503 },
   );
 }
 

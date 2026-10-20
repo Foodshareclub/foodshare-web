@@ -1,6 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
+const CHAT_CONVERSATION_SKELETON_KEYS = ["a", "b", "c", "d", "e", "f"] as const;
+const CHAT_MESSAGE_SKELETON_KEYS = ["a", "b", "c", "d", "e"] as const;
+
 interface ChatSkeletonProps {
   className?: string;
 }
@@ -13,7 +16,7 @@ export function ChatSkeleton({ className }: ChatSkeletonProps) {
     <div
       className={cn(
         "min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800",
-        className
+        className,
       )}
     >
       <div className="container mx-auto px-4 py-6">
@@ -24,8 +27,8 @@ export function ChatSkeleton({ className }: ChatSkeletonProps) {
               <Skeleton className="h-8 w-32" />
               <Skeleton className="h-10 w-full" />
               <div className="space-y-3 pt-4">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="flex items-center gap-3">
+                {CHAT_CONVERSATION_SKELETON_KEYS.map((k) => (
+                  <div key={k} className="flex items-center gap-3">
                     <Skeleton className="h-12 w-12 rounded-xl" />
                     <div className="flex-1 space-y-2">
                       <Skeleton className="h-4 w-24" />
@@ -53,12 +56,10 @@ export function ChatSkeleton({ className }: ChatSkeletonProps) {
 
               {/* Messages */}
               <div className="flex-1 p-4 space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}>
+                {CHAT_MESSAGE_SKELETON_KEYS.map((k, i) => (
+                  <div key={k} className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}>
                     <Skeleton
-                      className={`h-12 rounded-2xl ${
-                        i % 2 === 0 ? "w-48 rounded-bl-sm" : "w-36 rounded-br-sm"
-                      }`}
+                      className={`h-12 rounded-2xl ${i % 2 === 0 ? "w-48 rounded-bl-sm" : "w-36 rounded-br-sm"}`}
                     />
                   </div>
                 ))}

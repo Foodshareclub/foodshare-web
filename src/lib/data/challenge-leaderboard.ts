@@ -4,19 +4,19 @@
  * Server-side cached data fetching for the challenge leaderboard.
  */
 
-import { createClient, createCachedClient } from "@/lib/supabase/server";
-import { cacheThrough, getLeaderboardKey, REDIS_TTL } from "@/lib/redis";
 import {
-  type LeaderboardUser,
-  type LeaderboardUserProfile,
-  type UserRankInfo,
-  type RecentChallenge,
-} from "@/components/challenges/ChallengeLeaderboard/types";
-import {
-  getTierFromCount,
   LEADERBOARD_LIMIT,
   RECENT_CHALLENGES_LIMIT,
+  getTierFromCount,
 } from "@/components/challenges/ChallengeLeaderboard/constants";
+import type {
+  LeaderboardUser,
+  LeaderboardUserProfile,
+  RecentChallenge,
+  UserRankInfo,
+} from "@/components/challenges/ChallengeLeaderboard/types";
+import { REDIS_TTL, cacheThrough, getLeaderboardKey } from "@/lib/redis";
+import { createCachedClient, createClient } from "@/lib/supabase/server";
 
 // ============================================================================
 // Leaderboard Data
@@ -36,9 +36,7 @@ interface RawLeaderboardRow {
 /**
  * Get challenge leaderboard - top users by completed challenges
  */
-export async function getChallengeLeaderboard(
-  limit: number = LEADERBOARD_LIMIT
-): Promise<LeaderboardUser[]> {
+export async function getChallengeLeaderboard(limit: number = LEADERBOARD_LIMIT): Promise<LeaderboardUser[]> {
   // Try Redis cache first (distributed cache for multi-instance)
   return cacheThrough(
     getLeaderboardKey(limit),
@@ -58,7 +56,7 @@ export async function getChallengeLeaderboard(
 
       return transformLeaderboardData(data || []);
     },
-    REDIS_TTL.LEADERBOARD
+    REDIS_TTL.LEADERBOARD,
   );
 }
 
@@ -116,7 +114,7 @@ async function getLeaderboardManual(limit: number): Promise<LeaderboardUser[]> {
     const challenge = challengeData as { challenge_score: string | number } | null;
     const xp = challenge
       ? typeof challenge.challenge_score === "string"
-        ? parseInt(challenge.challenge_score, 10)
+        ? Number.parseInt(challenge.challenge_score, 10)
         : challenge.challenge_score
       : 0;
 
@@ -124,10 +122,7 @@ async function getLeaderboardManual(limit: number): Promise<LeaderboardUser[]> {
       if (p.is_completed) {
         existing.completed_count += 1;
         existing.total_xp += xp || 0;
-        if (
-          !existing.last_completed ||
-          (p.completed_at && p.completed_at > existing.last_completed)
-        ) {
+        if (!existing.last_completed || (p.completed_at && p.completed_at > existing.last_completed)) {
           existing.last_completed = p.completed_at;
         }
       } else {
@@ -187,9 +182,7 @@ function transformLeaderboardData(data: RawLeaderboardRow[]): LeaderboardUser[] 
  * Get detailed profile for leaderboard modal
  * Uses optimized RPC function with fallback to manual query
  */
-export async function getLeaderboardUserProfile(
-  userId: string
-): Promise<LeaderboardUserProfile | null> {
+export async function getLeaderboardUserProfile(userId: string): Promise<LeaderboardUserProfile | null> {
   const supabase = createCachedClient();
 
   // Try RPC function first
@@ -205,9 +198,9 @@ export async function getLeaderboardUserProfile(
         id: c.id,
         title: c.title,
         difficulty: c.difficulty,
-        xp: typeof c.xp === "string" ? parseInt(c.xp, 10) : c.xp,
+        xp: typeof c.xp === "string" ? Number.parseInt(c.xp, 10) : c.xp,
         completedAt: c.completedAt || "",
-      })
+      }),
     );
 
     return {
@@ -234,14 +227,14 @@ export async function getLeaderboardUserProfile(
 /**
  * Manual user profile query fallback
  */
-async function getLeaderboardUserProfileManual(
-  userId: string
-): Promise<LeaderboardUserProfile | null> {
+async function getLeaderboardUserProfileManual(userId: string): Promise<LeaderboardUserProfile | null> {
   const supabase = createCachedClient();
 
-  // Get user profile
+  // `profiles_public`, not `profiles`: this runs on the anon client, and
+  // profiles is now readable only by its owner or an admin. The public
+  // projection carries exactly the columns a leaderboard row needs.
   const { data: profile, error: profileError } = await supabase
-    .from("profiles")
+    .from("profiles_public")
     .select("id,nickname,first_name,avatar_url,created_time")
     .eq("id", userId)
     .single();
@@ -263,7 +256,7 @@ async function getLeaderboardUserProfileManual(
         challenge_difficulty,
         challenge_score
       )
-    `
+    `,
     )
     .eq("profile_id", userId)
     .order("completed_at", { ascending: false });
@@ -286,7 +279,7 @@ async function getLeaderboardUserProfileManual(
 
     const xp =
       typeof challenge.challenge_score === "string"
-        ? parseInt(challenge.challenge_score, 10)
+        ? Number.parseInt(challenge.challenge_score, 10)
         : challenge.challenge_score;
 
     if (p.is_completed) {
@@ -308,8 +301,7 @@ async function getLeaderboardUserProfileManual(
   }
 
   const totalChallenges = completedCount + activeCount;
-  const completionRate =
-    totalChallenges > 0 ? Math.round((completedCount / totalChallenges) * 100) : 0;
+  const completionRate = totalChallenges > 0 ? Math.round((completedCount / totalChallenges) * 100) : 0;
 
   // Get rank
   const leaderboard = await getChallengeLeaderboard(100);
@@ -351,9 +343,10 @@ export async function getCurrentUserRank(): Promise<UserRankInfo | null> {
     return null;
   }
 
-  // Get user profile
+  // The public projection, for the same reason as above — this is the caller's
+  // own row, but the query runs on the anon client.
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("profiles_public")
     .select("nickname,first_name,avatar_url")
     .eq("id", user.id)
     .single();
@@ -367,7 +360,7 @@ export async function getCurrentUserRank(): Promise<UserRankInfo | null> {
       challenges!inner (
         challenge_score
       )
-    `
+    `,
     )
     .eq("profile_id", user.id);
 
@@ -384,7 +377,7 @@ export async function getCurrentUserRank(): Promise<UserRankInfo | null> {
 
     const xp =
       typeof challenge.challenge_score === "string"
-        ? parseInt(challenge.challenge_score, 10)
+        ? Number.parseInt(challenge.challenge_score, 10)
         : challenge.challenge_score;
 
     if (p.is_completed) {
@@ -407,9 +400,7 @@ export async function getCurrentUserRank(): Promise<UserRankInfo | null> {
   } else {
     // User has completions but not in top 100, estimate rank
     const usersAhead = leaderboard.filter(
-      (u) =>
-        u.completedCount > completedCount ||
-        (u.completedCount === completedCount && u.totalXpEarned > totalXp)
+      (u) => u.completedCount > completedCount || (u.completedCount === completedCount && u.totalXpEarned > totalXp),
     ).length;
     rank = usersAhead + 1;
   }

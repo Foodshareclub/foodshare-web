@@ -2,7 +2,16 @@
 
 Next.js 16 App Router + React 19 + TypeScript 5 + Tailwind CSS 4 + Self-hosted Supabase + shadcn/ui
 
-Node 20 is the GitHub Actions runtime; Bun latest for local tooling.
+Bun is the only runtime: package manager, script runner, TypeScript executor,
+type checker, test runner and Next.js runtime. Node.js is not part of this
+project's toolchain — `bun scripts/check-no-node.ts` fails the build if it
+creeps back in, and it scans the CI workflows as well as the source tree.
+
+**Playwright runs on Bun too.** `bunx --bun playwright test` works because
+`patches/playwright@1.62.1.patch` stops Playwright from overwriting Bun's
+native `require.extensions[".ts"]` handler — without the patch, every spec
+file containing a TypeScript annotation fails to parse. The patch is applied
+by `bun install` through `patchedDependencies`; never delete `patches/`.
 
 **Self-hosted Supabase:**
 
@@ -24,15 +33,17 @@ All deployments are **fully automated** via GitHub Actions in full scale. **Neve
 | --------------------------- | --------------------------------------------------------------- |
 | `bun run dev`               | Dev server (Turbopack, port 3000)                               |
 | `bun run build`             | Production build                                                |
-| `bun run type-check`        | TypeScript checking (`bunx tsc`)                                |
-| `bun run lint:fix`          | oxlint (primary), biome format, eslint residual; runs all three |
+| `bun run type-check`        | TypeScript checking (`bun check`)                               |
+| `bun run type-check:tsc`    | Same check via `tsc` (strict parity gate, also run in CI)       |
+| `bun run lint:fix`          | oxlint (primary) + biome format; runs both                      |
 | `bun run test:ci`           | Run all tests with bun:test                                     |
+| `bun run e2e`               | Playwright end-to-end tests (`bunx --bun playwright test`)      |
 | `bun run test:build`        | Type-check + lint + build                                       |
 | `bun run translations:sync` | Sync translations to Supabase                                   |
 
 ## Critical Rules
 
-1. **src/proxy.ts, NOT middleware.ts** -- Next.js 16 renamed middleware. Export `async function proxy()` from `src/proxy.ts`. Runtime is Node.js (not Edge), so direct imports work.
+1. **src/proxy.ts, NOT middleware.ts** -- Next.js 16 renamed middleware. Export `async function proxy()` from `src/proxy.ts`. Runtime is the Node.js-compatible server runtime (Bun, not Edge), so direct imports work.
 2. **Never re-export types from server action files** -- `'use server'` files cannot re-export types. Import `AuthUser` from `@/lib/data/auth`, never from `@/app/actions/auth`.
 3. **Admin check requires service role client** -- `user_roles` table has RLS blocking anon reads. Always use `checkUserIsAdmin()` from `@/lib/data/admin-check.ts` (uses admin client internally). If modifying admin logic, update BOTH `admin-check.ts` and the inlined version in `proxy.ts`.
 4. **No Redux** -- State: Server Components (fetch) + Server Actions (mutate) + React Query (client cache) + Zustand (UI only).

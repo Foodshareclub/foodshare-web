@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Users, Sparkles, Loader2, AlertCircle, RefreshCw } from "lucide-react";
-import {
-  getGrokInsight,
-  getInsightSuggestions,
-  resetAiService,
-} from "@/app/actions/admin-insights";
+import { getGrokInsight, getInsightSuggestions, resetAiService } from "@/app/actions/admin-insights";
+import type { IntervalHandle } from "@/types/timer.types";
+import { AlertCircle, Loader2, RefreshCw, Send, Sparkles, Users } from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface Message {
   id: string;
@@ -34,17 +32,18 @@ export const GrokAssistant: React.FC = () => {
   const [retryCountdown, setRetryCountdown] = useState<number | null>(null);
   const [isResetting, setIsResetting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const retryTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const retryTimerRef = useRef<IntervalHandle | null>(null);
 
   useEffect(() => {
     // Load suggested questions via server action
     getInsightSuggestions().then(setSuggestedQuestions).catch(console.error);
   }, []);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: message count deliberately triggers this scroll side effect
   useEffect(() => {
     // Auto-scroll to bottom
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages.length]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -80,7 +79,7 @@ export const GrokAssistant: React.FC = () => {
       await handleSendMessage(originalQuery);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isLoading, retryCountdown]
+    [isLoading, retryCountdown],
   );
 
   const handleResetService = useCallback(async () => {
@@ -92,7 +91,7 @@ export const GrokAssistant: React.FC = () => {
       const resetMessage: Message = {
         id: Date.now().toString(),
         role: "assistant",
-        content: result.success ? "✓ " + result.message : "✗ " + result.message,
+        content: result.success ? `✓ ${result.message}` : `✗ ${result.message}`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, resetMessage]);
@@ -190,9 +189,7 @@ export const GrokAssistant: React.FC = () => {
           <Sparkles className="w-6 h-6 text-white" />
           <div>
             <h2 className="text-xl font-bold text-white">Grok AI Assistant</h2>
-            <p className="text-sm text-purple-100">
-              Powered by xAI - Ask me anything about your platform
-            </p>
+            <p className="text-sm text-purple-100">Powered by xAI - Ask me anything about your platform</p>
           </div>
         </div>
       </div>
@@ -200,10 +197,7 @@ export const GrokAssistant: React.FC = () => {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
-          >
+          <div key={message.id} className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
             {(message.role === "assistant" || message.role === "error") && (
               <div
                 className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
@@ -232,18 +226,18 @@ export const GrokAssistant: React.FC = () => {
               {message.role === "error" && message.originalQuery && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
+                    type="button"
                     onClick={() => handleRetry(message.originalQuery!)}
                     disabled={isLoading || retryCountdown !== null}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white border border-red-300 rounded-md hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    <RefreshCw
-                      className={`w-3.5 h-3.5 ${retryCountdown !== null ? "animate-spin" : ""}`}
-                    />
+                    <RefreshCw className={`w-3.5 h-3.5 ${retryCountdown !== null ? "animate-spin" : ""}`} />
                     {retryCountdown !== null ? `Retry in ${retryCountdown}s` : "Retry"}
                   </button>
 
                   {message.errorType === "circuit_open" && (
                     <button
+                      type="button"
                       onClick={handleResetService}
                       disabled={isResetting}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -259,9 +253,7 @@ export const GrokAssistant: React.FC = () => {
                 </div>
               )}
 
-              <span className="text-xs opacity-70 mt-2 block">
-                {message.timestamp.toLocaleTimeString()}
-              </span>
+              <span className="text-xs opacity-70 mt-2 block">{message.timestamp.toLocaleTimeString()}</span>
             </div>
             {message.role === "user" && (
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
@@ -290,9 +282,10 @@ export const GrokAssistant: React.FC = () => {
         <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
           <p className="text-sm font-medium text-gray-700 mb-2">Suggested questions:</p>
           <div className="flex flex-wrap gap-2">
-            {suggestedQuestions.slice(0, 3).map((question, index) => (
+            {suggestedQuestions.slice(0, 3).map((question) => (
               <button
-                key={index}
+                type="button"
+                key={question}
                 onClick={() => handleSendMessage(question)}
                 disabled={isLoading}
                 className="px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-full hover:bg-purple-50 hover:border-purple-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -317,20 +310,17 @@ export const GrokAssistant: React.FC = () => {
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <button
+            type="button"
             onClick={() => handleSendMessage()}
             disabled={isLoading || !input.trim()}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {isLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Send className="w-5 h-5" />
-            )}
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
           </button>
         </div>
         <p className="text-xs text-gray-500 mt-2">
-          💡 Try &quot;how many users signed up this week&quot; or &quot;top 10 most active
-          users&quot; for deep database analysis
+          💡 Try &quot;how many users signed up this week&quot; or &quot;top 10 most active users&quot; for deep
+          database analysis
         </p>
       </div>
     </div>

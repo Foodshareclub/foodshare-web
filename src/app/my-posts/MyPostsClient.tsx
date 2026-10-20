@@ -5,13 +5,10 @@ import { DeleteConfirmationModal } from "@/components/modals/ConfirmationModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLocale } from "next-intl";
+
+import { type Locale, getLocaleDirection } from "@/i18n/config";
 import { getPostTypeConfig } from "@/lib/constants";
 import { isValidImageUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
@@ -37,6 +34,12 @@ type FilterStatus = "all" | "active" | "inactive";
 type SortOption = "newest" | "oldest" | "name" | "views";
 
 export function MyPostsClient({ posts }: MyPostsClientProps) {
+  // The mobile category drawer slides in from the inline start. `start-0` puts
+  // the panel there, and a physical `-translate-x-full` would slide it in from
+  // the left whatever the anchor said — which is how the settings drawer ended
+  // up with a logical border and a physical transform.
+  const offscreen = getLocaleDirection(useLocale() as Locale) === "rtl" ? "100%" : "-100%";
+
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -58,7 +61,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
       acc[post.post_type] = (acc[post.post_type] || 0) + 1;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   );
 
   // Filter and sort posts
@@ -66,10 +69,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
     .filter((post) => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        if (
-          !post.post_name.toLowerCase().includes(query) &&
-          !post.post_description?.toLowerCase().includes(query)
-        ) {
+        if (!post.post_name.toLowerCase().includes(query) && !post.post_description?.toLowerCase().includes(query)) {
           return false;
         }
       }
@@ -131,9 +131,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
   // Category navigation content - reusable for mobile and desktop
   const categoryNavContent = (onSelect: (type: string) => void) => (
     <div className="glass rounded-xl p-4">
-      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-        Categories
-      </h3>
+      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Categories</h3>
       <nav className="space-y-1">
         <button
           type="button"
@@ -141,9 +139,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
           className={cn(
             "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
             "hover:bg-muted/80",
-            filterType === "all"
-              ? "bg-primary/10 text-primary border border-primary/30"
-              : "text-foreground/80"
+            filterType === "all" ? "bg-primary/10 text-primary border border-primary/30" : "text-foreground/80",
           )}
         >
           <span className="flex items-center gap-3">
@@ -168,7 +164,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
               className={cn(
                 "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                 "hover:bg-muted/80",
-                isActive ? cn("border", typeInfo.bgActive) : "text-foreground/80"
+                isActive ? cn("border", typeInfo.bgActive) : "text-foreground/80",
               )}
             >
               <span className="flex items-center gap-3">
@@ -196,11 +192,11 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
       <Button
         variant="outline"
         size="sm"
-        className="lg:hidden fixed bottom-4 left-4 z-50 shadow-lg bg-background"
+        className="lg:hidden fixed bottom-4 start-4 z-50 shadow-lg bg-background"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
       >
         {isSidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-        <span className="ml-2">Categories</span>
+        <span className="ms-2">Categories</span>
       </Button>
 
       {/* Mobile Overlay */}
@@ -216,11 +212,11 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
       {/* Mobile Category Sidebar */}
       <aside
         className={cn(
-          "lg:hidden fixed top-0 left-0 h-full w-64 z-40",
+          "lg:hidden fixed top-0 start-0 h-full w-64 z-40",
           "bg-background/95 backdrop-blur-lg",
           "pt-24 px-4 overflow-y-auto",
           "transform transition-transform duration-300 ease-in-out",
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          isSidebarOpen ? "translate-x-0" : offscreen,
         )}
       >
         {categoryNavContent((type) => {
@@ -235,14 +231,9 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl font-bold text-foreground">My Posts</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage all your shared items and food listings
-            </p>
+            <p className="text-muted-foreground mt-1">Manage all your shared items and food listings</p>
           </div>
-          <Button
-            onClick={() => setIsCreateOpen(true)}
-            className="bg-emerald-600 hover:bg-emerald-700 gap-2"
-          >
+          <Button onClick={() => setIsCreateOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 gap-2">
             <Plus className="h-4 w-4" />
             Create New Post
           </Button>
@@ -255,9 +246,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
             <div className="text-sm text-muted-foreground">Total Posts</div>
           </div>
           <div className="glass rounded-xl p-4">
-            <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-              {activeCount}
-            </div>
+            <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{activeCount}</div>
             <div className="text-sm text-muted-foreground">Active</div>
           </div>
           <div className="glass rounded-xl p-4">
@@ -283,18 +272,15 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
             <div className="glass rounded-xl p-4 mb-6">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search posts..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
+                    className="ps-10"
                   />
                 </div>
-                <Select
-                  value={filterStatus}
-                  onValueChange={(v) => setFilterStatus(v as FilterStatus)}
-                >
+                <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as FilterStatus)}>
                   <SelectTrigger className="w-full sm:w-[140px]">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
@@ -323,7 +309,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
               <p className="text-sm text-muted-foreground">
                 Showing {filteredPosts.length} of {posts.length} posts
                 {filterType !== "all" && (
-                  <span className="ml-1">
+                  <span className="ms-1">
                     in <span className="font-medium">{getPostTypeConfig(filterType).label}</span>
                   </span>
                 )}
@@ -369,11 +355,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
         {/* Modals */}
         <PublishListingModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
         {editingPost && (
-          <PublishListingModal
-            product={editingPost}
-            isOpen={!!editingPost}
-            onClose={() => setEditingPost(null)}
-          />
+          <PublishListingModal product={editingPost} isOpen={!!editingPost} onClose={() => setEditingPost(null)} />
         )}
         <DeleteConfirmationModal
           isOpen={!!deletingPost}
@@ -410,13 +392,10 @@ function PostCard({ post, onEdit, onDelete, onToggleStatus, isUpdating }: PostCa
     <div
       className={cn(
         "glass rounded-xl overflow-hidden transition-all duration-200 hover:shadow-lg",
-        !post.is_active && "opacity-60"
+        !post.is_active && "opacity-60",
       )}
     >
-      <Link
-        href={getProductDetailUrl(post.post_type, post.id)}
-        className="block relative aspect-[4/3]"
-      >
+      <Link href={getProductDetailUrl(post.post_type, post.id)} className="block relative aspect-[4/3]">
         {post.images?.length > 0 && isValidImageUrl(post.images[0]) ? (
           <Image
             src={post.images[0]}
@@ -430,20 +409,18 @@ function PostCard({ post, onEdit, onDelete, onToggleStatus, isUpdating }: PostCa
             <span className="text-5xl">{typeInfo.emoji}</span>
           </div>
         )}
-        <div className="absolute top-2 left-2">
+        <div className="absolute top-2 start-2">
           <Badge
             variant={post.is_active ? "default" : "secondary"}
             className={cn(
               "text-xs",
-              post.is_active
-                ? "bg-emerald-500/90 hover:bg-emerald-500"
-                : "bg-gray-500/90 hover:bg-gray-500"
+              post.is_active ? "bg-emerald-500/90 hover:bg-emerald-500" : "bg-gray-500/90 hover:bg-gray-500",
             )}
           >
             {post.is_active ? "Active" : "Inactive"}
           </Badge>
         </div>
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 end-2">
           <Badge className={cn("text-xs", typeInfo.color)}>
             {typeInfo.emoji} {typeInfo.label}
           </Badge>

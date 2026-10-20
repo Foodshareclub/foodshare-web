@@ -26,7 +26,7 @@ export const onRequestError = async (
     renderSource: string;
     revalidateReason: string | undefined;
     renderType: string;
-  }
+  },
 ) => {
   // Import Sentry dynamically to avoid initialization issues
   const Sentry = await import("@sentry/nextjs");

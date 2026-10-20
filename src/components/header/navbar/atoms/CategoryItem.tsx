@@ -75,14 +75,11 @@ export function CategoryItem({
         "transition-colors duration-200 hover:bg-muted motion-reduce:transition-none",
         isActive && "bg-primary/5",
         "rounded-lg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
-        className
+        className,
       )}
     >
       {icon && (
-        <span
-          className={cn(isActive ? "text-primary" : "text-muted-foreground")}
-          aria-hidden="true"
-        >
+        <span className={cn(isActive ? "text-primary" : "text-muted-foreground")} aria-hidden="true">
           {(() => {
             const Icon = icon;
             return <Icon className="size-5 md:size-6" strokeWidth={isActive ? 2 : 1.5} />;
@@ -92,7 +89,7 @@ export function CategoryItem({
       <span
         className={cn(
           "select-none whitespace-nowrap text-xs",
-          isActive ? "font-semibold text-foreground" : "font-medium text-muted-foreground"
+          isActive ? "font-semibold text-foreground" : "font-medium text-muted-foreground",
         )}
       >
         {label}

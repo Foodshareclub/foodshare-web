@@ -4,8 +4,8 @@
  * Following ultrathink principles: simple, reliable, maintainable
  */
 
-import { supabase } from "./client";
 import type { Session } from "@supabase/supabase-js";
+import { supabase } from "./client";
 
 // Re-export session manager
 export { sessionManager, initializeSessionManagement } from "../supabase/session";

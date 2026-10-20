@@ -5,10 +5,10 @@
  * Shared utilities for automation server actions
  */
 
-import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { requireAdmin } from "@/lib/data/admin-check";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
+import type { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 // ============================================================================
 // Auth Helper with Role Check (uses user_roles table)
@@ -39,7 +39,7 @@ export async function logAuditEvent(
   action: string,
   resourceType: string,
   resourceId: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ) {
   try {
     // Use the log_audit_event function for secure logging

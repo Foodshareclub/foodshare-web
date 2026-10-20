@@ -4,12 +4,12 @@
  */
 
 import type {
-  ErrorCode,
-  AppError,
   ActionResult,
+  AppError,
+  ErrorCode,
   ServerActionError as ServerActionErrorType,
-  ServerActionSuccess,
   ServerActionResult,
+  ServerActionSuccess,
 } from "./types";
 
 // ============================================================================
@@ -24,9 +24,7 @@ export function unauthorizedError(message = "Authentication required"): AppError
   return createError("UNAUTHORIZED", message);
 }
 
-export function forbiddenError(
-  message = "You do not have permission to perform this action"
-): AppError {
+export function forbiddenError(message = "You do not have permission to perform this action"): AppError {
   return createError("FORBIDDEN", message);
 }
 
@@ -50,9 +48,7 @@ export function conflictError(message: string): AppError {
   return createError("CONFLICT", message);
 }
 
-export function rateLimitError(
-  message = "Too many requests. Please wait a moment and try again."
-): AppError {
+export function rateLimitError(message = "Too many requests. Please wait a moment and try again."): AppError {
   return createError("RATE_LIMIT", message);
 }
 
@@ -107,18 +103,14 @@ export function serverActionSuccess<T>(data: T): ServerActionSuccess<T> {
 /**
  * Type guard to check if a result is an error
  */
-export function isServerActionError<T>(
-  result: ServerActionResult<T>
-): result is ServerActionErrorType {
+export function isServerActionError<T>(result: ServerActionResult<T>): result is ServerActionErrorType {
   return !result.success;
 }
 
 /**
  * Type guard to check if a result is a success
  */
-export function isServerActionSuccess<T>(
-  result: ServerActionResult<T>
-): result is ServerActionSuccess<T> {
+export function isServerActionSuccess<T>(result: ServerActionResult<T>): result is ServerActionSuccess<T> {
   return result.success;
 }
 
@@ -126,9 +118,7 @@ export function isServerActionSuccess<T>(
  * Extract error message from a server action result
  * Returns undefined if the result was successful
  */
-export function getServerActionErrorMessage<T>(
-  result: ServerActionResult<T>
-): string | undefined {
+export function getServerActionErrorMessage<T>(result: ServerActionResult<T>): string | undefined {
   if (isServerActionError(result)) {
     return result.error.message;
   }
@@ -143,10 +133,7 @@ export function getServerActionErrorMessage<T>(
  * Wraps an async function with standardized error handling
  * Returns ActionResult (primary system)
  */
-export async function withErrorHandling<T>(
-  fn: () => Promise<T>,
-  errorContext?: string
-): Promise<ActionResult<T>> {
+export async function withErrorHandling<T>(fn: () => Promise<T>, errorContext?: string): Promise<ActionResult<T>> {
   const ctx = errorContext ? `[${errorContext}]` : "[withErrorHandling]";
   console.log(`${ctx} 🔄 Starting...`);
 
@@ -198,7 +185,7 @@ export async function withErrorHandling<T>(
  */
 export async function withServerActionErrorHandling<T>(
   operation: () => Promise<T>,
-  defaultErrorMessage = "An unexpected error occurred"
+  defaultErrorMessage = "An unexpected error occurred",
 ): Promise<ServerActionResult<T>> {
   try {
     const data = await operation();

@@ -5,8 +5,8 @@
  * Handles navigation that requires useRouter
  */
 
-import { useRouter } from "next/navigation";
 import { Mail } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface ProfileActionsProps {
   profileId: string;
@@ -22,6 +22,7 @@ export function ProfileActions({ profileId, isAuthenticated }: ProfileActionsPro
       {isAuthenticated && (
         <div className="mt-8 flex justify-center">
           <button
+            type="button"
             onClick={() => router.push(`/chat?user=${profileId}`)}
             className="px-8 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
           >
@@ -34,6 +35,7 @@ export function ProfileActions({ profileId, isAuthenticated }: ProfileActionsPro
       {/* Back Button */}
       <div className="mt-6 flex justify-center">
         <button
+          type="button"
           onClick={() => router.back()}
           className="px-6 py-2 text-muted-foreground hover:text-foreground font-medium transition-colors"
         >

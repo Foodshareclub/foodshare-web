@@ -5,8 +5,8 @@
  * Uses OpenStreetMap Nominatim with proper rate limiting.
  */
 
-import { NOMINATIM_BASE_URL, USER_AGENT, API_DELAY_MS } from '../config';
-import type { Coordinates } from '../types';
+import { API_DELAY_MS, NOMINATIM_BASE_URL, USER_AGENT } from "../config";
+import type { Coordinates } from "../types";
 
 // In-memory cache
 const geocodeCache = new Map<string, Coordinates>();
@@ -19,9 +19,9 @@ function normalizeAddress(address: string): string {
   return address
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .replace(/\b(apt\.?|apartment|unit|#)\s*[\w-]+,?/gi, '')
-    .replace(/\bUSA\b/gi, 'United States');
+    .replace(/\s+/g, " ")
+    .replace(/\b(apt\.?|apartment|unit|#)\s*[\w-]+,?/gi, "")
+    .replace(/\bUSA\b/gi, "United States");
 }
 
 /**
@@ -44,8 +44,8 @@ async function enforceRateLimit(): Promise<void> {
  */
 export function isValidCoordinates(lat: number, lon: number): boolean {
   return (
-    !isNaN(lat) &&
-    !isNaN(lon) &&
+    !Number.isNaN(lat) &&
+    !Number.isNaN(lon) &&
     lat !== 0 &&
     lon !== 0 &&
     lat >= -90 &&
@@ -58,10 +58,7 @@ export function isValidCoordinates(lat: number, lon: number): boolean {
 /**
  * Geocode an address using Nominatim
  */
-export async function geocodeAddress(
-  address: string,
-  verbose = false
-): Promise<Coordinates | null> {
+export async function geocodeAddress(address: string, verbose = false): Promise<Coordinates | null> {
   if (!address || address.trim().length === 0) {
     return null;
   }
@@ -82,16 +79,16 @@ export async function geocodeAddress(
 
   try {
     const params = new URLSearchParams({
-      format: 'json',
+      format: "json",
       q: normalized,
-      limit: '1',
-      addressdetails: '1',
+      limit: "1",
+      addressdetails: "1",
     });
 
     const response = await fetch(`${NOMINATIM_BASE_URL}?${params.toString()}`, {
       headers: {
-        'User-Agent': USER_AGENT,
-        Accept: 'application/json',
+        "User-Agent": USER_AGENT,
+        Accept: "application/json",
       },
     });
 
@@ -106,15 +103,17 @@ export async function geocodeAddress(
 
     if (Array.isArray(data) && data.length > 0) {
       const result = data[0];
-      const latitude = parseFloat(result.lat);
-      const longitude = parseFloat(result.lon);
+      const latitude = Number.parseFloat(result.lat);
+      const longitude = Number.parseFloat(result.lon);
 
       if (isValidCoordinates(latitude, longitude)) {
         const coords: Coordinates = { latitude, longitude };
         geocodeCache.set(normalized, coords);
 
         if (verbose) {
-          console.log(`      Geocoded: ${address.substring(0, 40)}... -> ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+          console.log(
+            `      Geocoded: ${address.substring(0, 40)}... -> ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+          );
         }
 
         return coords;
@@ -128,7 +127,7 @@ export async function geocodeAddress(
     return null;
   } catch (error) {
     if (verbose) {
-      console.error(`      Geocoding error:`, error);
+      console.error("      Geocoding error:", error);
     }
     return null;
   }

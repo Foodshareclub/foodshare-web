@@ -2,9 +2,9 @@ import type { CustomRoomType } from "@/api/chatAPI";
 import { BecomeSharerBlock } from "@/components/becomeSharerBlock/BecomeSharerBlock";
 import { BecomeSharerButton } from "@/components/becomeSharerBlock/BecomeSharerButton";
 import { NotificationCenter } from "@/components/notifications";
-import { useMediaQuery } from "@/hooks";
-import { MobileMenu } from "./MobileMenu";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { DesktopMenu } from "./DesktopMenu";
+import { MobileMenu } from "./MobileMenu";
 
 export interface NavbarActionsProps {
   /** User authentication status */
@@ -96,9 +96,7 @@ export function NavbarActions({
       {!isAuth ? <BecomeSharerButton /> : <BecomeSharerBlock />}
 
       {/* Notifications - only for authenticated users */}
-      {isAuth && userId && (
-        <NotificationCenter userId={userId} initialUnreadCount={initialUnreadCount} />
-      )}
+      {isAuth && userId && <NotificationCenter userId={userId} initialUnreadCount={initialUnreadCount} />}
 
       {/* User Menu - Responsive (theme toggle inside dropdown) */}
       {isDesktop ? <DesktopMenu {...menuProps} /> : <MobileMenu {...menuProps} size="md" />}

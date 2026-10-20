@@ -21,14 +21,18 @@ git clone <repository-url>
 cd foodshare
 ```
 
-### 2. Install Node.js Version
+### 2. Install Bun
+
+Bun is the only runtime this project needs — it is the package manager, the
+script runner, the TypeScript executor, the test runner and the Next.js
+runtime. Node.js is not required.
 
 ```bash
-# Using nvm (recommended)
-nvm install
-nvm use
+# Using mise (recommended)
+mise install bun
 
-# Or manually install Node.js 24.11.1
+# Or install Bun directly
+curl -fsSL https://bun.sh/install | bash
 ```
 
 ### 3. Install Dependencies

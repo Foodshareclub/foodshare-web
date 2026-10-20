@@ -45,12 +45,7 @@ export default function ContactsBlock({
 
   const router = useRouter();
 
-  const onGetCurrentUserMessages = async (
-    post_id: number,
-    _sharerId: string,
-    _requesterId: string,
-    roomId: string
-  ) => {
+  const onGetCurrentUserMessages = async (post_id: number, _sharerId: string, _requesterId: string, roomId: string) => {
     if (roomId === roomIDFromUrl) {
       return;
     }
@@ -62,7 +57,7 @@ export default function ContactsBlock({
   };
 
   return (
-    <div className="glass-subtle rounded-2xl w-auto xl:w-[18vw] py-3 pr-3 flex flex-col animate-slide-up">
+    <div className="glass-subtle rounded-2xl w-auto xl:w-[18vw] py-3 pe-3 flex flex-col animate-slide-up">
       <div className="flex flex-col self-center">
         <AvatarWithRipple img={imgUrl || ""} />
         <div className="py-2">
@@ -71,8 +66,8 @@ export default function ContactsBlock({
           </h2>
         </div>
         <div className="w-[90%] self-center mb-5 relative">
-          <Input variant="glass" placeholder={t("search")} className="pr-10" />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+          <Input variant="glass" placeholder={t("search")} className="pe-10" />
+          <div className="absolute end-3 top-1/2 -translate-y-1/2 pointer-events-none">
             <SearchIcon />
           </div>
         </div>

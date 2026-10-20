@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { CategoryNav } from "@/components/ui-library";
-import type { PagesType } from "./navbar/types";
 import SearchModal from "@/components/modals/SearchModal";
+import { CategoryNav } from "@/components/ui-library";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import type { PagesType } from "./navbar/types";
 
 type CategoryFilterComponentProps = {
   pageType: PagesType;
@@ -25,11 +25,7 @@ const CATEGORY_TO_POST_TYPE: Record<string, string> = {
 };
 
 // React Compiler handles memoization automatically
-export default function CategoryFilterComponent({
-  getRoute,
-  setPageType,
-  productType,
-}: CategoryFilterComponentProps) {
+export default function CategoryFilterComponent({ getRoute, setPageType, productType }: CategoryFilterComponentProps) {
   const router = useRouter();
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 

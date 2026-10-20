@@ -1,5 +1,5 @@
-import React from "react";
 import { cn } from "@/lib/utils";
+import type React from "react";
 
 interface StatusIndicatorProps {
   status: "online" | "offline" | "pending" | "error";
@@ -11,11 +11,7 @@ interface StatusIndicatorProps {
  * StatusIndicator - Displays a status dot with color coding
  * Shows online/offline/pending/error status with appropriate colors
  */
-export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
-  status,
-  size = "md",
-  className,
-}) => {
+export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ status, size = "md", className }) => {
   const sizeMap = {
     sm: "w-4 h-4",
     md: "w-5 h-5",
@@ -30,13 +26,6 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   };
 
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full",
-        sizeMap[size],
-        statusColor[status],
-        className
-      )}
-    />
+    <span className={cn("inline-flex items-center rounded-full", sizeMap[size], statusColor[status], className)} />
   );
 };

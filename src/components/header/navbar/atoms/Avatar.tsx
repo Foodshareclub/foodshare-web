@@ -1,7 +1,7 @@
-import type { FC } from "react";
-import { cn } from "@/lib/utils";
-import { Avatar as AvatarPrimitive, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { AvatarFallback, AvatarImage, Avatar as AvatarPrimitive } from "@/components/ui/avatar";
 import { DEFAULT_AVATAR_URL } from "@/constants/storage";
+import { cn } from "@/lib/utils";
+import type { FC } from "react";
 
 export interface NavbarAvatarProps {
   /** Image URL for the avatar */
@@ -85,12 +85,12 @@ export const NavbarAvatar: FC<NavbarAvatarProps> = ({
     sizeClasses[size],
     hasNotification && [
       "after:content-['']",
-      "after:absolute after:bottom-0 after:right-0",
+      "after:absolute after:bottom-0 after:end-0",
       "after:bg-green-300 after:border-2 after:border-background",
       "after:rounded-full",
       badgeSizeClasses[size],
     ],
-    className
+    className,
   );
 
   const handleKeyDown = (e: React.KeyboardEvent): void => {
@@ -115,10 +115,10 @@ export const NavbarAvatar: FC<NavbarAvatarProps> = ({
       {hasNotification && notificationCount && notificationCount > 0 && (
         <span
           className={cn(
-            "absolute -top-1 -right-1 flex items-center justify-center",
+            "absolute -top-1 -end-1 flex items-center justify-center",
             "min-w-5 h-5 px-1 rounded-full",
             "bg-red-500 text-white text-xs font-semibold",
-            "border-2 border-background"
+            "border-2 border-background",
           )}
           aria-label={`${notificationCount} notifications`}
         >

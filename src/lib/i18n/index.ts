@@ -183,15 +183,15 @@ export const localeMetadata: Record<
 
 // Backward compatibility exports
 export const localeNames: Record<SupportedLocale, string> = Object.fromEntries(
-  supportedLocales.map((locale) => [locale, localeMetadata[locale].name])
+  supportedLocales.map((locale) => [locale, localeMetadata[locale].name]),
 ) as Record<SupportedLocale, string>;
 
 export const localeNativeNames: Record<SupportedLocale, string> = Object.fromEntries(
-  supportedLocales.map((locale) => [locale, localeMetadata[locale].nativeName])
+  supportedLocales.map((locale) => [locale, localeMetadata[locale].nativeName]),
 ) as Record<SupportedLocale, string>;
 
 export const localeFlags: Record<SupportedLocale, string> = Object.fromEntries(
-  supportedLocales.map((locale) => [locale, localeMetadata[locale].flag])
+  supportedLocales.map((locale) => [locale, localeMetadata[locale].flag]),
 ) as Record<SupportedLocale, string>;
 
 // ============================================================================
@@ -256,7 +256,7 @@ export function getLocaleCode(locale: SupportedLocale): string {
  */
 export function formatLocaleDisplay(
   locale: SupportedLocale,
-  options: { showFlag?: boolean; showNative?: boolean; separator?: string } = {}
+  options: { showFlag?: boolean; showNative?: boolean; separator?: string } = {},
 ): string {
   const { showFlag = false, showNative = false, separator = " " } = options;
   const metadata = localeMetadata[locale];

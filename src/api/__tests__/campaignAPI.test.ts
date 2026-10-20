@@ -148,8 +148,11 @@ describe("Segment Builder API", () => {
 
     it("should detect invalid customer type", () => {
       const result = segmentBuilderAPI.validateSegmentFilters({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        customer_type: "invalid" as any,
+        // Deliberately out-of-domain so the validator has something to reject;
+        // the parameter type only admits real enum members.
+        customer_type: "invalid" as unknown as NonNullable<
+          Parameters<typeof segmentBuilderAPI.validateSegmentFilters>[0]["customer_type"]
+        >,
       });
 
       expect(result.valid).toBe(false);

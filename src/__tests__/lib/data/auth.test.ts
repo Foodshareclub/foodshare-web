@@ -3,7 +3,7 @@
  * Unit tests for authentication-related data fetching functions
  */
 
-import { mock, describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 // Shared mock state
 const mockState = {
@@ -20,7 +20,7 @@ const createMockSupabaseClient = () => {
     Promise.resolve({
       data: mockState.profile,
       error: mockState.profileError,
-    })
+    }),
   );
 
   const mockSelect = mock(() => ({
@@ -34,7 +34,7 @@ const createMockSupabaseClient = () => {
       Promise.resolve({
         data: mockState.userRoles,
         error: null,
-      })
+      }),
     ),
   }));
 
@@ -44,7 +44,7 @@ const createMockSupabaseClient = () => {
         Promise.resolve({
           data: { user: mockState.user },
           error: mockState.authError,
-        })
+        }),
       ),
     },
     from: mock((table: string) => {
@@ -99,7 +99,7 @@ mock.module("@/lib/data/admin-check", () => ({
 }));
 
 // Import AFTER mocks are set up
-import { getCurrentUser, checkUserIsAdmin, getAuthSession } from "@/lib/data/auth";
+import { checkUserIsAdmin, getAuthSession, getCurrentUser } from "@/lib/data/auth";
 
 describe("Auth Data Functions", () => {
   beforeEach(() => {

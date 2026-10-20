@@ -12,9 +12,8 @@
  *   bun scripts/sync-translations.ts --force
  */
 
-import * as fs from "fs";
-import * as path from "path";
-import * as crypto from "crypto";
+import * as fs from "bun:fs";
+import * as path from "bun:path";
 import { createClient } from "@supabase/supabase-js";
 import { config } from "dotenv";
 
@@ -60,7 +59,7 @@ function generateVersion(): string {
 }
 
 function generateHash(content: string): string {
-  return crypto.createHash("sha256").update(content).digest("hex").slice(0, 16);
+  return new Bun.CryptoHasher("sha256").update(content).digest("hex").slice(0, 16);
 }
 
 function flattenObject(obj: Record<string, unknown>, prefix = ""): Record<string, string> {
@@ -83,7 +82,7 @@ function computeChanges(
   oldMessages: Record<string, unknown> | null,
   newMessages: Record<string, unknown>,
   locale: string,
-  version: string
+  version: string,
 ): ChangeLogEntry[] {
   const changes: ChangeLogEntry[] = [];
   const oldFlat = oldMessages ? flattenObject(oldMessages) : {};
@@ -152,20 +151,14 @@ async function syncTranslations() {
   log(`Found ${files.length} translation files to process`);
 
   // Fetch existing translations
-  let existingTranslations:
-    { locale: string; messages: Record<string, unknown>; version: string }[] | null = null;
+  let existingTranslations: { locale: string; messages: Record<string, unknown>; version: string }[] | null = null;
 
   try {
-    const { data, error: fetchError } = await supabase
-      .from("translations")
-      .select("locale,messages,version");
+    const { data, error: fetchError } = await supabase.from("translations").select("locale,messages,version");
 
     if (fetchError) {
       if (dryRun) {
-        log(
-          `Could not fetch remote translations (${fetchError.message}), running local validation only`,
-          "warn"
-        );
+        log(`Could not fetch remote translations (${fetchError.message}), running local validation only`, "warn");
       } else {
         log(`Failed to fetch existing translations: ${fetchError.message}`, "error");
         process.exit(1);
@@ -229,9 +222,9 @@ async function syncTranslations() {
 
       if (dryRun) {
         log(`[DRY RUN] Would update ${locale} with ${changes.length} changes`);
-        changes.slice(0, 5).forEach((c) => {
+        for (const c of changes.slice(0, 5)) {
           log(`  ${c.change_type}: ${c.key_path}`, "debug");
-        });
+        }
         if (changes.length > 5) {
           log(`  ... and ${changes.length - 5} more`, "debug");
         }
@@ -247,7 +240,7 @@ async function syncTranslations() {
           version,
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "locale" }
+        { onConflict: "locale" },
       );
 
       if (upsertError) {
@@ -273,7 +266,7 @@ async function syncTranslations() {
             acc[c.change_type] = (acc[c.change_type] || 0) + 1;
             return acc;
           },
-          {} as Record<string, number>
+          {} as Record<string, number>,
         ),
         previous_version: existing?.version || null,
       });
@@ -290,15 +283,15 @@ async function syncTranslations() {
   }
 
   // Summary
-  console.log("\n" + "=".repeat(50));
-  log(`Sync complete!`);
+  console.log(`\n${"=".repeat(50)}`);
+  log("Sync complete!");
   log(`  Locales updated: ${localesUpdated}`);
   log(`  Locales skipped: ${localesSkipped}`);
   log(`  Total changes: ${totalChanges}`);
   log(`  Version: ${version}`);
 
   if (dryRun) {
-    log(`\n[DRY RUN] No changes were made to the database`);
+    log("\n[DRY RUN] No changes were made to the database");
   }
 }
 

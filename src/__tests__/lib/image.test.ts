@@ -29,8 +29,8 @@ describe("listing image URLs", () => {
   });
 
   test("normalizes older host-based photo URLs without treating Telegram IDs as hosts", () => {
-    expect(
-      normalizeImageUrl("  firebasestorage.googleapis.com/v0/b/legacy/o/photo.jpg?alt=media  ")
-    ).toBe("https://firebasestorage.googleapis.com/v0/b/legacy/o/photo.jpg?alt=media");
+    expect(normalizeImageUrl("  firebasestorage.googleapis.com/v0/b/legacy/o/photo.jpg?alt=media  ")).toBe(
+      "https://firebasestorage.googleapis.com/v0/b/legacy/o/photo.jpg?alt=media",
+    );
   });
 });

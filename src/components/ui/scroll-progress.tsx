@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, RefObject } from "react";
-import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { motion, useScroll, useSpring, useTransform } from "framer-motion";
+import { type RefObject, useEffect, useState } from "react";
 
 export interface ScrollProgressProps {
   /** Position of the progress bar */
@@ -91,13 +91,14 @@ export function ScrollProgress({
   return (
     <div
       className={cn(
-        "fixed left-0 right-0 pointer-events-none",
+        "fixed inset-x-0 pointer-events-none",
         position === "top" ? "top-0" : "bottom-0",
         backgroundColor,
-        className
+        className,
       )}
       style={{ zIndex, height }}
       role="progressbar"
+      tabIndex={0}
       aria-valuenow={displayPercentage}
       aria-valuemin={0}
       aria-valuemax={100}
@@ -108,9 +109,9 @@ export function ScrollProgress({
       {showPercentage && (
         <div
           className={cn(
-            "absolute right-2 text-xs font-medium pointer-events-auto",
+            "absolute end-2 text-xs font-medium pointer-events-auto",
             position === "top" ? "top-full mt-1" : "bottom-full mb-1",
-            "bg-background/80 backdrop-blur-sm px-2 py-0.5 rounded text-foreground"
+            "bg-background/80 backdrop-blur-sm px-2 py-0.5 rounded text-foreground",
           )}
         >
           {displayPercentage}%
@@ -225,7 +226,7 @@ export function CircularScrollProgress({
       aria-label="Page scroll progress"
     >
       <div className="relative glass rounded-full p-1.5 shadow-lg">
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+        <svg aria-hidden="true" width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
           {/* Background circle */}
           <circle
             cx={size / 2}

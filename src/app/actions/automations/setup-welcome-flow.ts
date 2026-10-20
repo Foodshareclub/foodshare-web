@@ -5,12 +5,16 @@
  * Complete setup including template seeding and flow activation
  */
 
-import { createClient } from "@/lib/supabase/server";
 import { welcomeSeriesTemplates } from "@/lib/email/templates/welcome-series";
-import { createPresetAutomation } from "./presets";
+import { createClient } from "@/lib/supabase/server";
 import { toggleAutomationStatus } from "./flow-crud";
-import { success, error, type ActionResult } from "./types";
-import { requireAuth, logAuditEvent, invalidateAutomationCache } from "./helpers";
+import { invalidateAutomationCache, logAuditEvent, requireAuth } from "./helpers";
+import { createPresetAutomation } from "./presets";
+import { type ActionResult, error, success } from "./types";
+
+interface EmailTemplateSlugRow {
+  slug: string;
+}
 
 interface SetupResult {
   templates: {
@@ -30,7 +34,7 @@ interface SetupResult {
  * Optionally activates the flow immediately
  */
 export async function setupWelcomeAutomation(
-  options: { activate?: boolean; preset?: "welcome" | "welcome_with_testers" } = {}
+  options: { activate?: boolean; preset?: "welcome" | "welcome_with_testers" } = {},
 ): Promise<ActionResult<SetupResult>> {
   const { activate = false, preset = "welcome_with_testers" } = options;
 
@@ -46,11 +50,7 @@ export async function setupWelcomeAutomation(
     };
 
     for (const template of welcomeSeriesTemplates) {
-      const { data: existing } = await supabase
-        .from("email_templates")
-        .select("id")
-        .eq("slug", template.slug)
-        .single();
+      const { data: existing } = await supabase.from("email_templates").select("id").eq("slug", template.slug).single();
 
       if (existing) {
         const { error: updateError } = await supabase
@@ -96,10 +96,7 @@ export async function setupWelcomeAutomation(
     const { data: existingFlow } = await supabase
       .from("email_automation_flows")
       .select("id,name,status")
-      .ilike(
-        "name",
-        `%${preset === "welcome_with_testers" ? "Welcome Series + Tester" : "Welcome Series"}%`
-      )
+      .ilike("name", `%${preset === "welcome_with_testers" ? "Welcome Series + Tester" : "Welcome Series"}%`)
       .not("status", "eq", "archived")
       .single();
 
@@ -119,7 +116,7 @@ export async function setupWelcomeAutomation(
       if (!createResult.success) {
         return error(
           `Templates seeded but automation creation failed: ${createResult.error.message}`,
-          "AUTOMATION_CREATE_FAILED"
+          "AUTOMATION_CREATE_FAILED",
         );
       }
 
@@ -132,10 +129,7 @@ export async function setupWelcomeAutomation(
       const activateResult = await toggleAutomationStatus(automationId, "active");
 
       if (!activateResult.success) {
-        return error(
-          `Automation created but activation failed: ${activateResult.error.message}`,
-          "ACTIVATION_FAILED"
-        );
+        return error(`Automation created but activation failed: ${activateResult.error.message}`, "ACTIVATION_FAILED");
       }
 
       automationStatus = "active";
@@ -196,10 +190,10 @@ export async function checkWelcomeAutomationStatus(): Promise<
       .select("slug")
       .in(
         "slug",
-        welcomeSeriesTemplates.map((t) => t.slug)
+        welcomeSeriesTemplates.map((t) => t.slug),
       );
 
-    const existingSlugs = new Set(templates?.map((t: any) => t.slug) || []);
+    const existingSlugs = new Set(((templates ?? []) as EmailTemplateSlugRow[]).map((t) => t.slug));
     const templateStatus = welcomeSeriesTemplates.map((t) => ({
       slug: t.slug,
       exists: existingSlugs.has(t.slug),

@@ -1,4 +1,4 @@
-import path from "path";
+import path from "bun:path";
 import * as dotenv from "dotenv";
 
 // Load environment variables
@@ -31,16 +31,13 @@ async function checkCloudflareDNS() {
       result: DNSRecord[];
     }
 
-    const response = await fetch(
-      `https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records?per_page=100`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await fetch(`https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records?per_page=100`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    });
 
     const data = (await response.json()) as CloudflareDNSResponse;
 
@@ -54,9 +51,7 @@ async function checkCloudflareDNS() {
 
     // specific AWS SES check
     const awsRecords = records.filter(
-      (r: DNSRecord) =>
-        (r.content && r.content.includes("amazonses.com")) ||
-        (r.name && r.name.includes("_domainkey"))
+      (r: DNSRecord) => r.content?.includes("amazonses.com") || r.name?.includes("_domainkey"),
     );
 
     console.log("\n--- AWS SES / DKIM Record Analysis ---");
@@ -91,7 +86,7 @@ async function checkCloudflareDNS() {
 
       if (status.includes("ERROR")) {
         // Attempt to fix
-        console.log(`--> NEEDS FIXING`);
+        console.log("--> NEEDS FIXING");
       }
     });
   } catch (e: unknown) {

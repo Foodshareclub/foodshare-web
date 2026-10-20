@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { useGPUContext } from "@/lib/gpu";
-import { useSmoothScrollGPU } from "@/lib/gpu/useScrollGPU";
 import { initGPURender } from "@/lib/gpu/useGPURender";
+import { useSmoothScrollGPU } from "@/lib/gpu/useScrollGPU";
+import { useEffect, useRef } from "react";
 import type { FrameLoopHandle } from "vgpu";
 
 interface HeroParticlesProps {

@@ -26,7 +26,7 @@ if ! command -v supabase &> /dev/null; then
     echo "Install Supabase CLI:"
     echo "  bun install -g supabase"
     echo ""
-    echo "Or use npx:"
+    echo "Or use bunx:"
     echo "  bunx supabase db dump"
     exit 1
 fi

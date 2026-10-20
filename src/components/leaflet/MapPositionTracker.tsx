@@ -1,6 +1,31 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+/**
+ * MapPositionTracker - reports viewport changes to the host component.
+ *
+ * Previously this also did two things that do not work:
+ *
+ *   1. POSTed to `/api/map-services/preferences` on every `moveend`. That route
+ *      does not exist (src/app/api/ contains only `[[...route]]`, `admin`,
+ *      `challenges`, `chat`, `health`, `products`, `ready`, `sentry-test`), so
+ *      every pan produced a guaranteed 404 — while still consuming one of the
+ *      30/minute mutation-limiter budget, which is how map marker loading was
+ *      getting rate limited.
+ *   2. Opened a WebSocket to `/api/map-services/sync` and sent
+ *      `{ type: "auth", userId }` where userId came from `localStorage`. That
+ *      route does not exist either, so the socket failed immediately and
+ *      reconnected every 5s forever. Even if it had existed, a client-supplied
+ *      userId in an auth frame is not authentication.
+ *
+ * Both are removed rather than reimplemented: cross-device map sync needs a
+ * real backend and real auth, and until then the honest behaviour is to report
+ * the viewport locally and make no network calls.
+ *
+ * `onPositionChange` is still called on every `moveend` (debounced) — that is
+ * what drives the URL/center state in MapClient.
+ */
+
+import { useEffect, useRef } from "react";
 import { useMapEvents } from "react-leaflet";
 
 interface MapPositionTrackerProps {
@@ -8,13 +33,10 @@ interface MapPositionTrackerProps {
   onPositionChange: (center: [number, number], zoom: number) => void;
 }
 
-const MapPositionTracker: React.FC<MapPositionTrackerProps> = ({
-  category: _category,
-  onPositionChange,
-}) => {
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+const SAVE_DEBOUNCE_MS = 1000;
+
+const MapPositionTracker: React.FC<MapPositionTrackerProps> = ({ category: _category, onPositionChange }) => {
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const map = useMapEvents({
     moveend() {
@@ -22,111 +44,22 @@ const MapPositionTracker: React.FC<MapPositionTrackerProps> = ({
         clearTimeout(saveTimeoutRef.current);
       }
 
-      saveTimeoutRef.current = setTimeout(async () => {
+      saveTimeoutRef.current = setTimeout(() => {
         const center = map.getCenter();
-        const zoom = map.getZoom();
-
-        onPositionChange([center.lat, center.lng], zoom);
-
-        // Save to backend
-        try {
-          await fetch("/api/map-services/preferences", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              center: { lat: center.lat, lng: center.lng },
-              zoom,
-              platform: "web",
-              deviceId: getDeviceId(),
-            }),
-          });
-
-          // Broadcast via WebSocket
-          if (wsRef.current && isConnected) {
-            wsRef.current.send(
-              JSON.stringify({
-                type: "map_sync",
-                platform: "web",
-                deviceId: getDeviceId(),
-                center: { lat: center.lat, lng: center.lng },
-                zoom,
-              })
-            );
-          }
-        } catch (error) {
-          console.error("Failed to save map preferences:", error);
-        }
-      }, 1000);
+        onPositionChange([center.lat, center.lng], map.getZoom());
+      }, SAVE_DEBOUNCE_MS);
     },
   });
 
   useEffect(() => {
-    // Setup WebSocket for real-time sync
-    const setupWebSocket = () => {
-      const wsUrl = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/api/map-services/sync`;
-      const ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        setIsConnected(true);
-        // Authenticate
-        ws.send(
-          JSON.stringify({
-            type: "auth",
-            userId: getCurrentUserId(),
-          })
-        );
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === "map_preferences_updated" && data.platform !== "web") {
-            // Update map from remote device
-            const { center, zoom } = data.preferences;
-            map.setView([center.lat, center.lng], zoom);
-            onPositionChange([center.lat, center.lng], zoom);
-          }
-        } catch (error) {
-          console.error("WebSocket message error:", error);
-        }
-      };
-
-      ws.onclose = () => {
-        setIsConnected(false);
-        // Reconnect after delay
-        setTimeout(setupWebSocket, 5000);
-      };
-
-      wsRef.current = ws;
-    };
-
-    setupWebSocket();
-
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
     };
-  }, [map, onPositionChange]);
+  }, []);
 
   return null;
 };
-
-function getDeviceId(): string {
-  let deviceId = localStorage.getItem("deviceId");
-  if (!deviceId) {
-    deviceId = crypto.randomUUID();
-    localStorage.setItem("deviceId", deviceId);
-  }
-  return deviceId;
-}
-
-function getCurrentUserId(): string {
-  // Get from auth context or session
-  return localStorage.getItem("userId") || "anonymous";
-}
 
 export default MapPositionTracker;

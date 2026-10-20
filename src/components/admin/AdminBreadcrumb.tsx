@@ -4,10 +4,10 @@
  * AdminBreadcrumb - Breadcrumb navigation for admin pages
  */
 
-import { usePathname } from "next/navigation";
-import Link from "next/link";
-import { useTranslations } from "next-intl";
 import { ChevronRight, Home } from "lucide-react";
+import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const BREADCRUMB_MAP: Record<string, string> = {
   admin: "overview",
@@ -29,7 +29,7 @@ export function AdminBreadcrumb() {
 
   // Build breadcrumb items
   const items = segments.map((segment, index) => {
-    const href = "/" + segments.slice(0, index + 1).join("/");
+    const href = `/${segments.slice(0, index + 1).join("/")}`;
     const label = BREADCRUMB_MAP[segment] || segment;
     const isLast = index === segments.length - 1;
 
@@ -40,10 +40,7 @@ export function AdminBreadcrumb() {
 
   return (
     <nav className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
-      <Link
-        href="/admin"
-        className="flex items-center gap-1 hover:text-foreground transition-colors"
-      >
+      <Link href="/admin" className="flex items-center gap-1 hover:text-foreground transition-colors">
         <Home className="h-4 w-4" />
       </Link>
       {items.slice(1).map((item, _index) => (

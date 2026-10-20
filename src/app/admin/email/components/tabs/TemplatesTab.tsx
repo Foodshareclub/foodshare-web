@@ -9,25 +9,25 @@
  * - Active/Inactive status
  */
 
-import { motion } from "framer-motion";
-import {
-  FileText,
-  Zap,
-  Mail,
-  Megaphone,
-  Settings,
-  Newspaper,
-  CheckCircle2,
-  XCircle,
-  Edit,
-  Copy,
-  Trash2,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { EmailTemplate } from "@/lib/data/admin-email";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import {
+  CheckCircle2,
+  Copy,
+  Edit,
+  FileText,
+  Mail,
+  Megaphone,
+  Newspaper,
+  Settings,
+  Trash2,
+  XCircle,
+  Zap,
+} from "lucide-react";
 
 interface TemplatesTabProps {
   templates: EmailTemplate[];
@@ -93,7 +93,7 @@ export function TemplatesTab({ templates }: TemplatesTabProps) {
       acc[cat].push(template);
       return acc;
     },
-    {} as Record<string, EmailTemplate[]>
+    {} as Record<string, EmailTemplate[]>,
   );
 
   const categories = Object.keys(CATEGORY_CONFIG) as Array<keyof typeof CATEGORY_CONFIG>;
@@ -106,11 +106,10 @@ export function TemplatesTab({ templates }: TemplatesTabProps) {
         </div>
         <h3 className="text-lg font-semibold mb-2">No templates yet</h3>
         <p className="text-sm text-muted-foreground max-w-sm">
-          Email templates help you create consistent, professional emails. Create your first
-          template to get started.
+          Email templates help you create consistent, professional emails. Create your first template to get started.
         </p>
         <Button className="mt-4">
-          <FileText className="h-4 w-4 mr-2" />
+          <FileText className="h-4 w-4 me-2" />
           Create Template
         </Button>
       </div>
@@ -128,7 +127,7 @@ export function TemplatesTab({ templates }: TemplatesTabProps) {
           </p>
         </div>
         <Button>
-          <FileText className="h-4 w-4 mr-2" />
+          <FileText className="h-4 w-4 me-2" />
           New Template
         </Button>
       </div>

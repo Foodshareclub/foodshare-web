@@ -3,9 +3,9 @@
  * Handles theme preference syncing with Supabase for logged-in users
  */
 
+import { createLogger } from "@/lib/logger";
 import { supabase } from "@/lib/supabase/client";
 import type { Theme, ThemeSchedule } from "@/store/zustand/useUIStore";
-import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("ThemeAPI");
 
@@ -34,11 +34,7 @@ export const themeAPI = {
    */
   async getThemePreferences(userId: string): Promise<ThemePreferences | null> {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("theme_preferences")
-        .eq("id", userId)
-        .single();
+      const { data, error } = await supabase.from("profiles").select("theme_preferences").eq("id", userId).single();
 
       if (error) {
         logger.error("Error fetching theme preferences", error);
@@ -55,10 +51,7 @@ export const themeAPI = {
   /**
    * Update user's theme preferences in Supabase
    */
-  async updateThemePreferences(
-    userId: string,
-    preferences: Partial<ThemePreferences>
-  ): Promise<boolean> {
+  async updateThemePreferences(userId: string, preferences: Partial<ThemePreferences>): Promise<boolean> {
     try {
       // First get current preferences to merge
       const current = await this.getThemePreferences(userId);
@@ -73,10 +66,7 @@ export const themeAPI = {
         },
       };
 
-      const { error } = await supabase
-        .from("profiles")
-        .update({ theme_preferences: merged })
-        .eq("id", userId);
+      const { error } = await supabase.from("profiles").update({ theme_preferences: merged }).eq("id", userId);
 
       if (error) {
         logger.error("Error updating theme preferences", error);
@@ -114,10 +104,7 @@ export const themeAPI = {
   /**
    * Update only the transition setting
    */
-  async setTransition(
-    userId: string,
-    transition: "instant" | "smooth" | "radial"
-  ): Promise<boolean> {
+  async setTransition(userId: string, transition: "instant" | "smooth" | "radial"): Promise<boolean> {
     return this.updateThemePreferences(userId, { transition });
   },
 };

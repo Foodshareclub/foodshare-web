@@ -16,6 +16,19 @@ interface GPUErrorContext {
   gpu?: string;
 }
 
+interface UncapturedGPUError {
+  message?: string;
+  shaderModule?: { label?: string };
+}
+
+interface UncapturedGPUEvent {
+  error?: UncapturedGPUError;
+}
+
+interface NavigatorGPU {
+  addEventListener?: (type: "uncapturederror", listener: (event: UncapturedGPUEvent) => void) => void;
+}
+
 /**
  * Report a GPU error to Sentry with context.
  * Called by GPUErrorBoundary and GPU component catch blocks.
@@ -74,11 +87,11 @@ export function reportGPUPerformanceIssue(metrics: {
 export function initGPUMonitoring() {
   if (typeof navigator === "undefined") return;
 
-  const gpu = (navigator as any).gpu;
+  const gpu = (navigator as { gpu?: NavigatorGPU }).gpu;
   if (!gpu) return;
 
   // Listen for uncaptured GPU errors
-  gpu.addEventListener?.("uncapturederror", (event: any) => {
+  gpu.addEventListener?.("uncapturederror", (event) => {
     reportGPUError(new Error(event.error?.message || "Uncaptured GPU error"), {
       component: "global",
       shader: event.error?.shaderModule?.label,

@@ -12,19 +12,13 @@
  * @module app/actions/post-engagement
  */
 
-import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
-import {
-  type ActionResult,
-  withErrorHandling,
-  validateWithSchema,
-  failure,
-  createError,
-} from "@/lib/errors";
 import { logPostActivity, logPostShared } from "@/app/actions/post-activity";
+import { toggleBookmarkAPI, toggleLikeAPI } from "@/lib/api/engagement";
+import { invalidatePostActivityCaches, invalidateTag } from "@/lib/data/cache-invalidation";
 import { CACHE_TAGS } from "@/lib/data/cache-keys";
-import { invalidateTag, invalidatePostActivityCaches } from "@/lib/data/cache-invalidation";
-import { toggleLikeAPI, toggleBookmarkAPI } from "@/lib/api/engagement";
+import { type ActionResult, createError, failure, validateWithSchema, withErrorHandling } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
 
 // Feature flag for Edge Function migration
 const USE_EDGE_FUNCTIONS = process.env.USE_EDGE_FUNCTIONS_FOR_ENGAGEMENT === "true";
@@ -42,6 +36,10 @@ const shareSchema = z.object({
   method: z.enum(["link", "social", "email", "other"]),
 });
 
+interface PostEngagementRow {
+  post_id: number;
+}
+
 // ============================================================================
 // Like Actions
 // ============================================================================
@@ -50,9 +48,7 @@ const shareSchema = z.object({
  * Toggle like on a post
  * Returns new like state and count
  */
-export async function togglePostLike(
-  postId: number
-): Promise<ActionResult<{ isLiked: boolean; likeCount: number }>> {
+export async function togglePostLike(postId: number): Promise<ActionResult<{ isLiked: boolean; likeCount: number }>> {
   const validation = validateWithSchema(postIdSchema, { postId });
   if (!validation.success) return validation;
 
@@ -147,9 +143,7 @@ export async function togglePostLike(
 /**
  * Check if user has liked a post
  */
-export async function checkPostLiked(
-  postId: number
-): Promise<ActionResult<{ isLiked: boolean; likeCount: number }>> {
+export async function checkPostLiked(postId: number): Promise<ActionResult<{ isLiked: boolean; likeCount: number }>> {
   const validation = validateWithSchema(postIdSchema, { postId });
   if (!validation.success) return validation;
 
@@ -190,9 +184,7 @@ export async function checkPostLiked(
 /**
  * Toggle bookmark on a post
  */
-export async function togglePostBookmark(
-  postId: number
-): Promise<ActionResult<{ isBookmarked: boolean }>> {
+export async function togglePostBookmark(postId: number): Promise<ActionResult<{ isBookmarked: boolean }>> {
   const validation = validateWithSchema(postIdSchema, { postId });
   if (!validation.success) return validation;
 
@@ -240,11 +232,7 @@ export async function togglePostBookmark(
 
     if (existingBookmark) {
       // Remove bookmark
-      await supabase
-        .from("post_bookmarks")
-        .delete()
-        .eq("post_id", postId)
-        .eq("profile_id", user.id);
+      await supabase.from("post_bookmarks").delete().eq("post_id", postId).eq("profile_id", user.id);
 
       isBookmarked = false;
 
@@ -282,9 +270,7 @@ export async function togglePostBookmark(
 /**
  * Check if user has bookmarked a post
  */
-export async function checkPostBookmarked(
-  postId: number
-): Promise<ActionResult<{ isBookmarked: boolean }>> {
+export async function checkPostBookmarked(postId: number): Promise<ActionResult<{ isBookmarked: boolean }>> {
   const validation = validateWithSchema(postIdSchema, { postId });
   if (!validation.success) return validation;
 
@@ -313,7 +299,7 @@ export async function checkPostBookmarked(
 /**
  * Get user's bookmarked posts
  */
-export async function getUserBookmarks(limit: number = 50): Promise<ActionResult<number[]>> {
+export async function getUserBookmarks(limit = 50): Promise<ActionResult<number[]>> {
   return withErrorHandling(async () => {
     const supabase = await createClient();
 
@@ -334,7 +320,7 @@ export async function getUserBookmarks(limit: number = 50): Promise<ActionResult
 
     if (error) throw new Error(error.message);
 
-    return (data || []).map((b: any) => b.post_id);
+    return ((data ?? []) as PostEngagementRow[]).map((b) => b.post_id);
   }, "getUserBookmarks");
 }
 
@@ -347,7 +333,7 @@ export async function getUserBookmarks(limit: number = 50): Promise<ActionResult
  */
 export async function recordPostShare(
   postId: number,
-  method: "link" | "social" | "email" | "other" = "link"
+  method: "link" | "social" | "email" | "other" = "link",
 ): Promise<ActionResult<void>> {
   const validation = validateWithSchema(shareSchema, { postId, method });
   if (!validation.success) return validation;
@@ -368,10 +354,8 @@ export async function recordPostShare(
  * Optimized for list views
  */
 export async function getBatchEngagementStatus(
-  postIds: number[]
-): Promise<
-  ActionResult<Record<number, { isLiked: boolean; isBookmarked: boolean; likeCount: number }>>
-> {
+  postIds: number[],
+): Promise<ActionResult<Record<number, { isLiked: boolean; isBookmarked: boolean; likeCount: number }>>> {
   if (!postIds.length || postIds.length > 100) {
     return failure(createError("VALIDATION_ERROR", "Invalid post IDs (max 100)"));
   }
@@ -384,10 +368,7 @@ export async function getBatchEngagementStatus(
     } = await supabase.auth.getUser();
 
     // Get like counts
-    const { data: likeCounts } = await supabase
-      .from("post_likes")
-      .select("post_id")
-      .in("post_id", postIds);
+    const { data: likeCounts } = await supabase.from("post_likes").select("post_id").in("post_id", postIds);
 
     // Count likes per post
     const likeCountMap: Record<number, number> = {};
@@ -401,25 +382,16 @@ export async function getBatchEngagementStatus(
 
     if (user) {
       const [likesResult, bookmarksResult] = await Promise.all([
-        supabase
-          .from("post_likes")
-          .select("post_id")
-          .eq("profile_id", user.id)
-          .in("post_id", postIds),
-        supabase
-          .from("post_bookmarks")
-          .select("post_id")
-          .eq("profile_id", user.id)
-          .in("post_id", postIds),
+        supabase.from("post_likes").select("post_id").eq("profile_id", user.id).in("post_id", postIds),
+        supabase.from("post_bookmarks").select("post_id").eq("profile_id", user.id).in("post_id", postIds),
       ]);
 
-      userLikes = (likesResult.data || []).map((l: any) => l.post_id);
-      userBookmarks = (bookmarksResult.data || []).map((b: any) => b.post_id);
+      userLikes = ((likesResult.data ?? []) as PostEngagementRow[]).map((l) => l.post_id);
+      userBookmarks = ((bookmarksResult.data ?? []) as PostEngagementRow[]).map((b) => b.post_id);
     }
 
     // Build result
-    const result: Record<number, { isLiked: boolean; isBookmarked: boolean; likeCount: number }> =
-      {};
+    const result: Record<number, { isLiked: boolean; isBookmarked: boolean; likeCount: number }> = {};
 
     for (const postId of postIds) {
       result[postId] = {

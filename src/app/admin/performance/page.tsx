@@ -1,8 +1,8 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { Activity } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Activity } from "lucide-react";
+import dynamic from "next/dynamic";
 
 function PerformanceLoadingFallback() {
   return (
@@ -29,7 +29,7 @@ const WebVitalsDashboard = dynamic(
   {
     ssr: false,
     loading: PerformanceLoadingFallback,
-  }
+  },
 );
 
 export default function AdminPerformancePage() {
@@ -40,15 +40,11 @@ export default function AdminPerformancePage() {
           <Activity className="h-8 w-8 text-primary" />
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Performance</h1>
-            <p className="text-muted-foreground">
-              Core Web Vitals monitoring and real user metrics
-            </p>
+            <p className="text-muted-foreground">Core Web Vitals monitoring and real user metrics</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded-md">
-            Real-time RUM
-          </span>
+          <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded-md">Real-time RUM</span>
         </div>
       </div>
       <WebVitalsDashboard />

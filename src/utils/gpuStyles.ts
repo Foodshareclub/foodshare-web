@@ -136,8 +136,7 @@ export const gpu120Card = {
   transform: "translate3d(0, 0, 0)",
   backfaceVisibility: "hidden" as const,
   willChange: "transform, box-shadow",
-  transition:
-    "transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.12s cubic-bezier(0.4, 0, 0.2, 1)",
+  transition: "transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.12s cubic-bezier(0.4, 0, 0.2, 1)",
   _hover: {
     transform: "translateY(-4px) translate3d(0, 0, 0)",
   },

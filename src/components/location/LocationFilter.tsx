@@ -7,13 +7,13 @@
  * Shows radius selector when enabled.
  */
 
-import { useState, useTransition } from "react";
-import { MapPin, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
-import { cn } from "@/lib/utils";
 import { useLocationFilter } from "@/hooks/useLocationFilter";
+import { cn } from "@/lib/utils";
+import { Loader2, MapPin, X } from "lucide-react";
+import { useState, useTransition } from "react";
 
 interface LocationFilterProps {
   onLocationChange?: (
@@ -21,7 +21,7 @@ interface LocationFilterProps {
       latitude: number;
       longitude: number;
       radiusMeters: number;
-    } | null
+    } | null,
   ) => void;
   className?: string;
 }
@@ -103,11 +103,7 @@ export function LocationFilter({ onLocationChange, className }: LocationFilterPr
               }
             }}
           >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <MapPin className="h-4 w-4" />
-            )}
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
             {isEnabled ? `${radiusKm} km` : "Nearby"}
           </Button>
         </PopoverTrigger>

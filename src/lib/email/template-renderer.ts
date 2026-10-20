@@ -174,11 +174,7 @@ export function getSampleData(slug: string): TemplateVariables {
  * - Mustache: {{variable_name}} or {{ variable_name }}
  * - Go template: {{ .VariableName }} or {{.VariableName}}
  */
-export function replaceVariables(
-  html: string,
-  variables: TemplateVariables,
-  options: RenderOptions = {}
-): string {
+export function replaceVariables(html: string, variables: TemplateVariables, options: RenderOptions = {}): string {
   const { useSampleData = false, stripUndefined = false } = options;
 
   let result = html;
@@ -214,20 +210,81 @@ export function replaceVariables(
 
 // Allowed HTML elements for email templates
 const ALLOWED_TAGS = new Set([
-  "a", "b", "i", "u", "em", "strong", "p", "br", "hr",
-  "h1", "h2", "h3", "h4", "h5", "h6",
-  "ul", "ol", "li", "dl", "dt", "dd",
-  "table", "thead", "tbody", "tfoot", "tr", "th", "td",
-  "div", "span", "img", "blockquote", "pre", "code",
-  "header", "footer", "section", "article", "aside", "nav",
-  "figure", "figcaption", "center", "html", "head", "body", "meta", "title", "style",
+  "a",
+  "b",
+  "i",
+  "u",
+  "em",
+  "strong",
+  "p",
+  "br",
+  "hr",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "ul",
+  "ol",
+  "li",
+  "dl",
+  "dt",
+  "dd",
+  "table",
+  "thead",
+  "tbody",
+  "tfoot",
+  "tr",
+  "th",
+  "td",
+  "div",
+  "span",
+  "img",
+  "blockquote",
+  "pre",
+  "code",
+  "header",
+  "footer",
+  "section",
+  "article",
+  "aside",
+  "nav",
+  "figure",
+  "figcaption",
+  "center",
+  "html",
+  "head",
+  "body",
+  "meta",
+  "title",
+  "style",
 ]);
 
 // Allowed attributes for email templates
 const ALLOWED_ATTR = new Set([
-  "href", "src", "alt", "title", "style", "class", "id",
-  "width", "height", "align", "valign", "border", "cellpadding", "cellspacing",
-  "bgcolor", "color", "target", "rel", "charset", "name", "content", "http-equiv",
+  "href",
+  "src",
+  "alt",
+  "title",
+  "style",
+  "class",
+  "id",
+  "width",
+  "height",
+  "align",
+  "valign",
+  "border",
+  "cellpadding",
+  "cellspacing",
+  "bgcolor",
+  "color",
+  "target",
+  "rel",
+  "charset",
+  "name",
+  "content",
+  "http-equiv",
 ]);
 
 /**
@@ -265,11 +322,7 @@ export function sanitizeHtmlSync(html: string): string {
 /**
  * Render an email template with variables (sync version)
  */
-export function renderTemplate(
-  html: string,
-  variables: TemplateVariables = {},
-  options: RenderOptions = {}
-): string {
+export function renderTemplate(html: string, variables: TemplateVariables = {}, options: RenderOptions = {}): string {
   const { sanitize = false, useSampleData = true } = options;
 
   // Replace variables
@@ -289,7 +342,7 @@ export function renderTemplate(
 export async function renderTemplateAsync(
   html: string,
   variables: TemplateVariables = {},
-  options: RenderOptions = {}
+  options: RenderOptions = {},
 ): Promise<string> {
   const { sanitize = true, useSampleData = true } = options;
 
@@ -319,10 +372,7 @@ export function renderTemplatePreview(html: string, slug: string): string {
 /**
  * Render a template for sending (no sanitization, strip undefined)
  */
-export function renderTemplateForSend(
-  html: string,
-  variables: TemplateVariables
-): string {
+export function renderTemplateForSend(html: string, variables: TemplateVariables): string {
   return renderTemplate(html, variables, {
     sanitize: false,
     useSampleData: false,
@@ -345,12 +395,7 @@ export function getIframeSandboxAttributes(): string {
  * Generate Content Security Policy for email preview iframe
  */
 export function getIframeCSP(): string {
-  return [
-    "default-src 'none'",
-    "img-src https: data:",
-    "style-src 'unsafe-inline'",
-    "font-src https:",
-  ].join("; ");
+  return ["default-src 'none'", "img-src https: data:", "style-src 'unsafe-inline'", "font-src https:"].join("; ");
 }
 
 /**

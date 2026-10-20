@@ -4,8 +4,8 @@
  * Sent when a user receives a new chat message.
  */
 
-import { Text, Section, Img, Row, Column } from "@react-email/components";
-import { EmailLayout, EmailCard, EmailButton, EmailUserCard, colors } from "./components/base";
+import { Column, Img, Row, Section, Text } from "@react-email/components";
+import { EmailButton, EmailCard, EmailLayout, EmailUserCard, colors } from "./components/base";
 
 interface NewMessageEmailProps {
   senderName?: string;
@@ -117,14 +117,10 @@ export function NewMessageEmail({
             >
               Regarding
             </Text>
-            <Text
-              style={{ margin: "4px 0 0", fontSize: "16px", fontWeight: 700, color: colors.text }}
-            >
+            <Text style={{ margin: "4px 0 0", fontSize: "16px", fontWeight: 700, color: colors.text }}>
               {listingTitle}
             </Text>
-            <Text style={{ margin: "4px 0 0", fontSize: "14px", color: colors.teal }}>
-              {listingType}
-            </Text>
+            <Text style={{ margin: "4px 0 0", fontSize: "14px", color: colors.teal }}>{listingType}</Text>
           </Column>
         </Row>
       </Section>
@@ -137,8 +133,7 @@ export default NewMessageEmail;
 NewMessageEmail.PreviewProps = {
   senderName: "Sarah Johnson",
   senderAvatar: "https://i.pravatar.cc/100?u=sarah",
-  messagePreview:
-    "Hi! I'm interested in the fresh vegetables you posted. Are they still available?",
+  messagePreview: "Hi! I'm interested in the fresh vegetables you posted. Are they still available?",
   conversationUrl: "https://foodshare.club/messages/123",
   listingTitle: "Fresh Garden Vegetables",
   listingImage: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=200",

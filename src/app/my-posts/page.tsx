@@ -1,14 +1,14 @@
+import { getUser } from "@/app/actions/auth";
+import { getUserProducts } from "@/lib/data/products";
+import { generateNoIndexMetadata } from "@/lib/metadata";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { MyPostsClient } from "./MyPostsClient";
 import { MyPostsSkeleton } from "./MyPostsSkeleton";
-import { getUser } from "@/app/actions/auth";
-import { getUserProducts } from "@/lib/data/products";
-import { generateNoIndexMetadata } from "@/lib/metadata";
 
 export const metadata = generateNoIndexMetadata(
   "My Posts",
-  "Manage your food sharing posts - create, edit, and delete your listings"
+  "Manage your food sharing posts - create, edit, and delete your listings",
 );
 
 /**

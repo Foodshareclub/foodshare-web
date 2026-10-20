@@ -1,29 +1,29 @@
-import { describe, it, expect } from "bun:test";
-import { generateTotp, verifyTotp, constantTimeEquals, buildOtpAuthUri } from "@/lib/wasm-crypto";
+import { describe, expect, it } from "bun:test";
 import {
-  cosineSimilarity,
-  l2Distance,
-  normalizeVectorDimensions,
-  fuseRankedLists,
-  calculateHybridScore,
-  calculateDistanceDecay,
-} from "@/lib/wasm-search";
-import { calculateHaversineDistance } from "@/lib/wasm-geo";
-import {
+  compressAuto,
   compressBrotli,
-  decompressBrotliString,
   compressGzip,
+  decompressBrotliString,
   decompressGzipString,
   generateETag,
-  compressAuto,
 } from "@/lib/wasm-compression";
+import { buildOtpAuthUri, constantTimeEquals, generateTotp, verifyTotp } from "@/lib/wasm-crypto";
+import { calculateHaversineDistance } from "@/lib/wasm-geo";
 import {
-  detectImageFormat,
-  getImageMimeType,
   calculateSmartWidth,
-  isValidImage,
+  detectImageFormat,
   extractImageMetadata,
+  getImageMimeType,
+  isValidImage,
 } from "@/lib/wasm-image";
+import {
+  calculateDistanceDecay,
+  calculateHybridScore,
+  cosineSimilarity,
+  fuseRankedLists,
+  l2Distance,
+  normalizeVectorDimensions,
+} from "@/lib/wasm-search";
 
 describe("WebAssembly Crypto & TOTP Bridges", () => {
   const secret = "12345678901234567890";
@@ -47,7 +47,7 @@ describe("WebAssembly Crypto & TOTP Bridges", () => {
   });
 
   it("generates valid OTPAuth URI", () => {
-    const uri = buildOtpAuthUri("user@foodshare.club", "FoodShare", "JBSWY3DPEHPK3PXP");
+    const uri = buildOtpAuthUri("user@foodshare.club", "JBSWY3DPEHPK3PXP");
     expect(uri).toContain("otpauth://totp/FoodShare:user@foodshare.club");
     expect(uri).toContain("secret=JBSWY3DPEHPK3PXP");
   });
@@ -140,8 +140,7 @@ describe("WebAssembly Geospatial Bridges", () => {
 });
 
 describe("WebAssembly Compression & ETag Bridges", () => {
-  const samplePayload =
-    "FoodShare community pantry listing - fresh organic produce available for pickup!".repeat(20);
+  const samplePayload = "FoodShare community pantry listing - fresh organic produce available for pickup!".repeat(20);
 
   it("compresses and decompresses with Brotli", () => {
     const compressed = compressBrotli(samplePayload, 4);
@@ -182,17 +181,11 @@ describe("WebAssembly Compression & ETag Bridges", () => {
 
 describe("WebAssembly Image Geometry & Format Detection Bridges", () => {
   // PNG Magic bytes: 89 50 4E 47 0D 0A 1A 0A
-  const pngHeader = new Uint8Array([
-    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
-  ]);
+  const pngHeader = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d]);
   // JPEG Magic bytes: FF D8 FF
-  const jpegHeader = new Uint8Array([
-    0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
-  ]);
+  const jpegHeader = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01]);
   // GIF Magic bytes: GIF89a
-  const gifHeader = new Uint8Array([
-    0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x64, 0x00, 0x64, 0x00, 0x80, 0x00,
-  ]);
+  const gifHeader = new Uint8Array([0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x64, 0x00, 0x64, 0x00, 0x80, 0x00]);
 
   it("detects image formats from magic bytes", () => {
     expect(detectImageFormat(pngHeader)).toBe("png");

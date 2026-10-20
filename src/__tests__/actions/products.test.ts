@@ -79,16 +79,15 @@ const createMockSupabaseClient = () => {
         Promise.resolve({
           data: mockState.products,
           error: mockState.error,
-        })
+        }),
       ),
       single: mock(() =>
         Promise.resolve({
           data: mockState.product,
           error: mockState.error,
-        })
+        }),
       ),
       // Make thenable for direct await
-      // biome-ignore lint/suspicious/noThenProperty: Supabase query builders are thenable.
       then: (resolve: (value: unknown) => void) =>
         resolve({
           data: mockState.products,
@@ -119,13 +118,7 @@ mock.module("@/lib/supabase/server", () => ({
 }));
 
 // Import data functions from lib/data (not actions - 'use server' files can't re-export)
-import {
-  getAllProducts,
-  getProductById,
-  getProductLocations,
-  getProducts,
-  getUserProducts,
-} from "@/lib/data/products";
+import { getAllProducts, getProductById, getProductLocations, getProducts, getUserProducts } from "@/lib/data/products";
 
 describe("Products Data Functions", () => {
   beforeEach(() => {

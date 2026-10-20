@@ -22,11 +22,11 @@ export type {
 
 // Error handling utilities
 export {
-  getAuthErrorMessage,
+  authErrorKey,
+  getAuthErrorCode,
   sanitizeErrorMessage,
-  isNetworkError,
-  isAuthError,
-  getErrorSuggestion,
+  toAuthErrorCode,
+  type AuthErrorCode,
 } from "@/lib/errors";
 
 // Session management

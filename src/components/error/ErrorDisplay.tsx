@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
-import Link from "next/link";
-import { AlertCircle, RefreshCw, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AlertCircle, Home, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { type ReactNode, useEffect } from "react";
 
 /**
  * Error Display Variant Configuration
@@ -77,8 +77,7 @@ export function ErrorDisplay({
   }, [error, variant]);
 
   // Determine if we should show error details
-  const shouldShowDetails =
-    showDetails ?? (variant === "admin" || process.env.NODE_ENV === "development");
+  const shouldShowDetails = showDetails ?? (variant === "admin" || process.env.NODE_ENV === "development");
 
   // Get variant-specific defaults
   const config = getVariantConfig(variant);
@@ -105,11 +104,7 @@ export function ErrorDisplay({
             <div className="space-y-2">
               <h2 className="text-2xl font-bold text-foreground">{displayTitle}</h2>
               <p className="text-muted-foreground">{displayDescription}</p>
-              {error.digest && (
-                <p className="text-xs text-muted-foreground/60 font-mono">
-                  Error ID: {error.digest}
-                </p>
-              )}
+              {error.digest && <p className="text-xs text-muted-foreground/60 font-mono">Error ID: {error.digest}</p>}
             </div>
 
             {/* Actions */}
@@ -166,7 +161,7 @@ export function ErrorDisplay({
               <span
                 className={cn(
                   "text-xs font-medium px-3 py-1 rounded-full",
-                  badge.className ?? "bg-green-100 text-green-800"
+                  badge.className ?? "bg-green-100 text-green-800",
                 )}
               >
                 {badge.label}
@@ -179,14 +174,10 @@ export function ErrorDisplay({
             <div
               className={cn(
                 "inline-flex items-center justify-center w-20 h-20 rounded-full mb-4",
-                config.iconContainerClass
+                config.iconContainerClass,
               )}
             >
-              {typeof displayIcon === "string" ? (
-                <span className="text-4xl">{displayIcon}</span>
-              ) : (
-                displayIcon
-              )}
+              {typeof displayIcon === "string" ? <span className="text-4xl">{displayIcon}</span> : displayIcon}
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">{displayTitle}</h1>
             <p className="text-lg text-muted-foreground">{displayDescription}</p>
@@ -202,7 +193,7 @@ export function ErrorDisplay({
                     ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
                     : variant === "food"
                       ? "bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800"
-                      : "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
+                      : "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800",
                 )}
               >
                 <div className="space-y-2">
@@ -214,7 +205,7 @@ export function ErrorDisplay({
                           "text-sm font-semibold mb-1",
                           variant === "food"
                             ? "text-orange-800 dark:text-orange-300"
-                            : "text-red-800 dark:text-red-300"
+                            : "text-red-800 dark:text-red-300",
                         )}
                       >
                         {variant === "food" && process.env.NODE_ENV === "development"
@@ -226,7 +217,7 @@ export function ErrorDisplay({
                           "text-sm break-words font-mono",
                           variant === "food"
                             ? "text-orange-700 dark:text-orange-400"
-                            : "text-red-700 dark:text-red-400"
+                            : "text-red-700 dark:text-red-400",
                         )}
                       >
                         {error.message || "An unexpected error occurred"}
@@ -240,7 +231,7 @@ export function ErrorDisplay({
                         "pt-2 border-t",
                         variant === "food"
                           ? "border-orange-200 dark:border-orange-700"
-                          : "border-red-200 dark:border-red-700"
+                          : "border-red-200 dark:border-red-700",
                       )}
                     >
                       <p
@@ -248,15 +239,14 @@ export function ErrorDisplay({
                           "text-xs",
                           variant === "food"
                             ? "text-orange-600 dark:text-orange-500"
-                            : "text-red-600 dark:text-red-500"
+                            : "text-red-600 dark:text-red-500",
                         )}
                       >
                         <span className="font-semibold">Error ID:</span> {error.digest}
                       </p>
                       {variant === "admin" && (
                         <p className="text-xs text-red-600 dark:text-red-500 mt-1">
-                          <span className="font-semibold">Timestamp:</span>{" "}
-                          {new Date().toISOString()}
+                          <span className="font-semibold">Timestamp:</span> {new Date().toISOString()}
                         </p>
                       )}
                     </div>
@@ -269,7 +259,7 @@ export function ErrorDisplay({
                         "pt-2 border-t",
                         variant === "food"
                           ? "border-orange-200 dark:border-orange-700"
-                          : "border-red-200 dark:border-red-700"
+                          : "border-red-200 dark:border-red-700",
                       )}
                     >
                       <summary
@@ -277,7 +267,7 @@ export function ErrorDisplay({
                           "text-xs font-semibold cursor-pointer hover:opacity-80",
                           variant === "food"
                             ? "text-orange-800 dark:text-orange-300"
-                            : "text-red-800 dark:text-red-300"
+                            : "text-red-800 dark:text-red-300",
                         )}
                       >
                         Stack Trace (Development Only)
@@ -287,7 +277,7 @@ export function ErrorDisplay({
                           "text-xs mt-2 overflow-x-auto p-2 rounded",
                           variant === "food"
                             ? "text-orange-700 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30"
-                            : "text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30"
+                            : "text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30",
                         )}
                       >
                         {error.stack}
@@ -305,10 +295,11 @@ export function ErrorDisplay({
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
             <button
+              type="button"
               onClick={reset}
               className={cn(
                 "flex-1 px-6 py-3 text-white rounded-lg font-semibold hover:shadow-lg transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2",
-                buttonClass
+                buttonClass,
               )}
             >
               {variant === "admin" ? "🔄 Retry Operation" : "Try Again"}
@@ -331,9 +322,7 @@ export function ErrorDisplay({
                 </p>
               </div>
               <div className="mt-4 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Error occurred at: {new Date().toLocaleString()}
-                </p>
+                <p className="text-sm text-muted-foreground">Error occurred at: {new Date().toLocaleString()}</p>
               </div>
             </>
           )}
@@ -354,8 +343,7 @@ function getVariantConfig(variant: ErrorVariant) {
         description: "An error occurred while processing your admin request",
         icon: "⚡",
         containerClass: "bg-gray-50 dark:bg-gray-900",
-        iconContainerClass:
-          "bg-gradient-to-br from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30",
+        iconContainerClass: "bg-gradient-to-br from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30",
         primaryButtonClass:
           "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 focus:ring-green-500",
       };
@@ -371,8 +359,7 @@ function getVariantConfig(variant: ErrorVariant) {
     case "food":
       return {
         title: "Couldn't Load Products",
-        description:
-          "We had trouble loading the product listings. This might be a temporary issue.",
+        description: "We had trouble loading the product listings. This might be a temporary issue.",
         icon: "📦",
         containerClass: "bg-gradient-to-br from-muted/30 to-background",
         iconContainerClass: "bg-pink-100 dark:bg-pink-900/30",
@@ -392,10 +379,8 @@ function getVariantConfig(variant: ErrorVariant) {
         title: "Oops! Something went wrong",
         description: "We encountered an unexpected error. Don't worry, we're on it!",
         icon: "⚠️",
-        containerClass:
-          "bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20",
-        iconContainerClass:
-          "bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30",
+        containerClass: "bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20",
+        iconContainerClass: "bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30",
         primaryButtonClass: "bg-[#FF2D55] hover:bg-[#E6284D] focus:ring-[#FF2D55]",
       };
   }
@@ -466,17 +451,11 @@ export function AdminLinksFooter() {
   return (
     <div className="mt-6 pt-6 border-t border-border">
       <div className="flex flex-wrap gap-2 justify-center">
-        <Link
-          href="/admin/reports"
-          className="text-sm text-muted-foreground hover:text-foreground underline"
-        >
+        <Link href="/admin/reports" className="text-sm text-muted-foreground hover:text-foreground underline">
           View Reports
         </Link>
         <span className="text-muted-foreground/30">|</span>
-        <Link
-          href="/admin/email/monitor"
-          className="text-sm text-muted-foreground hover:text-foreground underline"
-        >
+        <Link href="/admin/email/monitor" className="text-sm text-muted-foreground hover:text-foreground underline">
           Email Monitor
         </Link>
         <span className="text-muted-foreground/30">|</span>

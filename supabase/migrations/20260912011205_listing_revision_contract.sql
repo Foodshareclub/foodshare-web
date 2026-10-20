@@ -1,7 +1,5 @@
 -- Edit revisions are independent of sync tracking: views, likes, and search
 -- indexing must not invalidate an open edit. Apply before the matching clients.
-BEGIN;
-
 ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS expires_at timestamptz;
 COMMENT ON COLUMN public.posts.expires_at IS 'Optional expiry supplied by the listing author';
 ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS version bigint NOT NULL DEFAULT 1;
@@ -90,4 +88,3 @@ CREATE OR REPLACE VIEW public.posts_with_location WITH (security_invoker='true')
 
 GRANT SELECT ON public.posts_with_location TO anon, authenticated, service_role;
 NOTIFY pgrst, 'reload schema';
-COMMIT;

@@ -3,8 +3,8 @@
  * Per-provider daily + monthly quota tracking
  */
 
-import { createAdminClient } from "@/lib/supabase/admin";
 import type { EmailProvider } from "@/lib/email/types";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // ============================================================================
 // Types

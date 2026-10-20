@@ -4,12 +4,12 @@
  */
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { BounceStats, CircuitBreakerState, EmailTemplate, ProviderHealth } from "./health";
+import { getBounceStats, getCircuitBreakerStates, getEmailTemplates, getProviderHealth } from "./health";
+import type { ActiveAutomation, AudienceSegment, QueueStats, RecentCampaign } from "./queue";
+import { getActiveAutomations, getAudienceSegments, getQueueStats, getRecentCampaigns } from "./queue";
 import type { ProviderQuotaDetails } from "./quotas";
 import { getComprehensiveQuotaStatus } from "./quotas";
-import type { BounceStats, ProviderHealth, CircuitBreakerState, EmailTemplate } from "./health";
-import { getBounceStats, getProviderHealth, getCircuitBreakerStates, getEmailTemplates } from "./health";
-import type { RecentCampaign, ActiveAutomation, AudienceSegment, QueueStats } from "./queue";
-import { getRecentCampaigns, getActiveAutomations, getAudienceSegments, getQueueStats } from "./queue";
 
 // ============================================================================
 // Types
@@ -75,16 +75,22 @@ export async function getEmailDashboardStats(): Promise<EmailDashboardStats> {
     suppressionRes,
   ] = await Promise.all([
     // Get all provider health metrics to aggregate quotas
-    supabase.from("email_provider_health_metrics").select("*"),
+    supabase
+      .from("email_provider_health_metrics")
+      .select("*"),
     // Total newsletter subscribers
-    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }),
+    supabase
+      .from("newsletter_subscribers")
+      .select("*", { count: "exact", head: true }),
     // Active newsletter subscribers
     supabase
       .from("newsletter_subscribers")
       .select("*", { count: "exact", head: true })
       .eq("status", "active"),
     // Registered users with email preferences
-    supabase.from("email_preferences").select("*", { count: "exact", head: true }),
+    supabase
+      .from("email_preferences")
+      .select("*", { count: "exact", head: true }),
     // Active automations
     supabase
       .from("email_automation_flows")
@@ -96,7 +102,9 @@ export async function getEmailDashboardStats(): Promise<EmailDashboardStats> {
       .select("*", { count: "exact", head: true })
       .in("status", ["draft", "scheduled", "sending"]),
     // Suppression list count
-    supabase.from("email_suppression_list").select("*", { count: "exact", head: true }),
+    supabase
+      .from("email_suppression_list")
+      .select("*", { count: "exact", head: true }),
   ]);
 
   // Aggregate quota from all providers

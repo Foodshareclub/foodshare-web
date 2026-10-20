@@ -93,8 +93,7 @@ export const ERROR_MESSAGES = {
   descriptionTooLong: (max: number) => `Description cannot exceed ${max} characters`,
   invalidQuantity: "Quantity must be at least 1",
   expirationInPast: "Expiration date cannot be in the past",
-  expirationTooFarFuture: (days: number) =>
-    `Expiration date cannot be more than ${days} days from now`,
+  expirationTooFarFuture: (days: number) => `Expiration date cannot be more than ${days} days from now`,
 
   // Profile errors
   displayNameEmpty: "Display name is required",
@@ -130,12 +129,7 @@ export interface ValidationResult {
 // Validation Functions
 // =============================================================================
 
-export function validateListing(
-  title: string,
-  description: string,
-  quantity: number = 1,
-  expiresAt?: Date
-): ValidationResult {
+export function validateListing(title: string, description: string, quantity = 1, expiresAt?: Date): ValidationResult {
   const errors: string[] = [];
   const trimmedTitle = title.trim();
   const trimmedDescription = description.trim();
@@ -172,10 +166,7 @@ export function validateListing(
   return { isValid: errors.length === 0, errors };
 }
 
-export function validateProfile(
-  nickname: string | null | undefined,
-  bio: string | null | undefined
-): ValidationResult {
+export function validateProfile(nickname: string | null | undefined, bio: string | null | undefined): ValidationResult {
   const errors: string[] = [];
 
   if (nickname) {
@@ -199,11 +190,7 @@ export function validateProfile(
   return { isValid: errors.length === 0, errors };
 }
 
-export function validateReview(
-  rating: number,
-  comment?: string | null,
-  revieweeId?: string | null
-): ValidationResult {
+export function validateReview(rating: number, comment?: string | null, revieweeId?: string | null): ValidationResult {
   const errors: string[] = [];
 
   if (rating < REVIEW.rating.min || rating > REVIEW.rating.max) {

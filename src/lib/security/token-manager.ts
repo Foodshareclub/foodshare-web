@@ -11,6 +11,7 @@
  */
 
 import { supabase } from "@/lib/supabase/client";
+import type { IntervalHandle } from "@/types/timer.types";
 import type { Session, User } from "@supabase/supabase-js";
 
 // =============================================================================
@@ -94,7 +95,7 @@ export class TokenManager {
   private static instance: TokenManager | null = null;
 
   private config: Required<TokenManagerConfig>;
-  private checkInterval: NodeJS.Timeout | null = null;
+  private checkInterval: IntervalHandle | null = null;
   private isRefreshing = false;
   private eventListeners: ((event: TokenEvent) => void)[] = [];
   private lastRefreshAttempt = 0;
@@ -136,7 +137,9 @@ export class TokenManager {
    * Get current session
    */
   async getSession(): Promise<Session | null> {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     return session;
   }
 
@@ -144,7 +147,9 @@ export class TokenManager {
    * Get current user
    */
   async getUser(): Promise<User | null> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     return user;
   }
 

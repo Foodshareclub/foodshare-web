@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import type React from "react";
 
 interface CharacterProgressRingProps {
   current: number;
@@ -8,11 +8,7 @@ interface CharacterProgressRingProps {
   size?: number;
 }
 
-export const CharacterProgressRing: React.FC<CharacterProgressRingProps> = ({
-  current,
-  max,
-  size = 32,
-}) => {
+export const CharacterProgressRing: React.FC<CharacterProgressRingProps> = ({ current, max, size = 32 }) => {
   const percentage = Math.min((current / max) * 100, 100);
   const strokeWidth = 3;
   const radius = (size - strokeWidth) / 2;
@@ -27,11 +23,8 @@ export const CharacterProgressRing: React.FC<CharacterProgressRingProps> = ({
   };
 
   return (
-    <div
-      className="relative inline-flex items-center justify-center"
-      style={{ width: size, height: size }}
-    >
-      <svg className="-rotate-90" width={size} height={size}>
+    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg aria-hidden="true" className="-rotate-90" width={size} height={size}>
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -54,9 +47,7 @@ export const CharacterProgressRing: React.FC<CharacterProgressRingProps> = ({
           className={`transition-all duration-300 ${getColor()}`}
         />
       </svg>
-      <span className={`absolute text-[9px] font-medium tabular-nums ${getColor()}`}>
-        {max - current}
-      </span>
+      <span className={`absolute text-[9px] font-medium tabular-nums ${getColor()}`}>{max - current}</span>
     </div>
   );
 };

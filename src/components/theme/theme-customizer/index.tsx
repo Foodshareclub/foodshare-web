@@ -1,35 +1,36 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import type { AccentColorConfig, ContrastMode, ThemePreset } from '@/store/zustand/useUIStore';
 import {
-  THEME_PRESETS,
-  SEASONAL_PRESETS,
-  getCurrentSeasonalPreset,
-  type FontScale,
-  type SeasonalPreset,
   type ColorBlindnessMode,
-} from '@/lib/theme/themeConfig';
-import { cn } from '@/lib/utils';
+  type FontScale,
+  SEASONAL_PRESETS,
+  type SeasonalPreset,
+  THEME_PRESETS,
+  getCurrentSeasonalPreset,
+} from "@/lib/theme/themeConfig";
+import { cn } from "@/lib/utils";
+import type { AccentColorConfig, ContrastMode, ThemePreset } from "@/store/zustand/useUIStore";
+import { AnimatePresence, motion } from "framer-motion";
+import type React from "react";
+import { useState } from "react";
 
-import { useThemeCustomization } from './hooks';
-import { AccentColorPicker } from './AccentColorPicker';
-import { PresetCard } from './PresetCard';
-import { SeasonalPresetCard } from './SeasonalPresetCard';
-import { FontScaleSelector } from './FontScaleSelector';
-import { ColorBlindnessSelector } from './ColorBlindnessSelector';
-import { ContrastSelector } from './ContrastSelector';
+import { AccentColorPicker } from "./AccentColorPicker";
+import { ColorBlindnessSelector } from "./ColorBlindnessSelector";
+import { ContrastSelector } from "./ContrastSelector";
+import { FontScaleSelector } from "./FontScaleSelector";
+import { PresetCard } from "./PresetCard";
+import { SeasonalPresetCard } from "./SeasonalPresetCard";
+import { useThemeCustomization } from "./hooks";
 import {
+  AccessibilityIcon,
+  ContrastIcon,
+  EyeIcon,
+  HapticIcon,
+  MotionIcon,
   PaletteIcon,
   SparklesIcon,
-  ContrastIcon,
-  AccessibilityIcon,
   TextSizeIcon,
-  MotionIcon,
-  HapticIcon,
-  EyeIcon,
-} from './icons';
+} from "./icons";
 
 const currentSeasonalPreset = getCurrentSeasonalPreset();
 
@@ -57,27 +58,28 @@ function ThemeCustomizer({ className }: ThemeCustomizerProps) {
     handleColorBlindnessChange,
   } = useThemeCustomization();
 
-  const [activeTab, setActiveTab] = useState<'presets' | 'colors' | 'accessibility'>('presets');
+  const [activeTab, setActiveTab] = useState<"presets" | "colors" | "accessibility">("presets");
 
   const tabs = [
-    { id: 'presets' as const, label: 'Presets', icon: <SparklesIcon /> },
-    { id: 'colors' as const, label: 'Colors', icon: <PaletteIcon /> },
-    { id: 'accessibility' as const, label: 'Accessibility', icon: <AccessibilityIcon /> },
+    { id: "presets" as const, label: "Presets", icon: <SparklesIcon /> },
+    { id: "colors" as const, label: "Colors", icon: <PaletteIcon /> },
+    { id: "accessibility" as const, label: "Accessibility", icon: <AccessibilityIcon /> },
   ];
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn("space-y-6", className)}>
       {/* Tab Navigation */}
       <div className="flex gap-1 p-1 bg-muted/50 rounded-xl">
         {tabs.map((tab) => (
           <button
+            type="button"
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium transition-all',
+              "flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium transition-all",
               activeTab === tab.id
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             {tab.icon}
@@ -88,7 +90,7 @@ function ThemeCustomizer({ className }: ThemeCustomizerProps) {
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">
-        {activeTab === 'presets' && (
+        {activeTab === "presets" && (
           <PresetsTab
             themePreset={themePreset}
             selectedSeasonal={selectedSeasonal}
@@ -97,11 +99,9 @@ function ThemeCustomizer({ className }: ThemeCustomizerProps) {
           />
         )}
 
-        {activeTab === 'colors' && (
-          <ColorsTab accentColor={accentColor} onAccentChange={handleAccentChange} />
-        )}
+        {activeTab === "colors" && <ColorsTab accentColor={accentColor} onAccentChange={handleAccentChange} />}
 
-        {activeTab === 'accessibility' && (
+        {activeTab === "accessibility" && (
           <AccessibilityTab
             fontScale={fontScale}
             contrastMode={contrastMode}
@@ -128,12 +128,7 @@ interface PresetsTabProps {
   onSeasonalSelect: (seasonal: SeasonalPreset) => void;
 }
 
-function PresetsTab({
-  themePreset,
-  selectedSeasonal,
-  onPresetSelect,
-  onSeasonalSelect,
-}: PresetsTabProps) {
+function PresetsTab({ themePreset, selectedSeasonal, onPresetSelect, onSeasonalSelect }: PresetsTabProps) {
   return (
     <motion.div
       key="presets"
@@ -146,12 +141,10 @@ function PresetsTab({
       {SEASONAL_PRESETS.length > 0 && (
         <div>
           <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-            <span className="text-lg">{currentSeasonalPreset?.emoji || ''}</span>
+            <span className="text-lg">{currentSeasonalPreset?.emoji || ""}</span>
             Seasonal Themes
             {currentSeasonalPreset && (
-              <span className="ml-auto text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                In Season
-              </span>
+              <span className="ms-auto text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">In Season</span>
             )}
           </h4>
           <div className="grid grid-cols-2 gap-3">
@@ -173,9 +166,7 @@ function PresetsTab({
           <SparklesIcon />
           Classic Themes
         </h4>
-        <p className="text-sm text-muted-foreground mb-4">
-          Choose a theme preset for a coordinated look
-        </p>
+        <p className="text-sm text-muted-foreground mb-4">Choose a theme preset for a coordinated look</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {Object.values(THEME_PRESETS).map((preset) => (
             <PresetCard
@@ -199,22 +190,22 @@ interface ColorsTabProps {
 
 function ColorsTab({ accentColor, onAccentChange }: ColorsTabProps) {
   return (
-  <motion.div
-    key="colors"
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -10 }}
-    className="space-y-4"
-  >
-    <div>
-      <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-        <PaletteIcon />
-        Accent Color
-      </h4>
-      <p className="text-sm text-muted-foreground mb-4">Personalize with your favorite color</p>
-      <AccentColorPicker current={accentColor} onChange={onAccentChange} />
-    </div>
-  </motion.div>
+    <motion.div
+      key="colors"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className="space-y-4"
+    >
+      <div>
+        <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+          <PaletteIcon />
+          Accent Color
+        </h4>
+        <p className="text-sm text-muted-foreground mb-4">Personalize with your favorite color</p>
+        <AccentColorPicker current={accentColor} onChange={onAccentChange} />
+      </div>
+    </motion.div>
   );
 }
 
@@ -258,9 +249,7 @@ function AccessibilityTab({
           <TextSizeIcon />
           Text Size
         </h4>
-        <p className="text-sm text-muted-foreground mb-4">
-          Adjust text size for better readability
-        </p>
+        <p className="text-sm text-muted-foreground mb-4">Adjust text size for better readability</p>
         <FontScaleSelector current={fontScale} onChange={onFontScaleChange} />
       </div>
 
@@ -270,9 +259,7 @@ function AccessibilityTab({
           <ContrastIcon />
           Contrast
         </h4>
-        <p className="text-sm text-muted-foreground mb-4">
-          Adjust color contrast for better visibility
-        </p>
+        <p className="text-sm text-muted-foreground mb-4">Adjust color contrast for better visibility</p>
         <ContrastSelector current={contrastMode} onChange={onContrastChange} />
       </div>
 
@@ -300,9 +287,7 @@ function AccessibilityTab({
           <EyeIcon />
           Color Vision
         </h4>
-        <p className="text-sm text-muted-foreground mb-4">
-          Simulate different types of color vision
-        </p>
+        <p className="text-sm text-muted-foreground mb-4">Simulate different types of color vision</p>
         <ColorBlindnessSelector current={colorBlindness} onChange={onColorBlindnessChange} />
       </div>
     </motion.div>
@@ -322,26 +307,22 @@ function ToggleOption({ icon, title, description, isEnabled, onToggle }: ToggleO
   return (
     <div>
       <button
+        type="button"
         onClick={onToggle}
         className="flex items-center justify-between w-full p-4 rounded-xl border border-border hover:border-primary/50 transition-colors"
       >
         <div className="flex items-center gap-3">
           {icon}
-          <div className="text-left">
+          <div className="text-start">
             <p className="font-medium">{title}</p>
             <p className="text-xs text-muted-foreground">{description}</p>
           </div>
         </div>
-        <div
-          className={cn(
-            'w-12 h-7 rounded-full p-1 transition-colors',
-            isEnabled ? 'bg-primary' : 'bg-muted'
-          )}
-        >
+        <div className={cn("w-12 h-7 rounded-full p-1 transition-colors", isEnabled ? "bg-primary" : "bg-muted")}>
           <motion.div
             className="w-5 h-5 bg-white rounded-full shadow-md"
             animate={{ x: isEnabled ? 20 : 0 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
           />
         </div>
       </button>

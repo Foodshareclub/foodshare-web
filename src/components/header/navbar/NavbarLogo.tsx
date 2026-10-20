@@ -1,8 +1,8 @@
-import React from "react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { PATH } from "@/utils";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import React from "react";
 
 interface NavbarLogoProps {
   onNavigate?: () => void;
@@ -29,7 +29,7 @@ export default function NavbarLogo({ onNavigate, isCompact = false }: NavbarLogo
         "transition-all duration-200 ease-in-out",
         "hover:opacity-80 hover:scale-[1.02]",
         "active:scale-[0.98]",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg",
       )}
       aria-label="Go to homepage"
     >
@@ -40,7 +40,7 @@ export default function NavbarLogo({ onNavigate, isCompact = false }: NavbarLogo
         height={isCompact ? 36 : 40}
         className={cn(
           "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-          isCompact ? "w-9 h-9" : "w-10 h-10"
+          isCompact ? "w-9 h-9" : "w-10 h-10",
         )}
         priority
       />
@@ -48,7 +48,7 @@ export default function NavbarLogo({ onNavigate, isCompact = false }: NavbarLogo
         className={cn(
           "hidden sm:block font-black text-primary tracking-[-0.5px]",
           "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-          isCompact ? "text-[22px]" : "text-[26px]"
+          isCompact ? "text-[22px]" : "text-[26px]",
         )}
       >
         Foodshare

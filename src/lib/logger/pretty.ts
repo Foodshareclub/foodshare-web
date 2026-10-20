@@ -3,8 +3,8 @@
  * Beautiful, structured console output for browser and server
  */
 
-import type { LogLevel, LogContext } from "./types";
-import { COLORS, EMOJI, STYLES, ANSI, getTimingStyle, getStatusStyle } from "./styles";
+import { ANSI, COLORS, EMOJI, STYLES, getStatusStyle, getTimingStyle } from "./styles";
+import type { LogContext, LogLevel } from "./types";
 
 const IS_BROWSER = typeof window !== "undefined";
 const IS_DEV = process.env.NODE_ENV !== "production";
@@ -33,7 +33,7 @@ function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+  return `${(bytes / k ** i).toFixed(1)} ${sizes[i]}`;
 }
 
 /**
@@ -56,7 +56,7 @@ const browserLog = {
         `${prefix} %c${message}`,
         STYLES.muted,
         `color: ${COLORS.purple}; font-weight: 600;`,
-        style
+        style,
       );
 
       if (context && Object.keys(context).length > 1) {
@@ -72,12 +72,7 @@ const browserLog = {
 
       console.groupEnd();
     } else {
-      console.log(
-        `${prefix} %c${message}`,
-        STYLES.muted,
-        `color: ${COLORS.purple}; font-weight: 600;`,
-        style
-      );
+      console.log(`${prefix} %c${message}`, STYLES.muted, `color: ${COLORS.purple}; font-weight: 600;`, style);
     }
   },
 
@@ -85,9 +80,7 @@ const browserLog = {
    * API request log
    */
   api(method: string, url: string, status?: number, duration?: number, size?: number) {
-    const { emoji, style: _style } = status
-      ? getStatusStyle(status)
-      : { emoji: EMOJI.loading, style: STYLES.info };
+    const { emoji, style: _style } = status ? getStatusStyle(status) : { emoji: EMOJI.loading, style: STYLES.info };
     const time = timestamp();
 
     const parts = [`${emoji} %c${time}`, `%c${method}`, `%c${url}`];
@@ -95,11 +88,7 @@ const browserLog = {
 
     if (status) {
       const statusLabel =
-        status >= 200 && status < 300
-          ? STYLES.labelSuccess
-          : status >= 400
-            ? STYLES.labelError
-            : STYLES.labelWarning;
+        status >= 200 && status < 300 ? STYLES.labelSuccess : status >= 400 ? STYLES.labelError : STYLES.labelWarning;
       parts.push(`%c${status}`);
       styles.push(statusLabel);
     }
@@ -123,9 +112,7 @@ const browserLog = {
    */
   db(operation: string, table: string, duration?: number, rowCount?: number) {
     const time = timestamp();
-    const { emoji: timeEmoji, style: timeStyle } = duration
-      ? getTimingStyle(duration)
-      : { emoji: "", style: "" };
+    const { emoji: timeEmoji, style: timeStyle } = duration ? getTimingStyle(duration) : { emoji: "", style: "" };
 
     const parts = [`${EMOJI.db} %c${time}`, `%c${operation.toUpperCase()}`, `%c${table}`];
     const styles = [STYLES.muted, STYLES.labelPrimary, `color: ${COLORS.teal}; font-weight: 600;`];
@@ -155,7 +142,7 @@ const browserLog = {
         `${emoji} %c${time} %c${name} %c${formatDuration(duration)}`,
         STYLES.muted,
         `color: ${COLORS.purple}; font-weight: 600;`,
-        style
+        style,
       );
       console.log("%c📊 Metrics", STYLES.label, metadata);
       console.groupEnd();
@@ -164,7 +151,7 @@ const browserLog = {
         `${emoji} %c${time} %c${name} %c${formatDuration(duration)}`,
         STYLES.muted,
         `color: ${COLORS.purple}; font-weight: 600;`,
-        style
+        style,
       );
     }
   },
@@ -172,11 +159,7 @@ const browserLog = {
   /**
    * Render/component lifecycle
    */
-  render(
-    component: string,
-    event: "mount" | "unmount" | "update",
-    props?: Record<string, unknown>
-  ) {
+  render(component: string, event: "mount" | "unmount" | "update", props?: Record<string, unknown>) {
     if (!IS_DEV) return;
 
     const emoji = event === "mount" ? "🟢" : event === "unmount" ? "🔴" : "🔵";
@@ -187,7 +170,7 @@ const browserLog = {
         `${emoji} %c${time} %c${component} %c${event}`,
         STYLES.muted,
         `color: ${COLORS.purple}; font-weight: 600;`,
-        STYLES.label
+        STYLES.label,
       );
       console.log("%c📦 Props", STYLES.label, props);
       console.groupEnd();
@@ -196,7 +179,7 @@ const browserLog = {
         `${emoji} %c${time} %c${component} %c${event}`,
         STYLES.muted,
         `color: ${COLORS.purple}; font-weight: 600;`,
-        STYLES.label
+        STYLES.label,
       );
     }
   },
@@ -211,7 +194,7 @@ const browserLog = {
       `${EMOJI.auth} %c${time} %c${event}${userId ? ` %c${userId}` : ""}`,
       STYLES.muted,
       `color: ${COLORS.pink}; font-weight: 600;`,
-      userId ? STYLES.code : ""
+      userId ? STYLES.code : "",
     );
     if (metadata) {
       console.log("%c📋 Details", STYLES.label, metadata);
@@ -222,15 +205,9 @@ const browserLog = {
   /**
    * Cache operations
    */
-  cache(
-    operation: "hit" | "miss" | "set" | "invalidate",
-    key: string,
-    _metadata?: Record<string, unknown>
-  ) {
-    const emoji =
-      operation === "hit" ? "✅" : operation === "miss" ? "❌" : operation === "set" ? "💾" : "🗑️";
-    const _color =
-      operation === "hit" ? COLORS.success : operation === "miss" ? COLORS.warn : COLORS.info;
+  cache(operation: "hit" | "miss" | "set" | "invalidate", key: string, _metadata?: Record<string, unknown>) {
+    const emoji = operation === "hit" ? "✅" : operation === "miss" ? "❌" : operation === "set" ? "💾" : "🗑️";
+    const _color = operation === "hit" ? COLORS.success : operation === "miss" ? COLORS.warn : COLORS.info;
     const time = timestamp();
 
     console.log(
@@ -238,7 +215,7 @@ const browserLog = {
       STYLES.muted,
       STYLES.label,
       `color: ${_color}; font-weight: 600;`,
-      STYLES.code
+      STYLES.code,
     );
   },
 
@@ -282,7 +259,7 @@ const browserLog = {
     if (label) {
       console.log(`%c────────── ${label} ──────────`, `color: ${COLORS.muted}; font-weight: bold;`);
     } else {
-      console.log("%c" + "─".repeat(50), `color: ${COLORS.muted};`);
+      console.log(`%c${"─".repeat(50)}`, `color: ${COLORS.muted};`);
     }
   },
 
@@ -294,7 +271,7 @@ const browserLog = {
       "%c 🍽️ FoodShare ",
       STYLES.header,
       "\n%cReducing food waste, one share at a time",
-      `color: ${COLORS.muted}; font-style: italic;`
+      `color: ${COLORS.muted}; font-style: italic;`,
     );
   },
 };
@@ -317,13 +294,9 @@ const serverLog = {
               ? ANSI.gray
               : ANSI.blue;
 
-    const contextStr = context?.component
-      ? ` ${ANSI.magenta}[${context.component}]${ANSI.reset}`
-      : "";
+    const contextStr = context?.component ? ` ${ANSI.magenta}[${context.component}]${ANSI.reset}` : "";
 
-    console.log(
-      `${emoji} ${ANSI.gray}${time}${ANSI.reset}${contextStr} ${color}${message}${ANSI.reset}`
-    );
+    console.log(`${emoji} ${ANSI.gray}${time}${ANSI.reset}${contextStr} ${color}${message}${ANSI.reset}`);
 
     if (data) {
       console.log(`   ${ANSI.cyan}→${ANSI.reset}`, data);
@@ -333,13 +306,8 @@ const serverLog = {
   api(method: string, url: string, status?: number, duration?: number, size?: number) {
     const time = timestamp();
     const statusColor =
-      status && status >= 200 && status < 300
-        ? ANSI.green
-        : status && status >= 400
-          ? ANSI.red
-          : ANSI.yellow;
-    const durationColor =
-      duration && duration < 100 ? ANSI.green : duration && duration < 500 ? ANSI.yellow : ANSI.red;
+      status && status >= 200 && status < 300 ? ANSI.green : status && status >= 400 ? ANSI.red : ANSI.yellow;
+    const durationColor = duration && duration < 100 ? ANSI.green : duration && duration < 500 ? ANSI.yellow : ANSI.red;
 
     let line = `${EMOJI.api} ${ANSI.gray}${time}${ANSI.reset} ${ANSI.bold}${method}${ANSI.reset} ${ANSI.cyan}${url}${ANSI.reset}`;
 
@@ -352,8 +320,7 @@ const serverLog = {
 
   db(operation: string, table: string, duration?: number, rowCount?: number) {
     const time = timestamp();
-    const durationColor =
-      duration && duration < 50 ? ANSI.green : duration && duration < 200 ? ANSI.yellow : ANSI.red;
+    const durationColor = duration && duration < 50 ? ANSI.green : duration && duration < 200 ? ANSI.yellow : ANSI.red;
 
     let line = `${EMOJI.db} ${ANSI.gray}${time}${ANSI.reset} ${ANSI.bold}${operation.toUpperCase()}${ANSI.reset} ${ANSI.cyan}${table}${ANSI.reset}`;
 
@@ -369,16 +336,14 @@ const serverLog = {
     const emoji = duration < 100 ? EMOJI.fast : duration < 500 ? EMOJI.slow : EMOJI.critical;
 
     console.log(
-      `${emoji} ${ANSI.gray}${time}${ANSI.reset} ${ANSI.magenta}${name}${ANSI.reset} ${color}${formatDuration(duration)}${ANSI.reset}`
+      `${emoji} ${ANSI.gray}${time}${ANSI.reset} ${ANSI.magenta}${name}${ANSI.reset} ${color}${formatDuration(duration)}${ANSI.reset}`,
     );
   },
 
   error(message: string, error?: Error, context?: LogContext) {
     const time = timestamp();
 
-    console.log(
-      `${EMOJI.error} ${ANSI.gray}${time}${ANSI.reset} ${ANSI.red}${ANSI.bold}${message}${ANSI.reset}`
-    );
+    console.log(`${EMOJI.error} ${ANSI.gray}${time}${ANSI.reset} ${ANSI.red}${ANSI.bold}${message}${ANSI.reset}`);
 
     if (context) {
       console.log(`   ${ANSI.cyan}Context:${ANSI.reset}`, context);
@@ -387,9 +352,7 @@ const serverLog = {
     if (error) {
       console.log(`   ${ANSI.red}Error:${ANSI.reset} ${error.message}`);
       if (error.stack && process.env.NODE_ENV !== "production") {
-        console.log(
-          `   ${ANSI.gray}${error.stack.split("\n").slice(1).join("\n   ")}${ANSI.reset}`
-        );
+        console.log(`   ${ANSI.gray}${error.stack.split("\n").slice(1).join("\n   ")}${ANSI.reset}`);
       }
     }
   },
@@ -414,35 +377,23 @@ const serverLog = {
  */
 export const pretty = {
   log: (level: LogLevel, message: string, context?: LogContext, data?: unknown) =>
-    IS_BROWSER
-      ? browserLog.log(level, message, context, data)
-      : serverLog.log(level, message, context, data),
+    IS_BROWSER ? browserLog.log(level, message, context, data) : serverLog.log(level, message, context, data),
 
   debug: (message: string, context?: LogContext, data?: unknown) =>
     IS_DEV &&
-    (IS_BROWSER
-      ? browserLog.log("debug", message, context, data)
-      : serverLog.log("debug", message, context, data)),
+    (IS_BROWSER ? browserLog.log("debug", message, context, data) : serverLog.log("debug", message, context, data)),
 
   info: (message: string, context?: LogContext, data?: unknown) =>
-    IS_BROWSER
-      ? browserLog.log("info", message, context, data)
-      : serverLog.log("info", message, context, data),
+    IS_BROWSER ? browserLog.log("info", message, context, data) : serverLog.log("info", message, context, data),
 
   warn: (message: string, context?: LogContext, data?: unknown) =>
-    IS_BROWSER
-      ? browserLog.log("warn", message, context, data)
-      : serverLog.log("warn", message, context, data),
+    IS_BROWSER ? browserLog.log("warn", message, context, data) : serverLog.log("warn", message, context, data),
 
   error: (message: string, error?: Error, context?: LogContext) =>
-    IS_BROWSER
-      ? browserLog.error(message, error, context)
-      : serverLog.error(message, error, context),
+    IS_BROWSER ? browserLog.error(message, error, context) : serverLog.error(message, error, context),
 
   success: (message: string, context?: LogContext, data?: unknown) =>
-    IS_BROWSER
-      ? browserLog.log("success", message, context, data)
-      : serverLog.log("success", message, context, data),
+    IS_BROWSER ? browserLog.log("success", message, context, data) : serverLog.log("success", message, context, data),
 
   api: (method: string, url: string, status?: number, duration?: number, size?: number) =>
     IS_BROWSER
@@ -455,24 +406,16 @@ export const pretty = {
       : serverLog.db(operation, table, duration, rowCount),
 
   perf: (name: string, duration: number, metadata?: Record<string, unknown>) =>
-    IS_BROWSER
-      ? browserLog.perf(name, duration, metadata)
-      : serverLog.perf(name, duration, metadata),
+    IS_BROWSER ? browserLog.perf(name, duration, metadata) : serverLog.perf(name, duration, metadata),
 
-  render: (
-    component: string,
-    event: "mount" | "unmount" | "update",
-    props?: Record<string, unknown>
-  ) => IS_BROWSER && browserLog.render(component, event, props),
+  render: (component: string, event: "mount" | "unmount" | "update", props?: Record<string, unknown>) =>
+    IS_BROWSER && browserLog.render(component, event, props),
 
   auth: (event: string, userId?: string, metadata?: Record<string, unknown>) =>
     IS_BROWSER && browserLog.auth(event, userId, metadata),
 
-  cache: (
-    operation: "hit" | "miss" | "set" | "invalidate",
-    key: string,
-    metadata?: Record<string, unknown>
-  ) => IS_BROWSER && browserLog.cache(operation, key, metadata),
+  cache: (operation: "hit" | "miss" | "set" | "invalidate", key: string, metadata?: Record<string, unknown>) =>
+    IS_BROWSER && browserLog.cache(operation, key, metadata),
 
   table: (title: string, data: Record<string, unknown>[] | Record<string, unknown>) =>
     IS_BROWSER && browserLog.table(title, data),

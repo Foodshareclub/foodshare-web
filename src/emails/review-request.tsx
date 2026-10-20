@@ -4,15 +4,8 @@
  * Sent after a successful pickup to request a review.
  */
 
-import { Text, Section, Img, Row, Column, Link } from "@react-email/components";
-import {
-  EmailLayout,
-  EmailCard,
-  EmailButton,
-  EmailInfoBox,
-  colors,
-  styles,
-} from "./components/base";
+import { Column, Img, Link, Row, Section, Text } from "@react-email/components";
+import { EmailButton, EmailCard, EmailInfoBox, EmailLayout, colors, styles } from "./components/base";
 
 interface ReviewRequestEmailProps {
   recipientName?: string;
@@ -52,9 +45,8 @@ export function ReviewRequestEmail({
       <EmailCard>
         <Text style={styles.paragraph}>Hi {recipientName}! 👋</Text>
         <Text style={styles.paragraph}>
-          You recently picked up an item from{" "}
-          <strong style={{ color: colors.amber }}>{sharerName}</strong>. We&apos;d love to hear how
-          it went!
+          You recently picked up an item from <strong style={{ color: colors.amber }}>{sharerName}</strong>. We&apos;d
+          love to hear how it went!
         </Text>
 
         {/* Transaction Summary */}
@@ -77,9 +69,7 @@ export function ReviewRequestEmail({
               />
             </Column>
             <Column style={{ paddingLeft: "15px" }}>
-              <Text style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: colors.text }}>
-                {listingTitle}
-              </Text>
+              <Text style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: colors.text }}>{listingTitle}</Text>
               <Text style={{ margin: "5px 0 0", fontSize: "14px", color: colors.textLight }}>
                 Picked up on {pickupDate}
               </Text>
@@ -100,34 +90,19 @@ export function ReviewRequestEmail({
           Rate your experience:
         </Text>
         <Section style={{ textAlign: "center", padding: "10px 0 25px" }}>
-          <Link
-            href={review1StarUrl}
-            style={{ margin: "0 5px", fontSize: "36px", textDecoration: "none" }}
-          >
+          <Link href={review1StarUrl} style={{ margin: "0 5px", fontSize: "36px", textDecoration: "none" }}>
             ⭐
           </Link>
-          <Link
-            href={review2StarUrl}
-            style={{ margin: "0 5px", fontSize: "36px", textDecoration: "none" }}
-          >
+          <Link href={review2StarUrl} style={{ margin: "0 5px", fontSize: "36px", textDecoration: "none" }}>
             ⭐
           </Link>
-          <Link
-            href={review3StarUrl}
-            style={{ margin: "0 5px", fontSize: "36px", textDecoration: "none" }}
-          >
+          <Link href={review3StarUrl} style={{ margin: "0 5px", fontSize: "36px", textDecoration: "none" }}>
             ⭐
           </Link>
-          <Link
-            href={review4StarUrl}
-            style={{ margin: "0 5px", fontSize: "36px", textDecoration: "none" }}
-          >
+          <Link href={review4StarUrl} style={{ margin: "0 5px", fontSize: "36px", textDecoration: "none" }}>
             ⭐
           </Link>
-          <Link
-            href={review5StarUrl}
-            style={{ margin: "0 5px", fontSize: "36px", textDecoration: "none" }}
-          >
+          <Link href={review5StarUrl} style={{ margin: "0 5px", fontSize: "36px", textDecoration: "none" }}>
             ⭐
           </Link>
         </Section>
@@ -140,8 +115,7 @@ export function ReviewRequestEmail({
         <EmailInfoBox color={colors.amber} bgColor="#f8f8f8">
           <strong style={{ color: colors.amber }}>Why leave a review?</strong>
           <br />
-          Reviews help build trust in our community and let other members know who the great sharers
-          are!
+          Reviews help build trust in our community and let other members know who the great sharers are!
         </EmailInfoBox>
       </EmailCard>
     </EmailLayout>

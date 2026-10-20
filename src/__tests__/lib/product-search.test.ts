@@ -15,11 +15,8 @@ const client = createClient("https://database.example.test", "public-anon-key", 
         rpcRequests.push(params);
         return Response.json(
           nearbyRows
-            .filter(
-              (row) =>
-                params.cursor_distance === null || row.distance_meters > params.cursor_distance
-            )
-            .slice(0, params.page_limit)
+            .filter((row) => params.cursor_distance === null || row.distance_meters > params.cursor_distance)
+            .slice(0, params.page_limit),
         );
       }
       return Response.json(responseRows);

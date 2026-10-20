@@ -3,9 +3,9 @@
  * Server-side wrapper that fetches notifications and passes to client components
  */
 
-import { getUserNotifications, getUnreadNotificationCount } from "@/lib/data/notifications";
-import { NotificationCenter } from "./NotificationCenter";
+import { getUnreadNotificationCount, getUserNotifications } from "@/lib/data/notifications";
 import { NotificationBell } from "./NotificationBell";
+import { NotificationCenter } from "./NotificationCenter";
 
 type NotificationListProps = {
   userId: string;
@@ -17,11 +17,7 @@ type NotificationListProps = {
  * Server component that fetches initial notification data
  * and renders the appropriate client component
  */
-export async function NotificationList({
-  userId,
-  variant = "center",
-  className,
-}: NotificationListProps) {
+export async function NotificationList({ userId, variant = "center", className }: NotificationListProps) {
   // Fetch initial data on server
   const [notifications, unreadCount] = await Promise.all([
     variant === "center" ? getUserNotifications(userId, { limit: 20 }) : Promise.resolve([]),

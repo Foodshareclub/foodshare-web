@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { TrendingUp, CheckCircle2, Circle, ChevronRight } from "lucide-react";
 import { Glass } from "@/components/ui/glass";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { CheckCircle2, ChevronRight, Circle, TrendingUp } from "lucide-react";
+import Link from "next/link";
 
 export function ProfileCompletionCard() {
   // Mock data - in real app, this would come from server
@@ -36,9 +36,7 @@ export function ProfileCompletionCard() {
             ) : (
               <Circle className="w-4 h-4 text-muted-foreground/40" />
             )}
-            <span className={cn(item.completed ? "text-muted-foreground" : "text-foreground")}>
-              {item.label}
-            </span>
+            <span className={cn(item.completed ? "text-muted-foreground" : "text-foreground")}>{item.label}</span>
           </div>
         ))}
       </div>

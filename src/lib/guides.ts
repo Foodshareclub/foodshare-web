@@ -18,8 +18,7 @@ export const guides: GuideMeta[] = [
   {
     slug: "food-safety",
     title: "Food Safety",
-    description:
-      "How to share and collect food safely on FoodShare — domestic kitchens and business donations.",
+    description: "How to share and collect food safely on FoodShare — domestic kitchens and business donations.",
     category: "Safety",
     keywords: ["food safety", "HACCP", "FoodShare", "allergen"],
     updatedAt: "2026-09-03",

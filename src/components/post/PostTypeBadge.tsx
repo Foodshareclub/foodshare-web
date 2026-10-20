@@ -1,8 +1,8 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { getPostTypeConfig } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 interface PostTypeBadgeProps {
   postType: string;
@@ -67,10 +67,10 @@ export function PostTypeBadge({
           "bg-gradient-to-r text-white border-0 font-medium capitalize shadow-md",
           gradient,
           sizeClasses[size],
-          className
+          className,
         )}
       >
-        {showEmoji && <span className="mr-1.5">{config.emoji}</span>}
+        {showEmoji && <span className="me-1.5">{config.emoji}</span>}
         {config.label}
       </Badge>
     );
@@ -78,15 +78,8 @@ export function PostTypeBadge({
 
   if (variant === "subtle") {
     return (
-      <Badge
-        className={cn(
-          config.color,
-          "font-medium capitalize border-0",
-          sizeClasses[size],
-          className
-        )}
-      >
-        {showEmoji && <span className="mr-1.5">{config.emoji}</span>}
+      <Badge className={cn(config.color, "font-medium capitalize border-0", sizeClasses[size], className)}>
+        {showEmoji && <span className="me-1.5">{config.emoji}</span>}
         {config.label}
       </Badge>
     );
@@ -96,15 +89,9 @@ export function PostTypeBadge({
   return (
     <Badge
       variant="outline"
-      className={cn(
-        "border font-medium capitalize",
-        config.bgActive,
-        config.color,
-        sizeClasses[size],
-        className
-      )}
+      className={cn("border font-medium capitalize", config.bgActive, config.color, sizeClasses[size], className)}
     >
-      {showEmoji && <span className="mr-1.5">{config.emoji}</span>}
+      {showEmoji && <span className="me-1.5">{config.emoji}</span>}
       {config.label}
     </Badge>
   );

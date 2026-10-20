@@ -7,8 +7,9 @@
  * @module lib/realtime/presence
  */
 
-import type { RealtimeChannel, RealtimePresenceState } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase/client";
+import type { IntervalHandle, TimerHandle } from "@/types/timer.types";
+import type { RealtimeChannel, RealtimePresenceState } from "@supabase/supabase-js";
 
 // =============================================================================
 // Types
@@ -78,17 +79,10 @@ export interface PresenceHandle {
  * ```
  */
 export async function trackPresence(config: PresenceConfig): Promise<PresenceHandle> {
-  const {
-    room,
-    user,
-    heartbeatIntervalMs = 30000,
-    onSync,
-    onJoin,
-    onLeave,
-  } = config;
+  const { room, user, heartbeatIntervalMs = 30000, onSync, onJoin, onLeave } = config;
 
   let channel: RealtimeChannel | null = null;
-  let heartbeatInterval: NodeJS.Timeout | null = null;
+  let heartbeatInterval: IntervalHandle | null = null;
   let currentPresence: PresenceUser = { ...user, lastSeen: Date.now() };
 
   // Parse presence state to user array
@@ -228,27 +222,23 @@ export interface TypingIndicatorHandle {
  * typing.destroy();
  * ```
  */
-export function createTypingIndicator(
-  config: TypingIndicatorConfig
-): TypingIndicatorHandle {
-  const {
-    room,
-    userId,
-    userName,
-    typingTimeoutMs = 3000,
-    onTypingChange,
-  } = config;
+export function createTypingIndicator(config: TypingIndicatorConfig): TypingIndicatorHandle {
+  const { room, userId, userName, typingTimeoutMs = 3000, onTypingChange } = config;
 
-  const typingUsers = new Map<string, { name?: string; timeout: NodeJS.Timeout }>();
+  const typingUsers = new Map<string, { name?: string; timeout: TimerHandle }>();
   let channel: RealtimeChannel | null = null;
   let isTyping = false;
-  let typingTimeout: NodeJS.Timeout | null = null;
+  let typingTimeout: TimerHandle | null = null;
 
   // Create broadcast channel
   channel = supabase.channel(`typing:${room}`);
 
   channel.on("broadcast", { event: "typing" }, ({ payload }) => {
-    const { userId: typingUserId, userName: typingUserName, isTyping: typing } = payload as {
+    const {
+      userId: typingUserId,
+      userName: typingUserName,
+      isTyping: typing,
+    } = payload as {
       userId: string;
       userName?: string;
       isTyping: boolean;

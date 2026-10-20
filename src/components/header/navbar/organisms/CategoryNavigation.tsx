@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type FC, useCallback, useEffect, useRef, useState } from "react";
@@ -52,10 +52,7 @@ export const CategoryNavigation: FC<CategoryNavigationProps> = ({
     const gap = Number.parseFloat(getComputedStyle(scroller).columnGap) || 0;
     // Measure content independently of the arrows so resizing cannot toggle them endlessly.
     const contentWidth =
-      Array.from(scroller.children).reduce(
-        (width, child) => width + child.getBoundingClientRect().width,
-        0
-      ) +
+      Array.from(scroller.children).reduce((width, child) => width + child.getBoundingClientRect().width, 0) +
       Math.max(0, scroller.children.length - 1) * gap;
     const position = Math.abs(scroller.scrollLeft);
     const next = {
@@ -64,11 +61,9 @@ export const CategoryNavigation: FC<CategoryNavigationProps> = ({
       next: position < scroller.scrollWidth - scroller.clientWidth - 1,
     };
     setScrollState((previous) =>
-      previous.overflow === next.overflow &&
-      previous.previous === next.previous &&
-      previous.next === next.next
+      previous.overflow === next.overflow && previous.previous === next.previous && previous.next === next.next
         ? previous
-        : next
+        : next,
     );
   }, []);
 
@@ -87,22 +82,17 @@ export const CategoryNavigation: FC<CategoryNavigationProps> = ({
   const scrollCategories = (direction: number) => {
     const scroller = scrollContainerRef.current;
     if (!scroller) return;
-    const logicalDirection =
-      getComputedStyle(scroller).direction === "rtl" ? -direction : direction;
+    const logicalDirection = getComputedStyle(scroller).direction === "rtl" ? -direction : direction;
     scroller.scrollBy({
       left: logicalDirection * scroller.clientWidth * 0.8,
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "instant"
-        : "smooth",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
     });
   };
 
   // Scroll active category into view on mount or when activeCategory changes
   useEffect(() => {
     const container = scrollContainerRef.current;
-    const button = container?.querySelector<HTMLButtonElement>(
-      `[data-category-id="${CSS.escape(activeCategory)}"]`
-    );
+    const button = container?.querySelector<HTMLButtonElement>(`[data-category-id="${CSS.escape(activeCategory)}"]`);
     if (button && container) {
       const containerRect = container.getBoundingClientRect();
       const buttonRect = button.getBoundingClientRect();
@@ -110,9 +100,7 @@ export const CategoryNavigation: FC<CategoryNavigationProps> = ({
       // Check if button is not fully visible
       if (buttonRect.left < containerRect.left || buttonRect.right > containerRect.right) {
         button.scrollIntoView({
-          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-            ? "instant"
-            : "smooth",
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
           block: "nearest",
           inline: "center",
         });
@@ -146,9 +134,7 @@ export const CategoryNavigation: FC<CategoryNavigationProps> = ({
 
     if (nextIndex !== null) {
       const nextCategory = categories[nextIndex];
-      scrollContainerRef.current
-        ?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
-        [nextIndex]?.focus();
+      scrollContainerRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[nextIndex]?.focus();
       onCategoryChange(nextCategory.id);
     }
   };
@@ -174,7 +160,7 @@ export const CategoryNavigation: FC<CategoryNavigationProps> = ({
         aria-label="Category navigation"
         className={cn(
           "flex min-w-0 flex-1 items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-none",
-          className
+          className,
         )}
       >
         {categories.map((category, index) => {
@@ -187,12 +173,7 @@ export const CategoryNavigation: FC<CategoryNavigationProps> = ({
                 label={category.label}
                 icon={category.icon}
                 isActive={isActive}
-                tabIndex={
-                  isActive ||
-                  (index === 0 && !categories.some((item) => item.id === activeCategory))
-                    ? 0
-                    : -1
-                }
+                tabIndex={isActive || (index === 0 && !categories.some((item) => item.id === activeCategory)) ? 0 : -1}
                 onClick={onCategoryChange}
                 onKeyDown={(e: React.KeyboardEvent) => handleKeyDown(e, index)}
               />

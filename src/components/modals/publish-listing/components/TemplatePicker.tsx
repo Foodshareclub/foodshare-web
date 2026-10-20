@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
 import { FileText, X } from "lucide-react";
+import type React from "react";
 import { templatePresets } from "../constants";
 
 interface TemplatePickerProps {
@@ -12,9 +12,7 @@ interface TemplatePickerProps {
 
 export const TemplatePicker: React.FC<TemplatePickerProps> = ({ category, onSelect, onClose }) => {
   const templates =
-    category && category in templatePresets
-      ? templatePresets[category as keyof typeof templatePresets]
-      : [];
+    category && category in templatePresets ? templatePresets[category as keyof typeof templatePresets] : [];
 
   if (templates.length === 0) return null;
 
@@ -25,11 +23,7 @@ export const TemplatePicker: React.FC<TemplatePickerProps> = ({ category, onSele
           <FileText className="h-4 w-4 text-muted-foreground" />
           Quick Templates
         </p>
-        <button
-          type="button"
-          onClick={onClose}
-          className="p-1 rounded hover:bg-muted transition-colors"
-        >
+        <button type="button" onClick={onClose} className="p-1 rounded hover:bg-muted transition-colors">
           <X className="h-4 w-4 text-muted-foreground" />
         </button>
       </div>
@@ -45,7 +39,7 @@ export const TemplatePicker: React.FC<TemplatePickerProps> = ({ category, onSele
                 tags: [...template.tags],
               })
             }
-            className="flex items-center gap-2 p-2 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+            className="flex items-center gap-2 p-2 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-start"
           >
             <span className="text-xl">{template.icon}</span>
             <span className="text-sm font-medium">{template.name}</span>

@@ -1,34 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Send,
-  Sparkles,
-  Lightbulb,
-  FileText,
-  Loader2,
-  TrendingUp,
-  AlertTriangle,
-  Target,
-  AlertCircle,
-  RefreshCw,
-  Database,
-  ChevronDown,
-  ChevronUp,
-  Trophy,
-  Clock,
-} from "lucide-react";
+import { askAnalyticsQuestion, generateWeeklyReport, getAIInsights } from "@/app/actions/analytics-ai";
+import type { AIInsight, NLQueryResult, WeeklyReport } from "@/app/actions/analytics-ai";
+import { fetchSyncStatus, fetchTopSharers } from "@/app/actions/analytics-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { SyncStatus, TopSharer } from "@/lib/data/analytics";
 import { cn } from "@/lib/utils";
 import {
-  askAnalyticsQuestion,
-  generateWeeklyReport,
-  getAIInsights,
-} from "@/app/actions/analytics-ai";
-import type { NLQueryResult, WeeklyReport, AIInsight } from "@/app/actions/analytics-ai";
-import { fetchSyncStatus, fetchTopSharers } from "@/app/actions/analytics-data";
-import type { SyncStatus, TopSharer } from "@/lib/data/analytics";
+  AlertCircle,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Database,
+  FileText,
+  Lightbulb,
+  Loader2,
+  RefreshCw,
+  Send,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Trophy,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 const EXAMPLE_QUESTIONS = [
   "How many users signed up this week?",
@@ -121,6 +117,7 @@ function SyncStatusBadge({
         <span>Synced: {latestSync ? formatTimeAgo(latestSync.lastSyncAt) : "Unknown"}</span>
       </div>
       <button
+        type="button"
         onClick={onRefresh}
         disabled={loading}
         className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -136,6 +133,7 @@ function SchemaReference({ expanded, onToggle }: { expanded: boolean; onToggle: 
   return (
     <div className="rounded-lg border bg-muted/30">
       <button
+        type="button"
         onClick={onToggle}
         className="flex w-full items-center justify-between p-3 text-sm font-medium hover:bg-muted/50"
       >
@@ -183,14 +181,15 @@ function QueryHistory({
           <Clock className="h-3 w-3" />
           <span>Recent queries</span>
         </div>
-        <button onClick={onClear} className="text-xs text-muted-foreground hover:text-foreground">
+        <button type="button" onClick={onClear} className="text-xs text-muted-foreground hover:text-foreground">
           Clear
         </button>
       </div>
       <div className="flex flex-wrap gap-2">
-        {queries.map((q, i) => (
+        {queries.map((q) => (
           <button
-            key={i}
+            type="button"
+            key={q}
             onClick={() => onSelect(q)}
             className="max-w-[200px] truncate rounded-full bg-primary/10 px-3 py-1 text-xs text-primary hover:bg-primary/20"
             title={q}
@@ -214,7 +213,7 @@ function ResultTable({ data }: { data: Record<string, unknown>[] }) {
         <thead>
           <tr className="border-b bg-muted/50">
             {keys.map((key) => (
-              <th key={key} className="p-2 text-left font-medium">
+              <th key={key} className="p-2 text-start font-medium">
                 {key}
               </th>
             ))}
@@ -222,6 +221,7 @@ function ResultTable({ data }: { data: Record<string, unknown>[] }) {
         </thead>
         <tbody>
           {data.map((row, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: static read-only report table; rows never reorder
             <tr key={i} className="border-b last:border-0">
               {keys.map((key) => (
                 <td key={key} className="p-2">
@@ -259,9 +259,7 @@ function QueryResultDisplay({ result }: { result: NLQueryResult }) {
       )}
 
       <details className="text-xs">
-        <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-          View generated SQL
-        </summary>
+        <summary className="cursor-pointer text-muted-foreground hover:text-foreground">View generated SQL</summary>
         <pre className="mt-2 overflow-x-auto rounded bg-muted p-2">{result.generatedSQL}</pre>
       </details>
 
@@ -302,6 +300,7 @@ function WeeklyReportCard({ report }: { report: WeeklyReport }) {
         <p className="text-sm font-medium">Highlights</p>
         <ul className="space-y-1 text-sm text-muted-foreground">
           {report.highlights.map((highlight, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: static read-only report list
             <li key={i} className="flex items-start gap-2">
               <span className="text-primary">*</span>
               {highlight}
@@ -325,6 +324,7 @@ function AIInsightsCard({ insights }: { insights: AIInsight[] }) {
 
       <div className="space-y-3">
         {insights.map((insight, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: static read-only report list
           <div key={i} className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
             <div className={cn("rounded-full p-1.5", getInsightColor(insight.type))}>
               {getInsightIcon(insight.type)}
@@ -332,9 +332,7 @@ function AIInsightsCard({ insights }: { insights: AIInsight[] }) {
             <div className="flex-1 space-y-1">
               <p className="font-medium">{insight.title}</p>
               <p className="text-sm text-muted-foreground">{insight.description}</p>
-              <p className="text-xs text-muted-foreground">
-                Confidence: {Math.round(insight.confidence * 100)}%
-              </p>
+              <p className="text-xs text-muted-foreground">Confidence: {Math.round(insight.confidence * 100)}%</p>
             </div>
           </div>
         ))}
@@ -355,10 +353,7 @@ function TopSharersCard({ sharers }: { sharers: TopSharer[] }) {
 
       <div className="space-y-2">
         {sharers.map((sharer, i) => (
-          <div
-            key={sharer.userId}
-            className="flex items-center justify-between rounded-lg bg-muted/50 p-3"
-          >
+          <div key={sharer.userId} className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
             <div className="flex items-center gap-3">
               <span
                 className={cn(
@@ -366,14 +361,14 @@ function TopSharersCard({ sharers }: { sharers: TopSharer[] }) {
                   i === 0 && "bg-yellow-500/20 text-yellow-600",
                   i === 1 && "bg-gray-300/30 text-gray-600",
                   i === 2 && "bg-amber-600/20 text-amber-700",
-                  i > 2 && "bg-muted text-muted-foreground"
+                  i > 2 && "bg-muted text-muted-foreground",
                 )}
               >
                 {i + 1}
               </span>
               <span className="font-medium">{sharer.nickname}</span>
             </div>
-            <div className="text-right text-sm">
+            <div className="text-end text-sm">
               <p className="font-semibold text-primary">{sharer.arrangedCount} shared</p>
               <p className="text-xs text-muted-foreground">{sharer.totalListings} total listings</p>
             </div>
@@ -511,24 +506,15 @@ export function AIAnalyticsPanel() {
           <Sparkles className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-semibold">AI-Powered Analytics</h2>
         </div>
-        <SyncStatusBadge
-          status={syncStatus}
-          onRefresh={handleRefreshSync}
-          loading={loading === "sync"}
-        />
+        <SyncStatusBadge status={syncStatus} onRefresh={handleRefreshSync} loading={loading === "sync"} />
       </div>
 
       {/* Schema Reference */}
-      <SchemaReference
-        expanded={schemaExpanded}
-        onToggle={() => setSchemaExpanded(!schemaExpanded)}
-      />
+      <SchemaReference expanded={schemaExpanded} onToggle={() => setSchemaExpanded(!schemaExpanded)} />
 
       {/* Query Section */}
       <div className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          Ask questions about your data in plain English
-        </p>
+        <p className="text-sm text-muted-foreground">Ask questions about your data in plain English</p>
 
         <div className="flex gap-2">
           <Input
@@ -539,11 +525,7 @@ export function AIAnalyticsPanel() {
             disabled={loading === "query"}
           />
           <Button onClick={handleAskQuestion} disabled={loading === "query" || !question.trim()}>
-            {loading === "query" ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
+            {loading === "query" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
 
@@ -554,6 +536,7 @@ export function AIAnalyticsPanel() {
         <div className="flex flex-wrap gap-2">
           {EXAMPLE_QUESTIONS.map((q) => (
             <button
+              type="button"
               key={q}
               onClick={() => setQuestion(q)}
               className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
@@ -571,25 +554,25 @@ export function AIAnalyticsPanel() {
       <div className="flex flex-wrap gap-3">
         <Button variant="outline" onClick={handleGenerateReport} disabled={loading === "report"}>
           {loading === "report" ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="me-2 h-4 w-4 animate-spin" />
           ) : (
-            <FileText className="mr-2 h-4 w-4" />
+            <FileText className="me-2 h-4 w-4" />
           )}
           Generate Weekly Report
         </Button>
         <Button variant="outline" onClick={handleGetInsights} disabled={loading === "insights"}>
           {loading === "insights" ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="me-2 h-4 w-4 animate-spin" />
           ) : (
-            <Lightbulb className="mr-2 h-4 w-4" />
+            <Lightbulb className="me-2 h-4 w-4" />
           )}
           Get AI Insights
         </Button>
         <Button variant="outline" onClick={handleGetTopSharers} disabled={loading === "sharers"}>
           {loading === "sharers" ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="me-2 h-4 w-4 animate-spin" />
           ) : (
-            <Trophy className="mr-2 h-4 w-4" />
+            <Trophy className="me-2 h-4 w-4" />
           )}
           Top Sharers
         </Button>

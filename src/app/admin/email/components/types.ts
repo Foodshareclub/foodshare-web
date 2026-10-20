@@ -4,15 +4,15 @@
  */
 
 import type {
-  EmailCRMData,
-  EmailDashboardStats,
-  ProviderHealth,
-  RecentCampaign,
   ActiveAutomation,
   AudienceSegment,
-  EmailTemplate,
   CircuitBreakerState,
+  EmailCRMData,
+  EmailDashboardStats,
+  EmailTemplate,
+  ProviderHealth,
   QueueStats,
+  RecentCampaign,
 } from "@/lib/data/admin-email";
 
 // Re-export data types for convenience

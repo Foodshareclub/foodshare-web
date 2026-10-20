@@ -1,16 +1,16 @@
 import {
-  Package,
-  MessageCircle,
   Circle,
-  Mail,
   HeartHandshake,
   Leaf,
+  Mail,
+  MessageCircle,
+  Milk,
+  Nut,
+  Package,
   Phone,
   Search,
   Star,
   Utensils,
-  Milk,
-  Nut,
   Wheat,
 } from "lucide-react";
 
@@ -244,8 +244,7 @@ export const templatePresets = {
       name: "Extra Groceries",
       icon: "🥬",
       title: "Fresh ",
-      description:
-        "Unopened/unused groceries. Purchased recently and still within expiration date. Perfect condition.",
+      description: "Unopened/unused groceries. Purchased recently and still within expiration date. Perfect condition.",
       tags: ["groceries", "fresh", "unopened"],
     },
     {
@@ -337,13 +336,7 @@ export const titleSuggestions = {
     "Leftover Party Food",
     "Organic Fruit",
   ],
-  thing: [
-    "IKEA Furniture",
-    "Winter Clothes",
-    "Books Collection",
-    "Kitchen Appliances",
-    "Sports Equipment",
-  ],
+  thing: ["IKEA Furniture", "Winter Clothes", "Books Collection", "Kitchen Appliances", "Sports Equipment"],
   borrow: ["Power Tools", "Camping Gear", "Camera Equipment", "Moving Boxes", "Party Supplies"],
   wanted: ["Baby Items", "Study Desk", "Winter Jacket", "Storage Boxes", "Garden Tools"],
 } as const;

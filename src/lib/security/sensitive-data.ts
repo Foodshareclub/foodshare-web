@@ -80,10 +80,7 @@ const DEFAULT_REDACTION = "[REDACTED]";
 /**
  * Check if a field name is sensitive
  */
-export function isSensitiveField(
-  fieldName: string,
-  sensitiveFields: string[] = DEFAULT_SENSITIVE_FIELDS
-): boolean {
+export function isSensitiveField(fieldName: string, sensitiveFields: string[] = DEFAULT_SENSITIVE_FIELDS): boolean {
   const lowerField = fieldName.toLowerCase();
   return sensitiveFields.some((sensitive) => lowerField.includes(sensitive.toLowerCase()));
 }
@@ -91,23 +88,15 @@ export function isSensitiveField(
 /**
  * Redact a single value
  */
-export function redactValue(
-  value: unknown,
-  fieldName: string,
-  config: SensitiveDataConfig = {}
-): unknown {
-  const { sensitiveFields = DEFAULT_SENSITIVE_FIELDS, redactionString = DEFAULT_REDACTION } =
-    config;
+export function redactValue(value: unknown, fieldName: string, config: SensitiveDataConfig = {}): unknown {
+  const { sensitiveFields = DEFAULT_SENSITIVE_FIELDS, redactionString = DEFAULT_REDACTION } = config;
 
   if (!isSensitiveField(fieldName, sensitiveFields)) {
     return value;
   }
 
   // Partial redaction for emails
-  if (
-    typeof value === "string" &&
-    (fieldName.toLowerCase().includes("email") || value.includes("@"))
-  ) {
+  if (typeof value === "string" && (fieldName.toLowerCase().includes("email") || value.includes("@"))) {
     return redactEmail(value);
   }
 
@@ -126,7 +115,7 @@ export function redactEmail(email: string): string {
   const [local, domain] = email.split("@");
   if (!local || !domain) return DEFAULT_REDACTION;
 
-  const redactedLocal = local.charAt(0) + "***";
+  const redactedLocal = `${local.charAt(0)}***`;
   return `${redactedLocal}@${domain}`;
 }
 
@@ -137,16 +126,13 @@ export function redactPhone(phone: string): string {
   const digits = phone.replace(/\D/g, "");
   if (digits.length < 4) return DEFAULT_REDACTION;
 
-  return "***-***-" + digits.slice(-4);
+  return `***-***-${digits.slice(-4)}`;
 }
 
 /**
  * Redact sensitive fields from an object (deep)
  */
-export function redactObject<T extends Record<string, unknown>>(
-  obj: T,
-  config: SensitiveDataConfig = {}
-): T {
+export function redactObject<T extends Record<string, unknown>>(obj: T, config: SensitiveDataConfig = {}): T {
   if (!obj || typeof obj !== "object") {
     return obj;
   }
@@ -155,9 +141,7 @@ export function redactObject<T extends Record<string, unknown>>(
 
   if (Array.isArray(obj)) {
     return obj.map((item) =>
-      typeof item === "object" && item !== null
-        ? redactObject(item as Record<string, unknown>, config)
-        : item
+      typeof item === "object" && item !== null ? redactObject(item as Record<string, unknown>, config) : item,
     ) as unknown as T;
   }
 
@@ -175,10 +159,7 @@ export function redactObject<T extends Record<string, unknown>>(
 /**
  * Create a safe logger that redacts sensitive data
  */
-export function createSafeLogger(
-  logger: typeof console = console,
-  config: SensitiveDataConfig = {}
-) {
+export function createSafeLogger(logger: typeof console = console, config: SensitiveDataConfig = {}) {
   const safeLog = (level: "log" | "info" | "warn" | "error", ...args: unknown[]) => {
     const safeArgs = args.map((arg) => {
       if (arg && typeof arg === "object") {
@@ -207,11 +188,7 @@ const STORAGE_PREFIX = "fs_secure_";
 /**
  * Securely store data (with optional encryption)
  */
-export async function secureStore(
-  key: string,
-  value: unknown,
-  config: SensitiveDataConfig = {}
-): Promise<void> {
+export async function secureStore(key: string, value: unknown, config: SensitiveDataConfig = {}): Promise<void> {
   if (typeof window === "undefined") return;
 
   const serialized = JSON.stringify(value);
@@ -230,10 +207,7 @@ export async function secureStore(
 /**
  * Securely retrieve data
  */
-export async function secureRetrieve<T>(
-  key: string,
-  config: SensitiveDataConfig = {}
-): Promise<T | null> {
+export async function secureRetrieve<T>(key: string, config: SensitiveDataConfig = {}): Promise<T | null> {
   if (typeof window === "undefined") return null;
 
   const storageKey = STORAGE_PREFIX + key;
@@ -333,7 +307,7 @@ async function decryptData(encryptedData: string): Promise<string> {
   const combined = new Uint8Array(
     atob(encryptedData)
       .split("")
-      .map((c) => c.charCodeAt(0))
+      .map((c) => c.charCodeAt(0)),
   );
 
   // Extract IV and encrypted data
@@ -402,10 +376,7 @@ export function sanitizeResponse(response: unknown, config: SensitiveDataConfig 
 /**
  * Create fetch wrapper that sanitizes logs
  */
-export function createSanitizedFetch(
-  baseFetch: typeof fetch = fetch,
-  config: SensitiveDataConfig = {}
-): typeof fetch {
+export function createSanitizedFetch(baseFetch: typeof fetch = fetch, config: SensitiveDataConfig = {}): typeof fetch {
   const safeLogger = createSafeLogger(console, config);
 
   return (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {

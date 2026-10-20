@@ -3,12 +3,12 @@
  * Fetches auth, chat, and notification data on the server and passes to client Header
  */
 
-import Header from "./Header";
+import type { CustomRoomType } from "@/api/chatAPI";
 import { getAuthSession } from "@/lib/data/auth";
 import { getUserChatRooms } from "@/lib/data/chat";
-import { getProfile } from "@/lib/data/profiles";
 import { getUnreadNotificationCount } from "@/lib/data/notifications";
-import type { CustomRoomType } from "@/api/chatAPI";
+import { getProfile } from "@/lib/data/profiles";
+import Header from "./Header";
 
 type HeaderServerProps = {
   getRoute: (route: string) => void;
@@ -16,11 +16,7 @@ type HeaderServerProps = {
   productType: string;
 };
 
-export default async function HeaderServer({
-  getRoute,
-  setProductType,
-  productType,
-}: HeaderServerProps) {
+export default async function HeaderServer({ getRoute, setProductType, productType }: HeaderServerProps) {
   // Fetch auth session on server
   const authSession = await getAuthSession();
   const userId = authSession.user?.id;

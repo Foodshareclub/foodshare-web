@@ -5,16 +5,16 @@
  */
 
 import {
+  type InferOutputRow,
+  type InferParams,
+  type InferRow,
+  Tinybird,
   defineDatasource,
   defineEndpoint,
-  Tinybird,
-  node,
-  t,
-  p,
   engine,
-  type InferRow,
-  type InferParams,
-  type InferOutputRow,
+  node,
+  p,
+  t,
 } from "@tinybirdco/sdk";
 
 // ============================================================================

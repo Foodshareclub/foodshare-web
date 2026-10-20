@@ -1,16 +1,10 @@
 "use client";
 
-import React from "react";
-import { useLocale } from "next-intl";
 import { useChangeLocale } from "@/app/providers";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { locales, localeMetadata, type Locale } from "@/i18n/config";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { type Locale, localeMetadata, locales } from "@/i18n/config";
+import { useLocale } from "next-intl";
+import React from "react";
 
 /**
  * LanguageSelector Component

@@ -1,9 +1,9 @@
+import { verifyTotp } from "@/lib/wasm-crypto";
+import { calculateHaversineDistance } from "@/lib/wasm-geo";
+import { calculateSmartWidth } from "@/lib/wasm-image";
+import { calculateDistanceDecay, calculateHybridScore } from "@/lib/wasm-search";
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
-import { calculateHybridScore, calculateDistanceDecay } from "@/lib/wasm-search";
-import { calculateHaversineDistance } from "@/lib/wasm-geo";
-import { verifyTotp } from "@/lib/wasm-crypto";
-import { calculateSmartWidth } from "@/lib/wasm-image";
 
 const app = new Hono().basePath("/api");
 
@@ -117,4 +117,3 @@ export const POST = handle(app);
 export const PUT = handle(app);
 export const DELETE = handle(app);
 export const PATCH = handle(app);
-

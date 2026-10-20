@@ -1,42 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
-import {
-  Send,
-  Search,
-  Plus,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
-  Copy,
-  Calendar,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  Pause,
-  MailOpen,
-  MousePointerClick,
-  Users,
-  ArrowUpDown,
-  Megaphone,
-  FileText,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,15 +10,37 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { RecentCampaign, EmailDashboardStats } from "@/lib/data/admin-email";
+import type { EmailDashboardStats, RecentCampaign } from "@/lib/data/admin-email";
+import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  AlertCircle,
+  ArrowUpDown,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Copy,
+  Edit,
+  Eye,
+  FileText,
+  MailOpen,
+  Megaphone,
+  MoreHorizontal,
+  MousePointerClick,
+  Pause,
+  Plus,
+  Search,
+  Send,
+  Trash2,
+  Users,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
 
 interface CampaignsClientProps {
   campaigns: RecentCampaign[];
@@ -189,12 +177,12 @@ export function CampaignsClient({ campaigns, stats }: CampaignsClientProps) {
           {/* Toolbar */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t("search_campaigns")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9 bg-background/50"
+                className="ps-9 h-9 bg-background/50"
               />
             </div>
             <div className="flex gap-2">
@@ -228,11 +216,7 @@ export function CampaignsClient({ campaigns, stats }: CampaignsClientProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             <AnimatePresence mode="popLayout">
               {filteredCampaigns.map((campaign) => (
-                <CampaignCard
-                  key={campaign.id}
-                  campaign={campaign}
-                  onView={() => setSelectedCampaign(campaign)}
-                />
+                <CampaignCard key={campaign.id} campaign={campaign} onView={() => setSelectedCampaign(campaign)} />
               ))}
             </AnimatePresence>
             {filteredCampaigns.length === 0 && (
@@ -308,10 +292,11 @@ function StatusPill({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={cn(
         "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
-        active ? STATUS_COLORS[color].active : STATUS_COLORS[color].inactive
+        active ? STATUS_COLORS[color].active : STATUS_COLORS[color].inactive,
       )}
     >
       {label} ({count})
@@ -339,17 +324,11 @@ function SortDropdown({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => onSort("createdAt", "desc")}>
-          {t("newest_first")}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onSort("createdAt", "asc")}>
-          {t("oldest_first")}
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onSort("createdAt", "desc")}>{t("newest_first")}</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onSort("createdAt", "asc")}>{t("oldest_first")}</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => onSort("name", "asc")}>{t("name_a_z")}</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onSort("totalSent", "desc")}>
-          {t("most_sent")}
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onSort("totalSent", "desc")}>{t("most_sent")}</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -380,50 +359,45 @@ function EmptyState({
 // Campaign Card
 // ============================================================================
 
-const CAMPAIGN_STATUS_CONFIG: Record<string, { bg: string; text: string; icon: React.ReactNode }> =
-  {
-    draft: {
-      bg: "bg-slate-100 dark:bg-slate-800",
-      text: "text-slate-600 dark:text-slate-400",
-      icon: <FileText className="h-3 w-3" />,
-    },
-    scheduled: {
-      bg: "bg-blue-100 dark:bg-blue-900/30",
-      text: "text-blue-600 dark:text-blue-400",
-      icon: <Calendar className="h-3 w-3" />,
-    },
-    sending: {
-      bg: "bg-amber-100 dark:bg-amber-900/30",
-      text: "text-amber-600 dark:text-amber-400",
-      icon: <Clock className="h-3 w-3" />,
-    },
-    sent: {
-      bg: "bg-emerald-100 dark:bg-emerald-900/30",
-      text: "text-emerald-600 dark:text-emerald-400",
-      icon: <CheckCircle2 className="h-3 w-3" />,
-    },
-    paused: {
-      bg: "bg-orange-100 dark:bg-orange-900/30",
-      text: "text-orange-600 dark:text-orange-400",
-      icon: <Pause className="h-3 w-3" />,
-    },
-    cancelled: {
-      bg: "bg-rose-100 dark:bg-rose-900/30",
-      text: "text-rose-600 dark:text-rose-400",
-      icon: <AlertCircle className="h-3 w-3" />,
-    },
-  };
+const CAMPAIGN_STATUS_CONFIG: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
+  draft: {
+    bg: "bg-slate-100 dark:bg-slate-800",
+    text: "text-slate-600 dark:text-slate-400",
+    icon: <FileText className="h-3 w-3" />,
+  },
+  scheduled: {
+    bg: "bg-blue-100 dark:bg-blue-900/30",
+    text: "text-blue-600 dark:text-blue-400",
+    icon: <Calendar className="h-3 w-3" />,
+  },
+  sending: {
+    bg: "bg-amber-100 dark:bg-amber-900/30",
+    text: "text-amber-600 dark:text-amber-400",
+    icon: <Clock className="h-3 w-3" />,
+  },
+  sent: {
+    bg: "bg-emerald-100 dark:bg-emerald-900/30",
+    text: "text-emerald-600 dark:text-emerald-400",
+    icon: <CheckCircle2 className="h-3 w-3" />,
+  },
+  paused: {
+    bg: "bg-orange-100 dark:bg-orange-900/30",
+    text: "text-orange-600 dark:text-orange-400",
+    icon: <Pause className="h-3 w-3" />,
+  },
+  cancelled: {
+    bg: "bg-rose-100 dark:bg-rose-900/30",
+    text: "text-rose-600 dark:text-rose-400",
+    icon: <AlertCircle className="h-3 w-3" />,
+  },
+};
 
 function CampaignCard({ campaign, onView }: { campaign: RecentCampaign; onView: () => void }) {
   const t = useTranslations();
   const config = CAMPAIGN_STATUS_CONFIG[campaign.status] || CAMPAIGN_STATUS_CONFIG.draft;
 
-  const openRate =
-    campaign.totalSent > 0 ? ((campaign.totalOpened / campaign.totalSent) * 100).toFixed(1) : "0";
-  const clickRate =
-    campaign.totalOpened > 0
-      ? ((campaign.totalClicked / campaign.totalOpened) * 100).toFixed(1)
-      : "0";
+  const openRate = campaign.totalSent > 0 ? ((campaign.totalOpened / campaign.totalSent) * 100).toFixed(1) : "0";
+  const clickRate = campaign.totalOpened > 0 ? ((campaign.totalClicked / campaign.totalOpened) * 100).toFixed(1) : "0";
 
   const displayDate = campaign.sentAt
     ? new Date(campaign.sentAt).toLocaleDateString()
@@ -442,7 +416,7 @@ function CampaignCard({ campaign, onView }: { campaign: RecentCampaign; onView: 
       <div className="p-4">
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
-          <div className="flex-1 min-w-0 pr-2">
+          <div className="flex-1 min-w-0 pe-2">
             <h3 className="font-semibold text-foreground truncate">{campaign.name}</h3>
             <p className="text-xs text-muted-foreground truncate mt-0.5">{campaign.subject}</p>
           </div>
@@ -469,10 +443,7 @@ function CampaignCard({ campaign, onView }: { campaign: RecentCampaign; onView: 
               <span>{t("progress")}</span>
               <span>{Math.round((campaign.totalSent / campaign.totalRecipients) * 100)}%</span>
             </div>
-            <Progress
-              value={(campaign.totalSent / campaign.totalRecipients) * 100}
-              className="h-1.5"
-            />
+            <Progress value={(campaign.totalSent / campaign.totalRecipients) * 100} className="h-1.5" />
           </div>
         )}
 
@@ -511,30 +482,26 @@ function CampaignActions({ onView }: { onView: () => void }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-        >
+        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={onView}>
-          <Eye className="h-4 w-4 mr-2" />
+          <Eye className="h-4 w-4 me-2" />
           {t("view_details")}
         </DropdownMenuItem>
         <DropdownMenuItem>
-          <Edit className="h-4 w-4 mr-2" />
+          <Edit className="h-4 w-4 me-2" />
           {t("edit")}
         </DropdownMenuItem>
         <DropdownMenuItem>
-          <Copy className="h-4 w-4 mr-2" />
+          <Copy className="h-4 w-4 me-2" />
           {t("duplicate")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="text-destructive">
-          <Trash2 className="h-4 w-4 mr-2" />
+          <Trash2 className="h-4 w-4 me-2" />
           {t("delete")}
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -557,15 +524,21 @@ function CreateCampaignDialog({ open, onClose }: { open: boolean; onClose: () =>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">{t("campaign_name")}</label>
-            <Input placeholder={t("enter_campaign_name")} />
+            <label htmlFor="campaign-name" className="text-sm font-medium">
+              {t("campaign_name")}
+            </label>
+            <Input id="campaign-name" placeholder={t("enter_campaign_name")} />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">{t("subject_line")}</label>
-            <Input placeholder={t("enter_subject")} />
+            <label htmlFor="campaign-subject" className="text-sm font-medium">
+              {t("subject_line")}
+            </label>
+            <Input id="campaign-subject" placeholder={t("enter_subject")} />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">{t("campaign_type")}</label>
+            <label htmlFor="campaign-type" className="text-sm font-medium">
+              {t("campaign_type")}
+            </label>
             <Select defaultValue="newsletter">
               <SelectTrigger>
                 <SelectValue />
@@ -602,12 +575,8 @@ function CampaignDetailDialog({
 
   if (!campaign) return null;
 
-  const openRate =
-    campaign.totalSent > 0 ? ((campaign.totalOpened / campaign.totalSent) * 100).toFixed(1) : "0";
-  const clickRate =
-    campaign.totalOpened > 0
-      ? ((campaign.totalClicked / campaign.totalOpened) * 100).toFixed(1)
-      : "0";
+  const openRate = campaign.totalSent > 0 ? ((campaign.totalOpened / campaign.totalSent) * 100).toFixed(1) : "0";
+  const clickRate = campaign.totalOpened > 0 ? ((campaign.totalClicked / campaign.totalOpened) * 100).toFixed(1) : "0";
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -630,25 +599,15 @@ function CampaignDetailDialog({
               <DetailField label={t("subject")} value={campaign.subject} />
               <DetailField label={t("type")} value={campaign.campaignType} capitalize />
               <DetailField label={t("status")} value={campaign.status} badge />
-              <DetailField
-                label={t("created")}
-                value={new Date(campaign.createdAt).toLocaleDateString()}
-              />
+              <DetailField label={t("created")} value={new Date(campaign.createdAt).toLocaleDateString()} />
             </div>
           </TabsContent>
 
           <TabsContent value="performance" className="mt-4">
             <div className="grid grid-cols-4 gap-3">
-              <PerformanceMetric
-                value={campaign.totalRecipients.toLocaleString()}
-                label={t("recipients")}
-              />
+              <PerformanceMetric value={campaign.totalRecipients.toLocaleString()} label={t("recipients")} />
               <PerformanceMetric value={campaign.totalSent.toLocaleString()} label={t("sent")} />
-              <PerformanceMetric
-                value={`${openRate}%`}
-                label={t("open_rate")}
-                highlight="emerald"
-              />
+              <PerformanceMetric value={`${openRate}%`} label={t("open_rate")} highlight="emerald" />
               <PerformanceMetric value={`${clickRate}%`} label={t("click_rate")} highlight="blue" />
             </div>
           </TabsContent>
@@ -665,7 +624,7 @@ function CampaignDetailDialog({
             {t("close")}
           </Button>
           <Button>
-            <Edit className="h-4 w-4 mr-2" />
+            <Edit className="h-4 w-4 me-2" />
             {t("edit")}
           </Button>
         </DialogFooter>
@@ -708,16 +667,8 @@ function PerformanceMetric({
   label: string;
   highlight?: "emerald" | "blue";
 }) {
-  const bgClass = highlight
-    ? highlight === "emerald"
-      ? "bg-emerald-500/20"
-      : "bg-blue-500/20"
-    : "bg-muted/50";
-  const textClass = highlight
-    ? highlight === "emerald"
-      ? "text-emerald-600"
-      : "text-blue-600"
-    : "text-foreground";
+  const bgClass = highlight ? (highlight === "emerald" ? "bg-emerald-500/20" : "bg-blue-500/20") : "bg-muted/50";
+  const textClass = highlight ? (highlight === "emerald" ? "text-emerald-600" : "text-blue-600") : "text-foreground";
 
   return (
     <div className={cn("p-3 rounded-lg text-center", bgClass)}>

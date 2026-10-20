@@ -3,13 +3,13 @@
  * Provides AI-powered insights using Grok models
  */
 
+import { createClient } from "@/lib/supabase/server";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { getAiConfig } from "./api-key";
-import { getPlatformMetrics, getChurnData, getEmailCampaignData } from "./platform-metrics";
+import { CACHE_TTL, MODELS } from "./config";
+import { getChurnData, getEmailCampaignData, getPlatformMetrics } from "./platform-metrics";
 import { executeWithRateLimitHandling } from "./rate-limiter";
-import { MODELS, CACHE_TTL } from "./config";
-import { createClient } from "@/lib/supabase/server";
 
 // Cache for insights
 const insightCache = new Map<string, { data: string; timestamp: number }>();
@@ -111,7 +111,7 @@ ${contextData}`,
         temperature: 0.7,
         maxRetries: 0, // We handle retries ourselves with better backoff
       }),
-    4 // Max 4 attempts
+    4, // Max 4 attempts
   );
 
   const insight = result.text || "No insight generated";

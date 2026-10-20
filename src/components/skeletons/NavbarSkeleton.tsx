@@ -10,9 +10,6 @@ interface NavbarSkeletonProps {
  */
 export function NavbarSkeleton({ height = 140, className }: NavbarSkeletonProps) {
   return (
-    <div
-      className={cn("bg-card border-b border-border animate-pulse", className)}
-      style={{ height: `${height}px` }}
-    />
+    <div className={cn("bg-card border-b border-border animate-pulse", className)} style={{ height: `${height}px` }} />
   );
 }

@@ -3,10 +3,10 @@
  * Fetches messages for food sharing rooms
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { getChatMessages } from "@/lib/data/chat";
 import { isPrerenderInterruption } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const roomId = searchParams.get("roomId");
-    const limit = parseInt(searchParams.get("limit") || "50", 10);
-    const offset = parseInt(searchParams.get("offset") || "0", 10);
+    const limit = Number.parseInt(searchParams.get("limit") || "50", 10);
+    const offset = Number.parseInt(searchParams.get("offset") || "0", 10);
 
     if (!roomId) {
       return NextResponse.json({ error: "roomId is required" }, { status: 400 });
@@ -39,9 +39,7 @@ export async function GET(request: NextRequest) {
       timestamp: msg.timestamp,
       image: msg.image || undefined,
       isOwn: msg.profile_id === user.id,
-      senderName: msg.profiles
-        ? `${msg.profiles.first_name} ${msg.profiles.second_name}`.trim()
-        : undefined,
+      senderName: msg.profiles ? `${msg.profiles.first_name} ${msg.profiles.second_name}`.trim() : undefined,
       senderAvatar: msg.profiles?.avatar_url || undefined,
     }));
 

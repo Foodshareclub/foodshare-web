@@ -10,17 +10,17 @@
 
 import {
   Body,
+  Column,
   Container,
   Head,
+  Hr,
   Html,
   Img,
   Link,
   Preview,
+  Row,
   Section,
   Text,
-  Hr,
-  Row,
-  Column,
 } from "@react-email/components";
 import type { ReactNode } from "react";
 
@@ -47,8 +47,7 @@ export const colors = {
 export const styles = {
   main: {
     backgroundColor: colors.background,
-    fontFamily:
-      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
   },
   container: {
     maxWidth: "600px",
@@ -334,14 +333,8 @@ export function EmailUserCard({
           />
         </Column>
         <Column style={{ paddingLeft: "15px" }}>
-          <Text style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: colors.text }}>
-            {name}
-          </Text>
-          {subtitle && (
-            <Text style={{ margin: "4px 0 0", fontSize: "14px", color: colors.textLight }}>
-              {subtitle}
-            </Text>
-          )}
+          <Text style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: colors.text }}>{name}</Text>
+          {subtitle && <Text style={{ margin: "4px 0 0", fontSize: "14px", color: colors.textLight }}>{subtitle}</Text>}
         </Column>
       </Row>
     </Section>
@@ -373,12 +366,7 @@ export function EmailListingCard({
         overflow: "hidden",
       }}
     >
-      <Img
-        src={imageUrl}
-        alt={title}
-        width="100%"
-        style={{ height: "160px", objectFit: "cover" }}
-      />
+      <Img src={imageUrl} alt={title} width="100%" style={{ height: "160px", objectFit: "cover" }} />
       <Section style={{ padding: "20px" }}>
         <Text
           style={{
@@ -392,13 +380,9 @@ export function EmailListingCard({
         >
           {type}
         </Text>
-        <Text style={{ margin: "8px 0 0", fontSize: "18px", fontWeight: 700, color: colors.text }}>
-          {title}
-        </Text>
+        <Text style={{ margin: "8px 0 0", fontSize: "18px", fontWeight: 700, color: colors.text }}>{title}</Text>
         {location && (
-          <Text style={{ margin: "8px 0 0", fontSize: "14px", color: colors.textLight }}>
-            📍 {location}
-          </Text>
+          <Text style={{ margin: "8px 0 0", fontSize: "14px", color: colors.textLight }}>📍 {location}</Text>
         )}
       </Section>
     </Section>

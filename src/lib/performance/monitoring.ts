@@ -55,10 +55,7 @@ class PerformanceMonitor {
       const resourceObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
           const resourceEntry = entry as PerformanceResourceTiming;
-          if (
-            resourceEntry.initiatorType === "fetch" ||
-            resourceEntry.initiatorType === "xmlhttprequest"
-          ) {
+          if (resourceEntry.initiatorType === "fetch" || resourceEntry.initiatorType === "xmlhttprequest") {
             this.recordMetric({
               name: "api-call",
               value: resourceEntry.duration,
@@ -148,7 +145,7 @@ export const performanceMonitor = new PerformanceMonitor();
 export function measurePerformance<T>(
   name: string,
   fn: () => T | Promise<T>,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): T | Promise<T> {
   const startTime = performance.now();
 
@@ -164,16 +161,15 @@ export function measurePerformance<T>(
         metadata,
       });
     }) as T;
-  } else {
-    const duration = performance.now() - startTime;
-    performanceMonitor.recordMetric({
-      name,
-      value: duration,
-      timestamp: startTime,
-      metadata,
-    });
-    return result;
   }
+  const duration = performance.now() - startTime;
+  performanceMonitor.recordMetric({
+    name,
+    value: duration,
+    timestamp: startTime,
+    metadata,
+  });
+  return result;
 }
 
 /**
@@ -278,7 +274,7 @@ export function reportPerformanceMetrics(): void {
       acc[metric.name].push(metric.value);
       return acc;
     },
-    {} as Record<string, number[]>
+    {} as Record<string, number[]>,
   );
 
   // Calculate averages
@@ -293,7 +289,7 @@ export function reportPerformanceMetrics(): void {
       };
       return acc;
     },
-    {} as Record<string, { average: number; min: number; max: number; count: number }>
+    {} as Record<string, { average: number; min: number; max: number; count: number }>,
   );
 
   if (process.env.NODE_ENV === "development") {

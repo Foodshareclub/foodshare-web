@@ -7,9 +7,9 @@
  * Now uses unified API client for Supabase.
  */
 
-import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { InitialProductStateType } from "@/types/product.types";
 import { api } from "@/lib/api/unified-client";
+import type { InitialProductStateType } from "@/types/product.types";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // ============================================================================
 // Types
@@ -61,11 +61,7 @@ async function fetchUserProducts(userId: string): Promise<InitialProductStateTyp
  * Hook for infinite scrolling products
  * Supports lazy loading with cursor-based pagination
  */
-export function useInfiniteProducts({
-  type = "food",
-  limit = 20,
-  enabled = true,
-}: UseProductsParams = {}) {
+export function useInfiniteProducts({ type = "food", limit = 20, enabled = true }: UseProductsParams = {}) {
   return useInfiniteQuery({
     queryKey: ["products", "infinite", { type, limit }],
     queryFn: ({ pageParam }) => fetchProducts({ postType: type, cursor: pageParam, limit }),
@@ -108,9 +104,7 @@ export function useUserProducts({ userId, enabled = true }: UseUserProductsParam
 /**
  * Helper to flatten infinite query pages into a single array
  */
-export function flattenProductPages(
-  pages: PaginatedProductsResponse[] | undefined
-): InitialProductStateType[] {
+export function flattenProductPages(pages: PaginatedProductsResponse[] | undefined): InitialProductStateType[] {
   if (!pages) return [];
   return pages.flatMap((page) => page.data);
 }
@@ -140,9 +134,7 @@ export function useInvalidateProducts() {
 
   return {
     invalidateAll: () => queryClient.invalidateQueries({ queryKey: ["products"] }),
-    invalidateType: (type: string) =>
-      queryClient.invalidateQueries({ queryKey: ["products", "infinite", { type }] }),
-    invalidateUser: (userId: string) =>
-      queryClient.invalidateQueries({ queryKey: ["products", "user", userId] }),
+    invalidateType: (type: string) => queryClient.invalidateQueries({ queryKey: ["products", "infinite", { type }] }),
+    invalidateUser: (userId: string) => queryClient.invalidateQueries({ queryKey: ["products", "user", userId] }),
   };
 }

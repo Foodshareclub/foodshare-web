@@ -1,10 +1,10 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import type { AccuracyLevel, PositionError } from "@/hooks/usePosition";
+import { AlertCircle, Info } from "lucide-react";
 import type { FC } from "react";
 import { useState } from "react";
-import { AlertCircle, Info } from "lucide-react";
-import type { PositionError, AccuracyLevel } from "@/hooks/usePosition";
-import { Button } from "@/components/ui/button";
 
 interface LocationPermissionBannerProps {
   error: PositionError | null;
@@ -104,9 +104,9 @@ export const LocationPermissionBanner: FC<LocationPermissionBannerProps> = ({
               <div className="p-3 bg-muted rounded-md">
                 <p className="font-medium mb-1 text-foreground">Privacy Notice</p>
                 <p className="text-xs text-muted-foreground">
-                  We use your location to show nearby food listings. Your location is only used for
-                  this purpose and is not stored permanently. You can change or disable location
-                  access at any time in your browser settings.
+                  We use your location to show nearby food listings. Your location is only used for this purpose and is
+                  not stored permanently. You can change or disable location access at any time in your browser
+                  settings.
                 </p>
               </div>
             </div>

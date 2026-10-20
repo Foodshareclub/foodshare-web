@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
 /**
  * Settings Navbar - Client Component
  * Wrapper for the main Navbar component with settings-specific handlers
  */
 
-import Navbar from '@/components/header/navbar/Navbar';
-import { useRouter } from 'next/navigation';
-import type { CustomRoomType } from '@/api/chatAPI';
+import type { CustomRoomType } from "@/api/chatAPI";
+import Navbar from "@/components/header/navbar/Navbar";
+import { useRouter } from "next/navigation";
 
 interface SettingsNavbarProps {
   userId?: string;
@@ -24,10 +24,10 @@ export function SettingsNavbar({
   userId,
   isAuth,
   isAdmin = false,
-  imgUrl = '',
-  firstName = '',
-  secondName = '',
-  email = '',
+  imgUrl = "",
+  firstName = "",
+  secondName = "",
+  email = "",
   signalOfNewMessage = [],
 }: SettingsNavbarProps) {
   const router = useRouter();

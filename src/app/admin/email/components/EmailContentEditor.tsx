@@ -12,48 +12,42 @@
  * - Copy HTML functionality
  */
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Monitor,
-  Smartphone,
-  Tablet,
-  X,
-  Eye,
-  Settings2,
-  Type,
-  Palette,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Mail,
-  ChevronDown,
-  RotateCcw,
-  Sun,
-  Moon,
-  ZoomIn,
-  ZoomOut,
-  Copy,
-  Check,
-  Maximize2,
-  Minimize2,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  Check,
+  ChevronDown,
+  Copy,
+  Eye,
+  Mail,
+  Maximize2,
+  Minimize2,
+  Monitor,
+  Moon,
+  Palette,
+  RotateCcw,
+  Settings2,
+  Smartphone,
+  Sun,
+  Tablet,
+  Type,
+  X,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
+import { useState } from "react";
 
 // Types
 export interface EmailVisualSettings {
@@ -134,27 +128,19 @@ const PRESET_COLORS = [
 // Transform HTML with visual settings
 function transformHtmlWithSettings(html: string, settings: EmailVisualSettings): string {
   // Apply link color to all anchor tags
-  let transformed = html.replace(
-    /<a /g,
-    `<a style="color: ${settings.linkColor}; text-decoration: underline;" `
-  );
+  let transformed = html.replace(/<a /g, `<a style="color: ${settings.linkColor}; text-decoration: underline;" `);
 
   // Apply button color to buttons/CTAs
   transformed = transformed.replace(
     /style="([^"]*)(background-color:\s*)(#[a-fA-F0-9]{6}|#[a-fA-F0-9]{3})/gi,
-    `style="$1$2${settings.buttonColor}`
+    `style="$1$2${settings.buttonColor}`,
   );
 
   return transformed;
 }
 
 // Generate full email HTML for export
-function generateFullEmailHtml(
-  to: string,
-  subject: string,
-  html: string,
-  settings: EmailVisualSettings
-): string {
+function generateFullEmailHtml(_to: string, subject: string, html: string, settings: EmailVisualSettings): string {
   const transformedContent = transformHtmlWithSettings(html, settings);
   const bgColor = settings.darkMode ? "#18181b" : settings.backgroundColor;
   const textColor = settings.darkMode ? "#e4e4e7" : settings.textColor;
@@ -256,12 +242,7 @@ export function EmailContentEditor({
   };
 
   return (
-    <div
-      className={cn(
-        "space-y-4",
-        isFullscreen && "fixed inset-0 z-50 bg-background p-6 overflow-auto"
-      )}
-    >
+    <div className={cn("space-y-4", isFullscreen && "fixed inset-0 z-50 bg-background p-6 overflow-auto")}>
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         {/* Device Selector */}
@@ -324,17 +305,11 @@ export function EmailContentEditor({
               <Button variant={showSettings ? "secondary" : "outline"} size="sm" className="gap-2">
                 <Settings2 className="h-4 w-4" />
                 <span className="hidden sm:inline">Visual Settings</span>
-                <ChevronDown
-                  className={cn("h-3 w-3 transition-transform", showSettings && "rotate-180")}
-                />
+                <ChevronDown className={cn("h-3 w-3 transition-transform", showSettings && "rotate-180")} />
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-80 p-0">
-              <VisualSettingsPanel
-                settings={settings}
-                onUpdate={updateSettings}
-                onReset={resetSettings}
-              />
+              <VisualSettingsPanel settings={settings} onUpdate={updateSettings} onReset={resetSettings} />
             </PopoverContent>
           </Popover>
 
@@ -355,11 +330,7 @@ export function EmailContentEditor({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleCopyHtml}>
-                {copied ? (
-                  <Check className="h-4 w-4 text-emerald-500" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
+                {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
               </Button>
             </TooltipTrigger>
             <TooltipContent>{copied ? "Copied!" : "Copy HTML"}</TooltipContent>
@@ -367,17 +338,8 @@ export function EmailContentEditor({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-              >
-                {isFullscreen ? (
-                  <Minimize2 className="h-4 w-4" />
-                ) : (
-                  <Maximize2 className="h-4 w-4" />
-                )}
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setIsFullscreen(!isFullscreen)}>
+                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
               </Button>
             </TooltipTrigger>
             <TooltipContent>{isFullscreen ? "Exit Fullscreen" : "Fullscreen"}</TooltipContent>
@@ -403,7 +365,7 @@ export function EmailContentEditor({
           <div
             className={cn(
               "rounded-xl border-2 overflow-hidden shadow-2xl transition-all duration-300",
-              settings.darkMode ? "border-zinc-700 bg-zinc-900" : "border-border/50 bg-white"
+              settings.darkMode ? "border-zinc-700 bg-zinc-900" : "border-border/50 bg-white",
             )}
             style={{
               width: deviceConfig.width,
@@ -427,16 +389,10 @@ export function EmailContentEditor({
                   <Mail className="h-5 w-5" style={{ color: settings.headerColor }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p
-                    className="font-medium text-sm truncate"
-                    style={{ color: settings.darkMode ? "#fff" : "#1a1a1a" }}
-                  >
+                  <p className="font-medium text-sm truncate" style={{ color: settings.darkMode ? "#fff" : "#1a1a1a" }}>
                     FoodShare
                   </p>
-                  <p
-                    className="text-xs truncate"
-                    style={{ color: settings.darkMode ? "#a1a1aa" : "#666" }}
-                  >
+                  <p className="text-xs truncate" style={{ color: settings.darkMode ? "#a1a1aa" : "#666" }}>
                     contact@foodshare.club
                   </p>
                 </div>
@@ -447,9 +403,7 @@ export function EmailContentEditor({
               <div className="space-y-1">
                 <p className="text-xs" style={{ color: settings.darkMode ? "#71717a" : "#888" }}>
                   To:{" "}
-                  <span style={{ color: settings.darkMode ? "#d4d4d8" : "#333" }}>
-                    {to || "recipient@example.com"}
-                  </span>
+                  <span style={{ color: settings.darkMode ? "#d4d4d8" : "#333" }}>{to || "recipient@example.com"}</span>
                 </p>
                 <p
                   className="font-semibold"
@@ -485,6 +439,7 @@ export function EmailContentEditor({
                     style={{ border: "3px solid rgba(255,255,255,0.3)" }}
                   >
                     <svg
+                      aria-hidden="true"
                       className="h-8 w-8 text-white"
                       viewBox="0 0 24 24"
                       fill="none"
@@ -523,6 +478,7 @@ export function EmailContentEditor({
                   padding: `${settings.padding}px`,
                   backgroundColor: settings.darkMode ? "#27272a" : "#fafafa",
                 }}
+                // biome-ignore lint/security/noDangerouslySetInnerHtml: admin-authored email preview, unsanitized by design; see the note below
                 dangerouslySetInnerHTML={{
                   __html: html
                     ? transformHtmlWithSettings(html, settings)
@@ -555,17 +511,11 @@ export function EmailContentEditor({
                       fontSize: "12px",
                     }}
                   >
-                    <a href="#" style={{ color: "#fff", textDecoration: "underline" }}>
-                      Privacy
-                    </a>
+                    <span style={{ color: "#fff", textDecoration: "underline" }}>Privacy</span>
                     {" • "}
-                    <a href="#" style={{ color: "#fff", textDecoration: "underline" }}>
-                      Terms
-                    </a>
+                    <span style={{ color: "#fff", textDecoration: "underline" }}>Terms</span>
                     {" • "}
-                    <a href="#" style={{ color: "#fff", textDecoration: "underline" }}>
-                      Unsubscribe
-                    </a>
+                    <span style={{ color: "#fff", textDecoration: "underline" }}>Unsubscribe</span>
                   </p>
                 </div>
               )}
@@ -637,10 +587,7 @@ function VisualSettingsPanel({
           <>
             <div className="space-y-2">
               <Label className="text-xs">Font Family</Label>
-              <Select
-                value={settings.fontFamily}
-                onValueChange={(v) => onUpdate({ fontFamily: v })}
-              >
+              <Select value={settings.fontFamily} onValueChange={(v) => onUpdate({ fontFamily: v })}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
@@ -656,9 +603,7 @@ function VisualSettingsPanel({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs">Font Size</Label>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {settings.fontSize}px
-                </span>
+                <span className="text-xs text-muted-foreground tabular-nums">{settings.fontSize}px</span>
               </div>
               <Slider
                 value={[settings.fontSize]}
@@ -672,9 +617,7 @@ function VisualSettingsPanel({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs">Line Height</Label>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {settings.lineHeight}
-                </span>
+                <span className="text-xs text-muted-foreground tabular-nums">{settings.lineHeight}</span>
               </div>
               <Slider
                 value={[settings.lineHeight]}
@@ -688,9 +631,7 @@ function VisualSettingsPanel({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs">Letter Spacing</Label>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {settings.letterSpacing}px
-                </span>
+                <span className="text-xs text-muted-foreground tabular-nums">{settings.letterSpacing}px</span>
               </div>
               <Slider
                 value={[settings.letterSpacing]}
@@ -706,21 +647,13 @@ function VisualSettingsPanel({
 
         {activeTab === "colors" && (
           <>
-            <ColorPicker
-              label="Text Color"
-              value={settings.textColor}
-              onChange={(v) => onUpdate({ textColor: v })}
-            />
+            <ColorPicker label="Text Color" value={settings.textColor} onChange={(v) => onUpdate({ textColor: v })} />
             <ColorPicker
               label="Background"
               value={settings.backgroundColor}
               onChange={(v) => onUpdate({ backgroundColor: v })}
             />
-            <ColorPicker
-              label="Link Color"
-              value={settings.linkColor}
-              onChange={(v) => onUpdate({ linkColor: v })}
-            />
+            <ColorPicker label="Link Color" value={settings.linkColor} onChange={(v) => onUpdate({ linkColor: v })} />
             <ColorPicker
               label="Header/Footer"
               value={settings.headerColor}
@@ -757,9 +690,7 @@ function VisualSettingsPanel({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs">Content Padding</Label>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {settings.padding}px
-                </span>
+                <span className="text-xs text-muted-foreground tabular-nums">{settings.padding}px</span>
               </div>
               <Slider
                 value={[settings.padding]}
@@ -773,9 +704,7 @@ function VisualSettingsPanel({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs">Border Radius</Label>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {settings.borderRadius}px
-                </span>
+                <span className="text-xs text-muted-foreground tabular-nums">{settings.borderRadius}px</span>
               </div>
               <Slider
                 value={[settings.borderRadius]}
@@ -790,17 +719,11 @@ function VisualSettingsPanel({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-xs">Show Header</Label>
-                <Switch
-                  checked={settings.showHeader}
-                  onCheckedChange={(v) => onUpdate({ showHeader: v })}
-                />
+                <Switch checked={settings.showHeader} onCheckedChange={(v) => onUpdate({ showHeader: v })} />
               </div>
               <div className="flex items-center justify-between">
                 <Label className="text-xs">Show Footer</Label>
-                <Switch
-                  checked={settings.showFooter}
-                  onCheckedChange={(v) => onUpdate({ showFooter: v })}
-                />
+                <Switch checked={settings.showFooter} onCheckedChange={(v) => onUpdate({ showFooter: v })} />
               </div>
             </div>
           </>
@@ -825,32 +748,25 @@ function ColorPicker({
       <div className="flex items-center justify-between">
         <Label className="text-xs">{label}</Label>
         <div className="flex items-center gap-2">
-          <div
-            className="h-5 w-5 rounded border border-border/50 shadow-sm"
-            style={{ backgroundColor: value }}
-          />
+          <div className="h-5 w-5 rounded border border-border/50 shadow-sm" style={{ backgroundColor: value }} />
           <span className="text-xs text-muted-foreground font-mono uppercase">{value}</span>
         </div>
       </div>
       <div className="flex flex-wrap gap-1.5">
         {PRESET_COLORS.map((color) => (
           <button
+            type="button"
             key={color}
             className={cn(
               "h-6 w-6 rounded-md border-2 transition-all hover:scale-110",
-              value === color ? "border-foreground shadow-md" : "border-transparent"
+              value === color ? "border-foreground shadow-md" : "border-transparent",
             )}
             style={{ backgroundColor: color }}
             onClick={() => onChange(color)}
           />
         ))}
         <label className="h-6 w-6 rounded-md border-2 border-dashed border-border/50 flex items-center justify-center cursor-pointer hover:border-primary transition-colors">
-          <input
-            type="color"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="sr-only"
-          />
+          <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="sr-only" />
           <span className="text-[10px] text-muted-foreground">+</span>
         </label>
       </div>

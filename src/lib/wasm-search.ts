@@ -38,7 +38,7 @@ export function l2Distance(a: Float32Array | number[], b: Float32Array | number[
 /**
  * Pad or truncate vector to exact target dimensions (e.g. 384 for gte-small).
  */
-export function normalizeVectorDimensions(v: Float32Array | number[], targetDim: number = 384): Float32Array {
+export function normalizeVectorDimensions(v: Float32Array | number[], targetDim = 384): Float32Array {
   const f32V = v instanceof Float32Array ? v : new Float32Array(v);
   return WasmSearch.vector_normalize_dimensions(f32V, targetDim);
 }
@@ -46,7 +46,7 @@ export function normalizeVectorDimensions(v: Float32Array | number[], targetDim:
 /**
  * Merge multiple ranked result lists using Reciprocal Rank Fusion (RRF).
  */
-export function fuseRankedLists(lists: string[][], k: number = 60.0): RrfFusedItem[] {
+export function fuseRankedLists(lists: string[][], k = 60.0): RrfFusedItem[] {
   try {
     const rawJson = WasmSearch.rrf_merge(JSON.stringify(lists), k);
     return JSON.parse(rawJson) as RrfFusedItem[];
@@ -97,14 +97,14 @@ export function calculateHybridScore(options: {
     options.vectorWeight,
     options.textWeight,
     options.geoWeight,
-    options.halfLifeKm
+    options.halfLifeKm,
   );
 }
 
 /**
  * Calculate exponential geographic proximity decay score (0.0 to 1.0).
  */
-export function calculateDistanceDecay(distanceKm: number, halfLifeKm: number = 10.0): number {
+export function calculateDistanceDecay(distanceKm: number, halfLifeKm = 10.0): number {
   return WasmSearch.distance_decay(distanceKm, halfLifeKm);
 }
 

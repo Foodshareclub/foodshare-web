@@ -1,12 +1,9 @@
-import { redirect } from "next/navigation";
-import { NewProductForm } from "./NewProductForm";
 import { getAuthSession } from "@/lib/data/auth";
 import { generateNoIndexMetadata } from "@/lib/metadata";
+import { redirect } from "next/navigation";
+import { NewProductForm } from "./NewProductForm";
 
-export const metadata = generateNoIndexMetadata(
-  "Create New Listing",
-  "Share food or items with your community"
-);
+export const metadata = generateNoIndexMetadata("Create New Listing", "Share food or items with your community");
 
 interface PageProps {
   searchParams: Promise<{ type?: string }>;

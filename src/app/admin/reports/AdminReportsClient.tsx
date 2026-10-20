@@ -4,18 +4,10 @@
  * AdminReportsClient - Analytics and reporting dashboard
  */
 
-import { useTranslations } from "next-intl";
-import {
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Package,
-  Users,
-  MessageSquare,
-  CheckCircle,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
 import type { ReportsData } from "@/lib/data/admin-reports";
+import { cn } from "@/lib/utils";
+import { CheckCircle, MessageSquare, Minus, Package, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface Props {
   data: ReportsData;
@@ -109,16 +101,12 @@ export function AdminReportsClient({ data }: Props) {
         <SummaryCard
           label="Avg Listings/Day"
           value={Math.round(
-            data.listingsByDay.reduce((sum, d) => sum + d.count, 0) /
-              Math.max(data.listingsByDay.length, 1)
+            data.listingsByDay.reduce((sum, d) => sum + d.count, 0) / Math.max(data.listingsByDay.length, 1),
           )}
         />
         <SummaryCard
           label="Avg Users/Day"
-          value={Math.round(
-            data.usersByDay.reduce((sum, d) => sum + d.count, 0) /
-              Math.max(data.usersByDay.length, 1)
-          )}
+          value={Math.round(data.usersByDay.reduce((sum, d) => sum + d.count, 0) / Math.max(data.usersByDay.length, 1))}
         />
         <SummaryCard
           label="Arrangement Rate"
@@ -200,14 +188,11 @@ function CategoryBar({
       <span className="w-24 text-sm text-muted-foreground capitalize truncate">{category}</span>
       <div className="flex-1 h-6 bg-muted rounded-full overflow-hidden">
         <div
-          className={cn(
-            "h-full rounded-full transition-all",
-            categoryColors[category] || "bg-gray-500"
-          )}
+          className={cn("h-full rounded-full transition-all", categoryColors[category] || "bg-gray-500")}
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <span className="w-12 text-sm font-medium text-right">{count}</span>
+      <span className="w-12 text-sm font-medium text-end">{count}</span>
     </div>
   );
 }

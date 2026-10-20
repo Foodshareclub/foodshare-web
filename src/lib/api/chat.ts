@@ -5,8 +5,8 @@
  * Used for food sharing chat operations (rooms, messages).
  */
 
-import { apiCall, apiGet } from "./client";
 import type { ActionResult } from "@/lib/errors";
+import { apiCall, apiGet } from "./client";
 
 // =============================================================================
 // Types (match Edge Function schemas)
@@ -121,7 +121,7 @@ export async function listRoomsAPI(options?: {
  */
 export async function getRoomAPI(
   roomId: string,
-  options?: { limit?: number }
+  options?: { limit?: number },
 ): Promise<ActionResult<RoomWithMessagesResponse>> {
   return apiGet<RoomWithMessagesResponse>(ENDPOINT, {
     mode: "food",
@@ -134,7 +134,7 @@ export async function getRoomAPI(
  * Create a food chat room
  */
 export async function createRoomAPI(
-  input: CreateRoomRequest
+  input: CreateRoomRequest,
 ): Promise<ActionResult<{ roomId: string; created: boolean }>> {
   return apiCall<{ roomId: string; created: boolean }, CreateRoomRequest>(ENDPOINT, {
     method: "POST",
@@ -146,9 +146,7 @@ export async function createRoomAPI(
 /**
  * Send a message in a food chat room
  */
-export async function sendMessageAPI(
-  input: SendMessageRequest
-): Promise<ActionResult<MessageResponse>> {
+export async function sendMessageAPI(input: SendMessageRequest): Promise<ActionResult<MessageResponse>> {
   return apiCall<MessageResponse, SendMessageRequest>(ENDPOINT, {
     method: "POST",
     body: input,
@@ -159,9 +157,7 @@ export async function sendMessageAPI(
 /**
  * Accept a food request (sharer only)
  */
-export async function acceptRequestAPI(
-  roomId: string
-): Promise<ActionResult<{ success: boolean; address: string }>> {
+export async function acceptRequestAPI(roomId: string): Promise<ActionResult<{ success: boolean; address: string }>> {
   return apiCall<{ success: boolean; address: string }, UpdateRoomRequest>(ENDPOINT, {
     method: "PUT",
     body: { action: "accept" },
@@ -172,9 +168,7 @@ export async function acceptRequestAPI(
 /**
  * Complete a food exchange
  */
-export async function completeExchangeAPI(
-  roomId: string
-): Promise<ActionResult<{ success: boolean }>> {
+export async function completeExchangeAPI(roomId: string): Promise<ActionResult<{ success: boolean }>> {
   return apiCall<{ success: boolean }, UpdateRoomRequest>(ENDPOINT, {
     method: "PUT",
     body: { action: "complete" },

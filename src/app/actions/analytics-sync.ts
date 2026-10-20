@@ -8,10 +8,10 @@
  * and interpolated row values straight into SQL.
  */
 
-import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/data/admin-check";
 import { getMotherDuckToken } from "@/lib/email/vault";
 import { logger } from "@/lib/logger";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const MOTHERDUCK_API = "https://api.motherduck.com/v1/sql";
 const MOTHERDUCK_DATABASE = "foodshare_analytics";
@@ -119,9 +119,7 @@ export async function testAnalyticsConnectivity(): Promise<AnalyticsConnectivity
     await requireAdmin();
 
     const supabase = createAdminClient();
-    const { count, error } = await supabase
-      .from("analytics_daily_stats")
-      .select("*", { count: "exact", head: true });
+    const { count, error } = await supabase.from("analytics_daily_stats").select("*", { count: "exact", head: true });
 
     if (error) {
       return {
@@ -148,10 +146,7 @@ export async function testAnalyticsConnectivity(): Promise<AnalyticsConnectivity
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Connection test failed";
-    logger.error(
-      "Analytics connectivity test failed",
-      error instanceof Error ? error : new Error(message)
-    );
+    logger.error("Analytics connectivity test failed", error instanceof Error ? error : new Error(message));
     return { success: false, message };
   }
 }
@@ -190,32 +185,32 @@ export async function syncAnalyticsToMotherDuck(fullSync = false): Promise<Analy
     for (const row of dailyStats as Record<string, unknown>[]) {
       await executeMotherDuckSQL(
         `INSERT OR REPLACE INTO daily_stats VALUES (${sqlLiteral(row.date)}, ${sqlLiteral(
-          row.new_users
+          row.new_users,
         )}, ${sqlLiteral(row.active_users)}, ${sqlLiteral(row.returning_users)}, ${sqlLiteral(
-          row.new_listings
+          row.new_listings,
         )}, ${sqlLiteral(row.completed_shares)}, ${sqlLiteral(row.messages_sent)}, ${sqlLiteral(
-          row.top_categories
-        )}, ${sqlLiteral(row.computed_at)})`
+          row.top_categories,
+        )}, ${sqlLiteral(row.computed_at)})`,
       );
     }
 
     for (const row of userActivity as Record<string, unknown>[]) {
       await executeMotherDuckSQL(
         `INSERT OR REPLACE INTO user_activity_summary VALUES (${sqlLiteral(row.user_id)}, ${sqlLiteral(
-          row.listings_viewed
+          row.listings_viewed,
         )}, ${sqlLiteral(row.listings_saved)}, ${sqlLiteral(row.messages_initiated)}, ${sqlLiteral(
-          row.shares_completed
-        )}, ${sqlLiteral(row.last_activity_at)}, ${sqlLiteral(row.updated_at)})`
+          row.shares_completed,
+        )}, ${sqlLiteral(row.last_activity_at)}, ${sqlLiteral(row.updated_at)})`,
       );
     }
 
     for (const row of postActivity as Record<string, unknown>[]) {
       await executeMotherDuckSQL(
         `INSERT OR REPLACE INTO post_activity_daily_stats VALUES (${sqlLiteral(row.id)}, ${sqlLiteral(
-          row.date
+          row.date,
         )}, ${sqlLiteral(row.post_type)}, ${sqlLiteral(row.posts_viewed)}, ${sqlLiteral(
-          row.post_arranged
-        )}, ${sqlLiteral(row.total_likes)}, ${sqlLiteral(row.updated_at)})`
+          row.post_arranged,
+        )}, ${sqlLiteral(row.total_likes)}, ${sqlLiteral(row.updated_at)})`,
       );
     }
 
@@ -226,7 +221,7 @@ export async function syncAnalyticsToMotherDuck(fullSync = false): Promise<Analy
           .update({ synced_to_motherduck: true })
           .in(
             "date",
-            dailyStats.map((row) => row.date)
+            dailyStats.map((row) => row.date),
           );
       }
       if (userActivity.length > 0) {
@@ -235,7 +230,7 @@ export async function syncAnalyticsToMotherDuck(fullSync = false): Promise<Analy
           .update({ synced_to_motherduck: true })
           .in(
             "user_id",
-            userActivity.map((row) => row.user_id)
+            userActivity.map((row) => row.user_id),
           );
       }
       if (postActivity.length > 0) {
@@ -244,7 +239,7 @@ export async function syncAnalyticsToMotherDuck(fullSync = false): Promise<Analy
           .update({ synced_to_motherduck: true })
           .in(
             "id",
-            postActivity.map((row) => row.id)
+            postActivity.map((row) => row.id),
           );
       }
     }
@@ -260,10 +255,7 @@ export async function syncAnalyticsToMotherDuck(fullSync = false): Promise<Analy
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Sync failed";
-    logger.error(
-      "Analytics sync to MotherDuck failed",
-      error instanceof Error ? error : new Error(message)
-    );
+    logger.error("Analytics sync to MotherDuck failed", error instanceof Error ? error : new Error(message));
     return { success: false, message };
   }
 }

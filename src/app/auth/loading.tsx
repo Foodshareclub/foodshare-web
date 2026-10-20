@@ -7,10 +7,10 @@ export default function Loading() {
     <div className="min-h-screen bg-muted/30 dark:bg-background relative overflow-hidden">
       {/* Background Pattern */}
       <div
-        className="absolute top-0 left-0 right-0 bottom-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none"
+        className="absolute top-0 inset-x-0 bottom-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none"
         style={{
-          backgroundImage: 'radial-gradient(circle, #FF2D55 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
+          backgroundImage: "radial-gradient(circle, #FF2D55 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
         }}
       />
 
@@ -68,5 +68,5 @@ export default function Loading() {
         <div className="h-4 w-64 bg-muted rounded mx-auto mt-6" />
       </div>
     </div>
-  )
+  );
 }

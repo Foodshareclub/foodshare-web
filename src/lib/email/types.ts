@@ -18,12 +18,7 @@ export type EmailStatus = "pending" | "sent" | "delivered" | "failed" | "bounced
 
 export type BounceType = "hard" | "soft";
 export type BounceCategory = "invalid" | "full_mailbox" | "blocked" | "spam" | "other";
-export type SuppressionReason =
-  | "hard_bounce"
-  | "soft_bounce"
-  | "complaint"
-  | "unsubscribe"
-  | "manual";
+export type SuppressionReason = "hard_bounce" | "soft_bounce" | "complaint" | "unsubscribe" | "manual";
 
 export interface EmailAddress {
   email: string;

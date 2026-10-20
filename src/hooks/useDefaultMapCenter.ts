@@ -3,8 +3,8 @@
  * Best practice: Use user's geolocation with intelligent fallbacks
  */
 
-import { useState, useEffect } from "react";
 import { createLogger } from "@/lib/logger";
+import { useEffect, useState } from "react";
 
 const logger = createLogger("MapCenter");
 
@@ -134,7 +134,7 @@ export const useDefaultMapCenter = (): MapCenterResult => {
           enableHighAccuracy: false, // Fast, low-accuracy is fine for city-level
           timeout: 3000,
           maximumAge: 300000, // Cache for 5 minutes
-        }
+        },
       );
     } else {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- No geolocation available, stop loading synchronously

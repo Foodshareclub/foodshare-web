@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
-import { Loader2, Sparkles, Trash2, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
+import { Calendar, Loader2, Sparkles, Trash2 } from "lucide-react";
+import React from "react";
 
 interface PublishListingFooterProps {
   isEditing: boolean;
@@ -39,7 +39,7 @@ export function PublishListingFooter({
             onClick={onOpenDeleteModal}
             className="text-destructive hover:text-destructive hover:bg-destructive/10"
           >
-            <Trash2 className="h-4 w-4 mr-1" />
+            <Trash2 className="h-4 w-4 me-1" />
             Delete
           </Button>
         )}
@@ -49,27 +49,22 @@ export function PublishListingFooter({
         <Button type="button" variant="ghost" onClick={onClose} disabled={isLoading}>
           Cancel
         </Button>
-        <Button
-          type="button"
-          onClick={onPublish}
-          disabled={isSubmitDisabled}
-          className="min-w-[120px]"
-        >
+        <Button type="button" onClick={onPublish} disabled={isSubmitDisabled} className="min-w-[120px]">
           {isLoading ? (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="h-4 w-4 me-2 animate-spin" />
               {isEditing ? "Saving..." : "Publishing..."}
             </>
           ) : isEditing ? (
             "Save Changes"
           ) : scheduledDate ? (
             <>
-              <Calendar className="h-4 w-4 mr-1.5" />
+              <Calendar className="h-4 w-4 me-1.5" />
               Schedule
             </>
           ) : (
             <>
-              <Sparkles className="h-4 w-4 mr-1.5" />
+              <Sparkles className="h-4 w-4 me-1.5" />
               Publish Now
             </>
           )}

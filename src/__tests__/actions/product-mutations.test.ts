@@ -11,12 +11,10 @@ const state = {
 const invalidateTag = mock();
 const embedProduct = mock(async (_input: unknown) => {});
 const createProductAPI = mock(
-  async (
-    _input: unknown
-  ): Promise<ActionResult<{ id: number; post_type: string; is_active: boolean }>> => ({
+  async (_input: unknown): Promise<ActionResult<{ id: number; post_type: string; is_active: boolean }>> => ({
     success: true,
     data: { id: 42, post_type: "thing", is_active: true },
-  })
+  }),
 );
 const supabase = {
   auth: { getUser: async () => ({ data: { user: { id: owner } } }) },

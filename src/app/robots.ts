@@ -1,5 +1,5 @@
-import { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/metadata";
+import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -91,18 +91,7 @@ export default function robots(): MetadataRoute.Robots {
       // This enables visibility in ChatGPT Search, Perplexity, Google AI Mode
       {
         userAgent: "GPTBot",
-        allow: [
-          "/",
-          "/food",
-          "/product",
-          "/listing",
-          "/forum",
-          "/help",
-          "/map",
-          "/challenge",
-          "/terms",
-          "/privacy",
-        ],
+        allow: ["/", "/food", "/product", "/listing", "/forum", "/help", "/map", "/challenge", "/terms", "/privacy"],
         disallow: [
           "/api/",
           "/admin/",
@@ -118,18 +107,7 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "ChatGPT-User",
-        allow: [
-          "/",
-          "/food",
-          "/product",
-          "/listing",
-          "/forum",
-          "/help",
-          "/map",
-          "/challenge",
-          "/terms",
-          "/privacy",
-        ],
+        allow: ["/", "/food", "/product", "/listing", "/forum", "/help", "/map", "/challenge", "/terms", "/privacy"],
         disallow: [
           "/api/",
           "/admin/",
@@ -145,18 +123,7 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "CCBot",
-        allow: [
-          "/",
-          "/food",
-          "/product",
-          "/listing",
-          "/forum",
-          "/help",
-          "/map",
-          "/challenge",
-          "/terms",
-          "/privacy",
-        ],
+        allow: ["/", "/food", "/product", "/listing", "/forum", "/help", "/map", "/challenge", "/terms", "/privacy"],
         disallow: [
           "/api/",
           "/admin/",
@@ -172,18 +139,7 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "anthropic-ai",
-        allow: [
-          "/",
-          "/food",
-          "/product",
-          "/listing",
-          "/forum",
-          "/help",
-          "/map",
-          "/challenge",
-          "/terms",
-          "/privacy",
-        ],
+        allow: ["/", "/food", "/product", "/listing", "/forum", "/help", "/map", "/challenge", "/terms", "/privacy"],
         disallow: [
           "/api/",
           "/admin/",
@@ -199,18 +155,7 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "PerplexityBot",
-        allow: [
-          "/",
-          "/food",
-          "/product",
-          "/listing",
-          "/forum",
-          "/help",
-          "/map",
-          "/challenge",
-          "/terms",
-          "/privacy",
-        ],
+        allow: ["/", "/food", "/product", "/listing", "/forum", "/help", "/map", "/challenge", "/terms", "/privacy"],
         disallow: [
           "/api/",
           "/admin/",
@@ -226,18 +171,7 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "Google-Extended",
-        allow: [
-          "/",
-          "/food",
-          "/product",
-          "/listing",
-          "/forum",
-          "/help",
-          "/map",
-          "/challenge",
-          "/terms",
-          "/privacy",
-        ],
+        allow: ["/", "/food", "/product", "/listing", "/forum", "/help", "/map", "/challenge", "/terms", "/privacy"],
         disallow: [
           "/api/",
           "/admin/",

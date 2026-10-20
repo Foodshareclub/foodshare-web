@@ -81,11 +81,7 @@ export async function getEmailMonitoringData(): Promise<EmailMonitoringData> {
     supabase.from("email_provider_health_metrics").select("*"),
     supabase.from("email_provider_quota").select("*").eq("date", today),
     supabase.from("email_logs").select("*").order("created_at", { ascending: false }).limit(10),
-    supabase
-      .from("email_health_events")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(20),
+    supabase.from("email_health_events").select("*").order("created_at", { ascending: false }).limit(20),
   ]);
 
   const cbData = cbRes.data || [];

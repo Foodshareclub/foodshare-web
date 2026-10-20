@@ -7,16 +7,9 @@
 
 "use client";
 
+import { fetchChallengeLeaderboard, fetchCurrentUserRank, fetchLeaderboardUserProfile } from "@/app/actions/challenges";
+import type { LeaderboardUser, UserRankInfo } from "@/components/challenges/ChallengeLeaderboard/types";
 import { useQuery } from "@tanstack/react-query";
-import {
-  fetchChallengeLeaderboard,
-  fetchCurrentUserRank,
-  fetchLeaderboardUserProfile,
-} from "@/app/actions/challenges";
-import type {
-  LeaderboardUser,
-  UserRankInfo,
-} from "@/components/challenges/ChallengeLeaderboard/types";
 
 // ============================================================================
 // Query Keys

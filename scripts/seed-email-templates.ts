@@ -7,8 +7,8 @@
  * Uses service role key to bypass RLS.
  */
 
-import { config } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
+import { config } from "dotenv";
 import { welcomeSeriesTemplates } from "../src/lib/email/templates/welcome-series";
 
 // Load environment variables
@@ -37,11 +37,7 @@ async function seedTemplates() {
     process.stdout.write(`  ${template.slug}... `);
 
     // Check if template exists
-    const { data: existing } = await supabase
-      .from("email_templates")
-      .select("id")
-      .eq("slug", template.slug)
-      .single();
+    const { data: existing } = await supabase.from("email_templates").select("id").eq("slug", template.slug).single();
 
     if (existing) {
       // Update existing template
@@ -93,19 +89,17 @@ async function seedTemplates() {
   const updated = results.filter((r) => r.status === "updated").length;
   const errors = results.filter((r) => r.status === "error");
 
-  console.log("\n" + "─".repeat(40));
+  console.log(`\n${"─".repeat(40)}`);
   console.log(`✅ Created: ${created}`);
   console.log(`🔄 Updated: ${updated}`);
   if (errors.length > 0) {
     console.log(`❌ Errors: ${errors.length}`);
-    errors.forEach((e) => console.log(`   - ${e.slug}: ${e.error}`));
+    for (const e of errors) console.log(`   - ${e.slug}: ${e.error}`);
   }
-  console.log("─".repeat(40) + "\n");
+  console.log(`${"─".repeat(40)}\n`);
 
   // Verify final count
-  const { count } = await supabase
-    .from("email_templates")
-    .select("*", { count: "exact", head: true });
+  const { count } = await supabase.from("email_templates").select("*", { count: "exact", head: true });
 
   console.log(`📧 Total templates in database: ${count}\n`);
 }

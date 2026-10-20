@@ -12,8 +12,8 @@
  * @module lib/security/auditLog
  */
 
-import { MFAService } from "./mfa";
 import { supabase } from "@/lib/supabase/client";
+import { MFAService } from "./mfa";
 
 export interface AuditLogEntry {
   admin_id: string;
@@ -44,7 +44,7 @@ export class AuditLogService {
       const session = await MFAService.getActiveSession(entry.admin_id);
 
       // Calculate risk score
-      const riskScore = this.calculateRiskScore({
+      const riskScore = AuditLogService.calculateRiskScore({
         action: entry.action,
         aal_level: currentAAL,
         success: entry.success,
@@ -76,16 +76,16 @@ export class AuditLogService {
     action: string,
     resourceType: string,
     resourceId?: string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): Promise<void> {
-    await this.logAction({
+    await AuditLogService.logAction({
       admin_id: adminId,
       action,
       resource_type: resourceType,
       resource_id: resourceId,
       metadata,
       success: true,
-      ip_address: await this.getClientIP(),
+      ip_address: await AuditLogService.getClientIP(),
       user_agent: navigator.userAgent,
     });
   }
@@ -99,9 +99,9 @@ export class AuditLogService {
     resourceType: string,
     errorMessage: string,
     resourceId?: string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): Promise<void> {
-    await this.logAction({
+    await AuditLogService.logAction({
       admin_id: adminId,
       action,
       resource_type: resourceType,
@@ -109,7 +109,7 @@ export class AuditLogService {
       metadata,
       success: false,
       error_message: errorMessage,
-      ip_address: await this.getClientIP(),
+      ip_address: await AuditLogService.getClientIP(),
       user_agent: navigator.userAgent,
     });
   }
@@ -117,7 +117,7 @@ export class AuditLogService {
   /**
    * Get recent audit logs for an admin
    */
-  static async getAdminLogs(adminId: string, limit: number = 50): Promise<AuditLogEntry[]> {
+  static async getAdminLogs(adminId: string, limit = 50): Promise<AuditLogEntry[]> {
     const { data, error } = await supabase
       .from("admin_audit_log")
       .select("*")
@@ -145,13 +145,9 @@ export class AuditLogService {
       start_date?: string;
       end_date?: string;
     },
-    limit: number = 100
+    limit = 100,
   ): Promise<AuditLogEntry[]> {
-    let query = supabase
-      .from("admin_audit_log")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(limit);
+    let query = supabase.from("admin_audit_log").select("*").order("created_at", { ascending: false }).limit(limit);
 
     // Apply filters
     if (filters?.action) {
@@ -240,7 +236,7 @@ export class AuditLogService {
  * Decorator to automatically log admin actions
  */
 export function LogAdminAction(action: string, resourceType: string) {
-  return function (target: object, propertyKey: string, descriptor: PropertyDescriptor) {
+  return (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) => {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: unknown[]) {
@@ -262,7 +258,7 @@ export function LogAdminAction(action: string, resourceType: string) {
           resourceType,
           error instanceof Error ? error.message : "Unknown error",
           resourceId,
-          { args }
+          { args },
         );
 
         throw error;

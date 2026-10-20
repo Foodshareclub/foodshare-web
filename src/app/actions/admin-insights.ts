@@ -6,12 +6,12 @@
 
 import { requireAdmin } from "@/lib/data/admin-check";
 import {
-  getGrokInsights as getInsights,
-  getSuggestedQuestions as getSuggestions,
   clearInsightCache,
-  getRateLimiterStatus,
-  resetCircuitBreaker,
   getDeepAnalysis,
+  getGrokInsights as getInsights,
+  getRateLimiterStatus,
+  getSuggestedQuestions as getSuggestions,
+  resetCircuitBreaker,
   shouldUseDeepAnalysis,
 } from "@/lib/data/admin-insights";
 
@@ -38,22 +38,15 @@ function classifyErrorForUser(error: Error): {
     const waitMatch = msg.match(/(\d+)\s*seconds/);
     return {
       errorType: "circuit_open",
-      message:
-        "The AI service is temporarily paused due to high demand. Please wait a moment and try again.",
-      retryAfterSeconds: waitMatch ? parseInt(waitMatch[1], 10) : 30,
+      message: "The AI service is temporarily paused due to high demand. Please wait a moment and try again.",
+      retryAfterSeconds: waitMatch ? Number.parseInt(waitMatch[1], 10) : 30,
     };
   }
 
-  if (
-    msg.includes("rate limit") ||
-    msg.includes("too many") ||
-    msg.includes("429") ||
-    msg.includes("quota")
-  ) {
+  if (msg.includes("rate limit") || msg.includes("too many") || msg.includes("429") || msg.includes("quota")) {
     return {
       errorType: "rate_limit",
-      message:
-        "The AI service is experiencing high traffic. Please wait a few seconds and try again.",
+      message: "The AI service is experiencing high traffic. Please wait a few seconds and try again.",
       retryAfterSeconds: 10,
     };
   }
@@ -89,7 +82,7 @@ function classifyErrorForUser(error: Error): {
 export async function getGrokInsight(
   query: string,
   includeMetrics = true,
-  enableDeepAnalysis?: boolean
+  enableDeepAnalysis?: boolean,
 ): Promise<InsightResult> {
   try {
     await requireAdmin();

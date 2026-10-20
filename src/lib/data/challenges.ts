@@ -7,6 +7,8 @@
 
 import { createCachedClient } from "@/lib/supabase/server";
 import type { InitialProductStateType } from "@/types/product.types";
+import { cacheLife, cacheTag } from "next/cache";
+import { CACHE_TAGS } from "./cache-keys";
 
 // ============================================================================
 // Types
@@ -33,8 +35,11 @@ export interface Challenge {
  * Transform challenge data to match InitialProductStateType for compatibility
  * with existing ProductGrid and HomeClient components.
  * Handles numeric fields that Supabase returns as strings.
+ *
+ * Exported: the `@modal` challenge intercept needs the same mapping, and it was
+ * previously duplicated verbatim in ProductInterceptPage.tsx.
  */
-function transformChallengeToProduct(challenge: Challenge): InitialProductStateType {
+export function transformChallengeToProduct(challenge: Challenge): InitialProductStateType {
   return {
     id: challenge.id,
     post_name: challenge.challenge_title || "",
@@ -95,6 +100,12 @@ export interface ChallengeStats {
   totalXpEarned: number;
 }
 
+interface ChallengeStatsRow {
+  challenge_score: string | number;
+  challenged_people: string | number;
+  challenge_likes_counter: number;
+}
+
 /**
  * Get challenge community stats with caching
  */
@@ -108,19 +119,15 @@ export async function getChallengeStats(): Promise<ChallengeStats> {
 
   if (error) throw new Error(error.message);
 
-  const challenges = data ?? [];
+  const challenges = (data ?? []) as ChallengeStatsRow[];
 
   // Calculate totals
   const totalChallenges = challenges.length;
-  const totalParticipants = challenges.reduce(
-    (sum: any, c: any) => sum + (Number(c.challenged_people) || 0),
-    0
-  );
+  const totalParticipants = challenges.reduce((sum, c) => sum + (Number(c.challenged_people) || 0), 0);
   // XP earned = sum of (score * participants who completed)
   const totalXpEarned = challenges.reduce(
-    (sum: any, c: any) =>
-      sum + (Number(c.challenge_score) || 0) * (Number(c.challenged_people) || 0),
-    0
+    (sum, c) => sum + (Number(c.challenge_score) || 0) * (Number(c.challenged_people) || 0),
+    0,
   );
 
   return { totalChallenges, totalParticipants, totalXpEarned };
@@ -131,6 +138,10 @@ export async function getChallengeStats(): Promise<ChallengeStats> {
  * Returns data transformed to InitialProductStateType for component compatibility
  */
 export async function getChallenges(searchTerm = ""): Promise<InitialProductStateType[]> {
+  "use cache";
+  cacheLife("challenges");
+  cacheTag(CACHE_TAGS.CHALLENGES);
+
   const supabase = createCachedClient();
 
   let query = supabase
@@ -139,8 +150,7 @@ export async function getChallenges(searchTerm = ""): Promise<InitialProductStat
     .eq("challenge_published", true)
     .order("challenge_created_at", { ascending: false });
 
-  if (searchTerm.trim())
-    query = query.ilike("challenge_title", `%${searchTerm.trim().replace(/[\\%_]/g, "\\$&")}%`);
+  if (searchTerm.trim()) query = query.ilike("challenge_title", `%${searchTerm.trim().replace(/[\\%_]/g, "\\$&")}%`);
   const { data, error } = await query;
 
   if (error) throw new Error(error.message);
@@ -152,7 +162,7 @@ export async function getChallenges(searchTerm = ""): Promise<InitialProductStat
  * Optimized for infinite scroll and deck loading
  */
 export async function getChallengesPaginated(
-  params: ChallengesPaginationParams = {}
+  params: ChallengesPaginationParams = {},
 ): Promise<PaginatedChallengesResponse> {
   const { page = 1, limit = 12, difficulty, searchTerm } = params;
   const offset = (page - 1) * limit;
@@ -160,17 +170,13 @@ export async function getChallengesPaginated(
   const supabase = createCachedClient();
 
   // Build query
-  let query = supabase
-    .from("challenges")
-    .select("*", { count: "exact" })
-    .eq("challenge_published", true);
+  let query = supabase.from("challenges").select("*", { count: "exact" }).eq("challenge_published", true);
 
   // Add difficulty filter if provided
   if (difficulty && difficulty !== "all") {
     query = query.eq("challenge_difficulty", difficulty);
   }
-  if (searchTerm?.trim())
-    query = query.ilike("challenge_title", `%${searchTerm.trim().replace(/[\\%_]/g, "\\$&")}%`);
+  if (searchTerm?.trim()) query = query.ilike("challenge_title", `%${searchTerm.trim().replace(/[\\%_]/g, "\\$&")}%`);
 
   // Add pagination and ordering
   const { data, error, count } = await query
@@ -198,13 +204,14 @@ export async function getChallengesPaginated(
  * Get single challenge by ID with caching
  */
 export async function getChallengeById(challengeId: number): Promise<Challenge | null> {
+  "use cache";
+  cacheLife("challenges");
+  cacheTag(CACHE_TAGS.CHALLENGES);
+  cacheTag(CACHE_TAGS.CHALLENGE(challengeId));
+
   const supabase = createCachedClient();
 
-  const { data, error } = await supabase
-    .from("challenges")
-    .select("*")
-    .eq("id", challengeId)
-    .single();
+  const { data, error } = await supabase.from("challenges").select("*").eq("id", challengeId).single();
 
   if (error) {
     if (error.code === "PGRST116") return null;
@@ -249,7 +256,7 @@ export async function getUserChallenges(userId: string): Promise<Challenge[]> {
 /**
  * Get popular challenges (by views or likes)
  */
-export async function getPopularChallenges(limit: number = 10): Promise<Challenge[]> {
+export async function getPopularChallenges(limit = 10): Promise<Challenge[]> {
   const supabase = createCachedClient();
 
   const { data, error } = await supabase

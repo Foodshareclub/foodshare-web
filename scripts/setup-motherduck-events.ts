@@ -15,7 +15,7 @@ async function setupEventsTable() {
 
     if (!process.env.MOTHERDUCK_TOKEN) {
       console.warn(
-        "Table setup might fail if Vault is not accessible from this script context. Ensure MOTHERDUCK_TOKEN is in .env"
+        "Table setup might fail if Vault is not accessible from this script context. Ensure MOTHERDUCK_TOKEN is in .env",
       );
     }
 

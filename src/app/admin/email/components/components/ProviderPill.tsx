@@ -5,10 +5,10 @@
  * Shows provider name with health status dot and success rate
  */
 
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { PROVIDER_NAMES, PROVIDER_STATUS_CONFIG } from "../constants";
 import type { ProviderPillProps } from "../types";
-import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function ProviderPill({ provider }: ProviderPillProps) {
   const config = PROVIDER_STATUS_CONFIG[provider.status];
@@ -18,10 +18,11 @@ export function ProviderPill({ provider }: ProviderPillProps) {
     <Tooltip>
       <TooltipTrigger asChild>
         <button
+          type="button"
           className={cn(
             "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
             config.bg,
-            config.text
+            config.text,
           )}
         >
           <span className={cn("h-1.5 w-1.5 rounded-full animate-pulse", config.dot)} />

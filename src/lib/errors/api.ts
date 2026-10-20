@@ -32,21 +32,12 @@ const USER_MESSAGES: Record<ErrorCode, string> = {
 /**
  * Error codes that can be retried
  */
-const RETRYABLE_ERRORS: Set<ErrorCode> = new Set([
-  "NETWORK_ERROR",
-  "RATE_LIMITED",
-  "SERVER_ERROR",
-  "DATABASE_ERROR",
-]);
+const RETRYABLE_ERRORS: Set<ErrorCode> = new Set(["NETWORK_ERROR", "RATE_LIMITED", "SERVER_ERROR", "DATABASE_ERROR"]);
 
 /**
  * Create a standardized API error
  */
-export function createApiError(
-  code: ErrorCode,
-  message: string,
-  details?: Record<string, unknown>
-): ApiError {
+export function createApiError(code: ErrorCode, message: string, details?: Record<string, unknown>): ApiError {
   return {
     code,
     message,
@@ -61,13 +52,7 @@ export function createApiError(
  * Check if an error is an ApiError
  */
 export function isApiError(error: unknown): error is ApiError {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    "message" in error &&
-    "userMessage" in error
-  );
+  return typeof error === "object" && error !== null && "code" in error && "message" in error && "userMessage" in error;
 }
 
 /**

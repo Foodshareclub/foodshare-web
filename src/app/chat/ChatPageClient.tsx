@@ -7,20 +7,23 @@
  * The page itself doesn't scroll - only the left (chat list) and right (messages) segments scroll independently
  */
 
-import { useState, useEffect, useTransition, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Users, WifiOff } from "lucide-react";
-import { UnifiedChatList } from "@/components/chat/UnifiedChatList";
-import { UnifiedChatContainer } from "@/components/chat/UnifiedChatContainer";
 import { ChatErrorBoundary } from "@/components/chat/ChatErrorBoundary";
-import { useMediaQuery } from "@/hooks";
-import { useOnlineStatus, useUnifiedChat, useUnreadCount } from "@/hooks/useUnifiedChat";
-import { Skeleton } from "@/components/ui/skeleton";
+import { UnifiedChatContainer } from "@/components/chat/UnifiedChatContainer";
+import { UnifiedChatList } from "@/components/chat/UnifiedChatList";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useOnlineStatus, useUnifiedChat, useUnreadCount } from "@/hooks/useUnifiedChat";
 import type { UnifiedChatRoom } from "@/lib/data/chat";
+import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
+import { MessageCircle, Users, WifiOff } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState, useTransition } from "react";
+
+const MESSAGE_SKELETON_KEYS = ["m-1", "m-2", "m-3", "m-4", "m-5", "m-6"] as const;
+const BUBBLE_SKELETON_KEYS = ["b-1", "b-2", "b-3", "b-4", "b-5"] as const;
 
 const FALLBACK = {
   selectConversation: "Select a conversation",
@@ -164,8 +167,8 @@ export function ChatPageClient({
     <div className="h-full min-h-0 flex flex-col bg-background overflow-hidden relative">
       {/* Subtle background pattern */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40 dark:opacity-20">
-        <div className="absolute -top-32 -right-32 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute -top-32 -end-32 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-32 -start-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
       </div>
 
       {/* Main content - fills available space, no page scroll */}
@@ -182,15 +185,13 @@ export function ChatPageClient({
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 className={cn(
                   "flex flex-col min-h-0",
-                  isDesktop
-                    ? "w-[340px] lg:w-[380px] flex-shrink-0"
-                    : "w-full absolute inset-0 z-20 bg-background"
+                  isDesktop ? "w-[340px] lg:w-[380px] flex-shrink-0" : "w-full absolute inset-0 z-20 bg-background",
                 )}
               >
                 <div
                   className={cn(
                     "flex-1 min-h-0 flex flex-col overflow-hidden",
-                    isDesktop && "rounded-2xl border border-border bg-card shadow-sm"
+                    isDesktop && "rounded-2xl border border-border bg-card shadow-sm",
                   )}
                 >
                   <UnifiedChatList
@@ -216,16 +217,13 @@ export function ChatPageClient({
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 className={cn(
                   "flex-1 min-h-0 flex flex-col overflow-hidden min-w-0",
-                  isDesktop && "rounded-2xl border border-border bg-card shadow-sm"
+                  isDesktop && "rounded-2xl border border-border bg-card shadow-sm",
                 )}
               >
                 {/* Connection status indicator */}
                 {connectionStatus === "reconnecting" && (
                   <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50">
-                    <Badge
-                      variant="outline"
-                      className="bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1.5"
-                    >
+                    <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1.5">
                       <WifiOff className="h-3 w-3" />
                       Reconnecting...
                     </Badge>
@@ -245,11 +243,7 @@ export function ChatPageClient({
                     />
                   </ChatErrorBoundary>
                 ) : (
-                  <EmptyState
-                    hasChats={chatRooms.length > 0}
-                    foodChatsCount={foodChatsCount}
-                    getText={getText}
-                  />
+                  <EmptyState hasChats={chatRooms.length > 0} foodChatsCount={foodChatsCount} getText={getText} />
                 )}
               </motion.main>
             )}
@@ -316,8 +310,8 @@ export function ChatPageSkeleton() {
           <Skeleton className="h-8 w-32 mb-4" />
           <Skeleton className="h-10 w-full mb-5 rounded-xl" />
           <div className="space-y-2">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="flex items-start gap-3 p-3">
+            {MESSAGE_SKELETON_KEYS.map((skeletonKey) => (
+              <div key={skeletonKey} className="flex items-start gap-3 p-3">
                 <Skeleton className="h-12 w-12 rounded-xl flex-shrink-0" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-3/4" />
@@ -342,8 +336,8 @@ export function ChatPageSkeleton() {
 
           {/* Messages */}
           <div className="flex-1 min-h-0 p-4 space-y-3 overflow-hidden">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className={cn("flex", i % 2 === 0 ? "justify-start" : "justify-end")}>
+            {BUBBLE_SKELETON_KEYS.map((skeletonKey, i) => (
+              <div key={skeletonKey} className={cn("flex", i % 2 === 0 ? "justify-start" : "justify-end")}>
                 <Skeleton className={cn("h-14 rounded-2xl", i % 2 === 0 ? "w-48" : "w-56")} />
               </div>
             ))}

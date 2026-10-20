@@ -1,17 +1,18 @@
-'use client';
+"use client";
 
-import React, { useRef, useState, type ChangeEvent } from 'react';
-import Image from 'next/image';
-import { cn } from '@/lib/utils';
-import { createPhotoUrl } from '@/utils';
-import { ALLOWED_MIME_TYPES } from '@/constants/mime-types';
-import cloud from '@/assets/cloud.svg';
+import cloud from "@/assets/cloud.svg";
+import { ALLOWED_MIME_TYPES } from "@/constants/mime-types";
+import { cn } from "@/lib/utils";
+import { createPhotoUrl } from "@/utils";
+import Image from "next/image";
+import type React from "react";
+import { type ChangeEvent, useRef, useState } from "react";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | number;
+type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl" | number;
 
 type BaseAvatarProps = {
   src?: string | null;
@@ -22,16 +23,16 @@ type BaseAvatarProps = {
 };
 
 type DisplayAvatarProps = BaseAvatarProps & {
-  variant?: 'display';
+  variant?: "display";
 };
 
 type UploadAvatarProps = BaseAvatarProps & {
-  variant: 'upload';
+  variant: "upload";
   onUpload: (filePath: string, file: File) => void;
 };
 
 type RippleAvatarProps = BaseAvatarProps & {
-  variant: 'ripple';
+  variant: "ripple";
   rippleColor?: string;
 };
 
@@ -50,7 +51,7 @@ const sizeMap: Record<string, number> = {
 };
 
 const getSize = (size: AvatarSize): number => {
-  if (typeof size === 'number') return size;
+  if (typeof size === "number") return size;
   return sizeMap[size] || sizeMap.md;
 };
 
@@ -61,10 +62,7 @@ const getSize = (size: AvatarSize): number => {
 function AvatarFallback({ size, className }: { size: number; className?: string }) {
   return (
     <div
-      className={cn(
-        'rounded-full bg-muted flex items-center justify-center text-muted-foreground',
-        className
-      )}
+      className={cn("rounded-full bg-muted flex items-center justify-center text-muted-foreground", className)}
       style={{ width: size, height: size }}
     >
       <span style={{ fontSize: size * 0.4 }}>👤</span>
@@ -76,7 +74,7 @@ function AvatarFallback({ size, className }: { size: number; className?: string 
 // Display Avatar
 // ============================================================================
 
-function DisplayAvatar({ src, alt = 'Avatar', size = 'md', className, fallback }: BaseAvatarProps) {
+function DisplayAvatar({ src, alt = "Avatar", size = "md", className, fallback }: BaseAvatarProps) {
   const pixelSize = getSize(size);
 
   if (!src) {
@@ -85,16 +83,10 @@ function DisplayAvatar({ src, alt = 'Avatar', size = 'md', className, fallback }
 
   return (
     <div
-      className={cn('relative rounded-full overflow-hidden', className)}
+      className={cn("relative rounded-full overflow-hidden", className)}
       style={{ width: pixelSize, height: pixelSize }}
     >
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        className="object-cover"
-        sizes={`${pixelSize}px`}
-      />
+      <Image src={src} alt={alt} fill className="object-cover" sizes={`${pixelSize}px`} />
     </div>
   );
 }
@@ -105,29 +97,23 @@ function DisplayAvatar({ src, alt = 'Avatar', size = 'md', className, fallback }
 
 function RippleAvatar({
   src,
-  alt = 'Avatar',
-  size = 'lg',
+  alt = "Avatar",
+  size = "lg",
   className,
-  rippleColor = 'teal',
+  rippleColor = "teal",
 }: BaseAvatarProps & { rippleColor?: string }) {
   const pixelSize = getSize(size);
 
   return (
-    <div className={cn('flex justify-center items-center w-full overflow-hidden', className)}>
+    <div className={cn("flex justify-center items-center w-full overflow-hidden", className)}>
       <div className="relative" style={{ width: pixelSize, height: pixelSize }}>
         <div
-          className="absolute block w-[300%] h-[300%] -ml-[100%] -mt-[100%] rounded-full animate-pulse-ring"
+          className="absolute block w-[300%] h-[300%] -ms-[100%] -mt-[100%] rounded-full animate-pulse-ring"
           style={{ backgroundColor: rippleColor }}
         />
         <div className="absolute top-0 w-full h-full">
           {src ? (
-            <Image
-              src={src}
-              alt={alt}
-              fill
-              className="rounded-full object-cover"
-              sizes={`${pixelSize}px`}
-            />
+            <Image src={src} alt={alt} fill className="rounded-full object-cover" sizes={`${pixelSize}px`} />
           ) : (
             <AvatarFallback size={pixelSize} />
           )}
@@ -143,8 +129,8 @@ function RippleAvatar({
 
 function UploadAvatar({
   src,
-  alt = 'Avatar',
-  size = 'lg',
+  alt = "Avatar",
+  size = "lg",
   className,
   onUpload,
 }: BaseAvatarProps & { onUpload: (filePath: string, file: File) => void }) {
@@ -153,9 +139,10 @@ function UploadAvatar({
   const inputFileRef = useRef<HTMLInputElement | null>(null);
 
   const handleUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    const { file, filePath, url } = createPhotoUrl(event);
-    onUpload(filePath, file);
-    setPreviewUrl(url);
+    const photo = createPhotoUrl(event);
+    if (!photo) return;
+    onUpload(photo.filePath, photo.file);
+    setPreviewUrl(photo.url);
   };
 
   const displayUrl = previewUrl || src;
@@ -163,21 +150,15 @@ function UploadAvatar({
   return (
     <div
       className={cn(
-        'glass-input rounded-xl p-4 border border-dashed border-blue-400',
-        'transition-all duration-300 ease-in-out hover:border-blue-500 hover:-translate-y-0.5',
-        className
+        "glass-input rounded-xl p-4 border border-dashed border-blue-400",
+        "transition-all duration-300 ease-in-out hover:border-blue-500 hover:-translate-y-0.5",
+        className,
       )}
     >
       <div className="flex justify-between items-center gap-4">
         {displayUrl ? (
           <div className="relative mx-auto" style={{ height: pixelSize, width: pixelSize }}>
-            <Image
-              src={displayUrl}
-              alt={alt}
-              fill
-              className="object-cover rounded-lg"
-              sizes={`${pixelSize}px`}
-            />
+            <Image src={displayUrl} alt={alt} fill className="object-cover rounded-lg" sizes={`${pixelSize}px`} />
           </div>
         ) : (
           <>
@@ -192,13 +173,14 @@ function UploadAvatar({
         )}
         <div className="self-center relative">
           <input
-            className="opacity-0 absolute h-[22%] left-0 top-[9%]"
-            accept={ALLOWED_MIME_TYPES.PROFILES.join(',')}
+            className="opacity-0 absolute h-[22%] start-0 top-[9%]"
+            accept={ALLOWED_MIME_TYPES.PROFILES.join(",")}
             ref={inputFileRef}
             type="file"
             onChange={handleUpload}
           />
           <button
+            type="button"
             onClick={() => inputFileRef?.current?.click()}
             className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
@@ -215,12 +197,12 @@ function UploadAvatar({
 // ============================================================================
 
 export function UnifiedAvatar(props: UnifiedAvatarProps) {
-  const { variant = 'display' } = props;
+  const { variant = "display" } = props;
 
   switch (variant) {
-    case 'upload':
+    case "upload":
       return <UploadAvatar {...props} onUpload={(props as UploadAvatarProps).onUpload} />;
-    case 'ripple':
+    case "ripple":
       return <RippleAvatar {...props} rippleColor={(props as RippleAvatarProps).rippleColor} />;
     default:
       return <DisplayAvatar {...props} />;

@@ -1,3 +1,4 @@
+import type { TimerHandle } from "@/types/timer.types";
 /**
  * Error Reporting Service
  * Provides unified error tracking and reporting via Sentry
@@ -111,7 +112,7 @@ function formatErrorForConsole(report: ErrorReport): void {
 // ============================================================================
 
 let errorQueue: ErrorReport[] = [];
-let flushTimeout: NodeJS.Timeout | null = null;
+let flushTimeout: TimerHandle | null = null;
 
 function queueError(report: ErrorReport): void {
   // Send directly to Sentry instead of queuing
@@ -169,7 +170,7 @@ async function flushErrorQueue(): Promise<void> {
 export function reportError(
   error: Error | string,
   context: ErrorContext = {},
-  severity: ErrorReport["severity"] = "error"
+  severity: ErrorReport["severity"] = "error",
 ): void {
   if (!shouldReport(severity)) return;
 
@@ -224,7 +225,7 @@ export function reportBoundaryError(error: Error, errorInfo: { componentStack?: 
       componentName: "ErrorBoundary",
       metadata: { componentStack: errorInfo.componentStack },
     },
-    "fatal"
+    "fatal",
   );
 }
 
@@ -237,7 +238,7 @@ export function reportBoundaryError(error: Error, errorInfo: { componentStack?: 
  */
 export function withErrorReporting<T extends unknown[], R>(
   action: (...args: T) => Promise<R>,
-  actionName: string
+  actionName: string,
 ): (...args: T) => Promise<R> {
   return async (...args: T): Promise<R> => {
     try {
@@ -246,7 +247,7 @@ export function withErrorReporting<T extends unknown[], R>(
       reportError(
         error instanceof Error ? error : new Error(String(error)),
         { action: actionName, metadata: { args } },
-        "error"
+        "error",
       );
       throw error;
     }
@@ -268,7 +269,7 @@ export function initializeErrorReporting(): void {
     reportError(
       event.reason instanceof Error ? event.reason : new Error(String(event.reason)),
       { action: "unhandledrejection" },
-      "error"
+      "error",
     );
   });
 
@@ -284,7 +285,7 @@ export function initializeErrorReporting(): void {
           colno: event.colno,
         },
       },
-      "error"
+      "error",
     );
   });
 

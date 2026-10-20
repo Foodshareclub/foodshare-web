@@ -88,3 +88,6 @@ export * from "./web-apis.types";
 
 // Notification domain types
 export * from "./notifications.types";
+
+// Timer handles (Bun-native, no NodeJS namespace)
+export type { IntervalHandle, TimerHandle } from "./timer.types";

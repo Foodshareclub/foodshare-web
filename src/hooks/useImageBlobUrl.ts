@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UseImageBlobUrlOptions {
   /** Function to fetch the blob data */
@@ -45,11 +45,7 @@ interface UseImageBlobUrlResult {
  * });
  * ```
  */
-export function useImageBlobUrl({
-  fetchFn,
-  enabled = true,
-  deps = [],
-}: UseImageBlobUrlOptions): UseImageBlobUrlResult {
+export function useImageBlobUrl({ fetchFn, enabled = true, deps = [] }: UseImageBlobUrlOptions): UseImageBlobUrlResult {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -93,11 +89,12 @@ export function useImageBlobUrl({
   }, [enabled, fetchFn, cleanup]);
 
   // Fetch on mount and when deps change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchBlob is re-created on every render because callers pass an inline fetchFn (the documented usage), so listing it would refetch on every render — this hook's public contract is that callers key refetches through `enabled` + `deps`, which is what this array tracks
   useEffect(() => {
     setTimeout(() => {
       fetchBlob();
     }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `enabled` + `deps` are this hook's public refetch contract
   }, [enabled, ...deps]);
 
   // Cleanup on unmount

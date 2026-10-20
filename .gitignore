@@ -22,6 +22,9 @@ yarn.lock
 
 # misc
 .DS_Store
+# AppleDouble resource forks (macOS writes these beside every file it
+# touches on non-HFS volumes; they are noise, never content).
+._*
 *.pem
 
 # env files (can opt-in for committing if needed)
@@ -39,8 +42,8 @@ next-env.d.ts
 # Rust build artifacts
 tools/target/
 
-# eslint cache
-.eslintcache
+# Local scratch space for one-off e2e spec experiments
+e2e/__tmp/
 
 # Supabase local config (keep migrations/functions tracked)
 /supabase/*
@@ -59,3 +62,8 @@ api-usage-audit.json
 downloaded-artifact/
 
 logs/
+
+# Fixtures created by src/__tests__/lib/class-check.test.ts
+.check-classes-*/
+.check-adornments-*/
+.check-i18n-text-*/

@@ -46,9 +46,12 @@ A modern food sharing platform that connects people to reduce food waste by enab
 
 ## Prerequisites
 
-- Bun >=1.1 (Primary runtime and package manager; CI uses latest)
+- Bun >=1.4 (primary runtime, package manager and type checker; CI pins 1.4.3)
 - Supabase CLI (for local development)
 - Git
+
+Node.js is not part of this toolchain. `bun run check:no-node` fails the build
+if a Node tool creeps back into the scripts or the CI workflows.
 
 ## Getting Started
 
@@ -92,9 +95,11 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 | `bun run build`             | Build for production                    |
 | `bun run build:analyze`     | Build with bundle analyzer              |
 | `bun run start`             | Start production server                 |
-| `bun run lint:fix`          | Fix ESLint errors                       |
-| `bun run type-check`        | TypeScript type checking                |
+| `bun run lint:fix`          | Fix oxlint and biome formatting issues  |
+| `bun run type-check`        | TypeScript type checking (`bun check`)  |
+| `bun run type-check:tsc`    | TypeScript type checking (`tsc`)        |
 | `bun run test:ci`           | Run all tests with bun:test (CI)        |
+| `bun run e2e`               | Run the Playwright end-to-end suite     |
 | `bun run test:build`        | Run type-check + lint + build           |
 | `bun run translations:sync` | Sync translations to Supabase           |
 | `bun run clean`             | Clean build artifacts and cache         |

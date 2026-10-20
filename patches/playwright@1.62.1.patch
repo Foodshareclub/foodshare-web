@@ -1,0 +1,23 @@
+diff --git a/lib/common/index.js b/lib/common/index.js
+index 47801bdf4f53150f0d4f21623324682f3248ea88..8bc5edcc2cb224076500cf5e8cabd018f9f8ae0d 100644
+--- a/lib/common/index.js
++++ b/lib/common/index.js
+@@ -1160,8 +1160,16 @@ function installTransformIfNeeded() {
+     return;
+   }
+   const extensions = import_module2.default._extensions;
+-  for (const ext of [".ts", ".cts", ".tsx", ".jsx"])
+-    extensions[ext] = extensions[".js"];
++  // Bun ships a native TypeScript loader and registers its own
++  // `require.extensions` entries for `.ts`/`.tsx`/`.mts`/`.cts`. Overwriting
++  // them with the plain-JS handler disables Bun's type stripping, so every
++  // spec file that contains a type annotation fails to parse with
++  // "N errors building <file>". `registerESMLoader()` already skips the Babel
++  // pipeline under Bun, so the extension table has to be left alone here too.
++  if (!("Bun" in globalThis)) {
++    for (const ext of [".ts", ".cts", ".tsx", ".jsx"])
++      extensions[ext] = extensions[".js"];
++  }
+ }
+ function installCJSHooks() {
+   const originalResolveFilename = import_module2.default._resolveFilename;

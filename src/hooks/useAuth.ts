@@ -8,19 +8,14 @@
 
 "use client";
 
-import { useCallback, useEffect, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
+import { resetPassword, signInWithPassword, signOut, signUp, updatePassword } from "@/app/actions/auth";
+import { type AuthErrorCode, getAuthErrorCode, sanitizeErrorMessage } from "@/lib/errors";
+import { pretty } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/zustand";
-import { pretty } from "@/lib/logger";
-import {
-  signInWithPassword,
-  signUp,
-  signOut,
-  resetPassword,
-  updatePassword,
-} from "@/app/actions/auth";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useTransition } from "react";
 
 // ============================================================================
 // Global Types for SDKs
@@ -63,6 +58,16 @@ import type { AuthUser } from "@/types";
 // Types
 // ============================================================================
 
+/**
+ * What every auth action resolves to.
+ *
+ * `error` is an `AuthErrorCode`, not a message, so nothing in this file has to
+ * invent a sentence. It used to: seven `"Login failed"`-shaped fallbacks, each
+ * of which reached the screen verbatim in 21 locales, and each of which was
+ * reachable precisely when something had already gone wrong.
+ */
+export type AuthOutcome = { success: boolean; error?: AuthErrorCode };
+
 export interface UseAuthReturn {
   // State
   isAuthenticated: boolean;
@@ -70,27 +75,23 @@ export interface UseAuthReturn {
   adminCheckStatus: "idle" | "loading" | "succeeded" | "failed";
   user: AuthUser | null;
   session: Session | null;
-  error: string | null;
+  /** An `AuthErrorCode`, resolved through `t()` by whoever renders it. */
+  error: AuthErrorCode | null;
   isLoading: boolean;
   roles: string[];
 
   // Actions
-  loginWithPassword: (
-    email: string,
-    password: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  loginWithOAuth: (
-    provider: "google" | "github" | "facebook" | "apple"
-  ) => Promise<{ success: boolean; error?: string }>;
-  loginWithMagicLink: (email: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithPassword: (email: string, password: string) => Promise<AuthOutcome>;
+  loginWithOAuth: (provider: "google" | "github" | "facebook" | "apple") => Promise<AuthOutcome>;
+  loginWithMagicLink: (email: string) => Promise<AuthOutcome>;
   register: (
     data: { email: string; password: string; firstName?: string; lastName?: string } | string,
     password?: string,
-    name?: string
-  ) => Promise<{ success: boolean; error?: string; user?: AuthUser }>;
+    name?: string,
+  ) => Promise<AuthOutcome & { user?: AuthUser }>;
   logout: () => Promise<void>;
-  recoverPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
-  updatePassword: (password: string) => Promise<{ success: boolean; error?: string }>;
+  recoverPassword: (email: string) => Promise<AuthOutcome>;
+  updatePassword: (password: string) => Promise<AuthOutcome>;
   clearError: () => void;
   checkSession: () => Promise<void>;
 
@@ -98,9 +99,26 @@ export interface UseAuthReturn {
   isAuth: boolean;
   authError: string | null;
   loginWithProvider: (
-    provider: "google" | "github" | "facebook" | "apple"
+    provider: "google" | "github" | "facebook" | "apple",
   ) => Promise<{ success: boolean; error?: string }>;
 }
+
+/**
+ * Classify a thrown value.
+ *
+ * The fallback code is the operation the caller was attempting, not a generic
+ * "something went wrong": "sign-in failed" is actionable where "unknown" is
+ * not, and a reader who mistyped their password deserves to be told signing in
+ * failed rather than that something went wrong.
+ */
+const asError = (error: unknown): Error =>
+  error instanceof Error ? error : new Error(sanitizeErrorMessage(String(error)));
+
+const thrownCode = (error: unknown, fallback: AuthErrorCode): AuthErrorCode => {
+  const message = error instanceof Error ? error.message : String(error);
+  const code = getAuthErrorCode(message);
+  return code === "unknown" ? fallback : code;
+};
 
 // ============================================================================
 // Hook Implementation
@@ -183,7 +201,7 @@ export function useAuth(): UseAuthReturn {
         useAuthStore.getState().setAdminCheckStatus("failed");
       }
     },
-    [supabase] // Only supabase as dependency - Zustand actions accessed via getState()
+    [supabase], // Only supabase as dependency - Zustand actions accessed via getState()
   );
 
   // ========================================================================
@@ -223,22 +241,20 @@ export function useAuth(): UseAuthReturn {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, newSession: Session | null) => {
-        useAuthStore.getState().setAuth(newSession?.user ?? null, newSession);
+    } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, newSession: Session | null) => {
+      useAuthStore.getState().setAuth(newSession?.user ?? null, newSession);
 
-        if (newSession?.user) {
-          await checkAdminStatus(newSession.user.id);
-        } else {
-          useAuthStore.getState().reset();
-        }
-
-        // Refresh server components on auth change
-        if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
-          router.refresh();
-        }
+      if (newSession?.user) {
+        await checkAdminStatus(newSession.user.id);
+      } else {
+        useAuthStore.getState().reset();
       }
-    );
+
+      // Refresh server components on auth change
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
+        router.refresh();
+      }
+    });
 
     return () => {
       subscription.unsubscribe();
@@ -262,8 +278,9 @@ export function useAuth(): UseAuthReturn {
         const result = await signInWithPassword(formData);
 
         if (!result.success) {
-          setError(result.error || "Login failed");
-          return { success: false, error: result.error };
+          const code = result.error ?? "signInFailed";
+          setError(code);
+          return { success: false, error: code };
         }
 
         startTransition(() => {
@@ -272,14 +289,18 @@ export function useAuth(): UseAuthReturn {
 
         return { success: true };
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Login failed";
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
+        // Logged, not shown. A thrown exception's message is English, arbitrary,
+        // and sometimes a stack fragment — none of which is a thing to put in
+        // front of somebody who mistyped their password.
+        const code = thrownCode(err, "signInFailed");
+        pretty.error("[loginWithPassword] Failed", asError(err), { code });
+        setError(code);
+        return { success: false, error: code };
       } finally {
         setLoading(false);
       }
     },
-    [router, clearErrorAction, setLoading, setError]
+    [router, clearErrorAction, setLoading, setError],
   );
 
   const loginWithApple = useCallback(async () => {
@@ -326,7 +347,7 @@ export function useAuth(): UseAuthReturn {
       const result = await authResponse.json();
 
       if (!result.success || !result.data) {
-        throw new Error(result.error || "Apple authentication failed at backend");
+        throw new Error(result.error || "oauthFailed");
       }
 
       // 4. Set Supabase Session
@@ -346,10 +367,10 @@ export function useAuth(): UseAuthReturn {
 
       return { success: true };
     } catch (err) {
-      pretty.error("[AppleAuth] Failed", err as Error);
-      const errorMessage = err instanceof Error ? err.message : "Apple Sign-In failed";
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+      const code = thrownCode(err, "oauthFailed");
+      pretty.error("[AppleAuth] Failed", asError(err), { code });
+      setError(code);
+      return { success: false, error: code };
     } finally {
       setLoading(false);
     }
@@ -383,29 +404,27 @@ export function useAuth(): UseAuthReturn {
         });
 
         if (oauthError) {
-          // Provide user-friendly error for missing or invalid OAuth configuration
-          let errorMessage = oauthError.message;
-          const isConfigError =
-            oauthError.message.includes("missing OAuth secret") ||
-            oauthError.message.includes("Unsupported provider") ||
-            oauthError.message.includes("invalid_client");
-
-          if (isConfigError) {
-            errorMessage = `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not correctly configured. Please contact support or use a different method.`;
-          }
-
-          setError(errorMessage);
-          return { success: false, error: errorMessage };
+          // The untranslated string this replaced was built here, on the client,
+          // from an English template: `${Provider} sign-in is not correctly
+          // configured. Please contact support or use a different method.` The
+          // provider's *name* is still interpolated — by the caller, from the
+          // translated `Auth.continueWithGoogle` label — so the sentence around
+          // it can finally be translated.
+          const code = getAuthErrorCode(oauthError);
+          pretty.warn("[loginWithOAuth] Unavailable", { provider, code }, sanitizeErrorMessage(oauthError.message));
+          setError(code);
+          return { success: false, error: code };
         }
 
         return { success: true };
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "OAuth login failed";
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
+        const code = thrownCode(err, "oauthFailed");
+        pretty.error("[loginWithOAuth] Failed", asError(err), { code });
+        setError(code);
+        return { success: false, error: code };
       }
     },
-    [supabase, clearErrorAction, setError]
+    [supabase, loginWithApple, clearErrorAction, setError],
   );
 
   const loginWithMagicLink = useCallback(
@@ -421,27 +440,26 @@ export function useAuth(): UseAuthReturn {
         });
 
         if (otpError) {
-          setError(otpError.message);
-          return { success: false, error: otpError.message };
+          const code = getAuthErrorCode(otpError);
+          setError(code);
+          return { success: false, error: code };
         }
 
         return { success: true };
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Magic link failed";
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
+        const code = thrownCode(err, "signInFailed");
+        setError(code);
+        return { success: false, error: code };
       }
     },
-    [supabase, clearErrorAction, setError]
+    [supabase, clearErrorAction, setError],
   );
 
   const register = useCallback(
     async (
-      dataOrEmail:
-        | { email: string; password: string; firstName?: string; lastName?: string }
-        | string,
+      dataOrEmail: { email: string; password: string; firstName?: string; lastName?: string } | string,
       passwordArg?: string,
-      nameArg?: string
+      nameArg?: string,
     ) => {
       clearErrorAction();
       setLoading(true);
@@ -480,8 +498,9 @@ export function useAuth(): UseAuthReturn {
         const result = await signUp(formData);
 
         if (!result.success) {
-          setError(result.error || "Registration failed");
-          return { success: false, error: result.error };
+          const code = result.error ?? "signUpFailed";
+          setError(code);
+          return { success: false, error: code };
         }
 
         startTransition(() => {
@@ -490,14 +509,15 @@ export function useAuth(): UseAuthReturn {
 
         return { success: true, user: user ? { id: user.id, email: user.email } : undefined };
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Registration failed";
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
+        const code = thrownCode(err, "signUpFailed");
+        pretty.error("[register] Failed", asError(err), { code });
+        setError(code);
+        return { success: false, error: code };
       } finally {
         setLoading(false);
       }
     },
-    [router, user, clearErrorAction, setLoading, setError]
+    [router, user, clearErrorAction, setLoading, setError],
   );
 
   const logout = useCallback(async () => {
@@ -520,18 +540,19 @@ export function useAuth(): UseAuthReturn {
         const result = await resetPassword(email);
 
         if (!result.success) {
-          setError(result.error || "Password recovery failed");
-          return { success: false, error: result.error };
+          const code = result.error ?? "passwordRecoveryFailed";
+          setError(code);
+          return { success: false, error: code };
         }
 
         return { success: true };
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Password recovery failed";
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
+        const code = thrownCode(err, "passwordRecoveryFailed");
+        setError(code);
+        return { success: false, error: code };
       }
     },
-    [clearErrorAction, setError]
+    [clearErrorAction, setError],
   );
 
   const handleUpdatePassword = useCallback(
@@ -545,18 +566,19 @@ export function useAuth(): UseAuthReturn {
         const result = await updatePassword(formData);
 
         if (!result.success) {
-          setError(result.error || "Password update failed");
-          return { success: false, error: result.error };
+          const code = result.error ?? "passwordUpdateFailed";
+          setError(code);
+          return { success: false, error: code };
         }
 
         return { success: true };
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Password update failed";
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
+        const code = thrownCode(err, "passwordUpdateFailed");
+        setError(code);
+        return { success: false, error: code };
       }
     },
-    [clearErrorAction, setError]
+    [clearErrorAction, setError],
   );
 
   const checkSession = useCallback(async () => {

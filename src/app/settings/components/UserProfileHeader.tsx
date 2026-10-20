@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
-import { Camera } from "lucide-react";
-import { ThemeToggle } from "./ThemeToggle";
 import { Badge } from "@/components/ui/badge";
 import { Glass } from "@/components/ui/glass";
+import { Camera } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function UserProfileHeader() {
   // Mock user data - in real app, this would come from props/context
@@ -23,24 +23,16 @@ export function UserProfileHeader() {
         <div className="relative group">
           <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-background shadow-xl">
             {user.avatarUrl ? (
-              <Image
-                src={user.avatarUrl}
-                alt={user.name}
-                fill
-                className="object-cover"
-                sizes="80px"
-              />
+              <Image src={user.avatarUrl} alt={user.name} fill className="object-cover" sizes="80px" />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                <span className="text-2xl font-bold text-white">
-                  {user.name.charAt(0).toUpperCase()}
-                </span>
+                <span className="text-2xl font-bold text-white">{user.name.charAt(0).toUpperCase()}</span>
               </div>
             )}
           </div>
           <Link
             href="/settings/personal-info"
-            className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-background border-2 border-border flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute -bottom-1 -end-1 w-8 h-8 rounded-full bg-background border-2 border-border flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <Camera className="w-4 h-4 text-muted-foreground" />
           </Link>

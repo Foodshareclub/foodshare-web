@@ -1,4 +1,8 @@
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from "@/components/ui/skeleton";
+
+const FEATURED_SKELETON_KEYS = ["f-1", "f-2", "f-3"] as const;
+const FILTER_SKELETON_KEYS = ["filter-1", "filter-2", "filter-3", "filter-4"] as const;
+const GRID_SKELETON_KEYS = ["g-1", "g-2", "g-3", "g-4", "g-5", "g-6"] as const;
 
 export default function ChallengeLoading() {
   return (
@@ -11,23 +15,23 @@ export default function ChallengeLoading() {
         <div className="mb-12">
           <Skeleton className="h-6 w-40 mb-6" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-48 rounded-2xl" />
+            {FEATURED_SKELETON_KEYS.map((skeletonKey) => (
+              <Skeleton key={skeletonKey} className="h-48 rounded-2xl" />
             ))}
           </div>
         </div>
 
         {/* Filter bar skeleton */}
         <div className="flex gap-2 mb-8">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-10 w-32 rounded-full" />
+          {FILTER_SKELETON_KEYS.map((skeletonKey) => (
+            <Skeleton key={skeletonKey} className="h-10 w-32 rounded-full" />
           ))}
         </div>
 
         {/* Grid skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="rounded-2xl border border-border overflow-hidden">
+          {GRID_SKELETON_KEYS.map((skeletonKey) => (
+            <div key={skeletonKey} className="rounded-2xl border border-border overflow-hidden">
               <Skeleton className="h-48" />
               <div className="p-4 space-y-3">
                 <Skeleton className="h-5 w-3/4" />

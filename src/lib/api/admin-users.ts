@@ -5,8 +5,8 @@
  * Used for admin user management operations.
  */
 
-import { apiCall, apiGet } from "./client";
 import type { ActionResult } from "@/lib/errors";
+import { apiCall, apiGet } from "./client";
 
 // =============================================================================
 // Types
@@ -72,19 +72,14 @@ const ENDPOINT = "api-v1-admin-users";
 /**
  * List users with filters
  */
-export async function listUsersAPI(
-  params: ListUsersRequest = {}
-): Promise<ActionResult<ListUsersResponse>> {
+export async function listUsersAPI(params: ListUsersRequest = {}): Promise<ActionResult<ListUsersResponse>> {
   return apiGet<ListUsersResponse>(ENDPOINT, params as Record<string, string>);
 }
 
 /**
  * Update a user's role (single role)
  */
-export async function updateUserRoleAPI(
-  userId: string,
-  role: string
-): Promise<ActionResult<UserActionResponse>> {
+export async function updateUserRoleAPI(userId: string, role: string): Promise<ActionResult<UserActionResponse>> {
   return apiCall<UserActionResponse, UpdateRoleRequest>(`${ENDPOINT}/${userId}/role`, {
     method: "PUT",
     body: { role },
@@ -96,7 +91,7 @@ export async function updateUserRoleAPI(
  */
 export async function updateUserRolesAPI(
   userId: string,
-  roles: Record<string, boolean>
+  roles: Record<string, boolean>,
 ): Promise<ActionResult<UserActionResponse>> {
   return apiCall<UserActionResponse, UpdateRolesRequest>(`${ENDPOINT}/${userId}/roles`, {
     method: "PUT",
@@ -107,10 +102,7 @@ export async function updateUserRolesAPI(
 /**
  * Ban a user
  */
-export async function banUserAPI(
-  userId: string,
-  reason: string
-): Promise<ActionResult<UserActionResponse>> {
+export async function banUserAPI(userId: string, reason: string): Promise<ActionResult<UserActionResponse>> {
   return apiCall<UserActionResponse, BanUserRequest>(`${ENDPOINT}/${userId}/ban`, {
     method: "POST",
     body: { reason },
@@ -120,9 +112,7 @@ export async function banUserAPI(
 /**
  * Unban a user
  */
-export async function unbanUserAPI(
-  userId: string
-): Promise<ActionResult<UserActionResponse>> {
+export async function unbanUserAPI(userId: string): Promise<ActionResult<UserActionResponse>> {
   return apiCall<UserActionResponse, Record<string, never>>(`${ENDPOINT}/${userId}/unban`, {
     method: "POST",
     body: {},

@@ -26,8 +26,7 @@ export const COLORS = {
 // Typography (Section 7)
 export const TYPOGRAPHY = {
   fontFamily: {
-    primary:
-      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    primary: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     fallback: "system-ui, sans-serif",
   },
   fontSize: {

@@ -5,9 +5,9 @@
  * Use after mutations to ensure data consistency
  */
 
-import { useCallback } from "react";
 import { apiCache } from "@/lib/api-cache";
 import { createLogger } from "@/lib/logger";
+import { useCallback } from "react";
 
 const logger = createLogger("CacheInvalidation");
 
@@ -119,8 +119,7 @@ export function useCacheInvalidation() {
  * });
  */
 export function useAutoInvalidation() {
-  const { invalidateProducts, invalidateProduct, invalidateProfile, invalidateSearch } =
-    useCacheInvalidation();
+  const { invalidateProducts, invalidateProduct, invalidateProfile, invalidateSearch } = useCacheInvalidation();
 
   const invalidateOnSuccess = useCallback(
     (caches: Array<"products" | "product" | "profile" | "search">, id?: number | string) => {
@@ -149,7 +148,7 @@ export function useAutoInvalidation() {
         });
       };
     },
-    [invalidateProducts, invalidateProduct, invalidateProfile, invalidateSearch]
+    [invalidateProducts, invalidateProduct, invalidateProfile, invalidateSearch],
   );
 
   return { invalidateOnSuccess };

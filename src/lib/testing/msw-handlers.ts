@@ -205,9 +205,7 @@ export const defaultHandlers = [
     await delay(100);
     const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json(
-      mockSuccess(
-        mockFactories.product({ id: params.id as string, ...(body as Partial<MockProduct>) })
-      )
+      mockSuccess(mockFactories.product({ id: params.id as string, ...(body as Partial<MockProduct>) })),
     );
   }),
 
@@ -275,25 +273,25 @@ export const errorHandlers = {
   /** Simulate rate limiting */
   rateLimit: (endpoint: string) =>
     http.all(`${BASE_URL}/functions/v1/${endpoint}`, () =>
-      HttpResponse.json(mockError("RATE_LIMIT_EXCEEDED", "Too many requests"), { status: 429 })
+      HttpResponse.json(mockError("RATE_LIMIT_EXCEEDED", "Too many requests"), { status: 429 }),
     ),
 
   /** Simulate server error */
   serverError: (endpoint: string) =>
     http.all(`${BASE_URL}/functions/v1/${endpoint}`, () =>
-      HttpResponse.json(mockError("INTERNAL_ERROR", "Internal server error"), { status: 500 })
+      HttpResponse.json(mockError("INTERNAL_ERROR", "Internal server error"), { status: 500 }),
     ),
 
   /** Simulate authentication error */
   unauthorized: (endpoint: string) =>
     http.all(`${BASE_URL}/functions/v1/${endpoint}`, () =>
-      HttpResponse.json(mockError("UNAUTHORIZED", "Authentication required"), { status: 401 })
+      HttpResponse.json(mockError("UNAUTHORIZED", "Authentication required"), { status: 401 }),
     ),
 
   /** Simulate not found */
   notFound: (endpoint: string) =>
     http.all(`${BASE_URL}/functions/v1/${endpoint}`, () =>
-      HttpResponse.json(mockError("NOT_FOUND", "Resource not found"), { status: 404 })
+      HttpResponse.json(mockError("NOT_FOUND", "Resource not found"), { status: 404 }),
     ),
 
   /** Simulate validation error */
@@ -301,7 +299,7 @@ export const errorHandlers = {
     http.all(`${BASE_URL}/functions/v1/${endpoint}`, () =>
       HttpResponse.json(mockError("VALIDATION_ERROR", "Validation failed", details), {
         status: 400,
-      })
+      }),
     ),
 
   /** Simulate circuit breaker open */
@@ -309,7 +307,7 @@ export const errorHandlers = {
     http.all(`${BASE_URL}/functions/v1/${endpoint}`, () =>
       HttpResponse.json(mockError("CIRCUIT_OPEN", "Service temporarily unavailable"), {
         status: 503,
-      })
+      }),
     ),
 };
 
@@ -324,15 +322,14 @@ export function createHandler<T>(
   method: "get" | "post" | "put" | "patch" | "delete",
   endpoint: string,
   response: T | (() => T | Promise<T>),
-  options: MockResponseOptions = {}
+  options: MockResponseOptions = {},
 ) {
   const httpMethod = http[method];
   return httpMethod(`${BASE_URL}/functions/v1/${endpoint}`, async () => {
     if (options.delay) {
       await delay(options.delay);
     }
-    const data =
-      typeof response === "function" ? await (response as () => T | Promise<T>)() : response;
+    const data = typeof response === "function" ? await (response as () => T | Promise<T>)() : response;
     return HttpResponse.json(mockSuccess(data), {
       status: options.status || 200,
       headers: options.headers,
@@ -346,7 +343,7 @@ export function createHandler<T>(
 export function createSequenceHandler(
   method: "get" | "post" | "put" | "patch" | "delete",
   endpoint: string,
-  responses: Array<{ response: Record<string, unknown>; status?: number; delay?: number }>
+  responses: Array<{ response: Record<string, unknown>; status?: number; delay?: number }>,
 ) {
   let callIndex = 0;
   const httpMethod = http[method];

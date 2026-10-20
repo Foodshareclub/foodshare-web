@@ -3,9 +3,9 @@
  * Schema validation utilities that return ActionResult
  */
 
-import { type ZodError, type ZodSchema } from "zod";
+import type { ZodError, ZodSchema } from "zod";
+import { failure, success, validationError } from "./server-actions";
 import type { ActionResult } from "./types";
-import { success, failure, validationError } from "./server-actions";
 
 /**
  * Validate data against a Zod schema

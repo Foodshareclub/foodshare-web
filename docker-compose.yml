@@ -23,12 +23,14 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    # /api/ready, not /api/health. /api/health probes PostgREST, GoTrue,
+    # storage and Upstash — four round trips every 20 seconds — and a single
+    # slow Upstash reply (the route allows 3s) marks the container unhealthy,
+    # so autoheal restarts the entire app. The full-page HEAD render on top of
+    # that made it worse. /api/ready is constant and prerendered; the deep
+    # probe still exists at /api/health for monitoring to scrape slowly.
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "curl -f http://localhost:3000/api/health && curl -f -I http://localhost:3000/ || exit 1",
-        ]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/api/ready || exit 1"]
       interval: 20s
       timeout: 10s
       retries: 5

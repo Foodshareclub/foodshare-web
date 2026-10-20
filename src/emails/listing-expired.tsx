@@ -4,13 +4,13 @@
  * Sent when a user's listing has expired.
  */
 
-import { Text, Section, Img, Row, Column } from "@react-email/components";
+import { Column, Img, Row, Section, Text } from "@react-email/components";
 import {
-  EmailLayout,
-  EmailCard,
   EmailButton,
   EmailButtonOutline,
+  EmailCard,
   EmailInfoBox,
+  EmailLayout,
   colors,
   styles,
 } from "./components/base";
@@ -46,9 +46,7 @@ export function ListingExpiredEmail({
     >
       <EmailCard>
         <Text style={styles.paragraph}>Hi {userName}! 👋</Text>
-        <Text style={styles.paragraph}>
-          Your listing has expired and is no longer visible to the community:
-        </Text>
+        <Text style={styles.paragraph}>Your listing has expired and is no longer visible to the community:</Text>
 
         {/* Expired Listing Card */}
         <Section
@@ -95,9 +93,7 @@ export function ListingExpiredEmail({
                 >
                   {listingTitle}
                 </Text>
-                <Text style={{ margin: "8px 0 0", fontSize: "14px", color: "#94a3b8" }}>
-                  Expired on {expiryDate}
-                </Text>
+                <Text style={{ margin: "8px 0 0", fontSize: "14px", color: "#94a3b8" }}>Expired on {expiryDate}</Text>
               </Column>
               <Column style={{ width: "80px", textAlign: "right" }}>
                 <Text
@@ -146,8 +142,8 @@ export function ListingExpiredEmail({
 
       {/* Tip */}
       <EmailInfoBox color="#3b82f6" bgColor="#eff6ff">
-        <strong style={{ color: "#1e40af" }}>💡 Pro tip:</strong> Listings with fresh photos and
-        updated descriptions get 3x more interest!
+        <strong style={{ color: "#1e40af" }}>💡 Pro tip:</strong> Listings with fresh photos and updated descriptions
+        get 3x more interest!
       </EmailInfoBox>
     </EmailLayout>
   );

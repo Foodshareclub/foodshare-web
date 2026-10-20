@@ -4,7 +4,7 @@
  */
 
 import { createLogger } from "./base";
-import type { PerformanceMark, SourceMapInfo, PerformanceReport } from "./types";
+import type { PerformanceMark, PerformanceReport, SourceMapInfo } from "./types";
 
 class AdvancedLogger {
   private performanceMarks: Map<string, PerformanceMark> = new Map();
@@ -43,7 +43,7 @@ class AdvancedLogger {
 
     console.log(
       `%c${emoji} [${new Date().toISOString().split("T")[1].split(".")[0]}] Performance: ${name} took ${Math.round(duration)}ms`,
-      `color: ${color}; font-weight: bold;`
+      `color: ${color}; font-weight: bold;`,
     );
 
     this.performanceMarks.delete(name);
@@ -96,8 +96,8 @@ class AdvancedLogger {
         parsed.push({
           source: match[1],
           file: match[2],
-          line: parseInt(match[3], 10),
-          column: parseInt(match[4], 10),
+          line: Number.parseInt(match[3], 10),
+          column: Number.parseInt(match[4], 10),
         });
       }
     }
@@ -135,7 +135,11 @@ class AdvancedLogger {
    */
   logMemoryUsage(): { used: number; total: number; limit: number; percentage: number } | null {
     if ("memory" in performance) {
-      const memory = (performance as Performance & { memory: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
+      const memory = (
+        performance as Performance & {
+          memory: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number };
+        }
+      ).memory;
       const used = Math.round(memory.usedJSHeapSize / 1024 / 1024);
       const total = Math.round(memory.totalJSHeapSize / 1024 / 1024);
       const limit = Math.round(memory.jsHeapSizeLimit / 1024 / 1024);
@@ -144,10 +148,7 @@ class AdvancedLogger {
       const emoji = percentage < 50 ? "✅" : percentage < 80 ? "⚠️" : "❌";
       const color = percentage < 50 ? "#10B981" : percentage < 80 ? "#F59E0B" : "#EF4444";
 
-      console.log(
-        `%c${emoji} Memory: ${used}MB / ${limit}MB (${percentage}%)`,
-        `color: ${color}; font-weight: bold;`
-      );
+      console.log(`%c${emoji} Memory: ${used}MB / ${limit}MB (${percentage}%)`, `color: ${color}; font-weight: bold;`);
 
       return { used, total, limit, percentage };
     }
@@ -165,7 +166,7 @@ class AdvancedLogger {
 
     console.log(
       `%c${emoji} [${new Date().toISOString().split("T")[1].split(".")[0]}] ${method} ${url} → ${status} (${duration}ms)${sizeStr}`,
-      `color: ${color}; font-weight: bold;`
+      `color: ${color}; font-weight: bold;`,
     );
   }
 
@@ -177,7 +178,7 @@ class AdvancedLogger {
     const k = 1024;
     const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+    return `${Math.round((bytes / k ** i) * 100) / 100} ${sizes[i]}`;
   }
 
   /**
@@ -226,7 +227,7 @@ class AdvancedLogger {
   /**
    * Monitor long tasks
    */
-  monitorLongTasks(threshold: number = 50) {
+  monitorLongTasks(threshold = 50) {
     if (typeof window !== "undefined" && "PerformanceObserver" in window) {
       try {
         const observer = new PerformanceObserver((list) => {
@@ -235,7 +236,7 @@ class AdvancedLogger {
               console.warn(
                 `%c🐌 Long task detected: ${Math.round(entry.duration)}ms`,
                 "color: #F59E0B; font-weight: bold;",
-                { name: entry.name, startTime: Math.round(entry.startTime) }
+                { name: entry.name, startTime: Math.round(entry.startTime) },
               );
             }
           }
@@ -258,7 +259,7 @@ class AdvancedLogger {
     console.log(
       `%c👆 [${timestamp.split("T")[1].split(".")[0]}] User: ${action} → ${target}`,
       "color: #8B5CF6; font-weight: bold;",
-      metadata || ""
+      metadata || "",
     );
 
     // Store for analytics

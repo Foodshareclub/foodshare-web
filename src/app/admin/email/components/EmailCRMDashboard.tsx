@@ -10,39 +10,9 @@
  * - Professional data visualization
  */
 
-import React, { useState, useCallback } from "react";
-import { useTranslations } from "next-intl";
-import { AnimatePresence, motion } from "framer-motion";
-import {
-  Send,
-  Plus,
-  RefreshCw,
-  Zap,
-  Target,
-  Megaphone,
-  Activity,
-  ChevronRight,
-  BarChart3,
-  Users,
-  Settings,
-  FileText,
-  Inbox,
-} from "lucide-react";
-import { getDefaultStats } from "./constants";
-import {
-  OverviewTab,
-  CampaignsTab,
-  AutomationTab,
-  AudienceTab,
-  ComposeTab,
-  ProvidersTab,
-  TemplatesTab,
-  QueueTab,
-} from "./tabs";
-import type { TabType, EmailCRMDashboardProps } from "./types";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { refreshEmailDashboard } from "@/app/actions/campaigns";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,8 +21,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { refreshEmailDashboard } from "@/app/actions/campaigns";
 import type { ProviderHealth } from "@/lib/data/admin-email";
+import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Activity,
+  BarChart3,
+  ChevronRight,
+  FileText,
+  Inbox,
+  Megaphone,
+  Plus,
+  RefreshCw,
+  Send,
+  Settings,
+  Target,
+  Users,
+  Zap,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import type React from "react";
+import { useCallback, useState } from "react";
+import { getDefaultStats } from "./constants";
+import {
+  AudienceTab,
+  AutomationTab,
+  CampaignsTab,
+  ComposeTab,
+  OverviewTab,
+  ProvidersTab,
+  QueueTab,
+  TemplatesTab,
+} from "./tabs";
+import type { EmailCRMDashboardProps, TabType } from "./types";
 
 // Provider brand colors and icons
 const PROVIDER_CONFIG = {
@@ -138,9 +139,7 @@ export function EmailCRMDashboard({ initialData }: EmailCRMDashboardProps) {
 
   // Quota calculations
   const dailyQuotaPercent =
-    stats.dailyQuotaLimit > 0
-      ? Math.round((stats.dailyQuotaUsed / stats.dailyQuotaLimit) * 100)
-      : 0;
+    stats.dailyQuotaLimit > 0 ? Math.round((stats.dailyQuotaUsed / stats.dailyQuotaLimit) * 100) : 0;
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -207,11 +206,7 @@ export function EmailCRMDashboard({ initialData }: EmailCRMDashboardProps) {
             {/* Actions */}
             <div className="flex items-center gap-4">
               {/* Quota Display */}
-              <QuotaDisplay
-                used={stats.dailyQuotaUsed}
-                limit={stats.dailyQuotaLimit}
-                percent={dailyQuotaPercent}
-              />
+              <QuotaDisplay used={stats.dailyQuotaUsed} limit={stats.dailyQuotaLimit} percent={dailyQuotaPercent} />
 
               <div className="h-8 w-px bg-border/50" />
 
@@ -259,14 +254,13 @@ export function EmailCRMDashboard({ initialData }: EmailCRMDashboardProps) {
 
                 return (
                   <button
+                    type="button"
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     className={cn(
                       "relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-200",
                       "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      isActive
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:bg-muted/50 rounded-t-lg"
+                      isActive ? "text-foreground" : "text-muted-foreground hover:bg-muted/50 rounded-t-lg",
                     )}
                   >
                     <span className={cn(isActive && config.color)}>{config.icon}</span>
@@ -274,7 +268,7 @@ export function EmailCRMDashboard({ initialData }: EmailCRMDashboardProps) {
                     {isActive && (
                       <motion.div
                         layoutId="activeTab"
-                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                        className="absolute bottom-0 inset-x-0 h-0.5 bg-primary"
                         initial={false}
                         transition={{ type: "spring", stiffness: 500, damping: 30 }}
                       />
@@ -309,9 +303,7 @@ export function EmailCRMDashboard({ initialData }: EmailCRMDashboardProps) {
                 {activeTab === "automation" && <AutomationTab automations={automations} />}
                 {activeTab === "audience" && <AudienceTab segments={segments} stats={stats} />}
                 {activeTab === "templates" && <TemplatesTab templates={templates} />}
-                {activeTab === "queue" && (
-                  <QueueTab queueStats={queueStats} circuitBreakers={circuitBreakers} />
-                )}
+                {activeTab === "queue" && <QueueTab queueStats={queueStats} circuitBreakers={circuitBreakers} />}
                 {activeTab === "compose" && <ComposeTab />}
                 {activeTab === "providers" && <ProvidersTab providerHealth={providerHealth} />}
               </motion.div>
@@ -364,7 +356,7 @@ function ProviderHealthPill({ provider }: { provider: ProviderHealth }) {
             "border transition-all duration-200",
             config.bgColor,
             config.borderColor,
-            "hover:shadow-md hover:shadow-black/5"
+            "hover:shadow-md hover:shadow-black/5",
           )}
         >
           {/* Status Indicator */}
@@ -378,9 +370,7 @@ function ProviderHealthPill({ provider }: { provider: ProviderHealth }) {
 
           {/* Provider Info */}
           <div className="flex flex-col min-w-0">
-            <span className={cn("text-xs font-semibold truncate", config.textColor)}>
-              {config.name}
-            </span>
+            <span className={cn("text-xs font-semibold truncate", config.textColor)}>{config.name}</span>
             <span className="text-[10px] text-muted-foreground tabular-nums">
               {provider.dailyQuotaUsed || 0}/{provider.dailyQuotaLimit || 0}
             </span>
@@ -394,11 +384,7 @@ function ProviderHealthPill({ provider }: { provider: ProviderHealth }) {
               transition={{ duration: 0.5, ease: "easeOut" }}
               className={cn(
                 "h-full rounded-full",
-                quotaPercent > 90
-                  ? "bg-rose-500"
-                  : quotaPercent > 70
-                    ? "bg-amber-500"
-                    : "bg-emerald-500"
+                quotaPercent > 90 ? "bg-rose-500" : quotaPercent > 70 ? "bg-amber-500" : "bg-emerald-500",
               )}
             />
           </div>
@@ -446,20 +432,16 @@ function QuotaDisplay({ used, limit, percent }: { used: number; limit: number; p
   return (
     <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-muted/30 border border-border/50">
       <div className="flex flex-col">
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-          Daily Quota
-        </span>
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Daily Quota</span>
         <div className="flex items-baseline gap-1">
-          <span className={cn("text-lg font-bold tabular-nums", getQuotaColor())}>
-            {used.toLocaleString()}
-          </span>
+          <span className={cn("text-lg font-bold tabular-nums", getQuotaColor())}>{used.toLocaleString()}</span>
           <span className="text-xs text-muted-foreground">/ {limit.toLocaleString()}</span>
         </div>
       </div>
 
       {/* Circular Progress */}
       <div className="relative h-10 w-10">
-        <svg className="h-10 w-10 -rotate-90" viewBox="0 0 36 36">
+        <svg aria-hidden="true" className="h-10 w-10 -rotate-90" viewBox="0 0 36 36">
           <path
             d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
             fill="none"
@@ -480,10 +462,7 @@ function QuotaDisplay({ used, limit, percent }: { used: number; limit: number; p
           />
         </svg>
         <span
-          className={cn(
-            "absolute inset-0 flex items-center justify-center text-[10px] font-bold",
-            getQuotaColor()
-          )}
+          className={cn("absolute inset-0 flex items-center justify-center text-[10px] font-bold", getQuotaColor())}
         >
           {percent}%
         </span>

@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Send } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ForumCommentCard } from "./ForumCommentCard";
-import { RichTextEditor } from "./RichTextEditor";
-import { createClient } from "@/lib/supabase/client";
+import type { ForumComment } from "@/api/forumAPI";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
-import type { ForumComment } from "@/api/forumAPI";
+import { createClient } from "@/lib/supabase/client";
+import { AnimatePresence, motion } from "framer-motion";
+import { Send } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ForumCommentCard } from "./ForumCommentCard";
+import { RichTextEditor } from "./RichTextEditor";
 
 type RealtimeCommentsProps = {
   forumId: number;
@@ -17,11 +17,7 @@ type RealtimeCommentsProps = {
   initialComments?: ForumComment[];
 };
 
-export function RealtimeComments({
-  forumId,
-  postAuthorId,
-  initialComments = [],
-}: RealtimeCommentsProps) {
+export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }: RealtimeCommentsProps) {
   const { user } = useAuth();
   const [comments, setComments] = useState<ForumComment[]>(initialComments);
   const [loading, setLoading] = useState(!initialComments.length);
@@ -39,9 +35,7 @@ export function RealtimeComments({
       const supabase = createClient();
       const { data } = await supabase
         .from("comments")
-        .select(
-          "*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)"
-        )
+        .select("*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)")
         .eq("forum_id", forumId)
         .is("parent_id", null)
         .order("is_pinned", { ascending: false })
@@ -68,9 +62,7 @@ export function RealtimeComments({
           // Fetch the full comment with profile
           const { data } = await supabase
             .from("comments")
-            .select(
-              "*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)"
-            )
+            .select("*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)")
             .eq("id", payload.new.id)
             .single();
 
@@ -87,7 +79,7 @@ export function RealtimeComments({
               setComments((prev) => [...prev, newComment]);
             }
           }
-        }
+        },
       )
       .on(
         "postgres_changes",
@@ -95,9 +87,7 @@ export function RealtimeComments({
         async (payload) => {
           const { data } = await supabase
             .from("comments")
-            .select(
-              "*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)"
-            )
+            .select("*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)")
             .eq("id", payload.new.id)
             .single();
 
@@ -106,14 +96,13 @@ export function RealtimeComments({
             if (updated.parent_id) {
               setReplies((prev) => ({
                 ...prev,
-                [updated.parent_id!]:
-                  prev[updated.parent_id!]?.map((c) => (c.id === updated.id ? updated : c)) || [],
+                [updated.parent_id!]: prev[updated.parent_id!]?.map((c) => (c.id === updated.id ? updated : c)) || [],
               }));
             } else {
               setComments((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
             }
           }
-        }
+        },
       )
       .on(
         "postgres_changes",
@@ -128,7 +117,7 @@ export function RealtimeComments({
             });
             return newReplies;
           });
-        }
+        },
       )
       .subscribe();
 
@@ -164,9 +153,7 @@ export function RealtimeComments({
     const supabase = createClient();
     const { data } = await supabase
       .from("comments")
-      .select(
-        "*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)"
-      )
+      .select("*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)")
       .eq("parent_id", commentId)
       .order("comment_created_at", { ascending: true });
 
@@ -220,7 +207,7 @@ export function RealtimeComments({
           />
           <div className="flex justify-end">
             <Button onClick={handleSubmit} disabled={submitting || !commentContent.trim()}>
-              <Send className="mr-2 h-4 w-4" />
+              <Send className="me-2 h-4 w-4" />
               {submitting ? "Posting..." : "Post Comment"}
             </Button>
           </div>

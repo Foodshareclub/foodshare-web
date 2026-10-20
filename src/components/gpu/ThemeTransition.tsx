@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
 import { useGPUContext } from "@/lib/gpu";
 import { acquireGPU, releaseGPU } from "@/lib/gpu/GPUDevicePool";
+import { useCallback, useEffect, useRef } from "react";
 import type { FrameLoopHandle } from "vgpu";
 
 interface ThemeTransitionProps {
@@ -19,13 +19,7 @@ interface ThemeTransitionProps {
  *
  * Uses shared GPU device pool. Short-lived — only active during transition.
  */
-export function ThemeTransition({
-  active,
-  originX,
-  originY,
-  isDark,
-  onComplete,
-}: ThemeTransitionProps) {
+export function ThemeTransition({ active, originX, originY, isDark, onComplete }: ThemeTransitionProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { supported } = useGPUContext();
   const loopRef = useRef<FrameLoopHandle | null>(null);
@@ -50,10 +44,8 @@ export function ThemeTransition({
 
       const canvasSurface = surface(gpu, canvasRef.current!, { dpr: 1, autoResize: false });
       const maxRadius =
-        Math.hypot(
-          Math.max(originX, window.innerWidth - originX),
-          Math.max(originY, window.innerHeight - originY)
-        ) * 1.5;
+        Math.hypot(Math.max(originX, window.innerWidth - originX), Math.max(originY, window.innerHeight - originY)) *
+        1.5;
 
       const transition = effect(gpu, shader, {
         label: "ThemeTransition",
@@ -90,7 +82,7 @@ export function ThemeTransition({
         }
 
         // Ease out cubic
-        const eased = 1 - Math.pow(1 - progress, 3);
+        const eased = 1 - (1 - progress) ** 3;
 
         transition.set({
           params: {
@@ -122,11 +114,7 @@ export function ThemeTransition({
   if (!supported || !active) return null;
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 w-screen h-screen pointer-events-none"
-      style={{ zIndex: 99999 }}
-    />
+    <canvas ref={canvasRef} className="fixed inset-0 w-screen h-screen pointer-events-none" style={{ zIndex: 99999 }} />
   );
 }
 
@@ -147,7 +135,7 @@ export function useThemeTransition() {
       // Fallback: DOM clip-path (existing implementation)
       return { isDark, x, y, useGPU: false };
     },
-    [supported]
+    [supported],
   );
 
   return { trigger, gpuSupported: supported };

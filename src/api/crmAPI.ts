@@ -3,25 +3,25 @@
  * Supabase API calls for Customer Relationship Management
  */
 
+import { createLogger } from "@/lib/logger";
 import { supabase } from "@/lib/supabase/client";
 import type {
+  ArchiveCustomerPayload,
+  AssignCustomerTagsPayload,
   CRMCustomer,
-  CRMCustomerWithProfile,
   CRMCustomerNote,
   CRMCustomerNoteWithAdmin,
-  CRMCustomerTag,
   CRMCustomerSummary,
+  CRMCustomerTag,
+  CRMCustomerWithProfile,
+  CRMCustomersFilter,
   CRMDashboardStats,
   CreateCustomerNotePayload,
-  UpdateCustomerNotePayload,
   CreateCustomerTagPayload,
-  UpdateCustomerTagPayload,
-  AssignCustomerTagsPayload,
-  ArchiveCustomerPayload,
+  UpdateCustomerNotePayload,
   UpdateCustomerPreferencesPayload,
-  CRMCustomersFilter,
+  UpdateCustomerTagPayload,
 } from "@/types/crm.types";
-import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("CRMAPI");
 
@@ -121,7 +121,7 @@ export async function fetchCRMCustomers(filters?: Partial<CRMCustomersFilter>) {
   const customers: CRMCustomerWithProfile[] =
     data?.map((customer: RawCustomer) => ({
       ...customer,
-      full_name: [customer.profiles?.first_name, customer.profiles?.second_name].filter(Boolean).join(' ') || "",
+      full_name: [customer.profiles?.first_name, customer.profiles?.second_name].filter(Boolean).join(" ") || "",
       email: customer.profiles?.email || "",
       avatar_url: customer.profiles?.avatar_url || null,
       items_shared: customer.profile_stats?.items_shared || 0,
@@ -138,8 +138,7 @@ export async function fetchCRMCustomers(filters?: Partial<CRMCustomersFilter>) {
     const searchLower = filters.searchTerm.toLowerCase();
     filteredCustomers = customers.filter(
       (customer) =>
-        customer.full_name?.toLowerCase().includes(searchLower) ||
-        customer.email?.toLowerCase().includes(searchLower)
+        customer.full_name?.toLowerCase().includes(searchLower) || customer.email?.toLowerCase().includes(searchLower),
     );
   }
 
@@ -252,7 +251,7 @@ export async function fetchCustomerNotes(customerId: string) {
         email,
         avatar_url
       )
-    `
+    `,
     )
     .eq("customer_id", customerId)
     .order("created_at", { ascending: false });
@@ -271,7 +270,7 @@ export async function fetchCustomerNotes(customerId: string) {
   const notes: CRMCustomerNoteWithAdmin[] =
     data?.map((note: RawNote) => ({
       ...note,
-      admin_name: [note.admin?.first_name, note.admin?.second_name].filter(Boolean).join(' ') || "",
+      admin_name: [note.admin?.first_name, note.admin?.second_name].filter(Boolean).join(" ") || "",
       admin_email: note.admin?.email || "",
       admin_avatar_url: note.admin?.avatar_url || null,
     })) || [];
@@ -314,7 +313,7 @@ export async function createCustomerNote(payload: CreateCustomerNotePayload) {
  * Update customer note
  */
 export async function updateCustomerNote(payload: UpdateCustomerNotePayload) {
-  const updateData: Partial<Pick<CRMCustomerNote, 'note_text' | 'note_type' | 'is_pinned'>> = {};
+  const updateData: Partial<Pick<CRMCustomerNote, "note_text" | "note_type" | "is_pinned">> = {};
 
   if (payload.note_text !== undefined) updateData.note_text = payload.note_text;
   if (payload.note_type !== undefined) updateData.note_type = payload.note_type;
@@ -394,7 +393,7 @@ export async function createCustomerTag(payload: CreateCustomerTagPayload) {
  * Update customer tag
  */
 export async function updateCustomerTag(payload: UpdateCustomerTagPayload) {
-  const updateData: Partial<Pick<CRMCustomerTag, 'name' | 'color' | 'description'>> = {};
+  const updateData: Partial<Pick<CRMCustomerTag, "name" | "color" | "description">> = {};
 
   if (payload.name !== undefined) updateData.name = payload.name;
   if (payload.color !== undefined) updateData.color = payload.color;
@@ -420,11 +419,7 @@ export async function updateCustomerTag(payload: UpdateCustomerTagPayload) {
  * Delete customer tag
  */
 export async function deleteCustomerTag(tagId: string) {
-  const { error } = await supabase
-    .from("crm_customer_tags")
-    .delete()
-    .eq("id", tagId)
-    .eq("is_system", false); // Can only delete non-system tags
+  const { error } = await supabase.from("crm_customer_tags").delete().eq("id", tagId).eq("is_system", false); // Can only delete non-system tags
 
   if (error) {
     logger.error("Error deleting customer tag", error);
@@ -446,10 +441,7 @@ export async function assignCustomerTags(payload: AssignCustomerTagsPayload) {
   }
 
   // First, remove all existing tag assignments
-  await supabase
-    .from("crm_customer_tag_assignments")
-    .delete()
-    .eq("customer_id", payload.customer_id);
+  await supabase.from("crm_customer_tag_assignments").delete().eq("customer_id", payload.customer_id);
 
   // Then, insert new tag assignments
   if (payload.tag_ids.length > 0) {
@@ -459,10 +451,7 @@ export async function assignCustomerTags(payload: AssignCustomerTagsPayload) {
       assigned_by: adminId,
     }));
 
-    const { data, error } = await supabase
-      .from("crm_customer_tag_assignments")
-      .insert(assignments)
-      .select();
+    const { data, error } = await supabase.from("crm_customer_tag_assignments").insert(assignments).select();
 
     if (error) {
       logger.error("Error assigning customer tags", error);
@@ -550,14 +539,14 @@ export async function fetchCRMDashboardStats() {
             churn_risk_score: number | null;
             ltv_score: number | null;
             total_interactions: number | null;
-          }
+          },
         ) => ({
           engagement: acc.engagement + (item.engagement_score || 0),
           churnRisk: acc.churnRisk + (item.churn_risk_score || 0),
           ltv: acc.ltv + (item.ltv_score || 0),
           interactions: acc.interactions + (item.total_interactions || 0),
         }),
-        { engagement: 0, churnRisk: 0, ltv: 0, interactions: 0 }
+        { engagement: 0, churnRisk: 0, ltv: 0, interactions: 0 },
       );
 
       averages.engagement = Math.round(sum.engagement / metricsData.length);
@@ -616,7 +605,7 @@ export async function fetchCRMDashboardStats() {
         profile_id,
         ltv_score,
         profiles:profile_id (first_name, second_name)
-      `
+      `,
       )
       .eq("lifecycle_stage", "champion")
       .order("ltv_score", { ascending: false })
@@ -632,7 +621,8 @@ export async function fetchCRMDashboardStats() {
     const topChampions =
       (championsData as unknown as ChampionData[] | null)?.map((item) => ({
         customer_id: item.id,
-        full_name: [item.profiles?.[0]?.first_name, item.profiles?.[0]?.second_name].filter(Boolean).join(' ') || "Unknown",
+        full_name:
+          [item.profiles?.[0]?.first_name, item.profiles?.[0]?.second_name].filter(Boolean).join(" ") || "Unknown",
         ltv_score: item.ltv_score,
       })) || [];
 

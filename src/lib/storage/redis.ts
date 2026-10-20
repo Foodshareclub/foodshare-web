@@ -2,7 +2,7 @@
  * Upstash Redis Client
  * Used for caching, rate limiting, and session storage
  */
-import { Redis } from '@upstash/redis';
+import { Redis } from "@upstash/redis";
 
 // Singleton instance
 let redis: Redis | null = null;
@@ -75,7 +75,7 @@ export const cache = {
       const client = getRedis();
       return await client.del(...keys);
     } catch (error) {
-      console.error(`[Redis] Failed to delete keys:`, error);
+      console.error("[Redis] Failed to delete keys:", error);
       return 0;
     }
   },
@@ -112,11 +112,7 @@ export const cache = {
   /**
    * Get or set cached value (cache-aside pattern)
    */
-  async getOrSet<T>(
-    key: string,
-    fetcher: () => Promise<T>,
-    ttlSeconds?: number
-  ): Promise<T> {
+  async getOrSet<T>(key: string, fetcher: () => Promise<T>, ttlSeconds?: number): Promise<T> {
     const cached = await this.get<T>(key);
     if (cached !== null) {
       return cached;
@@ -178,7 +174,7 @@ export const rateLimiter = {
   async check(
     identifier: string,
     limit: number,
-    windowSeconds: number
+    windowSeconds: number,
   ): Promise<{ allowed: boolean; remaining: number; reset: number }> {
     const redis = getRedis();
     const key = `ratelimit:${identifier}`;
@@ -193,10 +189,11 @@ export const rateLimiter = {
 
     if (count >= limit) {
       const oldestEntry = await redis.zrange<{ score: number; member: string }[]>(key, 0, 0, { withScores: true });
-      const reset = oldestEntry.length > 0 && oldestEntry[0]?.score
-        ? Math.ceil((Number(oldestEntry[0].score) + windowSeconds * 1000 - now) / 1000)
-        : windowSeconds;
-      
+      const reset =
+        oldestEntry.length > 0 && oldestEntry[0]?.score
+          ? Math.ceil((Number(oldestEntry[0].score) + windowSeconds * 1000 - now) / 1000)
+          : windowSeconds;
+
       return { allowed: false, remaining: 0, reset };
     }
 
@@ -224,7 +221,7 @@ export type CacheTTL = (typeof CACHE_TTL)[keyof typeof CACHE_TTL];
 // Cache key prefixes for different data types
 export const REDIS_KEYS = {
   PRODUCT: (id: string) => `product:${id}`,
-  PRODUCTS_LIST: (type?: string) => type ? `products:list:${type}` : 'products:list:all',
+  PRODUCTS_LIST: (type?: string) => (type ? `products:list:${type}` : "products:list:all"),
   USER_PROFILE: (id: string) => `user:profile:${id}`,
   USER_SESSION: (id: string) => `user:session:${id}`,
   RATE_LIMIT: (identifier: string) => `ratelimit:${identifier}`,
@@ -247,19 +244,16 @@ export const lock = {
    * Acquire a lock
    * @returns lock token if acquired, null if lock is held by another process
    */
-  async acquire(
-    key: string,
-    ttlSeconds: number = 30
-  ): Promise<string | null> {
+  async acquire(key: string, ttlSeconds = 30): Promise<string | null> {
     try {
       const client = getRedis();
       const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const lockKey = `lock:${key}`;
-      
+
       // SET NX (only if not exists) with expiration
       const result = await client.set(lockKey, token, { nx: true, ex: ttlSeconds });
-      
-      return result === 'OK' ? token : null;
+
+      return result === "OK" ? token : null;
     } catch (error) {
       console.error(`[Redis] Failed to acquire lock "${key}":`, error);
       return null;
@@ -273,7 +267,7 @@ export const lock = {
     try {
       const client = getRedis();
       const lockKey = `lock:${key}`;
-      
+
       // Only delete if token matches (we own the lock)
       const currentToken = await client.get<string>(lockKey);
       if (currentToken === token) {
@@ -290,11 +284,7 @@ export const lock = {
   /**
    * Execute a function with a lock
    */
-  async withLock<T>(
-    key: string,
-    fn: () => Promise<T>,
-    ttlSeconds: number = 30
-  ): Promise<T | null> {
+  async withLock<T>(key: string, fn: () => Promise<T>, ttlSeconds = 30): Promise<T | null> {
     const token = await this.acquire(key, ttlSeconds);
     if (!token) {
       return null;

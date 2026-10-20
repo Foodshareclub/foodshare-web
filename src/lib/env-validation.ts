@@ -266,7 +266,5 @@ export function logConfiguredServices(): void {
     .filter(([, enabled]) => enabled)
     .map(([name]) => name);
 
-  console.info(
-    `\n✅ Configured services: ${configured.length > 0 ? configured.join(", ") : "none"}\n`
-  );
+  console.info(`\n✅ Configured services: ${configured.length > 0 ? configured.join(", ") : "none"}\n`);
 }

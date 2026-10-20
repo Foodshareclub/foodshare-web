@@ -1,24 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-import { Info, Trash2, SlidersHorizontal, Database } from "lucide-react";
-import { FoodCategory, CATEGORY_METRIC_MAP, WasteEntry } from "@/lib/foodlytics/types";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/foodlytics/ui/table";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/foodlytics/ui/card";
 import { Badge } from "@/components/foodlytics/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/foodlytics/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/foodlytics/ui/table";
+import { CATEGORY_METRIC_MAP, type FoodCategory, type WasteEntry } from "@/lib/foodlytics/types";
+import { Database, Info, SlidersHorizontal, Trash2 } from "lucide-react";
+import React, { useState } from "react";
 
 interface LogsTableProps {
   logs: WasteEntry[];
@@ -29,9 +16,7 @@ export function LogsTable({ logs, onDeleteLog }: LogsTableProps) {
   const [categoryFilter, setCategoryFilter] = useState<FoodCategory | "all">("all");
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
 
-  const filteredLogs = logs.filter(
-    (item) => categoryFilter === "all" || item.category === categoryFilter
-  );
+  const filteredLogs = logs.filter((item) => categoryFilter === "all" || item.category === categoryFilter);
 
   const handleDelete = async (id: string) => {
     setIsDeletingId(id);
@@ -43,10 +28,7 @@ export function LogsTable({ logs, onDeleteLog }: LogsTableProps) {
   };
 
   return (
-    <Card
-      id="logs-history-container"
-      className="glass-panel border-none rounded-2xl shadow-xl overflow-hidden w-full"
-    >
+    <Card id="logs-history-container" className="glass-panel border-none rounded-2xl shadow-xl overflow-hidden w-full">
       <CardHeader className="p-6 border-b border-white/5 bg-white/[0.02] flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
           <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
@@ -54,14 +36,15 @@ export function LogsTable({ logs, onDeleteLog }: LogsTableProps) {
             Food Waste Logs & Ecological Impacts
           </CardTitle>
           <CardDescription className="text-xs text-stone-400 mt-1">
-            Real-time synchronization logs pulled from cloud Supabase table. Ecological loss
-            estimates apply USDA flow benchmarks.
+            Real-time synchronization logs pulled from cloud Supabase table. Ecological loss estimates apply USDA flow
+            benchmarks.
           </CardDescription>
         </div>
 
         {/* Log Filter category tabs */}
         <div className="flex flex-wrap items-center gap-2 bg-black/20 border border-white/5 p-1 rounded-xl text-xs self-start lg:self-center">
           <button
+            type="button"
             onClick={() => setCategoryFilter("all")}
             className={`px-3 py-2 rounded-lg font-extrabold transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
               categoryFilter === "all"
@@ -75,6 +58,7 @@ export function LogsTable({ logs, onDeleteLog }: LogsTableProps) {
 
           {Object.entries(CATEGORY_METRIC_MAP).map(([key, val]) => (
             <button
+              type="button"
               key={key}
               onClick={() => setCategoryFilter(key as FoodCategory)}
               className={`px-3 py-2 rounded-lg font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer border ${
@@ -95,46 +79,25 @@ export function LogsTable({ logs, onDeleteLog }: LogsTableProps) {
 
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <Table className="w-full text-left text-sm border-collapse">
+          <Table className="w-full text-start text-sm border-collapse">
             <TableHeader>
               <TableRow className="bg-white/[0.01] hover:bg-transparent text-stone-400 text-[10px] uppercase tracking-widest font-extrabold border-b border-white/5">
-                <TableHead className="px-6 py-4 font-bold text-stone-450 text-stone-400">
-                  Food Item
-                </TableHead>
-                <TableHead className="px-6 py-4 font-bold text-stone-450 text-stone-400">
-                  Category
-                </TableHead>
-                <TableHead className="px-6 py-4 font-bold text-stone-450 text-stone-400">
-                  Mass Weight
-                </TableHead>
-                <TableHead className="px-6 py-4 font-bold text-stone-450 text-stone-400">
-                  Financial Loss
-                </TableHead>
-                <TableHead className="px-6 py-4 font-bold text-stone-450 text-stone-400">
-                  Discard Reason
-                </TableHead>
-                <TableHead className="px-6 py-4 font-bold text-stone-450 text-stone-400 text-glow-emerald">
-                  Est. CO2 Penalty
-                </TableHead>
-                <TableHead className="px-6 py-4 font-bold text-stone-450 text-stone-400">
-                  Est. Water Waste
-                </TableHead>
-                <TableHead className="px-6 py-4 font-bold text-stone-450 text-stone-400">
-                  Date Logged
-                </TableHead>
-                <TableHead className="px-6 py-4 text-right font-bold text-stone-455 text-stone-400">
-                  Action
-                </TableHead>
+                <TableHead className="px-6 py-4 font-bold text-stone-400">Food Item</TableHead>
+                <TableHead className="px-6 py-4 font-bold text-stone-400">Category</TableHead>
+                <TableHead className="px-6 py-4 font-bold text-stone-400">Mass Weight</TableHead>
+                <TableHead className="px-6 py-4 font-bold text-stone-400">Financial Loss</TableHead>
+                <TableHead className="px-6 py-4 font-bold text-stone-400">Discard Reason</TableHead>
+                <TableHead className="px-6 py-4 font-bold text-stone-400">Est. CO2 Penalty</TableHead>
+                <TableHead className="px-6 py-4 font-bold text-stone-400">Est. Water Waste</TableHead>
+                <TableHead className="px-6 py-4 font-bold text-stone-400">Date Logged</TableHead>
+                <TableHead className="px-6 py-4 text-end font-bold text-stone-400">Action</TableHead>
               </TableRow>
             </TableHeader>
 
             <TableBody className="divide-y divide-white/5 font-semibold">
               {filteredLogs.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={9}
-                    className="px-6 py-16 text-center text-stone-500 font-bold"
-                  >
+                  <TableCell colSpan={9} className="px-6 py-16 text-center text-stone-500 font-bold">
                     No matching records retrieved from Supabase.
                   </TableCell>
                 </TableRow>
@@ -148,9 +111,7 @@ export function LogsTable({ logs, onDeleteLog }: LogsTableProps) {
                       key={item.id}
                       className="hover:bg-white/[0.02] border-b border-white/5 transition-colors duration-150"
                     >
-                      <TableCell className="px-6 py-4.5 text-white font-extrabold">
-                        {item.foodName}
-                      </TableCell>
+                      <TableCell className="px-6 py-4.5 text-white font-extrabold">{item.foodName}</TableCell>
                       <TableCell className="px-6 py-4.5">
                         <span
                           className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border"
@@ -160,14 +121,11 @@ export function LogsTable({ logs, onDeleteLog }: LogsTableProps) {
                             color: catInfo.color,
                           }}
                         >
-                          <span
-                            className="h-1.5 w-1.5 rounded-full"
-                            style={{ backgroundColor: catInfo.color }}
-                          />
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: catInfo.color }} />
                           {catInfo.label.split(" (")[0]}
                         </span>
                       </TableCell>
-                      <TableCell className="px-6 py-4.5 text-stone-250 text-stone-300 font-bold font-mono">
+                      <TableCell className="px-6 py-4.5 text-stone-300 font-bold font-mono">
                         {item.weight} lbs
                       </TableCell>
                       <TableCell className="px-6 py-4.5 text-rose-400 font-extrabold font-mono">
@@ -197,14 +155,13 @@ export function LogsTable({ logs, onDeleteLog }: LogsTableProps) {
                       <TableCell className="px-6 py-4.5 font-mono text-xs text-blue-400 font-bold">
                         {item.waterImpact.toLocaleString()} gal
                       </TableCell>
-                      <TableCell className="px-6 py-4.5 text-stone-400 text-xs font-mono">
-                        {item.date}
-                      </TableCell>
-                      <TableCell className="px-6 py-4.5 text-right">
+                      <TableCell className="px-6 py-4.5 text-stone-400 text-xs font-mono">{item.date}</TableCell>
+                      <TableCell className="px-6 py-4.5 text-end">
                         <button
+                          type="button"
                           onClick={() => handleDelete(item.id)}
                           disabled={isDeleting}
-                          className="text-stone-500 hover:text-rose-450 hover:text-rose-400 p-2 rounded-lg hover:bg-white/5 transition-all cursor-pointer disabled:opacity-50"
+                          className="text-stone-500 hover:text-rose-400 p-2 rounded-lg hover:bg-white/5 transition-all cursor-pointer disabled:opacity-50"
                           title="Delete database log"
                         >
                           {isDeleting ? (
@@ -225,9 +182,9 @@ export function LogsTable({ logs, onDeleteLog }: LogsTableProps) {
         <div className="p-4 bg-white/[0.01] border-t border-white/5 text-[11px] text-stone-400 flex items-start gap-2.5 font-semibold">
           <Info className="h-4.5 w-4.5 shrink-0 text-emerald-400 mt-0.5" />
           <span>
-            Database Integration Check: The dashboard logs table is fully integrated with Supabase
-            RLS policies. Deletions and additions communicate directly to the hosted PostgreSQL
-            environment to ensure persistent storage.
+            Database Integration Check: The dashboard logs table is fully integrated with Supabase RLS policies.
+            Deletions and additions communicate directly to the hosted PostgreSQL environment to ensure persistent
+            storage.
           </span>
         </div>
       </CardContent>

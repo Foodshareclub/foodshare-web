@@ -36,7 +36,7 @@ export default function NawDrawer({
       {signalOfNewMessage.length ? (
         <Button onClick={handleClick} variant="ghost" className="relative" aria-label="See menu">
           <DragHandleIcon />
-          <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-300 border-2 border-white rounded-full" />
+          <span className="absolute bottom-0 end-0 w-4 h-4 bg-green-300 border-2 border-white rounded-full" />
         </Button>
       ) : (
         <Button onClick={handleClick} variant="ghost" aria-label="See menu">
@@ -51,12 +51,7 @@ export default function NawDrawer({
         placement={"end"}
       >
         <>
-          <MinifiedUserInfo
-            src={imgUrl}
-            firstName={firstName}
-            secondName={secondName}
-            description={email}
-          />
+          <MinifiedUserInfo src={imgUrl} firstName={firstName} secondName={secondName} description={email} />
           <div className="mt-10">
             {isAuth ? (
               <div className="flex flex-col gap-3">
@@ -109,8 +104,8 @@ export default function NawDrawer({
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                <AuthenticationUserModal buttonValue="Login" fullScreen={false} />
-                <AuthenticationUserModal buttonValue="Registration" fullScreen={false} />
+                <AuthenticationUserModal mode="login" fullScreen={false} />
+                <AuthenticationUserModal mode="signup" fullScreen={false} />
               </div>
             )}
             <button
@@ -133,9 +128,7 @@ export default function NawDrawer({
 
             {/* Theme Switcher */}
             <div className="mt-6 pt-4 border-t border-border/30">
-              <p className="text-sm text-muted-foreground mb-3 font-medium">
-                &quot;Appearance&quot;
-              </p>
+              <p className="text-sm text-muted-foreground mb-3 font-medium">&quot;Appearance&quot;</p>
               <ThemeToggleInline />
             </div>
           </div>

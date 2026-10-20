@@ -3,9 +3,9 @@
  * Creates and manages beautiful custom marker icons for Leaflet maps
  */
 
-import { useMemo } from "react";
-import { DivIcon, Icon } from "leaflet";
 import markerIconRed from "@/assets/location-red.svg";
+import { DivIcon, Icon } from "leaflet";
+import { useMemo } from "react";
 
 /**
  * Creates a beautiful custom pin-style marker icon
@@ -13,14 +13,10 @@ import markerIconRed from "@/assets/location-red.svg";
  * @param isSelected - Whether the marker is selected/active
  * @param showPulse - Whether to show the pulse animation
  */
-export const useCustomMarkerIcon = (
-  isHovered: boolean = false,
-  isSelected: boolean = false,
-  showPulse: boolean = false
-) => {
+export const useCustomMarkerIcon = (isHovered = false, isSelected = false, showPulse = false) => {
   return useMemo(() => {
     const scale = isHovered || isSelected ? 1.2 : 1;
-    const pulseHtml = showPulse ? '<div class="marker-pulse"></div>' : '';
+    const pulseHtml = showPulse ? '<div class="marker-pulse"></div>' : "";
 
     return new DivIcon({
       className: "custom-map-marker",
@@ -50,7 +46,7 @@ export const useUserLocationIcon = () => {
         iconSize: [25, 25],
         className: "custom-marker-user",
       }),
-    []
+    [],
   );
 };
 
@@ -59,13 +55,13 @@ export const useUserLocationIcon = () => {
  * @param count - Number of markers in cluster
  */
 export const createClusterIcon = (count: number) => {
-  let size = 'small';
-  if (count > 10) size = 'medium';
-  if (count > 50) size = 'large';
+  let size = "small";
+  if (count > 10) size = "medium";
+  if (count > 50) size = "large";
 
   return new DivIcon({
     html: `<div class="cluster-marker cluster-${size}"><span>${count}</span></div>`,
-    className: 'custom-cluster-icon',
+    className: "custom-cluster-icon",
     iconSize: [40, 40],
   });
 };

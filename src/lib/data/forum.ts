@@ -75,10 +75,7 @@ export function calculateScore(posts: number, likes: number, comments: number): 
 /**
  * Compute leaderboard from posts
  */
-export function computeLeaderboard(
-  posts: ForumPost[],
-  limit = FORUM_LIMITS.LEADERBOARD
-): LeaderboardUser[] {
+export function computeLeaderboard(posts: ForumPost[], limit = FORUM_LIMITS.LEADERBOARD): LeaderboardUser[] {
   const userMap = new Map<string, LeaderboardUser>();
 
   for (const post of posts) {
@@ -92,11 +89,7 @@ export function computeLeaderboard(
       existing.postCount += 1;
       existing.likesReceived += likes;
       existing.commentsCount += comments;
-      existing.score = calculateScore(
-        existing.postCount,
-        existing.likesReceived,
-        existing.commentsCount
-      );
+      existing.score = calculateScore(existing.postCount, existing.likesReceived, existing.commentsCount);
     } else {
       userMap.set(post.profile_id, {
         id: post.profiles.id,
@@ -133,15 +126,9 @@ export function getTrendingPosts(posts: ForumPost[], limit = FORUM_LIMITS.TRENDI
 /**
  * Get recent activity posts
  */
-export function getRecentActivityPosts(
-  posts: ForumPost[],
-  limit = FORUM_LIMITS.RECENT_ACTIVITY
-): ForumPost[] {
+export function getRecentActivityPosts(posts: ForumPost[], limit = FORUM_LIMITS.RECENT_ACTIVITY): ForumPost[] {
   return [...posts]
-    .sort(
-      (a, b) =>
-        new Date(b.forum_post_created_at).getTime() - new Date(a.forum_post_created_at).getTime()
-    )
+    .sort((a, b) => new Date(b.forum_post_created_at).getTime() - new Date(a.forum_post_created_at).getTime())
     .slice(0, limit);
 }
 
@@ -164,10 +151,7 @@ export async function getForumStats(): Promise<ForumStats> {
 
   const [postsResult, commentsResult, postsTodayResult, activeUsersResult] = await Promise.all([
     supabase.from("forum").select("id", { count: "exact", head: true }).eq("forum_published", true),
-    supabase
-      .from("comments")
-      .select("id", { count: "exact", head: true })
-      .not("forum_id", "is", null),
+    supabase.from("comments").select("id", { count: "exact", head: true }).not("forum_id", "is", null),
     supabase
       .from("forum")
       .select("id", { count: "exact", head: true })
@@ -177,7 +161,7 @@ export async function getForumStats(): Promise<ForumStats> {
   ]);
 
   const uniqueUsers = new Set(
-    activeUsersResult.data?.map((p: Pick<ForumPost, "profile_id">) => p.profile_id).filter(Boolean)
+    activeUsersResult.data?.map((p: Pick<ForumPost, "profile_id">) => p.profile_id).filter(Boolean),
   );
 
   return {
@@ -209,7 +193,7 @@ export async function getForumPosts(options?: {
       `*,
       profiles!forum_profile_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url),
       forum_categories!forum_category_id_fkey (*),
-      forum_post_tags (forum_tags (*))`
+      forum_post_tags (forum_tags (*))`,
     )
     .eq("forum_published", true);
 

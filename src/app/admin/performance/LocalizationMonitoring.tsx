@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Localization Monitoring Dashboard
@@ -6,8 +6,8 @@
  * Admin dashboard for monitoring localization edge function performance
  */
 
-import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
+import React, { useState, useEffect } from "react";
 
 interface LocaleStats {
   locale: string;
@@ -47,10 +47,9 @@ export function LocalizationMonitoring() {
 
       try {
         // Fetch analytics for last 24 hours
-        const { data: analytics, error: analyticsError } = await supabase.rpc(
-          "get_localization_analytics",
-          { time_window: "24 hours" }
-        );
+        const { data: analytics, error: analyticsError } = await supabase.rpc("get_localization_analytics", {
+          time_window: "24 hours",
+        });
 
         if (analyticsError) {
           // Fallback to direct query if RPC doesn't exist
@@ -139,7 +138,7 @@ export function LocalizationMonitoring() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4" />
         <p className="text-gray-600">Loading analytics...</p>
       </div>
     );
@@ -148,8 +147,12 @@ export function LocalizationMonitoring() {
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-        <svg className="w-5 h-5 text-red-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
+        <svg aria-hidden="true" className="w-5 h-5 text-red-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fillRule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            clipRule="evenodd"
+          />
         </svg>
         <div>
           <p className="font-bold text-red-900">Failed to load analytics</p>
@@ -162,8 +165,12 @@ export function LocalizationMonitoring() {
   if (!data) {
     return (
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
-        <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+        <svg aria-hidden="true" className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fillRule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+            clipRule="evenodd"
+          />
         </svg>
         <p className="text-blue-900">No analytics data available</p>
       </div>
@@ -185,8 +192,12 @@ export function LocalizationMonitoring() {
             <p className="text-sm text-gray-600 mb-1">Total Requests</p>
             <p className="text-3xl font-bold">{data.totalRequests.toLocaleString()}</p>
             <p className="text-sm text-gray-500 mt-2 flex items-center gap-1">
-              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd"/>
+              <svg aria-hidden="true" className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"
+                  clipRule="evenodd"
+                />
               </svg>
               Last 24 hours
             </p>
@@ -195,11 +206,11 @@ export function LocalizationMonitoring() {
           <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
             <p className="text-sm text-gray-600 mb-1">Avg Response Time</p>
             <p className="text-3xl font-bold">{data.avgResponseTime.toFixed(0)}ms</p>
-            <span className={`inline-block px-2 py-1 text-xs font-semibold rounded mt-2 ${
-              data.avgResponseTime < 100
-                ? 'bg-green-100 text-green-800'
-                : 'bg-orange-100 text-orange-800'
-            }`}>
+            <span
+              className={`inline-block px-2 py-1 text-xs font-semibold rounded mt-2 ${
+                data.avgResponseTime < 100 ? "bg-green-100 text-green-800" : "bg-orange-100 text-orange-800"
+              }`}
+            >
               {data.avgResponseTime < 100 ? "Good" : "Slow"}
             </span>
           </div>
@@ -207,11 +218,11 @@ export function LocalizationMonitoring() {
           <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
             <p className="text-sm text-gray-600 mb-1">Cache Hit Rate</p>
             <p className="text-3xl font-bold">{data.cacheHitRate.toFixed(1)}%</p>
-            <span className={`inline-block px-2 py-1 text-xs font-semibold rounded mt-2 ${
-              data.cacheHitRate > 80
-                ? 'bg-green-100 text-green-800'
-                : 'bg-orange-100 text-orange-800'
-            }`}>
+            <span
+              className={`inline-block px-2 py-1 text-xs font-semibold rounded mt-2 ${
+                data.cacheHitRate > 80 ? "bg-green-100 text-green-800" : "bg-orange-100 text-orange-800"
+              }`}
+            >
               {data.cacheHitRate > 80 ? "Excellent" : "Needs Improvement"}
             </span>
           </div>
@@ -219,11 +230,11 @@ export function LocalizationMonitoring() {
           <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
             <p className="text-sm text-gray-600 mb-1">Error Rate</p>
             <p className="text-3xl font-bold">{data.errorRate.toFixed(2)}%</p>
-            <span className={`inline-block px-2 py-1 text-xs font-semibold rounded mt-2 ${
-              data.errorRate < 1
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
-            }`}>
+            <span
+              className={`inline-block px-2 py-1 text-xs font-semibold rounded mt-2 ${
+                data.errorRate < 1 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+              }`}
+            >
               {data.errorRate < 1 ? "Healthy" : "Issues"}
             </span>
           </div>
@@ -235,11 +246,11 @@ export function LocalizationMonitoring() {
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-2 px-4 font-semibold text-gray-700">Locale</th>
-                <th className="text-right py-2 px-4 font-semibold text-gray-700">Requests</th>
-                <th className="text-right py-2 px-4 font-semibold text-gray-700">Avg Response (ms)</th>
-                <th className="text-right py-2 px-4 font-semibold text-gray-700">Cache Hit Rate</th>
-                <th className="text-right py-2 px-4 font-semibold text-gray-700">Errors</th>
+                <th className="text-start py-2 px-4 font-semibold text-gray-700">Locale</th>
+                <th className="text-end py-2 px-4 font-semibold text-gray-700">Requests</th>
+                <th className="text-end py-2 px-4 font-semibold text-gray-700">Avg Response (ms)</th>
+                <th className="text-end py-2 px-4 font-semibold text-gray-700">Cache Hit Rate</th>
+                <th className="text-end py-2 px-4 font-semibold text-gray-700">Errors</th>
               </tr>
             </thead>
             <tbody>
@@ -250,20 +261,20 @@ export function LocalizationMonitoring() {
                       {stats.locale.toUpperCase()}
                     </span>
                   </td>
-                  <td className="text-right py-2 px-4">{stats.requests.toLocaleString()}</td>
-                  <td className={`text-right py-2 px-4 ${
-                    stats.avgResponseTime < 100 ? 'text-green-600' : 'text-orange-600'
-                  }`}>
+                  <td className="text-end py-2 px-4">{stats.requests.toLocaleString()}</td>
+                  <td
+                    className={`text-end py-2 px-4 ${
+                      stats.avgResponseTime < 100 ? "text-green-600" : "text-orange-600"
+                    }`}
+                  >
                     {stats.avgResponseTime.toFixed(0)}
                   </td>
-                  <td className={`text-right py-2 px-4 ${
-                    stats.cacheHitRate > 80 ? 'text-green-600' : 'text-orange-600'
-                  }`}>
+                  <td
+                    className={`text-end py-2 px-4 ${stats.cacheHitRate > 80 ? "text-green-600" : "text-orange-600"}`}
+                  >
                     {stats.cacheHitRate.toFixed(1)}%
                   </td>
-                  <td className={`text-right py-2 px-4 ${
-                    stats.errors > 0 ? 'text-red-600' : 'text-green-600'
-                  }`}>
+                  <td className={`text-end py-2 px-4 ${stats.errors > 0 ? "text-red-600" : "text-green-600"}`}>
                     {stats.errors}
                   </td>
                 </tr>
@@ -274,55 +285,74 @@ export function LocalizationMonitoring() {
 
         {/* Health Indicators */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className={`rounded-lg p-4 flex items-start gap-3 ${
-            data.cacheHitRate > 80
-              ? 'bg-green-50 border border-green-200'
-              : 'bg-yellow-50 border border-yellow-200'
-          }`}>
-            <svg className={`w-5 h-5 mt-0.5 ${
-              data.cacheHitRate > 80 ? 'text-green-500' : 'text-yellow-500'
-            }`} fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+          <div
+            className={`rounded-lg p-4 flex items-start gap-3 ${
+              data.cacheHitRate > 80 ? "bg-green-50 border border-green-200" : "bg-yellow-50 border border-yellow-200"
+            }`}
+          >
+            <svg
+              aria-hidden="true"
+              className={`w-5 h-5 mt-0.5 ${data.cacheHitRate > 80 ? "text-green-500" : "text-yellow-500"}`}
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                clipRule="evenodd"
+              />
             </svg>
             <div className="text-sm">
               <p className="font-bold">Cache Performance</p>
               <p className="text-gray-700">
-                {data.cacheHitRate > 80
-                  ? "Cache is performing well"
-                  : "Consider optimizing cache strategy"}
+                {data.cacheHitRate > 80 ? "Cache is performing well" : "Consider optimizing cache strategy"}
               </p>
             </div>
           </div>
 
-          <div className={`rounded-lg p-4 flex items-start gap-3 ${
-            data.avgResponseTime < 100
-              ? 'bg-green-50 border border-green-200'
-              : 'bg-yellow-50 border border-yellow-200'
-          }`}>
-            <svg className={`w-5 h-5 mt-0.5 ${
-              data.avgResponseTime < 100 ? 'text-green-500' : 'text-yellow-500'
-            }`} fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+          <div
+            className={`rounded-lg p-4 flex items-start gap-3 ${
+              data.avgResponseTime < 100
+                ? "bg-green-50 border border-green-200"
+                : "bg-yellow-50 border border-yellow-200"
+            }`}
+          >
+            <svg
+              aria-hidden="true"
+              className={`w-5 h-5 mt-0.5 ${data.avgResponseTime < 100 ? "text-green-500" : "text-yellow-500"}`}
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                clipRule="evenodd"
+              />
             </svg>
             <div className="text-sm">
               <p className="font-bold">Response Time</p>
               <p className="text-gray-700">
-                {data.avgResponseTime < 100
-                  ? "Response times are healthy"
-                  : "Response times need optimization"}
+                {data.avgResponseTime < 100 ? "Response times are healthy" : "Response times need optimization"}
               </p>
             </div>
           </div>
 
-          <div className={`rounded-lg p-4 flex items-start gap-3 ${
-            data.errorRate < 1
-              ? 'bg-green-50 border border-green-200'
-              : 'bg-red-50 border border-red-200'
-          }`}>
-            <svg className={`w-5 h-5 mt-0.5 ${
-              data.errorRate < 1 ? 'text-green-500' : 'text-red-500'
-            }`} fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+          <div
+            className={`rounded-lg p-4 flex items-start gap-3 ${
+              data.errorRate < 1 ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"
+            }`}
+          >
+            <svg
+              aria-hidden="true"
+              className={`w-5 h-5 mt-0.5 ${data.errorRate < 1 ? "text-green-500" : "text-red-500"}`}
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                clipRule="evenodd"
+              />
             </svg>
             <div className="text-sm">
               <p className="font-bold">Error Rate</p>

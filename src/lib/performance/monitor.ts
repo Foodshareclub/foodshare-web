@@ -16,9 +16,7 @@ export function usePerformanceMonitor() {
   const track = (renderTime: number) => {
     const memoryUsage =
       typeof performance !== "undefined"
-        ? (performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize /
-            1024 /
-            1024 || 0
+        ? (performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize / 1024 / 1024 || 0
         : 0;
     const cpuUsage =
       typeof process !== "undefined"

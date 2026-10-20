@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Mic, MicOff } from "lucide-react";
 import type { SpeechRecognition, SpeechRecognitionEvent } from "@/types/web-apis.types";
 import { getSpeechRecognition } from "@/types/web-apis.types";
+import { Mic, MicOff } from "lucide-react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void;

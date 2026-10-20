@@ -1,4 +1,4 @@
-import { useMediaQuery } from "@/hooks/index";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export const useGridSize = (): number | undefined => {
   const isSmallerThan550 = useMediaQuery("(min-width:550px)");

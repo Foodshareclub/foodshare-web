@@ -1,5 +1,5 @@
+import { categoryMetadata, generatePageMetadata } from "@/lib/metadata";
 import type { Metadata } from "next";
-import { generatePageMetadata, categoryMetadata } from "@/lib/metadata";
 
 type Props = {
   params: Promise<{ type: string }>;
@@ -13,13 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${category.title} Map - Find Near You`,
     description: `Interactive map showing ${category.title.toLowerCase()} locations near you. ${category.description}`,
     path: `/map/${type}`,
-    keywords: [
-      ...category.keywords,
-      `${type} map`,
-      `${type} near me`,
-      "location map",
-      "interactive map",
-    ],
+    keywords: [...category.keywords, `${type} map`, `${type} near me`, "location map", "interactive map"],
   });
 }
 

@@ -1,13 +1,14 @@
-'use client';
+"use client";
 
 /**
  * ThemeToast Component
  * Beautiful toast notifications for theme changes
  */
 
-import React, { useEffect, useState, createContext, useContext, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
+import type React from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 // ============================================================================
 // Types
@@ -44,20 +45,20 @@ export const useThemeToast = () => {
 // ============================================================================
 
 const SunIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <circle cx="12" cy="12" r="4" />
     <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
   </svg>
 );
 
 const MoonIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
   </svg>
 );
 
 const PaletteIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <circle cx="13.5" cy="6.5" r="0.5" fill="currentColor" />
     <circle cx="17.5" cy="10.5" r="0.5" fill="currentColor" />
     <circle cx="8.5" cy="7.5" r="0.5" fill="currentColor" />
@@ -67,21 +68,21 @@ const PaletteIcon = () => (
 );
 
 const SparklesIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
     <path d="M19 15l.9 2.7 2.7.9-2.7.9-.9 2.7-.9-2.7-2.7-.9 2.7-.9.9-2.7z" />
   </svg>
 );
 
 const ContrastIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <circle cx="12" cy="12" r="10" />
     <path d="M12 2a10 10 0 0 1 0 20V2z" fill="currentColor" />
   </svg>
 );
 
 const ClockIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <circle cx="12" cy="12" r="10" />
     <polyline points="12,6 12,12 16,14" />
   </svg>
@@ -124,7 +125,7 @@ function ToastItem({ toast, onDismiss }: { toast: ThemeToastData; onDismiss: () 
       className={cn(
         "flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg",
         "bg-background/95 backdrop-blur-xl border border-border/50",
-        "cursor-pointer hover:scale-[1.02] transition-transform"
+        "cursor-pointer hover:scale-[1.02] transition-transform",
       )}
       onClick={onDismiss}
     >
@@ -132,7 +133,7 @@ function ToastItem({ toast, onDismiss }: { toast: ThemeToastData; onDismiss: () 
       <motion.div
         className={cn(
           "flex items-center justify-center w-10 h-10 rounded-xl",
-          "bg-gradient-to-br from-primary/20 to-primary/5"
+          "bg-gradient-to-br from-primary/20 to-primary/5",
         )}
         style={toast.color ? { backgroundColor: `${toast.color}20` } : undefined}
         initial={{ rotate: -10 }}
@@ -158,7 +159,7 @@ function ToastItem({ toast, onDismiss }: { toast: ThemeToastData; onDismiss: () 
 
       {/* Animated progress bar */}
       <motion.div
-        className="absolute bottom-0 left-0 h-0.5 bg-primary/30 rounded-full"
+        className="absolute bottom-0 start-0 h-0.5 bg-primary/30 rounded-full"
         initial={{ width: "100%" }}
         animate={{ width: "0%" }}
         transition={{ duration: 2.5, ease: "linear" }}
@@ -171,17 +172,23 @@ function ToastItem({ toast, onDismiss }: { toast: ThemeToastData; onDismiss: () 
 // Toast Container
 // ============================================================================
 
-function ToastContainer({ toasts, onDismiss }: { toasts: ThemeToastData[]; onDismiss: (id: string) => void }) {
+function ToastContainer({
+  toasts,
+  onDismiss,
+}: {
+  toasts: ThemeToastData[];
+  onDismiss: (id: string) => void;
+}) {
   return (
-  <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none">
-    <AnimatePresence mode="popLayout">
-      {toasts.map((toast) => (
-        <div key={toast.id} className="pointer-events-auto">
-          <ToastItem toast={toast} onDismiss={() => onDismiss(toast.id)} />
-        </div>
-      ))}
-    </AnimatePresence>
-  </div>
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none">
+      <AnimatePresence mode="popLayout">
+        {toasts.map((toast) => (
+          <div key={toast.id} className="pointer-events-auto">
+            <ToastItem toast={toast} onDismiss={() => onDismiss(toast.id)} />
+          </div>
+        ))}
+      </AnimatePresence>
+    </div>
   );
 }
 

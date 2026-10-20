@@ -30,8 +30,7 @@ test("server output stays identical regardless of browser viewport", () => {
 test("tracks breakpoint changes and releases subscriptions on query changes and unmount", () => {
   const desktop = mediaQuery(true);
   const motion = mediaQuery(false);
-  window.matchMedia = (query) =>
-    (query === "desktop" ? desktop : motion) as unknown as MediaQueryList;
+  window.matchMedia = (query) => (query === "desktop" ? desktop : motion) as unknown as MediaQueryList;
   const { result, rerender, unmount } = renderHook(({ query }) => useMediaQuery(query), {
     initialProps: { query: "desktop" },
   });

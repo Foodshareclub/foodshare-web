@@ -6,20 +6,10 @@
  * Enhanced with modern animations and glassmorphism
  */
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import {
-  User,
-  ShieldCheck,
-  Settings,
-  ChevronRight,
-  Sparkles,
-  Bell,
-  Globe,
-  Heart,
-  LogOut,
-} from "lucide-react";
 import { FloatingOrbs } from "@/components/gpu/FloatingOrbs";
+import { Bell, ChevronRight, Globe, Heart, LogOut, Settings, ShieldCheck, Sparkles, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 // Icon aliases for consistency
 const HiOutlineUser = User;
@@ -34,8 +24,8 @@ const HiOutlineArrowRightOnRectangle = LogOut;
 import ListingPersonCards from "@/components/listingPersonCard/ListingPersonCards";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 import type { AuthUser } from "@/lib/data/auth";
+import { cn } from "@/lib/utils";
 
 type SettingsCardProps = {
   icon: React.ReactNode;
@@ -61,12 +51,13 @@ const SettingsCard = ({
   const router = useRouter();
 
   return (
-    <div
+    <button
+      type="button"
       className={cn(
         "group relative overflow-hidden rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm cursor-pointer transition-all duration-300",
         "hover:shadow-lg hover:border-border hover:scale-[1.02] hover:bg-card",
-        "transform",
-        isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+        "transform w-full text-start",
+        isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
       )}
       style={{ transitionDelay: `${index * 100 + 200}ms` }}
       onClick={() => router.push(route)}
@@ -80,7 +71,7 @@ const SettingsCard = ({
           <div
             className={cn(
               "flex-shrink-0 p-3 rounded-xl transition-transform duration-300 group-hover:scale-110",
-              iconBg
+              iconBg,
             )}
           >
             {icon}
@@ -107,7 +98,7 @@ const SettingsCard = ({
           </div>
         </div>
       </div>
-    </div>
+    </button>
   );
 };
 
@@ -180,7 +171,7 @@ export function ProfileSettingsClient({ user: _user }: ProfileSettingsClientProp
         <div
           className={cn(
             "mb-8 transform transition-all duration-500",
-            isLoaded ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
+            isLoaded ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0",
           )}
         >
           <div className="flex items-center gap-3 mb-2">
@@ -194,12 +185,12 @@ export function ProfileSettingsClient({ user: _user }: ProfileSettingsClientProp
         <div
           className={cn(
             "mb-8 transform transition-all duration-500 delay-100",
-            isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+            isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
           )}
         >
           <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-card/80 backdrop-blur-xl shadow-sm hover:shadow-lg transition-shadow duration-300">
             {/* Decorative gradient */}
-            <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-gradient-to-br from-primary/20 to-transparent blur-3xl" />
+            <div className="absolute -top-20 -end-20 h-40 w-40 rounded-full bg-gradient-to-br from-primary/20 to-transparent blur-3xl" />
 
             <div className="relative p-6">
               <ListingPersonCards settings="settings" />
@@ -211,7 +202,7 @@ export function ProfileSettingsClient({ user: _user }: ProfileSettingsClientProp
         <div
           className={cn(
             "flex items-center gap-3 mb-6 transform transition-all duration-500 delay-150",
-            isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+            isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
           )}
         >
           <HiOutlineCog className="h-5 w-5 text-muted-foreground" />
@@ -240,7 +231,7 @@ export function ProfileSettingsClient({ user: _user }: ProfileSettingsClientProp
         <div
           className={cn(
             "mt-12 transform transition-all duration-500",
-            isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+            isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
           )}
           style={{ transitionDelay: "800ms" }}
         >
@@ -255,10 +246,16 @@ export function ProfileSettingsClient({ user: _user }: ProfileSettingsClientProp
               Need to take a break? You can log out or deactivate your account at any time.
             </p>
             <div className="flex flex-wrap gap-3">
-              <button className="px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-xl transition-colors">
+              <button
+                type="button"
+                className="px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
+              >
                 Log out
               </button>
-              <button className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-colors">
+              <button
+                type="button"
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
+              >
                 Deactivate account
               </button>
             </div>

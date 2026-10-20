@@ -1,8 +1,10 @@
-import { Suspense } from "react";
-import type { Metadata } from "next";
+import { BecomeVolunteerCTA, VolunteerGrid, VolunteerHero } from "@/components/volunteers";
 import { getProducts } from "@/lib/data/products";
-import { VolunteerHero, BecomeVolunteerCTA, VolunteerGrid } from "@/components/volunteers";
+import type { Metadata } from "next";
+import { Suspense } from "react";
 import { generateCategoryMetadata } from "../food/CategoryPageContent";
+
+const VOLUNTEER_CARD_SKELETON_KEYS = ["a", "b", "c", "d", "e", "f", "g", "h"] as const;
 
 interface PageProps {
   searchParams: Promise<{
@@ -56,8 +58,8 @@ export default async function VolunteerPage({ searchParams }: PageProps) {
 function VolunteersPageSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 page-px py-7">
-      {[...Array(8)].map((_, i) => (
-        <div key={i} className="glass rounded-2xl p-5 animate-pulse">
+      {VOLUNTEER_CARD_SKELETON_KEYS.map((k) => (
+        <div key={k} className="glass rounded-2xl p-5 animate-pulse">
           <div className="flex justify-center mb-4">
             <div className="w-24 h-24 rounded-full bg-muted" />
           </div>

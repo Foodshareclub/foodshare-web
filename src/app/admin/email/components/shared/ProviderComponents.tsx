@@ -1,9 +1,9 @@
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 import { Mail } from "lucide-react";
 import type { ProviderHealth } from "../types";
 import { GlassCard } from "./GlassCard";
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 
 export function ProviderHealthBadge({ provider }: { provider: ProviderHealth }) {
   const statusColors = {
@@ -28,7 +28,7 @@ export function ProviderHealthBadge({ provider }: { provider: ProviderHealth }) 
             ? "bg-emerald-500"
             : provider.status === "degraded"
               ? "bg-amber-500"
-              : "bg-rose-500"
+              : "bg-rose-500",
         )}
       />
       {providerNames[provider.provider]}
@@ -55,9 +55,7 @@ export function ProviderCard({ provider }: { provider: ProviderHealth }) {
     <div className="rounded-lg border border-border/50 bg-card/50 p-4">
       <div className="flex items-center justify-between mb-3">
         <span className="font-medium">{providerNames[provider.provider]}</span>
-        <span className={cn("text-sm font-semibold", statusColors[provider.status])}>
-          {provider.successRate}%
-        </span>
+        <span className={cn("text-sm font-semibold", statusColors[provider.status])}>{provider.successRate}%</span>
       </div>
       <Progress
         value={provider.successRate}
@@ -67,7 +65,7 @@ export function ProviderCard({ provider }: { provider: ProviderHealth }) {
             ? "[&>div]:bg-emerald-500"
             : provider.status === "degraded"
               ? "[&>div]:bg-amber-500"
-              : "[&>div]:bg-rose-500"
+              : "[&>div]:bg-rose-500",
         )}
       />
       <div className="flex justify-between mt-2 text-xs text-muted-foreground">
@@ -104,22 +102,17 @@ export function ProviderDetailCard({ provider }: { provider: ProviderHealth }) {
                 ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
                 : provider.status === "degraded"
                   ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
-                  : "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400"
+                  : "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400",
             )}
           >
             <Mail className="h-5 w-5" />
           </div>
           <div>
             <h4 className="font-semibold">{providerNames[provider.provider]}</h4>
-            <p className="text-xs text-muted-foreground">
-              {providerDescriptions[provider.provider]}
-            </p>
+            <p className="text-xs text-muted-foreground">{providerDescriptions[provider.provider]}</p>
           </div>
         </div>
-        <Badge
-          variant={provider.status === "healthy" ? "default" : "secondary"}
-          className="capitalize"
-        >
+        <Badge variant={provider.status === "healthy" ? "default" : "secondary"} className="capitalize">
           {provider.status}
         </Badge>
       </div>

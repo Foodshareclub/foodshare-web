@@ -41,7 +41,7 @@ export const useDistanceWorker = () => {
         workerRef.current.postMessage({ userLat, userLng, products });
       });
     },
-    []
+    [],
   );
 
   return calculateDistances;

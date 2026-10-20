@@ -261,11 +261,11 @@ Receives webhook events from Meta platforms.
 
 **Location:** `src/app/api/admin/sync-analytics/route.ts`
 
-Syncs analytics data from PostgreSQL staging tables to MotherDuck. Uses Node.js runtime (not Edge) for native DuckDB support.
+Syncs analytics data from PostgreSQL staging tables to MotherDuck. Uses the Node.js-compatible server runtime (Bun, not Edge) for native DuckDB support.
 
 **Authentication:** Required via `CRON_SECRET` bearer token (or localhost in development)
 
-**Runtime:** Node.js (not Edge) - required for native DuckDB
+**Runtime:** Server runtime (Bun, not Edge) - required for native DuckDB
 
 **Max Duration:** 60 seconds
 

@@ -82,7 +82,7 @@ const DEFAULT_OPTIONS: Required<OptimizationOptions> = {
  */
 export async function optimizeImage(
   input: Buffer | ArrayBuffer | Uint8Array,
-  options: OptimizationOptions = {}
+  options: OptimizationOptions = {},
 ): Promise<ImageOptimizationResult> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const inputBuffer = Buffer.isBuffer(input) ? input : Buffer.from(input as ArrayBuffer);
@@ -111,7 +111,7 @@ export async function optimizeImage(
         format: opts.format,
       }).then((img) => {
         result.thumbnail = img;
-      })
+      }),
     );
   }
 
@@ -123,7 +123,7 @@ export async function optimizeImage(
         format: opts.format,
       }).then((img) => {
         result.medium = img;
-      })
+      }),
     );
   }
 
@@ -135,7 +135,7 @@ export async function optimizeImage(
         format: opts.format,
       }).then((img) => {
         result.large = img;
-      })
+      }),
     );
   }
 
@@ -143,7 +143,7 @@ export async function optimizeImage(
     tasks.push(
       generateBlurPlaceholder(inputBuffer).then((dataUrl) => {
         result.blurDataUrl = dataUrl;
-      })
+      }),
     );
   }
 
@@ -162,7 +162,7 @@ async function resizeAndConvert(
     height?: number;
     quality?: number;
     format?: "webp" | "jpeg";
-  }
+  },
 ): Promise<OptimizedImage> {
   const { width, height, quality = 80, format = "webp" } = options;
 
@@ -192,11 +192,7 @@ async function resizeAndConvert(
  * Generate a tiny blur placeholder as base64 data URL
  */
 export async function generateBlurPlaceholder(input: Buffer): Promise<string> {
-  const blurBuffer = await sharp(input)
-    .resize(20, 20, { fit: "inside" })
-    .blur(2)
-    .webp({ quality: 20 })
-    .toBuffer();
+  const blurBuffer = await sharp(input).resize(20, 20, { fit: "inside" }).blur(2).webp({ quality: 20 }).toBuffer();
 
   return `data:image/webp;base64,${blurBuffer.toString("base64")}`;
 }
@@ -204,9 +200,7 @@ export async function generateBlurPlaceholder(input: Buffer): Promise<string> {
 /**
  * Get image dimensions without full processing
  */
-export async function getImageDimensions(
-  input: Buffer | ArrayBuffer
-): Promise<{ width: number; height: number }> {
+export async function getImageDimensions(input: Buffer | ArrayBuffer): Promise<{ width: number; height: number }> {
   const inputBuffer = Buffer.isBuffer(input) ? input : Buffer.from(input);
   const metadata = await sharp(inputBuffer).metadata();
   return {
@@ -220,7 +214,7 @@ export async function getImageDimensions(
  */
 export function validateImageInput(
   input: Buffer | ArrayBuffer,
-  maxSizeBytes: number = 10 * 1024 * 1024
+  maxSizeBytes: number = 10 * 1024 * 1024,
 ): { valid: boolean; error?: string } {
   const size = input instanceof Buffer ? input.length : input.byteLength;
 
@@ -245,11 +239,7 @@ export function validateImageInput(
 /**
  * Quick optimize: Just convert to WebP with max dimensions
  */
-export async function quickOptimize(
-  input: Buffer | ArrayBuffer,
-  maxWidth: number = 1920,
-  quality: number = 80
-): Promise<Buffer> {
+export async function quickOptimize(input: Buffer | ArrayBuffer, maxWidth = 1920, quality = 80): Promise<Buffer> {
   const inputBuffer = Buffer.isBuffer(input) ? input : Buffer.from(input);
   const result = await resizeAndConvert(inputBuffer, {
     width: maxWidth,
@@ -279,7 +269,7 @@ export async function createResponsiveSet(input: Buffer | ArrayBuffer): Promise<
       relevantBreakpoints.map(async (width) => {
         const result = await resizeAndConvert(inputBuffer, { width, quality: 80 });
         return { width: result.width, buffer: result.buffer };
-      })
+      }),
     ),
     generateBlurPlaceholder(inputBuffer),
   ]);

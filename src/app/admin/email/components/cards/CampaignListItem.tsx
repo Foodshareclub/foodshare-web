@@ -4,12 +4,8 @@
  * CampaignListItem - Premium campaign row for overview lists
  */
 
-import { motion } from "framer-motion";
-import { MoreVertical, Eye, Edit, Copy, Trash2, Users, MousePointerClick } from "lucide-react";
-import type { RecentCampaign } from "../types";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +14,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { Copy, Edit, Eye, MoreVertical, MousePointerClick, Trash2, Users } from "lucide-react";
+import type { RecentCampaign } from "../types";
 
 const statusConfig = {
   draft: {
@@ -64,10 +64,8 @@ interface CampaignListItemProps {
 
 export function CampaignListItem({ campaign }: CampaignListItemProps) {
   const config = statusConfig[campaign.status];
-  const openRate =
-    campaign.totalSent > 0 ? Math.round((campaign.totalOpened / campaign.totalSent) * 100) : 0;
-  const clickRate =
-    campaign.totalSent > 0 ? Math.round((campaign.totalClicked / campaign.totalSent) * 100) : 0;
+  const openRate = campaign.totalSent > 0 ? Math.round((campaign.totalOpened / campaign.totalSent) * 100) : 0;
+  const clickRate = campaign.totalSent > 0 ? Math.round((campaign.totalClicked / campaign.totalSent) * 100) : 0;
 
   return (
     <div className="group relative flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-gradient-to-r from-card/50 to-card/30 hover:from-card/80 hover:to-card/60 hover:shadow-md hover:shadow-black/5 transition-all duration-200">
@@ -75,9 +73,7 @@ export function CampaignListItem({ campaign }: CampaignListItemProps) {
       <div className="relative">
         <div className={cn("h-3 w-3 rounded-full", config.color)} />
         {campaign.status === "sending" && (
-          <div
-            className={cn("absolute inset-0 rounded-full animate-ping", config.color, "opacity-50")}
-          />
+          <div className={cn("absolute inset-0 rounded-full animate-ping", config.color, "opacity-50")} />
         )}
       </div>
 
@@ -101,9 +97,7 @@ export function CampaignListItem({ campaign }: CampaignListItemProps) {
           <TooltipTrigger asChild>
             <div className="flex items-center gap-1.5 text-xs">
               <Users className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="font-medium tabular-nums">
-                {campaign.totalRecipients.toLocaleString()}
-              </span>
+              <span className="font-medium tabular-nums">{campaign.totalRecipients.toLocaleString()}</span>
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">Recipients</TooltipContent>
@@ -145,11 +139,7 @@ export function CampaignListItem({ campaign }: CampaignListItemProps) {
       {/* Actions */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
+          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
             <MoreVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>

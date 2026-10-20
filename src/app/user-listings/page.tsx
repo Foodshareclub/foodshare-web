@@ -1,10 +1,10 @@
+import { getUser } from "@/app/actions/auth";
+import SkeletonCard from "@/components/productCard/SkeletonCard";
+import { getUserProducts } from "@/lib/data/products";
+import { noIndexMetadata } from "@/lib/metadata";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { UserListingsClient } from "./UserListingsClient";
-import { getUser } from "@/app/actions/auth";
-import { getUserProducts } from "@/lib/data/products";
-import SkeletonCard from "@/components/productCard/SkeletonCard";
-import { noIndexMetadata } from "@/lib/metadata";
 
 // Private page - should not be indexed
 export const metadata = noIndexMetadata;
@@ -27,7 +27,7 @@ export default async function UserListingsPage() {
 
   return (
     <Suspense fallback={<UserListingsSkeleton />}>
-      <UserListingsClient listings={listings} user={user} />
+      <UserListingsClient listings={listings} />
     </Suspense>
   );
 }
@@ -35,6 +35,8 @@ export default async function UserListingsPage() {
 /**
  * Skeleton loader for user listings page
  */
+const USER_LISTING_SKELETON_KEYS = ["a", "b", "c", "d", "e", "f", "g", "h"] as const;
+
 function UserListingsSkeleton() {
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">
@@ -47,8 +49,8 @@ function UserListingsSkeleton() {
 
         {/* Grid skeleton */}
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {[...Array(8)].map((_, i) => (
-            <SkeletonCard key={i} isLoaded={false} />
+          {USER_LISTING_SKELETON_KEYS.map((k) => (
+            <SkeletonCard key={k} isLoaded={false} />
           ))}
         </div>
       </div>

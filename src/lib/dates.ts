@@ -33,7 +33,6 @@ export function formatDate(date: Date | string, options?: FormatDateOptions): st
     case "relative-short":
       return formatRelativeDateShort(d);
 
-    case "short":
     default:
       return d.toLocaleDateString("en-US", {
         year: "numeric",

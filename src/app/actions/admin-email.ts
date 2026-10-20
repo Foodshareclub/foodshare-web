@@ -1,25 +1,28 @@
 /**
  * Admin Email Server Actions
- * Mutations for email management from admin CRM
- * All actions require admin/superadmin role
+ * Mutations for email management from admin CRM.
+ * Every action requires admin/superadmin, enforced by `guardAdmin()` as its
+ * first statement — not by the RLS policies behind the edge function, which
+ * this module reaches through a service-role client.
  * Uses unified Edge Functions API
  */
 
 "use server";
 
-import type { EmailProvider, EmailType } from "@/lib/email/types";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
-import { invalidateTag } from "@/lib/data/cache-invalidation";
 import {
-  retryEmailAPI,
-  deleteQueuedEmailAPI,
-  sendManualEmailAPI,
-  resetProviderQuotaAPI,
-  updateProviderAvailabilityAPI,
-  resetCircuitBreakerAPI,
   addToSuppressionListAPI,
+  deleteQueuedEmailAPI,
   removeFromSuppressionListAPI,
+  resetCircuitBreakerAPI,
+  resetProviderQuotaAPI,
+  retryEmailAPI,
+  sendManualEmailAPI,
+  updateProviderAvailabilityAPI,
 } from "@/lib/api";
+import { guardAdmin } from "@/lib/data/admin-check";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import type { EmailProvider, EmailType } from "@/lib/email/types";
 
 // ============================================================================
 // Types
@@ -48,6 +51,9 @@ export interface ActionResult<T = void> {
  * Requires admin access
  */
 export async function retryEmail(queueId: string): Promise<ActionResult> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
   const result = await retryEmailAPI(queueId);
   if (result.success) {
     invalidateTag(CACHE_TAGS.EMAIL_QUEUE);
@@ -61,6 +67,9 @@ export async function retryEmail(queueId: string): Promise<ActionResult> {
  * Requires admin access
  */
 export async function deleteQueuedEmail(queueId: string): Promise<ActionResult> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
   const result = await deleteQueuedEmailAPI(queueId);
   if (result.success) {
     invalidateTag(CACHE_TAGS.EMAIL_QUEUE);
@@ -73,9 +82,10 @@ export async function deleteQueuedEmail(queueId: string): Promise<ActionResult> 
  * Send a manual email (admin only)
  * Requires admin access
  */
-export async function sendManualEmail(
-  request: ManualEmailRequest
-): Promise<ActionResult<{ messageId: string }>> {
+export async function sendManualEmail(request: ManualEmailRequest): Promise<ActionResult<{ messageId: string }>> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
   const result = await sendManualEmailAPI({
     to: request.to,
     subject: request.subject,
@@ -88,8 +98,7 @@ export async function sendManualEmail(
     invalidateTag(CACHE_TAGS.EMAIL_STATS);
     return { success: true, data: { messageId: result.data.messageId || "" } };
   }
-  const errorMsg =
-    !result.success && result.error ? result.error.message : "Failed to send manual email";
+  const errorMsg = !result.success && result.error ? result.error.message : "Failed to send manual email";
   return { success: false, error: errorMsg };
 }
 
@@ -101,14 +110,11 @@ export async function sendManualEmail(
  * Reset provider quota (admin only - use with caution)
  * Requires admin access
  */
-export async function resetProviderQuota(
-  provider: EmailProvider,
-  date?: string
-): Promise<ActionResult> {
-  const result = await resetProviderQuotaAPI(
-    provider as "resend" | "brevo" | "mailersend" | "ses",
-    date
-  );
+export async function resetProviderQuota(provider: EmailProvider, date?: string): Promise<ActionResult> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
+  const result = await resetProviderQuotaAPI(provider as "resend" | "brevo" | "mailersend" | "ses", date);
   if (result.success) {
     invalidateTag(CACHE_TAGS.PROVIDER_QUOTAS);
     invalidateTag(CACHE_TAGS.PROVIDER_HEALTH);
@@ -122,13 +128,13 @@ export async function resetProviderQuota(
  * Update provider availability (enable/disable)
  * Requires admin access
  */
-export async function updateProviderAvailability(
-  provider: EmailProvider,
-  isAvailable: boolean
-): Promise<ActionResult> {
+export async function updateProviderAvailability(provider: EmailProvider, isAvailable: boolean): Promise<ActionResult> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
   const result = await updateProviderAvailabilityAPI(
     provider as "resend" | "brevo" | "mailersend" | "ses",
-    isAvailable
+    isAvailable,
   );
   if (result.success) {
     invalidateTag(CACHE_TAGS.PROVIDER_HEALTH);
@@ -143,9 +149,10 @@ export async function updateProviderAvailability(
  * Requires admin access
  */
 export async function resetCircuitBreaker(provider: EmailProvider): Promise<ActionResult> {
-  const result = await resetCircuitBreakerAPI(
-    provider as "resend" | "brevo" | "mailersend" | "ses"
-  );
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
+  const result = await resetCircuitBreakerAPI(provider as "resend" | "brevo" | "mailersend" | "ses");
   if (result.success) {
     invalidateTag(CACHE_TAGS.PROVIDER_HEALTH);
     invalidateTag(CACHE_TAGS.EMAIL_HEALTH);
@@ -164,8 +171,11 @@ export async function resetCircuitBreaker(provider: EmailProvider): Promise<Acti
 export async function addToSuppressionList(
   email: string,
   reason: "bounce" | "complaint" | "unsubscribe" | "manual",
-  notes?: string
+  notes?: string,
 ): Promise<ActionResult> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
   const result = await addToSuppressionListAPI(email, reason, notes);
   if (result.success) {
     invalidateTag(CACHE_TAGS.EMAIL_STATS);
@@ -178,6 +188,9 @@ export async function addToSuppressionList(
  * Remove email from suppression list
  */
 export async function removeFromSuppressionList(email: string): Promise<ActionResult> {
+  const auth = await guardAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
   const result = await removeFromSuppressionListAPI(email);
   if (result.success) {
     invalidateTag(CACHE_TAGS.EMAIL_STATS);

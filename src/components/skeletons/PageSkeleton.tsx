@@ -1,5 +1,8 @@
-import { NavbarSkeleton } from "./NavbarSkeleton";
 import { cn } from "@/lib/utils";
+import { NavbarSkeleton } from "./NavbarSkeleton";
+
+// Pool of stable placeholder ids; `count` only ever needs a small subset of these.
+const CARD_CONTENT_SKELETON_KEYS = Array.from({ length: 24 }, (_, i) => `card-skeleton-${i}`);
 
 interface PageSkeletonProps {
   /** Show navbar skeleton */
@@ -15,12 +18,7 @@ interface PageSkeletonProps {
 /**
  * Generic page skeleton wrapper
  */
-export function PageSkeleton({
-  showNavbar = true,
-  navbarHeight = 140,
-  children,
-  className,
-}: PageSkeletonProps) {
+export function PageSkeleton({ showNavbar = true, navbarHeight = 140, children, className }: PageSkeletonProps) {
   return (
     <div className={cn("min-h-screen bg-background", className)}>
       {showNavbar && <NavbarSkeleton height={navbarHeight} />}
@@ -50,7 +48,7 @@ export function CardContentSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div className="space-y-4 animate-pulse">
       {[...Array(count)].map((_, i) => (
-        <div key={i} className="p-6 bg-card border border-border rounded-lg">
+        <div key={CARD_CONTENT_SKELETON_KEYS[i]} className="p-6 bg-card border border-border rounded-lg">
           <div className="h-5 bg-muted rounded w-1/3 mb-3" />
           <div className="h-4 bg-muted rounded w-full mb-2" />
           <div className="h-4 bg-muted rounded w-2/3" />

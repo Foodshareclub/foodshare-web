@@ -13,6 +13,12 @@
     "incremental": true,
     "noEmit": true,
 
+    // Bun's ambient types: the `Bun` global, `bun:test` and the `bun:*`
+    // builtin modules that `bun check` resolves natively. "node" keeps the
+    // Node-compat globals (`process`, `Buffer`) that the Next.js server
+    // runtime still relies on.
+    "types": ["bun", "node"],
+
     // Strict type checking
     "strict": true,
     // TODO: Enable noUncheckedIndexedAccess after fixing all array index access patterns
@@ -42,20 +48,17 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
-  ],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", ".next/dev/types/**/*.ts", "**/*.mts"],
   "exclude": [
     "node_modules",
     "supabase/**",
     "scripts/**",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
-    "src/__tests__/**"
+    "src/__tests__/**",
+    // Scratch space for throwaway Playwright specs. It is gitignored, and a
+    // half-written spec in it used to break `next build` outright: the
+    // type-check covers every `*.ts` in the tree, and nothing excluded it.
+    "e2e/__tmp/**"
   ]
 }

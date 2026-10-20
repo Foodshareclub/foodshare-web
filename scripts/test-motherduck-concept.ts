@@ -1,7 +1,6 @@
 import { Database } from "duckdb-async";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function testMotherDuck() {
+export async function testMotherDuck() {
   console.log("Testing MotherDuck connection...");
   try {
     const token = process.env.MOTHERDUCK_TOKEN;

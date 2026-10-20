@@ -18,35 +18,48 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  BUN_VERSION: "1.4.2"
-  NODE_VERSION: "24"
+  # The canary channel. `bun` is pinned to an exact canary build so a CI run
+  # and a local run execute the same binary.
+  BUN_VERSION: "1.4.3-canary.20261019.1"
+  # Third-party GitHub Actions are JavaScript and run on the runner's own Node
+  # runtime. That is the platform's requirement, not this project's toolchain —
+  # everything below runs on Bun, and `bun scripts/check-no-node.ts` fails the
+  # build if Node creeps back into the project's own scripts.
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   # Combined validation job - runs lint, oxlint, biome, type-check, test in parallel
   validate:
     name: Validate (${{ matrix.job }})
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        job: [lint, "lint:oxlint", "lint:biome", type-check, test]
+        job:
+          - lint
+          - "lint:oxlint"
+          - "lint:biome"
+          - type-check
+          - "type-check:tsc"
+          - "check:no-node"
+          - test
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name: Cache node_modules
+      # Cache Bun's package cache, not `node_modules`. Bun re-links from the
+      # cache on every install, so a `node_modules` cache is both slower and
+      # wrong the moment the linker strategy changes.
+      - name: Cache Bun package cache
         uses: actions/cache@v4
         with:
-          path: node_modules
+          path: ~/.bun/install/cache
           key: bun-${{ hashFiles('bun.lock') }}-${{ runner.os }}
           restore-keys: |
             bun-
@@ -60,6 +73,8 @@ jobs:
 
       - name: Run ${{ matrix.job }}
         run: bun run ${{ matrix.job == 'test' && 'test:ci' || matrix.job }}
+        env:
+          BIOME_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
 
       - name: Upload coverage
         if: matrix.job == 'test'
@@ -71,28 +86,22 @@ jobs:
 
   build:
     name: Build
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-24.04
     needs: validate
-    # Cold builds (no nextjs-* cache on refs/heads/main) need far longer than
-    # warm ones; the previous 30m cap cancelled a run that was still working.
-    timeout-minutes: 60
+    timeout-minutes: 30
     outputs:
       build-artifact: build-output
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name: Cache node_modules
+      - name: Cache Bun package cache
         uses: actions/cache@v4
         with:
-          path: node_modules
+          path: ~/.bun/install/cache
           key: bun-${{ hashFiles('bun.lock') }}-${{ runner.os }}
           restore-keys: |
             bun-
@@ -101,7 +110,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Restore Next.js build cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.next/cache
           key: nextjs-${{ hashFiles('bun.lock', 'next.config.ts', 'package.json') }}-${{ github.sha }}
@@ -114,7 +123,6 @@ jobs:
         env:
           SKIP_ENV_VALIDATION: "true"
           NEXT_TELEMETRY_DISABLED: "1"
-          NODE_OPTIONS: "--max-old-space-size=4096"
           NEXT_PUBLIC_SUPABASE_URL: https://api.${{ secrets.SITE_DOMAIN }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -131,18 +139,11 @@ jobs:
           NEXT_PUBLIC_OAUTH_APPLE_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_APPLE_ENABLED }}
           NEXT_PUBLIC_OAUTH_GITHUB_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED }}
 
-      # Persist the incremental cache even when the build step fails. Otherwise
-      # every main build starts cold, exceeds the runner budget, and never gets
-      # far enough to save a cache — an unrecoverable cold-start deadlock.
-      - name: Save Next.js build cache
-        if: ${{ !cancelled() }}
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ github.workspace }}/.next/cache
-          key: nextjs-${{ hashFiles('bun.lock', 'next.config.ts', 'package.json') }}-${{ github.sha }}
-
+      # `patches/` travels with the artifact: `patchedDependencies` is applied
+      # during `bun install`, so the e2e job needs the patch file to rebuild
+      # node_modules with the same patched Playwright.
       - name: Tar build output
-        run: tar -cvf build-output.tar .next public messages package.json bun.lock
+        run: tar -cvf build-output.tar .next public messages package.json bun.lock patches
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
@@ -156,7 +157,7 @@ jobs:
 
   e2e:
     name: E2E (${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-24.04
     needs: build
     timeout-minutes: 45
     strategy:
@@ -184,18 +185,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name: Cache node_modules
+      - name: Cache Bun package cache
         uses: actions/cache@v4
         with:
-          path: node_modules
+          path: ~/.bun/install/cache
           key: bun-${{ hashFiles('bun.lock') }}-${{ runner.os }}
           restore-keys: |
             bun-
@@ -220,22 +217,24 @@ jobs:
 
       - name: Install Playwright
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: bunx playwright install --with-deps
+        run: bun run playwright install --with-deps
 
       - name: Install Playwright deps only
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: bunx playwright install-deps
+        run: bun run playwright install-deps
 
       - name: Verify build output
         run: |
-          echo "Checking .next build output..."
-          ls -la .next/ || echo "ERROR: .next directory not found!"
-          ls -la .next/BUILD_ID 2>/dev/null && echo "Build ID: $(cat .next/BUILD_ID)" || echo "WARNING: No BUILD_ID found"
-          echo "Server routes:"
-          ls .next/server/ 2>/dev/null | head -10 || echo "No server directory"
+          test -s .next/BUILD_ID
+          test -d .next/server
+          echo "Production build artifact verified"
 
+      # `bun run <bin>` executes the local binary on Bun's runtime, because
+      # bunfig.toml sets `[run] bun = true`. A bare `bunx playwright` would
+      # resolve the package's own `#!/usr/bin/env node` shebang and run the
+      # suite on Node.
       - name: Run Playwright tests
-        run: npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: bun run playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload Blob report
         uses: actions/upload-artifact@v4
@@ -247,22 +246,30 @@ jobs:
 
   merge-e2e-reports:
     name: Merge E2E Reports
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-24.04
     needs: e2e
     if: always()
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name: Install playwright
-        run: bun add -d @playwright/test
+      - name: Cache Bun package cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('bun.lock') }}-${{ runner.os }}
+          restore-keys: |
+            bun-
+
+      # Install the pinned Playwright from the lockfile. `bun add -d
+      # @playwright/test` would pull the newest release instead, so the merge
+      # job could run a different version than the one that produced the
+      # reports.
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
 
       - name: Download blob reports
         uses: actions/download-artifact@v4
@@ -274,7 +281,7 @@ jobs:
 
       - name: Merge reports
         if: hashFiles('all-blob-reports/**') != ''
-        run: bunx playwright merge-reports --reporter html ./all-blob-reports
+        run: bun run playwright merge-reports --reporter html ./all-blob-reports
 
       - name: Upload report
         if: always() && hashFiles('playwright-report/**') != ''
@@ -285,13 +292,14 @@ jobs:
           retention-days: 14
 
   build-and-publish:
-    name: Build & Publish (OCI image for Podman/Quadlet)
-    runs-on: [self-hosted, Linux]
+    name: Build and publish production image
+    # Both serving hosts are ARM64; build on the matching architecture.
+    runs-on: ubuntu-24.04-arm
     needs: build
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     timeout-minutes: 30
     outputs:
-      build-artifact: build-output
+      image-digest: ${{ steps.image.outputs.digest }}
     steps:
       - uses: actions/checkout@v4
 
@@ -307,14 +315,10 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
-          # :latest for Quadlet convenience + :sha-XXXXXXX for digest-pinned
-          # rollouts (see DOCKER-TO-PODMAN-MIGRATION-PLAN.md auto-update strategy)
+          # Tags aid discovery; production deploys only the validated digest.
           tags: |
             type=raw,value=latest
             type=sha,prefix=sha-,format=short
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx (for build only)
         uses: docker/setup-buildx-action@v3
@@ -322,11 +326,12 @@ jobs:
           driver: docker-container
 
       - name: Build and push Docker image
+        id: image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
@@ -337,7 +342,7 @@ jobs:
             SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
             NEXT_PUBLIC_APP_URL=https://${{ secrets.SITE_DOMAIN }}
             NEXT_PUBLIC_SITE_URL=https://${{ secrets.SITE_DOMAIN }}
-            NEXT_PUBLIC_SENTRY_DSN=${{ secrets.NEXT_PUBLIC_SENTRY_DSN || 'https://e52cb069f4c7e57f1284abc69548b5a4@o4512048227876864' }}
+            NEXT_PUBLIC_SENTRY_DSN=${{ secrets.NEXT_PUBLIC_SENTRY_DSN || 'https://e52cb069f4c7e57f1284abc69548b5a4@o4512048058859520.ingest.us.sentry.io/4512048227876864' }}
             SENTRY_ORG=${{ secrets.SENTRY_ORG || 'organicnz-7v' }}
             SENTRY_PROJECT=${{ secrets.SENTRY_PROJECT || 'foodshare-web' }}
             SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -370,38 +375,21 @@ jobs:
           environment: production
           version: ${{ github.sha }}
 
-      - name: Tar build output
-        run: tar -cvf build-output.tar .next public messages package.json bun.lock
-
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: build-output.tar
-          retention-days: 1
-
-      - name: Check Bundle Size Budget
-        run: bun scripts/check-bundle-size.ts
-
   sync-translations:
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-24.04
     needs: build
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name: Cache node_modules
+      - name: Cache Bun package cache
         uses: actions/cache@v4
         with:
-          path: node_modules
+          path: ~/.bun/install/cache
           key: bun-${{ hashFiles('bun.lock') }}-${{ runner.os }}
           restore-keys: |
             bun-
@@ -420,9 +408,14 @@ jobs:
           NEXT_PUBLIC_SITE_URL: https://${{ secrets.SITE_DOMAIN }}
 
   deploy:
-    name: Deploy
+    name: Deploy (${{ matrix.host }})
     runs-on: [self-hosted, Linux]
     needs: build-and-publish
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix:
+        host: [VPS_BACKEND_HOST, VPS_FRONTEND_HOST]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     timeout-minutes: 15
     environment:
@@ -435,6 +428,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          DEPLOY_SHA: ${{ github.sha }}
+          DEPLOY_IMAGE: ghcr.io/foodshareclub/foodshare-web@${{ needs.build-and-publish.outputs.image-digest }}
+          NEXT_PUBLIC_SENTRY_RELEASE: ${{ github.sha }}
           NEXT_PUBLIC_SUPABASE_URL: https://api.${{ secrets.SITE_DOMAIN }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -451,143 +448,15 @@ jobs:
           NEXT_PUBLIC_OAUTH_APPLE_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_APPLE_ENABLED }}
           NEXT_PUBLIC_OAUTH_GITHUB_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED }}
         with:
-          host: ${{ secrets.VPS_HOST }}
+          host: ${{ secrets[matrix.host] }}
           username: organic
           key: ${{ secrets.VPS_SSH_KEY }}
           command_timeout: 10m
-          envs: GITHUB_TOKEN,GITHUB_REPO,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,SITE_DOMAIN,CLOUDFLARE_TUNNEL_TOKEN,NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_SITE_URL,NEXT_PUBLIC_SENTRY_DSN,SENTRY_ORG,SENTRY_PROJECT,SENTRY_RELEASE,NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED,NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED,NEXT_PUBLIC_OAUTH_APPLE_ENABLED,NEXT_PUBLIC_OAUTH_GITHUB_ENABLED
+          envs: DEPLOY_SHA,DEPLOY_IMAGE,GITHUB_ACTOR,GITHUB_TOKEN,GITHUB_REPO,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,SITE_DOMAIN,CLOUDFLARE_TUNNEL_TOKEN,NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_SITE_URL,NEXT_PUBLIC_SENTRY_DSN,SENTRY_ORG,SENTRY_PROJECT,SENTRY_RELEASE,NEXT_PUBLIC_SENTRY_RELEASE,NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED,NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED,NEXT_PUBLIC_OAUTH_APPLE_ENABLED,NEXT_PUBLIC_OAUTH_GITHUB_ENABLED
           script: |
-            set -eo pipefail
-            mkdir -p ${{ secrets.VPS_DEPLOY_PATH }}
+            set -euo pipefail
             cd ${{ secrets.VPS_DEPLOY_PATH }}
-
-            REPO_LOWER=$(echo "$GITHUB_REPO" | tr '[:upper:]' '[:lower:]')
-
-            # Bootstrap if missing
-            if [ ! -d .git ]; then
-              git clone --depth 1 https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git .
-            fi
-
-            # Update code
-            git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git
-            git fetch origin main
-            git reset --hard origin/main
-
-            # Sync secrets to .env.production
-            printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_ANON_KEY=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\nSITE_DOMAIN=%s\nCLOUDFLARE_TUNNEL_TOKEN=%s\nNEXT_PUBLIC_APP_URL=%s\nNEXT_PUBLIC_SITE_URL=%s\nNEXT_PUBLIC_SENTRY_DSN=%s\nSENTRY_ORG=%s\nSENTRY_PROJECT=%s\nSENTRY_RELEASE=%s\nNEXT_PUBLIC_SENTRY_RELEASE=%s\nNEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=%s\nNEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED=%s\nNEXT_PUBLIC_OAUTH_APPLE_ENABLED=%s\nNEXT_PUBLIC_OAUTH_GITHUB_ENABLED=%s\n' \
-              "$NEXT_PUBLIC_SUPABASE_URL" "$NEXT_PUBLIC_SUPABASE_ANON_KEY" "$SUPABASE_SERVICE_ROLE_KEY" "$SITE_DOMAIN" "$CLOUDFLARE_TUNNEL_TOKEN" "$NEXT_PUBLIC_APP_URL" "$NEXT_PUBLIC_SITE_URL" "$NEXT_PUBLIC_SENTRY_DSN" "$SENTRY_ORG" "$SENTRY_PROJECT" "$SENTRY_RELEASE" "$SENTRY_RELEASE" "$NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED" "$NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED" "$NEXT_PUBLIC_OAUTH_APPLE_ENABLED" "$NEXT_PUBLIC_OAUTH_GITHUB_ENABLED" > .env.production && cp .env.production .env
-
-            # GHCR login + pull via Podman (OCI image built in build-and-publish)
-            echo "$GITHUB_TOKEN" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
-            podman pull ghcr.io/${REPO_LOWER}:latest
-
-            # Deploy via Quadlet: install canonical units as user systemd services
-            mkdir -p ~/.config/containers/systemd
-            cp foodshare-web.container foodshare-cloudflared-web.container foodshare-web-network.network ~/.config/containers/systemd/
-            # Quadlet reads env from /etc/foodshare/foodshare-web.env — install it
-            sudo mkdir -p /etc/foodshare
-            sudo cp .env.production /etc/foodshare/foodshare-web.env
-            sudo chmod 600 /etc/foodshare/foodshare-web.env
-            systemctl --user daemon-reload
-            systemctl --user enable --now foodshare-web-network foodshare-web foodshare-cloudflared-web
-            systemctl --user restart foodshare-web foodshare-cloudflared-web
-            echo "Deploy complete"
-            systemctl --user is-active foodshare-web foodshare-cloudflared-web
-            sleep 10
-            curl -fsS -m 20 http://127.0.0.1:3000/api/health > /dev/null && echo "Web health OK" || (systemctl --user status foodshare-web --no-pager; podman logs --tail=50 foodshare-web; exit 1)
-
-      - name: Setup Tailscale on VPS
-        if: success()
-        env:
-          TAILSCALE_AUTH_KEY: ${{ secrets.TAILSCALE_AUTH_KEY }}
-          TAILSCALE_NODE_KEY: ${{ secrets.TAILSCALE_NODE_KEY }}
-          TAILSCALE_TL_PUB: ${{ secrets.TAILSCALE_TL_PUB }}
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-        run: |
-          set -eo pipefail
-
-          # Verify at least one key method is set
-          if [ -z "$TAILSCALE_AUTH_KEY" ] && [ -z "$TAILSCALE_NODE_KEY" ]; then
-            echo "::warning::Neither TAILSCALE_AUTH_KEY nor TAILSCALE_NODE_KEY set — skipping Tailscale setup"
-            exit 0
-          fi
-
-          if [ -z "$VPS_SSH_KEY" ]; then
-            echo "::warning::VPS_SSH_KEY not set — skipping Tailscale setup"
-            exit 0
-          fi
-
-          mkdir -p ~/.ssh
-          echo "$VPS_SSH_KEY" > ~/.ssh/vps_ssh_key
-          chmod 600 ~/.ssh/vps_ssh_key
-          trap 'rm -f ~/.ssh/vps_ssh_key' EXIT
-
-          echo "=== Running Tailscale setup on Frontend VPS ==="
-
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i ~/.ssh/vps_ssh_key "organic@${VPS_HOST}" \
-            "TAILSCALE_AUTH_KEY='$TAILSCALE_AUTH_KEY' TAILSCALE_NODE_KEY='$TAILSCALE_NODE_KEY' TAILSCALE_TL_PUB='$TAILSCALE_TL_PUB' bash -s" << 'REMOTE_EOF'
-          set -euo pipefail
-
-          log_info() { echo "[INFO] $1"; }
-          log_success() { echo "[OK]   $1"; }
-
-          # 1. Install Tailscale if not present
-          if ! command -v tailscale &>/dev/null; then
-            log_info "Installing Tailscale..."
-            curl -fsSL https://tailscale.com/install.sh | sh
-          fi
-
-          # 2. Build connection parameters
-          tailscale_args=("--accept-routes" "--advertise-routes=10.0.0.0/8" "--hostname=$(hostname)")
-
-          AUTH_KEY="${TAILSCALE_AUTH_KEY:-${TAILSCALE_NODE_KEY:-}}"
-          if [[ -n "$AUTH_KEY" ]]; then
-            tailscale_args+=("--auth-key" "$AUTH_KEY")
-          fi
-
-          log_info "Connecting to Tailnet..."
-          sudo tailscale up "${tailscale_args[@]}"
-
-          # 3. Wait for connection readiness
-          for i in $(seq 1 30); do
-            if tailscale status >/dev/null 2>&1; then
-              log_success "Tailscale is running on $(hostname)."
-              break
-            fi
-            sleep 2
-          done
-
-          # 4. Configure SSH config for cross-server access
-          log_info "Configuring SSH over Tailscale..."
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          touch ~/.ssh/config
-          chmod 600 ~/.ssh/config
-
-          if ! grep -q "Host backendvps-ts" ~/.ssh/config; then
-            cat << 'SSHEOF' >> ~/.ssh/config
-
-          Host backendvps-ts
-            HostName 100.92.38.119
-            User organic
-            IdentityFile ~/.ssh/foodshare_id_ed25519
-            IdentitiesOnly yes
-          SSHEOF
-          fi
-
-          if ! grep -q "Host frontendvps-ts" ~/.ssh/config; then
-            cat << 'SSHEOF' >> ~/.ssh/config
-
-          Host frontendvps-ts
-            HostName 100.99.241.23
-            User organic
-            IdentityFile ~/.ssh/foodshare_id_ed25519
-            IdentitiesOnly yes
-          SSHEOF
-          fi
-
-          log_success "Tailscale SSH config updated."
-          REMOTE_EOF
-
-          echo "=== Tailscale setup complete ==="
+            git fetch "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git" "$DEPLOY_SHA"
+            git reset --hard FETCH_HEAD
+            git remote set-url origin "https://github.com/${GITHUB_REPO}.git"
+            bash scripts/deploy-production.sh

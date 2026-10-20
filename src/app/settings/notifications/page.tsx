@@ -1,13 +1,13 @@
-import { redirect } from "next/navigation";
-import { Suspense } from "react";
-import { NotificationsSettingsClient } from "./NotificationsSettingsClient";
 import { getUser } from "@/app/actions/auth";
 import { getFullNotificationPreferences } from "@/app/actions/notifications";
 import { generateNoIndexMetadata } from "@/lib/metadata";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { NotificationsSettingsClient } from "./NotificationsSettingsClient";
 
 export const metadata = generateNoIndexMetadata(
   "Notification Settings",
-  "Manage push, email, and Telegram notification preferences"
+  "Manage push, email, and Telegram notification preferences",
 );
 
 /**
@@ -46,10 +46,7 @@ function NotificationsSkeleton() {
         </div>
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="rounded-2xl border border-border/50 bg-card/50 p-6 h-36 animate-pulse"
-            />
+            <div key={i} className="rounded-2xl border border-border/50 bg-card/50 p-6 h-36 animate-pulse" />
           ))}
         </div>
       </div>

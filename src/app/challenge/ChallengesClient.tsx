@@ -1,20 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import Link from "next/link";
-import { Target, Users, TrendingUp, ChevronRight, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ChallengeRevealModal } from "@/components/modals/challenge-reveal";
+import { QueryErrorBoundary } from "@/components/ErrorBoundary";
+import { ActiveChallenges } from "@/components/challenges/ActiveChallenges";
 import { ChallengeDeck } from "@/components/challenges/ChallengeDeck";
 import { ChallengeLeaderboard } from "@/components/challenges/ChallengeLeaderboard";
-import { ActiveChallenges } from "@/components/challenges/ActiveChallenges";
-import { QueryErrorBoundary } from "@/components/ErrorBoundary";
-import { useDeckChallenges } from "@/hooks/queries/useChallenges";
-import { FloatingOrbs } from "@/components/gpu/FloatingOrbs";
-import type { InitialProductStateType } from "@/types/product.types";
-import type { AuthUser } from "@/lib/data/auth";
 import type { LeaderboardUser, UserRankInfo } from "@/components/challenges/ChallengeLeaderboard";
+import { FloatingOrbs } from "@/components/gpu/FloatingOrbs";
+import { ChallengeRevealModal } from "@/components/modals/challenge-reveal";
+import { Button } from "@/components/ui/button";
+import { useDeckChallenges } from "@/hooks/queries/useChallenges";
+import type { AuthUser } from "@/lib/data/auth";
+import type { InitialProductStateType } from "@/types/product.types";
+import { motion } from "framer-motion";
+import { ChevronRight, Sparkles, Target, TrendingUp, Users } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 interface ChallengesClientProps {
   searchTerm?: string;
@@ -137,8 +137,7 @@ function HeroSection({
                 </span>
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-                Shuffle through challenges, accept your mission, and earn XP while making a positive
-                impact.
+                Shuffle through challenges, accept your mission, and earn XP while making a positive impact.
               </p>
             </motion.div>
 
@@ -152,12 +151,7 @@ function HeroSection({
               {/* Glow ring behind deck */}
               <div className="absolute -inset-8 bg-gradient-to-r from-primary/20 via-teal-500/20 to-orange-500/20 rounded-[3rem] blur-2xl opacity-60" />
 
-              <ChallengeDeck
-                challenges={challenges}
-                onCardClick={onCardClick}
-                autoShuffle
-                className="relative z-10"
-              />
+              <ChallengeDeck challenges={challenges} onCardClick={onCardClick} autoShuffle className="relative z-10" />
             </motion.div>
 
             {/* Stats row */}
@@ -169,20 +163,12 @@ function HeroSection({
             >
               <StatCard icon={Target} value={stats.totalChallenges} label="Challenges" />
               <StatCard icon={Users} value={stats.totalParticipants} label="Participants" />
-              <StatCard
-                icon={TrendingUp}
-                value={formatNumber(stats.totalXpEarned)}
-                label="XP Earned"
-              />
+              <StatCard icon={TrendingUp} value={formatNumber(stats.totalXpEarned)} label="XP Earned" />
             </motion.div>
 
             {/* CTA for non-auth users */}
             {!isAuth && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.9 }}
-              >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
                 <Link href="/auth/login">
                   <Button
                     size="lg"
@@ -236,7 +222,7 @@ function StatCard({
       <div className="p-1.5 rounded-lg bg-primary/10">
         <Icon className="w-4 h-4 text-primary" />
       </div>
-      <div className="text-left">
+      <div className="text-start">
         <div className="text-lg font-bold text-foreground">{value}</div>
         <div className="text-xs text-muted-foreground">{label}</div>
       </div>

@@ -1,7 +1,7 @@
+import { chmod, mkdtemp, rm } from "bun:fs/promises";
+import { tmpdir } from "bun:os";
+import { join, resolve } from "bun:path";
 import { expect, test } from "bun:test";
-import { chmod, mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
 
 const sha = "a".repeat(40);
 const image = `ghcr.io/foodshareclub/foodshare-web@sha256:${"b".repeat(64)}`;
@@ -31,7 +31,7 @@ case "$1 $2" in
   "exec -i") cat >/dev/null; [ "\${MOCK_API_FAIL:-0}" != 1 ] ;;
   *) exit 2 ;;
 esac
-`
+`,
     );
     await Bun.write(join(directory, "podman"), '#!/bin/sh\necho "${MOCK_PODMAN:-false}"\n');
     await Bun.write(join(directory, "sleep"), "#!/bin/sh\nexit 0\n");

@@ -4,8 +4,8 @@
  * Sent to remind users about scheduled pickups.
  */
 
-import { Text, Section, Img } from "@react-email/components";
-import { EmailLayout, EmailCard, EmailButton, EmailButtonOutline, colors } from "./components/base";
+import { Img, Section, Text } from "@react-email/components";
+import { EmailButton, EmailButtonOutline, EmailCard, EmailLayout, colors } from "./components/base";
 
 interface PickupReminderEmailProps {
   pickupTime?: string;
@@ -50,12 +50,8 @@ export function PickupReminderEmail({
           }}
         >
           <Text style={{ margin: 0, fontSize: "48px" }}>🕐</Text>
-          <Text style={{ margin: "10px 0 0", fontSize: "24px", fontWeight: 800, color: "#059669" }}>
-            {pickupTime}
-          </Text>
-          <Text
-            style={{ margin: "5px 0 0", fontSize: "16px", color: colors.green, fontWeight: 600 }}
-          >
+          <Text style={{ margin: "10px 0 0", fontSize: "24px", fontWeight: 800, color: "#059669" }}>{pickupTime}</Text>
+          <Text style={{ margin: "5px 0 0", fontSize: "16px", color: colors.green, fontWeight: 600 }}>
             {pickupDate}
           </Text>
         </Section>
@@ -68,16 +64,9 @@ export function PickupReminderEmail({
             overflow: "hidden",
           }}
         >
-          <Img
-            src={listingImage}
-            alt={listingTitle}
-            width="100%"
-            style={{ height: "160px", objectFit: "cover" }}
-          />
+          <Img src={listingImage} alt={listingTitle} width="100%" style={{ height: "160px", objectFit: "cover" }} />
           <Section style={{ padding: "20px" }}>
-            <Text style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: colors.text }}>
-              {listingTitle}
-            </Text>
+            <Text style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: colors.text }}>{listingTitle}</Text>
             <Text style={{ margin: "8px 0 0", fontSize: "14px", color: colors.textLight }}>
               Shared by <strong style={{ color: colors.green }}>{sharerName}</strong>
             </Text>
@@ -106,14 +95,10 @@ export function PickupReminderEmail({
           >
             📍 Pickup Location
           </Text>
-          <Text
-            style={{ margin: "8px 0 0", fontSize: "16px", fontWeight: 600, color: colors.text }}
-          >
+          <Text style={{ margin: "8px 0 0", fontSize: "16px", fontWeight: 600, color: colors.text }}>
             {pickupAddress}
           </Text>
-          <Text style={{ margin: "5px 0 0", fontSize: "14px", color: "#666666" }}>
-            {pickupInstructions}
-          </Text>
+          <Text style={{ margin: "5px 0 0", fontSize: "14px", color: "#666666" }}>{pickupInstructions}</Text>
         </Section>
 
         {/* CTA Buttons */}
@@ -140,8 +125,7 @@ export function PickupReminderEmail({
         </Text>
         <Text style={{ margin: 0, fontSize: "13px", lineHeight: "1.8", color: "#666666" }}>
           • Bring a reusable bag or container
-          <br />
-          • Be on time - the sharer is waiting for you
+          <br />• Be on time - the sharer is waiting for you
           <br />• Can&apos;t make it? Let them know ASAP
         </Text>
       </Section>

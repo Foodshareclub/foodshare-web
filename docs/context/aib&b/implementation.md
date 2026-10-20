@@ -25,12 +25,12 @@ A complete, production-ready guide for building an Airbnb-style application usin
 
 ```bash
 # Create Next.js 16 app with TypeScript
-npx create-next-app@latest airbnb-clone --typescript --tailwind --app --src-dir
+bunx create-next-app@latest airbnb-clone --typescript --tailwind --app --src-dir
 
 cd airbnb-clone
 
 # Install Shadcn/ui
-npx shadcn@latest init
+bunx shadcn@latest init
 
 # Install required dependencies
 bun add @supabase/supabase-js @supabase/ssr
@@ -46,24 +46,24 @@ bun add next-themes
 
 ```bash
 # Core UI components
-npx shadcn@latest add button
-npx shadcn@latest add card
-npx shadcn@latest add input
-npx shadcn@latest add label
-npx shadcn@latest add dialog
-npx shadcn@latest add dropdown-menu
-npx shadcn@latest add calendar
-npx shadcn@latest add popover
-npx shadcn@latest add sheet
-npx shadcn@latest add avatar
-npx shadcn@latest add badge
-npx shadcn@latest add separator
-npx shadcn@latest add select
-npx shadcn@latest add textarea
-npx shadcn@latest add toast
-npx shadcn@latest add skeleton
-npx shadcn@latest add tabs
-npx shadcn@latest add slider
+bunx shadcn@latest add button
+bunx shadcn@latest add card
+bunx shadcn@latest add input
+bunx shadcn@latest add label
+bunx shadcn@latest add dialog
+bunx shadcn@latest add dropdown-menu
+bunx shadcn@latest add calendar
+bunx shadcn@latest add popover
+bunx shadcn@latest add sheet
+bunx shadcn@latest add avatar
+bunx shadcn@latest add badge
+bunx shadcn@latest add separator
+bunx shadcn@latest add select
+bunx shadcn@latest add textarea
+bunx shadcn@latest add toast
+bunx shadcn@latest add skeleton
+bunx shadcn@latest add tabs
+bunx shadcn@latest add slider
 ```
 
 ### Environment Variables
@@ -1550,7 +1550,7 @@ export function useInfiniteProperties(filters: any = {}) {
 
 ```bash
 # Install Vercel CLI
-npm i -g 
+bun add -g vercel
 
 # Deploy
 

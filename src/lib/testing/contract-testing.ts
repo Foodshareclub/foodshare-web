@@ -7,8 +7,8 @@
  * @module lib/testing/contract-testing
  */
 
-import { z, ZodSchema } from "zod";
 import { expect } from "bun:test";
+import { type ZodSchema, z } from "zod";
 
 // =============================================================================
 // Types
@@ -271,7 +271,7 @@ export const profileContracts: ContractDefinition[] = [
  */
 export function validateRequest<T>(
   contract: ContractDefinition<T>,
-  request: unknown
+  request: unknown,
 ): { valid: boolean; errors: string[] } {
   if (!contract.requestSchema) {
     return { valid: true, errors: [] };
@@ -293,7 +293,7 @@ export function validateRequest<T>(
  */
 export function validateResponse<TReq, TRes>(
   contract: ContractDefinition<TReq, TRes>,
-  response: unknown
+  response: unknown,
 ): { valid: boolean; errors: string[] } {
   const result = contract.responseSchema.safeParse(response);
   if (result.success) {
@@ -311,7 +311,7 @@ export function validateResponse<TReq, TRes>(
  */
 export async function runContractTests(
   contracts: ContractDefinition[],
-  fetchFn: (endpoint: string, method: string, body?: unknown) => Promise<unknown>
+  fetchFn: (endpoint: string, method: string, body?: unknown) => Promise<unknown>,
 ): Promise<ContractTestSuite> {
   const results: ContractTestResult[] = [];
 
@@ -404,8 +404,7 @@ export function toMatchContract<T>(received: unknown, contract: ContractDefiniti
 
   return {
     pass: false,
-    message: () =>
-      `Expected response to match contract ${contract.endpoint}:\n${validation.errors.join("\n")}`,
+    message: () => `Expected response to match contract ${contract.endpoint}:\n${validation.errors.join("\n")}`,
   };
 }
 

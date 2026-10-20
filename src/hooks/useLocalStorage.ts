@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 
 /**
  * Hook for local storage with JSON serialization
@@ -32,7 +32,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
         console.error("Error saving to localStorage:", error);
       }
     },
-    [key, storedValue]
+    [key, storedValue],
   );
 
   return [storedValue, setValue] as const;

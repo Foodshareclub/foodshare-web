@@ -13,13 +13,16 @@ interface PostStatsCardProps {
   className?: string;
 }
 
-const colorSchemes: Record<ColorScheme, {
-  bg: string;
-  hover: string;
-  icon: string;
-  value: string;
-  label: string;
-}> = {
+const colorSchemes: Record<
+  ColorScheme,
+  {
+    bg: string;
+    hover: string;
+    icon: string;
+    value: string;
+    label: string;
+  }
+> = {
   rose: {
     bg: "from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/20",
     hover: "from-rose-500/10",
@@ -84,13 +87,7 @@ const colorSchemes: Record<ColorScheme, {
  * Used in post detail pages to show likes, views, posted date, etc.
  * Features gradient backgrounds, hover effects, and consistent dark mode support.
  */
-export function PostStatsCard({
-  icon: Icon,
-  value,
-  label,
-  colorScheme,
-  className,
-}: PostStatsCardProps) {
+export function PostStatsCard({ icon: Icon, value, label, colorScheme, className }: PostStatsCardProps) {
   const colors = colorSchemes[colorScheme];
 
   return (
@@ -99,21 +96,19 @@ export function PostStatsCard({
         "group relative overflow-hidden rounded-xl p-4 text-center",
         "transition-all duration-300 hover:shadow-md hover:scale-105 cursor-default",
         `bg-gradient-to-br ${colors.bg}`,
-        className
+        className,
       )}
     >
       <div
         className={cn(
           "absolute inset-0 bg-gradient-to-br to-transparent opacity-0",
           "group-hover:opacity-100 transition-opacity",
-          colors.hover
+          colors.hover,
         )}
       />
       <div className="relative">
         <Icon className={cn("h-5 w-5 mx-auto mb-1", colors.icon)} />
-        <div className={cn("text-lg font-bold tabular-nums", colors.value)}>
-          {value}
-        </div>
+        <div className={cn("text-lg font-bold tabular-nums", colors.value)}>{value}</div>
         <div className={cn("text-xs", colors.label)}>{label}</div>
       </div>
     </div>

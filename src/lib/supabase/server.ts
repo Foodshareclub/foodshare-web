@@ -32,8 +32,30 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 /**
- * Creates a Supabase client for cached data fetching (no cookies)
- * Use this inside unstable_cache() where cookies() cannot be called
+ * Creates a Supabase client that does NOT read cookies — i.e. it runs as the
+ * `anon` role, not as the signed-in user.
+ *
+ * The name is historical and misleading: this function performs no caching and
+ * must not be read as a hint to cache its result. It exists for the opposite
+ * reason — `unstable_cache()` cannot wrap a callback that calls `cookies()`,
+ * so this is the escape hatch for when a cached function needs a Supabase
+ * client at all.
+ *
+ * ── Do not cache a result from this client unless it is user-independent ────
+ *
+ * `unstable_cache` keys on the function's arguments, NOT on the caller. Several
+ * of the functions built on this client take a user id and filter by it —
+ * `getUserProducts`, `getUserChallenges`, `getUserStats`, `getProfile`,
+ * `getPublicProfile`, `getProfileReviews`, `hasUserReportedPost`. Wrapping any
+ * of those in `unstable_cache(fn)` without threading the id into the key
+ * returns the FIRST user's rows to EVERY caller: a cross-account data leak.
+ *
+ * If you need caching for a per-user query, either include the user id in the
+ * cache key arguments, or use the cookie-aware `createClient()` above and
+ * accept that it opts the route into dynamic rendering.
+ *
+ * Because this client is `anon`, RLS is the only thing separating one user's
+ * rows from another's here. Keep that in mind before loosening any policy.
  */
 export function createCachedClient() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports

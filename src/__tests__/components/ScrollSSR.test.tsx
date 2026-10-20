@@ -31,7 +31,7 @@ test("saved browser scroll state does not change the initial hydration markup", 
       scrollY: 500,
       isCompact: true,
       timestamp: Date.now(),
-    })
+    }),
   );
   try {
     expect(renderToStaticMarkup(<ScrollState />)).toBe(before);

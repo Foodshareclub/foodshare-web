@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
-import { Zap, Star, Flame, Users, Sparkles, Trophy } from "lucide-react";
-import { DIFFICULTY_CONFIG, type DifficultyLevel } from "./constants";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 import type { InitialProductStateType } from "@/types/product.types";
+import { motion } from "framer-motion";
+import { Flame, Sparkles, Star, Trophy, Users, Zap } from "lucide-react";
+import Image from "next/image";
+import { DIFFICULTY_CONFIG, type DifficultyLevel } from "./constants";
 
 interface HeroDeckCardProps {
   challenge: InitialProductStateType;
@@ -20,12 +20,7 @@ const DifficultyIcons = {
   Hard: Zap,
 } as const;
 
-export function HeroDeckCard({
-  challenge,
-  className,
-  isFaceUp = true,
-  isLarge = false,
-}: HeroDeckCardProps) {
+export function HeroDeckCard({ challenge, className, isFaceUp = true, isLarge = false }: HeroDeckCardProps) {
   const difficulty = (challenge.condition as DifficultyLevel) || "Easy";
   const config = DIFFICULTY_CONFIG[difficulty] || DIFFICULTY_CONFIG.Easy;
   const DifficultyIcon = DifficultyIcons[difficulty] || Star;
@@ -63,7 +58,7 @@ export function HeroDeckCard({
             "border border-border/50",
             "shadow-2xl shadow-black/30",
             "gpu-composite contain-card render-smooth",
-            "[mask-image:linear-gradient(white,white)] [-webkit-mask-image:-webkit-linear-gradient(white,white)]"
+            "[mask-image:linear-gradient(white,white)] [-webkit-mask-image:-webkit-linear-gradient(white,white)]",
           )}
         >
           {/* Shimmer overlay effect - GPU gradient */}
@@ -81,19 +76,13 @@ export function HeroDeckCard({
           <div
             className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none gpu-gradient"
             style={{
-              background:
-                "linear-gradient(90deg, rgba(255,45,85,0.1), rgba(0,166,153,0.1), rgba(252,100,45,0.1))",
+              background: "linear-gradient(90deg, rgba(255,45,85,0.1), rgba(0,166,153,0.1), rgba(252,100,45,0.1))",
               animation: "holographic 4s ease infinite",
             }}
           />
 
           {/* Challenge Image */}
-          <div
-            className={cn(
-              "relative overflow-hidden",
-              isLarge ? "h-48 sm:h-56 md:h-64" : "h-40 sm:h-48"
-            )}
-          >
+          <div className={cn("relative overflow-hidden", isLarge ? "h-48 sm:h-56 md:h-64" : "h-40 sm:h-48")}>
             <Image
               src={imageUrl}
               alt={challenge.post_name}
@@ -110,8 +99,8 @@ export function HeroDeckCard({
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
             {/* Decorative corner accent */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/40 to-transparent" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-500/30 to-transparent" />
+            <div className="absolute top-0 end-0 w-32 h-32 bg-gradient-to-bl from-primary/40 to-transparent" />
+            <div className="absolute bottom-0 start-0 w-24 h-24 bg-gradient-to-tr from-teal-500/30 to-transparent" />
 
             {/* Sparkle decoration on hover */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:scale-110">
@@ -122,7 +111,7 @@ export function HeroDeckCard({
             </div>
 
             {/* XP Badge - Enhanced */}
-            <div className="absolute top-3 right-3">
+            <div className="absolute top-3 end-3">
               <div className="relative">
                 <div className="absolute -inset-1 bg-yellow-500/40 rounded-full blur-md" />
                 <div className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-md border border-yellow-500/40">
@@ -133,7 +122,7 @@ export function HeroDeckCard({
             </div>
 
             {/* Difficulty Badge - Enhanced with intense fire for Hard */}
-            <div className="absolute top-3 left-3">
+            <div className="absolute top-3 start-3">
               <div className="relative">
                 {/* Intense multi-layer fire glow for Hard difficulty - GPU optimized */}
                 {difficulty === "Hard" && (
@@ -163,11 +152,11 @@ export function HeroDeckCard({
                       style={{ animation: "flameRise 0.7s ease-out infinite" }}
                     />
                     <div
-                      className="absolute -top-1 left-1/4 w-1 h-2 bg-gradient-to-t from-red-500 to-orange-400 rounded-full opacity-60 blur-[1px] gpu-particles"
+                      className="absolute -top-1 start-1/4 w-1 h-2 bg-gradient-to-t from-red-500 to-orange-400 rounded-full opacity-60 blur-[1px] gpu-particles"
                       style={{ animation: "flameRise 0.9s ease-out infinite 0.2s" }}
                     />
                     <div
-                      className="absolute -top-1.5 right-1/4 w-1 h-2.5 bg-gradient-to-t from-orange-600 to-yellow-400 rounded-full opacity-60 blur-[1px] gpu-particles"
+                      className="absolute -top-1.5 end-1/4 w-1 h-2.5 bg-gradient-to-t from-orange-600 to-yellow-400 rounded-full opacity-60 blur-[1px] gpu-particles"
                       style={{ animation: "flameRise 0.8s ease-out infinite 0.4s" }}
                     />
                   </>
@@ -178,26 +167,19 @@ export function HeroDeckCard({
                     "backdrop-blur-md border shadow-lg",
                     config.color,
                     config.borderColor,
-                    difficulty === "Hard" && "border-orange-400/70 shadow-orange-500/50"
+                    difficulty === "Hard" && "border-orange-400/70 shadow-orange-500/50",
                   )}
                 >
                   <DifficultyIcon
                     className={cn(
                       "w-3.5 h-3.5",
-                      difficulty === "Hard" &&
-                        "text-yellow-300 drop-shadow-[0_0_6px_rgba(251,146,60,1)]"
+                      difficulty === "Hard" && "text-yellow-300 drop-shadow-[0_0_6px_rgba(251,146,60,1)]",
                     )}
                     style={
-                      difficulty === "Hard"
-                        ? { animation: "fireIcon 0.5s ease-in-out infinite alternate" }
-                        : undefined
+                      difficulty === "Hard" ? { animation: "fireIcon 0.5s ease-in-out infinite alternate" } : undefined
                     }
                   />
-                  <span
-                    className={cn(
-                      difficulty === "Hard" && "drop-shadow-[0_0_4px_rgba(251,146,60,0.8)]"
-                    )}
-                  >
+                  <span className={cn(difficulty === "Hard" && "drop-shadow-[0_0_4px_rgba(251,146,60,0.8)]")}>
                     {difficulty}
                   </span>
                 </div>
@@ -205,7 +187,7 @@ export function HeroDeckCard({
             </div>
 
             {/* Participants Badge */}
-            <div className="absolute bottom-3 left-3">
+            <div className="absolute bottom-3 start-3">
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/25 backdrop-blur-md text-white text-xs font-medium border border-white/20">
                 <Users className="w-3.5 h-3.5" />
                 <span>{challenge.post_like_counter || 0} joined</span>
@@ -214,7 +196,7 @@ export function HeroDeckCard({
 
             {/* Trophy indicator for popular challenges */}
             {(challenge.post_like_counter || 0) > 50 && (
-              <div className="absolute bottom-3 right-3">
+              <div className="absolute bottom-3 end-3">
                 <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/80 backdrop-blur-md text-white text-xs font-medium">
                   <Trophy className="w-3 h-3" />
                   <span>Popular</span>
@@ -228,7 +210,7 @@ export function HeroDeckCard({
             <h3
               className={cn(
                 "font-bold text-foreground leading-tight line-clamp-2",
-                isLarge ? "text-lg sm:text-xl" : "text-base sm:text-lg"
+                isLarge ? "text-lg sm:text-xl" : "text-base sm:text-lg",
               )}
             >
               {challenge.post_name}
@@ -237,7 +219,7 @@ export function HeroDeckCard({
             <p
               className={cn(
                 "text-muted-foreground leading-relaxed line-clamp-2",
-                isLarge ? "text-sm" : "text-xs sm:text-sm"
+                isLarge ? "text-sm" : "text-xs sm:text-sm",
               )}
             >
               {challenge.post_description}
@@ -254,10 +236,9 @@ export function HeroDeckCard({
 
           {/* Bottom gradient accent - GPU animated */}
           <div
-            className="absolute bottom-0 left-0 right-0 h-1.5 gpu-gradient"
+            className="absolute bottom-0 inset-x-0 h-1.5 gpu-gradient"
             style={{
-              background:
-                "linear-gradient(90deg, hsl(var(--primary)), hsl(173 58% 39%), hsl(27 87% 59%))",
+              background: "linear-gradient(90deg, hsl(var(--primary)), hsl(173 58% 39%), hsl(27 87% 59%))",
               backgroundSize: "200% 100%",
               animation: "holographic 4s ease infinite",
             }}
@@ -291,7 +272,7 @@ function CardBack({ className, isLarge = false }: { className?: string; isLarge?
         "shadow-xl shadow-black/20",
         "gpu-composite contain-card render-smooth",
         "[mask-image:linear-gradient(white,white)] [-webkit-mask-image:-webkit-linear-gradient(white,white)]",
-        className
+        className,
       )}
     >
       {/* Animated diagonal stripe pattern */}
@@ -322,31 +303,26 @@ function CardBack({ className, isLarge = false }: { className?: string; isLarge?
           <div
             className={cn(
               "relative rounded-2xl bg-gradient-to-br from-primary/40 to-teal-500/40 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-2xl",
-              isLarge ? "w-20 h-20 sm:w-24 sm:h-24" : "w-16 h-16 sm:w-20 sm:h-20"
+              isLarge ? "w-20 h-20 sm:w-24 sm:h-24" : "w-16 h-16 sm:w-20 sm:h-20",
             )}
           >
-            <Zap
-              className={cn(
-                "text-primary/70",
-                isLarge ? "w-10 h-10 sm:w-12 sm:h-12" : "w-8 h-8 sm:w-10 sm:h-10"
-              )}
-            />
+            <Zap className={cn("text-primary/70", isLarge ? "w-10 h-10 sm:w-12 sm:h-12" : "w-8 h-8 sm:w-10 sm:h-10")} />
           </div>
         </div>
       </div>
 
       {/* Corner decorations - Enhanced */}
-      <div className="absolute top-4 left-4 w-8 h-8 sm:w-10 sm:h-10 border-l-2 border-t-2 border-primary/40 rounded-tl-xl" />
-      <div className="absolute top-4 right-4 w-8 h-8 sm:w-10 sm:h-10 border-r-2 border-t-2 border-primary/40 rounded-tr-xl" />
-      <div className="absolute bottom-4 left-4 w-8 h-8 sm:w-10 sm:h-10 border-l-2 border-b-2 border-primary/40 rounded-bl-xl" />
-      <div className="absolute bottom-4 right-4 w-8 h-8 sm:w-10 sm:h-10 border-r-2 border-b-2 border-primary/40 rounded-br-xl" />
+      <div className="absolute top-4 start-4 w-8 h-8 sm:w-10 sm:h-10 border-s-2 border-t-2 border-primary/40 rounded-tl-xl" />
+      <div className="absolute top-4 end-4 w-8 h-8 sm:w-10 sm:h-10 border-e-2 border-t-2 border-primary/40 rounded-tr-xl" />
+      <div className="absolute bottom-4 start-4 w-8 h-8 sm:w-10 sm:h-10 border-s-2 border-b-2 border-primary/40 rounded-bl-xl" />
+      <div className="absolute bottom-4 end-4 w-8 h-8 sm:w-10 sm:h-10 border-e-2 border-b-2 border-primary/40 rounded-br-xl" />
 
       {/* Subtle inner sparkles */}
-      <Sparkles className="absolute top-8 right-8 w-4 h-4 text-primary/30" />
-      <Sparkles className="absolute bottom-8 left-8 w-3 h-3 text-teal-500/30" />
+      <Sparkles className="absolute top-8 end-8 w-4 h-4 text-primary/30" />
+      <Sparkles className="absolute bottom-8 start-8 w-3 h-3 text-teal-500/30" />
 
       {/* Bottom gradient accent */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/40 via-teal-500/40 to-orange-500/40" />
+      <div className="absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r from-primary/40 via-teal-500/40 to-orange-500/40" />
     </div>
   );
 }

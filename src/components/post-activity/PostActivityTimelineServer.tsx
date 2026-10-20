@@ -13,9 +13,9 @@
  * ```
  */
 
-import { PostActivityTimeline } from "./PostActivityTimeline";
 import { getPostActivityTimeline } from "@/lib/data/post-activity";
 import type { PostActivityType } from "@/types/post-activity.types";
+import { PostActivityTimeline } from "./PostActivityTimeline";
 
 interface PostActivityTimelineServerProps {
   postId: number;
@@ -39,14 +39,7 @@ export async function PostActivityTimelineServer({
     activityTypes,
   });
 
-  return (
-    <PostActivityTimeline
-      activities={activities}
-      showActor={showActor}
-      compact={compact}
-      className={className}
-    />
-  );
+  return <PostActivityTimeline activities={activities} showActor={showActor} compact={compact} className={className} />;
 }
 
 export default PostActivityTimelineServer;

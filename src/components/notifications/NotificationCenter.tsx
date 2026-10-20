@@ -6,31 +6,21 @@
  * Features: Realtime updates, sound notifications, browser notifications, toast alerts
  */
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import {
-  Bell,
-  Check,
-  Trash2,
-  Settings,
-  Loader2,
-  Volume2,
-  VolumeX,
-  BellRing,
-  X,
-} from "lucide-react";
-import Link from "next/link";
-import { NotificationItem } from "./NotificationItem";
-import { createClient } from "@/lib/supabase/client";
+import { deleteReadNotifications, markAllNotificationsAsRead } from "@/app/actions/notifications";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
-import { markAllNotificationsAsRead, deleteReadNotifications } from "@/app/actions/notifications";
 import { useBrowserNotifications } from "@/hooks/useBrowserNotifications";
 import { useNotificationSound } from "@/hooks/useNotificationSound";
-import type { UserNotification, NotificationType } from "@/types/notifications.types";
+import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
+import type { NotificationType, UserNotification } from "@/types/notifications.types";
+import { Bell, BellRing, Check, Loader2, Settings, Trash2, Volume2, VolumeX, X } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { NotificationItem } from "./NotificationItem";
 
 // Storage key for sound preference
 const SOUND_ENABLED_KEY = "notification_sound_enabled";
@@ -133,7 +123,7 @@ export function NotificationCenter({
           *,
           actor:actor_id (id, first_name, second_name, avatar_url),
           post:post_id (id, post_name, images)
-        `
+        `,
         )
         .eq("recipient_id", userId)
         .order("created_at", { ascending: false })
@@ -150,7 +140,7 @@ export function NotificationCenter({
   }, [isOpen, userId]);
 
   // Helper to get notification URL
-  const getNotificationUrl = (notification: UserNotification): string | null => {
+  const getNotificationUrl = useCallback((notification: UserNotification): string | null => {
     switch (notification.type) {
       case "new_message":
         return notification.room_id ? `/chat/${notification.room_id}` : "/chat";
@@ -165,7 +155,7 @@ export function NotificationCenter({
       default:
         return null;
     }
-  };
+  }, []);
 
   // Realtime subscription
   useEffect(() => {
@@ -208,7 +198,7 @@ export function NotificationCenter({
             }
           } else if (payload.eventType === "UPDATE") {
             setNotifications((prev) =>
-              prev.map((n) => (n.id === payload.new.id ? (payload.new as UserNotification) : n))
+              prev.map((n) => (n.id === payload.new.id ? (payload.new as UserNotification) : n)),
             );
             // Update unread count
             if (payload.new.is_read && !payload.old?.is_read) {
@@ -220,22 +210,20 @@ export function NotificationCenter({
               setUnreadCount((prev) => Math.max(0, prev - 1));
             }
           }
-        }
+        },
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, isOpen, playSound, showBrowserNotification, showToast]);
+  }, [userId, isOpen, getNotificationUrl, playSound, showBrowserNotification, showToast]);
 
   const handleMarkAllAsRead = async () => {
     setIsMarkingAll(true);
     const result = await markAllNotificationsAsRead();
     if (result.success) {
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, is_read: true, read_at: new Date().toISOString() }))
-      );
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true, read_at: new Date().toISOString() })));
       setUnreadCount(0);
     }
     setIsMarkingAll(false);
@@ -267,7 +255,7 @@ export function NotificationCenter({
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
+            <span className="absolute -top-1 -end-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}
@@ -293,9 +281,7 @@ export function NotificationCenter({
                     ) : (
                       <VolumeX className="h-4 w-4 text-muted-foreground" />
                     )}
-                    <span className="sr-only">
-                      {soundEnabled ? "Mute sounds" : "Enable sounds"}
-                    </span>
+                    <span className="sr-only">{soundEnabled ? "Mute sounds" : "Enable sounds"}</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -309,12 +295,7 @@ export function NotificationCenter({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={requestPermission}
-                    >
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={requestPermission}>
                       <BellRing className="h-4 w-4 text-muted-foreground" />
                       <span className="sr-only">Enable browser notifications</span>
                     </Button>
@@ -332,11 +313,7 @@ export function NotificationCenter({
                 disabled={isMarkingAll}
                 className="h-8 text-xs"
               >
-                {isMarkingAll ? (
-                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                ) : (
-                  <Check className="h-3 w-3 mr-1" />
-                )}
+                {isMarkingAll ? <Loader2 className="h-3 w-3 animate-spin me-1" /> : <Check className="h-3 w-3 me-1" />}
                 Mark all read
               </Button>
             )}
@@ -391,7 +368,7 @@ export function NotificationCenter({
                   onClick={handleDeleteRead}
                   className="text-xs text-muted-foreground hover:text-destructive"
                 >
-                  <Trash2 className="h-3 w-3 mr-1" />
+                  <Trash2 className="h-3 w-3 me-1" />
                   Clear read
                 </Button>
               )}
@@ -402,19 +379,14 @@ export function NotificationCenter({
 
       {/* Toast notifications for new incoming notifications (CSS animations) */}
       {toasts.map((toast) => (
-        <div
-          key={toast.id}
-          className="fixed bottom-4 left-1/2 z-[100] max-w-sm -translate-x-1/2 animate-toast-in"
-        >
+        <div key={toast.id} className="fixed bottom-4 left-1/2 z-[100] max-w-sm -translate-x-1/2 animate-toast-in">
           <div className="bg-background border rounded-lg shadow-lg p-4 flex items-start gap-3">
             <div className="flex-shrink-0">
               <Bell className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium">{toast.title}</p>
-              {toast.body && (
-                <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{toast.body}</p>
-              )}
+              {toast.body && <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{toast.body}</p>}
             </div>
             <Button
               variant="ghost"

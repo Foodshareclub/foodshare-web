@@ -9,15 +9,15 @@
 
 "use client";
 
-import React from "react";
-import { MapContainer, Marker, TileLayer, Popup, Circle } from "react-leaflet";
+import type React from "react";
+import { Circle, MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTranslations } from "next-intl";
 
 import { ProductPopup } from "@/components/map/ProductPopup";
 import { useCustomMarkerIcon } from "@/hooks/useMarkerIcon";
-import { getCoordinates, type InitialProductStateType } from "@/types/product.types";
-import { approximateLocation, LOCATION_PRIVACY } from "@/utils/postgis";
+import { type InitialProductStateType, getCoordinates } from "@/types/product.types";
+import { LOCATION_PRIVACY, approximateLocation } from "@/utils/postgis";
 
 type LocationType = {
   indicator?: string;
@@ -103,7 +103,7 @@ export const ProductsLocation: React.FC<LocationType> = ({ indicator, product })
       </MapContainer>
 
       {/* Location approximation disclaimer */}
-      <div className="absolute bottom-3 left-3 right-3 z-[1000]">
+      <div className="absolute bottom-3 inset-x-3 z-[1000]">
         <div className="bg-card/90 backdrop-blur-sm rounded-lg px-3 py-2 border border-border/50 shadow-sm">
           <p className="text-xs text-muted-foreground/70 flex items-center gap-1.5">
             <span className="text-amber-500">&#9888;</span>

@@ -5,7 +5,7 @@
  * Handles browser notification permissions and display
  */
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type NotificationPermission = "default" | "granted" | "denied";
 

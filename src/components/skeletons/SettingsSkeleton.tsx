@@ -10,12 +10,7 @@ interface SettingsSkeletonProps {
  */
 export function SettingsSkeleton({ className }: SettingsSkeletonProps) {
   return (
-    <div
-      className={cn(
-        "min-h-screen bg-gradient-to-b from-background via-muted/20 to-background",
-        className
-      )}
-    >
+    <div className={cn("min-h-screen bg-gradient-to-b from-background via-muted/20 to-background", className)}>
       <div className="container mx-auto px-4 lg:px-8 py-6 lg:py-10">
         {/* Header Skeleton */}
         <header className="mb-6">

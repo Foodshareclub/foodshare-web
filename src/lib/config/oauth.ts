@@ -60,9 +60,7 @@ export const OAUTH_PROVIDERS: Record<OAuthProvider, OAuthConfig> = {
  * Get list of enabled OAuth providers
  */
 export function getEnabledProviders(): OAuthProvider[] {
-  return (Object.keys(OAUTH_PROVIDERS) as OAuthProvider[]).filter(
-    (provider) => OAUTH_PROVIDERS[provider].enabled
-  );
+  return (Object.keys(OAUTH_PROVIDERS) as OAuthProvider[]).filter((provider) => OAUTH_PROVIDERS[provider].enabled);
 }
 
 /**

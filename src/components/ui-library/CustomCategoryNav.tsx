@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useCallback, useRef, useEffect } from "react";
+import type React from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 // Simple Search Icon component
 const SearchIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" {...props}>
+  <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none" {...props}>
     <path
       d="M7 13A6 6 0 1 0 7 1a6 6 0 0 0 0 12zM13 13l-2-2"
       stroke="currentColor"
@@ -44,10 +45,11 @@ export const CustomCategoryNav: React.FC<CustomCategoryNavProps> = ({
   showFilter = true,
   isLoading = false,
 }) => {
-  const scrollContainerRef = useRef<HTMLUListElement>(null);
-  const activeItemRef = useRef<HTMLLIElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const activeItemRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to active category
+  // biome-ignore lint/correctness/useExhaustiveDependencies: activeCategory is a component prop, not an outer-scope binding
   useEffect(() => {
     if (activeItemRef.current && scrollContainerRef.current) {
       const container = scrollContainerRef.current;
@@ -71,7 +73,7 @@ export const CustomCategoryNav: React.FC<CustomCategoryNavProps> = ({
         onCategoryChange(categoryId);
       }
     },
-    [onCategoryChange]
+    [onCategoryChange],
   );
 
   const handleKeyDown = useCallback(
@@ -81,18 +83,14 @@ export const CustomCategoryNav: React.FC<CustomCategoryNavProps> = ({
         handleCategoryClick(categoryId);
       }
     },
-    [handleCategoryClick]
+    [handleCategoryClick],
   );
 
   return (
-    <nav
-      role="navigation"
-      aria-label="Category navigation"
-      className="bg-background border-b border-border sticky top-0 z-10 shadow-sm"
-    >
+    <nav aria-label="Category navigation" className="bg-background border-b border-border sticky top-0 z-10 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between gap-4">
         {/* Categories */}
-        <ul
+        <div
           ref={scrollContainerRef}
           role="tablist"
           className="flex-1 flex gap-5 md:gap-6 overflow-x-auto overflow-y-hidden list-none m-0 p-0 scrollbar-hide"
@@ -102,7 +100,7 @@ export const CustomCategoryNav: React.FC<CustomCategoryNavProps> = ({
             const isDisabled = category.disabled || isLoading;
 
             return (
-              <li
+              <div
                 key={category.id}
                 ref={isActive ? activeItemRef : null}
                 role="tab"
@@ -148,12 +146,12 @@ export const CustomCategoryNav: React.FC<CustomCategoryNavProps> = ({
 
                 {/* Active Indicator */}
                 {isActive && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-t-sm transition-all duration-200" />
+                  <div className="absolute inset-x-0 bottom-0 h-0.5 bg-foreground rounded-t-sm transition-all duration-200" />
                 )}
-              </li>
+              </div>
             );
           })}
-        </ul>
+        </div>
 
         {/* Search & Filter Buttons */}
         <div className="flex gap-3 items-center flex-shrink-0">
@@ -165,9 +163,7 @@ export const CustomCategoryNav: React.FC<CustomCategoryNavProps> = ({
               onClick={onSearch}
             >
               <SearchIcon className="text-muted-foreground" aria-hidden="true" />
-              <span className="hidden sm:block text-xs md:text-sm font-medium text-foreground">
-                Search
-              </span>
+              <span className="hidden sm:block text-xs md:text-sm font-medium text-foreground">Search</span>
             </button>
           )}
 
@@ -178,23 +174,10 @@ export const CustomCategoryNav: React.FC<CustomCategoryNavProps> = ({
               className="flex items-center gap-2 px-3 md:px-4 py-2 border border-border rounded-3xl cursor-pointer transition-all duration-200 bg-background hover:border-foreground hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm focus:outline-2 focus:outline-primary focus:outline-offset-2"
               onClick={onFilter}
             >
-              <svg
-                width="16"
-                height="16"
-                fill="none"
-                className="text-muted-foreground"
-                aria-hidden="true"
-              >
-                <path
-                  d="M2 4h12M4 8h8M6 12h4"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
+              <svg width="16" height="16" fill="none" className="text-muted-foreground" aria-hidden="true">
+                <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
-              <span className="hidden sm:block text-xs md:text-sm font-medium text-foreground">
-                Filter
-              </span>
+              <span className="hidden sm:block text-xs md:text-sm font-medium text-foreground">Filter</span>
             </button>
           )}
         </div>

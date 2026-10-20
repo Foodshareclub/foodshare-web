@@ -74,11 +74,7 @@ class ProductionErrorReporter {
   /**
    * Report error to queue
    */
-  reportError(
-    error: Error,
-    level: ErrorReport["level"] = "error",
-    context?: Record<string, unknown>
-  ) {
+  reportError(error: Error, level: ErrorReport["level"] = "error", context?: Record<string, unknown>) {
     const report: ErrorReport = {
       id: this.generateId(),
       timestamp: new Date().toISOString(),
@@ -134,7 +130,7 @@ class ProductionErrorReporter {
   /**
    * Send errors to external service with retry
    */
-  private async sendToService(errors: ErrorReport[], attempt: number = 1): Promise<void> {
+  private async sendToService(errors: ErrorReport[], attempt = 1): Promise<void> {
     // TODO: Replace with your actual error reporting service
     // Examples: Sentry, LogRocket, Rollbar, custom endpoint
 

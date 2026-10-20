@@ -1,9 +1,10 @@
+/* oxlint-disable unicorn/no-thenable -- Supabase query builder mocks must be thenable. */
 /**
  * Chat Server Actions Tests
  * Unit tests for chat management server actions
  */
 
-import { mock, describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 // Shared mock state
 const mockState = {
@@ -126,16 +127,15 @@ mock.module("@/app/actions/post-activity", () => ({
 
 // Mock email — must include ALL exports
 mock.module("@/app/actions/email", () => ({
-  sendEmailAsync: mock(mockResult),
-  sendNewMessageNotification: mock(mockResult),
-  sendListingInterestNotification: mock(mockResult),
-  sendPickupReminder: mock(mockResult),
-  sendReviewRequest: mock(mockResult),
-  sendListingExpiredNotification: mock(mockResult),
-  sendExchangeCompletionEmail: mock(mockResult),
   previewEmailTemplate: mock(mockResult),
   sendAdminEmail: mock(mockResult),
   sendTestEmailDirect: mock(mockResult),
+}));
+
+// Exchange-completion delivery moved out of the `'use server'` email module into
+// a plain server-only module, precisely so it is not an HTTP-reachable action.
+mock.module("@/lib/email/exchange-completion", () => ({
+  sendExchangeCompletionEmail: mock(() => Promise.resolve({ success: true })),
 }));
 
 // Define chain type for Supabase mock
@@ -178,9 +178,7 @@ mock.module("@/lib/supabase/server", () => ({
           if (tableName === "rooms" && mockState.newRoom) {
             return {
               select: mock(() => ({
-                single: mock(() =>
-                  Promise.resolve({ data: mockState.newRoom, error: mockState.dbError })
-                ),
+                single: mock(() => Promise.resolve({ data: mockState.newRoom, error: mockState.dbError })),
               })),
             };
           }
@@ -191,7 +189,6 @@ mock.module("@/lib/supabase/server", () => ({
       // For message count query
       if (tableName === "room_participants") {
         Object.assign(chain, {
-          // eslint-disable-next-line unicorn/no-thenable
           then: (resolve: (value: unknown) => void) =>
             resolve({
               count: mockState.messageCount,
@@ -206,7 +203,7 @@ mock.module("@/lib/supabase/server", () => ({
           Promise.resolve({
             data: mockState.existingRoom,
             error: null,
-          })
+          }),
         );
       }
 
@@ -219,7 +216,7 @@ mock.module("@/lib/supabase/server", () => ({
           Promise.resolve({
             data: { user: mockState.user },
             error: mockState.authError,
-          })
+          }),
         ),
       },
       from: mock((tableName: string) => createSelectChain(tableName)),
@@ -232,21 +229,21 @@ mock.module("@/lib/supabase/server", () => ({
           eq: mock(() => ({ single: mock(() => Promise.resolve({ data: null, error: null })) })),
         })),
       })),
-    })
+    }),
   ),
   createServerClient: mock(() => Promise.resolve({})),
 }));
 
 // Import actions after mocks
 import {
-  sendFoodChatMessage,
-  markFoodChatAsRead,
+  acceptRequestAndShareAddress,
+  archiveChatRoom,
+  completeExchange,
   createFoodChatRoom,
+  markFoodChatAsRead,
+  sendFoodChatMessage,
   updateRoom,
   writeReview,
-  acceptRequestAndShareAddress,
-  completeExchange,
-  archiveChatRoom,
 } from "@/app/actions/chat";
 
 // Helper type to extract error from failed result
@@ -645,8 +642,11 @@ describe("Chat Server Actions", () => {
       }
     });
 
-    it("should update room successfully", async () => {
-      mockState.user = { id: validUserId, email: "user@example.com" };
+    it("should update room successfully when the sharer marks it arranged", async () => {
+      // `post_arranged_to` is the authorization input to the DB-side
+      // deactivate_post / cancel_arrangement functions, so only the sharer may
+      // write it. Same rule as acceptRequestAndShareAddress.
+      mockState.user = { id: validSharerId, email: "sharer@example.com" };
       mockState.room = {
         id: validRoomId,
         post_id: 1,
@@ -661,6 +661,70 @@ describe("Chat Server Actions", () => {
       const result = await updateRoom(validRoomId, formData);
 
       expect(result.success).toBe(true);
+    });
+
+    it("rejects a non-sharer participant setting post_arranged_to", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
+      mockState.room = {
+        id: validRoomId,
+        post_id: 1,
+        sharer: validSharerId,
+        requester: validUserId,
+      };
+
+      const formData = createFormData({
+        post_arranged_to: validSharerId,
+      });
+
+      const result = await updateRoom(validRoomId, formData);
+
+      expect(result.success).toBe(false);
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ code: "FORBIDDEN" });
+      }
+    });
+
+    it("rejects a non-uuid post_arranged_to", async () => {
+      mockState.user = { id: validSharerId, email: "sharer@example.com" };
+      mockState.room = {
+        id: validRoomId,
+        post_id: 1,
+        sharer: validSharerId,
+        requester: validUserId,
+      };
+
+      const formData = createFormData({
+        post_arranged_to: "not-a-uuid",
+      });
+
+      const result = await updateRoom(validRoomId, formData);
+
+      expect(result.success).toBe(false);
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ code: "VALIDATION_ERROR" });
+      }
+    });
+
+    it("rejects re-marking an already-arranged room", async () => {
+      mockState.user = { id: validSharerId, email: "sharer@example.com" };
+      mockState.room = {
+        id: validRoomId,
+        post_id: 1,
+        sharer: validSharerId,
+        requester: validUserId,
+        post_arranged_to: validUserId,
+      };
+
+      const formData = createFormData({
+        post_arranged_to: validUserId,
+      });
+
+      const result = await updateRoom(validRoomId, formData);
+
+      expect(result.success).toBe(false);
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ code: "CONFLICT" });
+      }
     });
 
     it("should handle database error", async () => {

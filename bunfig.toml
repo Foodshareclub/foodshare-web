@@ -1,19 +1,44 @@
 # Bun configuration for FoodShare
 # https://bun.sh/docs/runtime/bunfig
 
-# Bun is used for everything:
+# Bun is used for everything — Node.js is not part of this project's toolchain:
 # - Package management (bun install)
 # - Dev server (bun --bun next dev)
 # - Production builds (bun --bun next build)
 # - Production server (bun --bun next start)
 # - Testing (bun test)
+# - End-to-end testing (bun run playwright test)
 # - Script execution (bun run)
+# - TypeScript execution (bun scripts/*.ts) — Bun runs TypeScript natively
+# - Type checking (bun check)
+#
+# `bun scripts/check-no-node.ts` fails the build if Node creeps back in. It
+# scans the CI workflows as well as the source tree, so a `setup-node` step or
+# a `bunx` without `--bun` in a workflow is caught too.
 
 [install]
 # Exact versions for reproducible builds
 exact = true
 # Faster installs
 concurrentScripts = 16
+# The linker is deliberately left at Bun's default ("hoisted").
+#
+# Bun's "isolated" linker (pnpm-style node_modules) is faster and stops
+# phantom dependencies, but it is not compatible with Next.js 16 + Turbopack:
+# Turbopack fails to resolve even direct dependencies such as `tailwindcss`
+# and `lucide-react` from a symlinked node_modules tree, and the build dies
+# with 265 module-resolution errors. Stay on the hoisted linker until
+# Turbopack supports the isolated layout.
+#
+# Because the hoisted linker resolves anything that happens to be in the
+# tree, a package the app imports must still be declared explicitly — an
+# undeclared one breaks as soon as the dependency that pulls it in changes.
+# `@radix-ui/react-visually-hidden`, `@vgpu/wgsl` and `postcss` were added for
+# exactly that reason.
+# Refuse to install a package published less than an hour ago. The dependency
+# tree is pinned to exact versions, so this only ever blocks a *new* version
+# — the window in which a compromised publish would otherwise be picked up.
+minimumReleaseAge = 3600
 
 [install.lockfile]
 save = true
@@ -24,5 +49,13 @@ coverageDir = "coverage"
 preload = ["./src/__tests__/happydom.ts", "./src/__tests__/setup.ts"]
 
 [run]
-# Use Bun runtime for all scripts
+# Use Bun runtime for all scripts.
+#
+# This makes `bun run <script>` and `bun <bin>` execute on Bun's runtime even
+# when the installed package's bin has a `#!/usr/bin/env node` shebang — which
+# is what every Next.js, ESLint and TypeScript CLI ships.
+#
+# It does NOT apply to `bunx`: `bunx` resolves the package's own shebang and
+# runs it on Node. Use `bunx --bun <tool>`, or invoke the local package
+# directly with `bun node_modules/<pkg>/bin/…`.
 bun = true

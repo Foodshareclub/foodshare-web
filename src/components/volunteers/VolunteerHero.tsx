@@ -36,8 +36,8 @@ export function VolunteerHero({ showSubmissionMessage = false }: VolunteerHeroPr
 
           {/* Subtitle */}
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join a community of passionate people working together to reduce food waste and
-            strengthen our neighborhoods. Every volunteer makes a difference.
+            Join a community of passionate people working together to reduce food waste and strengthen our
+            neighborhoods. Every volunteer makes a difference.
           </p>
 
           {/* CTA Button */}
@@ -68,8 +68,8 @@ export function VolunteerHero({ showSubmissionMessage = false }: VolunteerHeroPr
       </div>
 
       {/* Decorative elements */}
-      <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-400/20 dark:bg-emerald-500/10 rounded-full blur-3xl" />
-      <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-teal-400/20 dark:bg-teal-500/10 rounded-full blur-3xl" />
+      <div className="absolute -top-20 -end-20 w-64 h-64 bg-emerald-400/20 dark:bg-emerald-500/10 rounded-full blur-3xl" />
+      <div className="absolute -bottom-20 -start-20 w-64 h-64 bg-teal-400/20 dark:bg-teal-500/10 rounded-full blur-3xl" />
     </section>
   );
 }
@@ -83,12 +83,10 @@ export function BecomeVolunteerCTA() {
       <div className="max-w-2xl mx-auto text-center">
         <div className="glass rounded-2xl p-8 md:p-12">
           <div className="text-5xl mb-4">🌱</div>
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-            Want to Make a Difference?
-          </h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">Want to Make a Difference?</h2>
           <p className="text-muted-foreground mb-8">
-            Join our volunteer team and help reduce food waste in your community. Whether you can
-            drive, cook, organize, or just have a few hours to spare - we&apos;d love to have you!
+            Join our volunteer team and help reduce food waste in your community. Whether you can drive, cook, organize,
+            or just have a few hours to spare - we&apos;d love to have you!
           </p>
           <Link
             href="/new?type=volunteer"

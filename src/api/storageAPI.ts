@@ -6,9 +6,9 @@
  * This module handles download, delete, public URLs, and signed URLs.
  */
 
+import type { StorageBucket } from "@/constants/storage";
+import { deleteFromR2, getR2PublicUrl, isR2Configured } from "@/lib/r2/client";
 import { supabase } from "@/lib/supabase/client";
-import { type StorageBucket } from "@/constants/storage";
-import { deleteFromR2, isR2Configured, getR2PublicUrl } from "@/lib/r2/client";
 
 // ============================================================================
 // Types
@@ -27,9 +27,7 @@ export const storageAPI = {
   /**
    * Download image from Supabase storage
    */
-  async downloadImage(
-    params: ImageUrlType
-  ): Promise<{ data: Blob; error: null } | { data: null; error: Error }> {
+  async downloadImage(params: ImageUrlType): Promise<{ data: Blob; error: null } | { data: null; error: Error }> {
     try {
       const { data, error } = await supabase.storage.from(params.bucket).download(params.path);
 
@@ -94,12 +92,10 @@ export const storageAPI = {
    */
   async createSignedUrl(
     params: ImageUrlType,
-    expiresIn: number = 3600
+    expiresIn = 3600,
   ): Promise<{ data: { signedUrl: string } | null; error: Error | null }> {
     try {
-      const { data, error } = await supabase.storage
-        .from(params.bucket)
-        .createSignedUrl(params.path, expiresIn);
+      const { data, error } = await supabase.storage.from(params.bucket).createSignedUrl(params.path, expiresIn);
 
       if (error) return { data: null, error };
       return { data, error: null };

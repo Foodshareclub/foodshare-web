@@ -99,10 +99,7 @@ function httpError(status: number): ActionResult<never> {
     503: ["SERVICE_UNAVAILABLE", "Service temporarily unavailable"],
     504: ["TIMEOUT", "Request timed out"],
   };
-  const [code, message] = errors[status] ?? [
-    "INTERNAL_ERROR",
-    "Server returned an invalid response",
-  ];
+  const [code, message] = errors[status] ?? ["INTERNAL_ERROR", "Server returned an invalid response"];
   return { success: false, error: { code, message } };
 }
 
@@ -128,7 +125,7 @@ function httpError(status: number): ActionResult<never> {
  */
 export async function apiCall<TResponse, TBody = unknown>(
   endpoint: string,
-  options: APICallOptions<TBody>
+  options: APICallOptions<TBody>,
 ): Promise<ActionResult<TResponse>> {
   const { method, body, query, idempotencyKey, timeout = 30000, skipAuth = false } = options;
   const correlationId = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -175,8 +172,7 @@ export async function apiCall<TResponse, TBody = unknown>(
       "X-App-Version": APP_VERSION,
     };
 
-    const apiKey =
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const apiKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (apiKey) {
       headers.apikey = apiKey;
     }
@@ -235,13 +231,7 @@ export async function apiCall<TResponse, TBody = unknown>(
     if (!response.ok) return httpError(response.status);
 
     // Convert to ActionResult
-    if (
-      result &&
-      typeof result === "object" &&
-      "success" in result &&
-      result.success === true &&
-      "data" in result
-    ) {
+    if (result && typeof result === "object" && "success" in result && result.success === true && "data" in result) {
       return {
         success: true,
         data: result.data as TResponse,
@@ -299,7 +289,7 @@ export async function apiCall<TResponse, TBody = unknown>(
 export async function apiGet<TResponse>(
   endpoint: string,
   query?: Record<string, string | number | boolean | undefined>,
-  options?: Omit<APICallOptions, "method" | "body" | "query">
+  options?: Omit<APICallOptions, "method" | "body" | "query">,
 ): Promise<ActionResult<TResponse>> {
   return apiCall<TResponse>(endpoint, {
     method: "GET",
@@ -314,7 +304,7 @@ export async function apiGet<TResponse>(
 export async function apiPost<TResponse, TBody = unknown>(
   endpoint: string,
   body: TBody,
-  options?: Omit<APICallOptions<TBody>, "method" | "body">
+  options?: Omit<APICallOptions<TBody>, "method" | "body">,
 ): Promise<ActionResult<TResponse>> {
   return apiCall<TResponse, TBody>(endpoint, {
     method: "POST",
@@ -331,7 +321,7 @@ export async function apiPut<TResponse, TBody = unknown>(
   endpoint: string,
   body: TBody,
   query?: Record<string, string | number | boolean | undefined>,
-  options?: Omit<APICallOptions<TBody>, "method" | "body" | "query">
+  options?: Omit<APICallOptions<TBody>, "method" | "body" | "query">,
 ): Promise<ActionResult<TResponse>> {
   return apiCall<TResponse, TBody>(endpoint, {
     method: "PUT",
@@ -348,7 +338,7 @@ export async function apiPut<TResponse, TBody = unknown>(
 export async function apiDelete<TResponse = void>(
   endpoint: string,
   query?: Record<string, string | number | boolean | undefined>,
-  options?: Omit<APICallOptions, "method" | "body" | "query">
+  options?: Omit<APICallOptions, "method" | "body" | "query">,
 ): Promise<ActionResult<TResponse>> {
   return apiCall<TResponse>(endpoint, {
     method: "DELETE",

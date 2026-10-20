@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React from 'react';
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/dialog";
+import type React from "react";
 
 type ConfirmationModalProps = {
   isOpen: boolean;
@@ -19,7 +19,7 @@ type ConfirmationModalProps = {
   description?: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
-  confirmVariant?: 'default' | 'destructive' | 'outline' | 'ghost';
+  confirmVariant?: "default" | "destructive" | "outline" | "ghost";
   isLoading?: boolean;
 };
 
@@ -31,11 +31,11 @@ export function ConfirmationModal({
   isOpen,
   onClose,
   onConfirm,
-  title = 'Confirm',
+  title = "Confirm",
   description,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
-  confirmVariant = 'default',
+  confirmText = "Confirm",
+  cancelText = "Cancel",
+  confirmVariant = "default",
   isLoading = false,
 }: ConfirmationModalProps) {
   const handleConfirm = async () => {
@@ -57,7 +57,7 @@ export function ConfirmationModal({
             {cancelText}
           </Button>
           <Button variant={confirmVariant} onClick={handleConfirm} disabled={isLoading}>
-            {isLoading ? 'Processing...' : confirmText}
+            {isLoading ? "Processing..." : confirmText}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -82,7 +82,7 @@ export function DeleteConfirmationModal({
   onClose,
   onConfirm,
   itemName,
-  itemType = 'item',
+  itemType = "item",
   isLoading = false,
 }: DeleteConfirmationModalProps) {
   return (
@@ -93,7 +93,7 @@ export function DeleteConfirmationModal({
       title="Delete"
       description={
         <span>
-          You are going to delete the {itemType}{' '}
+          You are going to delete the {itemType}{" "}
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
             {itemName}
           </span>

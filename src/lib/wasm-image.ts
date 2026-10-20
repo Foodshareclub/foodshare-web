@@ -42,11 +42,7 @@ export function getImageMimeType(data: Uint8Array): string | null {
  *
  * Returns target width in pixels, or 0 if no resizing is required.
  */
-export function calculateSmartWidth(
-  fileSizeBytes: number,
-  currentWidth: number,
-  currentHeight: number
-): number {
+export function calculateSmartWidth(fileSizeBytes: number, currentWidth: number, currentHeight: number): number {
   return WasmImage.calculate_smart_width(fileSizeBytes, currentWidth, currentHeight);
 }
 

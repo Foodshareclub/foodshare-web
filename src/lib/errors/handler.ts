@@ -3,11 +3,11 @@
  * Centralized error handling with retry logic and logging
  */
 
-import type { ApiError, AppError, ErrorCode, ErrorContext } from "./types";
 import { createApiError, isApiError } from "./api";
-import { mapSupabaseError, isSupabaseError } from "./supabase";
 import { generateRequestId } from "./api";
 import { isAppError } from "./guards";
+import { isSupabaseError, mapSupabaseError } from "./supabase";
+import type { ApiError, AppError, ErrorCode, ErrorContext } from "./types";
 
 /**
  * Configuration for retry behavior
@@ -96,7 +96,7 @@ export class ApiErrorHandler {
    */
   getRetryDelay(attempt: number): number {
     // Exponential backoff: baseDelay * 2^attempt
-    const delay = this.config.baseDelayMs * Math.pow(2, attempt);
+    const delay = this.config.baseDelayMs * 2 ** attempt;
     // Add jitter (+-25%)
     const jitter = delay * 0.25 * (Math.random() * 2 - 1);
     // Cap at maxDelay
@@ -106,10 +106,7 @@ export class ApiErrorHandler {
   /**
    * Execute a function with automatic retry on failure
    */
-  async withRetry<T>(
-    fn: () => Promise<T>,
-    context: Omit<ErrorContext, "timestamp" | "requestId">
-  ): Promise<T> {
+  async withRetry<T>(fn: () => Promise<T>, context: Omit<ErrorContext, "timestamp" | "requestId">): Promise<T> {
     const requestId = generateRequestId();
     const fullContext: ErrorContext = {
       ...context,
@@ -223,7 +220,6 @@ export function getErrorMessage(error: AppError): string {
       return "The request is too large. Please reduce the size and try again.";
     case "CIRCUIT_OPEN":
       return "This service is temporarily unavailable. Please try again shortly.";
-    case "INTERNAL_ERROR":
     default:
       return "Something went wrong. Please try again later.";
   }

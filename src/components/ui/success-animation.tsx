@@ -5,9 +5,9 @@
  * Uses pure CSS animations for optimal performance (no Framer Motion)
  */
 
-import { useEffect, useState } from "react";
-import { Check, PartyPopper, Sparkles, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Check, Heart, PartyPopper, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export interface SuccessAnimationProps {
   /** Whether the animation is visible */
@@ -170,22 +170,21 @@ export function SuccessAnimation({
           className={cn(
             "fixed inset-0 bg-background/80 backdrop-blur-sm z-50",
             "transition-opacity duration-300",
-            isAnimating ? "opacity-100" : "opacity-0"
+            isAnimating ? "opacity-100" : "opacity-0",
           )}
           aria-hidden="true"
         />
       )}
 
       {/* Main animation container */}
-      <div
+      <output
         className={cn(
           "flex flex-col items-center justify-center gap-4",
           "transition-all duration-300 ease-out",
           isAnimating ? "opacity-100 scale-100" : "opacity-0 scale-[0.8]",
           overlay && "fixed inset-0 z-50",
-          className
+          className,
         )}
-        role="status"
         aria-live="polite"
         aria-label={message || "Success"}
       >
@@ -197,13 +196,14 @@ export function SuccessAnimation({
               "absolute inset-0 rounded-full",
               "transition-transform duration-300 ease-out",
               colors.bg,
-              isAnimating ? "scale-100" : "scale-0"
+              isAnimating ? "scale-100" : "scale-0",
             )}
             style={{ transitionDelay: "100ms" }}
           />
 
           {/* Animated circle stroke */}
           <svg
+            aria-hidden="true"
             className="absolute inset-0 -rotate-90"
             width={config.circle}
             height={config.circle}
@@ -216,7 +216,7 @@ export function SuccessAnimation({
               fill="none"
               strokeWidth={config.stroke}
               strokeLinecap="round"
-              className={cn(colors.circle, "animate-success-circle")}
+              className={cn(colors.circle)}
               style={{
                 strokeDasharray: circumference,
                 strokeDashoffset: isAnimating ? 0 : circumference,
@@ -231,7 +231,7 @@ export function SuccessAnimation({
               "absolute inset-0 flex items-center justify-center",
               "transition-all duration-300",
               colors.icon,
-              isAnimating ? "scale-100 opacity-100" : "scale-0 opacity-0"
+              isAnimating ? "scale-100 opacity-100" : "scale-0 opacity-0",
             )}
             style={{
               transitionDelay: "400ms",
@@ -244,9 +244,9 @@ export function SuccessAnimation({
           {/* Celebration particles */}
           {(variant === "celebration" || variant === "sparkle") && isAnimating && (
             <div className="absolute inset-0 pointer-events-none">
-              {particles.map((particle, i) => (
+              {particles.map((particle) => (
                 <div
-                  key={i}
+                  key={particle.delay}
                   className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-success-particle"
                   style={
                     {
@@ -273,7 +273,7 @@ export function SuccessAnimation({
               "font-semibold text-foreground text-center",
               "transition-all duration-300",
               config.message,
-              isAnimating ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2.5"
+              isAnimating ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2.5",
             )}
             style={{ transitionDelay: "500ms" }}
           >
@@ -288,14 +288,14 @@ export function SuccessAnimation({
               "text-muted-foreground text-center max-w-xs",
               "transition-all duration-300",
               config.description,
-              isAnimating ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2.5"
+              isAnimating ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2.5",
             )}
             style={{ transitionDelay: "600ms" }}
           >
             {description}
           </p>
         )}
-      </div>
+      </output>
     </>
   );
 }
@@ -325,7 +325,7 @@ export function InlineSuccessIndicator({ show, className }: { show: boolean; cla
         "inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-500/10 text-green-500",
         "transition-all duration-200",
         show ? "scale-100 opacity-100" : "scale-0 opacity-0",
-        className
+        className,
       )}
       style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}
     >

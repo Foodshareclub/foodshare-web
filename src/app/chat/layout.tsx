@@ -1,9 +1,6 @@
-import { generateNoIndexMetadata } from '@/lib/metadata';
+import { generateNoIndexMetadata } from "@/lib/metadata";
 
-export const metadata = generateNoIndexMetadata(
-    'Messages',
-    'Chat with food sharers in your community'
-);
+export const metadata = generateNoIndexMetadata("Messages", "Chat with food sharers in your community");
 
 /**
  * Chat Layout

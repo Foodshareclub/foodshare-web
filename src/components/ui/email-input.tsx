@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
-import { X, Mail, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isValidEmail } from "@/lib/validators/email";
+import { AlertCircle, Mail, X } from "lucide-react";
+import type React from "react";
+import { useCallback, useRef, useState } from "react";
 
 interface EmailInputProps {
   emails: string[];
@@ -66,7 +67,7 @@ export const EmailInput: React.FC<EmailInputProps> = ({
         onEmailsChange([...emails, ...toAdd]);
       }
     },
-    [emails, onEmailsChange, maxEmails]
+    [emails, onEmailsChange, maxEmails],
   );
 
   const handleKeyDown = useCallback(
@@ -84,7 +85,7 @@ export const EmailInput: React.FC<EmailInputProps> = ({
         onEmailsChange(emails.slice(0, -1));
       }
     },
-    [inputValue, addEmails, emails, onEmailsChange, disabled]
+    [inputValue, addEmails, emails, onEmailsChange, disabled],
   );
 
   const handlePaste = useCallback(
@@ -98,8 +99,18 @@ export const EmailInput: React.FC<EmailInputProps> = ({
       addEmails(pastedEmails);
       setInputValue("");
     },
-    [addEmails, disabled]
+    [addEmails, disabled],
   );
+
+  const focusInput = () => {
+    inputRef.current?.focus();
+  };
+
+  const handleWrapperKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      focusInput();
+    }
+  };
 
   const removeEmail = (emailToRemove: string) => {
     if (disabled) return;
@@ -115,9 +126,10 @@ export const EmailInput: React.FC<EmailInputProps> = ({
           "flex flex-wrap gap-2 p-2 min-h-[44px] rounded-lg transition-all",
           "glass-input focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
           error ? "border-red-500 focus-within:ring-red-500/50" : "",
-          disabled && "opacity-60 cursor-not-allowed"
+          disabled && "opacity-60 cursor-not-allowed",
         )}
-        onClick={() => inputRef.current?.focus()}
+        onClick={focusInput}
+        onKeyDown={handleWrapperKeyDown}
       >
         {emails.map((email) => (
           <span
@@ -132,7 +144,7 @@ export const EmailInput: React.FC<EmailInputProps> = ({
                 e.stopPropagation();
                 removeEmail(email);
               }}
-              className="hover:text-destructive transition-colors ml-0.5"
+              className="hover:text-destructive transition-colors ms-0.5"
               disabled={disabled}
             >
               <X className="h-3.5 w-3.5" />
@@ -158,7 +170,7 @@ export const EmailInput: React.FC<EmailInputProps> = ({
               }
             }}
             placeholder={emails.length === 0 ? placeholder : ""}
-            className="flex-1 min-w-[120px] bg-transparent outline-none text-sm placeholder:text-muted-foreground ml-1"
+            className="flex-1 min-w-[120px] bg-transparent outline-none text-sm placeholder:text-muted-foreground ms-1"
             disabled={disabled}
             autoComplete="email"
           />

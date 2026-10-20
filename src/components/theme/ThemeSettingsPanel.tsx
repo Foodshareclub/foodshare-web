@@ -6,32 +6,28 @@
 
 "use client";
 
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  useUIStore,
-  type Theme,
-  type ThemeSchedule,
-  type ThemeTransition,
-} from "@/store/zustand/useUIStore";
 import { cn } from "@/lib/utils";
+import { type Theme, type ThemeSchedule, type ThemeTransition, useUIStore } from "@/store/zustand/useUIStore";
+import { AnimatePresence, motion } from "framer-motion";
+import type React from "react";
+import { useState } from "react";
 
 // Icons
 const SunIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <circle cx="12" cy="12" r="4" />
     <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
   </svg>
 );
 
 const MoonIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
   </svg>
 );
 
 const MonitorIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <rect width="20" height="14" x="2" y="3" rx="2" />
     <line x1="8" x2="16" y1="21" y2="21" />
     <line x1="12" x2="12" y1="17" y2="21" />
@@ -39,14 +35,14 @@ const MonitorIcon = () => (
 );
 
 const ClockIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <circle cx="12" cy="12" r="10" />
     <polyline points="12,6 12,12 16,14" />
   </svg>
 );
 
 const SparklesIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
     <path d="M19 15l.9 2.7 2.7.9-2.7.9-.9 2.7-.9-2.7-2.7-.9 2.7-.9.9-2.7z" />
   </svg>
@@ -65,26 +61,19 @@ const ThemeOption: React.FC<{
   <motion.button
     onClick={onClick}
     className={cn(
-      "relative flex flex-col items-start p-4 rounded-2xl border-2 transition-all text-left w-full",
+      "relative flex flex-col items-start p-4 rounded-2xl border-2 transition-all text-start w-full",
       current === value
         ? "border-primary bg-primary/5 dark:bg-primary/10"
-        : "border-border hover:border-primary/50 bg-card"
+        : "border-border hover:border-primary/50 bg-card",
     )}
     whileHover={{ scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
   >
     {/* Preview */}
-    <div className="w-full h-20 rounded-xl overflow-hidden mb-3 border border-border/50">
-      {preview}
-    </div>
+    <div className="w-full h-20 rounded-xl overflow-hidden mb-3 border border-border/50">{preview}</div>
 
     <div className="flex items-center gap-2 mb-1">
-      <span
-        className={cn(
-          "transition-colors",
-          current === value ? "text-primary" : "text-muted-foreground"
-        )}
-      >
+      <span className={cn("transition-colors", current === value ? "text-primary" : "text-muted-foreground")}>
         {icon}
       </span>
       <span className="font-semibold">{label}</span>
@@ -94,12 +83,13 @@ const ThemeOption: React.FC<{
     {/* Selection indicator */}
     {current === value && (
       <motion.div
-        className="absolute top-3 right-3 w-6 h-6 bg-primary rounded-full flex items-center justify-center"
+        className="absolute top-3 end-3 w-6 h-6 bg-primary rounded-full flex items-center justify-center"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 500, damping: 30 }}
       >
         <svg
+          aria-hidden="true"
           className="w-4 h-4 text-primary-foreground"
           fill="none"
           viewBox="0 0 24 24"
@@ -175,7 +165,7 @@ const TransitionOption: React.FC<{
     onClick={onClick}
     className={cn(
       "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
-      current === value ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+      current === value ? "border-primary bg-primary/5" : "border-border hover:border-primary/50",
     )}
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
@@ -258,9 +248,7 @@ function ThemeSettingsPanel({ className }: { className?: string }) {
 
       {/* Transition Style */}
       <div>
-        <h4 className="text-sm font-medium text-muted-foreground mb-3">
-          &quot;Transition Style&quot;
-        </h4>
+        <h4 className="text-sm font-medium text-muted-foreground mb-3">&quot;Transition Style&quot;</h4>
         <div className="flex gap-2">
           <TransitionOption
             value="instant"
@@ -268,6 +256,7 @@ function ThemeSettingsPanel({ className }: { className?: string }) {
             label="Instant"
             icon={
               <svg
+                aria-hidden="true"
                 className="w-5 h-5"
                 viewBox="0 0 24 24"
                 fill="none"
@@ -285,6 +274,7 @@ function ThemeSettingsPanel({ className }: { className?: string }) {
             label="Smooth"
             icon={
               <svg
+                aria-hidden="true"
                 className="w-5 h-5"
                 viewBox="0 0 24 24"
                 fill="none"
@@ -302,6 +292,7 @@ function ThemeSettingsPanel({ className }: { className?: string }) {
             label="Radial"
             icon={
               <svg
+                aria-hidden="true"
                 className="w-5 h-5"
                 viewBox="0 0 24 24"
                 fill="none"
@@ -321,24 +312,18 @@ function ThemeSettingsPanel({ className }: { className?: string }) {
       {/* Schedule */}
       <div>
         <button
+          type="button"
           onClick={handleScheduleToggle}
           className="flex items-center justify-between w-full p-4 rounded-xl border border-border hover:border-primary/50 transition-colors"
         >
           <div className="flex items-center gap-3">
             <ClockIcon />
-            <div className="text-left">
+            <div className="text-start">
               <p className="font-medium">&quot;Schedule&quot;</p>
-              <p className="text-xs text-muted-foreground">
-                &quot;Auto-switch at specific times&quot;
-              </p>
+              <p className="text-xs text-muted-foreground">&quot;Auto-switch at specific times&quot;</p>
             </div>
           </div>
-          <div
-            className={cn(
-              "w-12 h-7 rounded-full p-1 transition-colors",
-              showSchedule ? "bg-primary" : "bg-muted"
-            )}
-          >
+          <div className={cn("w-12 h-7 rounded-full p-1 transition-colors", showSchedule ? "bg-primary" : "bg-muted")}>
             <motion.div
               className="w-5 h-5 bg-white rounded-full shadow-md"
               animate={{ x: showSchedule ? 20 : 0 }}
@@ -358,10 +343,11 @@ function ThemeSettingsPanel({ className }: { className?: string }) {
             >
               <div className="grid grid-cols-2 gap-4 mt-4 p-4 bg-muted/50 rounded-xl">
                 <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-2">
+                  <label htmlFor="light-mode-start" className="block text-xs font-medium text-muted-foreground mb-2">
                     &quot;Light mode from&quot;
                   </label>
                   <input
+                    id="light-mode-start"
                     type="time"
                     value={schedule?.lightStart || "07:00"}
                     onChange={(e) => handleScheduleChange("lightStart", e.target.value)}
@@ -369,10 +355,11 @@ function ThemeSettingsPanel({ className }: { className?: string }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-2">
+                  <label htmlFor="dark-mode-start" className="block text-xs font-medium text-muted-foreground mb-2">
                     &quot;Dark mode from&quot;
                   </label>
                   <input
+                    id="dark-mode-start"
                     type="time"
                     value={schedule?.darkStart || "19:00"}
                     onChange={(e) => handleScheduleChange("darkStart", e.target.value)}

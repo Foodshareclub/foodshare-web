@@ -5,7 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
  * Useful for event handlers that need to access latest state without causing re-renders.
  */
 export function useEvent<TArgs extends unknown[], TReturn>(
-  fn: (...args: TArgs) => TReturn
+  fn: (...args: TArgs) => TReturn,
 ): (...args: TArgs) => TReturn {
   const handlerRef = useRef(fn);
   useLayoutEffect(() => {
@@ -17,14 +17,9 @@ export function useEvent<TArgs extends unknown[], TReturn>(
   }, []);
 }
 
-type GetWindowEvent<Type extends string> = Type extends keyof WindowEventMap
-  ? WindowEventMap[Type]
-  : Event;
+type GetWindowEvent<Type extends string> = Type extends keyof WindowEventMap ? WindowEventMap[Type] : Event;
 
-export function useWindowEvent<Type extends string>(
-  type: Type,
-  cb: (event: GetWindowEvent<Type>) => void
-): void;
+export function useWindowEvent<Type extends string>(type: Type, cb: (event: GetWindowEvent<Type>) => void): void;
 
 export function useWindowEvent(type: string, cb: (event: Event) => void) {
   const eventCb = useEvent(cb);

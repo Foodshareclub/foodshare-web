@@ -8,43 +8,43 @@
  * Dynamically imported by page.tsx to keep admin bundle separate.
  */
 
-import { useState, useTransition } from "react";
-import {
-  Mail,
-  Eye,
-  Sparkles,
-  KeyRound,
-  Wand2,
-  MessageCircle,
-  Heart,
-  Star,
-  Clock,
-  AlertCircle,
-  BarChart3,
-  X,
-  Smartphone,
-  Monitor,
-  ExternalLink,
-  Database,
-  Code,
-  RefreshCw,
-  CheckCircle2,
-  AlertTriangle,
-  Users,
-  Home,
-  Trophy,
-  Leaf,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
-  useEmailTemplates,
-  useRenderTemplate,
-  useInvalidateTemplates,
   type EmailTemplate,
   TEMPLATE_CATEGORIES,
+  useEmailTemplates,
+  useInvalidateTemplates,
+  useRenderTemplate,
 } from "@/hooks/use-email-templates";
+import { cn } from "@/lib/utils";
+import {
+  AlertCircle,
+  AlertTriangle,
+  BarChart3,
+  CheckCircle2,
+  Clock,
+  Code,
+  Database,
+  ExternalLink,
+  Eye,
+  Heart,
+  Home,
+  KeyRound,
+  Leaf,
+  Mail,
+  MessageCircle,
+  Monitor,
+  RefreshCw,
+  Smartphone,
+  Sparkles,
+  Star,
+  Trophy,
+  Users,
+  Wand2,
+  X,
+} from "lucide-react";
+import { useState, useTransition } from "react";
 
 // ============================================================================
 // Template Icon Mapping
@@ -182,12 +182,7 @@ export default function EmailTemplatesClient() {
   const [isPending, startTransition] = useTransition();
 
   // Fetch templates from database
-  const {
-    data: templates,
-    isLoading,
-    error,
-    refetch,
-  } = useEmailTemplates(selectedCategory ?? undefined);
+  const { data: templates, isLoading, error, refetch } = useEmailTemplates(selectedCategory ?? undefined);
 
   // Render template mutation
   const renderMutation = useRenderTemplate();
@@ -277,25 +272,27 @@ export default function EmailTemplatesClient() {
           {/* Category Filter */}
           <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/50">
             <button
+              type="button"
               onClick={() => setSelectedCategory(null)}
               className={cn(
                 "px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
                 selectedCategory === null
                   ? "bg-background shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               All
             </button>
             {TEMPLATE_CATEGORIES.map((cat) => (
               <button
+                type="button"
                 key={cat.value}
                 onClick={() => setSelectedCategory(cat.value)}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
                   selectedCategory === cat.value
                     ? "bg-background shadow-sm text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {cat.label}
@@ -304,13 +301,7 @@ export default function EmailTemplatesClient() {
           </div>
 
           {/* Refresh Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isPending}
-            className="gap-1.5"
-          >
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isPending} className="gap-1.5">
             <RefreshCw className={cn("h-3.5 w-3.5", isPending && "animate-spin")} />
             Refresh
           </Button>
@@ -320,7 +311,7 @@ export default function EmailTemplatesClient() {
       {/* Content */}
       <div className="flex-1 flex gap-4 overflow-hidden">
         {/* Template List */}
-        <div className="w-80 flex-shrink-0 overflow-y-auto pr-2 space-y-2">
+        <div className="w-80 flex-shrink-0 overflow-y-auto pe-2 space-y-2">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -338,14 +329,15 @@ export default function EmailTemplatesClient() {
 
               return (
                 <button
+                  type="button"
                   key={template.id}
                   onClick={() => loadDatabaseTemplate(template)}
                   className={cn(
-                    "w-full p-4 rounded-xl border text-left transition-all duration-200",
+                    "w-full p-4 rounded-xl border text-start transition-all duration-200",
                     "hover:border-primary/30 hover:shadow-md hover:shadow-primary/5",
                     isSelected
                       ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
-                      : "border-border/50 bg-card/50"
+                      : "border-border/50 bg-card/50",
                   )}
                 >
                   <div className="flex items-start gap-3">
@@ -354,16 +346,12 @@ export default function EmailTemplatesClient() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-foreground text-sm truncate">
-                          {template.name}
-                        </h3>
+                        <h3 className="font-semibold text-foreground text-sm truncate">{template.name}</h3>
                         <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                           v{template.version}
                         </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {template.slug}
-                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{template.slug}</p>
                       <div className="flex items-center gap-2 mt-1.5">
                         <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                           {template.category}
@@ -382,9 +370,7 @@ export default function EmailTemplatesClient() {
               );
             })
           ) : (
-            <div className="text-center py-12 text-muted-foreground text-sm">
-              No templates found
-            </div>
+            <div className="text-center py-12 text-muted-foreground text-sm">No templates found</div>
           )}
         </div>
 
@@ -405,9 +391,7 @@ export default function EmailTemplatesClient() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-foreground text-sm">
-                              {selectedTemplate.name}
-                            </h3>
+                            <h3 className="font-semibold text-foreground text-sm">{selectedTemplate.name}</h3>
                             <Badge
                               variant={previewSource === "database" ? "default" : "secondary"}
                               className="text-[10px] gap-1"
@@ -425,9 +409,7 @@ export default function EmailTemplatesClient() {
                               )}
                             </Badge>
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            {selectedTemplate.subject}
-                          </p>
+                          <p className="text-xs text-muted-foreground">{selectedTemplate.subject}</p>
                         </div>
                       </>
                     );
@@ -438,23 +420,25 @@ export default function EmailTemplatesClient() {
                   {/* View Mode Toggle */}
                   <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/50">
                     <button
+                      type="button"
                       onClick={() => setViewMode("desktop")}
                       className={cn(
                         "p-1.5 rounded-md transition-colors",
                         viewMode === "desktop"
                           ? "bg-background shadow-sm text-foreground"
-                          : "text-muted-foreground hover:text-foreground"
+                          : "text-muted-foreground hover:text-foreground",
                       )}
                     >
                       <Monitor className="h-4 w-4" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => setViewMode("mobile")}
                       className={cn(
                         "p-1.5 rounded-md transition-colors",
                         viewMode === "mobile"
                           ? "bg-background shadow-sm text-foreground"
-                          : "text-muted-foreground hover:text-foreground"
+                          : "text-muted-foreground hover:text-foreground",
                       )}
                     >
                       <Smartphone className="h-4 w-4" />
@@ -501,7 +485,7 @@ export default function EmailTemplatesClient() {
                   <div
                     className={cn(
                       "mx-auto transition-all duration-300 bg-white rounded-lg shadow-xl overflow-hidden",
-                      viewMode === "desktop" ? "max-w-[650px]" : "max-w-[375px]"
+                      viewMode === "desktop" ? "max-w-[650px]" : "max-w-[375px]",
                     )}
                   >
                     <iframe
@@ -522,9 +506,7 @@ export default function EmailTemplatesClient() {
                     <span className="font-medium">Variables:</span>
                     {selectedTemplate.variables.map((v, i) => (
                       <span key={v.name}>
-                        <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">
-                          {"{{" + v.name + "}}"}
-                        </code>
+                        <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">{`{{${v.name}}}`}</code>
                         {v.required && <span className="text-destructive">*</span>}
                         {i < selectedTemplate.variables.length - 1 && ", "}
                       </span>

@@ -9,9 +9,9 @@
  * - Error handling
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useDebounce } from "./useDebounce";
 import { apiCache } from "@/lib/api-cache";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useDebounce } from "./useDebounce";
 
 interface UseOptimizedSearchOptions<T> {
   searchFn: (query: string) => Promise<T>;
@@ -98,7 +98,7 @@ export function useOptimizedSearch<T = unknown>({
         onError?.(error);
       }
     },
-    [searchFn, minQueryLength, cacheKey, cacheTTL, onSuccess, onError]
+    [searchFn, minQueryLength, cacheKey, cacheTTL, onSuccess, onError],
   );
 
   // Trigger search when debounced query changes

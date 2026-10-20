@@ -19,7 +19,7 @@ describe("server-rendered providers", () => {
     const html = renderToStaticMarkup(
       <Providers initialLocale="en" initialMessages={{}}>
         <Content />
-      </Providers>
+      </Providers>,
     );
     expect(html).toContain('<main lang="en">Community listings</main>');
     expect(html).not.toContain("animate-spin");
@@ -29,7 +29,7 @@ describe("server-rendered providers", () => {
     const html = renderToStaticMarkup(
       <Providers initialLocale="ar" initialMessages={{}}>
         <Content />
-      </Providers>
+      </Providers>,
     );
     expect(html).toContain('<main lang="ar">Community listings</main>');
   });

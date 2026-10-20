@@ -4,12 +4,7 @@
  * Common with Supabase's local session persistence
  */
 
-export type StorageErrorType =
-  | "quota_exceeded"
-  | "permission_denied"
-  | "private_browsing"
-  | "corrupted_db"
-  | "unknown";
+export type StorageErrorType = "quota_exceeded" | "permission_denied" | "private_browsing" | "corrupted_db" | "unknown";
 
 export interface StorageErrorInfo {
   type: StorageErrorType;
@@ -28,10 +23,7 @@ export function detectStorageError(error: Error | string): StorageErrorInfo | nu
 
   // LevelDB errors (IndexedDB backend)
   if (fullError.includes("leveldb") || fullError.includes(".ldb")) {
-    if (
-      fullError.includes("unable to create writable file") ||
-      fullError.includes("newwritablefile")
-    ) {
+    if (fullError.includes("unable to create writable file") || fullError.includes("newwritablefile")) {
       return {
         type: "quota_exceeded",
         message: "Browser storage quota exceeded or permissions issue",
@@ -43,16 +35,11 @@ export function detectStorageError(error: Error | string): StorageErrorInfo | nu
   }
 
   // Quota errors
-  if (
-    fullError.includes("quota") ||
-    fullError.includes("storage full") ||
-    fullError.includes("exceeds quota")
-  ) {
+  if (fullError.includes("quota") || fullError.includes("storage full") || fullError.includes("exceeds quota")) {
     return {
       type: "quota_exceeded",
       message: "Browser storage quota exceeded",
-      userGuidance:
-        "Please clear your browser cache and try again. You can do this in your browser settings.",
+      userGuidance: "Please clear your browser cache and try again. You can do this in your browser settings.",
       canRecover: true,
     };
   }
@@ -72,18 +59,13 @@ export function detectStorageError(error: Error | string): StorageErrorInfo | nu
     return {
       type: "private_browsing",
       message: "Private browsing mode detected",
-      userGuidance:
-        "Some features may not work in private browsing mode. Please use a regular browser window.",
+      userGuidance: "Some features may not work in private browsing mode. Please use a regular browser window.",
       canRecover: false,
     };
   }
 
   // Database corruption
-  if (
-    fullError.includes("corrupt") ||
-    fullError.includes("damaged") ||
-    fullError.includes("invalid database")
-  ) {
+  if (fullError.includes("corrupt") || fullError.includes("damaged") || fullError.includes("invalid database")) {
     return {
       type: "corrupted_db",
       message: "Browser database corrupted",
@@ -182,7 +164,7 @@ export async function clearSupabaseStorage(): Promise<boolean> {
   try {
     // Clear localStorage keys related to Supabase EXCEPT auth tokens
     const supabaseKeys = Object.keys(localStorage).filter(
-      (key) => (key.includes("supabase") || key.includes("sb-")) && !isAuthKey(key)
+      (key) => (key.includes("supabase") || key.includes("sb-")) && !isAuthKey(key),
     );
 
     console.log("[StorageErrorHandler] Clearing non-auth Supabase keys:", supabaseKeys);
@@ -191,8 +173,7 @@ export async function clearSupabaseStorage(): Promise<boolean> {
     // Delete Supabase IndexedDB databases EXCEPT auth-related ones
     const databases = await indexedDB.databases();
     const supabaseDbs = databases.filter(
-      (db) =>
-        (db.name?.includes("supabase") || db.name?.includes("sb-")) && !isAuthKey(db.name || "")
+      (db) => (db.name?.includes("supabase") || db.name?.includes("sb-")) && !isAuthKey(db.name || ""),
     );
 
     for (const db of supabaseDbs) {
@@ -212,7 +193,7 @@ export async function clearSupabaseStorage(): Promise<boolean> {
 /**
  * Logs storage errors in a user-friendly way
  */
-export function logStorageError(error: Error | string, context: string = "Storage"): void {
+export function logStorageError(error: Error | string, context = "Storage"): void {
   const storageError = detectStorageError(error);
 
   if (storageError) {

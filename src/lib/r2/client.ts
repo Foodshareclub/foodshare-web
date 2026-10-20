@@ -6,7 +6,7 @@
  * Credentials fetched from Supabase Vault in production
  */
 
-import { getR2Secrets, type R2Secrets } from "./vault";
+import { type R2Secrets, getR2Secrets } from "./vault";
 
 // Cached config (populated on first use)
 let cachedConfig: R2Secrets | null = null;
@@ -97,13 +97,7 @@ async function sha256(data: ArrayBuffer | string): Promise<string> {
  */
 async function hmacSha256(key: ArrayBuffer, data: string): Promise<ArrayBuffer> {
   const encoder = new TextEncoder();
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    key,
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
+  const cryptoKey = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   return crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(data));
 }
 
@@ -112,10 +106,7 @@ async function hmacSha256(key: ArrayBuffer, data: string): Promise<ArrayBuffer> 
  */
 async function getSigningKey(secretAccessKey: string, dateStamp: string): Promise<ArrayBuffer> {
   const encoder = new TextEncoder();
-  const kDate = await hmacSha256(
-    encoder.encode("AWS4" + secretAccessKey).buffer as ArrayBuffer,
-    dateStamp
-  );
+  const kDate = await hmacSha256(encoder.encode(`AWS4${secretAccessKey}`).buffer as ArrayBuffer, dateStamp);
   const kRegion = await hmacSha256(kDate, "auto");
   const kService = await hmacSha256(kRegion, "s3");
   return hmacSha256(kService, "aws4_request");
@@ -129,7 +120,7 @@ async function signRequest(
   method: string,
   path: string,
   headers: Record<string, string>,
-  body?: ArrayBuffer
+  body?: ArrayBuffer,
 ): Promise<Record<string, string>> {
   const now = new Date();
   const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, "");
@@ -147,9 +138,7 @@ async function signRequest(
   };
 
   const sortedKeys = Object.keys(canonicalHeaders).sort();
-  const canonicalHeadersStr = sortedKeys
-    .map((k) => `${k.toLowerCase()}:${canonicalHeaders[k]}`)
-    .join("\n");
+  const canonicalHeadersStr = sortedKeys.map((k) => `${k.toLowerCase()}:${canonicalHeaders[k]}`).join("\n");
   const signedHeaders = sortedKeys.map((k) => k.toLowerCase()).join(";");
 
   // Create canonical request
@@ -157,19 +146,14 @@ async function signRequest(
     method,
     canonicalUri,
     "", // query string
-    canonicalHeadersStr + "\n",
+    `${canonicalHeadersStr}\n`,
     signedHeaders,
     payloadHash,
   ].join("\n");
 
   // Create string to sign
   const credentialScope = `${dateStamp}/auto/s3/aws4_request`;
-  const stringToSign = [
-    "AWS4-HMAC-SHA256",
-    amzDate,
-    credentialScope,
-    await sha256(canonicalRequest),
-  ].join("\n");
+  const stringToSign = ["AWS4-HMAC-SHA256", amzDate, credentialScope, await sha256(canonicalRequest)].join("\n");
 
   // Calculate signature
   const signingKey = await getSigningKey(config.secretAccessKey!, dateStamp);
@@ -191,11 +175,7 @@ async function signRequest(
  * @param path - Object path (e.g., "posts/123/image.jpg")
  * @param contentType - Optional MIME type override
  */
-export async function uploadToR2(
-  file: File | Blob,
-  path: string,
-  contentType?: string
-): Promise<R2UploadResult> {
+export async function uploadToR2(file: File | Blob, path: string, contentType?: string): Promise<R2UploadResult> {
   const config = await getConfig();
 
   if (!config.accountId || !config.accessKeyId || !config.secretAccessKey) {
@@ -215,7 +195,7 @@ export async function uploadToR2(
         "Content-Type": mimeType,
         "Content-Length": arrayBuffer.byteLength.toString(),
       },
-      arrayBuffer
+      arrayBuffer,
     );
 
     const response = await fetch(`${getEndpoint(config.accountId)}${objectPath}`, {
@@ -313,7 +293,7 @@ export async function existsInR2(path: string): Promise<boolean> {
 export async function getPresignedUpload(
   path: string,
   contentType: string,
-  contentLength: number
+  contentLength: number,
 ): Promise<{ url: string; headers: Record<string, string> } | null> {
   const config = await getConfig();
 

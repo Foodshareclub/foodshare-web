@@ -1,9 +1,10 @@
+/* oxlint-disable unicorn/no-thenable -- Supabase query builder mocks must be thenable. */
 /**
  * Email Server Actions Tests
  * Unit tests for email sending server actions
  */
 
-import { mock, describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 // Shared mock state
 const mockState = {
@@ -46,7 +47,7 @@ mock.module("@/lib/email/unified-service", () => ({
   createUnifiedEmailService: mock(() =>
     Promise.resolve({
       sendEmail: mock(() => Promise.resolve(mockState.unifiedEmailResult)),
-    })
+    }),
   ),
 }));
 
@@ -57,7 +58,7 @@ mock.module("@/lib/notifications", () => ({
       success: mockState.emailSendResult.success,
       data: { notificationId: mockState.emailSendResult.messageId },
       error: mockState.emailSendResult.error,
-    })
+    }),
   ),
 }));
 
@@ -105,7 +106,6 @@ mock.module("@/lib/supabase/server", () => ({
       // For user_roles table (array result)
       if (tableName === "user_roles") {
         Object.assign(chain, {
-          // eslint-disable-next-line unicorn/no-thenable
           then: (resolve: (value: unknown) => void) =>
             resolve({
               data: mockState.userRoles,
@@ -123,7 +123,7 @@ mock.module("@/lib/supabase/server", () => ({
           Promise.resolve({
             data: { user: mockState.user },
             error: mockState.authError,
-          })
+          }),
         ),
       },
       from: mock((tableName: string) => createSelectChain(tableName)),
@@ -136,23 +136,18 @@ mock.module("@/lib/supabase/server", () => ({
           eq: mock(() => ({ single: mock(() => Promise.resolve({ data: null, error: null })) })),
         })),
       })),
-    })
+    }),
   ),
   createServerClient: mock(() => Promise.resolve({})),
 }));
 
 // Import actions after mocks
-import {
-  sendNewMessageNotification,
-  sendListingInterestNotification,
-  sendPickupReminder,
-  sendReviewRequest,
-  sendListingExpiredNotification,
-  sendExchangeCompletionEmail,
-  previewEmailTemplate,
-  sendAdminEmail,
-  sendTestEmailDirect,
-} from "@/app/actions/email";
+// Only the admin-gated exports remain. The six unauthenticated notification
+// actions and `sendEmailAsync` were removed: they had no callers, and being
+// exports of a `'use server'` module they were reachable by anyone who read the
+// client bundle, turning the app into a branded-email relay. Exchange-completion
+// delivery now lives in the non-action module `@/lib/email/exchange-completion`.
+import { previewEmailTemplate, sendAdminEmail, sendTestEmailDirect } from "@/app/actions/email";
 
 // Helper type to extract error from failed result
 type FailedResult = { success: false; error: { message: string; code: string } };
@@ -175,447 +170,6 @@ describe("Email Server Actions", () => {
       success: true,
       messageId: "unified-msg-123",
     };
-  });
-
-  // ==========================================================================
-  // sendNewMessageNotification Tests
-  // ==========================================================================
-
-  describe("sendNewMessageNotification", () => {
-    const validData = {
-      senderName: "John Doe",
-      senderAvatar: "https://example.com/avatar.jpg",
-      messagePreview: "Hello, I am interested in your food listing!",
-      conversationUrl: "https://foodshare.club/chat/123",
-      listingTitle: "Fresh Vegetables",
-      listingImage: "https://example.com/vegetables.jpg",
-      listingType: "food",
-    };
-
-    it("should reject invalid email address", async () => {
-      const result = await sendNewMessageNotification("invalid-email", validData);
-
-      expect(result.success).toBe(false);
-      if (isFailedResult(result)) {
-        expect(result.error).toMatchObject({ message: "Invalid recipient email address" });
-      }
-    });
-
-    it("should reject empty email address", async () => {
-      const result = await sendNewMessageNotification("", validData);
-
-      expect(result.success).toBe(false);
-      if (isFailedResult(result)) {
-        expect(result.error).toMatchObject({ message: "Invalid recipient email address" });
-      }
-    });
-
-    it("should reject missing sender name", async () => {
-      const result = await sendNewMessageNotification("test@example.com", {
-        ...validData,
-        senderName: "",
-      });
-
-      expect(result.success).toBe(false);
-      if (isFailedResult(result)) {
-        expect(result.error.message).toContain("Sender name is required");
-      }
-    });
-
-    it("should reject missing message preview", async () => {
-      const result = await sendNewMessageNotification("test@example.com", {
-        ...validData,
-        messagePreview: "",
-      });
-
-      expect(result.success).toBe(false);
-      if (isFailedResult(result)) {
-        expect(result.error.message).toContain("Message preview is required");
-      }
-    });
-
-    it("should reject invalid conversation URL", async () => {
-      const result = await sendNewMessageNotification("test@example.com", {
-        ...validData,
-        conversationUrl: "not-a-url",
-      });
-
-      expect(result.success).toBe(false);
-      if (isFailedResult(result)) {
-        expect(result.error.message).toContain("Invalid conversation URL");
-      }
-    });
-
-    it("should send email successfully", async () => {
-      const result = await sendNewMessageNotification("test@example.com", validData);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.messageId).toBe("msg-123");
-      }
-    });
-
-    it("should handle email send failure", async () => {
-      mockState.emailSendResult = {
-        success: false,
-        error: "Email provider error",
-      };
-
-      const result = await sendNewMessageNotification("test@example.com", validData);
-
-      expect(result.success).toBe(false);
-      if (isFailedResult(result)) {
-        expect(result.error.message).toContain("Email provider error");
-      }
-    });
-  });
-
-  // ==========================================================================
-  // sendListingInterestNotification Tests
-  // ==========================================================================
-
-  describe("sendListingInterestNotification", () => {
-    const validData = {
-      interestedUserName: "Jane Smith",
-      interestedUserAvatar: "https://example.com/jane.jpg",
-      interestedUserRating: "4.8",
-      interestedUserShares: "15",
-      listingTitle: "Homemade Bread",
-      listingImage: "https://example.com/bread.jpg",
-      listingType: "food",
-      listingLocation: "Prague, Czech Republic",
-      messageUrl: "https://foodshare.club/chat/456",
-      listingUrl: "https://foodshare.club/food/789",
-    };
-
-    it("should reject invalid email address", async () => {
-      const result = await sendListingInterestNotification("bad-email", validData);
-
-      expect(result.success).toBe(false);
-      if (isFailedResult(result)) {
-        expect(result.error).toMatchObject({ message: "Invalid recipient email address" });
-      }
-    });
-
-    it("should reject missing interested user name", async () => {
-      const result = await sendListingInterestNotification("test@example.com", {
-        ...validData,
-        interestedUserName: "",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject missing listing title", async () => {
-      const result = await sendListingInterestNotification("test@example.com", {
-        ...validData,
-        listingTitle: "",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject invalid message URL", async () => {
-      const result = await sendListingInterestNotification("test@example.com", {
-        ...validData,
-        messageUrl: "invalid",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should send email successfully", async () => {
-      const result = await sendListingInterestNotification("test@example.com", validData);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.messageId).toBe("msg-123");
-      }
-    });
-
-    it("should handle email send failure", async () => {
-      mockState.emailSendResult = {
-        success: false,
-        error: "SMTP connection failed",
-      };
-
-      const result = await sendListingInterestNotification("test@example.com", validData);
-
-      expect(result.success).toBe(false);
-    });
-  });
-
-  // ==========================================================================
-  // sendPickupReminder Tests
-  // ==========================================================================
-
-  describe("sendPickupReminder", () => {
-    const validData = {
-      pickupTime: "14:00",
-      pickupDate: "2024-12-28",
-      listingTitle: "Fresh Produce",
-      listingImage: "https://example.com/produce.jpg",
-      sharerName: "Bob Wilson",
-      pickupAddress: "123 Food Street, Prague",
-      pickupInstructions: "Ring the bell twice",
-      directionsUrl: "https://maps.google.com/abc",
-      messageUrl: "https://foodshare.club/chat/789",
-    };
-
-    it("should reject invalid email address", async () => {
-      const result = await sendPickupReminder("notanemail", validData);
-
-      expect(result.success).toBe(false);
-      if (isFailedResult(result)) {
-        expect(result.error).toMatchObject({ message: "Invalid recipient email address" });
-      }
-    });
-
-    it("should reject missing pickup time", async () => {
-      const result = await sendPickupReminder("test@example.com", {
-        ...validData,
-        pickupTime: "",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject missing pickup date", async () => {
-      const result = await sendPickupReminder("test@example.com", {
-        ...validData,
-        pickupDate: "",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject missing sharer name", async () => {
-      const result = await sendPickupReminder("test@example.com", {
-        ...validData,
-        sharerName: "",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject invalid directions URL", async () => {
-      const result = await sendPickupReminder("test@example.com", {
-        ...validData,
-        directionsUrl: "not-a-url",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should send email successfully", async () => {
-      const result = await sendPickupReminder("test@example.com", validData);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.messageId).toBe("msg-123");
-      }
-    });
-  });
-
-  // ==========================================================================
-  // sendReviewRequest Tests
-  // ==========================================================================
-
-  describe("sendReviewRequest", () => {
-    const validData = {
-      recipientName: "Alice Johnson",
-      sharerName: "Bob Smith",
-      listingTitle: "Organic Fruits",
-      listingImage: "https://example.com/fruits.jpg",
-      pickupDate: "2024-12-25",
-      reviewUrl: "https://foodshare.club/review/123",
-    };
-
-    it("should reject invalid email address", async () => {
-      const result = await sendReviewRequest("@invalid", validData);
-
-      expect(result.success).toBe(false);
-      if (isFailedResult(result)) {
-        expect(result.error).toMatchObject({ message: "Invalid recipient email address" });
-      }
-    });
-
-    it("should reject missing recipient name", async () => {
-      const result = await sendReviewRequest("test@example.com", {
-        ...validData,
-        recipientName: "",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject missing sharer name", async () => {
-      const result = await sendReviewRequest("test@example.com", {
-        ...validData,
-        sharerName: "",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject missing listing title", async () => {
-      const result = await sendReviewRequest("test@example.com", {
-        ...validData,
-        listingTitle: "",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject invalid review URL", async () => {
-      const result = await sendReviewRequest("test@example.com", {
-        ...validData,
-        reviewUrl: "bad-url",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should send email successfully with star rating URLs", async () => {
-      const result = await sendReviewRequest("test@example.com", validData);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.messageId).toBe("msg-123");
-      }
-    });
-  });
-
-  // ==========================================================================
-  // sendListingExpiredNotification Tests
-  // ==========================================================================
-
-  describe("sendListingExpiredNotification", () => {
-    const validData = {
-      userName: "Charlie Brown",
-      listingTitle: "Leftover Pizza",
-      listingImage: "https://example.com/pizza.jpg",
-      listingType: "food",
-      expiryDate: "2024-12-27",
-      renewUrl: "https://foodshare.club/food/123/renew",
-      editUrl: "https://foodshare.club/food/123/edit",
-      markSharedUrl: "https://foodshare.club/food/123/shared",
-    };
-
-    it("should reject invalid email address", async () => {
-      const result = await sendListingExpiredNotification("wrong", validData);
-
-      expect(result.success).toBe(false);
-      if (isFailedResult(result)) {
-        expect(result.error).toMatchObject({ message: "Invalid recipient email address" });
-      }
-    });
-
-    it("should reject missing user name", async () => {
-      const result = await sendListingExpiredNotification("test@example.com", {
-        ...validData,
-        userName: "",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject missing listing title", async () => {
-      const result = await sendListingExpiredNotification("test@example.com", {
-        ...validData,
-        listingTitle: "",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject invalid renew URL", async () => {
-      const result = await sendListingExpiredNotification("test@example.com", {
-        ...validData,
-        renewUrl: "not-valid",
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should send email successfully", async () => {
-      const result = await sendListingExpiredNotification("test@example.com", validData);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.messageId).toBe("msg-123");
-      }
-    });
-
-    it("should handle email provider failure", async () => {
-      mockState.emailSendResult = {
-        success: false,
-        error: "Rate limit exceeded",
-      };
-
-      const result = await sendListingExpiredNotification("test@example.com", validData);
-
-      expect(result.success).toBe(false);
-    });
-  });
-
-  // ==========================================================================
-  // sendExchangeCompletionEmail Tests
-  // ==========================================================================
-
-  describe("sendExchangeCompletionEmail", () => {
-    const validData = {
-      to: "sharer@example.com",
-      recipientName: "John",
-      otherPartyName: "Jane Requester",
-      itemName: "Fresh Vegetables",
-      role: "sharer" as const,
-      roomId: "550e8400-e29b-41d4-a716-446655440001",
-    };
-
-    it("should reject invalid email address", async () => {
-      const result = await sendExchangeCompletionEmail({
-        ...validData,
-        to: "not-an-email",
-      });
-
-      expect(result.success).toBe(false);
-      if (isFailedResult(result)) {
-        expect(result.error).toMatchObject({ message: "Invalid recipient email address" });
-      }
-    });
-
-    it("should send email successfully for sharer role", async () => {
-      const result = await sendExchangeCompletionEmail(validData);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.messageId).toBe("msg-123");
-      }
-    });
-
-    it("should send email successfully for requester role", async () => {
-      const result = await sendExchangeCompletionEmail({
-        ...validData,
-        role: "requester",
-      });
-
-      expect(result.success).toBe(true);
-    });
-
-    it("should handle email service failure", async () => {
-      mockState.emailSendResult = {
-        success: false,
-        error: "Service unavailable",
-      };
-
-      const result = await sendExchangeCompletionEmail(validData);
-
-      expect(result.success).toBe(false);
-      if (isFailedResult(result)) {
-        expect(result.error.message).toContain("Service unavailable");
-      }
-    });
   });
 
   // ==========================================================================
@@ -830,11 +384,7 @@ describe("Email Server Actions", () => {
       mockState.user = { id: "admin-123", email: "admin@example.com" };
       mockState.userRoles = [{ roles: { name: "admin" } }];
 
-      const result = await sendTestEmailDirect(
-        "test@example.com",
-        "Test Subject",
-        "Test message body"
-      );
+      const result = await sendTestEmailDirect("test@example.com", "Test Subject", "Test message body");
 
       expect(result.success).toBe(true);
     });

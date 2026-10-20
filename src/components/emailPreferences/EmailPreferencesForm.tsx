@@ -5,9 +5,9 @@
  * Allows users to manage their email notification settings
  */
 
-import React, { useState, useTransition } from "react";
-import { saveEmailPreferences, type EmailPreferencesInput } from "@/app/actions/email-preferences";
+import { type EmailPreferencesInput, saveEmailPreferences } from "@/app/actions/email-preferences";
 import type { EmailPreferences } from "@/lib/data/email-preferences";
+import React, { useState, useTransition } from "react";
 
 interface EmailPreferencesFormProps {
   initialPreferences: EmailPreferences | null;
@@ -37,7 +37,7 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
           quiet_hours_start: initialPreferences.quiet_hours_start,
           quiet_hours_end: initialPreferences.quiet_hours_end,
         }
-      : defaultPreferences
+      : defaultPreferences,
   );
 
   const handleSave = () => {
@@ -59,9 +59,7 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold mb-2">Email Notifications</h2>
-          <p className="text-muted-foreground">
-            Manage how you receive email notifications from FoodShare
-          </p>
+          <p className="text-muted-foreground">Manage how you receive email notifications from FoodShare</p>
         </div>
 
         {message && (
@@ -82,16 +80,12 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
             <input
               type="checkbox"
               checked={preferences.chat_notifications}
-              onChange={(e) =>
-                setPreferences({ ...preferences, chat_notifications: e.target.checked })
-              }
+              onChange={(e) => setPreferences({ ...preferences, chat_notifications: e.target.checked })}
               className="mt-1 h-5 w-5 text-primary rounded focus:ring-primary"
             />
             <div>
               <p className="font-medium">Chat Messages</p>
-              <p className="text-sm text-muted-foreground">
-                Get notified when you receive new chat messages
-              </p>
+              <p className="text-sm text-muted-foreground">Get notified when you receive new chat messages</p>
             </div>
           </label>
 
@@ -109,9 +103,7 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
             />
             <div>
               <p className="font-medium">Food Listings Nearby</p>
-              <p className="text-sm text-muted-foreground">
-                Get notified when new food is listed near your location
-              </p>
+              <p className="text-sm text-muted-foreground">Get notified when new food is listed near your location</p>
             </div>
           </label>
 
@@ -119,9 +111,7 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
             <input
               type="checkbox"
               checked={preferences.review_reminders}
-              onChange={(e) =>
-                setPreferences({ ...preferences, review_reminders: e.target.checked })
-              }
+              onChange={(e) => setPreferences({ ...preferences, review_reminders: e.target.checked })}
               className="mt-1 h-5 w-5 text-primary rounded focus:ring-primary"
             />
             <div>
@@ -144,9 +134,7 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
                 name="frequency"
                 value="instant"
                 checked={preferences.notification_frequency === "instant"}
-                onChange={() =>
-                  setPreferences({ ...preferences, notification_frequency: "instant" })
-                }
+                onChange={() => setPreferences({ ...preferences, notification_frequency: "instant" })}
                 className="h-4 w-4 text-primary focus:ring-primary"
               />
               <div>
@@ -161,16 +149,12 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
                 name="frequency"
                 value="daily_digest"
                 checked={preferences.notification_frequency === "daily_digest"}
-                onChange={() =>
-                  setPreferences({ ...preferences, notification_frequency: "daily_digest" })
-                }
+                onChange={() => setPreferences({ ...preferences, notification_frequency: "daily_digest" })}
                 className="h-4 w-4 text-primary focus:ring-primary"
               />
               <div>
                 <p className="font-medium">Daily Digest</p>
-                <p className="text-sm text-muted-foreground">
-                  Receive one email per day with all updates
-                </p>
+                <p className="text-sm text-muted-foreground">Receive one email per day with all updates</p>
               </div>
             </label>
 
@@ -180,16 +164,12 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
                 name="frequency"
                 value="weekly_digest"
                 checked={preferences.notification_frequency === "weekly_digest"}
-                onChange={() =>
-                  setPreferences({ ...preferences, notification_frequency: "weekly_digest" })
-                }
+                onChange={() => setPreferences({ ...preferences, notification_frequency: "weekly_digest" })}
                 className="h-4 w-4 text-primary focus:ring-primary"
               />
               <div>
                 <p className="font-medium">Weekly Digest</p>
-                <p className="text-sm text-muted-foreground">
-                  Receive one email per week with all updates
-                </p>
+                <p className="text-sm text-muted-foreground">Receive one email per week with all updates</p>
               </div>
             </label>
           </div>
@@ -199,14 +179,16 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
         <div className="space-y-3">
           <h3 className="text-lg font-semibold">Quiet Hours</h3>
           <p className="text-sm text-muted-foreground">
-            Don&apos;t send me notifications during these hours (applies to instant notifications
-            only)
+            Don&apos;t send me notifications during these hours (applies to instant notifications only)
           </p>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Start Time</label>
+              <label htmlFor="quiet-hours-start" className="block text-sm font-medium mb-1">
+                Start Time
+              </label>
               <input
+                id="quiet-hours-start"
                 type="time"
                 value={preferences.quiet_hours_start || ""}
                 onChange={(e) =>
@@ -220,8 +202,11 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">End Time</label>
+              <label htmlFor="quiet-hours-end" className="block text-sm font-medium mb-1">
+                End Time
+              </label>
               <input
+                id="quiet-hours-end"
                 type="time"
                 value={preferences.quiet_hours_end || ""}
                 onChange={(e) =>
@@ -239,6 +224,7 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
         {/* Save Button */}
         <div className="pt-4 border-t">
           <button
+            type="button"
             onClick={handleSave}
             disabled={isPending}
             className="w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"

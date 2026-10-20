@@ -13,11 +13,12 @@
  * - Flexible configuration
  */
 
-import React, { useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { Loader2 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useEffect } from "react";
 
 // ============================================================================
 // Types
@@ -96,6 +97,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   showLoadingMessage = true,
 }) => {
   const { isAuthenticated, isAdmin, isLoading, adminCheckStatus } = useAuth();
+  const t = useTranslations("AuthFlow");
   const pathname = usePathname();
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = React.useState(false);
@@ -162,11 +164,9 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
       <div className="flex items-center justify-center h-screen bg-background">
         <div className="flex flex-col items-center gap-4 p-8 text-center">
           <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold mb-2 text-foreground">Access Denied</h1>
-          <p className="text-muted-foreground mb-6">
-            You don&apos;t have permission to access this page.
-          </p>
-          <Button onClick={() => window.history.back()}>Go Back</Button>
+          <h1 className="text-2xl font-bold mb-2 text-foreground">{t("accessDeniedTitle")}</h1>
+          <p className="text-muted-foreground mb-6">{t("accessDeniedBody")}</p>
+          <Button onClick={() => window.history.back()}>{t("goBack")}</Button>
         </div>
       </div>
     );

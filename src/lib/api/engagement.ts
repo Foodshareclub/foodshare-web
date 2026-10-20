@@ -5,8 +5,8 @@
  * Used for likes, bookmarks, and shares.
  */
 
-import { apiCall, apiGet } from "./client";
 import type { ActionResult } from "@/lib/errors";
+import { apiCall, apiGet } from "./client";
 
 // =============================================================================
 // Types (match Edge Function schemas)
@@ -61,9 +61,7 @@ export async function getEngagementAPI(postId: number): Promise<ActionResult<Eng
 /**
  * Get engagement status for multiple posts (batch)
  */
-export async function getBatchEngagementAPI(
-  postIds: number[]
-): Promise<ActionResult<BatchEngagementStatus>> {
+export async function getBatchEngagementAPI(postIds: number[]): Promise<ActionResult<BatchEngagementStatus>> {
   return apiGet<BatchEngagementStatus>(ENDPOINT, {
     postIds: postIds.join(","),
   });
@@ -83,9 +81,7 @@ export async function toggleLikeAPI(postId: number): Promise<ActionResult<Toggle
 /**
  * Toggle bookmark on a post
  */
-export async function toggleBookmarkAPI(
-  postId: number
-): Promise<ActionResult<ToggleBookmarkResponse>> {
+export async function toggleBookmarkAPI(postId: number): Promise<ActionResult<ToggleBookmarkResponse>> {
   return apiCall<ToggleBookmarkResponse, { postId: number }>(ENDPOINT, {
     method: "POST",
     body: { postId },
@@ -98,7 +94,7 @@ export async function toggleBookmarkAPI(
  */
 export async function recordShareAPI(
   postId: number,
-  method: "link" | "social" | "email" | "other" = "link"
+  method: "link" | "social" | "email" | "other" = "link",
 ): Promise<ActionResult<{ success: boolean }>> {
   return apiCall<{ success: boolean }, { postId: number; method: string }>(ENDPOINT, {
     method: "POST",
@@ -110,9 +106,7 @@ export async function recordShareAPI(
 /**
  * Get user's bookmarked post IDs
  */
-export async function getUserBookmarksAPI(
-  limit?: number
-): Promise<ActionResult<UserBookmarksResponse>> {
+export async function getUserBookmarksAPI(limit?: number): Promise<ActionResult<UserBookmarksResponse>> {
   return apiGet<UserBookmarksResponse>(ENDPOINT, {
     action: "bookmarks",
     limit: limit?.toString(),

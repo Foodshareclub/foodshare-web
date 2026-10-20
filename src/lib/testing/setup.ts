@@ -7,8 +7,8 @@
  * @module lib/testing/setup
  */
 
+import { afterAll, afterEach, beforeAll } from "bun:test";
 import { defaultHandlers } from "./msw-handlers";
-import { beforeAll, afterEach, afterAll } from "bun:test";
 
 // =============================================================================
 // Server Setup (Lazy initialization)

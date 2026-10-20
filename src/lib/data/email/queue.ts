@@ -3,8 +3,8 @@
  * Queue management, campaign tracking, automation flows, audience segmentation
  */
 
-import { createCachedClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createCachedClient } from "@/lib/supabase/server";
 
 // ============================================================================
 // Types
@@ -55,6 +55,41 @@ export interface AudienceSegment {
   isSystem: boolean;
 }
 
+interface CampaignRow {
+  id: string;
+  name: string;
+  subject: string;
+  status: RecentCampaign["status"];
+  campaign_type: string;
+  total_recipients: number | null;
+  total_sent: number | null;
+  total_opened: number | null;
+  total_clicked: number | null;
+  scheduled_at: string | null;
+  sent_at: string | null;
+  created_at: string;
+}
+
+interface AutomationFlowRow {
+  id: string;
+  name: string;
+  trigger_type: string;
+  status: ActiveAutomation["status"];
+  total_enrolled: number;
+  total_completed: number;
+  total_converted: number;
+}
+
+interface AudienceSegmentRow {
+  id: string;
+  name: string;
+  description: string | null;
+  cached_count: number | null;
+  color: string | null;
+  icon_name: string | null;
+  is_system: boolean | null;
+}
+
 // ============================================================================
 // Queue Functions
 // ============================================================================
@@ -77,15 +112,15 @@ export async function getQueueStats(): Promise<QueueStats> {
       acc[item.status] = (acc[item.status] || 0) + 1;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   );
 
   return {
-    pending: statusCounts["pending"] || 0,
-    processing: statusCounts["processing"] || 0,
-    failed: statusCounts["failed"] || 0,
+    pending: statusCounts.pending || 0,
+    processing: statusCounts.processing || 0,
+    failed: statusCounts.failed || 0,
     deadLetter: dlqRes.count || 0,
-    completed: statusCounts["completed"] || 0,
+    completed: statusCounts.completed || 0,
     totalToday: queue.length,
   };
 }
@@ -97,11 +132,7 @@ export async function getQueueStats(): Promise<QueueStats> {
 export async function getQueuedEmails(params: { status?: string }) {
   const supabase = createAdminClient();
 
-  let query = supabase
-    .from("email_queue")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(100);
+  let query = supabase.from("email_queue").select("*").order("created_at", { ascending: false }).limit(100);
 
   if (params.status) {
     query = query.eq("status", params.status);
@@ -142,7 +173,7 @@ export async function getRecentCampaigns(limit = 10): Promise<RecentCampaign[]> 
     id, name, subject, status, campaign_type,
     total_recipients, total_sent, total_opened, total_clicked,
     scheduled_at, sent_at, created_at
-  `
+  `,
     )
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -152,7 +183,7 @@ export async function getRecentCampaigns(limit = 10): Promise<RecentCampaign[]> 
     return [];
   }
 
-  return (data || []).map((c: any) => ({
+  return ((data || []) as CampaignRow[]).map((c) => ({
     id: c.id,
     name: c.name,
     subject: c.subject,
@@ -181,7 +212,7 @@ export async function getActiveAutomations(): Promise<ActiveAutomation[]> {
       `
     id, name, trigger_type, status,
     total_enrolled, total_completed, total_converted
-  `
+  `,
     )
     .in("status", ["active", "paused"])
     .order("created_at", { ascending: false });
@@ -191,7 +222,7 @@ export async function getActiveAutomations(): Promise<ActiveAutomation[]> {
     return [];
   }
 
-  return (data || []).map((a: any) => ({
+  return ((data || []) as AutomationFlowRow[]).map((a) => ({
     id: a.id,
     name: a.name,
     triggerType: a.trigger_type,
@@ -199,8 +230,7 @@ export async function getActiveAutomations(): Promise<ActiveAutomation[]> {
     totalEnrolled: a.total_enrolled || 0,
     totalCompleted: a.total_completed || 0,
     totalConverted: a.total_converted || 0,
-    conversionRate:
-      a.total_enrolled > 0 ? Math.round((a.total_converted / a.total_enrolled) * 1000) / 10 : 0,
+    conversionRate: a.total_enrolled > 0 ? Math.round((a.total_converted / a.total_enrolled) * 1000) / 10 : 0,
   }));
 }
 
@@ -218,7 +248,7 @@ export async function getAudienceSegments(): Promise<AudienceSegment[]> {
     return [];
   }
 
-  return (data || []).map((s: any) => ({
+  return ((data || []) as AudienceSegmentRow[]).map((s) => ({
     id: s.id,
     name: s.name,
     description: s.description,

@@ -42,9 +42,7 @@ export interface AppError {
 /**
  * Action result type — primary pattern for server actions
  */
-export type ActionResult<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: AppError };
+export type ActionResult<T = void> = { success: true; data: T } | { success: false; error: AppError };
 
 export type ActionResultWithData<T> = ActionResult<T>;
 export type ActionResultVoid = ActionResult<undefined>;

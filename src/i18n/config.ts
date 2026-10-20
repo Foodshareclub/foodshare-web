@@ -215,15 +215,15 @@ export const localeMetadata: Record<
 
 // Backward compatibility exports
 export const localeNames: Record<Locale, string> = Object.fromEntries(
-  locales.map((locale) => [locale, localeMetadata[locale].name])
+  locales.map((locale) => [locale, localeMetadata[locale].name]),
 ) as Record<Locale, string>;
 
 export const localeNativeNames: Record<Locale, string> = Object.fromEntries(
-  locales.map((locale) => [locale, localeMetadata[locale].nativeName])
+  locales.map((locale) => [locale, localeMetadata[locale].nativeName]),
 ) as Record<Locale, string>;
 
 export const localeFlags: Record<Locale, string> = Object.fromEntries(
-  locales.map((locale) => [locale, localeMetadata[locale].flag])
+  locales.map((locale) => [locale, localeMetadata[locale].flag]),
 ) as Record<Locale, string>;
 
 /**
@@ -242,23 +242,33 @@ export function normalizeLocale(locale: string): Locale {
 }
 
 /**
- * Gets the saved locale from localStorage or cookies
+ * Gets the saved locale.
+ *
+ * The cookie is checked *first*, and the order matters now that the server
+ * derives its locale from the cookie. It used to be localStorage first, which
+ * created a second way for the client and the server to disagree about the
+ * locale in the same session — and the only place either of them reads the
+ * value is a place that decides what the whole tree renders. Reachable today:
+ * a visitor who picked a language, then cleared cookies (or hit Safari's ITP
+ * eviction), is left with localStorage only. The client then renders their old
+ * language while every Server Component renders English, indefinitely.
+ *
+ * localStorage is still consulted second, so an existing preference is not lost
+ * when the cookie is absent.
  */
 export function getSavedLocale(): Locale | null {
   if (typeof window === "undefined") {
     return null;
   }
 
-  // Check localStorage first
-  const localStorageLocale = localStorage.getItem("locale");
-  if (localStorageLocale && isValidLocale(localStorageLocale)) {
-    return localStorageLocale;
-  }
-
-  // Check cookies
   const cookieMatch = document.cookie.match(/(?:^|;\s*)locale=([^;]*)/);
   if (cookieMatch && isValidLocale(cookieMatch[1])) {
     return cookieMatch[1] as Locale;
+  }
+
+  const localStorageLocale = localStorage.getItem("locale");
+  if (localStorageLocale && isValidLocale(localStorageLocale)) {
+    return localStorageLocale;
   }
 
   return null;

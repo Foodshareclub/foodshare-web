@@ -12,16 +12,16 @@
  * existing Upstash Vector index — no re-embedding or index recreation needed.
  */
 
-import { createOpenAI } from "@ai-sdk/openai";
-import { embed, embedMany } from "ai";
 import {
-  upsertVector,
-  upsertVectors,
-  querySimilar,
-  deleteVectors,
   type VectorMetadata,
   type VectorUpsertItem,
+  deleteVectors,
+  querySimilar,
+  upsertVector,
+  upsertVectors,
 } from "@/lib/storage/vector";
+import { createOpenAI } from "@ai-sdk/openai";
+import { embed, embedMany } from "ai";
 
 // ============================================================================
 // Configuration
@@ -64,10 +64,7 @@ const EMBEDDING_PROVIDER_OPTIONS = {
  * Check if embeddings are available (Z.AI or OpenAI key + Vector configured)
  */
 export function isEmbeddingsAvailable(): boolean {
-  return (
-    !!(process.env.ZAI_API_KEY || process.env.OPENAI_API_KEY) &&
-    !!process.env.UPSTASH_VECTOR_REST_URL
-  );
+  return !!(process.env.ZAI_API_KEY || process.env.OPENAI_API_KEY) && !!process.env.UPSTASH_VECTOR_REST_URL;
 }
 
 // ============================================================================
@@ -139,9 +136,7 @@ export interface ProductEmbeddingInput {
  */
 export async function embedProduct(product: ProductEmbeddingInput): Promise<boolean> {
   // Create combined text for embedding
-  const textContent = [product.title, product.description, product.type, product.location]
-    .filter(Boolean)
-    .join(" | ");
+  const textContent = [product.title, product.description, product.type, product.location].filter(Boolean).join(" | ");
 
   const embedding = await generateEmbedding(textContent);
   if (!embedding) return false;
@@ -166,9 +161,7 @@ export async function embedProduct(product: ProductEmbeddingInput): Promise<bool
 export async function embedProducts(products: ProductEmbeddingInput[]): Promise<number> {
   if (products.length === 0) return 0;
 
-  const texts = products.map((p) =>
-    [p.title, p.description, p.type, p.location].filter(Boolean).join(" | ")
-  );
+  const texts = products.map((p) => [p.title, p.description, p.type, p.location].filter(Boolean).join(" | "));
 
   const embeddings = await generateEmbeddings(texts);
 
@@ -232,7 +225,7 @@ export interface SemanticSearchResult {
  */
 export async function semanticSearch(
   query: string,
-  options: SemanticSearchOptions = {}
+  options: SemanticSearchOptions = {},
 ): Promise<SemanticSearchResult[]> {
   const { topK = 10, minScore = 0.5, type, userId } = options;
 
@@ -265,10 +258,7 @@ export async function semanticSearch(
 /**
  * Find similar products by product ID
  */
-export async function findSimilarProducts(
-  productId: number,
-  topK: number = 5
-): Promise<SemanticSearchResult[]> {
+export async function findSimilarProducts(productId: number, topK = 5): Promise<SemanticSearchResult[]> {
   // First, fetch the product's embedding
   const embedding = await getProductEmbedding(productId);
   if (!embedding) return [];
@@ -324,9 +314,7 @@ export interface UserEmbeddingInput {
  * Generate and store embedding for a user profile
  */
 export async function embedUserProfile(user: UserEmbeddingInput): Promise<boolean> {
-  const textContent = [user.name, user.bio, user.interests?.join(", "), user.location]
-    .filter(Boolean)
-    .join(" | ");
+  const textContent = [user.name, user.bio, user.interests?.join(", "), user.location].filter(Boolean).join(" | ");
 
   const embedding = await generateEmbedding(textContent);
   if (!embedding) return false;
@@ -346,10 +334,7 @@ export async function embedUserProfile(user: UserEmbeddingInput): Promise<boolea
 /**
  * Find similar users (for recommendations)
  */
-export async function findSimilarUsers(
-  userId: string,
-  topK: number = 5
-): Promise<SemanticSearchResult[]> {
+export async function findSimilarUsers(userId: string, topK = 5): Promise<SemanticSearchResult[]> {
   try {
     const { fetchVectors } = await import("@/lib/storage/vector");
     const results = await fetchVectors([`user:${userId}`], {

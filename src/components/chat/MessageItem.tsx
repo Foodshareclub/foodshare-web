@@ -1,6 +1,7 @@
-import React, { memo } from "react";
 import type { RoomParticipantsType } from "@/api/chatAPI";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type React from "react";
+import { memo } from "react";
 
 type MessageItemProps = {
   message: RoomParticipantsType;
@@ -33,18 +34,14 @@ const MessageItem: React.FC<MessageItemProps> = memo(
       <div className="flex justify-start" key={message.id}>
         <div className="glass rounded-3xl animate-fade-in my-2 max-w-[255px] flex items-center">
           <div className="relative group">
-            <Avatar
-              className="ml-1 cursor-pointer self-center w-6 h-6"
-              onClick={onAvatarClick}
-              title={userName}
-            >
+            <Avatar className="ms-1 cursor-pointer self-center w-6 h-6" onClick={onAvatarClick} title={userName}>
               <AvatarImage src={avatarUrl || undefined} />
               <AvatarFallback>👤</AvatarFallback>
             </Avatar>
             {/* Custom tooltip */}
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none shadow-md">
               {userName}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-popover" />
+              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-0 h-0 border-s-4 border-e-4 border-t-4 border-transparent border-t-popover" />
             </div>
           </div>
           <p className="py-2 px-4">{message.text}</p>
@@ -63,7 +60,7 @@ const MessageItem: React.FC<MessageItemProps> = memo(
       prevProps.avatarUrl === nextProps.avatarUrl &&
       prevProps.userName === nextProps.userName
     );
-  }
+  },
 );
 
 MessageItem.displayName = "MessageItem";

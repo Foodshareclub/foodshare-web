@@ -4,10 +4,10 @@
  * Used across all map implementations (LeafletPage, MapView, ProductsLocation)
  */
 
-import React from "react";
+import { getProductDetailUrl } from "@/utils/categoryMapping";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { getProductDetailUrl } from "@/utils/categoryMapping";
+import type React from "react";
 
 type ProductPopupProps = {
   id: number;
@@ -39,14 +39,7 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
   return (
     <div className="product-popup-card">
       {image && (
-        <Image
-          src={image}
-          alt={name}
-          className="product-popup-image"
-          width={280}
-          height={160}
-          loading="lazy"
-        />
+        <Image src={image} alt={name} className="product-popup-image" width={280} height={160} loading="lazy" />
       )}
 
       <h4 className="product-popup-title">{name}</h4>
@@ -57,11 +50,9 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
 
       {description && <p className="product-popup-description">{description}</p>}
 
-      {distance !== undefined && (
-        <p className="product-popup-distance">📍 {distance.toFixed(1)} km away</p>
-      )}
+      {distance !== undefined && <p className="product-popup-distance">📍 {distance.toFixed(1)} km away</p>}
 
-      <button onClick={handleViewDetails} className="product-popup-button">
+      <button type="button" onClick={handleViewDetails} className="product-popup-button">
         View Details
       </button>
     </div>

@@ -3,7 +3,7 @@
  * Verify all 10 email admin routes require authentication
  */
 
-import { describe, it, expect, beforeEach, mock } from "bun:test";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 // Mock state
 let mockUser: { id: string } | null = null;
@@ -28,8 +28,7 @@ mock.module("@/lib/supabase/server", () => {
 
 // Mock admin check
 mock.module("@/lib/data/admin-check", () => ({
-  checkUserIsAdmin: () =>
-    Promise.resolve({ isAdmin: mockIsAdmin, roles: mockIsAdmin ? ["admin"] : [] }),
+  checkUserIsAdmin: () => Promise.resolve({ isAdmin: mockIsAdmin, roles: mockIsAdmin ? ["admin"] : [] }),
   getAdminAuth: () =>
     Promise.resolve({
       isAdmin: mockIsAdmin,

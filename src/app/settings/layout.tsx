@@ -1,8 +1,8 @@
-import { Suspense } from "react";
-import { getUser, checkUserIsAdmin } from "@/app/actions/auth";
-import { createClient } from "@/lib/supabase/server";
-import { SettingsNavbar } from "./SettingsNavbar";
+import { checkUserIsAdmin, getUser } from "@/app/actions/auth";
 import { generateNoIndexMetadata } from "@/lib/metadata";
+import { createClient } from "@/lib/supabase/server";
+import { Suspense } from "react";
+import { SettingsNavbar } from "./SettingsNavbar";
 
 export const metadata = generateNoIndexMetadata("Settings", "Manage your FoodShare settings");
 

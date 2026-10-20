@@ -12,10 +12,11 @@
  * - Better user experience without page refresh
  */
 
-import { useEffect, useCallback, useRef, useState } from "react";
-import type { RealtimeChannel } from "@supabase/supabase-js";
-import type { ConnectionStatus } from "./useRealtimeSubscription";
 import { createClient } from "@/lib/supabase/client";
+import type { TimerHandle } from "@/types/timer.types";
+import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { ConnectionStatus } from "./useRealtimeSubscription";
 
 // Product record from realtime payload
 interface ProductRecord {
@@ -74,7 +75,7 @@ export function useProductRealtime({
 }: UseProductRealtimeOptions = {}): UseProductRealtimeReturn {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const reconnectAttempts = useRef(0);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<TimerHandle | null>(null);
   const subscribeRef = useRef<() => void>(undefined);
 
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
@@ -85,7 +86,7 @@ export function useProductRealtime({
       setConnectionStatus(status);
       onStatusChange?.(status);
     },
-    [onStatusChange]
+    [onStatusChange],
   );
 
   const cleanup = useCallback(() => {
@@ -102,10 +103,7 @@ export function useProductRealtime({
   }, []);
 
   const handleChange = useCallback(
-    (
-      type: "INSERT" | "UPDATE" | "DELETE",
-      payload: { new: Record<string, unknown>; old: Record<string, unknown> }
-    ) => {
+    (type: "INSERT" | "UPDATE" | "DELETE", payload: { new: Record<string, unknown>; old: Record<string, unknown> }) => {
       const record = (type === "DELETE" ? payload.old : payload.new) as ProductRecord | undefined;
       if (!record?.id) return;
 
@@ -129,7 +127,7 @@ export function useProductRealtime({
       // Notify callback
       onProductChange?.(update);
     },
-    [postType, onProductChange]
+    [postType, onProductChange],
   );
 
   const subscribe = useCallback(() => {
@@ -154,11 +152,7 @@ export function useProductRealtime({
         table: "posts",
         ...(filter ? { filter } : {}),
       },
-      (payload) =>
-        handleChange(
-          "INSERT",
-          payload as { new: Record<string, unknown>; old: Record<string, unknown> }
-        )
+      (payload) => handleChange("INSERT", payload as { new: Record<string, unknown>; old: Record<string, unknown> }),
     );
 
     // Subscribe to UPDATE events
@@ -170,11 +164,7 @@ export function useProductRealtime({
         table: "posts",
         ...(filter ? { filter } : {}),
       },
-      (payload) =>
-        handleChange(
-          "UPDATE",
-          payload as { new: Record<string, unknown>; old: Record<string, unknown> }
-        )
+      (payload) => handleChange("UPDATE", payload as { new: Record<string, unknown>; old: Record<string, unknown> }),
     );
 
     // Subscribe to DELETE events
@@ -186,11 +176,7 @@ export function useProductRealtime({
         table: "posts",
         ...(filter ? { filter } : {}),
       },
-      (payload) =>
-        handleChange(
-          "DELETE",
-          payload as { new: Record<string, unknown>; old: Record<string, unknown> }
-        )
+      (payload) => handleChange("DELETE", payload as { new: Record<string, unknown>; old: Record<string, unknown> }),
     );
 
     channel.subscribe((status) => {
@@ -201,7 +187,7 @@ export function useProductRealtime({
         updateStatus("reconnecting");
 
         if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
-          const delay = Math.min(BASE_DELAY * Math.pow(2, reconnectAttempts.current), MAX_DELAY);
+          const delay = Math.min(BASE_DELAY * 2 ** reconnectAttempts.current, MAX_DELAY);
           reconnectAttempts.current++;
 
           reconnectTimeoutRef.current = setTimeout(() => {

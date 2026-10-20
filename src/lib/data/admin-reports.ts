@@ -53,6 +53,10 @@ interface ActivityItem {
   readonly timestamp: string;
 }
 
+interface RecentUserRow {
+  created_time: string | null;
+}
+
 export interface ReportsData {
   readonly overview: OverviewMetrics;
   readonly listingsByCategory: readonly CategoryCount[];
@@ -90,7 +94,7 @@ function calculateGrowth(current: number | null, previous: number | null): numbe
  */
 function aggregateByCategory(
   items: readonly { post_type: string | null }[] | null,
-  limit: number = MAX_CATEGORIES
+  limit: number = MAX_CATEGORIES,
 ): readonly CategoryCount[] {
   const categoryMap = new Map<string, number>();
 
@@ -109,7 +113,7 @@ function aggregateByCategory(
  * Aggregate timestamped items by day
  */
 function aggregateByDay(
-  items: readonly { created_at?: string; created_time?: string }[] | null
+  items: readonly { created_at?: string | null; created_time?: string | null }[] | null,
 ): readonly DailyCount[] {
   const dayMap = new Map<string, number>();
 
@@ -153,7 +157,9 @@ export async function getReportsData(): Promise<ReportsData> {
     supabase.rpc("get_admin_reports_stats", { p_days_window: 30 }),
 
     // Category breakdown
-    supabase.from("posts").select("post_type"),
+    supabase
+      .from("posts")
+      .select("post_type"),
 
     // Recent listings for daily chart
     supabase
@@ -185,26 +191,18 @@ export async function getReportsData(): Promise<ReportsData> {
       totalArranged: Number(stats?.total_arranged) || 0,
       listingsGrowth: calculateGrowth(
         Number(stats?.listings_last_period) || 0,
-        Number(stats?.listings_prev_period) || 0
+        Number(stats?.listings_prev_period) || 0,
       ),
-      usersGrowth: calculateGrowth(
-        Number(stats?.users_last_period) || 0,
-        Number(stats?.users_prev_period) || 0
-      ),
-      chatsGrowth: calculateGrowth(
-        Number(stats?.chats_last_period) || 0,
-        Number(stats?.chats_prev_period) || 0
-      ),
+      usersGrowth: calculateGrowth(Number(stats?.users_last_period) || 0, Number(stats?.users_prev_period) || 0),
+      chatsGrowth: calculateGrowth(Number(stats?.chats_last_period) || 0, Number(stats?.chats_prev_period) || 0),
       arrangedGrowth: calculateGrowth(
         Number(stats?.arranged_last_period) || 0,
-        Number(stats?.arranged_prev_period) || 0
+        Number(stats?.arranged_prev_period) || 0,
       ),
     },
     listingsByCategory: aggregateByCategory(categoryData),
     listingsByDay: aggregateByDay(recentListings),
-    usersByDay: aggregateByDay(
-      recentUsers?.map((u: any) => ({ created_at: u.created_time })) ?? null
-    ),
+    usersByDay: aggregateByDay(recentUsers?.map((u: RecentUserRow) => ({ created_at: u.created_time })) ?? null),
     topUsers: [], // TODO: Implement with proper query
     recentActivity: [], // TODO: Implement with audit log
   } as const;

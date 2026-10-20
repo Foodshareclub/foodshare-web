@@ -1,6 +1,6 @@
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import type { FC, ReactNode } from "react";
 import React from "react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 
 export type PlacementType = "top" | "bottom" | "start" | "end";
 
@@ -13,13 +13,7 @@ type UniversalDrawerType = {
   placement: PlacementType;
 };
 
-const UniversalDrawer: FC<UniversalDrawerType> = ({
-  placement,
-  headerValue,
-  onClose,
-  isOpen,
-  children,
-}) => {
+const UniversalDrawer: FC<UniversalDrawerType> = ({ placement, headerValue, onClose, isOpen, children }) => {
   // Map Chakra placement to shadcn position
   const positionMap: Record<PlacementType, "left" | "right" | "top" | "bottom"> = {
     start: "left",

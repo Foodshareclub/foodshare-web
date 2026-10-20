@@ -16,10 +16,13 @@ interface PostDetailSectionProps {
   variant?: "default" | "inline";
 }
 
-const iconColorSchemes: Record<ColorScheme, {
-  bg: string;
-  text: string;
-}> = {
+const iconColorSchemes: Record<
+  ColorScheme,
+  {
+    bg: string;
+    text: string;
+  }
+> = {
   teal: {
     bg: "from-teal-50 to-emerald-50 dark:from-teal-950/50 dark:to-emerald-950/30",
     text: "text-teal-600 dark:text-teal-400",
@@ -78,15 +81,12 @@ export function PostDetailSection({
         className={cn(
           "flex items-center justify-between p-4 rounded-xl",
           "bg-muted/30 hover:bg-muted/50 transition-colors",
-          className
+          className,
         )}
       >
         <div className="flex items-center gap-3">
           <div
-            className={cn(
-              "flex items-center justify-center h-10 w-10 rounded-xl",
-              `bg-gradient-to-br ${colors.bg}`
-            )}
+            className={cn("flex items-center justify-center h-10 w-10 rounded-xl", `bg-gradient-to-br ${colors.bg}`)}
           >
             <Icon className={cn("h-5 w-5", colors.text)} />
           </div>
@@ -98,26 +98,14 @@ export function PostDetailSection({
   }
 
   return (
-    <div
-      className={cn(
-        "p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors",
-        className
-      )}
-    >
+    <div className={cn("p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors", className)}>
       <div className="flex items-center gap-3 mb-3">
-        <div
-          className={cn(
-            "flex items-center justify-center h-10 w-10 rounded-xl",
-            `bg-gradient-to-br ${colors.bg}`
-          )}
-        >
+        <div className={cn("flex items-center justify-center h-10 w-10 rounded-xl", `bg-gradient-to-br ${colors.bg}`)}>
           <Icon className={cn("h-5 w-5", colors.text)} />
         </div>
         <span className="font-medium text-foreground">{title}</span>
       </div>
-      <div className="text-muted-foreground leading-relaxed pl-13">
-        {children}
-      </div>
+      <div className="text-muted-foreground leading-relaxed ps-13">{children}</div>
     </div>
   );
 }

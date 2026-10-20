@@ -3,12 +3,21 @@
 import { useEffect, useState } from "react";
 
 /**
+ * Structural subset of an axe-core violation used by this dev-only overlay.
+ */
+type AxeViolation = {
+  description: string;
+  help: string;
+  impact?: string | null;
+  nodes: { html: string; failureSummary?: string }[];
+};
+
+/**
  * Accessibility Checker - Development Only
  * Uses axe-core to run accessibility audits and display violations
  */
 export function AccessibilityChecker() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [violations, setViolations] = useState<any[]>([]);
+  const [violations, setViolations] = useState<AxeViolation[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -48,8 +57,9 @@ export function AccessibilityChecker() {
   if (violations.length === 0) return null;
 
   return (
-    <div className="fixed bottom-20 right-4 z-50">
+    <div className="fixed bottom-20 end-4 z-50">
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="bg-yellow-500 text-white px-3 py-2 rounded-full shadow-lg hover:bg-yellow-600 text-sm font-bold"
       >
@@ -57,16 +67,14 @@ export function AccessibilityChecker() {
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-12 right-0 w-96 max-h-80 overflow-auto bg-white dark:bg-gray-800 rounded-lg shadow-xl border p-4">
+        <div className="absolute bottom-12 end-0 w-96 max-h-80 overflow-auto bg-white dark:bg-gray-800 rounded-lg shadow-xl border p-4">
           <h3 className="font-bold text-red-600 mb-2">Accessibility Issues</h3>
-          {violations.map((v, i) => (
-            <div key={i} className="mb-3 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm">
+          {violations.map((v) => (
+            <div key={v.help} className="mb-3 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm">
               <div className="font-semibold text-red-700 dark:text-red-400">
                 [{v.impact}] {v.help}
               </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                {v.nodes.length} element(s) affected
-              </div>
+              <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{v.nodes.length} element(s) affected</div>
             </div>
           ))}
         </div>

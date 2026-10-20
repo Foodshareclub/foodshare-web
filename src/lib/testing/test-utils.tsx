@@ -7,10 +7,11 @@
  * @module lib/testing/test-utils
  */
 
-import React, { ReactElement, ReactNode } from "react";
-import { render, RenderOptions, RenderResult } from "@testing-library/react";
-import { mock, expect } from "bun:test";
+import { expect, mock } from "bun:test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { type RenderOptions, type RenderResult, render } from "@testing-library/react";
+import type React from "react";
+import type { ReactElement, ReactNode } from "react";
 
 // =============================================================================
 // Types
@@ -87,7 +88,7 @@ export function customRender(ui: ReactElement, options: CustomRenderOptions = {}
  */
 export async function waitForCondition(
   condition: () => boolean | Promise<boolean>,
-  options: { timeout?: number; interval?: number } = {}
+  options: { timeout?: number; interval?: number } = {},
 ): Promise<void> {
   const { timeout = 5000, interval = 50 } = options;
   const startTime = Date.now();
@@ -105,9 +106,7 @@ export async function waitForCondition(
 /**
  * Wait for network requests to settle
  */
-export async function waitForNetworkIdle(
-  options: { timeout?: number; idleTime?: number } = {}
-): Promise<void> {
+export async function waitForNetworkIdle(options: { timeout?: number; idleTime?: number } = {}): Promise<void> {
   const { timeout = 5000, idleTime = 100 } = options;
   let lastRequestTime = Date.now();
   const startTime = Date.now();
@@ -228,9 +227,7 @@ export function mockIndexedDB() {
                 return { onsuccess: null };
               }),
               get: mock((key: string) => ({
-                result: databases[name][storeName].find(
-                  (item) => (item as Record<string, unknown>).id === key
-                ),
+                result: databases[name][storeName].find((item) => (item as Record<string, unknown>).id === key),
                 onsuccess: null,
               })),
               getAll: mock(() => ({
@@ -239,7 +236,7 @@ export function mockIndexedDB() {
               })),
               delete: mock((key: string) => {
                 databases[name][storeName] = databases[name][storeName].filter(
-                  (item) => (item as Record<string, unknown>).id !== key
+                  (item) => (item as Record<string, unknown>).id !== key,
                 );
                 return { onsuccess: null };
               }),
@@ -277,7 +274,7 @@ export function mockIndexedDB() {
 /**
  * Mock navigator.onLine for offline testing
  */
-export function mockOnlineStatus(isOnline: boolean = true) {
+export function mockOnlineStatus(isOnline = true) {
   Object.defineProperty(navigator, "onLine", {
     value: isOnline,
     writable: true,

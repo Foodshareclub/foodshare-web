@@ -493,7 +493,8 @@ function ClientComponent() {
 
 ### **TypeScript Types**
 
-- `@types/node` - Node.js types
+- `@types/bun` - Bun types (includes the ambient `setTimeout`/`setInterval`
+  declarations the codebase uses via `TimerHandle`/`IntervalHandle`)
 - `@types/react` - React types
 - `@types/react-dom` - React DOM types
 - `@types/leaflet` - Leaflet types

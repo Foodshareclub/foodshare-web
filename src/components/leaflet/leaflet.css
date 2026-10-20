@@ -118,8 +118,7 @@
   }
 
   .leaflet-popup {
-    transition: transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1),
-                opacity 0.15s ease-out;
+    transition: transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.15s ease-out;
   }
 }
 
@@ -231,8 +230,8 @@
   contain: layout style;
 
   /* Smooth popup animations */
-  transition: transform var(--animation-duration-normal) var(--easing-smooth),
-              opacity var(--animation-duration-fast) ease-out;
+  transition: transform var(--animation-duration-normal) var(--easing-smooth), opacity var(--animation-duration-fast)
+    ease-out;
 }
 
 /* Mobile touch optimizations */
@@ -291,12 +290,10 @@
   width: 30px;
   height: 30px;
   border-radius: 50% 50% 50% 0;
-  background: linear-gradient(135deg, #FF2D55 0%, #E6284D 100%);
+  background: linear-gradient(135deg, #ff2d55 0%, #e6284d 100%);
   position: relative;
   transform: rotate(-45deg);
-  box-shadow:
-    0 2px 8px rgba(255, 45, 85, 0.4),
-    0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(255, 45, 85, 0.4), 0 4px 16px rgba(0, 0, 0, 0.15);
   border: 3px solid #fff;
 }
 
@@ -339,10 +336,8 @@
 
 /* Hover state for markers */
 .marker-pin-container:hover .marker-pin {
-  background: linear-gradient(135deg, #FF4D6D 0%, #FF2D55 100%);
-  box-shadow:
-    0 4px 12px rgba(255, 45, 85, 0.5),
-    0 6px 20px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #ff4d6d 0%, #ff2d55 100%);
+  box-shadow: 0 4px 12px rgba(255, 45, 85, 0.5), 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 /* ===========================================
@@ -361,9 +356,7 @@
   border-radius: 50%;
   font-weight: 600;
   color: #fff;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.2),
-    0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.1);
   border: 3px solid #fff;
   transition: transform 0.2s ease-out;
 }
@@ -420,7 +413,8 @@
 }
 
 @keyframes user-location-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -450,7 +444,7 @@
 
 .product-popup-card {
   padding: 12px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .product-popup-image {
@@ -505,20 +499,29 @@
 }
 
 .product-popup-button {
+  /* It's an <a>, not a <button> (see mapHelpers.tsx): anchors are inline by
+     default, so width/text-align/decoration have to be reset explicitly. */
+  display: block;
   width: 100%;
   padding: 10px 16px;
-  background: linear-gradient(135deg, #FF2D55 0%, #E6284D 100%);
+  background: linear-gradient(135deg, #ff2d55 0%, #e6284d 100%);
   color: #fff;
   border: none;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  text-align: center;
+  text-decoration: none;
   transition: all 0.2s ease;
 }
 
+.product-popup-button:visited {
+  color: #fff;
+}
+
 .product-popup-button:hover {
-  background: linear-gradient(135deg, #FF4D6D 0%, #FF2D55 100%);
+  background: linear-gradient(135deg, #ff4d6d 0%, #ff2d55 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(255, 45, 85, 0.4);
 }

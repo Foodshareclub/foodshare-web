@@ -13,35 +13,52 @@
  * - Do Not Disturb & Quiet Hours configuration
  */
 
-import React, { useState, useEffect, useTransition, useCallback } from "react";
-import Link from "next/link";
+import {
+  getFullNotificationPreferences,
+  updateCategoryChannelAction,
+  updateNotificationSettingsAction,
+} from "@/app/actions/notifications";
+import { TelegramIntegrationCard } from "@/components/settings/TelegramIntegrationCard";
+import { Glass } from "@/components/ui/glass";
+import { Switch } from "@/components/ui/switch";
+import type { AuthUser } from "@/lib/data/auth";
+import { createClient } from "@/lib/supabase/client";
+import type { FullNotificationPreferencesData } from "@/types";
 import { motion } from "framer-motion";
 import {
   Bell,
-  ChevronLeft,
-  Smartphone,
-  Mail,
-  Send,
-  MessageSquare,
-  Sparkles,
-  ShoppingBag,
-  Moon,
-  Clock,
-  ShieldCheck,
   Check,
+  ChevronLeft,
+  Clock,
+  Mail,
+  MessageSquare,
+  Moon,
   RefreshCw,
+  Send,
+  ShieldCheck,
+  ShoppingBag,
+  Smartphone,
+  Sparkles,
 } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { Glass } from "@/components/ui/glass";
-import { TelegramIntegrationCard } from "@/components/settings/TelegramIntegrationCard";
-import { createClient } from "@/lib/supabase/client";
-import {
-  getFullNotificationPreferences,
-  updateNotificationSettingsAction,
-  updateCategoryChannelAction,
-} from "@/app/actions/notifications";
-import type { FullNotificationPreferencesData } from "@/types";
-import type { AuthUser } from "@/lib/data/auth";
+import Link from "next/link";
+import React, { useState, useEffect, useTransition, useCallback } from "react";
+
+type PreferencesResult = { ok: true; data: FullNotificationPreferencesData } | { ok: false; message: string };
+
+async function fetchPreferencesResult(): Promise<PreferencesResult> {
+  try {
+    const res = await getFullNotificationPreferences();
+    if (res.success && res.data) {
+      return { ok: true, data: res.data };
+    }
+    if (!res.success) {
+      return { ok: false, message: res.error.message || "Failed to load preferences" };
+    }
+    return { ok: false, message: "Failed to load preferences" };
+  } catch (err) {
+    return { ok: false, message: (err as Error).message };
+  }
+}
 
 interface NotificationsSettingsClientProps {
   user: AuthUser;
@@ -65,10 +82,7 @@ const itemVariants = {
   },
 };
 
-export function NotificationsSettingsClient({
-  user,
-  initialData,
-}: NotificationsSettingsClientProps) {
+export function NotificationsSettingsClient({ user, initialData }: NotificationsSettingsClientProps) {
   const [data, setData] = useState<FullNotificationPreferencesData | null>(initialData || null);
   const [isLoading, setIsLoading] = useState(!initialData);
   const [savedToast, setSavedToast] = useState(false);
@@ -77,25 +91,32 @@ export function NotificationsSettingsClient({
 
   // Load preferences from backend
   const loadPreferences = useCallback(async () => {
-    try {
-      const res = await getFullNotificationPreferences();
-      if (res.success && res.data) {
-        setData(res.data);
-      } else if (!res.success) {
-        setErrorMessage(res.error.message || "Failed to load preferences");
-      }
-    } catch (err) {
-      setErrorMessage((err as Error).message);
-    } finally {
-      setIsLoading(false);
+    const result = await fetchPreferencesResult();
+    if (result.ok) {
+      setData(result.data);
+    } else {
+      setErrorMessage(result.message);
     }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
-    if (!initialData) {
-      loadPreferences();
-    }
-  }, [initialData, loadPreferences]);
+    if (initialData) return;
+    let cancelled = false;
+    void (async () => {
+      const result = await fetchPreferencesResult();
+      if (cancelled) return;
+      if (result.ok) {
+        setData(result.data);
+      } else {
+        setErrorMessage(result.message);
+      }
+      setIsLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialData]);
 
   // Subscribe to Supabase Realtime for instant multi-device / bot updates
   useEffect(() => {
@@ -114,7 +135,7 @@ export function NotificationsSettingsClient({
         },
         () => {
           loadPreferences();
-        }
+        },
       )
       .on(
         "postgres_changes",
@@ -126,7 +147,7 @@ export function NotificationsSettingsClient({
         },
         () => {
           loadPreferences();
-        }
+        },
       )
       .subscribe();
 
@@ -136,9 +157,7 @@ export function NotificationsSettingsClient({
   }, [user.id, loadPreferences]);
 
   // Toggle Master Delivery Channel
-  const handleToggleChannel = (
-    channelKey: "push_enabled" | "email_enabled" | "telegram_enabled"
-  ) => {
+  const handleToggleChannel = (channelKey: "push_enabled" | "email_enabled" | "telegram_enabled") => {
     if (!data) return;
 
     const previousValue = data.settings[channelKey];
@@ -172,7 +191,7 @@ export function NotificationsSettingsClient({
                   [channelKey]: previousValue,
                 },
               }
-            : null
+            : null,
         );
         setErrorMessage(!res.success ? res.error.message : "Failed to update channel setting");
       }
@@ -221,7 +240,7 @@ export function NotificationsSettingsClient({
                   },
                 },
               }
-            : null
+            : null,
         );
         setErrorMessage(!res.success ? res.error.message : "Failed to update category preference");
       }
@@ -271,7 +290,7 @@ export function NotificationsSettingsClient({
                   },
                 },
               }
-            : null
+            : null,
         );
       }
     });
@@ -299,7 +318,7 @@ export function NotificationsSettingsClient({
           href="/settings"
           className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-6 group"
         >
-          <ChevronLeft className="w-4 h-4 mr-1 transition-transform group-hover:-translate-x-1" />
+          <ChevronLeft className="w-4 h-4 me-1 transition-transform rtl:scale-x-100 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
           Settings
         </Link>
 
@@ -339,12 +358,7 @@ export function NotificationsSettingsClient({
           </div>
         )}
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="space-y-6"
-        >
+        <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
           {/* Telegram Card Component */}
           <motion.div variants={itemVariants}>
             <TelegramIntegrationCard
@@ -372,9 +386,7 @@ export function NotificationsSettingsClient({
                     </div>
                     <div>
                       <p className="text-sm font-medium text-foreground">Push Notifications</p>
-                      <p className="text-xs text-muted-foreground">
-                        Mobile & browser device push notifications
-                      </p>
+                      <p className="text-xs text-muted-foreground">Mobile & browser device push notifications</p>
                     </div>
                   </div>
                   <Switch
@@ -391,9 +403,7 @@ export function NotificationsSettingsClient({
                     </div>
                     <div>
                       <p className="text-sm font-medium text-foreground">Email Notifications</p>
-                      <p className="text-xs text-muted-foreground">
-                        Activity summaries and critical security updates
-                      </p>
+                      <p className="text-xs text-muted-foreground">Activity summaries and critical security updates</p>
                     </div>
                   </div>
                   <Switch
@@ -410,9 +420,7 @@ export function NotificationsSettingsClient({
                     </div>
                     <div>
                       <p className="text-sm font-medium text-foreground">Telegram Bot Messages</p>
-                      <p className="text-xs text-muted-foreground">
-                        Direct instant alerts in your Telegram chat
-                      </p>
+                      <p className="text-xs text-muted-foreground">Direct instant alerts in your Telegram chat</p>
                     </div>
                   </div>
                   <Switch
@@ -440,12 +448,8 @@ export function NotificationsSettingsClient({
                       <MessageSquare className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground">
-                        Chat Messages & Inquiries
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        When someone messages you regarding a food item
-                      </p>
+                      <p className="text-sm font-medium text-foreground">Chat Messages & Inquiries</p>
+                      <p className="text-xs text-muted-foreground">When someone messages you regarding a food item</p>
                     </div>
                   </div>
                   <Switch
@@ -461,12 +465,8 @@ export function NotificationsSettingsClient({
                       <ShoppingBag className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground">
-                        New Food Listings Nearby
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Alerts when free food is posted in your radius
-                      </p>
+                      <p className="text-sm font-medium text-foreground">New Food Listings Nearby</p>
+                      <p className="text-xs text-muted-foreground">Alerts when free food is posted in your radius</p>
                     </div>
                   </div>
                   <Switch
@@ -483,9 +483,7 @@ export function NotificationsSettingsClient({
                     </div>
                     <div>
                       <p className="text-sm font-medium text-foreground">Reservations & Pickups</p>
-                      <p className="text-xs text-muted-foreground">
-                        Status updates for items you claimed or shared
-                      </p>
+                      <p className="text-xs text-muted-foreground">Status updates for items you claimed or shared</p>
                     </div>
                   </div>
                   <Switch
@@ -512,10 +510,7 @@ export function NotificationsSettingsClient({
                     </p>
                   </div>
                 </div>
-                <Switch
-                  checked={settings?.quiet_hours?.enabled ?? false}
-                  onCheckedChange={handleToggleQuietHours}
-                />
+                <Switch checked={settings?.quiet_hours?.enabled ?? false} onCheckedChange={handleToggleQuietHours} />
               </div>
 
               {settings?.quiet_hours?.enabled && (

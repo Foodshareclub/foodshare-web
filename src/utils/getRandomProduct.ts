@@ -1,12 +1,9 @@
 import type { InitialProductStateType } from "@/types/product.types";
 
-export function getRandomProducts(
-  products: Array<InitialProductStateType>,
-  product: InitialProductStateType
-) {
+export function getRandomProducts(products: Array<InitialProductStateType>, product: InitialProductStateType) {
   const productsWithoutItem = products.filter((prod) => prod.id !== product.id);
 
-  const indexesArray = productsWithoutItem.map((el, i) => i).sort(() => Math.random() - 0.5);
+  const indexesArray = productsWithoutItem.map((_el, i) => i).sort(() => Math.random() - 0.5);
 
   const randomElementsArray = [] as Array<InitialProductStateType>;
 

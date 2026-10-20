@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect } from "react";
 import { chatAPI } from "@/api/chatAPI";
 import { useChatStore } from "@/store/zustand/useChatStore";
+import type React from "react";
+import { useEffect } from "react";
 
 /**
  * ContainerForChat - Initializes chat channel listening

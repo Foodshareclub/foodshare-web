@@ -7,21 +7,18 @@
 
 "use client";
 
-import { useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import { Trophy, ChevronRight } from "lucide-react";
-import { containerVariants, currentUserVariants, pulseVariants } from "./animations";
-import { getTierConfig, formatXp, LEADERBOARD_LIMIT } from "./constants";
-import { LeaderboardRow } from "./LeaderboardRow";
-import { LeaderboardUserModal } from "./LeaderboardUserModal";
-import { LeaderboardSkeleton } from "./LeaderboardSkeleton";
-import type { ChallengeLeaderboardProps, UserRankInfo } from "./types";
-import {
-  useChallengeLeaderboard,
-  useCurrentUserRank,
-} from "@/hooks/queries/useChallengeLeaderboard";
+import { useChallengeLeaderboard, useCurrentUserRank } from "@/hooks/queries/useChallengeLeaderboard";
 import { useLeaderboardRealtime } from "@/hooks/queries/useLeaderboardRealtime";
 import { cn } from "@/lib/utils";
+import { motion, useReducedMotion } from "framer-motion";
+import { ChevronRight, Trophy } from "lucide-react";
+import { useState } from "react";
+import { LeaderboardRow } from "./LeaderboardRow";
+import { LeaderboardSkeleton } from "./LeaderboardSkeleton";
+import { LeaderboardUserModal } from "./LeaderboardUserModal";
+import { containerVariants, currentUserVariants, pulseVariants } from "./animations";
+import { LEADERBOARD_LIMIT, formatXp, getTierConfig } from "./constants";
+import type { ChallengeLeaderboardProps, UserRankInfo } from "./types";
 
 export function ChallengeLeaderboard({
   initialData,
@@ -48,16 +45,12 @@ export function ChallengeLeaderboard({
   }
 
   const users = leaderboard || [];
-  const showCurrentUserSection =
-    currentUserRank && !currentUserRank.isInTopTen && currentUserRank.completedCount > 0;
+  const showCurrentUserSection = currentUserRank && !currentUserRank.isInTopTen && currentUserRank.completedCount > 0;
 
   return (
     <>
       <motion.div
-        className={cn(
-          "rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden",
-          className
-        )}
+        className={cn("rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden", className)}
         variants={shouldReduceMotion ? undefined : containerVariants}
         initial="hidden"
         animate="visible"
@@ -71,7 +64,10 @@ export function ChallengeLeaderboard({
             <h3 className="font-semibold text-sm">Challenge Champions</h3>
           </div>
           {users.length > LEADERBOARD_LIMIT && (
-            <button className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors">
+            <button
+              type="button"
+              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
+            >
               View All
               <ChevronRight className="h-3 w-3" />
             </button>
@@ -83,10 +79,7 @@ export function ChallengeLeaderboard({
           {users.length === 0 ? (
             <EmptyState />
           ) : (
-            <motion.div
-              className="space-y-1"
-              variants={shouldReduceMotion ? undefined : containerVariants}
-            >
+            <motion.div className="space-y-1" variants={shouldReduceMotion ? undefined : containerVariants}>
               {users.slice(0, LEADERBOARD_LIMIT).map((user) => (
                 <LeaderboardRow
                   key={user.id}
@@ -152,7 +145,7 @@ function CurrentUserRankSection({
           "w-full flex items-center gap-3 p-2 rounded-lg",
           "bg-primary/5 border border-primary/20",
           "hover:bg-primary/10 transition-colors",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
         )}
         onClick={onClick}
         variants={shouldReduceMotion ? undefined : pulseVariants}
@@ -165,7 +158,7 @@ function CurrentUserRankSection({
         </div>
 
         {/* Info */}
-        <div className="flex-1 min-w-0 text-left">
+        <div className="flex-1 min-w-0 text-start">
           <div className="flex items-center gap-1.5">
             <span className="font-medium text-sm">Your Rank</span>
             <span className="text-xs text-primary">{tierConfig.emoji}</span>

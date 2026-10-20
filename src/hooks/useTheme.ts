@@ -6,23 +6,18 @@
  * Uses Zustand for state management (migrated from Redux)
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useUIStore } from "@/store/zustand";
-import { createClient } from "@/lib/supabase/client";
 import { themeAPI } from "@/api/themeAPI";
+import { createClient } from "@/lib/supabase/client";
 import {
-  triggerHaptic,
+  type FontScale,
   applyAccentColor,
   applyContrastMode,
-  type FontScale,
   applyFontScale,
+  triggerHaptic,
 } from "@/lib/theme/themeConfig";
-import type {
-  Theme,
-  ThemeSchedule,
-  AccentColorConfig,
-  ContrastMode,
-} from "@/store/zustand/useUIStore";
+import { useUIStore } from "@/store/zustand";
+import type { AccentColorConfig, ContrastMode, Theme, ThemeSchedule } from "@/store/zustand/useUIStore";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type ResolvedTheme = "light" | "dark";
 type TransitionType = "instant" | "smooth" | "radial";
@@ -158,15 +153,14 @@ export const useTheme = (): UseThemeReturn => {
   }, []);
 
   const [hapticEnabled, setHapticEnabledState] = useState(
-    typeof window !== "undefined" ? localStorage.getItem(HAPTIC_ENABLED_KEY) !== "false" : true
+    typeof window !== "undefined" ? localStorage.getItem(HAPTIC_ENABLED_KEY) !== "false" : true,
   );
   const hapticEnabledRef = useRef(hapticEnabled);
   useEffect(() => {
     hapticEnabledRef.current = hapticEnabled;
   }, [hapticEnabled]);
   const [fontScale, setFontScaleState] = useState<FontScale>(
-    (typeof window !== "undefined" ? (localStorage.getItem(FONT_SCALE_KEY) as FontScale) : null) ||
-      "base"
+    (typeof window !== "undefined" ? (localStorage.getItem(FONT_SCALE_KEY) as FontScale) : null) || "base",
   );
 
   // Resolve the actual theme (accounting for system preference and schedule)
@@ -247,16 +241,7 @@ export const useTheme = (): UseThemeReturn => {
     };
 
     syncFromSupabase();
-  }, [
-    isAuthenticated,
-    userId,
-    theme,
-    schedule,
-    transition,
-    setStoreTheme,
-    setStoreSchedule,
-    setStoreTransition,
-  ]);
+  }, [isAuthenticated, userId, theme, schedule, transition, setStoreTheme, setStoreSchedule, setStoreTransition]);
 
   // Reset sync flag on logout
   useEffect(() => {
@@ -277,7 +262,7 @@ export const useTheme = (): UseThemeReturn => {
         themeAPI.setTheme(userId, newTheme).catch(() => {});
       }
     },
-    [setStoreTheme, isAuthenticated, userId]
+    [setStoreTheme, isAuthenticated, userId],
   );
 
   // Toggle between light and dark with Supabase sync and optional haptic
@@ -302,7 +287,7 @@ export const useTheme = (): UseThemeReturn => {
           .catch(() => {});
       }
     },
-    [setStoreTheme, setStoreSchedule, resolvedTheme, schedule, isAuthenticated, userId]
+    [setStoreTheme, setStoreSchedule, resolvedTheme, schedule, isAuthenticated, userId],
   );
 
   // Set schedule with Supabase sync
@@ -314,7 +299,7 @@ export const useTheme = (): UseThemeReturn => {
         themeAPI.setSchedule(userId, newSchedule).catch(() => {});
       }
     },
-    [setStoreSchedule, isAuthenticated, userId]
+    [setStoreSchedule, isAuthenticated, userId],
   );
 
   // Set transition with Supabase sync
@@ -326,7 +311,7 @@ export const useTheme = (): UseThemeReturn => {
         themeAPI.setTransition(userId, newTransition).catch(() => {});
       }
     },
-    [setStoreTransition, isAuthenticated, userId]
+    [setStoreTransition, isAuthenticated, userId],
   );
 
   // Set accent color with optional haptic
@@ -338,7 +323,7 @@ export const useTheme = (): UseThemeReturn => {
       setStoreAccentColor(config);
       applyAccentColor(config, contrastMode);
     },
-    [setStoreAccentColor, contrastMode]
+    [setStoreAccentColor, contrastMode],
   );
 
   // Set contrast mode
@@ -351,7 +336,7 @@ export const useTheme = (): UseThemeReturn => {
         applyAccentColor(accentColor, mode);
       }
     },
-    [setStoreContrastMode, accentColor]
+    [setStoreContrastMode, accentColor],
   );
 
   // Set reduced motion
@@ -365,7 +350,7 @@ export const useTheme = (): UseThemeReturn => {
         root.classList.remove("reduce-motion");
       }
     },
-    [setStoreReducedMotion]
+    [setStoreReducedMotion],
   );
 
   // Set font scale
@@ -390,7 +375,7 @@ export const useTheme = (): UseThemeReturn => {
       applyAccentColor(accentColor, contrastMode);
     }
     applyContrastMode(contrastMode);
-  }, [accentColor, contrastMode, resolvedTheme]);
+  }, [accentColor, contrastMode]);
 
   // Apply font scale on mount
   useEffect(() => {

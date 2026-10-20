@@ -8,8 +8,8 @@
  * - Sentry error tracking
  */
 
-import * as Sentry from "@sentry/nextjs";
 import { createEdgeClient } from "@/lib/supabase/edge";
+import * as Sentry from "@sentry/nextjs";
 
 export interface OGStats {
   totalListings: number;
@@ -64,9 +64,14 @@ export async function getOGStats(): Promise<OGStats> {
     const supabase = createEdgeClient();
 
     // Parallel queries for performance
+    // `profiles_public`, not `profiles`: this client is the anon key, and
+    // profiles is now owner-or-admin only. Counting the projection is the same
+    // number — it has one row per publicly visible member — and reading
+    // `profiles` here would have silently counted zero, which renders as a
+    // healthy-looking "0 members" in the social card.
     const [listingsResult, usersResult] = await Promise.all([
       supabase.from("posts").select("id", { count: "exact", head: true }).eq("is_active", true),
-      supabase.from("profiles").select("id", { count: "exact", head: true }),
+      supabase.from("profiles_public").select("id", { count: "exact", head: true }),
     ]);
 
     const totalListings = listingsResult.count || 0;
@@ -113,13 +118,14 @@ export function getSeasonalTheme(): {
 
   if (month >= 11 || month <= 1) {
     return { season: "winter", accent: "#A5D8FF", emoji: "❄️" };
-  } else if (month >= 2 && month <= 4) {
-    return { season: "spring", accent: "#B2F2BB", emoji: "🌸" };
-  } else if (month >= 5 && month <= 7) {
-    return { season: "summer", accent: "#FFE066", emoji: "☀️" };
-  } else {
-    return { season: "fall", accent: "#FFBD7A", emoji: "🍂" };
   }
+  if (month >= 2 && month <= 4) {
+    return { season: "spring", accent: "#B2F2BB", emoji: "🌸" };
+  }
+  if (month >= 5 && month <= 7) {
+    return { season: "summer", accent: "#FFE066", emoji: "☀️" };
+  }
+  return { season: "fall", accent: "#FFBD7A", emoji: "🍂" };
 }
 
 export interface AppRatingStats {
@@ -166,8 +172,7 @@ export async function getAppRatingStats(): Promise<AppRatingStats> {
     }
 
     const totalRatings = validRatings.length;
-    const avgRating =
-      validRatings.reduce((sum, r) => sum + (r.reviewed_rating || 0), 0) / totalRatings;
+    const avgRating = validRatings.reduce((sum, r) => sum + (r.reviewed_rating || 0), 0) / totalRatings;
 
     const stats: AppRatingStats = {
       ratingValue: avgRating.toFixed(1),

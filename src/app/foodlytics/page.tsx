@@ -1,41 +1,42 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase/client";
-import {
-  Leaf,
-  BarChart3,
-  Sparkles,
-  CookingPot,
-  ChevronRight,
-  RotateCw,
-  Award,
-  Zap,
-  Globe,
-  Scale,
-  DollarSign,
-  Flame,
-  Droplet,
-  Info,
-  BarChart2,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  FoodCategory,
-  WasteReason,
-  CATEGORY_METRIC_MAP,
-  WasteEntry,
-  ChatMessage,
-} from "@/lib/foodlytics/types";
+import { AdvisorChat } from "@/components/foodlytics/advisor-chat";
 import { BentoStats } from "@/components/foodlytics/bento-stats";
-import { WasteForm } from "@/components/foodlytics/waste-form";
+import { CampaignTracker } from "@/components/foodlytics/campaign-tracker";
 import { CategoryInsights } from "@/components/foodlytics/category-insights";
 import { LogsTable } from "@/components/foodlytics/logs-table";
-import { AdvisorChat } from "@/components/foodlytics/advisor-chat";
-import { CampaignTracker } from "@/components/foodlytics/campaign-tracker";
 import { PriorityQueue } from "@/components/foodlytics/priority-queue";
 import { UsWasteTracker } from "@/components/foodlytics/us-waste-tracker";
+import { WasteForm } from "@/components/foodlytics/waste-form";
 import { FloatingOrbs } from "@/components/gpu/FloatingOrbs";
+import { type UsCategoryRow, fetchUsFoodCategories, fetchWasteLogs } from "@/lib/foodlytics/queries";
+import {
+  CATEGORY_METRIC_MAP,
+  type ChatMessage,
+  type FoodCategory,
+  type WasteEntry,
+  type WasteReason,
+} from "@/lib/foodlytics/types";
+import { supabase } from "@/lib/supabase/client";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Award,
+  BarChart2,
+  BarChart3,
+  ChevronRight,
+  CookingPot,
+  DollarSign,
+  Droplet,
+  Flame,
+  Globe,
+  Info,
+  Leaf,
+  RotateCw,
+  Scale,
+  Sparkles,
+  Zap,
+} from "lucide-react";
+import React, { useState, useEffect } from "react";
 
 const SECTIONS = [
   { id: "dashboard", label: "Impact Dashboard", icon: BarChart3 },
@@ -47,22 +48,17 @@ const SECTIONS = [
 
 export default function Home() {
   // Navigation
-  const [activeTab, setActiveTab] = useState<
-    "dashboard" | "campaign" | "interventions" | "advisor" | "us-waste"
-  >("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "campaign" | "interventions" | "advisor" | "us-waste">(
+    "dashboard",
+  );
 
   // Dashboard state
   const [logs, setLogs] = useState<WasteEntry[]>([]);
-  const [_isLoadingLogs, setIsLoadingLogs] = useState(true);
   const [logsError, setLogsError] = useState<string | null>(null);
 
   // US categories macro data state
-  const [usCategories, setUsCategories] = useState<any[]>([]);
+  const [usCategories, setUsCategories] = useState<UsCategoryRow[]>([]);
   const [isLoadingUsCategories, setIsLoadingUsCategories] = useState(true);
-
-  // Live DB Sync Observer HUD states
-  const [_dbStatus, setDbStatus] = useState<"connected" | "syncing" | "error">("connected");
-  const [_dbLatency, setDbLatency] = useState<number | null>(null);
 
   // Advisor Chat State
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -79,76 +75,31 @@ export default function Home() {
 
   // Fetch initial logs directly from Supabase Cloud
   const fetchLogs = async () => {
-    setIsLoadingLogs(true);
-    setDbStatus("syncing");
-    const startTime = performance.now();
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const householdId = session?.user?.user_metadata?.household_id;
-
-      const query = supabase
-        .from("waste_logs")
-        .select("*")
-        .order("discard_date", { ascending: false });
-
-      const filteredQuery = householdId ? query.eq("household_id", householdId) : query;
-
-      const { data, error } = await filteredQuery;
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      const endTime = performance.now();
-      setDbLatency(Math.round(endTime - startTime));
-      setDbStatus("connected");
-
-      const mappedData: WasteEntry[] = (data || []).map((item) => ({
-        id: item.id,
-        foodName: item.food_name,
-        category: item.category as FoodCategory,
-        weight: Number(item.weight_lbs),
-        cost: Number(item.cost_usd),
-        date: item.discard_date,
-        reason: item.reason as WasteReason,
-        co2Impact: Number(item.co2_impact_lbs),
-        waterImpact: Math.round(item.water_impact_gal),
-      }));
-
-      setLogs(mappedData);
+      const logs = await fetchWasteLogs();
+      setLogs(logs);
       setLogsError(null);
-    } catch (err: any) {
-      setDbStatus("error");
-      setLogsError(err.message || "Could not connect to the Supabase database.");
-    } finally {
-      setIsLoadingLogs(false);
-    }
-  };
-
-  // Fetch US categories telemetry once on mount
-  const fetchUsCategories = async () => {
-    setIsLoadingUsCategories(true);
-    try {
-      const { data, error } = await supabase
-        .from("us_foodwaste_categories")
-        .select("*")
-        .order("waste_tonnes", { ascending: false });
-
-      if (!error && data) {
-        setUsCategories(data);
-      }
-    } catch (e) {
-      console.error("Failed to load US categories macro stats:", e);
-    } finally {
-      setIsLoadingUsCategories(false);
+    } catch (err) {
+      setLogsError(err instanceof Error ? err.message : "Could not connect to the Supabase database.");
     }
   };
 
   useEffect(() => {
-    fetchLogs();
-    fetchUsCategories();
+    void (async () => {
+      const [logs, usCategories] = await Promise.all([
+        fetchWasteLogs().catch((err: unknown) => {
+          setLogsError(err instanceof Error ? err.message : "Could not connect to the Supabase database.");
+          return null;
+        }),
+        fetchUsFoodCategories(),
+      ]);
+      if (logs) {
+        setLogs(logs);
+        setLogsError(null);
+      }
+      setUsCategories(usCategories);
+      setIsLoadingUsCategories(false);
+    })();
   }, []);
 
   // Handle Form Submission directly to Supabase
@@ -160,7 +111,6 @@ export default function Home() {
     reason: WasteReason;
     date: string;
   }) => {
-    setDbStatus("syncing");
     try {
       const metrics = CATEGORY_METRIC_MAP[logData.category];
       const co2Val = Number((logData.weight * metrics.co2PerLb).toFixed(1));
@@ -188,15 +138,13 @@ export default function Home() {
       }
 
       await fetchLogs();
-    } catch (err: any) {
-      setDbStatus("error");
-      throw new Error(err.message || "Error saving log to Supabase");
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : "Error saving log to Supabase");
     }
   };
 
   // Handle Log Deletion directly in Supabase
   const handleDeleteLog = async (id: string) => {
-    setDbStatus("syncing");
     try {
       const { error } = await supabase.from("waste_logs").delete().eq("id", id);
 
@@ -204,9 +152,8 @@ export default function Home() {
         throw new Error(error.message);
       }
       await fetchLogs();
-    } catch (err: any) {
-      setDbStatus("error");
-      alert("Error deleting entry from Supabase: " + err.message);
+    } catch (err) {
+      alert(`Error deleting entry from Supabase: ${err instanceof Error ? err.message : "Unknown error"}`);
     }
   };
 
@@ -236,8 +183,7 @@ export default function Home() {
         throw new Error(error.message);
       }
 
-      const replyText =
-        typeof data === "string" ? data : data?.reply || data || "No response received.";
+      const replyText = typeof data === "string" ? data : data?.reply || data || "No response received.";
       const modelMsg: ChatMessage = {
         id: Math.random().toString(),
         role: "model",
@@ -245,8 +191,8 @@ export default function Home() {
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setChatMessages((prev) => [...prev, modelMsg]);
-    } catch (err: any) {
-      setApiWarning(err.message || "An error occurred calling the cloud Edge Function.");
+    } catch (err) {
+      setApiWarning(err instanceof Error ? err.message : "An error occurred calling the cloud Edge Function.");
     } finally {
       setIsChatLoading(false);
     }
@@ -282,7 +228,7 @@ export default function Home() {
       acc[item.category] = (acc[item.category] || 0) + item.cost;
       return acc;
     },
-    {} as Record<FoodCategory, number>
+    {} as Record<FoodCategory, number>,
   );
 
   const weightByCategory = logs.reduce(
@@ -290,7 +236,7 @@ export default function Home() {
       acc[item.category] = (acc[item.category] || 0) + item.weight;
       return acc;
     },
-    {} as Record<FoodCategory, number>
+    {} as Record<FoodCategory, number>,
   );
 
   const maxCategoryWeight = Math.max(...(Object.values(weightByCategory) as number[]), 1);
@@ -301,11 +247,10 @@ export default function Home() {
       acc[item.reason] = (acc[item.reason] || 0) + 1;
       return acc;
     },
-    {} as Record<WasteReason, number>
+    {} as Record<WasteReason, number>,
   );
 
-  const totalReasons: number =
-    (Object.values(reasonCounts) as number[]).reduce((s, c) => s + c, 0) || 1;
+  const totalReasons: number = (Object.values(reasonCounts) as number[]).reduce((s, c) => s + c, 0) || 1;
 
   return (
     <div className="min-h-screen text-stone-200 font-sans antialiased flex flex-col flex-1 pb-12">
@@ -320,7 +265,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Brand Logo Unit */}
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-emerald-600/20 border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-450 text-emerald-400 shadow-inner shrink-0 animate-pulse">
+            <div className="h-10 w-10 bg-emerald-600/20 border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-400 shadow-inner shrink-0 animate-pulse">
               <Leaf className="h-5 w-5 fill-emerald-400/20" />
             </div>
             <div>
@@ -346,6 +291,7 @@ export default function Home() {
           >
             {SECTIONS.map(({ id, label, icon: Icon }) => (
               <button
+                type="button"
                 key={id}
                 onClick={() => setActiveTab(id)}
                 className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer shrink-0 whitespace-nowrap ${
@@ -365,7 +311,7 @@ export default function Home() {
 
         <div className="flex-1 min-w-0 flex flex-col justify-start">
           {logsError && (
-            <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-350 text-rose-400 rounded-2xl text-xs font-bold flex items-center gap-2.5 animate-bounce">
+            <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-xs font-bold flex items-center gap-2.5 animate-bounce">
               <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping shrink-0" />
               {logsError}
             </div>
@@ -390,8 +336,8 @@ export default function Home() {
                       Global Scale & US Market Segments
                     </h2>
                     <p className="text-xs text-stone-400">
-                      Contrasting global agricultural food loss metrics against verified US
-                      nationwide market sector segmentations
+                      Contrasting global agricultural food loss metrics against verified US nationwide market sector
+                      segmentations
                     </p>
                   </div>
 
@@ -404,8 +350,8 @@ export default function Home() {
                   >
                     {/* Global Economic Loss */}
                     <div className="glass-panel hover:glass-panel-glow-rose hover:-translate-y-1.5 transition-all duration-500 rounded-3xl p-8 bg-gradient-to-br from-rose-500/10 via-stone-900/40 to-stone-900/10 border border-rose-500/20 flex flex-col justify-between cursor-default relative overflow-hidden min-h-[220px]">
-                      <div className="absolute -right-20 -bottom-20 w-60 h-60 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-                      <div className="absolute -left-10 -top-10 w-40 h-40 bg-rose-600/5 rounded-full blur-2xl pointer-events-none" />
+                      <div className="absolute -end-20 -bottom-20 w-60 h-60 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+                      <div className="absolute -start-10 -top-10 w-40 h-40 bg-rose-600/5 rounded-full blur-2xl pointer-events-none" />
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3.5">
@@ -436,17 +382,14 @@ export default function Home() {
 
                       <div className="text-[10px] text-stone-500 font-bold uppercase tracking-wider flex items-center gap-1.5 mt-2">
                         <Info className="h-3.5 w-3.5 text-rose-500/50 animate-bounce" />
-                        <span>
-                          Direct economic penalty including ecological capital and natural
-                          resources.
-                        </span>
+                        <span>Direct economic penalty including ecological capital and natural resources.</span>
                       </div>
                     </div>
 
                     {/* Global Wasted Weight */}
                     <div className="glass-panel hover:glass-panel-glow-amber hover:-translate-y-1.5 transition-all duration-500 rounded-3xl p-8 bg-gradient-to-br from-amber-500/10 via-stone-900/40 to-stone-900/10 border border-amber-500/20 flex flex-col justify-between cursor-default relative overflow-hidden min-h-[220px]">
-                      <div className="absolute -right-20 -bottom-20 w-60 h-60 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-                      <div className="absolute -left-10 -top-10 w-40 h-40 bg-amber-600/5 rounded-full blur-2xl pointer-events-none" />
+                      <div className="absolute -end-20 -bottom-20 w-60 h-60 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+                      <div className="absolute -start-10 -top-10 w-40 h-40 bg-amber-600/5 rounded-full blur-2xl pointer-events-none" />
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3.5">
@@ -477,9 +420,7 @@ export default function Home() {
 
                       <div className="text-[10px] text-stone-500 font-bold uppercase tracking-wider flex items-center gap-1.5 mt-2">
                         <Info className="h-3.5 w-3.5 text-amber-500/50 animate-bounce" />
-                        <span>
-                          Equivalent to wasting 1/3 of all food produced for human consumption.
-                        </span>
+                        <span>Equivalent to wasting 1/3 of all food produced for human consumption.</span>
                       </div>
                     </div>
                   </motion.div>
@@ -543,9 +484,7 @@ export default function Home() {
                           <h4 className="text-[10px] font-black text-white uppercase tracking-wider">
                             US Market Segmentation
                           </h4>
-                          <span className="text-[9px] text-emerald-400 font-extrabold">
-                            Active Baseline
-                          </span>
+                          <span className="text-[9px] text-emerald-400 font-extrabold">Active Baseline</span>
                         </div>
 
                         <div className="space-y-2.5">
@@ -558,10 +497,9 @@ export default function Home() {
                             usCategories.slice(0, 4).map((c) => (
                               <div key={c.id} className="space-y-1 text-[10px] font-bold">
                                 <div className="flex justify-between text-stone-300">
-                                  <span className="truncate pr-2">{c.category.split(" (")[0]}</span>
+                                  <span className="truncate pe-2">{c.category.split(" (")[0]}</span>
                                   <span className="text-white font-mono">
-                                    {(Number(c.waste_tonnes) / 1000000).toFixed(1)}M tons (
-                                    {c.waste_pct}%)
+                                    {(Number(c.waste_tonnes) / 1000000).toFixed(1)}M tons ({c.waste_pct}%)
                                   </span>
                                 </div>
                                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden p-[1px]">
@@ -587,6 +525,7 @@ export default function Home() {
                       </div>
 
                       <button
+                        type="button"
                         onClick={() => setActiveTab("us-waste")}
                         className="w-full py-2 border border-white/5 hover:border-emerald-500/30 bg-white/[0.01] hover:bg-emerald-600/10 text-[9px] font-black uppercase tracking-widest text-stone-300 hover:text-white rounded-xl transition duration-200 flex items-center justify-center gap-1.5 cursor-pointer"
                       >
@@ -600,12 +539,12 @@ export default function Home() {
 
                 {/* Local Footprint Divider Section */}
                 <div className="relative py-1 flex items-center">
-                  <div className="flex-grow border-t border-white/5"></div>
+                  <div className="flex-grow border-t border-white/5" />
                   <span className="flex-shrink mx-4 text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5 bg-black/10 px-4 py-1.5 rounded-full border border-white/5 select-none">
                     <Leaf className="h-3.5 w-3.5" />
                     Your Household Footprint
                   </span>
-                  <div className="flex-grow border-t border-white/5"></div>
+                  <div className="flex-grow border-t border-white/5" />
                 </div>
 
                 {/* Highlight Stats Strip (Bento-grid like structure) */}
@@ -647,18 +586,18 @@ export default function Home() {
                     <div className="glass-panel border-none rounded-2xl p-6 bg-gradient-to-br from-emerald-950/20 to-emerald-900/10 flex flex-col md:flex-row items-center gap-6 justify-between shadow-xl">
                       <div className="space-y-2">
                         <h3 className="text-sm font-black text-white flex items-center gap-2">
-                          <CookingPot className="h-5 w-5 text-emerald-450 text-emerald-400" />
+                          <CookingPot className="h-5 w-5 text-emerald-400" />
                           Did you know?
                         </h3>
                         <p className="text-xs text-stone-400 leading-relaxed max-w-xl font-bold">
-                          Almost <strong>40% of all food</strong> gets thrown away at home in the
-                          US. Wasted meat generates roughly <strong>9 times</strong> the greenhouse
-                          gas emissions per pound than wasted produce due to resources required in
-                          animal farming! Learn shelf-saving techniques instantly from your
-                          dedicated AI advisor.
+                          Almost <strong>40% of all food</strong> gets thrown away at home in the US. Wasted meat
+                          generates roughly <strong>9 times</strong> the greenhouse gas emissions per pound than wasted
+                          produce due to resources required in animal farming! Learn shelf-saving techniques instantly
+                          from your dedicated AI advisor.
                         </p>
                       </div>
                       <button
+                        type="button"
                         onClick={() => setActiveTab("advisor")}
                         className="shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider px-5 py-3 rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-950/20 border border-emerald-500/20 hover:border-emerald-400 transition-all duration-200 cursor-pointer h-11"
                       >
@@ -752,13 +691,9 @@ export default function Home() {
 
       {/* Sustainable footer summary */}
       <footer className="max-w-7xl mx-auto px-6 py-6 border-t border-white/5 text-center text-[10px] text-stone-500 font-bold space-y-1 mt-16 rounded-t-3xl w-full select-none bg-black/10">
-        <p>
-          Foodlytics Ecological Analytics Platform — Cultivating ecological mindfulness one home
-          kitchen at a time.
-        </p>
+        <p>Foodlytics Ecological Analytics Platform — Cultivating ecological mindfulness one home kitchen at a time.</p>
         <p className="text-stone-600">
-          Calculations based on standard USDA agricultural flow models and FAO food wastage
-          coefficients.
+          Calculations based on standard USDA agricultural flow models and FAO food wastage coefficients.
         </p>
       </footer>
     </div>

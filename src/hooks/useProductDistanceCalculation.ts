@@ -1,6 +1,6 @@
+import { type InitialProductStateType, getCoordinates } from "@/types/product.types";
 import { useEffect, useState } from "react";
 import { useDistanceWorker } from "./useDistanceWorker";
-import { getCoordinates, type InitialProductStateType } from "@/types/product.types";
 
 /**
  * Hook to calculate distances for products using Web Worker
@@ -10,7 +10,7 @@ export const useProductDistanceCalculation = (
   products: InitialProductStateType[],
   userLat: number,
   userLng: number,
-  enabled: boolean = true
+  enabled = true,
 ) => {
   const calculateDistances = useDistanceWorker();
   const [productsWithDistance, setProductsWithDistance] = useState<InitialProductStateType[]>([]);

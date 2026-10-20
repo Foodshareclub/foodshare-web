@@ -5,8 +5,8 @@
  * Used for admin email management operations.
  */
 
-import { apiCall, apiDelete } from "./client";
 import type { ActionResult } from "@/lib/errors";
+import { apiCall, apiDelete } from "./client";
 
 // =============================================================================
 // Types
@@ -69,9 +69,7 @@ const ENDPOINT = "api-v1-admin-email";
 /**
  * Retry a failed email from the queue
  */
-export async function retryEmailAPI(
-  queueId: string
-): Promise<ActionResult<QueueActionResponse>> {
+export async function retryEmailAPI(queueId: string): Promise<ActionResult<QueueActionResponse>> {
   return apiCall<QueueActionResponse, Record<string, never>>(`${ENDPOINT}/queue/${queueId}/retry`, {
     method: "POST",
     body: {},
@@ -81,18 +79,14 @@ export async function retryEmailAPI(
 /**
  * Delete a queued email
  */
-export async function deleteQueuedEmailAPI(
-  queueId: string
-): Promise<ActionResult<void>> {
+export async function deleteQueuedEmailAPI(queueId: string): Promise<ActionResult<void>> {
   return apiDelete<void>(`${ENDPOINT}/queue/${queueId}`);
 }
 
 /**
  * Send a manual email
  */
-export async function sendManualEmailAPI(
-  request: SendManualEmailRequest
-): Promise<ActionResult<QueueActionResponse>> {
+export async function sendManualEmailAPI(request: SendManualEmailRequest): Promise<ActionResult<QueueActionResponse>> {
   return apiCall<QueueActionResponse, SendManualEmailRequest>(`${ENDPOINT}/queue/send`, {
     method: "POST",
     body: request,
@@ -108,15 +102,12 @@ export async function sendManualEmailAPI(
  */
 export async function resetProviderQuotaAPI(
   provider: EmailProvider,
-  date?: string
+  date?: string,
 ): Promise<ActionResult<ProviderActionResponse>> {
-  return apiCall<ProviderActionResponse, ResetQuotaRequest>(
-    `${ENDPOINT}/providers/${provider}/reset-quota`,
-    {
-      method: "POST",
-      body: { date },
-    }
-  );
+  return apiCall<ProviderActionResponse, ResetQuotaRequest>(`${ENDPOINT}/providers/${provider}/reset-quota`, {
+    method: "POST",
+    body: { date },
+  });
 }
 
 /**
@@ -124,29 +115,24 @@ export async function resetProviderQuotaAPI(
  */
 export async function updateProviderAvailabilityAPI(
   provider: EmailProvider,
-  isAvailable: boolean
+  isAvailable: boolean,
 ): Promise<ActionResult<ProviderActionResponse>> {
-  return apiCall<ProviderActionResponse, UpdateAvailabilityRequest>(
-    `${ENDPOINT}/providers/${provider}/availability`,
-    {
-      method: "PUT",
-      body: { isAvailable },
-    }
-  );
+  return apiCall<ProviderActionResponse, UpdateAvailabilityRequest>(`${ENDPOINT}/providers/${provider}/availability`, {
+    method: "PUT",
+    body: { isAvailable },
+  });
 }
 
 /**
  * Reset circuit breaker for a provider
  */
-export async function resetCircuitBreakerAPI(
-  provider: EmailProvider
-): Promise<ActionResult<ProviderActionResponse>> {
+export async function resetCircuitBreakerAPI(provider: EmailProvider): Promise<ActionResult<ProviderActionResponse>> {
   return apiCall<ProviderActionResponse, Record<string, never>>(
     `${ENDPOINT}/providers/${provider}/reset-circuit-breaker`,
     {
       method: "POST",
       body: {},
-    }
+    },
   );
 }
 
@@ -160,7 +146,7 @@ export async function resetCircuitBreakerAPI(
 export async function addToSuppressionListAPI(
   email: string,
   reason: SuppressionReason,
-  notes?: string
+  notes?: string,
 ): Promise<ActionResult<SuppressionActionResponse>> {
   return apiCall<SuppressionActionResponse, AddSuppressionRequest>(`${ENDPOINT}/suppression`, {
     method: "POST",
@@ -171,10 +157,6 @@ export async function addToSuppressionListAPI(
 /**
  * Remove email from suppression list
  */
-export async function removeFromSuppressionListAPI(
-  email: string
-): Promise<ActionResult<SuppressionActionResponse>> {
-  return apiDelete<SuppressionActionResponse>(
-    `${ENDPOINT}/suppression/${encodeURIComponent(email)}`
-  );
+export async function removeFromSuppressionListAPI(email: string): Promise<ActionResult<SuppressionActionResponse>> {
+  return apiDelete<SuppressionActionResponse>(`${ENDPOINT}/suppression/${encodeURIComponent(email)}`);
 }

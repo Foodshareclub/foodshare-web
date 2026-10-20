@@ -1,12 +1,14 @@
+/* oxlint-disable unicorn/no-thenable -- Supabase query builder mocks must be thenable. */
 /**
  * Test Utilities
  * Shared utilities for testing React components and hooks
  */
 
-import React, { ReactElement } from "react";
-import { render, RenderOptions } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { type RenderOptions, render } from "@testing-library/react";
 import * as fc from "fast-check";
+import type React from "react";
+import type { ReactElement } from "react";
 
 // ============================================================================
 // Query Client Factory
@@ -78,7 +80,6 @@ export function createMockSupabaseClient() {
     eq: jest.fn().mockReturnThis(),
     order: jest.fn().mockReturnThis(),
     single: jest.fn().mockResolvedValue({ data: null, error: null }),
-    // eslint-disable-next-line unicorn/no-thenable
     then: jest.fn().mockResolvedValue({ data: [], error: null }),
   });
 
@@ -89,17 +90,13 @@ export function createMockSupabaseClient() {
       getUser: jest.fn().mockResolvedValue({ data: { user: null }, error: null }),
       signInWithPassword: jest.fn().mockResolvedValue({ data: null, error: null }),
       signOut: jest.fn().mockResolvedValue({ error: null }),
-      onAuthStateChange: jest
-        .fn()
-        .mockReturnValue({ data: { subscription: { unsubscribe: jest.fn() } } }),
+      onAuthStateChange: jest.fn().mockReturnValue({ data: { subscription: { unsubscribe: jest.fn() } } }),
     },
     storage: {
       from: jest.fn().mockReturnValue({
         upload: jest.fn().mockResolvedValue({ data: null, error: null }),
         download: jest.fn().mockResolvedValue({ data: null, error: null }),
-        getPublicUrl: jest
-          .fn()
-          .mockReturnValue({ data: { publicUrl: "https://example.com/image.jpg" } }),
+        getPublicUrl: jest.fn().mockReturnValue({ data: { publicUrl: "https://example.com/image.jpg" } }),
       }),
     },
     channel: jest.fn().mockReturnValue({
@@ -132,7 +129,7 @@ export const productTypeArbitrary = fc.constantFrom(
   "challenge",
   "zerowaste",
   "vegan",
-  "forum"
+  "forum",
 );
 
 // Product arbitrary

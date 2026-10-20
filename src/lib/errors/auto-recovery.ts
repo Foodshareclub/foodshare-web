@@ -3,8 +3,8 @@
  * Automatically attempts to recover from errors
  */
 
-import { productionErrorReporter } from "./production-reporter";
 import { createLogger } from "@/lib/logger";
+import { productionErrorReporter } from "./production-reporter";
 
 // Extend Window interface for optional debug/recovery methods
 declare global {
@@ -49,9 +49,7 @@ class AutoRecovery {
     this.registerStrategy({
       name: "clear-cache-reload",
       condition: (error) =>
-        error.message.includes("chunk") ||
-        error.message.includes("module") ||
-        error.message.includes("import"),
+        error.message.includes("chunk") || error.message.includes("module") || error.message.includes("import"),
       action: async () => {
         logger.info("Attempting recovery: Clear cache and reload");
         try {
@@ -78,9 +76,7 @@ class AutoRecovery {
     this.registerStrategy({
       name: "clear-storage",
       condition: (error) =>
-        error.message.includes("storage") ||
-        error.message.includes("quota") ||
-        error.message.includes("localStorage"),
+        error.message.includes("storage") || error.message.includes("quota") || error.message.includes("localStorage"),
       action: async () => {
         logger.info("Attempting recovery: Clear non-auth storage");
         try {
@@ -122,9 +118,7 @@ class AutoRecovery {
     this.registerStrategy({
       name: "hard-reload",
       condition: (error) =>
-        error.message.includes("network") ||
-        error.message.includes("fetch") ||
-        error.message.includes("load"),
+        error.message.includes("network") || error.message.includes("fetch") || error.message.includes("load"),
       action: async () => {
         logger.info("Attempting recovery: Hard reload");
         window.location.reload();
@@ -136,8 +130,7 @@ class AutoRecovery {
     // Strategy 4: Clear IndexedDB
     this.registerStrategy({
       name: "clear-indexeddb",
-      condition: (error) =>
-        error.message.includes("indexeddb") || error.message.includes("database"),
+      condition: (error) => error.message.includes("indexeddb") || error.message.includes("database"),
       action: async () => {
         logger.info("Attempting recovery: Clear IndexedDB");
         try {
@@ -235,11 +228,9 @@ class AutoRecovery {
           logger.success(`Recovery successful: ${strategy.name}`);
 
           // Report success
-          productionErrorReporter.addBreadcrumb(
-            "error",
-            `Auto-recovery successful: ${strategy.name}`,
-            { error: error.message }
-          );
+          productionErrorReporter.addBreadcrumb("error", `Auto-recovery successful: ${strategy.name}`, {
+            error: error.message,
+          });
 
           this.recoveryInProgress = false;
           return true;

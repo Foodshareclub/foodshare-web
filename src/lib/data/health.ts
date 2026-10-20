@@ -75,7 +75,6 @@ export async function isDatabaseHealthy(timeoutMs = 8000, maxRetries = 1): Promi
     } catch {
       if (attempt < maxRetries) {
         await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
-        continue;
       }
     }
   }

@@ -5,9 +5,25 @@
  * Returns the authenticated user's active (uncompleted) challenges
  */
 
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { isPrerenderInterruption } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
+
+interface ActiveChallengeInfo {
+  id: number;
+  challenge_title: string;
+  challenge_description: string;
+  challenge_difficulty: string;
+  challenge_score: string | number;
+  challenge_image: string;
+}
+
+interface ActiveChallengeParticipantRow {
+  id: number;
+  challenge_id: number;
+  accepted_at: string;
+  challenges: ActiveChallengeInfo | ActiveChallengeInfo[];
+}
 
 export async function GET() {
   try {
@@ -37,7 +53,7 @@ export async function GET() {
           challenge_score,
           challenge_image
         )
-      `
+      `,
       )
       .eq("profile_id", user.id)
       .eq("is_completed", false)
@@ -49,7 +65,7 @@ export async function GET() {
     }
 
     // Transform the data
-    const activeChallenges = (participants || []).map((p: any) => {
+    const activeChallenges = ((participants ?? []) as ActiveChallengeParticipantRow[]).map((p) => {
       const challengeData = Array.isArray(p.challenges) ? p.challenges[0] : p.challenges;
       const challenge = challengeData as {
         id: number;
@@ -68,7 +84,7 @@ export async function GET() {
         difficulty: challenge.challenge_difficulty,
         score:
           typeof challenge.challenge_score === "string"
-            ? parseInt(challenge.challenge_score, 10)
+            ? Number.parseInt(challenge.challenge_score, 10)
             : challenge.challenge_score,
         image: challenge.challenge_image,
         acceptedAt: p.accepted_at,

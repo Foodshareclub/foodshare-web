@@ -38,15 +38,9 @@ export async function getAIInsightsData(): Promise<AIInsightsData> {
       .select("*", { count: "exact", head: true })
       .gte("last_seen_at", sevenDaysAgo.toISOString()),
     supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", true),
-    supabase
-      .from("posts")
-      .select("*", { count: "exact", head: true })
-      .gte("created_at", sevenDaysAgo.toISOString()),
+    supabase.from("posts").select("*", { count: "exact", head: true }).gte("created_at", sevenDaysAgo.toISOString()),
     supabase.from("rooms").select("*", { count: "exact", head: true }),
-    supabase
-      .from("rooms")
-      .select("*", { count: "exact", head: true })
-      .gte("created_at", sevenDaysAgo.toISOString()),
+    supabase.from("rooms").select("*", { count: "exact", head: true }).gte("created_at", sevenDaysAgo.toISOString()),
     // Users inactive for 30+ days
     supabase
       .from("profiles")

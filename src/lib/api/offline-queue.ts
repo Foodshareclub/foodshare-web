@@ -9,8 +9,9 @@
  * @module lib/api/offline-queue
  */
 
-import { enterpriseClient, ErrorCodes, type EnterpriseResult } from "./enterprise-client";
 import { logger } from "@/lib/logger";
+import type { IntervalHandle } from "@/types/timer.types";
+import { type EnterpriseResult, ErrorCodes, enterpriseClient } from "./enterprise-client";
 
 const LOG_CONTEXT = { component: "OfflineQueue" };
 
@@ -149,7 +150,7 @@ const DEFAULT_CONFIG: Required<OfflineQueueConfig> = {
  */
 export class OfflineQueue {
   private config: Required<OfflineQueueConfig>;
-  private syncInterval: NodeJS.Timeout | null = null;
+  private syncInterval: IntervalHandle | null = null;
   private isSyncing = false;
   private isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
 
@@ -185,7 +186,7 @@ export class OfflineQueue {
    * Enqueue an operation
    */
   async enqueue(
-    operation: Omit<QueuedOperation, "id" | "createdAt" | "retryCount" | "idempotencyKey" | "priority">
+    operation: Omit<QueuedOperation, "id" | "createdAt" | "retryCount" | "idempotencyKey" | "priority">,
   ): Promise<string> {
     const queue = await this.getQueue();
 
@@ -385,9 +386,7 @@ export class OfflineQueue {
   /**
    * Execute an operation via the API client
    */
-  private async executeOperation(
-    operation: QueuedOperation
-  ): Promise<EnterpriseResult<unknown>> {
+  private async executeOperation(operation: QueuedOperation): Promise<EnterpriseResult<unknown>> {
     const { endpoint, method, payload, query, idempotencyKey } = operation;
 
     switch (method) {
@@ -429,10 +428,7 @@ export class OfflineQueue {
   /**
    * Handle operation error
    */
-  private async handleOperationError(
-    operation: QueuedOperation,
-    error: unknown
-  ): Promise<void> {
+  private async handleOperationError(operation: QueuedOperation, error: unknown): Promise<void> {
     const errorMessage =
       error instanceof Error
         ? error.message
@@ -506,7 +502,7 @@ export function getOfflineQueue(config?: OfflineQueueConfig): OfflineQueue {
  * Enqueue an operation to the default queue
  */
 export async function enqueueOffline(
-  operation: Omit<QueuedOperation, "id" | "createdAt" | "retryCount" | "idempotencyKey" | "priority">
+  operation: Omit<QueuedOperation, "id" | "createdAt" | "retryCount" | "idempotencyKey" | "priority">,
 ): Promise<string> {
   return getOfflineQueue().enqueue(operation);
 }

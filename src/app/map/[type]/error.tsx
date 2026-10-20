@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
+import { useEffect } from "react";
 
 export default function MapError({
   error,
@@ -20,6 +20,7 @@ export default function MapError({
       <p className="text-muted-foreground mb-6">Something went wrong loading the map view.</p>
       <div className="flex gap-3">
         <button
+          type="button"
           onClick={reset}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
         >

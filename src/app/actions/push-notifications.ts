@@ -1,8 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { ROLE_IDS } from "@/lib/constants";
-import { sendPushTask, broadcastPushTask } from "@/trigger/push-notifications";
+import { checkUserIsAdmin } from "@/lib/data/admin-check";
+import { createClient } from "@/lib/supabase/server";
+import { broadcastPushTask, sendPushTask } from "@/trigger/push-notifications";
 
 interface PushPayload {
   type: string;
@@ -28,11 +29,14 @@ interface SendPushResult {
 export async function sendPushNotification(
   userIds: string[],
   payload: PushPayload,
-  platforms?: ("ios" | "android" | "web")[]
+  platforms?: ("ios" | "android" | "web")[],
 ): Promise<SendPushResult> {
   const supabase = await createClient();
 
-  // Verify caller is authenticated
+  // Verify caller is admin. Authentication alone is not sufficient: the request
+  // is made with the service-role key, so any logged-in user could otherwise
+  // push arbitrary title/body/url content to an arbitrary list of user IDs.
+  // `broadcastPushNotification` already required admin; this one did not.
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -41,22 +45,24 @@ export async function sendPushNotification(
     return { success: false, error: "Unauthorized" };
   }
 
+  const { isAdmin } = await checkUserIsAdmin(user.id);
+  if (!isAdmin) {
+    return { success: false, error: "Admin access required" };
+  }
+
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-push-notification`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        },
-        body: JSON.stringify({
-          user_ids: userIds,
-          platforms,
-          payload,
-        }),
-      }
-    );
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-push-notification`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({
+        user_ids: userIds,
+        platforms,
+        payload,
+      }),
+    });
 
     const result = await response.json();
 
@@ -104,10 +110,7 @@ export async function broadcastPushNotification(payload: PushPayload): Promise<S
   }
 
   // Get all users with push subscriptions
-  const { data: tokens } = await supabase
-    .from("device_tokens")
-    .select("profile_id")
-    .eq("platform", "web");
+  const { data: tokens } = await supabase.from("device_tokens").select("profile_id").eq("platform", "web");
 
   if (!tokens?.length) {
     return { success: true, sent: 0, failed: 0 };
@@ -115,9 +118,7 @@ export async function broadcastPushNotification(payload: PushPayload): Promise<S
 
   const userIds: string[] = [
     ...new Set(
-      ((tokens as unknown as { profile_id: string }[]) || []).map(
-        (t: { profile_id: string }) => t.profile_id
-      )
+      ((tokens as unknown as { profile_id: string }[]) || []).map((t: { profile_id: string }) => t.profile_id),
     ),
   ];
 
@@ -136,7 +137,7 @@ export async function sendPushNotificationAsync(
   userId: string,
   title: string,
   body: string,
-  data?: Record<string, string>
+  data?: Record<string, string>,
 ): Promise<{ triggered: boolean }> {
   try {
     await sendPushTask.trigger({
@@ -160,7 +161,7 @@ export async function broadcastPushNotificationAsync(
   userIds: string[],
   title: string,
   body: string,
-  data?: Record<string, string>
+  data?: Record<string, string>,
 ): Promise<{ triggered: boolean }> {
   const supabase = await createClient();
 

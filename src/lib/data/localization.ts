@@ -42,10 +42,9 @@ export async function getLocalizationAnalytics(): Promise<LocalizationAnalytics 
 
   try {
     // Try RPC first
-    const { data: rpcData, error: rpcError } = await supabase.rpc(
-      "get_localization_analytics",
-      { time_window: "24 hours" }
-    );
+    const { data: rpcData, error: rpcError } = await supabase.rpc("get_localization_analytics", {
+      time_window: "24 hours",
+    });
 
     if (!rpcError && rpcData) {
       return rpcData as LocalizationAnalytics;
@@ -98,10 +97,7 @@ export async function getLocalizationAnalytics(): Promise<LocalizationAnalytics 
     }));
 
     // Fetch errors
-    const { data: errors } = await supabase
-      .from("translation_errors")
-      .select("locale")
-      .gte("timestamp", last24h);
+    const { data: errors } = await supabase.from("translation_errors").select("locale").gte("timestamp", last24h);
 
     const errorMap = new Map<string, number>();
     (errors as RawErrorRow[] | null)?.forEach((err) => {

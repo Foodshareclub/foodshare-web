@@ -16,9 +16,7 @@ export function isSuccessResult<T>(result: ActionResult<T>): result is { success
   return result.success === true;
 }
 
-export function isFailureResult<T>(
-  result: ActionResult<T>
-): result is { success: false; error: AppError } {
+export function isFailureResult<T>(result: ActionResult<T>): result is { success: false; error: AppError } {
   return result.success === false;
 }
 
@@ -57,13 +55,8 @@ export function toError(error: unknown): Error {
 /**
  * Type guard to check if an error has a specific code property
  */
-export function hasErrorCode<T extends string>(
-  error: unknown,
-  code: T
-): error is Error & { code: T } {
-  return (
-    error instanceof Error && "code" in error && (error as Error & { code: unknown }).code === code
-  );
+export function hasErrorCode<T extends string>(error: unknown, code: T): error is Error & { code: T } {
+  return error instanceof Error && "code" in error && (error as Error & { code: unknown }).code === code;
 }
 
 /**

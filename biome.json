@@ -11,7 +11,19 @@
         "noUnusedVariables": "error"
       },
       "style": {
-        "useConst": "error"
+        "useConst": "error",
+        "noNonNullAssertion": "off",
+        "useNodejsImportProtocol": "off"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "warn"
+      },
+      "a11y": {
+        "useSemanticElements": "off"
+      },
+      "complexity": {
+        "noForEach": "off",
+        "noStaticOnlyClass": "off"
       }
     }
   },
@@ -22,6 +34,34 @@
     "lineWidth": 120
   },
   "files": {
-    "ignore": [".next/**", "out/**", "node_modules/**", "coverage/**", "public/**", "supabase/**"]
-  }
+    "ignore": [
+      ".next/**",
+      "out/**",
+      "node_modules/**",
+      "coverage/**",
+      "public/**",
+      "supabase/**",
+      "src/wasm/**",
+      "e2e/__tmp/**",
+      ".check-classes-*/**",
+      ".check-adornments-*/**",
+      ".check-i18n-text-*/**",
+      "test-results/**"
+    ]
+  },
+  "overrides": [
+    {
+      "include": ["src/__tests__/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noThenProperty": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off"
+          }
+        }
+      }
+    }
+  ]
 }

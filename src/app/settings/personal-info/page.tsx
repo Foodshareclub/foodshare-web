@@ -1,13 +1,10 @@
+import { getUser } from "@/app/actions/auth";
+import { generateNoIndexMetadata } from "@/lib/metadata";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { PersonalInfoClient } from "./PersonalInfoClient";
-import { getUser } from "@/app/actions/auth";
-import { generateNoIndexMetadata } from "@/lib/metadata";
 
-export const metadata = generateNoIndexMetadata(
-  "Personal Info",
-  "Update your personal information"
-);
+export const metadata = generateNoIndexMetadata("Personal Info", "Update your personal information");
 
 /**
  * Personal Info Settings Page - Server Component

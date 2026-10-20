@@ -79,9 +79,7 @@ export type ProductWithCoordinates = InitialProductStateType & {
  * Best practice: Use posts_with_location view which provides location_json
  * as proper GeoJSON via ST_AsGeoJSON()
  */
-export function getCoordinates(
-  product: InitialProductStateType | LocationType
-): { lat: number; lng: number } | null {
+export function getCoordinates(product: InitialProductStateType | LocationType): { lat: number; lng: number } | null {
   // Prefer location_json (GeoJSON from computed column via ST_AsGeoJSON)
   if ("location_json" in product && product.location_json) {
     const parsed = parsePostGISPoint(product.location_json);

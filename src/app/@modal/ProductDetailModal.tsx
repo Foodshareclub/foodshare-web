@@ -1,11 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { PostDetailContent } from "../food/[id]/PostDetailContent";
-import type { InitialProductStateType } from "@/types/product.types";
 import type { AuthUser } from "@/lib/data/auth";
+import type { InitialProductStateType } from "@/types/product.types";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useRouter } from "next/navigation";
+import { PostDetailContent } from "../food/[id]/PostDetailContent";
 
 interface ProductDetailModalProps {
   post: InitialProductStateType;

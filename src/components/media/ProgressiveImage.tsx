@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { useState } from "react";
 
 interface ProgressiveImageProps {
   src: string;
@@ -54,7 +54,7 @@ export function ProgressiveImage({
       className={cn(
         className,
         "transition-[opacity,filter] duration-400 ease-out",
-        isLoading ? "opacity-60 blur-[10px]" : "opacity-100 blur-0"
+        isLoading ? "opacity-60 blur-[10px]" : "opacity-100 blur-none",
       )}
       onLoadingComplete={handleLoadingComplete}
       priority={priority}

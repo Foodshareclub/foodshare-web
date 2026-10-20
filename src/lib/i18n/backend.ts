@@ -212,7 +212,7 @@ export interface TranslationBundle {
  */
 export async function fetchTranslationsForMobile(
   locale: ExtendedLocale,
-  version?: string
+  version?: string,
 ): Promise<TranslationBundle | null> {
   try {
     const query = supabase.from("translations").select("*").eq("locale", locale);
@@ -241,7 +241,7 @@ export async function fetchTranslationsForMobile(
  */
 export async function syncTranslationsToBackend(
   locale: ExtendedLocale,
-  messages: Record<string, string>
+  messages: Record<string, string>,
 ): Promise<boolean> {
   try {
     const { error } = await supabase.from("translations").upsert(
@@ -253,7 +253,7 @@ export async function syncTranslationsToBackend(
       },
       {
         onConflict: "locale",
-      }
+      },
     );
 
     if (error) {
@@ -283,9 +283,7 @@ export interface UserLocalePreference {
 /**
  * Gets user's locale preference from Supabase
  */
-export async function getUserLocalePreference(
-  userId: string
-): Promise<UserLocalePreference | null> {
+export async function getUserLocalePreference(userId: string): Promise<UserLocalePreference | null> {
   const { data, error } = await supabase
     .from("user_preferences")
     .select("locale,timezone,date_format,number_format")
@@ -306,10 +304,7 @@ export async function getUserLocalePreference(
 /**
  * Saves user's locale preference to Supabase
  */
-export async function saveUserLocalePreference(
-  userId: string,
-  locale: ExtendedLocale
-): Promise<boolean> {
+export async function saveUserLocalePreference(userId: string, locale: ExtendedLocale): Promise<boolean> {
   const { error } = await supabase.from("user_preferences").upsert(
     {
       user_id: userId,
@@ -318,7 +313,7 @@ export async function saveUserLocalePreference(
     },
     {
       onConflict: "user_id",
-    }
+    },
   );
 
   return !error;
@@ -342,7 +337,7 @@ export async function detectBestLocale(
   userId?: string,
   deviceLocale?: string,
   browserLocales?: string[],
-  ipCountry?: string
+  ipCountry?: string,
 ): Promise<DeviceLocaleInfo> {
   // 1. Check user preference (highest priority)
   if (userId) {
@@ -408,9 +403,7 @@ export async function detectBestLocale(
 
 function normalizeToExtendedLocale(locale: string): ExtendedLocale | null {
   const normalized = locale.split("-")[0].toLowerCase();
-  return extendedLocales.includes(normalized as ExtendedLocale)
-    ? (normalized as ExtendedLocale)
-    : null;
+  return extendedLocales.includes(normalized as ExtendedLocale) ? (normalized as ExtendedLocale) : null;
 }
 
 function countryToLocale(countryCode: string): ExtendedLocale | null {

@@ -1,18 +1,10 @@
 import { expect, test } from "bun:test";
 import { CATEGORIES } from "@/constants/categories";
-import {
-  getRedirectUrl,
-  unstable_getResponseFromNextConfig,
-} from "next/experimental/testing/server";
+import { getRedirectUrl, unstable_getResponseFromNextConfig } from "next/experimental/testing/server";
 import nextConfig from "../../../next.config";
 
 test("category indexes are never captured by legacy product detail redirects", async () => {
-  for (const category of [
-    ...CATEGORIES.map(({ id }) => id),
-    "things",
-    "organisations",
-    "volunteers",
-  ]) {
+  for (const category of [...CATEGORIES.map(({ id }) => id), "things", "organisations", "volunteers"]) {
     const response = await unstable_getResponseFromNextConfig({
       url: `https://foodshare.club/${category}?distance=any&key_word=banana`,
       nextConfig: { redirects: nextConfig.redirects },

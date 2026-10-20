@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 
 type ContainerProps = {
   productType: string;
@@ -13,9 +13,7 @@ type ContainerProps = {
  * Note: I18n is now handled by NextIntlClientProvider in providers.tsx
  * This component is kept for backward compatibility and simply passes through children.
  */
-const ChangeLanguageContainer: React.FC<ContainerProps> = ({
-  children,
-}) => {
+const ChangeLanguageContainer: React.FC<ContainerProps> = ({ children }) => {
   return <>{children}</>;
 };
 

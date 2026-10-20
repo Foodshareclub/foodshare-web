@@ -1,5 +1,5 @@
-import { slugify } from "@/lib/utils";
 import { supabase } from "@/lib/supabase/client";
+import { slugify } from "@/lib/utils";
 import type { PostgrestSingleResponse } from "@supabase/supabase-js";
 
 // ============================================================================
@@ -192,11 +192,7 @@ export const forumAPI = {
   // Categories
   // --------------------------------------------------------------------------
   getCategories(): PromiseLike<PostgrestSingleResponse<ForumCategory[]>> {
-    return supabase
-      .from("forum_categories")
-      .select("*")
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true });
+    return supabase.from("forum_categories").select("*").eq("is_active", true).order("sort_order", { ascending: true });
   },
 
   getCategoryBySlug(slug: string): PromiseLike<PostgrestSingleResponse<ForumCategory>> {
@@ -210,12 +206,8 @@ export const forumAPI = {
     return supabase.from("forum_tags").select("*").order("usage_count", { ascending: false });
   },
 
-  getPopularTags(limit: number = 10): PromiseLike<PostgrestSingleResponse<ForumTag[]>> {
-    return supabase
-      .from("forum_tags")
-      .select("*")
-      .order("usage_count", { ascending: false })
-      .limit(limit);
+  getPopularTags(limit = 10): PromiseLike<PostgrestSingleResponse<ForumTag[]>> {
+    return supabase.from("forum_tags").select("*").order("usage_count", { ascending: false }).limit(limit);
   },
 
   // --------------------------------------------------------------------------
@@ -238,7 +230,7 @@ export const forumAPI = {
         profiles:profile_id (id, nickname, first_name, second_name, avatar_url),
         forum_categories:category_id (*),
         forum_post_tags (forum_tags (*))
-      `
+      `,
       )
       .eq("forum_published", true);
 
@@ -295,7 +287,7 @@ export const forumAPI = {
         profiles:profile_id (id, nickname, first_name, second_name, avatar_url),
         forum_categories:category_id (*),
         forum_post_tags (forum_tags (*))
-      `
+      `,
       )
       .eq("slug", slug)
       .single();
@@ -310,7 +302,7 @@ export const forumAPI = {
         profiles:profile_id (id, nickname, first_name, second_name, avatar_url),
         forum_categories:category_id (*),
         forum_post_tags (forum_tags (*))
-      `
+      `,
       )
       .eq("id", id)
       .single();
@@ -350,7 +342,7 @@ export const forumAPI = {
       post_type: ForumPostType;
       rich_content: Record<string, unknown>;
       is_edited: boolean;
-    }>
+    }>,
   ): PromiseLike<PostgrestSingleResponse<ForumPost>> {
     return supabase
       .from("forum")
@@ -376,7 +368,7 @@ export const forumAPI = {
   // Search posts
   searchPosts(
     query: string,
-    options?: { categoryId?: number; limit?: number }
+    options?: { categoryId?: number; limit?: number },
   ): PromiseLike<PostgrestSingleResponse<ForumPost[]>> {
     let searchQuery = supabase
       .from("forum")
@@ -385,7 +377,7 @@ export const forumAPI = {
         *,
         profiles:profile_id (id, nickname, first_name, second_name, avatar_url),
         forum_categories:category_id (*)
-      `
+      `,
       )
       .eq("forum_published", true)
       .textSearch("search_vector", query, { type: "websearch" })
@@ -407,7 +399,7 @@ export const forumAPI = {
   // --------------------------------------------------------------------------
   getComments(
     forumId: number,
-    options?: { parentId?: number | null; limit?: number; offset?: number }
+    options?: { parentId?: number | null; limit?: number; offset?: number },
   ): PromiseLike<PostgrestSingleResponse<ForumComment[]>> {
     let query = supabase
       .from("comments")
@@ -415,7 +407,7 @@ export const forumAPI = {
         `
         *,
         profiles:user_id (id, nickname, first_name, second_name, avatar_url)
-      `
+      `,
       )
       .eq("forum_id", forumId);
 
@@ -445,7 +437,7 @@ export const forumAPI = {
         `
         *,
         profiles:user_id (id, nickname, first_name, second_name, avatar_url)
-      `
+      `,
       )
       .eq("parent_id", commentId)
       .order("comment_created_at", { ascending: true });
@@ -469,14 +461,14 @@ export const forumAPI = {
         `
         *,
         profiles:user_id (id, nickname, first_name, second_name, avatar_url)
-      `
+      `,
       )
       .single();
   },
 
   updateComment(
     id: number,
-    updates: { comment: string; rich_content?: Record<string, unknown> }
+    updates: { comment: string; rich_content?: Record<string, unknown> },
   ): PromiseLike<PostgrestSingleResponse<ForumComment>> {
     return supabase
       .from("comments")
@@ -494,17 +486,9 @@ export const forumAPI = {
     return supabase.from("comments").delete().eq("id", id);
   },
 
-  markBestAnswer(
-    postId: number,
-    commentId: number
-  ): PromiseLike<PostgrestSingleResponse<ForumPost>> {
+  markBestAnswer(postId: number, commentId: number): PromiseLike<PostgrestSingleResponse<ForumPost>> {
     // Update the post's best_answer_id
-    return supabase
-      .from("forum")
-      .update({ best_answer_id: commentId })
-      .eq("id", postId)
-      .select()
-      .single();
+    return supabase.from("forum").update({ best_answer_id: commentId }).eq("id", postId).select().single();
   },
 
   // --------------------------------------------------------------------------
@@ -526,11 +510,7 @@ export const forumAPI = {
   },
 
   removeReaction(forumId: number, profileId: string) {
-    return supabase
-      .from("forum_reactions")
-      .delete()
-      .eq("forum_id", forumId)
-      .eq("profile_id", profileId);
+    return supabase.from("forum_reactions").delete().eq("forum_id", forumId).eq("profile_id", profileId);
   },
 
   // Comment reactions
@@ -543,11 +523,7 @@ export const forumAPI = {
   },
 
   removeCommentReaction(commentId: number, profileId: string) {
-    return supabase
-      .from("forum_comment_reactions")
-      .delete()
-      .eq("comment_id", commentId)
-      .eq("profile_id", profileId);
+    return supabase.from("forum_comment_reactions").delete().eq("comment_id", commentId).eq("profile_id", profileId);
   },
 
   // --------------------------------------------------------------------------
@@ -560,7 +536,7 @@ export const forumAPI = {
         `
         *,
         forum:forum_id (id, forum_post_name, slug, forum_post_image, profiles:profile_id (nickname, avatar_url))
-      `
+      `,
       )
       .eq("profile_id", profileId)
       .order("created_at", { ascending: false });
@@ -576,17 +552,10 @@ export const forumAPI = {
   },
 
   removeBookmark(forumId: number, profileId: string) {
-    return supabase
-      .from("forum_bookmarks")
-      .delete()
-      .eq("forum_id", forumId)
-      .eq("profile_id", profileId);
+    return supabase.from("forum_bookmarks").delete().eq("forum_id", forumId).eq("profile_id", profileId);
   },
 
-  isBookmarked(
-    forumId: number,
-    profileId: string
-  ): PromiseLike<PostgrestSingleResponse<ForumBookmark | null>> {
+  isBookmarked(forumId: number, profileId: string): PromiseLike<PostgrestSingleResponse<ForumBookmark | null>> {
     return supabase
       .from("forum_bookmarks")
       .select("id")
@@ -608,11 +577,7 @@ export const forumAPI = {
   },
 
   unsubscribeFromPost(forumId: number, profileId: string) {
-    return supabase
-      .from("forum_subscriptions")
-      .delete()
-      .eq("forum_id", forumId)
-      .eq("profile_id", profileId);
+    return supabase.from("forum_subscriptions").delete().eq("forum_id", forumId).eq("profile_id", profileId);
   },
 
   // --------------------------------------------------------------------------
@@ -627,7 +592,7 @@ export const forumAPI = {
   // --------------------------------------------------------------------------
   getNotifications(
     profileId: string,
-    options?: { unreadOnly?: boolean; limit?: number }
+    options?: { unreadOnly?: boolean; limit?: number },
   ): PromiseLike<PostgrestSingleResponse<ForumNotification[]>> {
     let query = supabase
       .from("forum_notifications")
@@ -636,7 +601,7 @@ export const forumAPI = {
         *,
         actor:actor_id (id, nickname, avatar_url),
         forum:forum_id (id, forum_post_name, slug)
-      `
+      `,
       )
       .eq("recipient_id", profileId)
       .order("created_at", { ascending: false });
@@ -668,21 +633,14 @@ export const forumAPI = {
   // Polls
   // --------------------------------------------------------------------------
   getPoll(forumId: number): PromiseLike<PostgrestSingleResponse<ForumPoll>> {
-    return supabase
-      .from("forum_polls")
-      .select("*,forum_poll_options (*)")
-      .eq("forum_id", forumId)
-      .single();
+    return supabase.from("forum_polls").select("*,forum_poll_options (*)").eq("forum_id", forumId).single();
   },
 
   votePoll(vote: { poll_id: string; option_id: string; profile_id: string }) {
     return supabase.from("forum_poll_votes").insert(vote);
   },
 
-  hasVoted(
-    pollId: string,
-    profileId: string
-  ): PromiseLike<PostgrestSingleResponse<{ id: string } | null>> {
+  hasVoted(pollId: string, profileId: string): PromiseLike<PostgrestSingleResponse<{ id: string } | null>> {
     return supabase
       .from("forum_poll_votes")
       .select("id")
@@ -702,17 +660,10 @@ export const forumAPI = {
   },
 
   unfollowUser(followerId: string, followingId: string) {
-    return supabase
-      .from("forum_user_follows")
-      .delete()
-      .eq("follower_id", followerId)
-      .eq("following_id", followingId);
+    return supabase.from("forum_user_follows").delete().eq("follower_id", followerId).eq("following_id", followingId);
   },
 
-  isFollowing(
-    followerId: string,
-    followingId: string
-  ): PromiseLike<PostgrestSingleResponse<{ id: string } | null>> {
+  isFollowing(followerId: string, followingId: string): PromiseLike<PostgrestSingleResponse<{ id: string } | null>> {
     return supabase
       .from("forum_user_follows")
       .select("id")

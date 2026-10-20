@@ -11,12 +11,8 @@ interface PushNotificationToggleProps {
   showLabel?: boolean;
 }
 
-export function PushNotificationToggle({
-  className,
-  showLabel = true,
-}: PushNotificationToggleProps) {
-  const { permission, isSubscribed, isLoading, error, subscribe, unsubscribe } =
-    usePushNotifications();
+export function PushNotificationToggle({ className, showLabel = true }: PushNotificationToggleProps) {
+  const { permission, isSubscribed, isLoading, error, subscribe, unsubscribe } = usePushNotifications();
 
   if (permission === "unsupported") {
     return null; // Don't show on unsupported browsers
@@ -47,9 +43,9 @@ export function PushNotificationToggle({
         aria-pressed={isSubscribed}
       >
         {isSubscribed ? (
-          <Bell className={cn("h-4 w-4", showLabel && "mr-2")} aria-hidden="true" />
+          <Bell className={cn("h-4 w-4", showLabel && "me-2")} aria-hidden="true" />
         ) : (
-          <BellOff className={cn("h-4 w-4", showLabel && "mr-2")} aria-hidden="true" />
+          <BellOff className={cn("h-4 w-4", showLabel && "me-2")} aria-hidden="true" />
         )}
         {showLabel && (isSubscribed ? "Notifications On" : "Enable Notifications")}
       </Button>

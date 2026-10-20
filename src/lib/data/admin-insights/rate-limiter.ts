@@ -3,8 +3,8 @@
  * Handles API rate limits, exponential backoff, and circuit breaker pattern
  */
 
-import type { CircuitBreaker, CircuitState, QueuedRequest, ErrorClassification } from "./types";
 import { CIRCUIT_BREAKER_CONFIG, RATE_LIMIT_CONFIG } from "./config";
+import type { CircuitBreaker, CircuitState, ErrorClassification, QueuedRequest } from "./types";
 
 // Global state
 let lastApiCallTime = 0;
@@ -48,7 +48,7 @@ function calculateBackoffDelay(attempt: number, retryAfterHeader?: number): numb
   }
 
   // Exponential backoff: baseDelay * 2^attempt
-  const exponentialDelay = RATE_LIMIT_CONFIG.baseDelayMs * Math.pow(2, attempt);
+  const exponentialDelay = RATE_LIMIT_CONFIG.baseDelayMs * 2 ** attempt;
   const cappedDelay = Math.min(exponentialDelay, RATE_LIMIT_CONFIG.maxDelayMs);
   return addJitter(cappedDelay);
 }
@@ -62,7 +62,7 @@ export function classifyError(error: Error): ErrorClassification {
 
   // Extract Retry-After if present
   const retryAfterMatch = errorStr.match(/retry[- ]?after[:\s]*(\d+)/i);
-  const retryAfter = retryAfterMatch ? parseInt(retryAfterMatch[1], 10) : undefined;
+  const retryAfter = retryAfterMatch ? Number.parseInt(retryAfterMatch[1], 10) : undefined;
 
   const isRateLimit =
     message.includes("429") ||
@@ -134,7 +134,7 @@ function recordFailure(): void {
     circuitBreaker.state = "OPEN";
     circuitBreaker.nextRetryTime = now + CIRCUIT_BREAKER_CONFIG.resetTimeoutMs;
     console.warn(
-      `[xAI Circuit Breaker] OPEN - Too many failures. Will retry after ${new Date(circuitBreaker.nextRetryTime).toISOString()}`
+      `[xAI Circuit Breaker] OPEN - Too many failures. Will retry after ${new Date(circuitBreaker.nextRetryTime).toISOString()}`,
     );
   }
 }
@@ -233,13 +233,13 @@ async function processQueue(): Promise<void> {
  */
 export async function executeWithRateLimitHandling<T>(
   fn: () => Promise<T>,
-  maxRetries: number = RATE_LIMIT_CONFIG.maxRetries
+  maxRetries: number = RATE_LIMIT_CONFIG.maxRetries,
 ): Promise<T> {
   // Check circuit breaker first
   const circuitCheck = canMakeRequest();
   if (!circuitCheck.allowed) {
     throw new Error(
-      `AI service temporarily unavailable. ${circuitCheck.reason}. Please try again in ${Math.ceil((circuitCheck.waitMs || 0) / 1000)} seconds.`
+      `AI service temporarily unavailable. ${circuitCheck.reason}. Please try again in ${Math.ceil((circuitCheck.waitMs || 0) / 1000)} seconds.`,
     );
   }
 
@@ -296,9 +296,7 @@ export async function executeWithRateLimitHandling<T>(
 
       // Calculate delay with backoff
       const delayMs = calculateBackoffDelay(attempt, classification.retryAfter);
-      console.warn(
-        `[xAI API] Waiting ${(delayMs / 1000).toFixed(1)}s before retry ${attempt + 2}/${maxRetries}...`
-      );
+      console.warn(`[xAI API] Waiting ${(delayMs / 1000).toFixed(1)}s before retry ${attempt + 2}/${maxRetries}...`);
 
       await sleep(delayMs);
     }
@@ -306,7 +304,7 @@ export async function executeWithRateLimitHandling<T>(
 
   // All retries exhausted
   const finalError = new Error(
-    `AI service request failed after ${maxRetries} attempts. ${lastError?.message || "Unknown error"}. Please try again later.`
+    `AI service request failed after ${maxRetries} attempts. ${lastError?.message || "Unknown error"}. Please try again later.`,
   );
   throw finalError;
 }

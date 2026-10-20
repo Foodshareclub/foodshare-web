@@ -3,11 +3,20 @@
  * Unit tests for newsletter and campaign management server actions
  */
 
-import { mock, describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 // Shared mock state
 const mockState = {
   user: null as { id: string; email: string } | null,
+  /**
+   * Whether the caller holds the admin role. These actions are all admin-only
+   * — campaigns, segments, automations and the subscriber list — and the guard
+   * used to check only that a session existed, leaving the role to an RLS
+   * policy on the far side of a client the action builds itself. The tests below
+   * therefore run as an admin by default, and the non-admin cases assert the
+   * rejection.
+   */
+  isAdmin: true,
   authError: null as { message: string } | null,
   dbError: null as { message: string; code?: string } | null,
   campaignData: null as { id: string } | null,
@@ -16,6 +25,29 @@ const mockState = {
   flowData: null as { id: string } | null,
   enrollmentData: null as { id: string } | null,
 };
+
+// Mock the admin role check, which reads user_roles through the service-role
+// client. Mocked at the boundary so the tests exercise the actions' own
+// ordering (guard first, then a query) rather than the admin-check internals.
+mock.module("@/lib/data/admin-check", () => ({
+  guardAdmin: mock(() =>
+    mockState.isAdmin
+      ? Promise.resolve({ ok: true, adminId: mockState.user?.id ?? "admin-1" })
+      : Promise.resolve({ ok: false, error: "Admin access required" }),
+  ),
+  requireAdmin: mock(() => {
+    if (!mockState.isAdmin) throw new Error("Admin access required");
+    return Promise.resolve(mockState.user?.id ?? "admin-1");
+  }),
+  checkUserIsAdmin: mock(() =>
+    Promise.resolve({
+      isAdmin: mockState.isAdmin,
+      isSuperAdmin: false,
+      roles: mockState.isAdmin ? ["admin"] : ["user"],
+      userId: mockState.user?.id ?? null,
+    }),
+  ),
+}));
 
 // Mock next/cache
 mock.module("next/cache", () => ({
@@ -168,7 +200,7 @@ mock.module("@/lib/supabase/server", () => ({
           Promise.resolve({
             data: { user: mockState.user },
             error: mockState.authError,
-          })
+          }),
         ),
       },
       from: mock((tableName: string) => createSelectChain(tableName)),
@@ -182,22 +214,22 @@ mock.module("@/lib/supabase/server", () => ({
           eq: mock(() => ({ single: mock(() => Promise.resolve({ data: null, error: null })) })),
         })),
       })),
-    })
+    }),
   ),
   createServerClient: mock(() => Promise.resolve({})),
 }));
 
 // Import actions after mocks
 import {
-  createCampaign,
-  updateCampaignStatus,
-  scheduleCampaign,
   addSubscriber,
-  unsubscribeEmail,
-  createSegment,
   createAutomationFlow,
-  updateAutomationStatus,
+  createCampaign,
+  createSegment,
   enrollUserInAutomation,
+  scheduleCampaign,
+  unsubscribeEmail,
+  updateAutomationStatus,
+  updateCampaignStatus,
 } from "@/app/actions/newsletter";
 
 // Helper type to extract error from failed result
@@ -217,14 +249,17 @@ describe("Newsletter Server Actions", () => {
 
   const createFormData = (data: Record<string, string>) => {
     const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(data)) {
       formData.append(key, value);
-    });
+    }
     return formData;
   };
 
   beforeEach(() => {
     mockState.user = null;
+    // Admin by default: the happy paths below are admin paths. The
+    // non-admin rejections are asserted explicitly.
+    mockState.isAdmin = true;
     mockState.authError = null;
     mockState.dbError = null;
     mockState.campaignData = null;
@@ -241,6 +276,7 @@ describe("Newsletter Server Actions", () => {
   describe("createCampaign", () => {
     it("should reject unauthenticated users", async () => {
       mockState.user = null;
+      mockState.isAdmin = false;
 
       const formData = createFormData({
         name: "Test Campaign",
@@ -251,8 +287,23 @@ describe("Newsletter Server Actions", () => {
       const result = await createCampaign(formData);
 
       expect(result.success).toBe(false);
+    });
+
+    it("should reject an authenticated non-admin", async () => {
+      // The regression this guards: the guard used to accept any signed-in
+      // caller and rely on an RLS policy one layer down, so campaigns,
+      // segments and the subscriber list were only protected by a policy typo
+      // away from being writable by any member.
+      mockState.user = { id: validUserId, email: "user@example.com" };
+      mockState.isAdmin = false;
+
+      const result = await createCampaign(
+        createFormData({ name: "Test Campaign", subject: "Test Subject", htmlContent: "<p>Content</p>" }),
+      );
+
+      expect(result.success).toBe(false);
       if (isFailedResult(result)) {
-        expect(result.error).toMatchObject({ message: "You must be logged in" });
+        expect(result.error).toMatchObject({ message: "Admin access required" });
       }
     });
 
@@ -531,11 +582,29 @@ describe("Newsletter Server Actions", () => {
   });
 
   // ==========================================================================
-  // unsubscribeEmail Tests (No auth required)
+  // unsubscribeEmail Tests
+  //
+  // Admin-only. It had no check of any kind: any caller who could reach the
+  // action could unsubscribe an arbitrary address, and the only thing that
+  // stopped a mass unsubscribe was the RLS policy on newsletter_subscribers.
   // ==========================================================================
 
   describe("unsubscribeEmail", () => {
+    it("should reject a non-admin before touching the subscriber list", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
+      mockState.isAdmin = false;
+
+      const result = await unsubscribeEmail("victim@example.com");
+
+      expect(result.success).toBe(false);
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Admin access required" });
+      }
+    });
+
     it("should reject invalid email address", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
+
       const result = await unsubscribeEmail("invalid");
 
       expect(result.success).toBe(false);
@@ -545,6 +614,8 @@ describe("Newsletter Server Actions", () => {
     });
 
     it("should reject empty email", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
+
       const result = await unsubscribeEmail("");
 
       expect(result.success).toBe(false);
@@ -554,18 +625,23 @@ describe("Newsletter Server Actions", () => {
     });
 
     it("should unsubscribe successfully", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
+
       const result = await unsubscribeEmail("user@example.com");
 
       expect(result.success).toBe(true);
     });
 
     it("should unsubscribe with reason", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
+
       const result = await unsubscribeEmail("user@example.com", "Too many emails");
 
       expect(result.success).toBe(true);
     });
 
     it("should handle database error", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.dbError = { message: "Database error" };
 
       const result = await unsubscribeEmail("user@example.com");
@@ -829,7 +905,23 @@ describe("Newsletter Server Actions", () => {
   // ==========================================================================
 
   describe("enrollUserInAutomation", () => {
+    it("should reject a non-admin before validating the ids", async () => {
+      // Authorization first: an unauthenticated caller must not be able to
+      // distinguish a malformed id from a well-formed one.
+      mockState.user = { id: validUserId, email: "user@example.com" };
+      mockState.isAdmin = false;
+
+      const result = await enrollUserInAutomation(validFlowId, validProfileId);
+
+      expect(result.success).toBe(false);
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Admin access required" });
+      }
+    });
+
     it("should reject invalid flow ID", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
+
       const result = await enrollUserInAutomation("bad-flow-id", validProfileId);
 
       expect(result.success).toBe(false);
@@ -839,6 +931,8 @@ describe("Newsletter Server Actions", () => {
     });
 
     it("should reject invalid profile ID", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
+
       const result = await enrollUserInAutomation(validFlowId, "bad-profile-id");
 
       expect(result.success).toBe(false);
@@ -848,6 +942,7 @@ describe("Newsletter Server Actions", () => {
     });
 
     it("should enroll user successfully", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.enrollmentData = { id: "enrollment-123" };
 
       const result = await enrollUserInAutomation(validFlowId, validProfileId);
@@ -856,6 +951,7 @@ describe("Newsletter Server Actions", () => {
     });
 
     it("should handle already enrolled (duplicate key)", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.dbError = { message: "Duplicate key", code: "23505" };
 
       const result = await enrollUserInAutomation(validFlowId, validProfileId);
@@ -865,6 +961,7 @@ describe("Newsletter Server Actions", () => {
     });
 
     it("should handle database error", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.dbError = { message: "Database error", code: "OTHER" };
 
       const result = await enrollUserInAutomation(validFlowId, validProfileId);

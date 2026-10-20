@@ -44,12 +44,12 @@ export function LocationPickupStep({
           <RequiredStar />
         </Label>
         <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <MapPin className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={address}
             onChange={(e) => onAddressChange(e.target.value)}
             placeholder="Address or general area..."
-            className={`pl-9 ${showAddressError ? "border-destructive" : ""}`}
+            className={`ps-9 ${showAddressError ? "border-destructive" : ""}`}
           />
         </div>
       </div>
@@ -59,12 +59,12 @@ export function LocationPickupStep({
         <div className="space-y-1.5">
           <Label className="text-xs">Pickup Times</Label>
           <div className="relative">
-            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Clock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={time}
               onChange={(e) => onTimeChange(e.target.value)}
               placeholder="e.g. Weekdays 5-8pm"
-              className="pl-9"
+              className="ps-9"
             />
           </div>
         </div>
@@ -72,12 +72,12 @@ export function LocationPickupStep({
         <div className="space-y-1.5">
           <Label className="text-xs">Nearest Transit</Label>
           <div className="relative">
-            <Train className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Train className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={metroStation}
               onChange={(e) => onMetroStationChange(e.target.value)}
               placeholder="e.g. Central Station"
-              className="pl-9"
+              className="ps-9"
             />
           </div>
         </div>

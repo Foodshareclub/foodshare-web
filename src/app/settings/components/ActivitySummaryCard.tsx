@@ -1,7 +1,7 @@
 "use client";
 
-import { Heart, MessageSquare, Clock, Sparkles } from "lucide-react";
 import { Glass } from "@/components/ui/glass";
+import { Clock, Heart, MessageSquare, Sparkles } from "lucide-react";
 
 export function ActivitySummaryCard() {
   // Mock data

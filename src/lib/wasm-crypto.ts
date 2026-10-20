@@ -27,12 +27,7 @@ export function generateTotp(secret: string, timestampSeconds?: number): string 
 /**
  * Verify user-entered TOTP token with time-drift window support (±windowSteps).
  */
-export function verifyTotp(
-  secret: string,
-  code: string,
-  timestampSeconds?: number,
-  windowSteps: number = 1
-): boolean {
+export function verifyTotp(secret: string, code: string, timestampSeconds?: number, windowSteps = 1): boolean {
   try {
     const timeBigInt = timestampSeconds ? BigInt(timestampSeconds) : null;
     const windowBigInt = BigInt(windowSteps);
@@ -46,11 +41,7 @@ export function verifyTotp(
 /**
  * Build standard otpauth URI for Google Authenticator / Apple Keychain QR Codes.
  */
-export function buildOtpAuthUri(
-  accountName: string,
-  issuer: string = "FoodShare",
-  base32Secret: string
-): string {
+export function buildOtpAuthUri(accountName: string, base32Secret: string, issuer = "FoodShare"): string {
   return WasmCrypto.build_totp_uri(accountName, issuer, base32Secret);
 }
 

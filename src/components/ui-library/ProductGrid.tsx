@@ -1,6 +1,6 @@
-import React from "react";
 import { ResponsiveGrid } from "@/components/ui-library";
 import { ProductCard } from "@/components/ui-library";
+import type React from "react";
 
 interface ProductGridProps {
   products: Array<{
@@ -17,16 +17,12 @@ interface ProductGridProps {
   loadMore?: boolean;
 }
 
-export const ProductGrid: React.FC<ProductGridProps> = ({
-  products,
-  columns = 2,
-  className,
-  loadMore = false,
-}) => {
+export const ProductGrid: React.FC<ProductGridProps> = ({ products, columns = 2, className, loadMore = false }) => {
   return (
     <ResponsiveGrid columns={columns} className={className}>
       {products.map((product, index) => (
         <ProductCard
+          // biome-ignore lint/suspicious/noArrayIndexKey: ui-library demo products carry no id field; the list is static and never reorders
           key={index}
           image={product.image}
           title={product.title}

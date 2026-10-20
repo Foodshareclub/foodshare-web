@@ -5,29 +5,23 @@
  * Handles filtering, role management, and user actions
  */
 
-import React, { useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Search, MoreVertical, Shield, User, RefreshCw, Mail, Eye } from "lucide-react";
-import { UserRolesModal } from "./UserRolesModal";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { AdminUserProfile, UserStats, AdminUsersFilter } from "@/lib/data/admin-users";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { AdminUserProfile, AdminUsersFilter, UserStats } from "@/lib/data/admin-users";
+import { cn } from "@/lib/utils";
+import { Eye, Mail, MoreVertical, RefreshCw, Search, Shield, User } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useTransition } from "react";
+import { UserRolesModal } from "./UserRolesModal";
 
 // Icon aliases for minimal code changes
 const FiSearch = Search;
@@ -172,10 +166,7 @@ export function AdminUsersClient({
           </div>
 
           {/* Role Filter */}
-          <Select
-            value={filters.role || "all"}
-            onValueChange={(value) => updateFilters({ role: value })}
-          >
+          <Select value={filters.role || "all"} onValueChange={(value) => updateFilters({ role: value })}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Role" />
             </SelectTrigger>
@@ -189,9 +180,7 @@ export function AdminUsersClient({
 
           {/* Active Filter */}
           <Select
-            value={
-              filters.isActive === true ? "active" : filters.isActive === false ? "inactive" : "all"
-            }
+            value={filters.isActive === true ? "active" : filters.isActive === false ? "inactive" : "all"}
             onValueChange={(value) =>
               updateFilters({
                 isActive: value === "active" ? true : value === "inactive" ? false : undefined,
@@ -211,9 +200,7 @@ export function AdminUsersClient({
           {/* Sort */}
           <Select
             value={filters.sortBy || "created_time"}
-            onValueChange={(value) =>
-              updateFilters({ sortBy: value as AdminUsersFilter["sortBy"] })
-            }
+            onValueChange={(value) => updateFilters({ sortBy: value as AdminUsersFilter["sortBy"] })}
           >
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Sort by" />
@@ -227,12 +214,7 @@ export function AdminUsersClient({
           </Select>
 
           {/* Refresh */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => router.refresh()}
-            disabled={isPending}
-          >
+          <Button variant="outline" size="icon" onClick={() => router.refresh()} disabled={isPending}>
             <FiRefreshCw className={cn("h-4 w-4", isPending && "animate-spin")} />
           </Button>
         </div>
@@ -243,24 +225,12 @@ export function AdminUsersClient({
         <table className="w-full">
           <thead className="bg-gray-50 dark:bg-gray-900">
             <tr>
-              <th className="p-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">
-                User
-              </th>
-              <th className="p-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">
-                Roles
-              </th>
-              <th className="p-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">
-                Status
-              </th>
-              <th className="p-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">
-                Joined
-              </th>
-              <th className="p-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">
-                Last Active
-              </th>
-              <th className="p-3 text-right text-sm font-medium text-gray-600 dark:text-gray-400">
-                Actions
-              </th>
+              <th className="p-3 text-start text-sm font-medium text-gray-600 dark:text-gray-400">User</th>
+              <th className="p-3 text-start text-sm font-medium text-gray-600 dark:text-gray-400">Roles</th>
+              <th className="p-3 text-start text-sm font-medium text-gray-600 dark:text-gray-400">Status</th>
+              <th className="p-3 text-start text-sm font-medium text-gray-600 dark:text-gray-400">Joined</th>
+              <th className="p-3 text-start text-sm font-medium text-gray-600 dark:text-gray-400">Last Active</th>
+              <th className="p-3 text-end text-sm font-medium text-gray-600 dark:text-gray-400">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -269,10 +239,7 @@ export function AdminUsersClient({
                 <td className="p-3">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage
-                        src={user.avatar_url || undefined}
-                        alt={user.first_name || "User"}
-                      />
+                      <AvatarImage src={user.avatar_url || undefined} alt={user.first_name || "User"} />
                       <AvatarFallback>{getInitials(user)}</AvatarFallback>
                     </Avatar>
                     <div>
@@ -285,8 +252,8 @@ export function AdminUsersClient({
                 </td>
                 <td className="p-3">
                   <div className="flex flex-wrap gap-1">
-                    {getRoleBadges(user).map((badge, i) => (
-                      <Badge key={i} variant="outline" className={cn("text-xs", badge.color)}>
+                    {getRoleBadges(user).map((badge) => (
+                      <Badge key={badge.label} variant="outline" className={cn("text-xs", badge.color)}>
                         {badge.label}
                       </Badge>
                     ))}
@@ -299,7 +266,7 @@ export function AdminUsersClient({
                       className={cn(
                         user.is_active
                           ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                          : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+                          : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
                       )}
                     >
                       {user.is_active ? "Active" : "Inactive"}
@@ -320,7 +287,7 @@ export function AdminUsersClient({
                 <td className="p-3 text-sm text-gray-500 dark:text-gray-400">
                   {user.last_seen_at ? new Date(user.last_seen_at).toLocaleDateString() : "Never"}
                 </td>
-                <td className="p-3 text-right">
+                <td className="p-3 text-end">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon">
@@ -329,15 +296,13 @@ export function AdminUsersClient({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => setEditingUser(user)}>
-                        <FiShield className="h-4 w-4 mr-2" /> Manage Roles
+                        <FiShield className="h-4 w-4 me-2" /> Manage Roles
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => window.open(`/profile/${user.id}`, "_blank")}
-                      >
-                        <FiEye className="h-4 w-4 mr-2" /> View Profile
+                      <DropdownMenuItem onClick={() => window.open(`/profile/${user.id}`, "_blank")}>
+                        <FiEye className="h-4 w-4 me-2" /> View Profile
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => window.open(`mailto:${user.email}`)}>
-                        <FiMail className="h-4 w-4 mr-2" /> Send Email
+                        <FiMail className="h-4 w-4 me-2" /> Send Email
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -376,13 +341,7 @@ export function AdminUsersClient({
       )}
 
       {/* Role Management Modal */}
-      {editingUser && (
-        <UserRolesModal
-          user={editingUser}
-          open={!!editingUser}
-          onClose={() => setEditingUser(null)}
-        />
-      )}
+      {editingUser && <UserRolesModal user={editingUser} open={!!editingUser} onClose={() => setEditingUser(null)} />}
     </div>
   );
 }
@@ -391,8 +350,7 @@ export function AdminUsersClient({
 function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
   const colorClasses = {
     blue: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400",
-    green:
-      "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-600 dark:text-green-400",
+    green: "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-600 dark:text-green-400",
     orange:
       "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400",
     purple:

@@ -1,61 +1,51 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { FeatureErrorBoundary } from "@/components/ErrorBoundary";
+import { GlassPanel } from "@/components/ui/glass";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { Activity, Award, Heart, Leaf, MapPin, Package, ShoppingBag, Users, Utensils } from "lucide-react";
 import dynamic from "next/dynamic";
+import { useCallback, useEffect, useState } from "react";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  AreaChart,
   Area,
-  BarChart,
+  AreaChart,
   Bar,
-  PieChart,
-  Pie,
+  BarChart,
+  CartesianGrid,
   Cell,
   Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
-import {
-  Users,
-  ShoppingBag,
-  Activity,
-  MapPin,
-  Leaf,
-  Heart,
-  Award,
-  Utensils,
-  Package,
-} from "lucide-react";
-import { motion } from "framer-motion";
-import { InsightCard } from "./InsightCard";
 import { ChartCard, EmptyState } from "./ChartCard";
+import { InsightCard } from "./InsightCard";
 import { SyncStatusBadge } from "./SyncStatusBadge";
-import { GlassPanel } from "@/components/ui/glass";
-import { FeatureErrorBoundary } from "@/components/ErrorBoundary";
-import { cn } from "@/lib/utils";
 
 import {
   fetchAnalyticsSummary,
-  fetchMonthlyGrowth,
-  fetchDailyActiveUsers,
   fetchConversionFunnel,
-  fetchUserRetentionCohorts,
+  fetchDailyActiveUsers,
   fetchInventoryAging,
   fetchListingTypeDistribution,
+  fetchMonthlyGrowth,
   fetchTopSharers,
+  fetchUserRetentionCohorts,
 } from "@/app/actions/analytics-data";
 import type {
   AnalyticsSummary,
-  MonthlyGrowth,
   DailyActiveUsers,
   FunnelStep,
-  RetentionCohort,
   InventoryAge,
   ListingTypeDistribution,
+  MonthlyGrowth,
+  RetentionCohort,
   TopSharer,
 } from "@/lib/data/analytics";
 
@@ -71,6 +61,8 @@ const GeoHeatMap = dynamic(() => import("./GeoHeatMap").then((mod) => mod.GeoHea
     </div>
   ),
 });
+
+const DASHBOARD_SKELETON_KEYS = ["sk-1", "sk-2", "sk-3", "sk-4"] as const;
 
 const CHART_COLORS = {
   primary: "#FF2D55",
@@ -109,11 +101,7 @@ function ImpactBanner({
   successfulShares: number;
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
+    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
       <GlassPanel className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border-emerald-500/20">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -126,22 +114,10 @@ function ImpactBanner({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-6 md:gap-8">
-            <ImpactStat
-              icon={Package}
-              value={`${foodSavedKg.toLocaleString()}kg`}
-              label="Food Saved"
-            />
-            <ImpactStat
-              icon={Leaf}
-              value={`${co2Prevented.toLocaleString()}kg`}
-              label="CO₂ Prevented"
-            />
+            <ImpactStat icon={Package} value={`${foodSavedKg.toLocaleString()}kg`} label="Food Saved" />
+            <ImpactStat icon={Leaf} value={`${co2Prevented.toLocaleString()}kg`} label="CO₂ Prevented" />
             <ImpactStat icon={Utensils} value={mealsShared.toLocaleString()} label="Meals Shared" />
-            <ImpactStat
-              icon={Heart}
-              value={successfulShares.toLocaleString()}
-              label="Successful Shares"
-            />
+            <ImpactStat icon={Heart} value={successfulShares.toLocaleString()} label="Successful Shares" />
           </div>
         </div>
       </GlassPanel>
@@ -174,8 +150,8 @@ function DashboardSkeleton() {
     <div className="space-y-8 animate-pulse">
       <div className="h-24 bg-muted/30 rounded-xl" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-32 bg-muted/30 rounded-xl" />
+        {DASHBOARD_SKELETON_KEYS.map((skeletonKey) => (
+          <div key={skeletonKey} className="h-32 bg-muted/30 rounded-xl" />
         ))}
       </div>
       <div className="h-[350px] bg-muted/30 rounded-xl" />
@@ -376,19 +352,16 @@ export function AnalyticsDashboard() {
                     }}
                     formatter={(value, name) => {
                       if (name === "dropoff" && typeof value === "number")
-                        return [(value * 100).toFixed(1) + "%", "Drop-off"];
+                        return [`${(value * 100).toFixed(1)}%`, "Drop-off"];
                       return [value ?? 0, "Count"];
                     }}
                   />
                   <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={36}>
                     {funnelData.map((_, index) => (
                       <Cell
+                        // biome-ignore lint/suspicious/noArrayIndexKey: recharts Cell colours are driven purely by funnel stage position; stages are a fixed read-only report
                         key={`cell-${index}`}
-                        fill={
-                          [CHART_COLORS.primary, CHART_COLORS.secondary, CHART_COLORS.tertiary][
-                            index % 3
-                          ]
-                        }
+                        fill={[CHART_COLORS.primary, CHART_COLORS.secondary, CHART_COLORS.tertiary][index % 3]}
                       />
                     ))}
                   </Bar>
@@ -399,12 +372,7 @@ export function AnalyticsDashboard() {
         </ChartCard>
 
         {/* Geographic Heat Map */}
-        <ChartCard
-          title="Geographic Activity"
-          subtitle="Where food sharing is happening"
-          delay={9}
-          minHeight="450px"
-        >
+        <ChartCard title="Geographic Activity" subtitle="Where food sharing is happening" delay={9} minHeight="450px">
           <GeoHeatMap />
         </ChartCard>
 
@@ -427,11 +395,7 @@ export function AnalyticsDashboard() {
                         <stop offset="95%" stopColor={CHART_COLORS.secondary} stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="hsl(var(--border))"
-                    />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                     <XAxis
                       dataKey="month"
                       axisLine={false}
@@ -480,11 +444,7 @@ export function AnalyticsDashboard() {
               <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={dauData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="hsl(var(--border))"
-                    />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                     <XAxis
                       dataKey="date"
                       axisLine={false}
@@ -516,23 +476,14 @@ export function AnalyticsDashboard() {
 
         {/* Listings & Distribution Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <ChartCard
-            title="Listing Activity"
-            subtitle="Monthly new listings"
-            delay={12}
-            className="lg:col-span-2"
-          >
+          <ChartCard title="Listing Activity" subtitle="Monthly new listings" delay={12} className="lg:col-span-2">
             {growthData.length === 0 ? (
               <EmptyState message="No listing data yet" />
             ) : (
               <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={growthData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="hsl(var(--border))"
-                    />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                     <XAxis
                       dataKey="month"
                       axisLine={false}
@@ -587,7 +538,11 @@ export function AnalyticsDashboard() {
                       nameKey="name"
                     >
                       {typeDistribution.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                        <Cell
+                          // biome-ignore lint/suspicious/noArrayIndexKey: recharts Cell colours are driven purely by slice position; the pie is a fixed read-only report
+                          key={`cell-${index}`}
+                          fill={PIE_COLORS[index % PIE_COLORS.length]}
+                        />
                       ))}
                     </Pie>
                     <Tooltip
@@ -620,16 +575,14 @@ export function AnalyticsDashboard() {
                         index === 0 && "bg-yellow-500/20 text-yellow-600",
                         index === 1 && "bg-gray-400/20 text-gray-600",
                         index === 2 && "bg-orange-500/20 text-orange-600",
-                        index > 2 && "bg-muted text-muted-foreground"
+                        index > 2 && "bg-muted text-muted-foreground",
                       )}
                     >
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{sharer.nickname || "Anonymous"}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {sharer.arrangedCount} successful shares
-                      </p>
+                      <p className="text-sm text-muted-foreground">{sharer.arrangedCount} successful shares</p>
                     </div>
                     <Award
                       className={cn(
@@ -637,7 +590,7 @@ export function AnalyticsDashboard() {
                         index === 0 && "text-yellow-500",
                         index === 1 && "text-gray-400",
                         index === 2 && "text-orange-500",
-                        index > 2 && "text-muted-foreground/50"
+                        index > 2 && "text-muted-foreground/50",
                       )}
                     />
                   </div>
@@ -673,6 +626,7 @@ export function AnalyticsDashboard() {
                     <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={24}>
                       {ageData.map((_, index) => (
                         <Cell
+                          // biome-ignore lint/suspicious/noArrayIndexKey: recharts Cell colours are driven purely by inventory-age bucket position; the chart is a fixed read-only report
                           key={`cell-${index}`}
                           fill={["#10B981", "#F59E0B", "#EF4444"][index % 3]}
                         />
@@ -694,7 +648,7 @@ export function AnalyticsDashboard() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium">Cohort</th>
+                    <th className="text-start py-3 px-4 font-medium">Cohort</th>
                     <th className="text-center py-3 px-4 font-medium">Users</th>
                     <th className="text-center py-3 px-4 font-medium">Month 1</th>
                     <th className="text-center py-3 px-4 font-medium">Month 2</th>
@@ -713,10 +667,8 @@ export function AnalyticsDashboard() {
                             className={cn(
                               "inline-block px-2 py-1 rounded text-xs font-medium",
                               month1Pct >= 50 && "bg-emerald-500/20 text-emerald-600",
-                              month1Pct >= 25 &&
-                                month1Pct < 50 &&
-                                "bg-yellow-500/20 text-yellow-600",
-                              month1Pct < 25 && "bg-muted text-muted-foreground"
+                              month1Pct >= 25 && month1Pct < 50 && "bg-yellow-500/20 text-yellow-600",
+                              month1Pct < 25 && "bg-muted text-muted-foreground",
                             )}
                           >
                             {month1Pct.toFixed(0)}%
@@ -727,10 +679,8 @@ export function AnalyticsDashboard() {
                             className={cn(
                               "inline-block px-2 py-1 rounded text-xs font-medium",
                               month2Pct >= 50 && "bg-emerald-500/20 text-emerald-600",
-                              month2Pct >= 25 &&
-                                month2Pct < 50 &&
-                                "bg-yellow-500/20 text-yellow-600",
-                              month2Pct < 25 && "bg-muted text-muted-foreground"
+                              month2Pct >= 25 && month2Pct < 50 && "bg-yellow-500/20 text-yellow-600",
+                              month2Pct < 25 && "bg-muted text-muted-foreground",
                             )}
                           >
                             {month2Pct.toFixed(0)}%

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
 import { Copy, History, X } from "lucide-react";
+import type React from "react";
+import { useState } from "react";
 import { RECENT_LISTINGS_KEY } from "../constants";
 import type { RecentListing } from "../types";
 
@@ -10,10 +11,7 @@ interface RecentListingsPickerProps {
   onClose: () => void;
 }
 
-export const RecentListingsPicker: React.FC<RecentListingsPickerProps> = ({
-  onSelect,
-  onClose,
-}) => {
+export const RecentListingsPicker: React.FC<RecentListingsPickerProps> = ({ onSelect, onClose }) => {
   const [recentListings] = useState<RecentListing[]>(() => {
     try {
       const stored = localStorage.getItem(RECENT_LISTINGS_KEY);
@@ -43,11 +41,7 @@ export const RecentListingsPicker: React.FC<RecentListingsPickerProps> = ({
           <History className="h-4 w-4 text-muted-foreground" />
           Copy from Recent
         </p>
-        <button
-          type="button"
-          onClick={onClose}
-          className="p-1 rounded hover:bg-muted transition-colors"
-        >
+        <button type="button" onClick={onClose} className="p-1 rounded hover:bg-muted transition-colors">
           <X className="h-4 w-4 text-muted-foreground" />
         </button>
       </div>
@@ -57,13 +51,11 @@ export const RecentListingsPicker: React.FC<RecentListingsPickerProps> = ({
             key={listing.id}
             type="button"
             onClick={() => onSelect(listing)}
-            className="w-full flex items-center gap-2 p-2 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+            className="w-full flex items-center gap-2 p-2 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-start"
           >
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{listing.title}</p>
-              <p className="text-xs text-muted-foreground truncate">
-                {listing.description.slice(0, 50)}...
-              </p>
+              <p className="text-xs text-muted-foreground truncate">{listing.description.slice(0, 50)}...</p>
             </div>
             <Copy className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           </button>

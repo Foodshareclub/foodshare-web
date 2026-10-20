@@ -59,7 +59,7 @@ export function buttonClasses(
     variant?: keyof typeof buttonVariantDefaults;
     size?: keyof typeof buttonSizeDefaults;
   },
-  className?: string
+  className?: string,
 ): string {
   const { variant = "default", size = "default" } = variants;
   const variantMap: Record<string, string> = {

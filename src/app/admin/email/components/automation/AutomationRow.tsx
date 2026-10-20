@@ -1,6 +1,3 @@
-import { Zap, Play, Pause, Edit, Copy, Trash2, MoreVertical } from "lucide-react";
-import type { ActiveAutomation } from "../types";
-import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +7,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import { Copy, Edit, MoreVertical, Pause, Play, Trash2, Zap } from "lucide-react";
+import type { ActiveAutomation } from "../types";
 
 export function AutomationRow({
   automation,
@@ -30,11 +30,9 @@ export function AutomationRow({
       <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium truncate">{automation.name}</p>
-          <p className="text-xs text-muted-foreground capitalize">
-            {automation.triggerType.replace("_", " ")}
-          </p>
+          <p className="text-xs text-muted-foreground capitalize">{automation.triggerType.replace("_", " ")}</p>
         </div>
-        <div className="flex items-center gap-2 ml-3">
+        <div className="flex items-center gap-2 ms-3">
           <Badge variant="outline" className={cn("text-xs", statusColors[automation.status])}>
             {automation.status}
           </Badge>
@@ -52,7 +50,7 @@ export function AutomationRow({
             "rounded-lg p-2",
             automation.status === "active"
               ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400",
           )}
         >
           <Zap className="h-5 w-5" />
@@ -65,11 +63,11 @@ export function AutomationRow({
         </div>
       </div>
       <div className="flex items-center gap-6">
-        <div className="text-right">
+        <div className="text-end">
           <p className="font-semibold">{automation.totalEnrolled.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground">Enrolled</p>
         </div>
-        <div className="text-right">
+        <div className="text-end">
           <p className="font-semibold">{automation.conversionRate}%</p>
           <p className="text-xs text-muted-foreground">Conversion</p>
         </div>
@@ -85,22 +83,22 @@ export function AutomationRow({
           <DropdownMenuContent align="end">
             {automation.status === "active" ? (
               <DropdownMenuItem>
-                <Pause className="h-4 w-4 mr-2" /> Pause
+                <Pause className="h-4 w-4 me-2" /> Pause
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem>
-                <Play className="h-4 w-4 mr-2" /> Activate
+                <Play className="h-4 w-4 me-2" /> Activate
               </DropdownMenuItem>
             )}
             <DropdownMenuItem>
-              <Edit className="h-4 w-4 mr-2" /> Edit
+              <Edit className="h-4 w-4 me-2" /> Edit
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Copy className="h-4 w-4 mr-2" /> Duplicate
+              <Copy className="h-4 w-4 me-2" /> Duplicate
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-rose-600">
-              <Trash2 className="h-4 w-4 mr-2" /> Delete
+              <Trash2 className="h-4 w-4 me-2" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -1,19 +1,20 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
-import { invalidateTag } from "@/lib/data/cache-invalidation";
-import {
-  getChallengeLeaderboard as getLeaderboardData,
-  getCurrentUserRank as getUserRankData,
-  getLeaderboardUserProfile as getUserProfileData,
-} from "@/lib/data/challenge-leaderboard";
 import type {
   LeaderboardUser,
   LeaderboardUserProfile,
   UserRankInfo,
 } from "@/components/challenges/ChallengeLeaderboard/types";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import {
+  getChallengeLeaderboard as getLeaderboardData,
+  getLeaderboardUserProfile as getUserProfileData,
+  getCurrentUserRank as getUserRankData,
+} from "@/lib/data/challenge-leaderboard";
+import { invalidateLeaderboard } from "@/lib/redis";
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 // ============================================================================
 // Constants
@@ -54,11 +55,7 @@ type ActivityType = "accepted" | "rejected" | "completed";
 /**
  * Log a challenge activity to challenge_activities table
  */
-async function logChallengeActivity(
-  challengeId: number,
-  userId: string,
-  activityType: ActivityType
-): Promise<void> {
+async function logChallengeActivity(challengeId: number, userId: string, activityType: ActivityType): Promise<void> {
   const supabase = await createClient();
 
   const activityData: Record<string, unknown> = {
@@ -112,10 +109,7 @@ export async function getActiveChallengeCount(): Promise<number> {
  * @param challengeId - The challenge to accept
  * @param overrideLimit - Set to true to bypass the soft limit warning
  */
-export async function acceptChallenge(
-  challengeId: number,
-  overrideLimit: boolean = false
-): Promise<AcceptChallengeResult> {
+export async function acceptChallenge(challengeId: number, overrideLimit = false): Promise<AcceptChallengeResult> {
   const supabase = await createClient();
 
   const {
@@ -166,6 +160,9 @@ export async function acceptChallenge(
     supabase.rpc("increment_challenged_people", { challenge_id: challengeId }),
   ]);
 
+  // Accepting changes the participant count the leaderboard is built from,
+  // so the Redis copy has to go too — see completeChallenge.
+  await invalidateLeaderboard();
   invalidateTag(CACHE_TAGS.CHALLENGES);
   revalidatePath(`/challenge/${challengeId}`);
 
@@ -175,9 +172,7 @@ export async function acceptChallenge(
 /**
  * Decline a challenge - logs the rejection for analytics
  */
-export async function declineChallenge(
-  challengeId: number
-): Promise<{ success: boolean; error?: string }> {
+export async function declineChallenge(challengeId: number): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
   const {
@@ -199,9 +194,7 @@ export async function declineChallenge(
 /**
  * Mark a challenge as completed
  */
-export async function completeChallenge(
-  challengeId: number
-): Promise<{ success: boolean; error?: string }> {
+export async function completeChallenge(challengeId: number): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
   const {
@@ -229,7 +222,17 @@ export async function completeChallenge(
   // Log the completion activity
   await logChallengeActivity(challengeId, user.id, "completed");
 
-  // Invalidate relevant caches
+  // Invalidate relevant caches.
+  //
+  // Two different caches hold challenge state, and they need two different
+  // invalidations. The leaderboard is served from Redis
+  // (`cache:leaderboard:top{N}`, 2-minute TTL), which `invalidateTag` cannot
+  // reach — it only marks entries in the Next incremental cache stale. So a
+  // completion used to leave the rank unchanged for up to two minutes while
+  // the completion count beside it updated, which is a card that contradicts
+  // itself. `invalidateLeaderboard` existed for exactly this and had no
+  // callers.
+  await invalidateLeaderboard();
   invalidateTag(CACHE_TAGS.CHALLENGES);
   invalidateTag(CACHE_TAGS.CHALLENGE_LEADERBOARD);
   revalidatePath(`/challenge/${challengeId}`);
@@ -347,8 +350,8 @@ export async function getUserInteractedChallengeIds(): Promise<{
   const declined: number[] = [
     ...new Set(
       ((declinedActivities as unknown as { challenge_id: number }[]) || []).map(
-        (d: { challenge_id: number }) => d.challenge_id
-      )
+        (d: { challenge_id: number }) => d.challenge_id,
+      ),
     ),
   ];
 
@@ -359,7 +362,7 @@ export async function getUserInteractedChallengeIds(): Promise<{
  * Toggle like on a challenge
  */
 export async function toggleChallengeLike(
-  challengeId: number
+  challengeId: number,
 ): Promise<{ success: boolean; isLiked: boolean; likeCount: number; error?: string }> {
   const supabase = await createClient();
 
@@ -383,11 +386,7 @@ export async function toggleChallengeLike(
 
   if (existingLike) {
     // Unlike - remove from likes table
-    const { error } = await supabase
-      .from("likes")
-      .delete()
-      .eq("challenge_id", challengeId)
-      .eq("profile_id", user.id);
+    const { error } = await supabase.from("likes").delete().eq("challenge_id", challengeId).eq("profile_id", user.id);
 
     if (error) {
       return { success: false, isLiked: true, likeCount: 0, error: error.message };
@@ -417,10 +416,7 @@ export async function toggleChallengeLike(
   const likeCount = count || 0;
 
   // Update the counter on the challenges table for denormalized access
-  await supabase
-    .from("challenges")
-    .update({ challenge_likes_counter: likeCount })
-    .eq("id", challengeId);
+  await supabase.from("challenges").update({ challenge_likes_counter: likeCount }).eq("id", challengeId);
 
   invalidateTag(CACHE_TAGS.CHALLENGES);
   revalidatePath(`/challenge/${challengeId}`);
@@ -431,9 +427,7 @@ export async function toggleChallengeLike(
 /**
  * Check if user has liked a challenge
  */
-export async function checkChallengeLiked(
-  challengeId: number
-): Promise<{ isLiked: boolean; likeCount: number }> {
+export async function checkChallengeLiked(challengeId: number): Promise<{ isLiked: boolean; likeCount: number }> {
   const supabase = await createClient();
 
   const {
@@ -488,8 +482,6 @@ export async function fetchCurrentUserRank(): Promise<UserRankInfo | null> {
  * Get user profile for leaderboard modal - Server Action wrapper
  * Replaces: GET /api/challenges/leaderboard/user/[userId]
  */
-export async function fetchLeaderboardUserProfile(
-  userId: string
-): Promise<LeaderboardUserProfile | null> {
+export async function fetchLeaderboardUserProfile(userId: string): Promise<LeaderboardUserProfile | null> {
   return getUserProfileData(userId);
 }

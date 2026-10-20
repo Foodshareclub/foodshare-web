@@ -93,7 +93,7 @@ export function useGPUInit() {
         });
       });
     },
-    []
+    [],
   );
 
   const cleanup = useCallback(() => {

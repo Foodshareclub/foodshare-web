@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { TrendingDown, ShieldAlert, Award, Calendar } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { Award, Calendar, ShieldAlert, TrendingDown } from "lucide-react";
+import React, { useState, useEffect } from "react";
 
 interface Intervention {
   id: string;
@@ -36,60 +36,85 @@ interface Baseline {
   total_tonnes: number;
 }
 
+interface InterventionRow {
+  id: string;
+  name: string;
+  stage: string;
+  region: string;
+  projected_reduction_pct: number;
+  projected_reduction_tonnes: number;
+  effort_level: string;
+  urgency: string;
+  status: "live" | "committed" | "candidate";
+  deployed_at?: string;
+  target_date: string;
+}
+
+interface InterventionActualRow {
+  intervention_id: string;
+  actual_reduction_tonnes: number;
+}
+
+interface RiskRow {
+  id: string;
+  intervention_id: string;
+  description: string;
+  probability: number;
+  impact: number;
+  mitigation: string;
+  status: string;
+}
+
 export function CampaignTracker() {
   const [interventions, setInterventions] = useState<Intervention[]>([]);
   const [risks, setRisks] = useState<Risk[]>([]);
   const [baselines, setBaselines] = useState<Baseline[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchCampaignData = async () => {
-    setIsLoading(true);
-    try {
-      // 1. Fetch baselines
-      const { data: baseData } = await supabase.from("baselines").select("*");
-      setBaselines(baseData || []);
-
-      // 2. Fetch interventions
-      const { data: intData } = await supabase.from("interventions").select("*");
-
-      // 3. Fetch actual savings per intervention
-      const { data: actData } = await supabase.from("intervention_actuals").select("*");
-
-      const mappedInterventions = (intData || []).map((int: any) => {
-        const matchingActuals = (actData || []).filter(
-          (act: any) => act.intervention_id === int.id
-        );
-        const actualSavings = matchingActuals.reduce(
-          (sum: number, item: any) => sum + Number(item.actual_reduction_tonnes),
-          0
-        );
-        return {
-          ...int,
-          actual_savings: actualSavings,
-        };
-      });
-
-      setInterventions(mappedInterventions);
-
-      // 4. Fetch risks
-      const { data: riskData } = await supabase.from("risks").select("*");
-      const mappedRisks = (riskData || []).map((risk: any) => {
-        const matchingInt = mappedInterventions.find((i) => i.id === risk.intervention_id);
-        return {
-          ...risk,
-          intervention_name: matchingInt ? matchingInt.name : "Unknown Intervention",
-        };
-      });
-      setRisks(mappedRisks);
-    } catch (err) {
-      console.error("Error loading campaign data:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchCampaignData();
+    void (async () => {
+      try {
+        // 1. Fetch baselines
+        const { data: baseData } = await supabase.from("baselines").select("*");
+        setBaselines(baseData || []);
+
+        // 2. Fetch interventions
+        const { data: intData } = await supabase.from("interventions").select("*");
+
+        // 3. Fetch actual savings per intervention
+        const { data: actData } = await supabase.from("intervention_actuals").select("*");
+
+        const intRows = (intData ?? []) as InterventionRow[];
+        const actualRows = (actData ?? []) as InterventionActualRow[];
+
+        const mappedInterventions = intRows.map((int) => {
+          const matchingActuals = actualRows.filter((act) => act.intervention_id === int.id);
+          const actualSavings = matchingActuals.reduce((sum, item) => sum + Number(item.actual_reduction_tonnes), 0);
+          return {
+            ...int,
+            actual_savings: actualSavings,
+          };
+        });
+
+        setInterventions(mappedInterventions);
+
+        // 4. Fetch risks
+        const { data: riskData } = await supabase.from("risks").select("*");
+        const riskRows = (riskData ?? []) as RiskRow[];
+        const mappedRisks = riskRows.map((risk) => {
+          const matchingInt = mappedInterventions.find((i) => i.id === risk.intervention_id);
+          return {
+            ...risk,
+            intervention_name: matchingInt ? matchingInt.name : "Unknown Intervention",
+          };
+        });
+        setRisks(mappedRisks);
+      } catch (err) {
+        console.error("Error loading campaign data:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   }, []);
 
   if (isLoading) {
@@ -134,8 +159,7 @@ export function CampaignTracker() {
               50% Food Waste Reduction Campaign
             </h2>
             <p className="text-xs text-stone-400">
-              Aggregating active operational interventions against locked January 2026 regional
-              baselines
+              Aggregating active operational interventions against locked January 2026 regional baselines
             </p>
           </div>
 
@@ -162,9 +186,7 @@ export function CampaignTracker() {
         <div className="space-y-3">
           <div className="flex justify-between items-center text-[11px] font-bold text-stone-400">
             <span>Locked Baseline ({totalBaseline.toLocaleString()} tonnes)</span>
-            <span className="text-white">
-              Target: {(totalBaseline * 0.5).toLocaleString()} tonnes
-            </span>
+            <span className="text-white">Target: {(totalBaseline * 0.5).toLocaleString()} tonnes</span>
           </div>
 
           {/* Canvas-style progress segmented bar */}
@@ -172,13 +194,13 @@ export function CampaignTracker() {
             {/* Achieved segment */}
             <div
               style={{ width: `${(achievedPct / 50) * 100}%` }}
-              className="bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-l-full relative group cursor-pointer transition-all duration-500"
+              className="bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-s-full relative group cursor-pointer transition-all duration-500"
               title={`Achieved: ${achievedPct}% (${totalAchieved.toLocaleString()} tonnes)`}
             />
             {/* Committed segment */}
             <div
               style={{ width: `${(committedPct / 50) * 100}%` }}
-              className="bg-emerald-500/30 border-l border-emerald-500/20 relative group cursor-pointer transition-all duration-500"
+              className="bg-emerald-500/30 border-s border-emerald-500/20 relative group cursor-pointer transition-all duration-500"
               title={`Committed: ${committedPct}% (${totalCommitted.toLocaleString()} tonnes)`}
             />
             {/* Remaining gap segment */}
@@ -211,15 +233,13 @@ export function CampaignTracker() {
 
       {/* Gap Alert Banner */}
       {isGapAlertActive && (
-        <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-350 text-amber-400 rounded-2xl text-xs font-bold flex flex-col md:flex-row md:items-center justify-between gap-4 animate-pulse">
+        <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-2xl text-xs font-bold flex flex-col md:flex-row md:items-center justify-between gap-4 animate-pulse">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400">
               <ShieldAlert className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-white font-extrabold uppercase tracking-wide">
-                Critical Campaign Gap Detected
-              </p>
+              <p className="text-white font-extrabold uppercase tracking-wide">Critical Campaign Gap Detected</p>
               <p className="text-stone-400 mt-0.5">
                 Currently short of the 50% waste reduction goal by{" "}
                 <span className="text-amber-400 font-extrabold">
@@ -229,7 +249,10 @@ export function CampaignTracker() {
               </p>
             </div>
           </div>
-          <button className="self-start md:self-auto px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 font-extrabold uppercase tracking-wider rounded-xl transition-all border border-amber-500/20 cursor-pointer text-[10px]">
+          <button
+            type="button"
+            className="self-start md:self-auto px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 font-extrabold uppercase tracking-wider rounded-xl transition-all border border-amber-500/20 cursor-pointer text-[10px]"
+          >
             Review Candidates ↗
           </button>
         </div>
@@ -245,9 +268,7 @@ export function CampaignTracker() {
                 <TrendingDown className="h-4 w-4 text-emerald-400" />
                 Reduction Trajectory (tonnes)
               </h3>
-              <p className="text-[10px] text-stone-500">
-                Historical performance vs required target pathway
-              </p>
+              <p className="text-[10px] text-stone-500">Historical performance vs required target pathway</p>
             </div>
 
             <div className="flex items-center gap-4 text-[9px] font-bold uppercase text-stone-400">
@@ -268,40 +289,18 @@ export function CampaignTracker() {
 
           {/* SVG Custom Line Chart */}
           <div className="flex-1 w-full relative pt-2">
-            <svg className="w-full h-full" viewBox="0 0 500 200" preserveAspectRatio="none">
+            <svg
+              className="w-full h-full"
+              viewBox="0 0 500 200"
+              preserveAspectRatio="none"
+              role="img"
+              aria-label="Line chart of the waste reduction trajectory in tonnes, comparing actual, projected and required target values"
+            >
               {/* Grids */}
-              <line
-                x1="0"
-                y1="20"
-                x2="500"
-                y2="20"
-                stroke="rgba(255,255,255,0.03)"
-                strokeWidth="1"
-              />
-              <line
-                x1="0"
-                y1="80"
-                x2="500"
-                y2="80"
-                stroke="rgba(255,255,255,0.03)"
-                strokeWidth="1"
-              />
-              <line
-                x1="0"
-                y1="140"
-                x2="500"
-                y2="140"
-                stroke="rgba(255,255,255,0.03)"
-                strokeWidth="1"
-              />
-              <line
-                x1="0"
-                y1="199"
-                x2="500"
-                y2="199"
-                stroke="rgba(255,255,255,0.08)"
-                strokeWidth="1"
-              />
+              <line x1="0" y1="20" x2="500" y2="20" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+              <line x1="0" y1="80" x2="500" y2="80" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+              <line x1="0" y1="140" x2="500" y2="140" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+              <line x1="0" y1="199" x2="500" y2="199" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
 
               {/* Required Path Line (dotted white) */}
               <path
@@ -332,14 +331,7 @@ export function CampaignTracker() {
               {/* Actual dots */}
               <circle cx="0" cy="20" r="4" fill="#10b981" />
               <circle cx="100" cy="52" r="4" fill="#10b981" />
-              <circle
-                cx="200"
-                cy="90"
-                r="5"
-                fill="#10b981"
-                stroke="rgba(16,185,129,0.4)"
-                strokeWidth="4"
-              />
+              <circle cx="200" cy="90" r="5" fill="#10b981" stroke="rgba(16,185,129,0.4)" strokeWidth="4" />
             </svg>
 
             {/* X-Axis Labels */}
@@ -361,22 +353,17 @@ export function CampaignTracker() {
               <ShieldAlert className="h-4 w-4 text-amber-500" />
               Active Risk Factors
             </h3>
-            <p className="text-[10px] text-stone-500">
-              Live operational threat matrix logged in database
-            </p>
+            <p className="text-[10px] text-stone-500">Live operational threat matrix logged in database</p>
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-1 space-y-3 scrollbar-thin">
+          <div className="flex-1 overflow-y-auto pe-1 space-y-3 scrollbar-thin">
             {risks.length === 0 ? (
               <div className="flex items-center justify-center h-full text-stone-500 text-[11px] font-bold">
                 No active threats logged.
               </div>
             ) : (
               risks.map((risk) => (
-                <div
-                  key={risk.id}
-                  className="p-3 bg-black/25 rounded-xl border border-white/5 space-y-2"
-                >
+                <div key={risk.id} className="p-3 bg-black/25 rounded-xl border border-white/5 space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <span
                       className="text-[9px] font-mono text-stone-500 truncate max-w-[120px]"
@@ -395,17 +382,13 @@ export function CampaignTracker() {
                     </span>
                   </div>
 
-                  <p className="text-xs text-stone-300 font-bold leading-relaxed">
-                    {risk.description}
-                  </p>
+                  <p className="text-xs text-stone-300 font-bold leading-relaxed">{risk.description}</p>
 
                   <div className="pt-1.5 border-t border-white/5">
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-450 text-emerald-400 block mb-0.5">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400 block mb-0.5">
                       Mitigation Strategy:
                     </span>
-                    <p className="text-[10px] text-stone-400 italic leading-normal">
-                      {risk.mitigation}
-                    </p>
+                    <p className="text-[10px] text-stone-400 italic leading-normal">{risk.mitigation}</p>
                   </div>
                 </div>
               ))
@@ -416,9 +399,7 @@ export function CampaignTracker() {
 
       {/* Active Interventions List */}
       <div className="space-y-4">
-        <h3 className="text-sm font-black text-white uppercase tracking-wider">
-          Active & Deployed Interventions
-        </h3>
+        <h3 className="text-sm font-black text-white uppercase tracking-wider">Active & Deployed Interventions</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {interventions.map((int) => {
@@ -429,7 +410,7 @@ export function CampaignTracker() {
             return (
               <div
                 key={int.id}
-                className="glass-panel p-5 rounded-2xl border-none shadow-md bg-stone-950/20 flex flex-col justify-between space-y-4 hover:-translate-y-0.5 transition-all hover:bg-stone-900/10 border-l-2 hover:border-l-emerald-500"
+                className="glass-panel p-5 rounded-2xl border-none shadow-md bg-stone-950/20 flex flex-col justify-between space-y-4 hover:-translate-y-0.5 transition-all hover:bg-stone-900/10 border-s-2 hover:border-s-emerald-500"
               >
                 <div className="space-y-1">
                   <div className="flex items-center justify-between gap-2">
@@ -466,9 +447,7 @@ export function CampaignTracker() {
                     <div className="space-y-1">
                       <div className="flex justify-between items-center text-[10px] font-bold">
                         <span className="text-stone-500">Achieved Savings:</span>
-                        <span
-                          className={`font-mono ${ratio < 0.8 ? "text-amber-400" : "text-emerald-400"}`}
-                        >
+                        <span className={`font-mono ${ratio < 0.8 ? "text-amber-400" : "text-emerald-400"}`}>
                           {progress.toLocaleString()} tonnes ({Math.round(ratio * 100)}%)
                         </span>
                       </div>

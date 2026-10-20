@@ -8,13 +8,13 @@
  * - Audit logging
  */
 
+import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { type ServerActionResult, serverActionError, successVoid } from "@/lib/errors";
+import type { ErrorCode } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
-import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
-import { invalidateTag } from "@/lib/data/cache-invalidation";
-import type { ErrorCode } from "@/lib/errors";
 
 // ============================================================================
 // Zod Schemas
@@ -22,15 +22,7 @@ import type { ErrorCode } from "@/lib/errors";
 
 const SegmentFilterRuleSchema = z.object({
   field: z.string().min(1, "Field is required"),
-  operator: z.enum([
-    "equals",
-    "not_equals",
-    "contains",
-    "greater_than",
-    "less_than",
-    "in",
-    "not_in",
-  ]),
+  operator: z.enum(["equals", "not_equals", "contains", "greater_than", "less_than", "in", "not_in"]),
   value: z.union([z.string(), z.number(), z.array(z.string())]),
 });
 
@@ -119,7 +111,7 @@ async function logAuditEvent(
   action: string,
   resourceType: string,
   resourceId: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<void> {
   try {
     await supabase.rpc("log_audit_event", {
@@ -141,9 +133,7 @@ async function logAuditEvent(
 /**
  * Create a new audience segment
  */
-export async function createSegment(
-  input: CreateSegmentInput
-): Promise<ServerActionResult<SegmentResult>> {
+export async function createSegment(input: CreateSegmentInput): Promise<ServerActionResult<SegmentResult>> {
   try {
     // Validate with Zod
     const validated = CreateSegmentSchema.safeParse(input);
@@ -207,7 +197,7 @@ export async function createSegment(
  */
 export async function updateSegment(
   id: string,
-  input: Partial<CreateSegmentInput>
+  input: Partial<CreateSegmentInput>,
 ): Promise<ServerActionResult<SegmentResult>> {
   try {
     // Validate ID
@@ -230,11 +220,7 @@ export async function updateSegment(
     const { supabase, user } = auth;
 
     // Check if segment is system segment
-    const { data: existing } = await supabase
-      .from("audience_segments")
-      .select("is_system,name")
-      .eq("id", id)
-      .single();
+    const { data: existing } = await supabase.from("audience_segments").select("is_system,name").eq("id", id).single();
 
     if (!existing) {
       return serverActionError("Segment not found", "NOT_FOUND");
@@ -246,8 +232,7 @@ export async function updateSegment(
 
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (validated.data.name !== undefined) updates.name = validated.data.name.trim();
-    if (validated.data.description !== undefined)
-      updates.description = validated.data.description?.trim() || null;
+    if (validated.data.description !== undefined) updates.description = validated.data.description?.trim() || null;
     if (validated.data.filterRules !== undefined) updates.filter_rules = validated.data.filterRules;
     if (validated.data.color !== undefined) updates.color = validated.data.color;
     if (validated.data.iconName !== undefined) updates.icon_name = validated.data.iconName;
@@ -305,11 +290,7 @@ export async function deleteSegment(id: string): Promise<ServerActionResult<void
     const { supabase, user } = auth;
 
     // Check if segment is system segment
-    const { data: existing } = await supabase
-      .from("audience_segments")
-      .select("is_system,name")
-      .eq("id", id)
-      .single();
+    const { data: existing } = await supabase.from("audience_segments").select("is_system,name").eq("id", id).single();
 
     if (!existing) {
       return serverActionError("Segment not found", "NOT_FOUND");

@@ -1,13 +1,14 @@
 "use client";
 
-import type { ChangeEvent } from "react";
-import React, { useRef, useState } from "react";
-import Image from "next/image";
-import { useTranslations } from "next-intl";
 import cloud from "@/assets/cloud.svg";
-import { createPhotoUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { ALLOWED_MIME_TYPES } from "@/constants/mime-types";
+import { createPhotoUrl } from "@/utils";
+import { useTranslations } from "next-intl";
+import Image from "next/image";
+import type { ChangeEvent } from "react";
+import type React from "react";
+import { useRef, useState } from "react";
 
 type PropsType = {
   size: number;
@@ -30,9 +31,10 @@ const Avatar: React.FC<PropsType> = ({ size, onUpload, avatarUrl: propAvatarUrl 
   const inputFileRef = useRef<HTMLInputElement | null>(null);
 
   const uploadAvatar = (event: ChangeEvent<HTMLInputElement>) => {
-    const { file, filePath, url } = createPhotoUrl(event);
-    onUpload(filePath, file);
-    setPastUrl(url);
+    const photo = createPhotoUrl(event);
+    if (!photo) return;
+    onUpload(photo.filePath, photo.file);
+    setPastUrl(photo.url);
   };
 
   return (
@@ -63,7 +65,7 @@ const Avatar: React.FC<PropsType> = ({ size, onUpload, avatarUrl: propAvatarUrl 
         )}
         <div className="self-center relative">
           <input
-            className="opacity-0 absolute h-[22%] left-0 top-[9%]"
+            className="opacity-0 absolute h-[22%] start-0 top-[9%]"
             accept={ALLOWED_MIME_TYPES.PROFILES.join(",")}
             ref={inputFileRef}
             type="file"

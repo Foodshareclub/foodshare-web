@@ -1,9 +1,9 @@
 "use client";
 
-import { LucideIcon, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { GlassCard } from "@/components/ui/glass";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { type LucideIcon, Minus, TrendingDown, TrendingUp } from "lucide-react";
 
 interface InsightCardProps {
   title: string;
@@ -83,9 +83,7 @@ export function InsightCard({
           </div>
 
           {change !== undefined && (
-            <div
-              className={cn("flex items-center gap-1.5 mt-3 text-sm font-medium", getTrendColor())}
-            >
+            <div className={cn("flex items-center gap-1.5 mt-3 text-sm font-medium", getTrendColor())}>
               {renderTrendIcon()}
               <span>
                 {change > 0 ? "+" : ""}

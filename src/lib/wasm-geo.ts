@@ -32,12 +32,7 @@ export interface GeoResultItem extends GeoItem {
 /**
  * Calculate Great Circle (Haversine) distance between two points in kilometers.
  */
-export function calculateHaversineDistance(
-  lat1: number,
-  lng1: number,
-  lat2: number,
-  lng2: number
-): number {
+export function calculateHaversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   return WasmGeo.distance(lat1, lng1, lat2, lng2);
 }
 
@@ -47,7 +42,7 @@ export function calculateHaversineDistance(
 export function calculateItemDistances<T extends GeoItem>(
   userLat: number,
   userLng: number,
-  items: T[]
+  items: T[],
 ): (T & { distance?: number })[] {
   try {
     const rawJson = JSON.stringify(items);
@@ -74,7 +69,7 @@ export function filterItemsWithinRadius<T extends GeoItem>(
   userLat: number,
   userLng: number,
   items: T[],
-  radiusKm: number
+  radiusKm: number,
 ): (T & { distance: number })[] {
   try {
     const rawJson = JSON.stringify(items);
@@ -89,9 +84,7 @@ export function filterItemsWithinRadius<T extends GeoItem>(
 /**
  * Parse PostGIS geometry representation (WKT 'POINT(lng lat)' or GeoJSON) into coordinates.
  */
-export function parsePostGisLocation(
-  location: unknown
-): GeoCoordinate | null {
+export function parsePostGisLocation(location: unknown): GeoCoordinate | null {
   if (!location) return null;
   try {
     const rawJson = typeof location === "string" ? location : JSON.stringify(location);

@@ -446,11 +446,7 @@ export class MultiLayerCache {
   /**
    * Get data from cache or fetch if not available
    */
-  async getOrFetch<T>(
-    key: string,
-    fetcher: () => Promise<T>,
-    options: CacheOptions = {}
-  ): Promise<T> {
+  async getOrFetch<T>(key: string, fetcher: () => Promise<T>, options: CacheOptions = {}): Promise<T> {
     const { ttl: _ttl = DEFAULT_TTL, staleWhileRevalidate = false } = options;
 
     // Check cache
@@ -489,11 +485,7 @@ export class MultiLayerCache {
   /**
    * Refresh cache in background
    */
-  private async refreshInBackground<T>(
-    key: string,
-    fetcher: () => Promise<T>,
-    options: CacheOptions
-  ): Promise<void> {
+  private async refreshInBackground<T>(key: string, fetcher: () => Promise<T>, options: CacheOptions): Promise<void> {
     try {
       const data = await fetcher();
       await this.set(key, data, options);
@@ -595,11 +587,7 @@ export class MultiLayerCache {
   /**
    * Prefetch data into cache
    */
-  async prefetch<T>(
-    key: string,
-    fetcher: () => Promise<T>,
-    options: CacheOptions = {}
-  ): Promise<void> {
+  async prefetch<T>(key: string, fetcher: () => Promise<T>, options: CacheOptions = {}): Promise<void> {
     const cached = await this.get<T>(key);
     if (cached !== null) return;
 
@@ -638,11 +626,7 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
 /**
  * Get data from cache or fetch
  */
-export async function cacheGetOrFetch<T>(
-  key: string,
-  fetcher: () => Promise<T>,
-  options?: CacheOptions
-): Promise<T> {
+export async function cacheGetOrFetch<T>(key: string, fetcher: () => Promise<T>, options?: CacheOptions): Promise<T> {
   return getCache().getOrFetch(key, fetcher, options);
 }
 

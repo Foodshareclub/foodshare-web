@@ -1,6 +1,12 @@
 /**
- * Security utilities: validation, XSS protection, audit, MFA, rate-limiting,
- * sensitive-data handling, and token management.
+ * Security utilities: validation, XSS protection, audit, MFA, sensitive-data
+ * handling, and token management.
+ *
+ * Rate limiting is not here: it lives in `src/proxy.ts`, which is the only
+ * place every request passes through. The removed `checkRateLimit` helper had
+ * no callers, opened with a no-op when Redis was absent, and — reachable from
+ * this barrel, which `lib/utils.ts` re-exports — pulled `@upstash/redis` and
+ * `@upstash/ratelimit` into the client bundle of every page.
  *
  * Canonical implementations live here — import from `@/lib/security`
  * directly in new code.
@@ -19,13 +25,6 @@ export {
   type MFAVerificationResult,
   type MFASession,
 } from "./mfa";
-export {
-  checkRateLimit,
-  requireRateLimit,
-  withRateLimit,
-  type RateLimitType,
-  type RateLimitResult,
-} from "./rateLimit";
 export {
   DEFAULT_SENSITIVE_FIELDS,
   isSensitiveField,

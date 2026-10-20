@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
 import { cn } from "@/lib/utils";
+import type { TimerHandle } from "@/types/timer.types";
+import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState } from "react";
 
 interface HealthStatus {
   status: "healthy" | "degraded" | "maintenance";
@@ -15,6 +17,7 @@ const MAX_POLL_INTERVAL = 600000; // 10 minutes max
 const CONSECUTIVE_FAILURES_THRESHOLD = 3; // Only show banner after 3 consecutive failures
 
 export function MaintenanceBanner(): React.ReactElement | null {
+  const t = useTranslations();
   const [status, setStatus] = useState<HealthStatus | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
@@ -25,7 +28,7 @@ export function MaintenanceBanner(): React.ReactElement | null {
 
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: TimerHandle;
 
     const checkHealth = async (): Promise<void> => {
       setIsChecking(true);
@@ -128,9 +131,9 @@ export function MaintenanceBanner(): React.ReactElement | null {
       role="alert"
       aria-live="polite"
       className={cn(
-        "fixed top-0 left-0 right-0 z-50",
+        "fixed top-0 inset-x-0 z-50",
         "bg-gradient-to-r from-amber-400 via-orange-400 to-amber-400",
-        "shadow-lg"
+        "shadow-lg",
       )}
     >
       <div className="max-w-4xl mx-auto px-4 py-3">
@@ -151,8 +154,7 @@ export function MaintenanceBanner(): React.ReactElement | null {
                 </>
               ) : (
                 <>
-                  Things might be a bit slow right now.{" "}
-                  <span className="opacity-90"> We&apos;re on it! 🚀</span>
+                  Things might be a bit slow right now. <span className="opacity-90"> We&apos;re on it! 🚀</span>
                 </>
               )}
             </p>
@@ -162,16 +164,18 @@ export function MaintenanceBanner(): React.ReactElement | null {
           <div className="flex items-center gap-1 flex-shrink-0">
             {/* Refresh button */}
             <button
+              type="button"
               onClick={() => checkHealthRef.current?.()}
               disabled={isChecking}
               className={cn(
                 "p-2 rounded-full transition-all duration-200",
                 "hover:bg-white/20 active:scale-95",
-                "text-white/90 hover:text-white"
+                "text-white/90 hover:text-white",
               )}
-              aria-label="Check status"
+              aria-label={t("Common.refresh")}
             >
               <svg
+                aria-hidden="true"
                 className={cn("w-4 h-4", isChecking && "animate-spin")}
                 fill="none"
                 stroke="currentColor"
@@ -188,21 +192,17 @@ export function MaintenanceBanner(): React.ReactElement | null {
 
             {/* Dismiss button */}
             <button
+              type="button"
               onClick={() => setDismissed(true)}
               className={cn(
                 "p-2 rounded-full transition-all duration-200",
                 "hover:bg-white/20 active:scale-95",
-                "text-white/90 hover:text-white"
+                "text-white/90 hover:text-white",
               )}
-              aria-label="Dismiss"
+              aria-label={t("Common.dismiss")}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
+              <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
@@ -211,10 +211,7 @@ export function MaintenanceBanner(): React.ReactElement | null {
         {/* Progress indicator */}
         {isMaintenance && (
           <div className="mt-2 h-1 bg-white/20 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-white/60 rounded-full animate-pulse"
-              style={{ width: "60%" }}
-            />
+            <div className="h-full bg-white/60 rounded-full animate-pulse" style={{ width: "60%" }} />
           </div>
         )}
       </div>

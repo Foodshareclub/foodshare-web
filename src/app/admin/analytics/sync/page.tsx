@@ -7,13 +7,13 @@
  * staging tables must not be reachable from the browser.
  */
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
+  type AnalyticsSyncCounts,
   syncAnalyticsToMotherDuck,
   testAnalyticsConnectivity,
-  type AnalyticsSyncCounts,
 } from "@/app/actions/analytics-sync";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 export default function AnalyticsSyncPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -63,8 +63,8 @@ export default function AnalyticsSyncPage() {
       <div className="space-y-4">
         <div className="p-4 bg-muted rounded-lg">
           <p className="text-sm text-muted-foreground mb-2">
-            This syncs analytics data from PostgreSQL staging tables to MotherDuck. The sync runs on
-            the server so the MotherDuck token is never sent to the browser.
+            This syncs analytics data from PostgreSQL staging tables to MotherDuck. The sync runs on the server so the
+            MotherDuck token is never sent to the browser.
           </p>
         </div>
 
@@ -77,11 +77,7 @@ export default function AnalyticsSyncPage() {
             {isLoading ? "Syncing..." : "Incremental Sync"}
           </Button>
 
-          <Button
-            onClick={() => syncToMotherDuck(true)}
-            disabled={isLoading || isTesting}
-            variant="secondary"
-          >
+          <Button onClick={() => syncToMotherDuck(true)} disabled={isLoading || isTesting} variant="secondary">
             Full Sync
           </Button>
         </div>

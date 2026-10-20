@@ -9,7 +9,8 @@ import { DevTools } from "@/components/dev";
 import Footer from "@/components/footer/Footer";
 import { NavbarWrapper } from "@/components/header/navbar/NavbarWrapper";
 import { MaintenanceBanner } from "@/components/maintenance/MaintenanceBanner";
-import { defaultLocale, isValidLocale, locales } from "@/i18n/config";
+import { defaultLocale, getLocaleDirection, isValidLocale, locales } from "@/i18n/config";
+import { loadMessagesWithFallback } from "@/i18n/merge";
 import { getAuthSession } from "@/lib/data/auth";
 import { getAppRatingStats } from "@/lib/data/og-stats";
 import { getFacebookAppId } from "@/lib/email/vault";
@@ -37,21 +38,36 @@ type RootLayoutProps = Readonly<{
   modal?: React.ReactNode;
 }>;
 
-// The document shell must not read request data with Cache Components enabled.
-// Apply a validated locale before paint; Providers keeps it in sync after hydration.
+// The document shell must not read request data with Cache Components enabled —
+// awaiting `cookies()` in the root layout would opt every route's shell out of
+// prerendering, which is a far larger cost than this script. So `lang` and
+// `dir` are applied here, synchronously, before the first paint, and Providers
+// keeps them in sync afterwards.
+//
+// Two corrections to the version this replaces:
+//
+//   - Direction came from a hard-coded `locale === "ar" ? "rtl" : "ltr"`, so
+//     adding `he`, `fa` or `ur` to the catalogue would have left them
+//     left-to-right with no error anywhere. The table is generated from
+//     `localeMetadata`, which is the same source `getLocaleDirection` reads.
+//   - The allowlist is embedded, so the same validation the server applies runs
+//     here: a tampered cookie cannot put an arbitrary string into `lang`.
+const localeDirections = Object.fromEntries(locales.map((locale) => [locale, getLocaleDirection(locale)]));
+
 const localeScript = `(() => { try {
   const supported = ${JSON.stringify(locales)};
+  const directions = ${JSON.stringify(localeDirections)};
   const match = document.cookie.match(/(?:^|;\\s*)locale=([^;]*)/);
   const locale = match && supported.includes(match[1]) ? match[1] : "${defaultLocale}";
   document.documentElement.lang = locale;
-  document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
+  document.documentElement.dir = directions[locale] || "ltr";
 } catch {} })();`;
 
 async function RequestContent({ children, modal }: RootLayoutProps) {
   const [cookieStore, session] = await Promise.all([cookies(), getAuthSession()]);
   const requestedLocale = cookieStore.get("locale")?.value ?? defaultLocale;
   const locale = isValidLocale(requestedLocale) ? requestedLocale : defaultLocale;
-  const messages = (await import(`../../messages/${locale}.json`)).default;
+  const messages = await loadMessagesWithFallback(locale);
 
   return (
     <Providers initialLocale={locale} initialMessages={messages}>
@@ -73,11 +89,7 @@ async function StructuredMetadata() {
   const [facebookAppId, appRating] = await Promise.all([getFacebookAppId(), getAppRatingStats()]);
   const jsonLd = safeJsonLdStringify({
     "@context": "https://schema.org",
-    "@graph": [
-      generateOrganizationJsonLd(),
-      generateWebsiteJsonLd(),
-      generateSoftwareApplicationJsonLd(appRating),
-    ],
+    "@graph": [generateOrganizationJsonLd(), generateWebsiteJsonLd(), generateSoftwareApplicationJsonLd(appRating)],
   });
   return (
     <>
@@ -105,12 +117,7 @@ export default function RootLayout({ children, modal }: RootLayoutProps) {
           href="/opensearch.xml"
         />
         {/* RSS Feed autodiscovery */}
-        <link
-          rel="alternate"
-          type="application/rss+xml"
-          title="FoodShare Forum Feed"
-          href="/forum/feed.xml"
-        />
+        <link rel="alternate" type="application/rss+xml" title="FoodShare Forum Feed" href="/forum/feed.xml" />
         {/* Preconnect to third-party origins for performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -132,7 +139,7 @@ export default function RootLayout({ children, modal }: RootLayoutProps) {
         {/* Skip to main content link for keyboard accessibility */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:start-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
           Skip to main content
         </a>

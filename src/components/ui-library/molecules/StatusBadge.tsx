@@ -1,6 +1,6 @@
-import React from "react";
-import { cn } from "@/lib/utils";
 import { StatusIndicator } from "@/components/ui-library/atoms/StatusIndicator";
+import { cn } from "@/lib/utils";
+import type React from "react";
 
 /**
  * StatusBadge - A composed molecule showing status with badge pattern
@@ -13,12 +13,7 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({
-  status,
-  label,
-  size = "md",
-  className,
-}) => {
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label, size = "md", className }) => {
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <StatusIndicator status={status} size={size} />

@@ -3,15 +3,15 @@
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 
-import { AddListingButton } from "./AddListingButton";
-import { photoObj } from "@/utils/navigationActions";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { photoObj } from "@/utils/navigationActions";
+import { AddListingButton } from "./AddListingButton";
 
 type ListingMenuItemProps = {
   value: string;
@@ -22,10 +22,7 @@ type ListingMenuItemProps = {
 // React Compiler handles memoization automatically
 function ListingMenuItem({ value, icon, label }: ListingMenuItemProps) {
   return (
-    <DropdownMenuItem
-      asChild
-      className="rounded-lg hover:bg-[rgba(255,45,85,0.1)] transition-colors cursor-pointer"
-    >
+    <DropdownMenuItem asChild className="rounded-lg hover:bg-[rgba(255,45,85,0.1)] transition-colors cursor-pointer">
       <Link href={`/new?type=${value}`} className="flex items-center gap-3">
         <Image src={icon} alt={label} width={20} height={20} />
         <span className="text-sm">{label}</span>

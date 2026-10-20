@@ -1,9 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
-import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { checkUserIsAdmin } from "@/lib/data/admin-check";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { createClient } from "@/lib/supabase/server";
 
 // Type for forum comments (defined locally, not exported from "use server" file)
 interface ForumComment {
@@ -25,7 +25,7 @@ function extractFirst<T>(data: T[] | T | null | undefined): T | null {
  * Create a new forum post (FormData version - legacy)
  */
 export async function createForumPost(
-  formData: FormData
+  formData: FormData,
 ): Promise<{ success: boolean; id?: number; slug?: string; error?: string }> {
   const supabase = await createClient();
 
@@ -43,13 +43,10 @@ export async function createForumPost(
   const imageUrl = formData.get("imageUrl") as string | null;
 
   // Generate slug from title
-  const slug =
-    title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "") +
-    "-" +
-    Date.now();
+  const slug = `${title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")}-${Date.now()}`;
 
   const { data, error } = await supabase
     .from("forum")
@@ -58,7 +55,7 @@ export async function createForumPost(
       forum_post_name: title,
       forum_post_description: content,
       category_id:
-        categoryId && !Number.isNaN(parseInt(categoryId, 10)) ? parseInt(categoryId, 10) : null,
+        categoryId && !Number.isNaN(Number.parseInt(categoryId, 10)) ? Number.parseInt(categoryId, 10) : null,
       post_type: postType,
       forum_post_image: imageUrl || null,
       slug,
@@ -100,13 +97,10 @@ export async function createForumPostFast(data: {
   }
 
   // Generate slug server-side
-  const slug =
-    data.title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "") +
-    "-" +
-    Date.now();
+  const slug = `${data.title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")}-${Date.now()}`;
 
   // Insert WITHOUT .select() for fastest response
   const { error } = await supabase.from("forum").insert({
@@ -133,10 +127,7 @@ export async function createForumPostFast(data: {
 /**
  * Update a forum post
  */
-export async function updateForumPost(
-  id: number,
-  formData: FormData
-): Promise<{ success: boolean; error?: string }> {
+export async function updateForumPost(id: number, formData: FormData): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
   const {
@@ -161,7 +152,7 @@ export async function updateForumPost(
       category_id: (() => {
         const catId = formData.get("category") as string | null;
         if (!catId) return undefined;
-        const parsed = parseInt(catId, 10);
+        const parsed = Number.parseInt(catId, 10);
         return Number.isNaN(parsed) ? undefined : parsed;
       })(),
       is_edited: true,
@@ -218,7 +209,7 @@ export async function deleteForumPost(id: number): Promise<{ success: boolean; e
  */
 export async function addComment(
   postId: number,
-  formData: FormData
+  formData: FormData,
 ): Promise<{ success: boolean; comment?: ForumComment; error?: string }> {
   const supabase = await createClient();
 
@@ -244,7 +235,7 @@ export async function addComment(
       comment_created_at,
       user_id,
       profiles:user_id(first_name, second_name, avatar_url)
-    `
+    `,
     )
     .single();
 
@@ -261,9 +252,7 @@ export async function addComment(
     content: data.comment || "",
     created_at: data.comment_created_at,
     author_id: data.user_id,
-    author: extractFirst(
-      data.profiles as Array<{ first_name: string; second_name: string; avatar_url: string | null }>
-    )
+    author: extractFirst(data.profiles as Array<{ first_name: string; second_name: string; avatar_url: string | null }>)
       ? {
           name: `${(data.profiles as { first_name: string; second_name: string }[])?.[0]?.first_name || ""} ${(data.profiles as { first_name: string; second_name: string }[])?.[0]?.second_name || ""}`.trim(),
           avatar_url: (data.profiles as { avatar_url: string | null }[])?.[0]?.avatar_url || null,
@@ -278,9 +267,7 @@ export async function addComment(
  * Delete a comment
  * Optimized: Parallel fetch for comment and profile data
  */
-export async function deleteComment(
-  commentId: number
-): Promise<{ success: boolean; error?: string }> {
+export async function deleteComment(commentId: number): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
   const {
@@ -320,9 +307,7 @@ export async function deleteComment(
 /**
  * Toggle like on a forum post
  */
-export async function toggleForumLike(
-  postId: number
-): Promise<{ success: boolean; isLiked: boolean; error?: string }> {
+export async function toggleForumLike(postId: number): Promise<{ success: boolean; isLiked: boolean; error?: string }> {
   const supabase = await createClient();
 
   const {
@@ -348,15 +333,12 @@ export async function toggleForumLike(
 
     invalidateTag(CACHE_TAGS.FORUM_POST(postId));
     return { success: true, isLiked: false };
-  } else {
-    // Add like
-    const { error } = await supabase
-      .from("likes")
-      .insert({ forum_id: postId, profile_id: user.id });
-
-    if (error) return { success: false, isLiked: false, error: error.message };
-
-    invalidateTag(CACHE_TAGS.FORUM_POST(postId));
-    return { success: true, isLiked: true };
   }
+  // Add like
+  const { error } = await supabase.from("likes").insert({ forum_id: postId, profile_id: user.id });
+
+  if (error) return { success: false, isLiked: false, error: error.message };
+
+  invalidateTag(CACHE_TAGS.FORUM_POST(postId));
+  return { success: true, isLiked: true };
 }

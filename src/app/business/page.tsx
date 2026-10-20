@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { PageProps } from "../food/CategoryPageContent";
+import type { PageProps } from "../food/CategoryPageContent";
 
 export default async function BusinessPage(props: PageProps) {
   const searchParams = await props.searchParams;
@@ -9,7 +9,7 @@ export default async function BusinessPage(props: PageProps) {
       params.set(key, value as string);
     }
   });
-  
+
   const queryString = params.toString();
   redirect(`/organisation${queryString ? `?${queryString}` : ""}`);
 }

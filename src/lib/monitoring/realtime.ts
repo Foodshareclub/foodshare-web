@@ -126,9 +126,7 @@ class RealTimeMonitor {
 
             // Alert on slow requests
             if (resource.duration > this.config.responseTime.critical) {
-              logger.warn(
-                `Slow request detected: ${resource.name} (${Math.round(resource.duration)}ms)`
-              );
+              logger.warn(`Slow request detected: ${resource.name} (${Math.round(resource.duration)}ms)`);
             }
           }
         }
@@ -277,12 +275,11 @@ class RealTimeMonitor {
     const fpsEmoji = metrics.fps >= 50 ? "✅" : metrics.fps >= 30 ? "⚠️" : "❌";
     const memEmoji = metrics.memory < 50 ? "✅" : metrics.memory < 80 ? "⚠️" : "❌";
     const errEmoji = metrics.errorRate === 0 ? "✅" : metrics.errorRate < 5 ? "⚠️" : "❌";
-    const resEmoji =
-      metrics.avgResponseTime < 200 ? "✅" : metrics.avgResponseTime < 500 ? "⚠️" : "❌";
+    const resEmoji = metrics.avgResponseTime < 200 ? "✅" : metrics.avgResponseTime < 500 ? "⚠️" : "❌";
 
     console.log(
       `%c📊 Metrics: ${fpsEmoji} FPS:${metrics.fps} | ${memEmoji} Mem:${metrics.memory}% | ${errEmoji} Err:${metrics.errorRate}/min | ${resEmoji} Res:${metrics.avgResponseTime}ms`,
-      "color: #8B5CF6; font-weight: bold;"
+      "color: #8B5CF6; font-weight: bold;",
     );
   }
 
@@ -306,15 +303,11 @@ class RealTimeMonitor {
   getMetricsSummary() {
     if (this.metrics.length === 0) return null;
 
-    const avgFPS = Math.round(
-      this.metrics.reduce((sum, m) => sum + m.fps, 0) / this.metrics.length
-    );
-    const avgMemory = Math.round(
-      this.metrics.reduce((sum, m) => sum + m.memory, 0) / this.metrics.length
-    );
+    const avgFPS = Math.round(this.metrics.reduce((sum, m) => sum + m.fps, 0) / this.metrics.length);
+    const avgMemory = Math.round(this.metrics.reduce((sum, m) => sum + m.memory, 0) / this.metrics.length);
     const totalErrors = this.metrics.reduce((sum, m) => sum + m.errorRate, 0);
     const avgResponseTime = Math.round(
-      this.metrics.reduce((sum, m) => sum + m.avgResponseTime, 0) / this.metrics.length
+      this.metrics.reduce((sum, m) => sum + m.avgResponseTime, 0) / this.metrics.length,
     );
 
     return {

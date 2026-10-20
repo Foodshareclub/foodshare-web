@@ -1,14 +1,13 @@
-'use client';
+"use client";
 
-import * as React from "react";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
-import Carousel from "../carousel/Carousel";
-import type { PagesType } from "./navbar/types";
 import FiltersModal from "@/components/modals/FiltersModal";
-import CompactSearchButton from "./CompactSearchButton";
 import SearchModal from "@/components/modals/SearchModal";
-
+import { cn } from "@/lib/utils";
+import type * as React from "react";
+import { useState } from "react";
+import Carousel from "../carousel/Carousel";
+import CompactSearchButton from "./CompactSearchButton";
+import type { PagesType } from "./navbar/types";
 
 type SimpleBottomNavigationType = {
   pageType: PagesType;
@@ -34,7 +33,7 @@ const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({
           "glass-subtle relative px-6 md:px-7 xl:px-20 gpu",
           "rounded-b-2xl",
           "transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-          isCompact ? "py-2 md:py-2.5" : "py-3 md:py-4"
+          isCompact ? "py-2 md:py-2.5" : "py-3 md:py-4",
         )}
       >
         <div className="w-full flex items-center justify-between gap-2 md:gap-3">

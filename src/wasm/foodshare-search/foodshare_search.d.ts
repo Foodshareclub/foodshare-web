@@ -1,5 +1,4 @@
 /* tslint:disable */
-/* eslint-disable */
 
 /**
  * Calculate exponential geospatial proximity decay in WebAssembly.
@@ -30,7 +29,7 @@ export function hybrid_score(
   vector_weight?: number | null,
   text_weight?: number | null,
   geo_weight?: number | null,
-  half_life_km?: number | null
+  half_life_km?: number | null,
 ): number;
 
 /**

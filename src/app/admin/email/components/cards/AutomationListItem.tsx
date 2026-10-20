@@ -4,12 +4,8 @@
  * AutomationListItem - Premium automation row for overview lists
  */
 
-import { motion } from "framer-motion";
-import { MoreVertical, Eye, Edit, Play, Pause, Copy, Trash2, Zap, TrendingUp } from "lucide-react";
-import type { ActiveAutomation } from "../types";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +14,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { Copy, Edit, Eye, MoreVertical, Pause, Play, Trash2, TrendingUp, Zap } from "lucide-react";
+import type { ActiveAutomation } from "../types";
 
 const statusConfig = {
   active: {
@@ -74,7 +74,7 @@ export function AutomationListItem({ automation }: AutomationListItemProps) {
       <div
         className={cn(
           "flex items-center justify-center h-10 w-10 rounded-xl",
-          "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+          "bg-amber-500/10 text-amber-600 dark:text-amber-400",
         )}
       >
         <Zap className="h-5 w-5" />
@@ -88,13 +88,12 @@ export function AutomationListItem({ automation }: AutomationListItemProps) {
             variant="outline"
             className={cn("text-[10px] px-1.5 py-0", config.textColor, config.bgColor, "border-0")}
           >
-            <StatusIcon className="h-2.5 w-2.5 mr-1" />
+            <StatusIcon className="h-2.5 w-2.5 me-1" />
             {config.label}
           </Badge>
         </div>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Trigger:{" "}
-          {triggerLabels[automation.triggerType] || automation.triggerType.replace(/_/g, " ")}
+          Trigger: {triggerLabels[automation.triggerType] || automation.triggerType.replace(/_/g, " ")}
         </p>
       </div>
 
@@ -103,9 +102,7 @@ export function AutomationListItem({ automation }: AutomationListItemProps) {
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="flex flex-col items-center min-w-[48px]">
-              <span className="text-sm font-bold tabular-nums">
-                {automation.totalEnrolled.toLocaleString()}
-              </span>
+              <span className="text-sm font-bold tabular-nums">{automation.totalEnrolled.toLocaleString()}</span>
               <span className="text-[10px] text-muted-foreground">enrolled</span>
             </div>
           </TooltipTrigger>
@@ -120,7 +117,7 @@ export function AutomationListItem({ automation }: AutomationListItemProps) {
               <span
                 className={cn(
                   "text-sm font-bold tabular-nums",
-                  automation.conversionRate > 10 ? "text-emerald-600 dark:text-emerald-400" : ""
+                  automation.conversionRate > 10 ? "text-emerald-600 dark:text-emerald-400" : "",
                 )}
               >
                 {automation.conversionRate}%
@@ -145,15 +142,12 @@ export function AutomationListItem({ automation }: AutomationListItemProps) {
                   ? "bg-emerald-500"
                   : automation.conversionRate > 5
                     ? "bg-amber-500"
-                    : "bg-rose-500"
+                    : "bg-rose-500",
               )}
             />
           </div>
           <TrendingUp
-            className={cn(
-              "h-3.5 w-3.5",
-              automation.conversionRate > 10 ? "text-emerald-500" : "text-muted-foreground"
-            )}
+            className={cn("h-3.5 w-3.5", automation.conversionRate > 10 ? "text-emerald-500" : "text-muted-foreground")}
           />
         </div>
       </div>
@@ -161,11 +155,7 @@ export function AutomationListItem({ automation }: AutomationListItemProps) {
       {/* Actions */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
+          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
             <MoreVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>

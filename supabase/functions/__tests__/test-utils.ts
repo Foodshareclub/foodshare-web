@@ -1,3 +1,4 @@
+/* oxlint-disable unicorn/no-thenable -- Supabase query builder mocks must be thenable. */
 /**
  * Edge Function Test Utilities
  *

@@ -1,13 +1,12 @@
+import { getUser } from "@/app/actions/auth";
+import { generateNoIndexMetadata } from "@/lib/metadata";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { ProfileSettingsClient } from "./ProfileSettingsClient";
-import { getUser } from "@/app/actions/auth";
-import { generateNoIndexMetadata } from "@/lib/metadata";
 
-export const metadata = generateNoIndexMetadata(
-  "Profile",
-  "Manage your FoodShare profile settings"
-);
+export const metadata = generateNoIndexMetadata("Profile", "Manage your FoodShare profile settings");
+
+const PROFILE_SETTINGS_CARD_SKELETON_KEYS = ["a", "b", "c", "d", "e", "f"] as const;
 
 /**
  * Profile Settings Page - Server Component
@@ -64,8 +63,8 @@ function ProfileSettingsSkeleton() {
 
         {/* Settings Cards Grid Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="rounded-2xl border border-border/40 bg-card/80 p-6">
+          {PROFILE_SETTINGS_CARD_SKELETON_KEYS.map((k) => (
+            <div key={k} className="rounded-2xl border border-border/40 bg-card/80 p-6">
               <div className="flex items-start gap-4">
                 <div className="h-12 w-12 bg-muted animate-pulse rounded-xl" />
                 <div className="flex-1 space-y-2">

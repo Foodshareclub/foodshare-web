@@ -22,8 +22,7 @@ export function useDecorativeShader(loadShader: ShaderLoader, label: string, scr
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } })
-      .connection;
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
     if (!supported || !motionAllowed || connection?.saveData || !canvas) return;
 
     let cancelled = false;
@@ -62,10 +61,7 @@ export function useDecorativeShader(loadShader: ShaderLoader, label: string, scr
     async function start() {
       starting = true;
       try {
-        const [{ effect, frameLoop, clock }, shader] = await Promise.all([
-          import("vgpu"),
-          loadShader(),
-        ]);
+        const [{ effect, frameLoop, clock }, shader] = await Promise.all([import("vgpu"), loadShader()]);
         if (cancelled) return;
         render = await initGPURender({
           canvasRef,
@@ -86,9 +82,7 @@ export function useDecorativeShader(loadShader: ShaderLoader, label: string, scr
         // against the actual canvas format without acquiring its swapchain.
         await decoration.compile({ colors: [surface.format] });
         if (cancelled || failed) return;
-        render.onCleanup(
-          surface.onResize(() => decoration.set({ params: { resolution: surface.size } }))
-        );
+        render.onCleanup(surface.onResize(() => decoration.set({ params: { resolution: surface.size } })));
         const time = clock(gpu);
         startLoop = () =>
           frameLoop(
@@ -106,7 +100,7 @@ export function useDecorativeShader(loadShader: ShaderLoader, label: string, scr
                 queueMicrotask(() => fail(error));
               }
             },
-            { fps: 30 }
+            { fps: 30 },
           );
         syncVisibility();
       } catch (error) {

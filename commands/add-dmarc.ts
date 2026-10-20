@@ -1,4 +1,4 @@
-import path from "path";
+import path from "bun:path";
 import * as dotenv from "dotenv";
 
 // Load environment variables
@@ -39,26 +39,23 @@ async function addDmarcRecord() {
     }
 
     // Execute fetch
-    const response = await fetch(
-      `https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      }
-    );
+    const response = await fetch(`https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
 
     const result = (await response.json()) as CloudflareResponse;
 
     if (result.success) {
       console.log("\n✅ DMARC Record Added Successfully!");
-      console.log(`Name: _dmarc.foodshare.club`);
+      console.log("Name: _dmarc.foodshare.club");
       console.log(`Content: ${RECORD_CONTENT}`);
       console.log(
-        "This sets policy to 'none' (monitoring mode), which satisfies AWS requirements without risking email delivery."
+        "This sets policy to 'none' (monitoring mode), which satisfies AWS requirements without risking email delivery.",
       );
     } else {
       console.error("\n❌ Failed to add record:");

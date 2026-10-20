@@ -1,17 +1,20 @@
-import { Suspense } from "react";
-import type { Metadata } from "next";
-import { getProductsPaginated } from "@/lib/data/products";
-import { getChallenges } from "@/lib/data/challenges";
-import { getNearbyPosts } from "@/lib/data/nearby-posts";
-import { getAuthSession } from "@/lib/data/auth";
 import { HomeClient } from "@/app/HomeClient";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
 import { LISTING_CONTAINER, LISTING_GRID } from "@/components/productCard/listing-layout";
-import { cn } from "@/lib/utils";
-import { categoryMetadata, generatePageMetadata, siteConfig } from "@/lib/metadata";
+import { getAuthSession } from "@/lib/data/auth";
+import { getChallenges } from "@/lib/data/challenges";
+import { getNearbyPosts } from "@/lib/data/nearby-posts";
+import { getProductsPaginated } from "@/lib/data/products";
 import { generateItemListJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
-import { createRequestLogger } from "@/lib/structured-logger";
 import { parseSearchLocation, parseSearchRadius } from "@/lib/listing-search";
+import { categoryMetadata, generatePageMetadata, siteConfig } from "@/lib/metadata";
+import { createRequestLogger } from "@/lib/structured-logger";
+import { cn } from "@/lib/utils";
+import { getProductCanonicalUrl } from "@/utils/categoryMapping";
+import type { Metadata } from "next";
+import { Suspense } from "react";
+
+const PRODUCTS_PAGE_SKELETON_KEYS = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"] as const;
 
 export const CATEGORY_PATHS = [
   "food",
@@ -70,7 +73,7 @@ export function parseLocationParams(
     lng?: string;
     radius?: string;
   },
-  defaultRadius: number = 5000
+  defaultRadius = 5000,
 ): { lat: number; lng: number; radius: number } | null {
   const location = parseSearchLocation({ get: (name) => params[name as "lat" | "lng"] ?? null });
   return location ? { ...location, radius: parseSearchRadius(params.radius, defaultRadius) } : null;
@@ -78,7 +81,7 @@ export function parseLocationParams(
 
 export async function generateCategoryMetadata(
   type: string,
-  _searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  _searchParams: Promise<{ [key: string]: string | string[] | undefined }>,
 ): Promise<Metadata> {
   const categoryKey = categoryKeyMap[type] || "food";
   const category = categoryMetadata[categoryKey];
@@ -91,10 +94,7 @@ export async function generateCategoryMetadata(
   });
 }
 
-export default async function CategoryPageContent({
-  type,
-  searchParams,
-}: { type: string } & PageProps) {
+export default async function CategoryPageContent({ type, searchParams }: { type: string } & PageProps) {
   const logger = await createRequestLogger({ action: "CategoryPageContent", type });
   const params = await searchParams;
   const productType = type;
@@ -105,8 +105,7 @@ export default async function CategoryPageContent({
   const userRadiusMeters = (session.user?.profile?.search_radius_km || 5) * 1000;
 
   // Parse location params for nearby filtering
-  const locationParams =
-    params.distance === "any" ? null : parseLocationParams(params, userRadiusMeters);
+  const locationParams = params.distance === "any" ? null : parseLocationParams(params, userRadiusMeters);
   const isLocationFiltered = locationParams !== null;
 
   // If location params provided, fetch nearby posts using PostGIS
@@ -178,7 +177,7 @@ export default async function CategoryPageContent({
     description: category.description,
     items: paginatedResult.data.slice(0, 10).map((product, index) => ({
       name: product.post_name || "Item",
-      url: `${siteConfig.url}/food/${product.id}`,
+      url: getProductCanonicalUrl(product, siteConfig.url),
       image: product.images?.[0],
       position: index + 1,
     })),
@@ -188,6 +187,7 @@ export default async function CategoryPageContent({
     <>
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD needs a raw script tag; safeJsonLdStringify escapes angle brackets and ampersands so a script-tag breakout is impossible
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(itemListJsonLd) }}
       />
       <Suspense fallback={<ProductsPageSkeleton />}>
@@ -211,8 +211,8 @@ export function ProductsPageSkeleton() {
     <div className="min-h-screen bg-background">
       <div className={cn(LISTING_CONTAINER, "py-6 sm:py-8")}>
         <div className={LISTING_GRID}>
-          {[...Array(10)].map((_, i) => (
-            <SkeletonCard key={i} isLoaded={false} />
+          {PRODUCTS_PAGE_SKELETON_KEYS.map((k) => (
+            <SkeletonCard key={k} isLoaded={false} />
           ))}
         </div>
       </div>

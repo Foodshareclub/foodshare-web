@@ -1,20 +1,14 @@
 "use client";
 
-import { useCallback, useTransition } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { acceptChallenge } from "@/app/actions/challenges";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
 import { Shuffle, Sparkles } from "lucide-react";
+import { useCallback, useTransition } from "react";
 import { CardDeck } from "./CardDeck";
 import { modalVariants } from "./animations";
 import type { ChallengeRevealModalProps } from "./types";
-import { cn } from "@/lib/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { acceptChallenge } from "@/app/actions/challenges";
 
 export function ChallengeRevealModal({
   open,
@@ -36,7 +30,7 @@ export function ChallengeRevealModal({
         }
       });
     },
-    [onAccept]
+    [onAccept],
   );
 
   const handleClose = useCallback(() => {
@@ -55,22 +49,16 @@ export function ChallengeRevealModal({
           "max-w-md w-full p-0 overflow-hidden",
           "bg-background/80 backdrop-blur-2xl",
           "border border-border/50",
-          "shadow-2xl"
+          "shadow-2xl",
         )}
       >
         <AnimatePresence mode="wait">
           {open && (
-            <motion.div
-              variants={modalVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="relative"
-            >
+            <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit" className="relative">
               {/* Decorative background elements */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
-                <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-teal-500/10 rounded-full blur-3xl" />
+                <div className="absolute -top-20 -end-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
+                <div className="absolute -bottom-20 -start-20 w-40 h-40 bg-teal-500/10 rounded-full blur-3xl" />
               </div>
 
               {/* Header */}
@@ -80,9 +68,7 @@ export function ChallengeRevealModal({
                     <Sparkles className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <DialogTitle className="text-xl font-bold text-foreground">
-                      Discover Challenges
-                    </DialogTitle>
+                    <DialogTitle className="text-xl font-bold text-foreground">Discover Challenges</DialogTitle>
                     <DialogDescription className="text-sm text-muted-foreground">
                       Swipe right to accept, left to skip
                     </DialogDescription>
@@ -106,7 +92,11 @@ export function ChallengeRevealModal({
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <motion.div
                         animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        transition={{
+                          duration: 1,
+                          repeat: Number.POSITIVE_INFINITY,
+                          ease: "linear",
+                        }}
                       >
                         <Shuffle className="w-4 h-4" />
                       </motion.div>

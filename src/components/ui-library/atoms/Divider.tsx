@@ -1,5 +1,5 @@
-import React from "react";
 import { cn } from "@/lib/utils";
+import type React from "react";
 
 interface DividerProps {
   orientation?: "horizontal" | "vertical";
@@ -15,7 +15,7 @@ export const Divider: React.FC<DividerProps> = ({ orientation = "horizontal", cl
         "border-t border-border opacity-40",
         isHorizontal && "h-px w-full",
         !isHorizontal && "w-px h-full",
-        className
+        className,
       )}
     />
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface ScrollGPUState {
   /** Normalized scroll position 0-1 */
@@ -51,8 +51,7 @@ export function useScrollGPU(): ScrollGPUState {
         const scrollTop = window.scrollY;
         const docHeight = document.documentElement.scrollHeight - window.innerHeight;
         const progress = docHeight > 0 ? Math.min(scrollTop / docHeight, 1) : 0;
-        const direction =
-          scrollTop > lastScrollRef.current ? 1 : scrollTop < lastScrollRef.current ? -1 : 0;
+        const direction = scrollTop > lastScrollRef.current ? 1 : scrollTop < lastScrollRef.current ? -1 : 0;
         lastScrollRef.current = scrollTop;
 
         setState((prev) => ({

@@ -5,13 +5,7 @@ import { createProduct, updateProduct } from "@/app/actions/products";
 import { fetchUserAddress } from "@/app/actions/profile";
 import DeleteCardModal from "@/components/modals/DeleteCardModal";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { STORAGE_BUCKETS } from "@/constants/storage";
 import { useAuth } from "@/hooks/useAuth";
 import { useUIStore } from "@/store/zustand/useUIStore";
@@ -55,13 +49,7 @@ import type { PublishListingModalType } from "./publish-listing/types";
  * Modal for creating and editing product listings
  * Refactored into modular step components for high maintainability
  */
-function PublishListingModal({
-  product,
-  isOpen,
-  onClose,
-  setOpenEdit,
-  value,
-}: PublishListingModalType) {
+function PublishListingModal({ product, isOpen, onClose, setOpenEdit, value }: PublishListingModalType) {
   const _t = useTranslations();
   const router = useRouter();
   const formRef = useRef<HTMLDivElement>(null);
@@ -210,9 +198,7 @@ function PublishListingModal({
       transportation: form.formData.metroStation,
       condition: form.formData.condition || "",
       profile_id: id,
-      location: userLocation
-        ? `SRID=4326;POINT(${userLocation.longitude} ${userLocation.latitude})`
-        : undefined,
+      location: userLocation ? `SRID=4326;POINT(${userLocation.longitude} ${userLocation.latitude})` : undefined,
     };
 
     if (product && images[0]?.isExisting) {
@@ -272,7 +258,7 @@ function PublishListingModal({
           { bucket: STORAGE_BUCKETS.POSTS },
           (completed, total) => {
             setUploadProgress(`Uploading ${completed}/${total} image(s)...`);
-          }
+          },
         );
 
         if (batchResult.error) {
@@ -318,9 +304,7 @@ function PublishListingModal({
         formData.set("version", String(product.version));
         formData.set("is_active", "true");
       }
-      const result = product
-        ? await updateProduct(productId, formData)
-        : await createProduct(formData);
+      const result = product ? await updateProduct(productId, formData) : await createProduct(formData);
       if (!product && result.success) form.clearDraft();
 
       if (!result.success) {
@@ -352,11 +336,7 @@ function PublishListingModal({
   const onDialogOpenChange = (open: boolean) => {
     if (!open) {
       if (publishState === "loading") {
-        if (
-          confirm(
-            "Publishing involves uploading images. Closing now may result in incomplete data. Are you sure?"
-          )
-        ) {
+        if (confirm("Publishing involves uploading images. Closing now may result in incomplete data. Are you sure?")) {
           onClose();
           setOpenEdit?.(false);
         }
@@ -383,13 +363,9 @@ function PublishListingModal({
                 <CheckCircle className="h-12 w-12 text-green-500" />
               </div>
             </div>
-            <h3 className="mt-6 text-xl font-semibold">
-              {product ? "Listing Updated!" : "Listing Published!"}
-            </h3>
+            <h3 className="mt-6 text-xl font-semibold">{product ? "Listing Updated!" : "Listing Published!"}</h3>
             <p className="mt-2 text-muted-foreground">
-              {form.formData.scheduledDate
-                ? "Your listing is scheduled"
-                : "Your listing is now live"}
+              {form.formData.scheduledDate ? "Your listing is scheduled" : "Your listing is now live"}
             </p>
           </div>
         </DialogContent>
@@ -400,11 +376,8 @@ function PublishListingModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onDialogOpenChange}>
-        <DialogContent
-          variant="glass"
-          className="max-w-md md:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
-        >
-          <div className="absolute top-0 left-0 right-0">
+        <DialogContent variant="glass" className="max-w-md md:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="absolute top-0 inset-x-0">
             <ProgressBar progress={form.progress} />
           </div>
 
@@ -418,9 +391,7 @@ function PublishListingModal({
                   )}
                 </DialogTitle>
                 <DialogDescription className="text-muted-foreground">
-                  {product
-                    ? "Update your listing details below"
-                    : "Add photos, a description, and pickup details"}
+                  {product ? "Update your listing details below" : "Add photos, a description, and pickup details"}
                 </DialogDescription>
               </div>
               <div className="flex items-center gap-2">
@@ -538,7 +509,7 @@ function PublishListingModal({
                   </Button>
 
                   {(undoRedo.canUndo || undoRedo.canRedo) && (
-                    <div className="flex items-center gap-1 ml-auto">
+                    <div className="flex items-center gap-1 ms-auto">
                       <Button
                         type="button"
                         variant="ghost"
@@ -653,21 +624,11 @@ function PublishListingModal({
 
       {/* Lightbox Preview */}
       {lightboxIndex !== null && (
-        <ImageLightbox
-          images={images}
-          initialIndex={lightboxIndex}
-          onClose={() => setLightboxIndex(null)}
-        />
+        <ImageLightbox images={images} initialIndex={lightboxIndex} onClose={() => setLightboxIndex(null)} />
       )}
 
       {/* Delete Confirmation Modal */}
-      {product && (
-        <DeleteCardModal
-          product={product}
-          isOpen={isDeleteOpen}
-          onClose={() => setIsDeleteOpen(false)}
-        />
-      )}
+      {product && <DeleteCardModal product={product} isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} />}
     </>
   );
 }

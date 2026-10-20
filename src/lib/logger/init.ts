@@ -3,14 +3,14 @@
  * Sets up the logging system on app start
  */
 
-import { theme } from './console-theme';
-import { interceptor } from './interceptor';
-import { profiler } from './profiler';
-import { pretty } from './pretty';
-import { COLORS } from './styles';
+import { theme } from "./console-theme";
+import { interceptor } from "./interceptor";
+import { pretty } from "./pretty";
+import { profiler } from "./profiler";
+import { COLORS } from "./styles";
 
-const IS_BROWSER = typeof window !== 'undefined';
-const IS_DEV = process.env.NODE_ENV !== 'production';
+const IS_BROWSER = typeof window !== "undefined";
+const IS_DEV = process.env.NODE_ENV !== "production";
 
 interface InitOptions {
   /** Show FoodShare banner on start */
@@ -69,30 +69,26 @@ function initBrowser(opts: InitOptions): void {
 
   // Show environment info
   if (opts.showEnvInfo) {
-    console.log('');
+    console.log("");
     theme.envInfo();
-    
+
     if (opts.version) {
       console.log(
         `%c📦 Version: %c${opts.version}`,
         `color: ${COLORS.muted};`,
-        `color: ${COLORS.cyan}; font-weight: bold;`
+        `color: ${COLORS.cyan}; font-weight: bold;`,
       );
     }
-    
-    console.log(
-      `%c🌐 URL: %c${window.location.href}`,
-      `color: ${COLORS.muted};`,
-      `color: ${COLORS.cyan};`
-    );
-    
-    console.log('');
+
+    console.log(`%c🌐 URL: %c${window.location.href}`, `color: ${COLORS.muted};`, `color: ${COLORS.cyan};`);
+
+    console.log("");
   }
 
   // Start console interceptor
   if (opts.interceptConsole) {
     interceptor.start();
-    pretty.debug('Console interceptor enabled');
+    pretty.debug("Console interceptor enabled");
   }
 
   // Enable profiler
@@ -105,7 +101,7 @@ function initBrowser(opts: InitOptions): void {
     addGlobalHelpers();
   }
 
-  pretty.success('Logger initialized', { component: 'Logger' });
+  pretty.success("Logger initialized", { component: "Logger" });
 }
 
 /**
@@ -120,7 +116,7 @@ function initServer(opts: InitOptions): void {
   // Show environment info
   if (opts.showEnvInfo) {
     theme.envInfo();
-    
+
     if (opts.version) {
       pretty.info(`Version: ${opts.version}`);
     }
@@ -136,7 +132,7 @@ function initServer(opts: InitOptions): void {
     profiler.setEnabled(true);
   }
 
-  pretty.success('Logger initialized', { component: 'Logger' });
+  pretty.success("Logger initialized", { component: "Logger" });
 }
 
 /**
@@ -151,36 +147,37 @@ function addGlobalHelpers(): void {
     $log: pretty,
     $profiler: profiler,
     $interceptor: interceptor,
-    
+
     // Quick actions
     $clearLogs: () => {
       console.clear();
       interceptor.clearBuffer();
-      pretty.success('Logs cleared');
+      pretty.success("Logs cleared");
     },
-    
+
     $exportLogs: () => {
       const data = interceptor.exportBuffer();
-      const blob = new Blob([data], { type: 'application/json' });
+      const blob = new Blob([data], { type: "application/json" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `foodshare-logs-${new Date().toISOString().slice(0, 19)}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      pretty.success('Logs exported');
+      pretty.success("Logs exported");
     },
-    
+
     $profile: () => {
       profiler.printReport();
     },
-    
+
     $timeline: () => {
       profiler.printTimeline();
     },
-    
+
     $help: () => {
-      console.log(`
+      console.log(
+        `
 %c🍽️ FoodShare Debug Helpers
 
 %c$log%c          - Pretty logger (info, warn, error, success, api, db)
@@ -193,14 +190,22 @@ function addGlobalHelpers(): void {
 %c$help()%c       - Show this help
 `,
         `color: ${COLORS.primary}; font-weight: bold; font-size: 14px;`,
-        `color: ${COLORS.cyan}; font-weight: bold;`, `color: ${COLORS.muted};`,
-        `color: ${COLORS.cyan}; font-weight: bold;`, `color: ${COLORS.muted};`,
-        `color: ${COLORS.cyan}; font-weight: bold;`, `color: ${COLORS.muted};`,
-        `color: ${COLORS.cyan}; font-weight: bold;`, `color: ${COLORS.muted};`,
-        `color: ${COLORS.cyan}; font-weight: bold;`, `color: ${COLORS.muted};`,
-        `color: ${COLORS.cyan}; font-weight: bold;`, `color: ${COLORS.muted};`,
-        `color: ${COLORS.cyan}; font-weight: bold;`, `color: ${COLORS.muted};`,
-        `color: ${COLORS.cyan}; font-weight: bold;`, `color: ${COLORS.muted};`
+        `color: ${COLORS.cyan}; font-weight: bold;`,
+        `color: ${COLORS.muted};`,
+        `color: ${COLORS.cyan}; font-weight: bold;`,
+        `color: ${COLORS.muted};`,
+        `color: ${COLORS.cyan}; font-weight: bold;`,
+        `color: ${COLORS.muted};`,
+        `color: ${COLORS.cyan}; font-weight: bold;`,
+        `color: ${COLORS.muted};`,
+        `color: ${COLORS.cyan}; font-weight: bold;`,
+        `color: ${COLORS.muted};`,
+        `color: ${COLORS.cyan}; font-weight: bold;`,
+        `color: ${COLORS.muted};`,
+        `color: ${COLORS.cyan}; font-weight: bold;`,
+        `color: ${COLORS.muted};`,
+        `color: ${COLORS.cyan}; font-weight: bold;`,
+        `color: ${COLORS.muted};`,
       );
     },
   };
@@ -210,10 +215,10 @@ function addGlobalHelpers(): void {
 
   // Log available helpers
   console.log(
-    `%c💡 Debug helpers available. Type %c$help()%c for list.`,
+    "%c💡 Debug helpers available. Type %c$help()%c for list.",
     `color: ${COLORS.muted};`,
     `color: ${COLORS.cyan}; font-weight: bold;`,
-    `color: ${COLORS.muted};`
+    `color: ${COLORS.muted};`,
   );
 }
 

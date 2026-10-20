@@ -1,8 +1,8 @@
-import { Suspense } from "react";
-import { getTranslations } from "next-intl/server";
-import { getAdminListings, getListingStats } from "@/lib/data/admin-listings";
 import { AdminListingsClient } from "@/app/admin/listings/AdminListingsClient";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getAdminListings, getListingStats } from "@/lib/data/admin-listings";
+import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 
 interface PageProps {
   searchParams: Promise<{
@@ -22,10 +22,9 @@ async function ListingsContent({ searchParams }: PageProps) {
     status: (params.status as "all" | "pending" | "approved") || "all",
     category: params.category || "all",
     search: params.search || "",
-    page: parseInt(params.page || "1", 10),
+    page: Number.parseInt(params.page || "1", 10),
     limit: 20,
-    sortBy:
-      (params.sortBy as "created_at" | "updated_at" | "post_name" | "post_views") || "created_at",
+    sortBy: (params.sortBy as "created_at" | "updated_at" | "post_name" | "post_views") || "created_at",
     sortOrder: (params.sortOrder as "asc" | "desc") || "desc",
   };
 
@@ -43,18 +42,21 @@ async function ListingsContent({ searchParams }: PageProps) {
   );
 }
 
+const LISTING_STAT_SKELETON_KEYS = ["a", "b", "c", "d"] as const;
+const LISTING_ROW_SKELETON_KEYS = ["a", "b", "c", "d", "e"] as const;
+
 function ListingsSkeleton() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-24 rounded-lg" />
+        {LISTING_STAT_SKELETON_KEYS.map((k) => (
+          <Skeleton key={k} className="h-24 rounded-lg" />
         ))}
       </div>
       <Skeleton className="h-12 w-full" />
       <div className="space-y-3">
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-20 w-full rounded-lg" />
+        {LISTING_ROW_SKELETON_KEYS.map((k) => (
+          <Skeleton key={k} className="h-20 w-full rounded-lg" />
         ))}
       </div>
     </div>

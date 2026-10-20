@@ -22,11 +22,7 @@ export function FloatingOrbs({ className, scroll = 0, opacity = 1 }: FloatingOrb
       className={cn("pointer-events-none absolute inset-0 -z-10 overflow-hidden", className)}
       style={{ opacity }}
     >
-      <div
-        data-gpu-fallback="orbs"
-        className={cn("absolute inset-0", styles.fallback)}
-        hidden={ready}
-      />
+      <div data-gpu-fallback="orbs" className={cn("absolute inset-0", styles.fallback)} hidden={ready} />
       <canvas
         ref={canvasRef}
         data-gpu-effect="orbs"

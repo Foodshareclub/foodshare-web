@@ -7,8 +7,6 @@
 export { getRedis, cache, rateLimiter, lock, REDIS_KEYS, CACHE_TTL } from "./redis";
 export type { RateLimitResult, CacheTTL } from "./redis";
 
-
-
 // Upstash Vector (Embeddings)
 export {
   getVectorIndex,
@@ -76,8 +74,6 @@ export type {
   SearchIndexName,
   ProductSearchDocument,
 } from "./search";
-
-
 
 // MotherDuck (Analytics)
 export { getMotherDuckConfig, ANALYTICS_QUERIES, MOTHERDUCK_ENV } from "./motherduck";

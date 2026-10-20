@@ -1,7 +1,7 @@
+import type { NavigationActionsSVGType } from "@/utils/navigationActions";
+import Image from "next/image";
 import type { FC } from "react";
 import React from "react";
-import Image from "next/image";
-import type { NavigationActionsSVGType } from "@/utils/navigationActions";
 
 type ItemsForCarouselType = {
   productType: string;
@@ -21,13 +21,15 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
   const changeAttributeValue = (v1: string, v2: string): string => {
     if (productType === item.nameForUrl.toLowerCase() && pageType === "productComponent") {
       return v1;
-    } else return v2;
+    }
+    return v2;
   };
 
   const isActive = productType === item.nameForUrl.toLowerCase() && pageType === "productComponent";
 
   return (
-    <div
+    <button
+      type="button"
       className={`${isActive ? "glass-subtle" : "glass"} cursor-pointer rounded-xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative ${
         isCompact
           ? "min-w-[80px] md:min-w-[96px] px-2.5 md:px-3 py-1.5 md:py-2"
@@ -41,9 +43,7 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
         {/* Enhanced Icon Size - Airbnb-style prominence with scroll compaction */}
         <Image
           className={`m-auto transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-            isCompact
-              ? "w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8"
-              : "w-7 h-7 md:w-9 md:h-9 lg:w-10 lg:h-10"
+            isCompact ? "w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8" : "w-7 h-7 md:w-9 md:h-9 lg:w-10 lg:h-10"
           } ${isActive ? "opacity-100" : "opacity-85"} group-hover:scale-105`}
           src={changeAttributeValue(item.red, item.src)}
           alt={item.name}
@@ -70,7 +70,7 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
           />
         )}
       </div>
-    </div>
+    </button>
   );
 };
 

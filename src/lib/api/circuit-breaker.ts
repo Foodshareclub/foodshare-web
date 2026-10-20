@@ -67,11 +67,7 @@ export class CircuitBreaker {
   private readonly failureThreshold: number;
   private readonly resetTimeoutMs: number;
   private readonly halfOpenRequests: number;
-  private readonly onStateChange?: (
-    name: string,
-    from: CircuitState,
-    to: CircuitState
-  ) => void;
+  private readonly onStateChange?: (name: string, from: CircuitState, to: CircuitState) => void;
 
   constructor(config: CircuitBreakerConfig) {
     this.name = config.name;
@@ -115,9 +111,7 @@ export class CircuitBreaker {
         return true;
 
       case "OPEN": {
-        const timeSinceFailure = this.lastFailureTime
-          ? Date.now() - this.lastFailureTime
-          : Infinity;
+        const timeSinceFailure = this.lastFailureTime ? Date.now() - this.lastFailureTime : Number.POSITIVE_INFINITY;
 
         if (timeSinceFailure >= this.resetTimeoutMs) {
           // Transition to half-open
@@ -252,11 +246,9 @@ export class CircuitOpenError extends Error {
 
   constructor(
     public readonly circuitName: string,
-    public readonly remainingCooldownMs: number
+    public readonly remainingCooldownMs: number,
   ) {
-    super(
-      `Circuit '${circuitName}' is open. Retry in ${remainingCooldownMs}ms`
-    );
+    super(`Circuit '${circuitName}' is open. Retry in ${remainingCooldownMs}ms`);
     this.name = "CircuitOpenError";
   }
 }
@@ -301,6 +293,5 @@ export function resetAllCircuitBreakers(): void {
 
 // Expose in development for debugging
 if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
-  (window as unknown as Record<string, unknown>).circuitBreakerMetrics =
-    getAllCircuitBreakerMetrics;
+  (window as unknown as Record<string, unknown>).circuitBreakerMetrics = getAllCircuitBreakerMetrics;
 }

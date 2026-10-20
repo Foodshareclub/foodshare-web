@@ -5,31 +5,43 @@
  * Beautiful Airbnb-inspired login/signup experience
  */
 
-import React, { useState, useEffect, useTransition } from "react";
-import { useTranslations } from "next-intl";
-import { PasswordStrength } from "./PasswordStrength";
-import { InvitationStep } from "./InvitationStep";
-import { SocialAuthButtons } from "./SocialAuthButtons";
-import { useAuth } from "@/hooks";
+import { useAuth } from "@/hooks/useAuth";
 import { ViewIcon, ViewOffIcon } from "@/utils/icons";
+import { useTranslations } from "next-intl";
+import React, { useState, useEffect, useTransition } from "react";
+import { InvitationStep } from "./InvitationStep";
+import { PasswordStrength } from "./PasswordStrength";
+import { SocialAuthButtons } from "./SocialAuthButtons";
 
-import { isStorageHealthy } from "@/lib/supabase/client";
-import { getEnabledProviders, type OAuthProvider } from "@/lib/config/oauth";
-import {
-  testStorageAvailability,
-  clearSupabaseStorage,
-  type StorageErrorInfo,
-} from "@/lib/errors/storage-handler";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { type OAuthProvider, getEnabledProviders } from "@/lib/config/oauth";
+import { type StorageErrorInfo, clearSupabaseStorage, testStorageAvailability } from "@/lib/errors/storage-handler";
 import { createLogger } from "@/lib/logger";
+import { isStorageHealthy } from "@/lib/supabase/client";
 import { validateEmail } from "@/lib/validators/email";
 
 const logger = createLogger("AuthModal");
 
 type ModalType = {
-  buttonValue?: "Login" | "Registration";
+  /**
+   * Which form the modal opens on.
+   *
+   * This used to be inferred from a *label*: `buttonValue?: "Login" |
+   * "Registration"` doubled as both the button text and the mode switch
+   * (`mode = buttonValue === "Registration" ? "signup" : "login"`). Which is why
+   * the trigger in the navbar and the mobile menu could not be translated — a
+   * German "Anmelden" is not `"Login"`, so passing it would have silently opened
+   * the sign-up form. The label and the mode are separate concerns and are now
+   * separate props.
+   */
+  mode?: "login" | "signup";
+  /**
+   * Label for the trigger button. Pass a translated string; falls back to the
+   * built-in English so an untranslated caller still reads correctly.
+   */
+  buttonLabel?: string;
   fullScreen?: boolean;
   oneProductComponent?: boolean;
   becomeSharerBlock?: boolean;
@@ -39,15 +51,16 @@ type ModalType = {
 
 const AuthenticationUserModal: React.FC<ModalType> = ({
   becomeSharerBlock,
-  buttonValue = "Login",
+  mode = "login",
+  buttonLabel,
   oneProductComponent,
   fullScreen,
   isOpen: externalIsOpen,
   onClose: externalOnClose,
 }) => {
-  const _t = useTranslations();
+  const t = useTranslations("AuthFlow");
   const [internalIsOpen, setInternalIsOpen] = useState(false);
-  const internalOnOpen = () => setInternalIsOpen(true);
+  const internalOnOpen = React.useCallback(() => setInternalIsOpen(true), []);
   const internalOnClose = () => setInternalIsOpen(false);
 
   // Use external state if provided (controlled), otherwise use internal state (uncontrolled)
@@ -55,23 +68,22 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
   const isOpen = isControlled ? externalIsOpen : internalIsOpen;
   const onCloseHandler = externalOnClose || internalOnClose;
 
-  const { loginWithPassword, loginWithProvider, register, authError, clearError, isAuth } =
-    useAuth();
+  const { loginWithPassword, loginWithProvider, register, authError, clearError, isAuth } = useAuth();
 
   // Only create onOpen wrapper for uncontrolled mode
   const onOpen = React.useCallback(() => {
     if (!isControlled) {
-      logger.debug("Opening auth modal", {
-        buttonValue,
-        mode: buttonValue === "Registration" ? "signup" : "login",
-      });
+      logger.debug("Opening auth modal", { mode });
       internalOnOpen();
     }
-  }, [isControlled, buttonValue]);
+  }, [isControlled, mode, internalOnOpen]);
 
-  const [mode, setMode] = useState<"login" | "signup">(
-    buttonValue === "Registration" ? "signup" : "login"
-  );
+  const [activeMode, setActiveMode] = useState<"login" | "signup">(mode);
+  // A caller that switches mode between renders (a navbar that re-renders on a
+  // route change) should not be left showing the previous form.
+  React.useEffect(() => setActiveMode(mode), [mode]);
+
+  const buttonText = buttonLabel ?? (mode === "signup" ? "Registration" : "Login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -83,6 +95,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
   const [isRecoveringStorage, setIsRecoveringStorage] = useState(false);
   const [emailError, setEmailError] = useState<string>("");
   const [showInvitation, setShowInvitation] = useState(false);
+  const [clearFailed, setClearFailed] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -90,11 +103,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
       checkStorageAvailability();
       // Clean up any OAuth hash fragments in URL to prevent display issues
       if (window.location.hash.includes("access_token") || window.location.hash.includes("error")) {
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname + window.location.search
-        );
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
       }
     }
   }, [isOpen, clearError]);
@@ -113,12 +122,10 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
       if (result.error) {
         setStorageError(result.error);
       } else if (!result.localStorage && !result.indexedDB) {
-        setStorageError({
-          type: "unknown",
-          message: "Browser storage is unavailable",
-          userGuidance: "Please enable cookies and storage in your browser settings.",
-          canRecover: false,
-        });
+        // The `message` and `userGuidance` fields are *rendered* to the reader
+        // two lines below, so they cannot hold a key — this component keeps its
+        // own state for the copy and leaves the type alone.
+        setStorageError({ type: "unknown", message: "", userGuidance: "", canRecover: false });
       } else {
         setStorageError(null);
       }
@@ -137,12 +144,8 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
         setStorageError(null);
         window.location.reload();
       } else {
-        setStorageError({
-          type: "unknown",
-          message: "Failed to clear storage",
-          userGuidance: "Please manually clear your browser cache and refresh the page.",
-          canRecover: true,
-        });
+        setStorageError({ type: "unknown", message: "", userGuidance: "", canRecover: true });
+        setClearFailed(true);
       }
     } catch (error) {
       logger.error("Storage recovery failed", error as Error);
@@ -187,7 +190,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
 
     startTransition(async () => {
       try {
-        if (mode === "login") {
+        if (activeMode === "login") {
           logger.debug("Attempting login...");
           const result = await loginWithPassword(email, password);
           logger.debug("Login result", {
@@ -221,11 +224,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
         }
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message.toLowerCase() : "";
-        if (
-          errorMessage.includes("storage") ||
-          errorMessage.includes("indexeddb") ||
-          errorMessage.includes("ldb")
-        ) {
+        if (errorMessage.includes("storage") || errorMessage.includes("indexeddb") || errorMessage.includes("ldb")) {
           await checkStorageAvailability();
         }
       }
@@ -254,7 +253,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
   };
 
   const toggleMode = () => {
-    setMode(mode === "login" ? "signup" : "login");
+    setActiveMode(activeMode === "login" ? "signup" : "login");
     clearError();
   };
 
@@ -269,6 +268,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
     setStorageError(null);
     setEmailError("");
     setShowInvitation(false);
+    setClearFailed(false);
     clearError();
   }
 
@@ -276,23 +276,23 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
     <>
       {/* Trigger Buttons - Only render in uncontrolled mode */}
       {!isControlled && fullScreen ? (
-        <button onClick={onOpen} className="w-full text-left">
-          &quot;{buttonValue}&quot;
+        <button type="button" onClick={onOpen} className="w-full text-start">
+          {buttonText ?? t("logIn")}
         </button>
       ) : !isControlled && oneProductComponent ? (
         <Button
           onClick={onOpen}
           className="uppercase brand-gradient text-white w-full font-semibold hover:brand-gradient-hover hover:-translate-y-px hover:shadow-lg hover:shadow-primary/40 transition-all"
         >
-          &quot;Request&quot;
+          {t("modal.requestLabel")}
         </Button>
       ) : !isControlled && becomeSharerBlock ? (
         <Button
           onClick={onOpen}
           variant="ghost"
-          className="mr-2 hidden md:block text-foreground text-base font-semibold hover:text-primary transition-colors"
+          className="me-2 hidden md:block text-foreground text-base font-semibold hover:text-primary transition-colors"
         >
-          &quot;Become a Sharer&quot;
+          {t("modal.becomeSharer")}
         </Button>
       ) : !isControlled ? (
         <Button
@@ -300,21 +300,17 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
           variant="outline"
           className="bg-background text-foreground border border-border font-semibold px-6 hover:border-foreground hover:shadow-md transition-all"
         >
-          &quot;{buttonValue}&quot;
+          {buttonText ?? t("logIn")}
         </Button>
       ) : null}
 
       {/* Modal */}
       <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && handleClose()}>
-        <DialogContent
-          variant="glass"
-          className="max-w-[568px] rounded-2xl p-0"
-          aria-describedby={undefined}
-        >
+        <DialogContent variant="glass" className="max-w-[568px] rounded-2xl p-0" aria-describedby={undefined}>
           {/* Header with proper accessibility */}
           <DialogHeader className="border-b border-border py-4 px-6 relative">
             <DialogTitle className="text-base font-semibold text-center text-foreground">
-              {mode === "login" ? "Log in" : "Sign up"}
+              {activeMode === "login" ? t("logIn") : t("signUp")}
             </DialogTitle>
           </DialogHeader>
 
@@ -325,13 +321,9 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
               <div key={mode} className="transition-opacity duration-200">
                 {/* Welcome Message */}
                 <div className="mb-6">
-                  <h2 className="text-[22px] font-semibold mb-2 text-foreground">
-                    &quot;Welcome to FoodShare&quot;
-                  </h2>
+                  <h2 className="text-[22px] font-semibold mb-2 text-foreground">{t("modal.welcomeTitle")}</h2>
                   <p className="text-sm text-muted-foreground">
-                    {mode === "login"
-                      ? "Log in to continue sharing and discovering food"
-                      : "Create an account to start sharing food in your community"}
+                    {activeMode === "login" ? t("modal.loginBody") : t("modal.signupBody")}
                   </p>
                 </div>
 
@@ -341,6 +333,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0">
                         <svg
+                          aria-hidden="true"
                           className="h-5 w-5 text-orange-400"
                           viewBox="0 0 20 20"
                           fill="currentColor"
@@ -353,22 +346,15 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-sm font-medium text-orange-800">
-                          &quot;Memory-Only Mode&quot;
-                        </h3>
-                        <p className="mt-1 text-sm text-orange-700 mb-2">
-                          Your browser storage is degraded. You can log in, but your session will
-                          only last while this tab is open.
-                        </p>
+                        <h3 className="text-sm font-medium text-orange-800">{t("modal.memoryOnlyTitle")}</h3>
+                        <p className="mt-1 text-sm text-orange-700 mb-2">{t("modal.memoryOnlyBody")}</p>
                         <Button
                           size="sm"
                           onClick={handleClearStorage}
                           disabled={isRecoveringStorage}
                           className="bg-orange-600 hover:bg-orange-700 text-white"
                         >
-                          {isRecoveringStorage
-                            ? "Clearing..."
-                            : "Clear Storage to Enable Persistence"}
+                          {isRecoveringStorage ? t("modal.clearing") : t("modal.clearStorageToPersist")}
                         </Button>
                       </div>
                     </div>
@@ -379,7 +365,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                   <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-blue-400 animate-spin" viewBox="0 0 24 24">
+                        <svg aria-hidden="true" className="h-5 w-5 text-blue-400 animate-spin" viewBox="0 0 24 24">
                           <circle
                             className="opacity-25"
                             cx="12"
@@ -396,8 +382,8 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                           />
                         </svg>
                       </div>
-                      <p className="text-sm font-medium text-blue-800">
-                        &quot;Checking browser storage...&quot;
+                      <p className="text-sm font-medium text-blue-800" role="status" aria-live="polite">
+                        {t("modal.checkingStorage")}
                       </p>
                     </div>
                   </div>
@@ -408,6 +394,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0">
                         <svg
+                          aria-hidden="true"
                           className="h-5 w-5 text-red-400"
                           viewBox="0 0 20 20"
                           fill="currentColor"
@@ -420,11 +407,14 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-sm font-medium text-red-800">
-                          &quot;Storage Error&quot;
-                        </h3>
-                        <p className="mt-1 text-sm text-red-700 mb-2">{storageError.message}</p>
-                        <p className="text-sm text-red-600 mb-3">{storageError.userGuidance}</p>
+                        <h3 className="text-sm font-medium text-red-800">{t("modal.storageErrorTitle")}</h3>
+                        {/* Translated copy, not the error type's prose fields. */}
+                        <p className="mt-1 text-sm text-red-700 mb-2">
+                          {clearFailed ? t("modal.clearStorageFailed") : t("modal.storageUnavailable")}
+                        </p>
+                        <p className="text-sm text-red-600 mb-3">
+                          {clearFailed ? t("modal.manualClearGuidance") : t("modal.enableStorageGuidance")}
+                        </p>
                         {storageError.canRecover && (
                           <Button
                             size="sm"
@@ -432,7 +422,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                             disabled={isRecoveringStorage}
                             className="bg-red-600 hover:bg-red-700 text-white"
                           >
-                            {isRecoveringStorage ? "Clearing..." : "Clear Browser Storage & Reload"}
+                            {isRecoveringStorage ? t("modal.clearing") : t("modal.clearStorageAndReload")}
                           </Button>
                         )}
                       </div>
@@ -444,17 +434,10 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                 <div role="alert" aria-live="polite" aria-atomic="true">
                   {authError && !storageError && (
                     <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
-                      <p className="text-sm text-red-800">
-                        {/* Sanitize error message to remove any encoded tokens */}
-                        {authError.replace(/[a-zA-Z0-9+/=]{20,}/g, "[token]")}
-                        {process.env.NODE_ENV === "development" &&
-                          authError.includes("redirect") && (
-                            <span className="block mt-2 text-xs text-orange-600">
-                              💡 Tip: Add http://localhost:3000/auth/callback to Supabase allowed
-                              redirect URLs
-                            </span>
-                          )}
-                      </p>
+                      {/* The code, resolved. It was Sanitised and rendered as
+                          prose before Phase 26 — and the redaction regex was
+                          standing in for a type change. */}
+                      <p className="text-sm text-red-800">{t(`errors.${authError}`)}</p>
                     </div>
                   )}
                 </div>
@@ -463,15 +446,15 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                 <form onSubmit={handleSubmit}>
                   <div className="flex flex-col gap-4 items-stretch">
                     {/* Name Fields (Signup only) */}
-                    {mode === "signup" && (
+                    {activeMode === "signup" && (
                       <div className="flex gap-3">
                         <div className="flex-1">
                           <label htmlFor="auth-first-name" className="sr-only">
-                            First name
+                            {t("firstName")}
                           </label>
                           <Input
                             id="auth-first-name"
-                            placeholder={"First name"}
+                            placeholder={t("firstName")}
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
                             autoComplete="given-name"
@@ -481,11 +464,11 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                         </div>
                         <div className="flex-1">
                           <label htmlFor="auth-last-name" className="sr-only">
-                            Last name
+                            {t("lastName")}
                           </label>
                           <Input
                             id="auth-last-name"
-                            placeholder={"Last name"}
+                            placeholder={t("lastName")}
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
                             autoComplete="family-name"
@@ -499,12 +482,12 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     {/* Email */}
                     <div>
                       <label htmlFor="auth-email" className="sr-only">
-                        Email address
+                        {t("emailAddress")}
                       </label>
                       <Input
                         id="auth-email"
                         type="email"
-                        placeholder={"Email address"}
+                        placeholder={t("emailAddress")}
                         value={email}
                         onChange={handleEmailChange}
                         onBlur={handleEmailBlur}
@@ -513,19 +496,13 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                         className={`h-11 rounded-lg border ${
                           emailError ? "border-red-500 dark:border-red-400" : "border-border"
                         } hover:border-foreground focus:border-foreground focus:ring-1 ${
-                          emailError
-                            ? "focus:ring-red-500 dark:focus:ring-red-400"
-                            : "focus:ring-foreground"
+                          emailError ? "focus:ring-red-500 dark:focus:ring-red-400" : "focus:ring-foreground"
                         }`}
                         aria-invalid={!!emailError}
                         aria-describedby={emailError ? "auth-email-error" : undefined}
                       />
                       {emailError && (
-                        <p
-                          id="auth-email-error"
-                          className="text-xs text-red-500 dark:text-red-400 mt-1"
-                          role="alert"
-                        >
+                        <p id="auth-email-error" className="text-xs text-red-500 dark:text-red-400 mt-1" role="alert">
                           {emailError}
                         </p>
                       )}
@@ -534,22 +511,23 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     {/* Password */}
                     <div className="relative">
                       <label htmlFor="auth-password" className="sr-only">
-                        Password
+                        {t("password")}
                       </label>
                       <Input
                         id="auth-password"
                         type={showPassword ? "text" : "password"}
-                        placeholder={"Password"}
+                        placeholder={t("password")}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        autoComplete={mode === "login" ? "current-password" : "new-password"}
+                        autoComplete={activeMode === "login" ? "current-password" : "new-password"}
                         required
-                        className="h-11 rounded-lg border border-border pr-12 hover:border-foreground focus:border-foreground focus:ring-1 focus:ring-foreground"
+                        className="h-11 rounded-lg border border-border pe-12 hover:border-foreground focus:border-foreground focus:ring-1 focus:ring-foreground"
                       />
                       <button
                         type="button"
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded"
+                        aria-label={showPassword ? t("hidePassword") : t("showPassword")}
+                        aria-pressed={showPassword}
+                        className="absolute end-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? <ViewOffIcon /> : <ViewIcon />}
@@ -557,7 +535,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     </div>
 
                     {/* Password Strength Indicator - Only show during signup */}
-                    {mode === "signup" && <PasswordStrength password={password} />}
+                    {activeMode === "signup" && <PasswordStrength password={password} />}
 
                     {/* Submit Button */}
                     <Button
@@ -566,12 +544,12 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                       disabled={isPending}
                     >
                       {isPending
-                        ? mode === "login"
-                          ? "Logging in..."
-                          : "Signing up..."
-                        : mode === "login"
-                          ? "Continue"
-                          : "Sign up"}
+                        ? activeMode === "login"
+                          ? t("loggingIn")
+                          : t("modal.signingUp")
+                        : activeMode === "login"
+                          ? t("modal.continueLabel")
+                          : t("signUp")}
                     </Button>
                   </div>
                 </form>
@@ -581,7 +559,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                   <>
                     <div className="flex items-center my-6">
                       <div className="flex-1 border-t border-border" />
-                      <span className="px-4 text-xs text-muted-foreground font-medium">or</span>
+                      <span className="px-4 text-xs text-muted-foreground font-medium">{t("orContinueWith")}</span>
                       <div className="flex-1 border-t border-border" />
                     </div>
                     <SocialAuthButtons onSelectProvider={handleSocialLogin} disabled={isPending} />
@@ -591,13 +569,13 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                 {/* Toggle Mode */}
                 <div className="mt-6 pt-6 border-t border-border">
                   <p className="text-sm text-muted-foreground text-center">
-                    {mode === "login" ? "Don&apos;t have an account?" : "Already have an account?"}{" "}
+                    {activeMode === "login" ? t("noAccountPrompt") : t("haveAccountPrompt")}{" "}
                     <button
                       type="button"
                       className="font-semibold text-foreground underline hover:text-primary cursor-pointer"
                       onClick={toggleMode}
                     >
-                      &quot;{mode === "login" ? "Sign up" : "Log in"}&quot;
+                      {activeMode === "login" ? t("signUp") : t("logIn")}
                     </button>
                   </p>
                 </div>

@@ -12,21 +12,11 @@ interface SubmitButtonProps extends Omit<ButtonProps, "type" | "disabled"> {
  * Submit button that automatically shows loading state via useFormStatus.
  * Must be used inside a <form> with a server action.
  */
-export function SubmitButton({
-  children,
-  pendingText,
-  ...props
-}: SubmitButtonProps) {
+export function SubmitButton({ children, pendingText, ...props }: SubmitButtonProps) {
   const { pending } = useFormStatus();
 
   return (
-    <Button
-      type="submit"
-      disabled={pending}
-      loading={pending}
-      loadingText={pendingText}
-      {...props}
-    >
+    <Button type="submit" disabled={pending} loading={pending} loadingText={pendingText} {...props}>
       {children}
     </Button>
   );

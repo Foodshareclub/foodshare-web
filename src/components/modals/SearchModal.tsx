@@ -1,13 +1,14 @@
 "use client";
 
-import type { ChangeEvent } from "react";
-import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { SearchIcon } from "@/utils/icons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import type { ChangeEvent } from "react";
+import type React from "react";
+import { useState } from "react";
 
 type SearchModalProps = {
   isOpen: boolean;

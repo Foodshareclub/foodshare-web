@@ -1,6 +1,5 @@
-import { readFile } from "fs/promises";
-import { join } from "path";
-import { NextRequest, NextResponse } from "next/server";
+import { join } from "bun:path";
+import { type NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "../../_shared/requireAdmin";
 
 // Sample data for each template
@@ -98,10 +97,7 @@ const sampleData: Record<string, Record<string, string>> = {
   },
 };
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ templateId: string }> }
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ templateId: string }> }) {
   const auth = await requireAdmin();
   if (!auth.authorized) return auth.response;
 
@@ -116,7 +112,7 @@ export async function GET(
     // Read the template file
     const templatePath = join(process.cwd(), "src/emails/templates", `${templateId}.html`);
 
-    let html = await readFile(templatePath, "utf-8");
+    let html = await Bun.file(templatePath).text();
 
     // Replace Go template variables with sample data
     const data = sampleData[templateId];

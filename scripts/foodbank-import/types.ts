@@ -30,7 +30,7 @@ export interface RawFoodbankData {
 // Processed record ready for database insert
 export interface FoodbankImportRecord {
   post_name: string;
-  post_type: 'food_bank' | 'fridge';
+  post_type: "food_bank" | "fridge";
   post_description: string;
   post_address: string;
   post_stripped_address: string;
@@ -77,7 +77,7 @@ export interface ImportOptions {
 
 // OSM element from Overpass API
 export interface OSMElement {
-  type: 'node' | 'way' | 'relation';
+  type: "node" | "way" | "relation";
   id: number;
   lat?: number;
   lon?: number;

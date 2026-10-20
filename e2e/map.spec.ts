@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test("map loads without server rendering or browser runtime failures", async ({ page }) => {
   const errors: string[] = [];
@@ -10,8 +10,7 @@ test("map loads without server rendering or browser runtime failures", async ({ 
 
 // 1x1 transparent PNG used to fulfill tile requests deterministically
 // (external tile CDN availability from CI runners is flaky)
-const TILE_PNG =
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+const TILE_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
 
 test.describe("Map Page", () => {
   // Map tests need longer timeouts due to tile loading

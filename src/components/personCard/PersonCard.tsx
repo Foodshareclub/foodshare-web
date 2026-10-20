@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
+import type React from "react";
+import { useState } from "react";
 
 type PropsType = {
   name: string;
@@ -25,7 +26,7 @@ const PersonCard: React.FC<PropsType> = ({ name, secondName, img, aboutExp, role
         className={cn(
           "glass rounded-xl p-8 glass-fade-in flex flex-col items-center overflow-hidden h-full relative",
           "transition-all duration-300 ease-out",
-          isHovered && "scale-[1.02] -translate-y-3"
+          isHovered && "scale-[1.02] -translate-y-3",
         )}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -33,8 +34,8 @@ const PersonCard: React.FC<PropsType> = ({ name, secondName, img, aboutExp, role
         {/* Animated gradient background */}
         <div
           className={cn(
-            "absolute top-0 left-0 right-0 bottom-0 bg-gradient-to-br from-red-500/10 to-orange-500/10 pointer-events-none z-0 transition-opacity duration-400",
-            isHovered ? "opacity-100" : "opacity-0"
+            "absolute top-0 inset-x-0 bottom-0 bg-gradient-to-br from-red-500/10 to-orange-500/10 pointer-events-none z-0 transition-opacity duration-400",
+            isHovered ? "opacity-100" : "opacity-0",
           )}
         />
 
@@ -43,7 +44,7 @@ const PersonCard: React.FC<PropsType> = ({ name, secondName, img, aboutExp, role
             className={cn(
               "object-cover rounded-full w-[160px] h-[160px] sm:w-[180px] sm:h-[180px] border-[5px] border-solid shadow-2xl relative z-[1]",
               "transition-all duration-300",
-              isHovered && "scale-105"
+              isHovered && "scale-105",
             )}
             style={{
               borderColor: isHovered ? "rgba(255, 99, 71, 0.8)" : "rgba(255, 255, 255, 0.4)",
@@ -57,8 +58,8 @@ const PersonCard: React.FC<PropsType> = ({ name, secondName, img, aboutExp, role
           {/* Glow effect */}
           <div
             className={cn(
-              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180px] sm:w-[200px] h-[180px] sm:h-[200px] rounded-full bg-gradient-radial from-red-500/40 to-transparent blur-[20px] z-0 transition-opacity duration-400",
-              isHovered ? "opacity-100" : "opacity-0"
+              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180px] sm:w-[200px] h-[180px] sm:h-[200px] rounded-full bg-radial from-red-500/40 to-transparent blur-[20px] z-0 transition-opacity duration-400",
+              isHovered ? "opacity-100" : "opacity-0",
             )}
           />
         </div>
@@ -74,9 +75,7 @@ const PersonCard: React.FC<PropsType> = ({ name, secondName, img, aboutExp, role
             </span>
           )}
 
-          <p className="text-sm md:text-base text-center leading-relaxed text-muted-foreground px-2 mt-2">
-            {aboutExp}
-          </p>
+          <p className="text-sm md:text-base text-center leading-relaxed text-muted-foreground px-2 mt-2">{aboutExp}</p>
         </div>
       </div>
     </div>

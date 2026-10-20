@@ -1,5 +1,6 @@
 "use client";
 
+import type { TimerHandle } from "@/types/timer.types";
 import { restoreScrollState, saveScrollState } from "@/utils/scrollPersistence";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -69,15 +70,11 @@ export const useAdvancedScroll = (options: UseAdvancedScrollOptions = {}) => {
   const lastDirection = useRef<ScrollDirection>("none");
   const ticking = useRef(false);
   const initialized = useRef(false);
-  const debounceTimeout = useRef<NodeJS.Timeout | undefined>(undefined);
+  const debounceTimeout = useRef<TimerHandle | undefined>(undefined);
 
   const updateScrollState = useCallback(() => {
-    const calculatedCompactThreshold = calculateSmartThreshold(
-      window.innerHeight,
-      compactThreshold
-    );
-    const calculatedHideThreshold =
-      calculateSmartThreshold(window.innerHeight, hideThreshold) * 1.5;
+    const calculatedCompactThreshold = calculateSmartThreshold(window.innerHeight, compactThreshold);
+    const calculatedHideThreshold = calculateSmartThreshold(window.innerHeight, hideThreshold) * 1.5;
     const currentScrollY = window.scrollY;
     const documentHeight = document.documentElement.scrollHeight - window.innerHeight;
     const scrollPercentage = documentHeight > 0 ? (currentScrollY / documentHeight) * 100 : 0;

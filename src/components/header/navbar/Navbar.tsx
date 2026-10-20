@@ -1,10 +1,11 @@
 "use client";
 
-import { useAdvancedScroll } from "@/hooks";
-import { useAuth } from "@/hooks/useAuth";
-import { cn } from "@/lib/utils";
-import { LISTING_CONTAINER } from "@/components/productCard/listing-layout";
+import { signOut } from "@/app/actions/auth";
 import { GradientBackground } from "@/components/gpu/GradientBackground";
+import { LISTING_CONTAINER } from "@/components/productCard/listing-layout";
+import { useAdvancedScroll } from "@/hooks/useAdvancedScroll";
+import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/zustand";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
@@ -36,7 +37,29 @@ function Navbar({
   initialUnreadCount = 0,
 }: NavbarProps) {
   const _t = useTranslations();
-  const { logout } = useAuth();
+
+  /**
+   * Logout, without `useAuth()`.
+   *
+   * `useAuth` opens a browser Supabase client and subscribes to auth changes so
+   * it can hold live session state. In the navbar that subscription bought
+   * nothing: the wrapper already receives `initialUser` and `initialIsAdmin`
+   * from the server, `signOut()` revalidates the tree so the shell re-renders
+   * with the new props, and the only other thing this needed was clearing the
+   * auth store. So the navbar used to put the browser Supabase client — 245 KB
+   * raw / 66 KB gzip, the single largest thing in the first-load bundle — into
+   * the root layout of every route, including the static legal pages.
+   *
+   * Sign-in and sign-out are both navigations, so there is no window in which
+   * the navbar's identity can be stale.
+   */
+  const logout = async () => {
+    try {
+      await signOut();
+    } finally {
+      useAuthStore.getState().reset();
+    }
+  };
   const { scrollY } = useAdvancedScroll({
     compactThreshold: 100,
     hideThreshold: 150,
@@ -48,11 +71,7 @@ function Navbar({
   const searchParams = useSearchParams();
   const routeCategory = productType.toLowerCase() || "food";
   const activeCategory =
-    searchParams.get("type") === "all"
-      ? "all"
-      : routeCategory === "business"
-        ? "organisation"
-        : routeCategory;
+    searchParams.get("type") === "all" ? "all" : routeCategory === "business" ? "organisation" : routeCategory;
 
   // Get category translations
   const tCategories = useTranslations("categories");
@@ -78,9 +97,7 @@ function Navbar({
     // Forum, Challenge and Foodlytics have their own routes without map views
     if (routeName === "forum" || routeName === "challenge" || routeName === "foodlytics") {
       const keyword = routeName === "challenge" ? searchParams.get("key_word") : null;
-      router.push(
-        `/${routeName}${keyword ? `?${new URLSearchParams({ key_word: keyword })}` : ""}`
-      );
+      router.push(`/${routeName}${keyword ? `?${new URLSearchParams({ key_word: keyword })}` : ""}`);
       return;
     }
 
@@ -99,9 +116,7 @@ function Navbar({
   const handleSearchClick = () => {
     window.scrollTo({
       top: 0,
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "instant"
-        : "smooth",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
     });
   };
 
@@ -115,14 +130,19 @@ function Navbar({
 
   const navbarShadow =
     scrollY > 10
-      ? "0 1px 2px hsl(var(--foreground) / 0.08), 0 4px 12px hsl(var(--foreground) / 0.05)"
-      : "0 1px 2px hsl(var(--foreground) / 0.08)";
+      ? "0 1px 3px hsl(var(--foreground) / 0.06), 0 8px 24px hsl(var(--foreground) / 0.04), 0 16px 48px hsl(var(--foreground) / 0.02)"
+      : "0 1px 2px hsl(var(--foreground) / 0.04)";
+
+  const navbarBg = scrollY > 10 ? "bg-background/80 backdrop-blur-xl backdrop-saturate-150" : "bg-background";
 
   return (
     <>
       {/* SINGLE MERGED NAVBAR - Always Visible */}
       <header
-        className={cn("navbar sticky top-0 z-[100] w-full bg-background", "border-b border-border")}
+        className={cn(
+          "navbar sticky top-0 z-[100] w-full border-b border-border/50 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
+          navbarBg,
+        )}
         style={{
           boxShadow: navbarShadow,
           backfaceVisibility: "hidden" as const,
@@ -133,7 +153,7 @@ function Navbar({
         <div
           className={cn(
             LISTING_CONTAINER,
-            "relative isolate z-20 grid grid-cols-[1fr_auto] items-center gap-x-6 gap-y-3 py-3 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:py-4"
+            "relative isolate z-20 grid grid-cols-[1fr_auto] items-center gap-x-6 gap-y-3 py-3 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:py-4",
           )}
         >
           <GradientBackground />
@@ -164,11 +184,7 @@ function Navbar({
           </div>
           {activeCategory !== "foodlytics" && activeCategory !== "forum" && (
             <div className="col-span-2 row-start-2 w-full min-w-0 max-w-[720px] justify-self-center lg:col-span-1 lg:col-start-2 lg:row-start-1">
-              <SearchBar
-                key={activeCategory}
-                onSearchClick={handleSearchClick}
-                defaultCategory={activeCategory}
-              />
+              <SearchBar key={activeCategory} onSearchClick={handleSearchClick} defaultCategory={activeCategory} />
             </div>
           )}
         </div>

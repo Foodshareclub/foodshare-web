@@ -4,9 +4,10 @@
  * Replaces Redux auth slice following ultrathink principles
  */
 
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import type { AuthErrorCode } from "@/lib/errors";
 import type { Session, User } from "@supabase/supabase-js";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 // ============================================================================
 // Types
@@ -22,7 +23,15 @@ interface AuthState {
 
   // Loading and error states
   isLoading: boolean;
-  error: string | null;
+  /**
+   * An `AuthErrorCode`, never a message.
+   *
+   * Nothing is persisted (`partialize` returns `{}`), so this is a per-session
+   * value and the change of domain is free of migration concerns. It matters
+   * that it is a code: the store is read by the login page and by the auth
+   * modal, and a string here is a string somebody eventually renders.
+   */
+  error: AuthErrorCode | null;
 
   // Admin state
   isAdmin: boolean;
@@ -34,7 +43,7 @@ interface AuthState {
   setSession: (session: Session | null) => void;
   setAuth: (user: User | null, session: Session | null) => void;
   setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
+  setError: (error: AuthErrorCode | null) => void;
   setAdmin: (isAdmin: boolean, roles?: string[]) => void;
   setAdminCheckStatus: (status: AdminCheckStatus) => void;
   clearError: () => void;
@@ -131,8 +140,8 @@ export const useAuthStore = create<AuthState>()(
       // Note: Previously adminCheckStatus was persisted, but this caused a bug
       // where the check was skipped on page reload while isAdmin remained false
       partialize: () => ({}),
-    }
-  )
+    },
+  ),
 );
 
 // ============================================================================

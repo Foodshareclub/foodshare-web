@@ -3,7 +3,7 @@
  * Tests chat functionality including room creation, messaging, and read receipts
  */
 
-import { mock, describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 // Mock state for controlling test behavior
 const mockState = {
@@ -112,7 +112,7 @@ mock.module("@/lib/supabase/server", () => ({
           Promise.resolve({
             data: { user: mockState.user },
             error: mockState.authError,
-          })
+          }),
         ),
       },
       from: mock((tableName: string) => createChain(tableName)),

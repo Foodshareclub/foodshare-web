@@ -6,57 +6,8 @@
  * Modern glass UI with fixed viewport layout (no horizontal scroll)
  */
 
-import React, { useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Send,
-  Mail,
-  Users,
-  AlertCircle,
-  CheckCircle,
-  BarChart3,
-  Zap,
-  Settings,
-  Plus,
-  Search,
-  MoreVertical,
-  Play,
-  Pause,
-  Trash2,
-  Edit,
-  Eye,
-  Copy,
-  TrendingUp,
-  TrendingDown,
-  Activity,
-  Target,
-  MousePointerClick,
-  UserPlus,
-  UserMinus,
-  ChevronRight,
-  Sparkles,
-  LayoutGrid,
-  List,
-  Calendar,
-  Globe,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,17 +15,61 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Activity,
+  AlertCircle,
+  BarChart3,
+  Calendar,
+  CheckCircle,
+  ChevronRight,
+  Copy,
+  Edit,
+  Eye,
+  Globe,
+  LayoutGrid,
+  List,
+  Mail,
+  MoreVertical,
+  MousePointerClick,
+  Pause,
+  Play,
+  Plus,
+  Search,
+  Send,
+  Settings,
+  Sparkles,
+  Target,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
+  UserMinus,
+  UserPlus,
+  Users,
+  Zap,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import type React from "react";
+import { useState, useTransition } from "react";
 
 import { sendAdminEmail, sendTestEmailDirect } from "@/app/actions/email";
-import type { EmailType } from "@/lib/email/types";
 import type {
+  ActiveAutomation,
+  AudienceSegment,
   EmailCRMData,
   EmailDashboardStats,
   ProviderHealth,
   RecentCampaign,
-  ActiveAutomation,
-  AudienceSegment,
 } from "@/lib/data/admin-email";
+import type { EmailType } from "@/lib/email/types";
 
 // ============================================================================
 // Types
@@ -142,10 +137,7 @@ export function EmailCRMClient({ initialData }: Props) {
   const segments = initialData?.segments || [];
 
   // Quota calculation
-  const quotaPercent =
-    stats.dailyQuotaLimit > 0
-      ? Math.round((stats.dailyQuotaUsed / stats.dailyQuotaLimit) * 100)
-      : 0;
+  const quotaPercent = stats.dailyQuotaLimit > 0 ? Math.round((stats.dailyQuotaUsed / stats.dailyQuotaLimit) * 100) : 0;
 
   return (
     <div className="flex flex-col flex-1 min-h-0 rounded-2xl border border-border/40 bg-card/30 backdrop-blur-sm overflow-hidden">
@@ -161,7 +153,7 @@ export function EmailCRMClient({ initialData }: Props) {
 
           {/* Daily Quota */}
           <div className="flex items-center gap-3">
-            <div className="text-right">
+            <div className="text-end">
               <p className="text-xs text-muted-foreground">Daily Quota</p>
               <p className="text-sm font-semibold">
                 {stats.dailyQuotaUsed.toLocaleString()} / {stats.dailyQuotaLimit.toLocaleString()}
@@ -176,7 +168,7 @@ export function EmailCRMClient({ initialData }: Props) {
                     ? "[&>div]:bg-rose-500"
                     : quotaPercent > 70
                       ? "[&>div]:bg-amber-500"
-                      : "[&>div]:bg-emerald-500"
+                      : "[&>div]:bg-emerald-500",
                 )}
               />
             </div>
@@ -189,20 +181,20 @@ export function EmailCRMClient({ initialData }: Props) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem onClick={() => setActiveTab("compose")}>
-                  <Send className="h-4 w-4 mr-2" />
+                  <Send className="h-4 w-4 me-2" />
                   New Email
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setActiveTab("campaigns")}>
-                  <Mail className="h-4 w-4 mr-2" />
+                  <Mail className="h-4 w-4 me-2" />
                   New Campaign
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setActiveTab("automation")}>
-                  <Zap className="h-4 w-4 mr-2" />
+                  <Zap className="h-4 w-4 me-2" />
                   New Automation
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setActiveTab("audience")}>
-                  <Users className="h-4 w-4 mr-2" />
+                  <Users className="h-4 w-4 me-2" />
                   New Segment
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -221,7 +213,7 @@ export function EmailCRMClient({ initialData }: Props) {
                   className={cn(
                     "gap-2 px-4 py-2.5 rounded-t-lg rounded-b-none border-b-2 border-transparent",
                     "data-[state=active]:bg-background data-[state=active]:border-primary",
-                    "data-[state=active]:shadow-none"
+                    "data-[state=active]:shadow-none",
                   )}
                 >
                   {tab.icon}
@@ -357,7 +349,7 @@ function DashboardTab({
               Recent Campaigns
             </h3>
             <Button variant="ghost" size="sm" className="text-xs">
-              View All <ChevronRight className="h-3 w-3 ml-1" />
+              View All <ChevronRight className="h-3 w-3 ms-1" />
             </Button>
           </div>
           <div className="space-y-3">
@@ -376,7 +368,7 @@ function DashboardTab({
               Active Automations
             </h3>
             <Button variant="ghost" size="sm" className="text-xs">
-              View All <ChevronRight className="h-3 w-3 ml-1" />
+              View All <ChevronRight className="h-3 w-3 ms-1" />
             </Button>
           </div>
           <div className="space-y-3">
@@ -429,12 +421,12 @@ function CampaignsTab({ campaigns }: { campaigns: RecentCampaign[] }) {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-1">
           <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search campaigns..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="ps-9"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -483,23 +475,13 @@ function CampaignsTab({ campaigns }: { campaigns: RecentCampaign[] }) {
           <table className="w-full">
             <thead className="bg-muted/50">
               <tr>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  Campaign
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  Recipients
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  Open Rate
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  Click Rate
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">Date</th>
-                <th className="text-right p-4 text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
+                <th className="text-start p-4 text-sm font-medium text-muted-foreground">Campaign</th>
+                <th className="text-start p-4 text-sm font-medium text-muted-foreground">Status</th>
+                <th className="text-start p-4 text-sm font-medium text-muted-foreground">Recipients</th>
+                <th className="text-start p-4 text-sm font-medium text-muted-foreground">Open Rate</th>
+                <th className="text-start p-4 text-sm font-medium text-muted-foreground">Click Rate</th>
+                <th className="text-start p-4 text-sm font-medium text-muted-foreground">Date</th>
+                <th className="text-end p-4 text-sm font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -539,21 +521,19 @@ function CampaignsTab({ campaigns }: { campaigns: RecentCampaign[] }) {
 function AutomationTab({ automations }: { automations: ActiveAutomation[] }) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredAutomations = automations.filter((a) =>
-    a.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredAutomations = automations.filter((a) => a.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div className="space-y-6">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search automations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="ps-9"
           />
         </div>
         <Button className="gap-2">
@@ -642,9 +622,7 @@ function AudienceTab({
         />
         <MetricCard
           label="Unsubscribed (30d)"
-          value={Math.round(
-            (stats.totalSubscribers * stats.unsubscribeRate) / 100
-          ).toLocaleString()}
+          value={Math.round((stats.totalSubscribers * stats.unsubscribeRate) / 100).toLocaleString()}
           icon={<UserMinus className="h-5 w-5" />}
           color="rose"
         />
@@ -695,11 +673,7 @@ function AudienceTab({
         <div className="grid md:grid-cols-4 gap-4">
           <SystemSegmentCard name="All Subscribers" count={stats.totalSubscribers} color="blue" />
           <SystemSegmentCard name="Active Users" count={stats.activeSubscribers} color="emerald" />
-          <SystemSegmentCard
-            name="New (7 days)"
-            count={Math.round(stats.totalSubscribers * 0.05)}
-            color="violet"
-          />
+          <SystemSegmentCard name="New (7 days)" count={Math.round(stats.totalSubscribers * 0.05)} color="violet" />
           <SystemSegmentCard
             name="Engaged"
             count={Math.round((stats.totalSubscribers * stats.avgOpenRate) / 100)}
@@ -822,10 +796,7 @@ function ComposeTab() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Email Type</Label>
-                <Select
-                  value={formData.emailType}
-                  onValueChange={(value) => handleChange("emailType", value)}
-                >
+                <Select value={formData.emailType} onValueChange={(value) => handleChange("emailType", value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -841,10 +812,7 @@ function ComposeTab() {
 
               <div className="space-y-2">
                 <Label>Provider</Label>
-                <Select
-                  value={formData.provider}
-                  onValueChange={(value) => handleChange("provider", value)}
-                >
+                <Select value={formData.provider} onValueChange={(value) => handleChange("provider", value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -853,9 +821,7 @@ function ComposeTab() {
                       <SelectItem key={provider.value} value={provider.value}>
                         <div className="flex flex-col">
                           <span>{provider.label}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {provider.description}
-                          </span>
+                          <span className="text-xs text-muted-foreground">{provider.description}</span>
                         </div>
                       </SelectItem>
                     ))}
@@ -873,7 +839,7 @@ function ComposeTab() {
                     type="checkbox"
                     checked={formData.useHtml}
                     onChange={(e) => handleChange("useHtml", e.target.checked)}
-                    className="mr-2 rounded"
+                    className="me-2 rounded"
                   />
                   HTML Mode
                 </label>
@@ -896,7 +862,7 @@ function ComposeTab() {
                   "p-4 rounded-lg flex items-center gap-3",
                   result.success
                     ? "bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300"
-                    : "bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300"
+                    : "bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300",
                 )}
               >
                 {result.success ? (
@@ -914,12 +880,7 @@ function ComposeTab() {
                 <Send className="h-4 w-4" />
                 {isPending ? "Sending..." : "Send Email"}
               </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={isPending}
-                onClick={handleTestSend}
-              >
+              <Button type="button" variant="secondary" disabled={isPending} onClick={handleTestSend}>
                 Test (Resend)
               </Button>
               <Button
@@ -1004,8 +965,7 @@ function ComposeTab() {
                 setFormData((prev) => ({
                   ...prev,
                   subject: "New Food Available Near You! 🥗",
-                  message:
-                    "Great news!\n\nNew food has been listed in your area. Check it out before it's gone!",
+                  message: "Great news!\n\nNew food has been listed in your area. Check it out before it's gone!",
                   emailType: "food_listing",
                 }));
               }}
@@ -1070,21 +1030,9 @@ function ProvidersTab({ providerHealth }: { providerHealth: ProviderHealth[] }) 
         </h3>
         <div className="space-y-3">
           <RoutingRule condition="Email type = auth" action="Route to Resend" priority="High" />
-          <RoutingRule
-            condition="Email type = newsletter"
-            action="Route to Brevo"
-            priority="Normal"
-          />
-          <RoutingRule
-            condition="Primary quota exhausted"
-            action="Failover to AWS SES"
-            priority="Fallback"
-          />
-          <RoutingRule
-            condition="All quotas exhausted"
-            action="Queue for next day"
-            priority="Last resort"
-          />
+          <RoutingRule condition="Email type = newsletter" action="Route to Brevo" priority="Normal" />
+          <RoutingRule condition="Primary quota exhausted" action="Failover to AWS SES" priority="Fallback" />
+          <RoutingRule condition="All quotas exhausted" action="Queue for next day" priority="Last resort" />
         </div>
       </GlassCard>
     </div>
@@ -1097,12 +1045,7 @@ function ProvidersTab({ providerHealth }: { providerHealth: ProviderHealth[] }) 
 
 function GlassCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div
-      className={cn(
-        "rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm p-5",
-        className
-      )}
-    >
+    <div className={cn("rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm p-5", className)}>
       {children}
     </div>
   );
@@ -1204,7 +1147,7 @@ function ProviderHealthBadge({ provider }: { provider: ProviderHealth }) {
             ? "bg-emerald-500"
             : provider.status === "degraded"
               ? "bg-amber-500"
-              : "bg-rose-500"
+              : "bg-rose-500",
         )}
       />
       {providerNames[provider.provider]}
@@ -1231,9 +1174,7 @@ function ProviderCard({ provider }: { provider: ProviderHealth }) {
     <div className="rounded-lg border border-border/50 bg-card/50 p-4">
       <div className="flex items-center justify-between mb-3">
         <span className="font-medium">{providerNames[provider.provider]}</span>
-        <span className={cn("text-sm font-semibold", statusColors[provider.status])}>
-          {provider.successRate}%
-        </span>
+        <span className={cn("text-sm font-semibold", statusColors[provider.status])}>{provider.successRate}%</span>
       </div>
       <Progress
         value={provider.successRate}
@@ -1243,7 +1184,7 @@ function ProviderCard({ provider }: { provider: ProviderHealth }) {
             ? "[&>div]:bg-emerald-500"
             : provider.status === "degraded"
               ? "[&>div]:bg-amber-500"
-              : "[&>div]:bg-rose-500"
+              : "[&>div]:bg-rose-500",
         )}
       />
       <div className="flex justify-between mt-2 text-xs text-muted-foreground">
@@ -1280,22 +1221,17 @@ function ProviderDetailCard({ provider }: { provider: ProviderHealth }) {
                 ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
                 : provider.status === "degraded"
                   ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
-                  : "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400"
+                  : "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400",
             )}
           >
             <Mail className="h-5 w-5" />
           </div>
           <div>
             <h4 className="font-semibold">{providerNames[provider.provider]}</h4>
-            <p className="text-xs text-muted-foreground">
-              {providerDescriptions[provider.provider]}
-            </p>
+            <p className="text-xs text-muted-foreground">{providerDescriptions[provider.provider]}</p>
           </div>
         </div>
-        <Badge
-          variant={provider.status === "healthy" ? "default" : "secondary"}
-          className="capitalize"
-        >
+        <Badge variant={provider.status === "healthy" ? "default" : "secondary"} className="capitalize">
           {provider.status}
         </Badge>
       </div>
@@ -1395,10 +1331,8 @@ function CampaignRow({ campaign, compact }: { campaign: RecentCampaign; compact?
     cancelled: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
   };
 
-  const openRate =
-    campaign.totalSent > 0 ? Math.round((campaign.totalOpened / campaign.totalSent) * 100) : 0;
-  const clickRate =
-    campaign.totalOpened > 0 ? Math.round((campaign.totalClicked / campaign.totalOpened) * 100) : 0;
+  const openRate = campaign.totalSent > 0 ? Math.round((campaign.totalOpened / campaign.totalSent) * 100) : 0;
+  const clickRate = campaign.totalOpened > 0 ? Math.round((campaign.totalClicked / campaign.totalOpened) * 100) : 0;
 
   if (compact) {
     return (
@@ -1407,13 +1341,11 @@ function CampaignRow({ campaign, compact }: { campaign: RecentCampaign; compact?
           <p className="text-sm font-medium truncate">{campaign.name}</p>
           <p className="text-xs text-muted-foreground truncate">{campaign.subject}</p>
         </div>
-        <div className="flex items-center gap-2 ml-3">
+        <div className="flex items-center gap-2 ms-3">
           <Badge variant="outline" className={cn("text-xs", statusColors[campaign.status])}>
             {campaign.status}
           </Badge>
-          {campaign.status === "sent" && (
-            <span className="text-xs text-muted-foreground">{openRate}% open</span>
-          )}
+          {campaign.status === "sent" && <span className="text-xs text-muted-foreground">{openRate}% open</span>}
         </div>
       </div>
     );
@@ -1442,7 +1374,7 @@ function CampaignRow({ campaign, compact }: { campaign: RecentCampaign; compact?
             ? `Scheduled: ${new Date(campaign.scheduledAt).toLocaleDateString()}`
             : "Draft"}
       </td>
-      <td className="p-4 text-right">
+      <td className="p-4 text-end">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -1451,17 +1383,17 @@ function CampaignRow({ campaign, compact }: { campaign: RecentCampaign; compact?
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem>
-              <Eye className="h-4 w-4 mr-2" /> View
+              <Eye className="h-4 w-4 me-2" /> View
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Edit className="h-4 w-4 mr-2" /> Edit
+              <Edit className="h-4 w-4 me-2" /> Edit
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Copy className="h-4 w-4 mr-2" /> Duplicate
+              <Copy className="h-4 w-4 me-2" /> Duplicate
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-rose-600">
-              <Trash2 className="h-4 w-4 mr-2" /> Delete
+              <Trash2 className="h-4 w-4 me-2" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -1480,10 +1412,8 @@ function CampaignCard({ campaign }: { campaign: RecentCampaign }) {
     cancelled: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
   };
 
-  const openRate =
-    campaign.totalSent > 0 ? Math.round((campaign.totalOpened / campaign.totalSent) * 100) : 0;
-  const clickRate =
-    campaign.totalOpened > 0 ? Math.round((campaign.totalClicked / campaign.totalOpened) * 100) : 0;
+  const openRate = campaign.totalSent > 0 ? Math.round((campaign.totalOpened / campaign.totalSent) * 100) : 0;
+  const clickRate = campaign.totalOpened > 0 ? Math.round((campaign.totalClicked / campaign.totalOpened) * 100) : 0;
 
   return (
     <GlassCard className="hover:shadow-md transition-shadow">
@@ -1493,23 +1423,23 @@ function CampaignCard({ campaign }: { campaign: RecentCampaign }) {
         </Badge>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 -mr-2 -mt-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7 -me-2 -mt-1">
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem>
-              <Eye className="h-4 w-4 mr-2" /> View
+              <Eye className="h-4 w-4 me-2" /> View
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Edit className="h-4 w-4 mr-2" /> Edit
+              <Edit className="h-4 w-4 me-2" /> Edit
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Copy className="h-4 w-4 mr-2" /> Duplicate
+              <Copy className="h-4 w-4 me-2" /> Duplicate
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-rose-600">
-              <Trash2 className="h-4 w-4 mr-2" /> Delete
+              <Trash2 className="h-4 w-4 me-2" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -1568,11 +1498,9 @@ function AutomationRow({
       <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium truncate">{automation.name}</p>
-          <p className="text-xs text-muted-foreground capitalize">
-            {automation.triggerType.replace("_", " ")}
-          </p>
+          <p className="text-xs text-muted-foreground capitalize">{automation.triggerType.replace("_", " ")}</p>
         </div>
-        <div className="flex items-center gap-2 ml-3">
+        <div className="flex items-center gap-2 ms-3">
           <Badge variant="outline" className={cn("text-xs", statusColors[automation.status])}>
             {automation.status}
           </Badge>
@@ -1590,7 +1518,7 @@ function AutomationRow({
             "rounded-lg p-2",
             automation.status === "active"
               ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400",
           )}
         >
           <Zap className="h-5 w-5" />
@@ -1603,11 +1531,11 @@ function AutomationRow({
         </div>
       </div>
       <div className="flex items-center gap-6">
-        <div className="text-right">
+        <div className="text-end">
           <p className="font-semibold">{automation.totalEnrolled.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground">Enrolled</p>
         </div>
-        <div className="text-right">
+        <div className="text-end">
           <p className="font-semibold">{automation.conversionRate}%</p>
           <p className="text-xs text-muted-foreground">Conversion</p>
         </div>
@@ -1623,22 +1551,22 @@ function AutomationRow({
           <DropdownMenuContent align="end">
             {automation.status === "active" ? (
               <DropdownMenuItem>
-                <Pause className="h-4 w-4 mr-2" /> Pause
+                <Pause className="h-4 w-4 me-2" /> Pause
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem>
-                <Play className="h-4 w-4 mr-2" /> Activate
+                <Play className="h-4 w-4 me-2" /> Activate
               </DropdownMenuItem>
             )}
             <DropdownMenuItem>
-              <Edit className="h-4 w-4 mr-2" /> Edit
+              <Edit className="h-4 w-4 me-2" /> Edit
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Copy className="h-4 w-4 mr-2" /> Duplicate
+              <Copy className="h-4 w-4 me-2" /> Duplicate
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-rose-600">
-              <Trash2 className="h-4 w-4 mr-2" /> Delete
+              <Trash2 className="h-4 w-4 me-2" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -1663,7 +1591,7 @@ function AutomationCard({ automation }: { automation: ActiveAutomation }) {
             "rounded-lg p-2",
             automation.status === "active"
               ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400",
           )}
         >
           <Zap className="h-5 w-5" />
@@ -1729,10 +1657,7 @@ function SegmentCard({ segment }: { segment: AudienceSegment }) {
   return (
     <div className="rounded-lg border border-border/50 bg-card/50 p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-3">
-        <div
-          className="rounded-lg p-2"
-          style={{ backgroundColor: `${segment.color}20`, color: segment.color }}
-        >
+        <div className="rounded-lg p-2" style={{ backgroundColor: `${segment.color}20`, color: segment.color }}>
           <Target className="h-5 w-5" />
         </div>
         {segment.isSystem && (
@@ -1742,9 +1667,7 @@ function SegmentCard({ segment }: { segment: AudienceSegment }) {
         )}
       </div>
       <h4 className="font-semibold mb-1">{segment.name}</h4>
-      {segment.description && (
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{segment.description}</p>
-      )}
+      {segment.description && <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{segment.description}</p>}
       <div className="flex items-center justify-between pt-3 border-t border-border/50">
         <span className="text-lg font-semibold">{segment.cachedCount.toLocaleString()}</span>
         <span className="text-xs text-muted-foreground">subscribers</span>
@@ -1805,8 +1728,9 @@ function EmptyState({
 function QuickTemplateButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="w-full text-left px-3 py-2 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors text-sm"
+      className="w-full text-start px-3 py-2 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors text-sm"
     >
       {label}
     </button>

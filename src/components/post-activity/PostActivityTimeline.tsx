@@ -7,40 +7,40 @@
  * Used in post detail pages and admin dashboards.
  */
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn, formatDate } from "@/lib/utils";
+import type { PostActivityTimelineItem, PostActivityType } from "@/types/post-activity.types";
+import { ACTIVITY_TYPE_COLORS, ACTIVITY_TYPE_LABELS } from "@/types/post-activity.types";
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  RotateCcw,
-  ToggleRight,
-  ToggleLeft,
+  AlertCircle,
+  AlertTriangle,
+  Bookmark,
+  Check,
+  CheckCircle,
   Clock,
   Eye,
-  MessageCircle,
-  CheckCircle,
-  XCircle,
-  Package,
-  AlertCircle,
-  Flag,
-  AlertTriangle,
-  Check,
-  ThumbsUp,
-  ThumbsDown,
   EyeOff,
-  Heart,
-  Share2,
-  Bookmark,
-  PenLine,
   FileText,
-  Settings,
-  Power,
-  MapPin,
+  Flag,
+  Heart,
   Image,
+  MapPin,
+  MessageCircle,
+  Package,
+  PenLine,
+  Pencil,
+  Plus,
+  Power,
+  RotateCcw,
+  Settings,
+  Share2,
+  ThumbsDown,
+  ThumbsUp,
+  ToggleLeft,
+  ToggleRight,
+  Trash2,
+  XCircle,
 } from "lucide-react";
-import { cn, formatDate } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { PostActivityTimelineItem, PostActivityType } from "@/types/post-activity.types";
-import { ACTIVITY_TYPE_LABELS, ACTIVITY_TYPE_COLORS } from "@/types/post-activity.types";
 
 // Icon mapping
 const ACTIVITY_ICONS: Record<PostActivityType, React.ComponentType<{ className?: string }>> = {
@@ -98,16 +98,11 @@ export function PostActivityTimeline({
   return (
     <div className={cn("relative", className)}>
       {/* Timeline line */}
-      <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
+      <div className="absolute start-4 top-0 bottom-0 w-px bg-border" />
 
       <div className="space-y-4">
         {activities.map((activity) => (
-          <ActivityItem
-            key={activity.id}
-            activity={activity}
-            showActor={showActor}
-            compact={compact}
-          />
+          <ActivityItem key={activity.id} activity={activity} showActor={showActor} compact={compact} />
         ))}
       </div>
     </div>
@@ -126,12 +121,12 @@ function ActivityItem({ activity, showActor, compact }: ActivityItemProps) {
   const label = ACTIVITY_TYPE_LABELS[activity.activity_type] || activity.activity_type;
 
   return (
-    <div className="relative pl-10">
+    <div className="relative ps-10">
       {/* Icon circle */}
       <div
         className={cn(
-          "absolute left-0 w-8 h-8 rounded-full bg-background border-2 flex items-center justify-center",
-          colorClass.replace("text-", "border-")
+          "absolute start-0 w-8 h-8 rounded-full bg-background border-2 flex items-center justify-center",
+          colorClass.replace("text-", "border-"),
         )}
       >
         <Icon className={cn("w-4 h-4", colorClass)} />
@@ -143,9 +138,7 @@ function ActivityItem({ activity, showActor, compact }: ActivityItemProps) {
             {showActor && activity.actor_nickname && (
               <Avatar className="h-6 w-6 flex-shrink-0">
                 <AvatarImage src={activity.actor_avatar || undefined} />
-                <AvatarFallback className="text-xs">
-                  {activity.actor_nickname.charAt(0).toUpperCase()}
-                </AvatarFallback>
+                <AvatarFallback className="text-xs">{activity.actor_nickname.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
             )}
             <div className="min-w-0">
@@ -154,27 +147,18 @@ function ActivityItem({ activity, showActor, compact }: ActivityItemProps) {
                   <span className="text-foreground">{activity.actor_nickname} </span>
                 )}
                 <span className={colorClass}>{label.toLowerCase()}</span>
-                {activity.reason && (
-                  <span className="text-muted-foreground"> - {activity.reason}</span>
-                )}
+                {activity.reason && <span className="text-muted-foreground"> - {activity.reason}</span>}
               </p>
-              {!compact && activity.notes && (
-                <p className="text-sm text-muted-foreground mt-1">{activity.notes}</p>
-              )}
+              {!compact && activity.notes && <p className="text-sm text-muted-foreground mt-1">{activity.notes}</p>}
             </div>
           </div>
-          <time
-            className="text-xs text-muted-foreground flex-shrink-0"
-            dateTime={activity.created_at}
-          >
+          <time className="text-xs text-muted-foreground flex-shrink-0" dateTime={activity.created_at}>
             {formatDate(activity.created_at, { format: "relative-short" })}
           </time>
         </div>
 
         {/* Show changes if present */}
-        {!compact && Object.keys(activity.changes || {}).length > 0 && (
-          <ActivityChanges changes={activity.changes} />
-        )}
+        {!compact && Object.keys(activity.changes || {}).length > 0 && <ActivityChanges changes={activity.changes} />}
       </div>
     </div>
   );
@@ -198,9 +182,7 @@ function ActivityChanges({ changes }: ActivityChangesProps) {
             <span className="text-muted-foreground">{formatValue(value)}</span>
           </div>
         ))}
-        {entries.length > 5 && (
-          <p className="text-xs text-muted-foreground">+{entries.length - 5} more changes</p>
-        )}
+        {entries.length > 5 && <p className="text-xs text-muted-foreground">+{entries.length - 5} more changes</p>}
       </div>
     </div>
   );

@@ -1,13 +1,17 @@
 // One-shot autofix for TS1484 (verbatimModuleSyntax): converts type-only
 // named imports to `import type` or inline `type` qualifiers.
 // Usage: bun scripts/fix-verbatim-imports.ts
-import { execSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
 
-const out = execSync("bunx tsc --noEmit --verbatimModuleSyntax 2>&1 || true", {
-  encoding: "utf-8",
-  maxBuffer: 16 * 1024 * 1024,
+// This file has no imports or exports of its own, so without this it is a
+// script rather than a module — and a module is what allows the top-level
+// `await` below.
+export {};
+
+const tsc = Bun.spawnSync(["bun", "node_modules/typescript/bin/tsc", "--noEmit", "--verbatimModuleSyntax"], {
+  stdout: "pipe",
+  stderr: "pipe",
 });
+const out = `${tsc.stdout?.toString() ?? ""}${tsc.stderr?.toString() ?? ""}`;
 
 // file -> line(1-based) -> Set<flagged names>
 const flagged = new Map<string, Map<number, Set<string>>>();
@@ -31,7 +35,7 @@ for (const m of out.matchAll(/^(.+?)\((\d+),\d+\): error TS1484: '([^']+)'/gm)) 
 
 let changedFiles = 0;
 for (const [file, perFile] of flagged) {
-  const lines = readFileSync(file, "utf-8").split("\n");
+  const lines = (await Bun.file(file).text()).split("\n");
   let changed = false;
   for (const [lineNo, names] of perFile) {
     const idx = lineNo - 1;
@@ -78,13 +82,13 @@ for (const [file, perFile] of flagged) {
       const defPart = def ? `${def}, ` : "";
       lines[idx] = (line ?? "").replace(
         /import\s+(?:\w+\s*,\s*)?\{[^}]*\}/,
-        `import ${defPart}{ ${fixed.join(", ")} }`
+        `import ${defPart}{ ${fixed.join(", ")} }`,
       );
       changed = true;
     }
   }
   if (changed) {
-    writeFileSync(file, lines.join("\n"));
+    await Bun.write(file, lines.join("\n"));
     changedFiles++;
   }
 }

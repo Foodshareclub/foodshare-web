@@ -1,6 +1,6 @@
-import { NextRequest } from "next/server";
+import { handleError, ok } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
-import { ok, handleError } from "@/lib/api";
+import type { NextRequest } from "next/server";
 import { requireAdmin } from "../_shared/requireAdmin";
 
 export async function GET(request: NextRequest) {

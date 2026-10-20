@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { RefreshCw, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { triggerAnalyticsSync } from "@/app/actions/analytics";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { triggerAnalyticsSync } from "@/app/actions/analytics";
+import { AlertCircle, CheckCircle2, Clock, RefreshCw } from "lucide-react";
+import { useState } from "react";
 
 interface SyncStatusBadgeProps {
   lastSyncAt?: string | null;
@@ -58,7 +58,7 @@ export function SyncStatusBadge({ lastSyncAt, onSyncComplete }: SyncStatusBadgeP
             "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
             syncResult === "success" && "bg-emerald-500/10 text-emerald-500",
             syncResult === "error" && "bg-rose-500/10 text-rose-500",
-            !syncResult && "bg-muted text-muted-foreground"
+            !syncResult && "bg-muted text-muted-foreground",
           )}
         >
           {syncResult === "success" ? (
@@ -69,11 +69,7 @@ export function SyncStatusBadge({ lastSyncAt, onSyncComplete }: SyncStatusBadgeP
             <Clock className="w-3.5 h-3.5" />
           )}
           <span>
-            {syncResult === "success"
-              ? "Synced"
-              : syncResult === "error"
-                ? "Failed"
-                : getTimeSince(lastSyncAt)}
+            {syncResult === "success" ? "Synced" : syncResult === "error" ? "Failed" : getTimeSince(lastSyncAt)}
           </span>
         </div>
       </div>

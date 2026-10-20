@@ -1,9 +1,9 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
 import { CardBack } from "./CardFace";
-import { stackCardVariants, shuffleFlyVariants } from "./animations";
+import { shuffleFlyVariants, stackCardVariants } from "./animations";
 import { DECK_CONFIG } from "./constants";
 import type { DeckStackProps } from "./types";
 
@@ -23,7 +23,7 @@ export function DeckStack({ challenges, isShuffling }: DeckStackProps) {
               key={`stack-${challenge.id}-${index}`}
               className={cn(
                 "absolute top-0 left-0",
-                "pointer-events-none" // Stack cards are not interactive
+                "pointer-events-none", // Stack cards are not interactive
               )}
               variants={{ ...stackCardVariants(stackIndex), ...shuffleFlyVariants(stackIndex) }}
               initial="stacked"

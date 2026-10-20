@@ -3,7 +3,7 @@
  * Server-side data fetching for admin CRM listings management
  */
 
-import { createClient, createCachedClient } from "@/lib/supabase/server";
+import { createCachedClient, createClient } from "@/lib/supabase/server";
 import { escapeFilterValue } from "@/lib/utils";
 
 // ============================================================================
@@ -66,6 +66,32 @@ export interface ListingStats {
   byCategory: Record<string, number>;
 }
 
+interface AdminListingRow {
+  id: number;
+  profile_id: string;
+  post_name: string;
+  post_description: string | null;
+  post_type: string;
+  pickup_time: string | null;
+  available_hours: string | null;
+  post_address: string | null;
+  images: string[] | null;
+  is_active: boolean;
+  is_arranged: boolean;
+  post_arranged_to: string | null;
+  post_arranged_at: string | null;
+  post_views: number;
+  post_like_counter: number;
+  created_at: string;
+  updated_at: string;
+  admin_notes: string | null;
+  profile: Array<AdminListing["profile"]> | AdminListing["profile"] | null;
+}
+
+interface CategoryCountRow {
+  post_type: string | null;
+}
+
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -95,20 +121,10 @@ function deriveStatus(listing: {
  * Get admin listings with filters and pagination
  * NOTE: Uses createClient() (cookies-dependent) - NOT cached
  */
-export async function getAdminListings(
-  filters: AdminListingsFilter = {}
-): Promise<AdminListingsResult> {
+export async function getAdminListings(filters: AdminListingsFilter = {}): Promise<AdminListingsResult> {
   const supabase = await createClient();
 
-  const {
-    status = "all",
-    category,
-    search,
-    sortBy = "created_at",
-    sortOrder = "desc",
-    page = 1,
-    limit = 20,
-  } = filters;
+  const { status = "all", category, search, sortBy = "created_at", sortOrder = "desc", page = 1, limit = 20 } = filters;
 
   const offset = (page - 1) * limit;
 
@@ -134,7 +150,7 @@ export async function getAdminListings(
       admin_notes,
       profile:profiles!profile_id(id, first_name, second_name, email, avatar_url)
     `,
-    { count: "exact" }
+    { count: "exact" },
   );
 
   // Apply status filter
@@ -167,7 +183,7 @@ export async function getAdminListings(
 
   if (error) throw new Error(error.message);
 
-  const listings: AdminListing[] = (data ?? []).map((item: any) => ({
+  const listings: AdminListing[] = ((data ?? []) as AdminListingRow[]).map((item) => ({
     ...item,
     status: deriveStatus(item),
     profile: extractFirst(item.profile as Array<AdminListing["profile"]>),
@@ -217,7 +233,7 @@ export async function getAdminListingById(id: number): Promise<AdminListing | nu
       updated_at,
       admin_notes,
       profile:profiles!profile_id(id, first_name, second_name, email, avatar_url)
-    `
+    `,
     )
     .eq("id", id)
     .single();
@@ -238,23 +254,18 @@ export async function getAdminListingById(id: number): Promise<AdminListing | nu
 export async function getListingStats(): Promise<ListingStats> {
   const supabase = createCachedClient();
 
-  const [
-    { count: total },
-    { count: active },
-    { count: inactive },
-    { count: arranged },
-    { data: categoryData },
-  ] = await Promise.all([
-    supabase.from("posts").select("*", { count: "exact", head: true }),
-    supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", true),
-    supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", false),
-    supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_arranged", true),
-    supabase.from("posts").select("post_type"),
-  ]);
+  const [{ count: total }, { count: active }, { count: inactive }, { count: arranged }, { data: categoryData }] =
+    await Promise.all([
+      supabase.from("posts").select("*", { count: "exact", head: true }),
+      supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", true),
+      supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", false),
+      supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_arranged", true),
+      supabase.from("posts").select("post_type"),
+    ]);
 
   // Count by category
   const byCategory: Record<string, number> = {};
-  (categoryData ?? []).forEach((item: any) => {
+  ((categoryData ?? []) as CategoryCountRow[]).forEach((item) => {
     const type = item.post_type || "unknown";
     byCategory[type] = (byCategory[type] || 0) + 1;
   });

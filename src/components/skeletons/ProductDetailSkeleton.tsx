@@ -1,5 +1,5 @@
-import { NavbarSkeleton } from "./NavbarSkeleton";
 import { cn } from "@/lib/utils";
+import { NavbarSkeleton } from "./NavbarSkeleton";
 
 interface ProductDetailSkeletonProps {
   className?: string;
@@ -13,7 +13,7 @@ export function ProductDetailSkeleton({ className }: ProductDetailSkeletonProps)
     <div
       className={cn(
         "min-h-screen bg-gradient-to-br from-muted/30 to-background dark:from-background dark:to-muted/20",
-        className
+        className,
       )}
     >
       <NavbarSkeleton />
@@ -25,7 +25,7 @@ export function ProductDetailSkeleton({ className }: ProductDetailSkeletonProps)
             <div className="glass w-full overflow-hidden rounded-xl">
               {/* Image with back button */}
               <div className="relative aspect-[16/9] bg-muted">
-                <div className="absolute top-4 left-4 h-9 w-20 bg-background/90 rounded-lg" />
+                <div className="absolute top-4 start-4 h-9 w-20 bg-background/90 rounded-lg" />
               </div>
               <div className="p-6">
                 <div className="h-6 bg-muted rounded w-20 mb-3" />
@@ -50,7 +50,7 @@ export function ProductDetailSkeleton({ className }: ProductDetailSkeletonProps)
         </div>
 
         {/* Right Column - Map */}
-        <div className="w-full lg:w-1/2 h-[400px] lg:h-auto lg:fixed lg:right-0 lg:top-0 lg:bottom-0 bg-muted animate-pulse flex items-center justify-center">
+        <div className="w-full lg:w-1/2 h-[400px] lg:h-auto lg:fixed lg:end-0 lg:top-0 lg:bottom-0 bg-muted animate-pulse flex items-center justify-center">
           <span className="text-4xl">🗺️</span>
         </div>
       </div>

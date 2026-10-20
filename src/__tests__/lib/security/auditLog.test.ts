@@ -6,7 +6,7 @@
  * Supabase client mocking requirements. These tests cover core logic.
  */
 
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 
 describe("AuditLogService", () => {
   describe("Action Types", () => {

@@ -4,7 +4,6 @@
  */
 
 import type { Metadata } from "next";
-import { locales, localeMetadata } from "@/i18n/config";
 
 export const siteConfig = {
   name: "FoodShare",
@@ -40,29 +39,23 @@ export const siteConfig = {
 };
 
 /**
- * Generate hreflang alternates for all 21 supported languages
- * Used for international SEO to indicate language variants of a page
+ * No hreflang alternates, deliberately.
+ *
+ * This used to emit 25 `<link rel="alternate" hreflang=...>` tags per page —
+ * one per locale plus `en-nz`, `en-au`, `en-gb` and `x-default` — where
+ * **every one of them pointed at the same URL as the canonical**. The app
+ * resolves the locale from a cookie rather than a `[locale]` route segment, so
+ * there is no per-locale URL to advertise; the generator had nothing to
+ * differentiate on and filled the difference with the canonical.
+ *
+ * A cluster whose members are all the same URL is invalid: Google's guidelines
+ * require each alternate to be a self-canonical URL for that language, and the
+ * whole set is discarded when it is not — so this was not a weak signal but an
+ * actively wrong one, and it cost ~1.9 KB of HTML on every page.
+ *
+ * If the site ever moves to a `[locale]` segment, this comes back — with real
+ * per-locale URLs, which is the only version of it worth shipping.
  */
-export function generateHreflangAlternates(path: string = ""): Record<string, string> {
-  const baseUrl = siteConfig.url;
-  const pagePath = path.startsWith("/") ? path : `/${path}`;
-  const pageUrl = `${baseUrl}${pagePath}`;
-
-  const alternates: Record<string, string> = {};
-
-  for (const locale of locales) {
-    const code = localeMetadata[locale].code.toLowerCase();
-    alternates[code] = pageUrl;
-  }
-
-  // Additional English variants for better international SEO
-  alternates["en-nz"] = pageUrl;
-  alternates["en-au"] = pageUrl;
-  alternates["en-gb"] = pageUrl;
-  alternates["x-default"] = pageUrl;
-
-  return alternates;
-}
 
 export const defaultMetadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -131,7 +124,6 @@ export const defaultMetadata: Metadata = {
   },
   alternates: {
     canonical: siteConfig.url,
-    languages: generateHreflangAlternates(),
   },
   other: {
     "apple-mobile-web-app-capable": "yes",
@@ -164,8 +156,7 @@ export const categoryMetadata = {
   },
   borrow: {
     title: "Borrow & Lend",
-    description:
-      "Borrow tools, equipment, and items from neighbors. Build a sharing economy in your local community.",
+    description: "Borrow tools, equipment, and items from neighbors. Build a sharing economy in your local community.",
     emoji: "🤝",
     keywords: ["borrow tools", "equipment sharing", "community lending"],
   },
@@ -179,8 +170,7 @@ export const categoryMetadata = {
 
   volunteers: {
     title: "Volunteer Opportunities",
-    description:
-      "Join volunteer opportunities to help distribute food and make a difference in your community.",
+    description: "Join volunteer opportunities to help distribute food and make a difference in your community.",
     emoji: "🙋",
     keywords: ["volunteer", "charity donations", "corporate giving", "community service"],
   },
@@ -189,13 +179,7 @@ export const categoryMetadata = {
     description:
       "Organisations sharing surplus food and products. Connect with local businesses and charities donating excess inventory to reduce waste.",
     emoji: "🏛️",
-    keywords: [
-      "organisation donation",
-      "food donation",
-      "commercial surplus",
-      "corporate giving",
-      "charity donations",
-    ],
+    keywords: ["organisation donation", "food donation", "commercial surplus", "corporate giving", "charity donations"],
   },
   fridges: {
     title: "Community Fridges",
@@ -235,8 +219,50 @@ export const categoryMetadata = {
 };
 
 /**
+ * OpenGraph wants `language_TERRITORY`, not the bare BCP-47 tag next-intl
+ * carries, and the territory is chosen rather than derivable: Portuguese and
+ * Chinese both have several equally defensible answers. These are the
+ * territories FoodShare actually serves — changing one is a product decision,
+ * not a correction, which is why they are written down instead of computed.
+ *
+ * Falls back to `en_US` rather than throwing: a page that passes no locale is
+ * an English page, and metadata is not worth failing a request over.
+ */
+const OPENGRAPH_LOCALES: Record<string, string> = {
+  ar: "ar_SA",
+  cs: "cs_CZ",
+  de: "de_DE",
+  en: "en_US",
+  es: "es_ES",
+  fr: "fr_FR",
+  hi: "hi_IN",
+  id: "id_ID",
+  it: "it_IT",
+  ja: "ja_JP",
+  ko: "ko_KR",
+  nl: "nl_NL",
+  pl: "pl_PL",
+  pt: "pt_BR",
+  ru: "ru_RU",
+  sv: "sv_SE",
+  th: "th_TH",
+  tr: "tr_TR",
+  uk: "uk_UA",
+  vi: "vi_VN",
+  zh: "zh_CN",
+};
+
+export function openGraphLocale(locale?: string): string {
+  return (locale && OPENGRAPH_LOCALES[locale]) || "en_US";
+}
+
+/**
  * Helper to generate page-specific metadata
  * Supports both website and article types for proper social sharing
+ *
+ * `locale` only affects the OpenGraph `locale` field — title and description
+ * are whatever the caller passes, so a page that wants localized metadata
+ * resolves those through `getTranslations()` inside its own `generateMetadata`.
  */
 export function generatePageMetadata({
   title,
@@ -247,6 +273,7 @@ export function generatePageMetadata({
   noIndex = false,
   type = "website",
   article,
+  locale,
 }: {
   title: string;
   description: string;
@@ -264,6 +291,8 @@ export function generatePageMetadata({
     section?: string;
     tags?: string[];
   };
+  /** BCP-47 tag from `getLocale()`; used only for the OpenGraph `locale` field. */
+  locale?: string;
 }): Metadata {
   const pageUrl = path ? `${siteConfig.url}${path}` : siteConfig.url;
   const pageKeywords = keywords ? [...siteConfig.keywords, ...keywords] : siteConfig.keywords;
@@ -281,13 +310,12 @@ export function generatePageMetadata({
     keywords: pageKeywords,
     alternates: {
       canonical: pageUrl,
-      languages: generateHreflangAlternates(path || ""),
     },
     // OpenGraph: Facebook, LinkedIn, WhatsApp, Telegram, iMessage
     // Note: og:image auto-generated by opengraph-image.tsx if not explicitly provided
     openGraph: {
       type,
-      locale: "en_US",
+      locale: openGraphLocale(locale),
       url: pageUrl,
       siteName: siteConfig.name,
       title: `${title} | ${siteConfig.name}`,

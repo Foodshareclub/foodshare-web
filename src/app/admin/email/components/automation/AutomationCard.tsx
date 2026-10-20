@@ -1,8 +1,8 @@
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { Zap } from "lucide-react";
 import { GlassCard } from "../shared/GlassCard";
 import type { ActiveAutomation } from "../types";
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 
 export function AutomationCard({ automation }: { automation: ActiveAutomation }) {
   const statusColors = {
@@ -20,7 +20,7 @@ export function AutomationCard({ automation }: { automation: ActiveAutomation })
             "rounded-lg p-2",
             automation.status === "active"
               ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400",
           )}
         >
           <Zap className="h-5 w-5" />

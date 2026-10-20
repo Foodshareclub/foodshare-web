@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * RAF Throttle Hook
@@ -8,7 +8,7 @@
  * Consolidates useRAFThrottle.ts and useRAFThrottle120.ts
  */
 
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 /**
  * Throttle function calls to animation frames
@@ -31,10 +31,7 @@ import { useCallback, useRef, useEffect } from "react";
  * }
  * ```
  */
-export function useRAFThrottle<T extends (...args: unknown[]) => unknown>(
-  callback: T,
-  fps: number = 60
-): T {
+export function useRAFThrottle<T extends (...args: unknown[]) => unknown>(callback: T, fps = 60): T {
   const rafRef = useRef<number | undefined>(undefined);
   const lastCallRef = useRef<number>(0);
   const callbackRef = useRef(callback);
@@ -78,7 +75,7 @@ export function useRAFThrottle<T extends (...args: unknown[]) => unknown>(
         });
       }
     },
-    [frameTime]
+    [frameTime],
   );
 
   return throttledFn as T;

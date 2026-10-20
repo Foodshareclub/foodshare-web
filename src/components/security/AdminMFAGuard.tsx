@@ -12,12 +12,13 @@
  * - Session activity tracking
  */
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
-import { MFAVerification } from "./MFAVerification";
 import { useAuth } from "@/hooks/useAuth";
-import { checkAdminMFARequired, MFAService } from "@/lib/security/mfa";
+import { MFAService, checkAdminMFARequired } from "@/lib/security/mfa";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import type React from "react";
+import { useEffect, useState } from "react";
+import { MFAVerification } from "./MFAVerification";
 
 interface AdminMFAGuardProps {
   children: React.ReactNode;
@@ -43,9 +44,29 @@ export const AdminMFAGuard: React.FC<AdminMFAGuardProps> = ({ children }) => {
   const [_currentAAL, setCurrentAAL] = useState<"aal1" | "aal2">("aal1");
 
   // Check MFA requirement on mount and when auth changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: isAdmin is the trigger — the body reads only the auth state, and the admin role resolves asynchronously from the store, so the MFA requirement has to be re-checked once it lands
   useEffect(() => {
-    checkMFARequirement();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void (async () => {
+      if (!isAuthenticated || !user) {
+        setIsChecking(false);
+        return;
+      }
+
+      try {
+        const result = await checkAdminMFARequired();
+
+        setRequiresMFA(result.required);
+        setCurrentAAL(result.currentAAL);
+      } catch (error) {
+        // Log error in development only
+        if (process.env.NODE_ENV === "development") {
+          console.error("[AdminMFAGuard] Error checking MFA requirement:", error);
+        }
+        setRequiresMFA(false);
+      } finally {
+        setIsChecking(false);
+      }
+    })();
   }, [isAuthenticated, isAdmin, user]);
 
   // Set up session activity tracking
@@ -59,34 +80,12 @@ export const AdminMFAGuard: React.FC<AdminMFAGuardProps> = ({ children }) => {
             await MFAService.updateSessionActivity(session.session_id);
           }
         },
-        5 * 60 * 1000
+        5 * 60 * 1000,
       ); // Every 5 minutes
 
       return () => clearInterval(activityInterval);
     }
   }, [requiresMFA, user?.id]);
-
-  async function checkMFARequirement() {
-    if (!isAuthenticated || !user) {
-      setIsChecking(false);
-      return;
-    }
-
-    try {
-      const result = await checkAdminMFARequired();
-
-      setRequiresMFA(result.required);
-      setCurrentAAL(result.currentAAL);
-    } catch (error) {
-      // Log error in development only
-      if (process.env.NODE_ENV === "development") {
-        console.error("[AdminMFAGuard] Error checking MFA requirement:", error);
-      }
-      setRequiresMFA(false);
-    } finally {
-      setIsChecking(false);
-    }
-  }
 
   const handleMFAVerified = () => {
     setRequiresMFA(false);
@@ -97,7 +96,7 @@ export const AdminMFAGuard: React.FC<AdminMFAGuardProps> = ({ children }) => {
 
   const handleMFACancel = () => {
     // Log user out and redirect to login
-    window.location.href = "/login";
+    window.location.href = new URL("/login", window.location.origin).href;
   };
 
   // Redirect to login if not authenticated
@@ -140,11 +139,7 @@ export const AdminMFAGuard: React.FC<AdminMFAGuardProps> = ({ children }) => {
   if (requiresMFA && user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted">
-        <MFAVerification
-          profileId={user.id}
-          onVerified={handleMFAVerified}
-          onCancel={handleMFACancel}
-        />
+        <MFAVerification profileId={user.id} onVerified={handleMFAVerified} onCancel={handleMFACancel} />
       </div>
     );
   }

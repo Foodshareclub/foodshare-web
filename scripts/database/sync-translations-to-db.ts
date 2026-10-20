@@ -7,12 +7,11 @@
  *
  * Usage:
  *   bun run sync-translations
- *   tsx scripts/sync-translations-to-db.ts
+ *   bun scripts/sync-translations-to-db.ts
  */
 
+import { join } from "bun:path";
 import { createClient } from "@supabase/supabase-js";
-import { readFileSync, existsSync } from "fs";
-import { join } from "path";
 import { config } from "dotenv";
 
 // Load environment variables
@@ -56,17 +55,17 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 /**
  * Load messages from compiled .mjs file
  */
-function loadMessages(locale: string): Record<string, string> | null {
+async function loadMessages(locale: string): Promise<Record<string, string> | null> {
   const messagesPath = join(LOCALES_DIR, locale, "messages.mjs");
 
-  if (!existsSync(messagesPath)) {
+  if (!(await Bun.file(messagesPath).exists())) {
     console.warn(`⚠️  Messages file not found: ${messagesPath}`);
     return null;
   }
 
   try {
     // Read the .mjs file
-    const content = readFileSync(messagesPath, "utf-8");
+    const content = await Bun.file(messagesPath).text();
 
     // Extract the messages object using regex
     // Format: export const messages = { ... };
@@ -89,9 +88,11 @@ function loadMessages(locale: string): Record<string, string> | null {
 /**
  * Get current version from package.json
  */
-function getVersion(): string {
+async function getVersion(): Promise<string> {
   try {
-    const packageJson = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf-8"));
+    const packageJson = (await Bun.file(join(process.cwd(), "package.json")).json()) as {
+      version?: string;
+    };
     return packageJson.version || "1.0.0";
   } catch {
     return "1.0.0";
@@ -104,7 +105,7 @@ function getVersion(): string {
 async function syncTranslations() {
   console.log("🌍 Syncing translations to database...\n");
 
-  const version = getVersion();
+  const version = await getVersion();
   const timestamp = new Date().toISOString();
 
   let successCount = 0;
@@ -116,10 +117,10 @@ async function syncTranslations() {
       console.log(`📦 Processing ${locale}...`);
 
       // Load messages
-      const messages = loadMessages(locale);
+      const messages = await loadMessages(locale);
 
       if (!messages) {
-        console.log(`   ⏭️  Skipped (no messages file)\n`);
+        console.log("   ⏭️  Skipped (no messages file)\n");
         skippedCount++;
         continue;
       }
@@ -137,7 +138,7 @@ async function syncTranslations() {
         },
         {
           onConflict: "locale",
-        }
+        },
       );
 
       if (error) {
@@ -146,10 +147,10 @@ async function syncTranslations() {
         continue;
       }
 
-      console.log(`   ✅ Synced successfully\n`);
+      console.log("   ✅ Synced successfully\n");
       successCount++;
     } catch (error) {
-      console.error(`   ❌ Unexpected error:`, error, "\n");
+      console.error("   ❌ Unexpected error:", error, "\n");
       errorCount++;
     }
   }

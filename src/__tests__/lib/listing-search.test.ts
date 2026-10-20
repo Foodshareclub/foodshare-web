@@ -1,15 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import {
-  buildListingSearchUrl,
-  parseSearchLocation,
-  parseSearchRadius,
-} from "@/lib/listing-search";
+import { buildListingSearchUrl, parseSearchLocation, parseSearchRadius } from "@/lib/listing-search";
 
 describe("listing search navigation", () => {
   test("all categories uses the existing food route and preserves a literal keyword", () => {
     const url = new URL(
       buildListingSearchUrl({ category: "all", term: "  Banana & bread  ", radius: null }),
-      "https://example.test"
+      "https://example.test",
     );
     expect(url.pathname).toBe("/food");
     expect(url.searchParams.get("type")).toBe("all");
@@ -25,7 +21,7 @@ describe("listing search navigation", () => {
         radius: 2000,
         location: { lat: 0, lng: -122.4 },
       }),
-      "https://example.test"
+      "https://example.test",
     );
     expect(parseSearchLocation(url.searchParams)).toEqual({ lat: 0, lng: -122.4 });
     expect(url.searchParams.get("radius")).toBe("2000");
@@ -41,7 +37,7 @@ describe("listing search navigation", () => {
         radius: null,
         location: { lat: 1, lng: 2 },
       }),
-      "https://example.test"
+      "https://example.test",
     );
     expect(url.searchParams.has("lat")).toBe(false);
     expect(url.searchParams.has("key_word")).toBe(false);
@@ -55,21 +51,13 @@ describe("listing search navigation", () => {
         term: "Waste",
         radius: 1000,
         location: { lat: 1, lng: 2 },
-      })
+      }),
     ).toBe("/challenge?key_word=Waste");
-    expect(buildListingSearchUrl({ category: "business", term: "", radius: null })).toBe(
-      "/organisation?distance=any"
-    );
+    expect(buildListingSearchUrl({ category: "business", term: "", radius: null })).toBe("/organisation?distance=any");
   });
 
   test("rejects malformed coordinates and clamps finite distances", () => {
-    for (const value of [
-      "lat=1x&lng=2",
-      "lat=Infinity&lng=2",
-      "lat=91&lng=2",
-      "lat=&lng=2",
-      "lat=1&lng=181",
-    ]) {
+    for (const value of ["lat=1x&lng=2", "lat=Infinity&lng=2", "lat=91&lng=2", "lat=&lng=2", "lat=1&lng=181"]) {
       expect(parseSearchLocation(new URLSearchParams(value))).toBeNull();
     }
     expect(parseSearchRadius("invalid")).toBe(5000);

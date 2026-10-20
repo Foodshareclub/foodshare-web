@@ -9,26 +9,26 @@
  * - Edge Function routing (when enabled via feature flag)
  */
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
-import { invalidateTag } from "@/lib/data/cache-invalidation";
-import { type UserAddress } from "@/lib/data/profiles";
-import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
-import { createActionLogger } from "@/lib/structured-logger";
 import { trackEvent } from "@/app/actions/analytics";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import type { UserAddress } from "@/lib/data/profiles";
+import { type ServerActionResult, serverActionError, successVoid } from "@/lib/errors";
+import { createActionLogger } from "@/lib/structured-logger";
+import { createClient } from "@/lib/supabase/server";
 import type { ProfileUpdate } from "@/types";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 // Edge Function API imports
 import {
+  deleteAvatarAPI,
+  fileToAvatarInput,
+  formDataToAddressInput,
+  formDataToProfileInput,
+  updateAddressAPI,
   updateProfileAPI,
   uploadAvatarAPI,
-  deleteAvatarAPI,
-  updateAddressAPI,
-  formDataToProfileInput,
-  formDataToAddressInput,
-  fileToAvatarInput,
 } from "@/lib/api/profile";
 
 // =============================================================================
@@ -63,6 +63,10 @@ export interface ProfileResult {
 
 export interface AvatarUploadResult {
   url: string;
+}
+
+interface StorageObject {
+  name: string;
 }
 
 // NOTE: UserAddress type and getCurrentProfile/getUserAddress READ functions
@@ -105,9 +109,7 @@ async function verifyAuth() {
 /**
  * Update profile
  */
-export async function updateProfile(
-  formData: FormData
-): Promise<ServerActionResult<ProfileResult>> {
+export async function updateProfile(formData: FormData): Promise<ServerActionResult<ProfileResult>> {
   const logger = await createActionLogger("updateProfile");
 
   try {
@@ -208,9 +210,7 @@ export async function updateProfile(
 /**
  * Upload avatar image
  */
-export async function uploadAvatar(
-  formData: FormData
-): Promise<ServerActionResult<AvatarUploadResult>> {
+export async function uploadAvatar(formData: FormData): Promise<ServerActionResult<AvatarUploadResult>> {
   try {
     const { supabase, user, error: authError } = await verifyAuth();
     if (authError || !supabase || !user) {
@@ -224,10 +224,7 @@ export async function uploadAvatar(
 
     // Validate file type
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      return serverActionError(
-        "Invalid file type. Allowed: JPEG, PNG, WebP, GIF",
-        "VALIDATION_ERROR"
-      );
+      return serverActionError("Invalid file type. Allowed: JPEG, PNG, WebP, GIF", "VALIDATION_ERROR");
     }
 
     // Validate file size
@@ -262,9 +259,7 @@ export async function uploadAvatar(
     const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const fileName = `${user.id}/avatar.${fileExt}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(fileName, file, { upsert: true });
+    const { error: uploadError } = await supabase.storage.from("avatars").upload(fileName, file, { upsert: true });
 
     if (uploadError) {
       console.error("Failed to upload avatar:", uploadError);
@@ -308,9 +303,7 @@ export async function uploadAvatar(
  * Upload profile avatar (alias for uploadAvatar with different form field name)
  * Expects formData with 'file' and 'userId' fields
  */
-export async function uploadProfileAvatar(
-  formData: FormData
-): Promise<ServerActionResult<AvatarUploadResult>> {
+export async function uploadProfileAvatar(formData: FormData): Promise<ServerActionResult<AvatarUploadResult>> {
   try {
     const { supabase, user, error: authError } = await verifyAuth();
     if (authError || !supabase || !user) {
@@ -331,10 +324,7 @@ export async function uploadProfileAvatar(
 
     // Validate file type
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      return serverActionError(
-        "Invalid file type. Allowed: JPEG, PNG, WebP, GIF",
-        "VALIDATION_ERROR"
-      );
+      return serverActionError("Invalid file type. Allowed: JPEG, PNG, WebP, GIF", "VALIDATION_ERROR");
     }
 
     // Validate file size
@@ -369,9 +359,7 @@ export async function uploadProfileAvatar(
     const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const fileName = `${user.id}/avatar.${fileExt}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("profiles")
-      .upload(fileName, file, { upsert: true });
+    const { error: uploadError } = await supabase.storage.from("profiles").upload(fileName, file, { upsert: true });
 
     if (uploadError) {
       console.error("Failed to upload profile avatar:", uploadError);
@@ -441,7 +429,7 @@ export async function deleteAvatar(): Promise<ServerActionResult<void>> {
     const { data: files } = await supabase.storage.from("avatars").list(user.id);
 
     if (files && files.length > 0) {
-      const filePaths = files.map((f: any) => `${user.id}/${f.name}`);
+      const filePaths = (files as StorageObject[]).map((f) => `${user.id}/${f.name}`);
       await supabase.storage.from("avatars").remove(filePaths);
     }
 
@@ -449,7 +437,7 @@ export async function deleteAvatar(): Promise<ServerActionResult<void>> {
     const { data: profileFiles } = await supabase.storage.from("profiles").list(user.id);
 
     if (profileFiles && profileFiles.length > 0) {
-      const profilePaths = profileFiles.map((f: any) => `${user.id}/${f.name}`);
+      const profilePaths = (profileFiles as StorageObject[]).map((f) => `${user.id}/${f.name}`);
       await supabase.storage.from("profiles").remove(profilePaths);
     }
 
@@ -479,9 +467,7 @@ export async function deleteAvatar(): Promise<ServerActionResult<void>> {
 /**
  * Update user's address
  */
-export async function updateUserAddress(
-  formData: FormData
-): Promise<ServerActionResult<UserAddress>> {
+export async function updateUserAddress(formData: FormData): Promise<ServerActionResult<UserAddress>> {
   try {
     const { supabase, user, error: authError } = await verifyAuth();
     if (authError || !supabase || !user) {
@@ -542,8 +528,8 @@ export async function updateUserAddress(
     const lat = formData.get("lat");
     const long = formData.get("long");
     if (lat && long) {
-      const parsedLat = parseFloat(lat as string);
-      const parsedLong = parseFloat(long as string);
+      const parsedLat = Number.parseFloat(lat as string);
+      const parsedLong = Number.parseFloat(long as string);
       // Only assign if both are valid numbers
       if (!Number.isNaN(parsedLat) && !Number.isNaN(parsedLong)) {
         Object.assign(addressData, {

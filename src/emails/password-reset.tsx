@@ -5,15 +5,8 @@
  * Uses Supabase Auth's {{ .ConfirmationURL }} template variable.
  */
 
-import { Text, Section, Link } from "@react-email/components";
-import {
-  EmailLayout,
-  EmailCard,
-  EmailButton,
-  EmailInfoBox,
-  colors,
-  styles,
-} from "./components/base";
+import { Link, Section, Text } from "@react-email/components";
+import { EmailButton, EmailCard, EmailInfoBox, EmailLayout, colors, styles } from "./components/base";
 
 interface PasswordResetEmailProps {
   confirmationUrl?: string;
@@ -34,8 +27,8 @@ export function PasswordResetEmail({
         <Text style={styles.paragraph}>Hi there! 👋</Text>
         <Text style={styles.paragraph}>
           We received a request to reset your password for your{" "}
-          <strong style={{ color: colors.primary }}>Foodshare</strong> account. Click the button
-          below to create a new password:
+          <strong style={{ color: colors.primary }}>Foodshare</strong> account. Click the button below to create a new
+          password:
         </Text>
 
         <EmailButton href={confirmationUrl}>🔑 Reset Password</EmailButton>
@@ -44,8 +37,8 @@ export function PasswordResetEmail({
         <EmailInfoBox color="#ffc107" bgColor="#fff3cd">
           <strong style={{ color: "#856404" }}>⚠️ Security Notice</strong>
           <br />
-          This link expires in 1 hour. If you didn&apos;t request this reset, please ignore this
-          email or contact support if you&apos;re concerned.
+          This link expires in 1 hour. If you didn&apos;t request this reset, please ignore this email or contact
+          support if you&apos;re concerned.
         </EmailInfoBox>
       </EmailCard>
 

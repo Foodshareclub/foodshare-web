@@ -5,17 +5,8 @@
 
 import { CRMDashboard } from "@/app/admin/crm/components/CRMDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  getAdminCRMStatsCached,
-  getAdminCustomersCached,
-  getCustomerTagsCached,
-} from "@/lib/data/crm";
-import {
-  getAutomationFlows,
-  getCampaigns,
-  getNewsletterStats,
-  getSegments,
-} from "@/lib/data/newsletter";
+import { getAdminCRMStatsCached, getAdminCustomersCached, getCustomerTagsCached } from "@/lib/data/crm";
+import { getAutomationFlows, getCampaigns, getNewsletterStats, getSegments } from "@/lib/data/newsletter";
 import { isPrerenderInterruption } from "@/lib/errors";
 import { Suspense } from "react";
 
@@ -68,16 +59,15 @@ const defaultNewsletterStats = {
 
 async function fetchCRMData() {
   try {
-    const [tags, customers, crmStats, campaigns, segments, automations, newsletterStats] =
-      await Promise.all([
-        getCustomerTagsCached(),
-        getAdminCustomersCached(100),
-        getAdminCRMStatsCached(),
-        getCampaigns(10),
-        getSegments(),
-        getAutomationFlows(),
-        getNewsletterStats(),
-      ]);
+    const [tags, customers, crmStats, campaigns, segments, automations, newsletterStats] = await Promise.all([
+      getCustomerTagsCached(),
+      getAdminCustomersCached(100),
+      getAdminCRMStatsCached(),
+      getCampaigns(10),
+      getSegments(),
+      getAutomationFlows(),
+      getNewsletterStats(),
+    ]);
     return { tags, customers, crmStats, campaigns, segments, automations, newsletterStats };
   } catch (error) {
     if (isPrerenderInterruption(error)) {
@@ -97,8 +87,7 @@ async function fetchCRMData() {
 }
 
 async function AdminDashboardData() {
-  const { tags, customers, crmStats, campaigns, segments, automations, newsletterStats } =
-    await fetchCRMData();
+  const { tags, customers, crmStats, campaigns, segments, automations, newsletterStats } = await fetchCRMData();
 
   // Ensure data is serializable to prevent "Server Components render" errors
   // This handles Date objects, undefined values, and other non-serializable types
@@ -111,7 +100,7 @@ async function AdminDashboardData() {
       segments,
       automations,
       newsletterStats,
-    })
+    }),
   );
 
   return <CRMDashboard {...sanitizedProps} />;

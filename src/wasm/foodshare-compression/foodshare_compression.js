@@ -169,8 +169,7 @@ function getDataViewMemory0() {
   if (
     cachedDataViewMemory0 === null ||
     cachedDataViewMemory0.buffer.detached === true ||
-    (cachedDataViewMemory0.buffer.detached === undefined &&
-      cachedDataViewMemory0.buffer !== wasm.memory.buffer)
+    (cachedDataViewMemory0.buffer.detached === undefined && cachedDataViewMemory0.buffer !== wasm.memory.buffer)
   ) {
     cachedDataViewMemory0 = new DataView(wasm.memory.buffer);
   }
@@ -196,7 +195,7 @@ function passArray8ToWasm0(arg, malloc) {
   return ptr;
 }
 
-let cachedTextDecoder = new TextDecoder("utf-8", { ignoreBOM: true, fatal: true });
+const cachedTextDecoder = new TextDecoder("utf-8", { ignoreBOM: true, fatal: true });
 cachedTextDecoder.decode();
 function decodeText(ptr, len) {
   return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
@@ -211,15 +210,7 @@ function __resolveWasmPath(filename) {
     path.join(__dirname, filename),
     path.join(process.cwd(), "src", "wasm", "foodshare-compression", filename),
     path.join(process.cwd(), "foodshare-web", "src", "wasm", "foodshare-compression", filename),
-    path.join(
-      process.cwd(),
-      "..",
-      "foodshare-web",
-      "src",
-      "wasm",
-      "foodshare-compression",
-      filename
-    ),
+    path.join(process.cwd(), "..", "foodshare-web", "src", "wasm", "foodshare-compression", filename),
   ];
   for (const c of candidates) {
     if (fs.existsSync(/*turbopackIgnore: true*/ c)) return c;
@@ -229,5 +220,5 @@ function __resolveWasmPath(filename) {
 const wasmPath = __resolveWasmPath("foodshare_compression_bg.wasm");
 const wasmBytes = require("fs").readFileSync(/*turbopackIgnore: true*/ wasmPath);
 const wasmModule = new WebAssembly.Module(wasmBytes);
-let wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
-let wasm = wasmInstance.exports;
+const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+const wasm = wasmInstance.exports;

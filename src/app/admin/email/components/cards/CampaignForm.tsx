@@ -4,12 +4,12 @@
  * CampaignForm - Create/edit campaign dialog form
  */
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { DialogFooter } from "@/components/ui/dialog";
+import { useState } from "react";
 
 interface CampaignFormProps {
   onClose: () => void;

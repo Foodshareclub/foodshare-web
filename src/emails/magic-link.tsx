@@ -5,15 +5,8 @@
  * Uses Supabase Auth's {{ .ConfirmationURL }} template variable.
  */
 
-import { Text, Section } from "@react-email/components";
-import {
-  EmailLayout,
-  EmailCard,
-  EmailButton,
-  EmailInfoBox,
-  colors,
-  styles,
-} from "./components/base";
+import { Section, Text } from "@react-email/components";
+import { EmailButton, EmailCard, EmailInfoBox, EmailLayout, colors, styles } from "./components/base";
 
 interface MagicLinkEmailProps {
   confirmationUrl?: string;
@@ -70,8 +63,7 @@ export function MagicLinkEmail({
         <Text style={{ margin: 0, fontSize: "14px", lineHeight: "1.6", color: "#999999" }}>
           <strong style={{ color: "#666666" }}>🔒 Didn&apos;t request this?</strong>
           <br />
-          If you didn&apos;t try to sign in, you can safely ignore this email. Your account is
-          secure.
+          If you didn&apos;t try to sign in, you can safely ignore this email. Your account is secure.
         </Text>
       </Section>
     </EmailLayout>

@@ -13,57 +13,67 @@
  * - Smooth animations
  */
 
-import { useState, useMemo, useTransition, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Globe,
-  Search,
-  MapPin,
-  Check,
-  ChevronRight,
-  Navigation,
-  Sparkles,
-  Map,
-  Compass,
-  Ruler,
-  Zap,
-  TrendingUp,
-} from "lucide-react";
-import { useLocale } from "next-intl";
 import { useChangeLocale } from "@/app/providers";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Glass } from "@/components/ui/glass";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Glass } from "@/components/ui/glass";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { useLocationFilter } from "@/hooks/useLocationFilter";
+import { type Locale, getBrowserLocale, localeMetadata, locales } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/zustand/useUIStore";
-import { useLocationFilter } from "@/hooks/useLocationFilter";
-import { locales, localeMetadata, type Locale, getBrowserLocale } from "@/i18n/config";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Check,
+  ChevronRight,
+  Compass,
+  Globe,
+  Map as MapIcon,
+  MapPin,
+  Navigation,
+  Ruler,
+  Search,
+  Sparkles,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 
-const RADIUS_PRESETS = [
-  { km: 1, label: "My street", icon: "🏘️", description: "Immediate area" },
-  { km: 5, label: "My neighborhood", icon: "🏙️", description: "Walking distance" },
-  { km: 10, label: "My city", icon: "🌆", description: "Cycling distance" },
-  { km: 25, label: "Nearby cities", icon: "🗺️", description: "Short drive" },
-  { km: 50, label: "My region", icon: "🌍", description: "Road trip" },
-  { km: 100, label: "Wide area", icon: "🌎", description: "Day trip" },
-];
+/**
+ * Radius presets, by key rather than by label.
+ *
+ * The label and description were English literals in a module-level constant,
+ * which is why this page — the one a user visits *to choose a language* —
+ * rendered at 0% in every locale but English. The keys resolve through
+ * `languageSettings.presets.<km>`.
+ */
+const RADIUS_PRESETS = [1, 5, 10, 25, 50, 100].map((km) => ({ km, icon: RADIUS_PRESET_ICONS[km] }));
+
+const RADIUS_PRESET_ICONS: Record<number, string> = {
+  1: "🏘️",
+  5: "🏙️",
+  10: "🌆",
+  25: "🗺️",
+  50: "🌍",
+  100: "🌎",
+};
 
 const POPULAR_LOCALES: Locale[] = ["en", "es", "fr", "de", "pt", "zh", "ja", "ar"];
 
+/** Regions, named by key. See RADIUS_PRESETS for why. */
 const REGIONS: Array<{
-  id: string;
-  name: string;
+  id: "global" | "europe" | "asia" | "mena";
   locales: Locale[];
 }> = [
-  { id: "global", name: "Global", locales: ["en", "es", "fr", "pt"] },
-  { id: "europe", name: "Europe", locales: ["cs", "de", "ru", "uk", "it", "pl", "nl", "sv"] },
-  { id: "asia", name: "Asia", locales: ["zh", "hi", "ja", "ko", "vi", "id", "th"] },
-  { id: "mena", name: "Middle East & North Africa", locales: ["ar", "tr"] },
+  { id: "global", locales: ["en", "es", "fr", "pt"] },
+  { id: "europe", locales: ["cs", "de", "ru", "uk", "it", "pl", "nl", "sv"] },
+  { id: "asia", locales: ["zh", "hi", "ja", "ko", "vi", "id", "th"] },
+  { id: "mena", locales: ["ar", "tr"] },
 ];
 
 // Conversion helpers
@@ -82,14 +92,20 @@ function calculateArea(radiusKm: number): string {
   const area = Math.PI * radiusKm * radiusKm;
   if (area < 1) {
     return `${Math.round(area * 100) / 100} km²`;
-  } else if (area < 10) {
-    return `${Math.round(area * 10) / 10} km²`;
-  } else {
-    return `${Math.round(area)} km²`;
   }
+  if (area < 10) {
+    return `${Math.round(area * 10) / 10} km²`;
+  }
+  return `${Math.round(area)} km²`;
 }
 
 export function LanguageRegionClient() {
+  // This page was 100% untranslated: every heading, label, placeholder, tooltip
+  // and preset name was an English literal. It is also the page a user opens in
+  // order to *choose* a language, so a non-English speaker arriving there was
+  // told to pick a language in English.
+  const t = useTranslations("languageSettings");
+
   const nextIntlLocale = useLocale() as Locale;
   const { changeLocale, locale: contextLocale } = useChangeLocale();
   const currentLocale = contextLocale || nextIntlLocale;
@@ -99,13 +115,11 @@ export function LanguageRegionClient() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
   const { geoDistance, setGeoDistance, distanceUnit, setDistanceUnit } = useUIStore();
-  const { radiusMeters, setRadiusKm, isEnabled, requestLocation, clearLocation } =
-    useLocationFilter();
+  const { radiusMeters, setRadiusKm, isEnabled, requestLocation, clearLocation } = useLocationFilter();
 
   // Convert meters to current unit
   const currentRadiusKm = Math.round((geoDistance ?? radiusMeters) / 1000);
-  const currentRadiusDisplay =
-    distanceUnit === "miles" ? kmToMiles(currentRadiusKm) : currentRadiusKm;
+  const currentRadiusDisplay = distanceUnit === "miles" ? kmToMiles(currentRadiusKm) : currentRadiusKm;
   const [localRadius, setLocalRadius] = useState(currentRadiusDisplay);
 
   // Detect browser language
@@ -170,7 +184,7 @@ export function LanguageRegionClient() {
         router.refresh();
       });
     },
-    [changeLocale, currentLocale, router]
+    [changeLocale, currentLocale, router],
   );
 
   const handleRadiusChange = useCallback(
@@ -183,7 +197,7 @@ export function LanguageRegionClient() {
       setGeoDistance(radiusInKm * 1000);
       setRadiusKm(radiusInKm);
     },
-    [distanceUnit, setGeoDistance, setRadiusKm]
+    [distanceUnit, setGeoDistance, setRadiusKm],
   );
 
   const handlePresetClick = useCallback(
@@ -193,7 +207,7 @@ export function LanguageRegionClient() {
       setGeoDistance(km * 1000);
       setRadiusKm(km);
     },
-    [distanceUnit, setGeoDistance, setRadiusKm]
+    [distanceUnit, setGeoDistance, setRadiusKm],
   );
 
   const handleUnitToggle = useCallback(
@@ -205,7 +219,7 @@ export function LanguageRegionClient() {
       const newDisplay = newUnit === "miles" ? kmToMiles(currentRadiusKm) : currentRadiusKm;
       setLocalRadius(newDisplay);
     },
-    [currentRadiusKm, setDistanceUnit]
+    [currentRadiusKm, setDistanceUnit],
   );
 
   const handleAutoDetect = useCallback(() => {
@@ -228,8 +242,8 @@ export function LanguageRegionClient() {
     <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
       {/* Decorative background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-purple-500/8 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-1/3 -left-20 w-72 h-72 bg-blue-500/8 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute -top-40 -end-40 w-96 h-96 bg-purple-500/8 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/3 -start-20 w-72 h-72 bg-blue-500/8 rounded-full blur-3xl animate-pulse delay-1000" />
       </div>
 
       <div className="container mx-auto px-4 lg:px-8 py-6 lg:py-10 max-w-4xl">
@@ -245,10 +259,8 @@ export function LanguageRegionClient() {
               <Globe className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Language & Region</h1>
-              <p className="text-sm text-muted-foreground">
-                Customize your language and location preferences
-              </p>
+              <h1 className="text-2xl lg:text-3xl font-bold text-foreground">{t("title")}</h1>
+              <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
             </div>
           </div>
 
@@ -269,8 +281,8 @@ export function LanguageRegionClient() {
             <Glass variant="prominent" className="p-6 lg:p-8">
               <div className="flex items-center gap-2 mb-4">
                 <Globe className="w-5 h-5 text-purple-500" />
-                <h2 className="text-lg font-semibold">Language</h2>
-                <Badge variant="secondary" className="ml-auto">
+                <h2 className="text-lg font-semibold">{t("language")}</h2>
+                <Badge variant="secondary" className="ms-auto">
                   {locales.length} languages
                 </Badge>
               </div>
@@ -288,12 +300,8 @@ export function LanguageRegionClient() {
                   <div className="flex items-center gap-3">
                     <Zap className="w-5 h-5 text-blue-500 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">
-                        Detected: {localeMetadata[detectedLocale].nativeName}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Based on your browser settings
-                      </p>
+                      <p className="text-sm font-medium">Detected: {localeMetadata[detectedLocale].nativeName}</p>
+                      <p className="text-xs text-muted-foreground">{t("basedOnBrowser")}</p>
                     </div>
                     <Button size="sm" onClick={handleAutoDetect} className="flex-shrink-0">
                       Switch
@@ -305,7 +313,7 @@ export function LanguageRegionClient() {
               {/* Popular languages */}
               <div className="mb-6">
                 <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">
-                  Popular
+                  {t("popular")}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {POPULAR_LOCALES.map((locale) => {
@@ -332,14 +340,14 @@ export function LanguageRegionClient() {
               {/* Search and region filter */}
               <div className="flex flex-col sm:flex-row gap-3 mb-6">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="language-search"
                     type="text"
-                    placeholder="Search languages..."
+                    placeholder={t("searchPlaceholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 h-10"
+                    className="ps-9 h-10"
                   />
                 </div>
                 <div className="flex gap-2 overflow-x-auto">
@@ -349,7 +357,7 @@ export function LanguageRegionClient() {
                     onClick={() => setSelectedRegion(null)}
                     className="whitespace-nowrap"
                   >
-                    All regions
+                    {t("allRegions")}
                   </Button>
                   {REGIONS.map((region) => (
                     <Button
@@ -359,14 +367,14 @@ export function LanguageRegionClient() {
                       onClick={() => setSelectedRegion(region.id)}
                       className="whitespace-nowrap"
                     >
-                      {region.name}
+                      {t(`regions.${region.id}`)}
                     </Button>
                   ))}
                 </div>
               </div>
 
               {/* Language list */}
-              <div className="grid gap-2 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
+              <div className="grid gap-2 max-h-[400px] overflow-y-auto pe-2 scrollbar-thin">
                 <AnimatePresence mode="popLayout">
                   {filteredLocales.map((locale, index) => {
                     const meta = localeMetadata[locale];
@@ -388,19 +396,14 @@ export function LanguageRegionClient() {
                             ? "bg-primary/10 border-primary/50 shadow-sm"
                             : "bg-card/50 hover:bg-card hover:shadow-md hover:-translate-y-0.5",
                           isPending && "opacity-50 cursor-wait",
-                          meta.direction === "rtl" && "flex-row-reverse"
+                          meta.direction === "rtl" && "flex-row-reverse",
                         )}
                       >
                         {/* Flag */}
                         <div className="text-3xl">{meta.flag}</div>
 
                         {/* Language info */}
-                        <div
-                          className={cn(
-                            "flex-1 text-left",
-                            meta.direction === "rtl" && "text-right"
-                          )}
-                        >
+                        <div className={cn("flex-1 text-start", meta.direction === "rtl" && "text-end")}>
                           <div className="font-medium text-foreground flex items-center gap-2">
                             <span>{meta.nativeName}</span>
                             {meta.direction === "rtl" && (
@@ -434,7 +437,7 @@ export function LanguageRegionClient() {
 
               {filteredLocales.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">No languages found</p>
+                  <p className="text-muted-foreground">{t("noLanguagesFound")}</p>
                 </div>
               )}
             </Glass>
@@ -448,16 +451,13 @@ export function LanguageRegionClient() {
           >
             <Glass variant="prominent" className="p-6 lg:p-8">
               <div className="flex items-center gap-2 mb-4">
-                <Map className="w-5 h-5 text-blue-500" />
-                <h2 className="text-lg font-semibold">Search Radius</h2>
-                <Badge variant="secondary" className="ml-auto">
+                <MapIcon className="w-5 h-5 text-blue-500" />
+                <h2 className="text-lg font-semibold">{t("searchRadius")}</h2>
+                <Badge variant="secondary" className="ms-auto">
                   {localRadius} {distanceUnit}
                 </Badge>
               </div>
-              <p className="text-sm text-muted-foreground mb-6">
-                Set your default search radius for finding nearby food items. You can always adjust
-                it when browsing.
-              </p>
+              <p className="text-sm text-muted-foreground mb-6">{t("searchRadiusDescription")}</p>
 
               {/* Unit toggle */}
               <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 mb-6">
@@ -465,25 +465,17 @@ export function LanguageRegionClient() {
                   <Ruler className="w-5 h-5 text-muted-foreground" />
                   <div>
                     <Label htmlFor="unit-toggle" className="font-medium cursor-pointer">
-                      Distance units
+                      {t("distanceUnits")}
                     </Label>
                     <p className="text-xs text-muted-foreground">
-                      {distanceUnit === "km" ? "Kilometers" : "Miles"}
+                      {distanceUnit === "km" ? t("kilometers") : t("miles")}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={cn("text-sm", distanceUnit === "km" && "font-semibold")}>
-                    km
-                  </span>
-                  <Switch
-                    id="unit-toggle"
-                    checked={distanceUnit === "miles"}
-                    onCheckedChange={handleUnitToggle}
-                  />
-                  <span className={cn("text-sm", distanceUnit === "miles" && "font-semibold")}>
-                    mi
-                  </span>
+                  <span className={cn("text-sm", distanceUnit === "km" && "font-semibold")}>km</span>
+                  <Switch id="unit-toggle" checked={distanceUnit === "miles"} onCheckedChange={handleUnitToggle} />
+                  <span className={cn("text-sm", distanceUnit === "miles" && "font-semibold")}>mi</span>
                 </div>
               </div>
 
@@ -492,14 +484,14 @@ export function LanguageRegionClient() {
                 <div className="p-3 rounded-lg bg-muted/30">
                   <div className="flex items-center gap-2 mb-1">
                     <Compass className="w-4 h-4 text-blue-500" />
-                    <span className="text-xs font-medium">Coverage</span>
+                    <span className="text-xs font-medium">{t("coverage")}</span>
                   </div>
                   <p className="text-lg font-semibold">{coverageArea}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/30">
                   <div className="flex items-center gap-2 mb-1">
                     <TrendingUp className="w-4 h-4 text-emerald-500" />
-                    <span className="text-xs font-medium">Radius</span>
+                    <span className="text-xs font-medium">{t("radius")}</span>
                   </div>
                   <p className="text-lg font-semibold">
                     {localRadius} {distanceUnit}
@@ -534,8 +526,7 @@ export function LanguageRegionClient() {
                 {/* Preset buttons */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {RADIUS_PRESETS.map((preset) => {
-                    const displayValue =
-                      distanceUnit === "miles" ? kmToMiles(preset.km) : preset.km;
+                    const displayValue = distanceUnit === "miles" ? kmToMiles(preset.km) : preset.km;
                     const isActive = Math.abs(localRadius - displayValue) < 0.1;
 
                     return (
@@ -553,7 +544,10 @@ export function LanguageRegionClient() {
                           </span>
                         </div>
                         <span className="text-xs text-muted-foreground font-normal">
-                          {preset.label}
+                          {t(`presets.${preset.km}.label`)}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground/80 font-normal">
+                          {t(`presets.${preset.km}.description`)}
                         </span>
                       </Button>
                     );
@@ -572,26 +566,24 @@ export function LanguageRegionClient() {
             <Glass variant="subtle" className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Navigation className="w-5 h-5 text-emerald-500" />
-                <h2 className="text-lg font-semibold">Location Services</h2>
+                <h2 className="text-lg font-semibold">{t("locationServices")}</h2>
               </div>
-              <p className="text-sm text-muted-foreground mb-6">
-                Enable location services to find food near you automatically.
-              </p>
+              <p className="text-sm text-muted-foreground mb-6">{t("locationServicesDescription")}</p>
 
               <div className="flex flex-col sm:flex-row gap-3">
                 {!isEnabled ? (
                   <Button onClick={requestLocation} variant="default" size="sm" className="gap-2">
                     <MapPin className="w-4 h-4" />
-                    Enable location
+                    {t("enableLocation")}
                   </Button>
                 ) : (
                   <>
                     <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
                       <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      Location enabled
+                      {t("locationEnabled")}
                     </div>
                     <Button onClick={clearLocation} variant="outline" size="sm" className="gap-2">
-                      Clear location data
+                      {t("clearLocationData")}
                     </Button>
                   </>
                 )}
@@ -609,25 +601,23 @@ export function LanguageRegionClient() {
               <div className="flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-amber-500 mt-0.5" />
                 <div className="flex-1">
-                  <h3 className="font-medium text-sm mb-2">Pro tips</h3>
+                  <h3 className="font-medium text-sm mb-2">{t("proTips")}</h3>
                   <ul className="text-xs text-muted-foreground space-y-1.5">
                     <li className="flex items-start gap-2">
                       <span className="text-primary">•</span>
-                      <span>
-                        Your radius and unit settings are saved and apply across all pages
-                      </span>
+                      <span>{t("tipSettingsSaved")}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-primary">•</span>
-                      <span>Language changes take effect immediately without reload</span>
+                      <span>{t("tipLanguageImmediate")}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-primary">•</span>
-                      <span>Location data is never stored on our servers</span>
+                      <span>{t("tipLocationNotStored")}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-primary">•</span>
-                      <span>Use ⌘K to quickly search for languages</span>
+                      <span>{t("tipSearchShortcut")}</span>
                     </li>
                   </ul>
                 </div>

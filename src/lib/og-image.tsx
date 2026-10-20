@@ -46,20 +46,13 @@ const emojis = {
  * }
  * ```
  */
-export function generateOGImage({
-  title,
-  subtitle,
-  emoji,
-  type = "default",
-  imageUrl,
-}: OGImageProps): ImageResponse {
+export function generateOGImage({ title, subtitle, emoji, type = "default", imageUrl }: OGImageProps): ImageResponse {
   const gradient = gradients[type];
   const defaultEmoji = emoji || emojis[type];
 
   // Truncate title if too long
   const displayTitle = title.length > 50 ? `${title.slice(0, 47)}...` : title;
-  const displaySubtitle =
-    subtitle && subtitle.length > 100 ? `${subtitle.slice(0, 97)}...` : subtitle;
+  const displaySubtitle = subtitle && subtitle.length > 100 ? `${subtitle.slice(0, 97)}...` : subtitle;
 
   return new ImageResponse(
     <div
@@ -189,6 +182,6 @@ export function generateOGImage({
         </span>
       </div>
     </div>,
-    { ...ogImageSize }
+    { ...ogImageSize },
   );
 }

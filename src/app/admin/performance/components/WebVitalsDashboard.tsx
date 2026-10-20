@@ -6,14 +6,14 @@
  * Part of Phase 5: Observability & Architecture Hardening
  */
 
-import { useQuery } from "@tanstack/react-query";
-import { lazy, Suspense } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WEB_VITALS_THRESHOLDS } from "@/lib/config";
+import { createClient } from "@/lib/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { Suspense, lazy } from "react";
 
 // Lazy load Recharts for code splitting
 const LazyLineChart = lazy(() => import("recharts").then((mod) => ({ default: mod.LineChart })));
@@ -21,9 +21,7 @@ const LazyLine = lazy(() => import("recharts").then((mod) => ({ default: mod.Lin
 const LazyXAxis = lazy(() => import("recharts").then((mod) => ({ default: mod.XAxis })));
 const LazyYAxis = lazy(() => import("recharts").then((mod) => ({ default: mod.YAxis })));
 const LazyTooltip = lazy(() => import("recharts").then((mod) => ({ default: mod.Tooltip })));
-const LazyResponsiveContainer = lazy(() =>
-  import("recharts").then((mod) => ({ default: mod.ResponsiveContainer }))
-);
+const LazyResponsiveContainer = lazy(() => import("recharts").then((mod) => ({ default: mod.ResponsiveContainer })));
 
 interface WebVitalsSummary {
   metric_name: string;
@@ -92,7 +90,7 @@ function formatValue(name: string, value: number): string {
 // Data Fetching Hooks
 // =============================================================================
 
-function useWebVitalsSummary(hours: number = 24) {
+function useWebVitalsSummary(hours = 24) {
   const supabase = createClient();
 
   return useQuery({
@@ -109,7 +107,7 @@ function useWebVitalsSummary(hours: number = 24) {
   });
 }
 
-function useWebVitalsByPage(hours: number = 24) {
+function useWebVitalsByPage(hours = 24) {
   const supabase = createClient();
 
   return useQuery({
@@ -126,7 +124,7 @@ function useWebVitalsByPage(hours: number = 24) {
   });
 }
 
-function useWebVitalsTrend(metric: string, hours: number = 24) {
+function useWebVitalsTrend(metric: string, hours = 24) {
   const supabase = createClient();
 
   return useQuery({
@@ -194,10 +192,7 @@ function MetricCard({ metric }: { metric: WebVitalsSummary }) {
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden flex">
               <div className="bg-green-500 h-full" style={{ width: `${metric.good_pct ?? 0}%` }} />
-              <div
-                className="bg-yellow-500 h-full"
-                style={{ width: `${metric.needs_improvement_pct ?? 0}%` }}
-              />
+              <div className="bg-yellow-500 h-full" style={{ width: `${metric.needs_improvement_pct ?? 0}%` }} />
               <div className="bg-red-500 h-full" style={{ width: `${metric.poor_pct ?? 0}%` }} />
             </div>
             <div className="flex justify-between text-xs text-muted-foreground">
@@ -219,9 +214,7 @@ function TrendChart({ metric, hours }: { metric: string; hours: number }) {
 
   if (!data || data.length === 0) {
     return (
-      <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-        No trend data available
-      </div>
+      <div className="h-[200px] flex items-center justify-center text-muted-foreground">No trend data available</div>
     );
   }
 
@@ -254,9 +247,7 @@ function PageMetricsTable() {
   }
 
   if (!data || data.length === 0) {
-    return (
-      <div className="text-center text-muted-foreground py-8">No page-level metrics available</div>
-    );
+    return <div className="text-center text-muted-foreground py-8">No page-level metrics available</div>;
   }
 
   return (
@@ -264,56 +255,45 @@ function PageMetricsTable() {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b">
-            <th className="text-left py-2 px-2">Page</th>
-            <th className="text-right py-2 px-2">LCP</th>
-            <th className="text-right py-2 px-2">CLS</th>
-            <th className="text-right py-2 px-2">INP</th>
-            <th className="text-right py-2 px-2">Samples</th>
+            <th className="text-start py-2 px-2">Page</th>
+            <th className="text-end py-2 px-2">LCP</th>
+            <th className="text-end py-2 px-2">CLS</th>
+            <th className="text-end py-2 px-2">INP</th>
+            <th className="text-end py-2 px-2">Samples</th>
           </tr>
         </thead>
         <tbody>
           {data.map((page) => (
             <tr key={page.page_url} className="border-b hover:bg-muted/50">
-              <td className="py-2 px-2 font-mono text-xs truncate max-w-[200px]">
-                {page.page_url}
-              </td>
-              <td className="text-right py-2 px-2">
+              <td className="py-2 px-2 font-mono text-xs truncate max-w-[200px]">{page.page_url}</td>
+              <td className="text-end py-2 px-2">
                 {page.lcp_p75 ? (
-                  <Badge
-                    variant="secondary"
-                    className={getRatingColor(getMetricRating("LCP", page.lcp_p75))}
-                  >
+                  <Badge variant="secondary" className={getRatingColor(getMetricRating("LCP", page.lcp_p75))}>
                     {Math.round(page.lcp_p75)}ms
                   </Badge>
                 ) : (
                   "-"
                 )}
               </td>
-              <td className="text-right py-2 px-2">
+              <td className="text-end py-2 px-2">
                 {page.cls_p75 ? (
-                  <Badge
-                    variant="secondary"
-                    className={getRatingColor(getMetricRating("CLS", page.cls_p75))}
-                  >
+                  <Badge variant="secondary" className={getRatingColor(getMetricRating("CLS", page.cls_p75))}>
                     {page.cls_p75.toFixed(3)}
                   </Badge>
                 ) : (
                   "-"
                 )}
               </td>
-              <td className="text-right py-2 px-2">
+              <td className="text-end py-2 px-2">
                 {page.inp_p75 ? (
-                  <Badge
-                    variant="secondary"
-                    className={getRatingColor(getMetricRating("INP", page.inp_p75))}
-                  >
+                  <Badge variant="secondary" className={getRatingColor(getMetricRating("INP", page.inp_p75))}>
                     {Math.round(page.inp_p75)}ms
                   </Badge>
                 ) : (
                   "-"
                 )}
               </td>
-              <td className="text-right py-2 px-2 text-muted-foreground">{page.sample_count}</td>
+              <td className="text-end py-2 px-2 text-muted-foreground">{page.sample_count}</td>
             </tr>
           ))}
         </tbody>
@@ -399,9 +379,7 @@ export function WebVitalsDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Page-Level Performance</CardTitle>
-              <CardDescription>
-                P75 metrics for top pages by sample count (last 24 hours)
-              </CardDescription>
+              <CardDescription>P75 metrics for top pages by sample count (last 24 hours)</CardDescription>
             </CardHeader>
             <CardContent>
               <PageMetricsTable />

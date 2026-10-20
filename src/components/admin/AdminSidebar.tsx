@@ -5,35 +5,35 @@
  * Enhanced with CRM navigation, improved UX, and mobile drawer support
  */
 
-import { usePathname } from "next/navigation";
-import Link from "next/link";
-import { useTranslations } from "next-intl";
-import {
-  LayoutDashboard,
-  Users,
-  ClipboardList,
-  Mail,
-  BarChart3,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  Sparkles,
-  UserCircle,
-  Send,
-  Target,
-  Workflow,
-  Menu,
-  TrendingUp,
-  Gauge,
-  Zap,
-  Folder,
-} from "lucide-react";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
+import {
+  BarChart3,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  Folder,
+  Gauge,
+  LayoutDashboard,
+  Mail,
+  Menu,
+  Send,
+  Settings,
+  Sparkles,
+  Target,
+  TrendingUp,
+  UserCircle,
+  Users,
+  Workflow,
+  Zap,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 interface NavGroup {
   label: string;
@@ -133,14 +133,14 @@ function AdminNavContent({
                         collapsed && "justify-center px-2",
                         active
                           ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
-                          : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                          : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
                       )}
                       title={collapsed ? t(item.label) : undefined}
                     >
                       <Icon className="h-4 w-4 flex-shrink-0" />
                       {!collapsed && <span className="truncate">{t(item.label)}</span>}
                       {!collapsed && item.badge && (
-                        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                        <span className="ms-auto text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
                           {item.badge}
                         </span>
                       )}
@@ -162,7 +162,7 @@ function AdminNavContent({
           className={cn(
             "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
             collapsed && "justify-center px-2",
-            "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+            "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
           )}
           title={collapsed ? t("settings") : undefined}
         >
@@ -183,8 +183,8 @@ export function AdminSidebar() {
   return (
     <aside
       className={cn(
-        "hidden md:flex h-screen sticky top-0 bg-background/95 backdrop-blur-sm border-r border-border/50 flex-col transition-all duration-300",
-        collapsed ? "w-16" : "w-60"
+        "hidden md:flex h-screen sticky top-0 bg-background/95 backdrop-blur-sm border-e border-border/50 flex-col transition-all duration-300",
+        collapsed ? "w-16" : "w-60",
       )}
     >
       {/* Header */}

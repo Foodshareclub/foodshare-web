@@ -49,7 +49,7 @@ export async function acquireGPU(): Promise<SharedGPU> {
       (error) => {
         if (pool === entry) pool = null;
         throw error;
-      }
+      },
     );
     pool = entry;
   }
@@ -78,7 +78,7 @@ function releaseEntry(entry: PoolEntry): void {
     else
       void entry.ready.then(
         (gpu) => gpu.dispose(),
-        () => {}
+        () => {},
       );
   }
 }

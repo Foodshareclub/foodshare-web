@@ -1,7 +1,7 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
+import dynamic from "next/dynamic";
 
 function AnalyticsLoadingFallback() {
   return (
@@ -39,7 +39,7 @@ const AnalyticsDashboard = dynamic(
   {
     ssr: false,
     loading: AnalyticsLoadingFallback,
-  }
+  },
 );
 
 // Lazy-load AIAnalyticsPanel
@@ -51,7 +51,7 @@ const AIAnalyticsPanel = dynamic(
   {
     ssr: false,
     loading: AIAnalyticsLoadingFallback,
-  }
+  },
 );
 
 export default function AdminAnalyticsPage() {
@@ -61,9 +61,7 @@ export default function AdminAnalyticsPage() {
         <div className="flex items-center justify-between sticky top-0 bg-muted/30 backdrop-blur-sm py-2 -mx-1 px-1 z-10">
           <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded-md">
-              Powered by MotherDuck
-            </span>
+            <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded-md">Powered by MotherDuck</span>
           </div>
         </div>
         <AnalyticsDashboard />

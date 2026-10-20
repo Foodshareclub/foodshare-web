@@ -4,15 +4,10 @@
  * AutomationCardEnhanced - Full CRUD automation card
  */
 
-import React, { useState, useTransition } from "react";
-import { Play, Pause, MoreVertical, Edit, Copy, Trash2 } from "lucide-react";
-import type { ActiveAutomation } from "../types";
-import { cn } from "@/lib/utils";
-import { useActionToast } from "@/hooks/useActionToast";
-import { Button } from "@/components/ui/button";
+import { refreshEmailDashboard } from "@/app/actions/campaigns";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +15,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { refreshEmailDashboard } from "@/app/actions/campaigns";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useActionToast } from "@/hooks/useActionToast";
+import { cn } from "@/lib/utils";
+import { Copy, Edit, MoreVertical, Pause, Play, Trash2 } from "lucide-react";
+import React, { useState, useTransition } from "react";
+import type { ActiveAutomation } from "../types";
 
 const statusConfig = {
   draft: {
@@ -68,10 +68,7 @@ export function AutomationCardEnhanced({ automation, onEdit }: AutomationCardEnh
       const newStatus = automation.status === "active" ? "paused" : "active";
       const result = await toggleAutomationStatus(automation.id, newStatus);
       if (result.success) {
-        toast.success(
-          newStatus === "active" ? "Automation activated" : "Automation paused",
-          result.data.message
-        );
+        toast.success(newStatus === "active" ? "Automation activated" : "Automation paused", result.data.message);
       } else {
         const errorMsg = typeof result.error === "string" ? result.error : result.error?.message;
         toast.error("Failed to update status", errorMsg);
@@ -98,12 +95,7 @@ export function AutomationCardEnhanced({ automation, onEdit }: AutomationCardEnh
   };
 
   const handleDelete = (): void => {
-    if (
-      !confirm(
-        `Are you sure you want to archive "${automation.name}"? This will stop all pending emails.`
-      )
-    )
-      return;
+    if (!confirm(`Are you sure you want to archive "${automation.name}"? This will stop all pending emails.`)) return;
     setActionType("delete");
     startTransition(async () => {
       const { deleteAutomationFlow } = await import("@/app/actions/automations");
@@ -125,7 +117,7 @@ export function AutomationCardEnhanced({ automation, onEdit }: AutomationCardEnh
         "bg-card/50 backdrop-blur-sm border hover:shadow-md transition-all",
         config.color,
         config.bg,
-        isLoading && "opacity-70"
+        isLoading && "opacity-70",
       )}
     >
       <CardContent className="p-4">
@@ -167,14 +159,14 @@ export function AutomationCardEnhanced({ automation, onEdit }: AutomationCardEnh
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={onEdit}>
-                  <Edit className="h-4 w-4 mr-2" />
+                  <Edit className="h-4 w-4 me-2" />
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDuplicate} disabled={isPending}>
                   {actionType === "duplicate" ? (
-                    <div className="h-4 w-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    <div className="h-4 w-4 me-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <Copy className="h-4 w-4 mr-2" />
+                    <Copy className="h-4 w-4 me-2" />
                   )}
                   Duplicate
                 </DropdownMenuItem>
@@ -185,9 +177,9 @@ export function AutomationCardEnhanced({ automation, onEdit }: AutomationCardEnh
                   disabled={isPending}
                 >
                   {actionType === "delete" ? (
-                    <div className="h-4 w-4 mr-2 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="h-4 w-4 me-2 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 className="h-4 w-4 me-2" />
                   )}
                   Archive
                 </DropdownMenuItem>
@@ -201,15 +193,11 @@ export function AutomationCardEnhanced({ automation, onEdit }: AutomationCardEnh
         </p>
         <div className="grid grid-cols-3 gap-2 text-center">
           <div>
-            <p className="text-lg font-bold tabular-nums">
-              {automation.totalEnrolled.toLocaleString()}
-            </p>
+            <p className="text-lg font-bold tabular-nums">{automation.totalEnrolled.toLocaleString()}</p>
             <p className="text-[10px] text-muted-foreground uppercase">Enrolled</p>
           </div>
           <div>
-            <p className="text-lg font-bold tabular-nums">
-              {automation.totalCompleted.toLocaleString()}
-            </p>
+            <p className="text-lg font-bold tabular-nums">{automation.totalCompleted.toLocaleString()}</p>
             <p className="text-[10px] text-muted-foreground uppercase">Completed</p>
           </div>
           <div>

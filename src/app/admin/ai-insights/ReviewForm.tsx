@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState } from "react";
 
 interface ReviewFormProps {
   onReviewSubmitted: () => void;
@@ -26,7 +26,7 @@ export function ReviewForm({ onReviewSubmitted, initialRepo }: ReviewFormProps) 
       const res = await fetch("/api/admin/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ owner, repo, pr_number: parseInt(selectedPr), post: postToGithub }),
+        body: JSON.stringify({ owner, repo, pr_number: Number.parseInt(selectedPr), post: postToGithub }),
       });
       if (res.ok) {
         setReviewProgress("Review complete!");
@@ -34,11 +34,10 @@ export function ReviewForm({ onReviewSubmitted, initialRepo }: ReviewFormProps) 
         setSelectedPr("");
       } else {
         const err = await res.json();
-        // eslint-disable-next-line no-alert
-        alert("Review failed: " + (err.error || "Unknown error"));
+
+        alert(`Review failed: ${err.error || "Unknown error"}`);
       }
     } catch {
-      // eslint-disable-next-line no-alert
       alert("Review failed - network error");
     } finally {
       setTimeout(() => {
@@ -48,6 +47,16 @@ export function ReviewForm({ onReviewSubmitted, initialRepo }: ReviewFormProps) 
     }
   };
 
+  // Fetch PRs for the selected repo
+  const [prs, setPrs] = useState<{ number: number; title: string; state: string; html_url: string }[]>([]);
+  useEffect(() => {
+    if (!selectedRepo) return;
+    fetch(`/api/admin/pulls?owner=${selectedRepo.split("/")[0]}&repo=${selectedRepo.split("/")[1]}&state=all`)
+      .then((r) => r.json())
+      .then((data) => setPrs(data.pulls || []))
+      .catch(() => setPrs([]));
+  }, [selectedRepo]);
+
   if (!selectedRepo) {
     return (
       <Card className="bg-zinc-900 border-zinc-800 p-6 text-zinc-500 text-center">
@@ -55,20 +64,6 @@ export function ReviewForm({ onReviewSubmitted, initialRepo }: ReviewFormProps) 
       </Card>
     );
   }
-
-  // Fetch PRs for the selected repo
-  const [prs, setPrs] = useState<
-    { number: number; title: string; state: string; html_url: string }[]
-  >([]);
-  useEffect(() => {
-    if (!selectedRepo) return;
-    fetch(
-      `/api/admin/pulls?owner=${selectedRepo.split("/")[0]}&repo=${selectedRepo.split("/")[1]}&state=all`
-    )
-      .then((r) => r.json())
-      .then((data) => setPrs(data.pulls || []))
-      .catch(() => setPrs([]));
-  }, [selectedRepo]);
 
   return (
     <Card className="bg-zinc-900 border-zinc-800">
@@ -80,8 +75,11 @@ export function ReviewForm({ onReviewSubmitted, initialRepo }: ReviewFormProps) 
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           <div>
-            <label className="text-sm text-zinc-400 block mb-1">Repository</label>
+            <label htmlFor="review-repo" className="text-sm text-zinc-400 block mb-1">
+              Repository
+            </label>
             <select
+              id="review-repo"
               value={selectedRepo}
               onChange={(e) => {
                 setSelectedRepo(e.target.value);
@@ -96,16 +94,17 @@ export function ReviewForm({ onReviewSubmitted, initialRepo }: ReviewFormProps) 
             </select>
           </div>
           <div>
-            <label className="text-sm text-zinc-400 block mb-1">Pull Request</label>
+            <label htmlFor="review-pr" className="text-sm text-zinc-400 block mb-1">
+              Pull Request
+            </label>
             <select
+              id="review-pr"
               value={selectedPr}
               onChange={(e) => setSelectedPr(e.target.value)}
               disabled={!selectedRepo || reviewing}
               className="flex-1 px-3 md:px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm disabled:opacity-50"
             >
-              <option value="">
-                {prs.length === 0 && selectedRepo ? "No PRs found" : "Select PR..."}
-              </option>
+              <option value="">{prs.length === 0 && selectedRepo ? "No PRs found" : "Select PR..."}</option>
               {prs.map((pr) => (
                 <option key={pr.number} value={pr.number}>
                   #{pr.number} {pr.state === "closed" ? "✓" : "○"} {pr.title.slice(0, 30)}
@@ -115,7 +114,7 @@ export function ReviewForm({ onReviewSubmitted, initialRepo }: ReviewFormProps) 
             </select>
             {selectedPr && (
               <a
-                href={prs.find((p) => p.number === parseInt(selectedPr))?.html_url}
+                href={prs.find((p) => p.number === Number.parseInt(selectedPr))?.html_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-400 hover:text-white hover:border-zinc-600 transition-colors text-sm mt-1"

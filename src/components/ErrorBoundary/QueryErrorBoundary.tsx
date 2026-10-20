@@ -6,8 +6,8 @@
  * Provides "Try Again" that resets failed queries automatically.
  */
 
-import type { ReactNode } from "react";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { FeatureErrorBoundary } from "./FeatureErrorBoundary";
 
 type QueryErrorBoundaryProps = {
@@ -19,11 +19,7 @@ export function QueryErrorBoundary({ children, featureName }: QueryErrorBoundary
   return (
     <QueryErrorResetBoundary>
       {({ reset }) => (
-        <FeatureErrorBoundary
-          featureName={featureName}
-          onReset={reset}
-          retryAction={reset}
-        >
+        <FeatureErrorBoundary featureName={featureName} onReset={reset} retryAction={reset}>
           {children}
         </FeatureErrorBoundary>
       )}

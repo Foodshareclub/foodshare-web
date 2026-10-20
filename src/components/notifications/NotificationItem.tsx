@@ -5,22 +5,7 @@
  * Displays a single notification with actions
  */
 
-import { useState } from "react";
-import {
-  MessageSquare,
-  ShoppingBag,
-  Star,
-  Clock,
-  MapPin,
-  Bell,
-  Trash2,
-  Check,
-  ShieldCheck,
-} from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import { MoreHorizontal } from "lucide-react";
-import { cn, formatDate } from "@/lib/utils";
+import { deleteNotification, markNotificationAsRead } from "@/app/actions/notifications";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -28,8 +13,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { UserNotification, NotificationType } from "@/types/notifications.types";
-import { markNotificationAsRead, deleteNotification } from "@/app/actions/notifications";
+import { cn, formatDate } from "@/lib/utils";
+import type { NotificationType, UserNotification } from "@/types/notifications.types";
+import { Bell, Check, Clock, MapPin, MessageSquare, ShieldCheck, ShoppingBag, Star, Trash2 } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
 
 type NotificationItemProps = {
   notification: UserNotification;
@@ -125,7 +115,7 @@ export function NotificationItem({ notification, onRead, onDelete }: Notificatio
       className={cn(
         "flex gap-3 p-3 rounded-lg transition-colors",
         !isRead && "bg-muted/50",
-        link && "hover:bg-muted cursor-pointer"
+        link && "hover:bg-muted cursor-pointer",
       )}
     >
       {/* Icon or Avatar */}
@@ -139,9 +129,7 @@ export function NotificationItem({ notification, onRead, onDelete }: Notificatio
             className="rounded-full object-cover"
           />
         ) : (
-          <div
-            className={cn("w-10 h-10 rounded-full flex items-center justify-center", colorClass)}
-          >
+          <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", colorClass)}>
             <Icon className="h-5 w-5" />
           </div>
         )}
@@ -150,9 +138,7 @@ export function NotificationItem({ notification, onRead, onDelete }: Notificatio
       {/* Content */}
       <div className="flex-1 min-w-0">
         <p className={cn("text-sm", !isRead && "font-medium")}>{notification.title}</p>
-        {notification.body && (
-          <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{notification.body}</p>
-        )}
+        {notification.body && <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{notification.body}</p>}
         <p className="text-xs text-muted-foreground mt-1">{timeAgo}</p>
       </div>
 
@@ -171,12 +157,16 @@ export function NotificationItem({ notification, onRead, onDelete }: Notificatio
         <Link href={link} onClick={handleMarkAsRead}>
           {content}
         </Link>
+      ) : !isRead ? (
+        <button type="button" className="block w-full text-start" onClick={handleMarkAsRead}>
+          {content}
+        </button>
       ) : (
-        <div onClick={!isRead ? handleMarkAsRead : undefined}>{content}</div>
+        <div>{content}</div>
       )}
 
       {/* Actions dropdown */}
-      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute top-2 end-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -187,12 +177,12 @@ export function NotificationItem({ notification, onRead, onDelete }: Notificatio
           <DropdownMenuContent align="end">
             {!isRead && (
               <DropdownMenuItem onClick={handleMarkAsRead}>
-                <Check className="h-4 w-4 mr-2" />
+                <Check className="h-4 w-4 me-2" />
                 Mark as read
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="h-4 w-4 me-2" />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>

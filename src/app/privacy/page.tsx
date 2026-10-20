@@ -1,128 +1,132 @@
-import { PageHeader } from '@/components/navigation/PageHeader'
-import { generatePageMetadata } from '@/lib/metadata'
+import { PageHeader } from "@/components/navigation/PageHeader";
+import { generatePageMetadata } from "@/lib/metadata";
+import type { Metadata } from "next";
+import { getLocale, getTranslations } from "next-intl/server";
 
-export const metadata = generatePageMetadata({
-  title: 'Privacy Policy',
-  description: 'FoodShare Privacy Policy - Learn how we collect, use, and protect your personal information.',
-  keywords: ['privacy policy', 'privacy', 'data protection', 'GDPR'],
-  path: '/privacy',
-});
+// A German reader should not be handed an English <title> for a page whose
+// body is in German, and the <title> is the part search engines read.
+// Keywords stay English — they are an indexing hint, not visible copy.
+export async function generateMetadata(): Promise<Metadata> {
+  const [t, locale] = await Promise.all([getTranslations("Privacy"), getLocale()]);
 
-export default function PrivacyPage() {
+  return generatePageMetadata({
+    title: t("meta_title"),
+    description: t("meta_description"),
+    keywords: ["privacy policy", "privacy", "data protection", "GDPR"],
+    path: "/privacy",
+    locale,
+  });
+}
+
+/**
+ * A numbered section heading.
+ *
+ * The number is rendered beside the message rather than inside it. That is the
+ * whole reason the messages carry `Information We Collect` and not
+ * `1. Information We Collect`: the number is a reading aid over the document
+ * structure, not copy, and several locales reorder or renumber sections. Putting
+ * it in the string would pin the numbering to English — and once a translator
+ * drops the number because their language does not do that, the section
+ * headings silently lose their cross-references.
+ */
+function SectionHeading({ n, children }: { n: number; children: React.ReactNode }) {
+  return (
+    <h2 className="text-xl font-semibold text-foreground mb-4">
+      <span className="text-muted-foreground">{n}.</span> {children}
+    </h2>
+  );
+}
+
+export default async function PrivacyPage() {
+  const t = await getTranslations("Privacy");
+
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">
-      <PageHeader title="Privacy Policy" />
+      <PageHeader title={t("title")} />
 
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="bg-card rounded-2xl shadow-sm p-8 md:p-12">
           <div className="prose prose-gray dark:prose-invert max-w-none">
-            <p className="text-muted-foreground mb-6">
-              Last updated: December 2024
-            </p>
+            <p className="text-muted-foreground mb-6">{t("lastUpdated")}</p>
 
             <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">1. Information We Collect</h2>
-              <p className="text-foreground/80 mb-4">We collect information you provide directly to us, including:</p>
-              <ul className="list-disc list-inside text-foreground/80 space-y-2 ml-4">
-                <li>Account information (name, email, password)</li>
-                <li>Profile information (photo, bio, location)</li>
-                <li>Food listings you create</li>
-                <li>Messages sent through our chat feature</li>
-                <li>Feedback and correspondence</li>
+              <SectionHeading n={1}>{t("s1_title")}</SectionHeading>
+              <p className="text-foreground/80 mb-4">{t("s1_intro")}</p>
+              <ul className="list-disc list-inside text-foreground/80 space-y-2 ms-4">
+                <li>{t("s1_account")}</li>
+                <li>{t("s1_profile")}</li>
+                <li>{t("s1_listings")}</li>
+                <li>{t("s1_messages")}</li>
+                <li>{t("s1_feedback")}</li>
               </ul>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">2. How We Use Your Information</h2>
-              <p className="text-foreground/80 mb-4">We use the information we collect to:</p>
-              <ul className="list-disc list-inside text-foreground/80 space-y-2 ml-4">
-                <li>Provide, maintain, and improve our services</li>
-                <li>Connect food sharers with recipients</li>
-                <li>Send notifications about your listings and messages</li>
-                <li>Respond to your comments and questions</li>
-                <li>Detect and prevent fraud and abuse</li>
+              <SectionHeading n={2}>{t("s2_title")}</SectionHeading>
+              <p className="text-foreground/80 mb-4">{t("s2_intro")}</p>
+              <ul className="list-disc list-inside text-foreground/80 space-y-2 ms-4">
+                <li>{t("s2_service")}</li>
+                <li>{t("s2_connect")}</li>
+                <li>{t("s2_notify")}</li>
+                <li>{t("s2_respond")}</li>
+                <li>{t("s2_abuse")}</li>
               </ul>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">3. Information Sharing</h2>
-              <p className="text-foreground/80 mb-4">
-                We do not sell your personal information. We may share your information only in the following circumstances:
-              </p>
-              <ul className="list-disc list-inside text-foreground/80 space-y-2 ml-4">
-                <li>With other users as necessary to facilitate food sharing</li>
-                <li>With service providers who assist in operating our platform</li>
-                <li>When required by law or to protect rights and safety</li>
-                <li>With your consent</li>
+              <SectionHeading n={3}>{t("s3_title")}</SectionHeading>
+              <p className="text-foreground/80 mb-4">{t("s3_intro")}</p>
+              <ul className="list-disc list-inside text-foreground/80 space-y-2 ms-4">
+                <li>{t("s3_users")}</li>
+                <li>{t("s3_providers")}</li>
+                <li>{t("s3_legal")}</li>
+                <li>{t("s3_consent")}</li>
               </ul>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">4. Location Data</h2>
-              <p className="text-foreground/80 mb-4">
-                FoodShare uses location data to show nearby food listings on the map and connect
-                you with local sharers. You can control location sharing through your device settings.
-                Your exact location is not shared with other users unless you choose to include it
-                in your listings.
-              </p>
+              <SectionHeading n={4}>{t("s4_title")}</SectionHeading>
+              <p className="text-foreground/80 mb-4">{t("s4_body")}</p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">5. Data Security</h2>
-              <p className="text-foreground/80 mb-4">
-                We implement appropriate security measures to protect your personal information.
-                However, no method of transmission over the Internet is 100% secure, and we cannot
-                guarantee absolute security.
-              </p>
+              <SectionHeading n={5}>{t("s5_title")}</SectionHeading>
+              <p className="text-foreground/80 mb-4">{t("s5_body")}</p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">6. Your Rights</h2>
-              <p className="text-foreground/80 mb-4">You have the right to:</p>
-              <ul className="list-disc list-inside text-foreground/80 space-y-2 ml-4">
-                <li>Access and update your personal information</li>
-                <li>Delete your account and associated data</li>
-                <li>Opt out of marketing communications</li>
-                <li>Request a copy of your data</li>
+              <SectionHeading n={6}>{t("s6_title")}</SectionHeading>
+              <p className="text-foreground/80 mb-4">{t("s6_intro")}</p>
+              <ul className="list-disc list-inside text-foreground/80 space-y-2 ms-4">
+                <li>{t("s6_access")}</li>
+                <li>{t("s6_delete")}</li>
+                <li>{t("s6_marketing")}</li>
+                <li>{t("s6_copy")}</li>
               </ul>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">7. Cookies</h2>
-              <p className="text-foreground/80 mb-4">
-                We use cookies and similar technologies to maintain your session, remember your
-                preferences, and improve your experience. You can control cookies through your
-                browser settings.
-              </p>
+              <SectionHeading n={7}>{t("s7_title")}</SectionHeading>
+              <p className="text-foreground/80 mb-4">{t("s7_body")}</p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">8. Children&apos;s Privacy</h2>
-              <p className="text-foreground/80 mb-4">
-                FoodShare is not intended for children under 13. We do not knowingly collect
-                personal information from children under 13. If you believe we have collected
-                such information, please contact us.
-              </p>
+              <SectionHeading n={8}>{t("s8_title")}</SectionHeading>
+              <p className="text-foreground/80 mb-4">{t("s8_body")}</p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">9. Changes to This Policy</h2>
-              <p className="text-foreground/80 mb-4">
-                We may update this Privacy Policy from time to time. We will notify you of any
-                changes by posting the new policy on this page and updating the &quot;Last updated&quot; date.
-              </p>
+              <SectionHeading n={9}>{t("s9_title")}</SectionHeading>
+              <p className="text-foreground/80 mb-4">{t("s9_body")}</p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-foreground mb-4">10. Contact Us</h2>
-              <p className="text-foreground/80">
-                If you have questions about this Privacy Policy, please contact us through the
-                feedback form in your account settings.
-              </p>
+              <SectionHeading n={10}>{t("s10_title")}</SectionHeading>
+              <p className="text-foreground/80">{t("s10_body")}</p>
             </section>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

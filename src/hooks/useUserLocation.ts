@@ -15,8 +15,8 @@
 
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { useUIStore, selectUserLocation } from "@/store/zustand/useUIStore";
+import { selectUserLocation, useUIStore } from "@/store/zustand/useUIStore";
+import { useCallback, useMemo, useState } from "react";
 
 // ============================================================================
 // Types
@@ -101,7 +101,7 @@ export function useUserLocation(): UseUserLocationReturn {
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 300000, // 5 minutes cache
-      }
+      },
     );
   }, [setUserLocation]);
 

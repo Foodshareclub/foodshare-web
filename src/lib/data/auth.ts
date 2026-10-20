@@ -6,8 +6,8 @@
  * call makes them automatically dynamic.
  */
 
-import { checkUserIsAdmin } from "./admin-check";
 import { createClient } from "@/lib/supabase/server";
+import { checkUserIsAdmin } from "./admin-check";
 
 // ============================================================================
 // Types
@@ -51,7 +51,7 @@ function isFullUrl(url: string): boolean {
  */
 async function resolveAvatarUrl(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  avatarUrl: string | null
+  avatarUrl: string | null,
 ): Promise<string | null> {
   if (!avatarUrl || avatarUrl.trim() === "") return null;
   if (isFullUrl(avatarUrl)) return avatarUrl;
@@ -80,15 +80,11 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select(
-          "id,first_name,second_name,nickname,avatar_url,email,search_radius_km,onboarding_completed"
-        )
+        .select("id,first_name,second_name,nickname,avatar_url,email,search_radius_km,onboarding_completed")
         .eq("id", user.id)
         .single();
 
-      const resolvedAvatarUrl = profile?.avatar_url
-        ? await resolveAvatarUrl(supabase, profile.avatar_url)
-        : null;
+      const resolvedAvatarUrl = profile?.avatar_url ? await resolveAvatarUrl(supabase, profile.avatar_url) : null;
 
       return {
         id: user.id,

@@ -9,11 +9,11 @@
  * - Client (realtime only): Keep using this file
  */
 
-import { supabase } from "@/lib/supabase/client";
-import type { PostgrestSingleResponse, PostgrestResponse } from "@supabase/supabase-js";
 import type { ReviewsType } from "@/api/chatAPI";
+import { supabase } from "@/lib/supabase/client";
+import type { GeoJSONPoint, PostGISGeography } from "@/types/postgis.types";
 import { parsePostGISPoint } from "@/utils/postgis";
-import type { PostGISGeography, GeoJSONPoint } from "@/types/postgis.types";
+import type { PostgrestResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
 
 export type InitialProductStateType = {
   available_hours: string;
@@ -56,9 +56,7 @@ export type LocationType = {
  * Checks location_json (GeoJSON from computed column) first,
  * then falls back to location field for backwards compatibility
  */
-export function getCoordinates(
-  product: InitialProductStateType | LocationType
-): { lat: number; lng: number } | null {
+export function getCoordinates(product: InitialProductStateType | LocationType): { lat: number; lng: number } | null {
   // Prefer location_json (GeoJSON from computed column)
   if ("location_json" in product && product.location_json) {
     const parsed = parsePostGISPoint(product.location_json);
@@ -94,12 +92,10 @@ export const productAPI = {
    * @param productType - The type of product to filter by
    * @returns Promise with filtered products
    */
-  getProducts(
-    productType: string
-  ): PromiseLike<PostgrestSingleResponse<Array<InitialProductStateType>>> {
+  getProducts(productType: string): PromiseLike<PostgrestSingleResponse<Array<InitialProductStateType>>> {
     return supabase
       .from("posts_with_location")
-      .select(`*`)
+      .select("*")
       .order("created_at", { ascending: false })
       .eq("post_type", productType.toLowerCase())
       .eq("is_active", true);
@@ -124,9 +120,7 @@ export const productAPI = {
    * @param currentUserID - The user's profile ID
    * @returns Promise with user's products (includes inactive for owner to manage)
    */
-  getCurrentUserProduct(
-    currentUserID: string
-  ): PromiseLike<PostgrestResponse<InitialProductStateType>> {
+  getCurrentUserProduct(currentUserID: string): PromiseLike<PostgrestResponse<InitialProductStateType>> {
     return supabase.from("posts_with_location").select("*").eq("profile_id", currentUserID);
   },
 
@@ -136,11 +130,7 @@ export const productAPI = {
    * @returns Promise with product and reviews
    */
   getOneProduct(productId: number): PromiseLike<PostgrestResponse<InitialProductStateType>> {
-    return supabase
-      .from("posts_with_location")
-      .select(`*, reviews(*)`)
-      .eq("id", productId)
-      .eq("is_active", true);
+    return supabase.from("posts_with_location").select("*, reviews(*)").eq("id", productId).eq("is_active", true);
   },
 
   /**
@@ -148,9 +138,7 @@ export const productAPI = {
    * @param createdProduct - The product data to insert
    * @returns Promise with insert result
    */
-  async createProduct(
-    createdProduct: Partial<InitialProductStateType>
-  ): Promise<PostgrestSingleResponse<null>> {
+  async createProduct(createdProduct: Partial<InitialProductStateType>): Promise<PostgrestSingleResponse<null>> {
     return supabase.from("posts").insert(createdProduct).select().single();
   },
 
@@ -159,9 +147,7 @@ export const productAPI = {
    * @param createdProduct - The product data to update
    * @returns Promise with upsert result
    */
-  async updateProduct(
-    createdProduct: Partial<InitialProductStateType>
-  ): Promise<PostgrestSingleResponse<null>> {
+  async updateProduct(createdProduct: Partial<InitialProductStateType>): Promise<PostgrestSingleResponse<null>> {
     return supabase.from("posts").upsert(createdProduct).select().single();
   },
 
@@ -183,7 +169,7 @@ export const productAPI = {
    */
   searchProducts(
     searchWord: string,
-    productSearchType: string
+    productSearchType: string,
   ): PromiseLike<PostgrestResponse<InitialProductStateType>> {
     let query = supabase
       .from("posts_with_location")

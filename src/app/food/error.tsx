@@ -1,6 +1,6 @@
 "use client";
 
-import { ErrorDisplay, ProductErrorSuggestions, ProductCategoryLinks } from "@/components/error";
+import { ErrorDisplay, ProductCategoryLinks, ProductErrorSuggestions } from "@/components/error";
 
 /**
  * Products Error Boundary Component
@@ -24,12 +24,7 @@ export default function ProductsError({
 
       {/* Error Content */}
       <div className="container mx-auto px-4 py-12">
-        <ErrorDisplay
-          error={error}
-          reset={reset}
-          variant="food"
-          footerContent={<ProductErrorSuggestions />}
-        />
+        <ErrorDisplay error={error} reset={reset} variant="food" footerContent={<ProductErrorSuggestions />} />
         <ProductCategoryLinks />
       </div>
     </>

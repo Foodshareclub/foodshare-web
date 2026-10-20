@@ -76,23 +76,10 @@ export const ACTIVITY_CATEGORIES = {
     "collected",
     "not_collected",
   ] as PostActivityType[],
-  moderation: [
-    "reported",
-    "flagged",
-    "unflagged",
-    "approved",
-    "rejected",
-    "hidden",
-    "unhidden",
-  ] as PostActivityType[],
+  moderation: ["reported", "flagged", "unflagged", "approved", "rejected", "hidden", "unhidden"] as PostActivityType[],
   engagement: ["liked", "unliked", "shared", "bookmarked", "unbookmarked"] as PostActivityType[],
   admin: ["admin_edited", "admin_note_added", "admin_status_changed"] as PostActivityType[],
-  system: [
-    "auto_expired",
-    "auto_deactivated",
-    "location_updated",
-    "images_updated",
-  ] as PostActivityType[],
+  system: ["auto_expired", "auto_deactivated", "location_updated", "images_updated"] as PostActivityType[],
 } as const;
 
 // ============================================================================

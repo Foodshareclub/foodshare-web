@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Sparkles, FileText, ChevronRight, Zap, X } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { ChevronRight, FileText, Sparkles, X, Zap } from "lucide-react";
+import React, { useState, useEffect } from "react";
 
 interface Candidate {
   id: string;
@@ -18,6 +18,19 @@ interface Candidate {
   priority_score: number;
 }
 
+interface CandidateRow {
+  id: string;
+  name: string;
+  stage: string;
+  region: string;
+  projected_reduction_pct: number;
+  projected_reduction_tonnes: number;
+  effort_level: "Low" | "Medium" | "High";
+  urgency: "Low" | "Medium" | "High";
+  status: string;
+  target_date: string;
+}
+
 export function PriorityQueue() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,44 +44,39 @@ export function PriorityQueue() {
   } | null>(null);
   const [isGeneratingBriefId, setIsGeneratingBriefId] = useState<string | null>(null);
 
-  const fetchCandidates = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("interventions")
-        .select("*")
-        .eq("status", "candidate");
-
-      if (error) throw error;
-
-      // Compute priority score locally: projected_reduction_tonnes / effort_score
-      // Low = 1, Medium = 2, High = 3
-      const mapped = (data || []).map((item: any) => {
-        let effortScore = 1;
-        if (item.effort_level === "Medium") effortScore = 2;
-        if (item.effort_level === "High") effortScore = 3;
-
-        const priorityScore = Number((item.projected_reduction_tonnes / effortScore).toFixed(1));
-
-        return {
-          ...item,
-          priority_score: priorityScore,
-        };
-      });
-
-      // Rank by priority score descending
-      mapped.sort((a, b) => b.priority_score - a.priority_score);
-
-      setCandidates(mapped);
-    } catch (err) {
-      console.error("Error loading candidates:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchCandidates();
+    void (async () => {
+      try {
+        const { data, error } = await supabase.from("interventions").select("*").eq("status", "candidate");
+
+        if (error) throw error;
+
+        // Compute priority score locally: projected_reduction_tonnes / effort_score
+        // Low = 1, Medium = 2, High = 3
+        const rows = (data || []) as CandidateRow[];
+        const mapped = rows.map((item) => {
+          let effortScore = 1;
+          if (item.effort_level === "Medium") effortScore = 2;
+          if (item.effort_level === "High") effortScore = 3;
+
+          const priorityScore = Number((item.projected_reduction_tonnes / effortScore).toFixed(1));
+
+          return {
+            ...item,
+            priority_score: priorityScore,
+          };
+        });
+
+        // Rank by priority score descending
+        mapped.sort((a, b) => b.priority_score - a.priority_score);
+
+        setCandidates(mapped);
+      } catch (err) {
+        console.error("Error loading candidates:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   }, []);
 
   const handleGenerateBrief = async (candidate: Candidate) => {
@@ -87,7 +95,7 @@ export function PriorityQueue() {
         throw new Error(error.message);
       }
 
-      if (data && data.success) {
+      if (data?.success) {
         setSelectedBrief({
           id: data.brief_id,
           name: candidate.name,
@@ -100,8 +108,8 @@ export function PriorityQueue() {
       } else {
         throw new Error("Invalid response format received from brief generator.");
       }
-    } catch (err: any) {
-      alert("Error generating brief: " + err.message);
+    } catch (err) {
+      alert(`Error generating brief: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
       setIsGeneratingBriefId(null);
     }
@@ -111,9 +119,7 @@ export function PriorityQueue() {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <div className="h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-        <span className="text-xs font-bold text-stone-400 tracking-wider uppercase">
-          Sorting Candidate Queue...
-        </span>
+        <span className="text-xs font-bold text-stone-400 tracking-wider uppercase">Sorting Candidate Queue...</span>
       </div>
     );
   }
@@ -128,8 +134,7 @@ export function PriorityQueue() {
             Priority Intervention Queue
           </h2>
           <p className="text-xs text-stone-400">
-            Pre-aggregated B2B candidate list ranked dynamically by ROI (Reduction tonnes / Effort
-            Score)
+            Pre-aggregated B2B candidate list ranked dynamically by ROI (Reduction tonnes / Effort Score)
           </p>
         </div>
       </div>
@@ -137,12 +142,12 @@ export function PriorityQueue() {
       {/* Main candidate table/grid */}
       <div className="glass-panel border-none shadow-xl rounded-2xl overflow-hidden bg-black/10">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full text-start text-xs border-collapse">
             <thead>
-              <tr className="border-b border-white/5 bg-white/[0.02] text-stone-450 text-stone-400 font-extrabold uppercase tracking-wider text-[10px]">
+              <tr className="border-b border-white/5 bg-white/[0.02] text-stone-400 font-extrabold uppercase tracking-wider text-[10px]">
                 <th className="py-4 px-6">Rank & Candidate</th>
                 <th className="py-4 px-4">Supply Stage</th>
-                <th className="py-4 px-4 text-right">Potential Impact</th>
+                <th className="py-4 px-4 text-end">Potential Impact</th>
                 <th className="py-4 px-4 text-center">Effort / Urgency</th>
                 <th className="py-4 px-4 text-center">Priority Score</th>
                 <th className="py-4 px-6 text-center">Action</th>
@@ -157,10 +162,7 @@ export function PriorityQueue() {
                 </tr>
               ) : (
                 candidates.map((cand, idx) => (
-                  <tr
-                    key={cand.id}
-                    className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group"
-                  >
+                  <tr key={cand.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
                     {/* Name & Rank */}
                     <td className="py-4 px-6 font-bold">
                       <div className="flex items-center gap-3">
@@ -169,9 +171,7 @@ export function PriorityQueue() {
                         </span>
                         <div>
                           <p className="text-white text-xs font-black">{cand.name}</p>
-                          <p className="text-[10px] text-stone-400 font-bold mt-0.5">
-                            {cand.region}
-                          </p>
+                          <p className="text-[10px] text-stone-400 font-bold mt-0.5">{cand.region}</p>
                         </div>
                       </div>
                     </td>
@@ -184,7 +184,7 @@ export function PriorityQueue() {
                     </td>
 
                     {/* Reduction */}
-                    <td className="py-4 px-4 text-right">
+                    <td className="py-4 px-4 text-end">
                       <div className="space-y-1">
                         <span className="text-emerald-400 font-mono font-extrabold">
                           -{cand.projected_reduction_pct}%
@@ -231,6 +231,7 @@ export function PriorityQueue() {
                     {/* Action */}
                     <td className="py-4 px-6 text-center">
                       <button
+                        type="button"
                         onClick={() => handleGenerateBrief(cand)}
                         disabled={isGeneratingBriefId !== null}
                         className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-extrabold text-[10px] uppercase tracking-wider px-3.5 py-2 rounded-xl flex items-center justify-center gap-1.5 border border-emerald-500/20 hover:border-emerald-400 shadow-md transition-all cursor-pointer mx-auto"
@@ -260,7 +261,7 @@ export function PriorityQueue() {
       {/* Slide-over Diagnostic AI Brief panel */}
       {selectedBrief && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end animate-in fade-in duration-200">
-          <div className="w-full max-w-xl bg-stone-950 border-l border-white/10 h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
+          <div className="w-full max-w-xl bg-stone-950 border-s border-white/10 h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
             {/* Drawer Header */}
             <div className="px-6 py-5 border-b border-white/15 bg-white/[0.02] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -268,11 +269,12 @@ export function PriorityQueue() {
                 <div>
                   <h3 className="font-extrabold text-sm text-white">AI Corrective Action Brief</h3>
                   <p className="text-[10px] text-stone-400">
-                    Grounded Diagnostic // {selectedBrief.name}
+                    Grounded Diagnostic {"//"} {selectedBrief.name}
                   </p>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedBrief(null)}
                 className="p-1 text-stone-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 rounded-lg cursor-pointer transition-colors"
               >
@@ -289,11 +291,12 @@ export function PriorityQueue() {
               </div>
 
               {/* Render generated brief markdown formatted */}
-              <div className="prose prose-invert prose-xs max-w-none text-stone-300 font-sans space-y-6">
+              <div className="prose prose-invert prose-sm max-w-none text-stone-300 font-sans space-y-6">
                 {selectedBrief.content.split("\n").map((line, lIdx) => {
                   if (line.startsWith("# ")) {
                     return (
                       <h1
+                        // biome-ignore lint/suspicious/noArrayIndexKey: brief is rendered read-only from a fixed markdown snapshot; identical lines can repeat, so line position is the identity
                         key={lIdx}
                         className="text-lg font-black text-white border-b border-white/5 pb-2 mt-4"
                       >
@@ -304,8 +307,9 @@ export function PriorityQueue() {
                   if (line.startsWith("## ")) {
                     return (
                       <h2
+                        // biome-ignore lint/suspicious/noArrayIndexKey: brief is rendered read-only from a fixed markdown snapshot; identical lines can repeat, so line position is the identity
                         key={lIdx}
-                        className="text-sm font-extrabold text-emerald-405 text-emerald-400 pt-2 mt-3"
+                        className="text-sm font-extrabold text-emerald-400 pt-2 mt-3"
                       >
                         {line.replace("## ", "")}
                       </h2>
@@ -313,14 +317,22 @@ export function PriorityQueue() {
                   }
                   if (line.startsWith("- ") || line.startsWith("* ")) {
                     return (
-                      <li key={lIdx} className="ml-4 list-disc pl-1 font-bold text-stone-350">
+                      <li
+                        // biome-ignore lint/suspicious/noArrayIndexKey: brief is rendered read-only from a fixed markdown snapshot; identical lines can repeat, so line position is the identity
+                        key={lIdx}
+                        className="ms-4 list-disc ps-1 font-bold text-stone-300"
+                      >
                         {line.replace(/^[-*]\s+/, "")}
                       </li>
                     );
                   }
                   if (line.trim().length === 0) return null;
                   return (
-                    <p key={lIdx} className="leading-relaxed font-bold text-stone-400">
+                    <p
+                      // biome-ignore lint/suspicious/noArrayIndexKey: brief is rendered read-only from a fixed markdown snapshot; identical lines can repeat, so line position is the identity
+                      key={lIdx}
+                      className="leading-relaxed font-bold text-stone-400"
+                    >
                       {line}
                     </p>
                   );
@@ -336,12 +348,14 @@ export function PriorityQueue() {
 
               <div className="flex items-center gap-3">
                 <button
+                  type="button"
                   onClick={() => setSelectedBrief(null)}
                   className="px-4 py-2 border border-white/10 hover:bg-white/5 text-stone-400 hover:text-white font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition-all cursor-pointer"
                 >
                   Close Console
                 </button>
                 <button
+                  type="button"
                   onClick={async () => {
                     // Mark as acknowledged
                     await supabase

@@ -12,9 +12,9 @@
  * - Monthly quota tracking alongside daily quota
  */
 
-import type { EmailProvider, EmailType, SendEmailRequest, SendEmailResponse } from "./types";
-import { toEmailProvider } from "./type-guards";
 import { isValidEmail } from "@/lib/validators/email";
+import { toEmailProvider } from "./type-guards";
+import type { EmailProvider, EmailType, SendEmailRequest, SendEmailResponse } from "./types";
 
 // Lazy-loaded providers (tree-shaking friendly)
 
@@ -87,9 +87,7 @@ let metricsFlushTimer: ReturnType<typeof setTimeout> | null = null;
 export class UnifiedEmailService {
   private config: UnifiedConfig;
   private providerInstances = new Map<EmailProvider, IEmailProvider>();
-  private supabase: Awaited<
-    ReturnType<typeof import("@/lib/supabase/server").createClient>
-  > | null = null;
+  private supabase: Awaited<ReturnType<typeof import("@/lib/supabase/server").createClient>> | null = null;
 
   constructor(config: UnifiedConfig) {
     this.config = {
@@ -108,9 +106,7 @@ export class UnifiedEmailService {
 
     try {
       // Validate recipient email
-      const recipient = Array.isArray(request.options.to)
-        ? request.options.to[0]
-        : request.options.to;
+      const recipient = Array.isArray(request.options.to) ? request.options.to[0] : request.options.to;
 
       if (!isValidEmail(recipient.email)) {
         return {
@@ -365,15 +361,10 @@ export class UnifiedEmailService {
   /**
    * Queue email for retry (when all providers fail)
    */
-  private async queueForRetry(
-    request: SendEmailRequest,
-    reason: string
-  ): Promise<SendEmailResponse> {
+  private async queueForRetry(request: SendEmailRequest, reason: string): Promise<SendEmailResponse> {
     try {
       const supabase = await this.getSupabase();
-      const recipient = Array.isArray(request.options.to)
-        ? request.options.to[0]
-        : request.options.to;
+      const recipient = Array.isArray(request.options.to) ? request.options.to[0] : request.options.to;
 
       await supabase.from("email_queue").insert({
         recipient_email: recipient.email,

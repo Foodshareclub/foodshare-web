@@ -84,7 +84,7 @@ export async function getUserChatRooms(userId: string): Promise<ChatRoom[]> {
       posts:post_id (id, post_name, images, post_type),
       sharer_profile:sharer (id, first_name, second_name, avatar_url),
       requester_profile:requester (id, first_name, second_name, avatar_url)
-    `
+    `,
     )
     .or(`sharer.eq.${userId},requester.eq.${userId}`)
     .order("last_message_time", { ascending: false });
@@ -111,7 +111,7 @@ export async function getChatRoom(roomId: string): Promise<ChatRoom | null> {
       posts:post_id (id, post_name, images, post_type),
       sharer_profile:sharer (id, first_name, second_name, avatar_url),
       requester_profile:requester (id, first_name, second_name, avatar_url)
-    `
+    `,
     )
     .eq("id", roomId)
     .single();
@@ -130,7 +130,7 @@ export async function getChatRoom(roomId: string): Promise<ChatRoom | null> {
 export async function getOrCreateChatRoom(
   postId: number,
   sharerId: string,
-  requesterId: string
+  requesterId: string,
 ): Promise<ChatRoom | null> {
   const supabase = await createClient();
 
@@ -143,7 +143,7 @@ export async function getOrCreateChatRoom(
       posts:post_id (id, post_name, images, post_type),
       sharer_profile:sharer (id, first_name, second_name, avatar_url),
       requester_profile:requester (id, first_name, second_name, avatar_url)
-    `
+    `,
     )
     .eq("post_id", postId)
     .eq("sharer", sharerId)
@@ -171,7 +171,7 @@ export async function getOrCreateChatRoom(
       posts:post_id (id, post_name, images, post_type),
       sharer_profile:sharer (id, first_name, second_name, avatar_url),
       requester_profile:requester (id, first_name, second_name, avatar_url)
-    `
+    `,
     )
     .single();
 
@@ -195,7 +195,7 @@ export async function getChatMessages(roomId: string, limit = 50, offset = 0): P
       `
       *,
       profiles:profile_id (id, first_name, second_name, avatar_url)
-    `
+    `,
     )
     .eq("room_id", roomId)
     .order("timestamp", { ascending: false })

@@ -185,7 +185,7 @@ export function recordR2Failure(): void {
     r2CircuitState.isOpen = true;
     console.log(
       `[CircuitBreaker] R2 circuit OPEN after ${r2CircuitState.failures} failures. ` +
-        `Will reset in ${CIRCUIT_RESET_MS / 1000}s`
+        `Will reset in ${CIRCUIT_RESET_MS / 1000}s`,
     );
   }
 }
@@ -225,12 +225,9 @@ export function getR2CircuitState(): CircuitState {
 /**
  * Calculate delay for exponential backoff with jitter
  */
-export function calculateBackoffDelay(
-  attempt: number,
-  config: RetryConfig = DEFAULT_RETRY_CONFIG
-): number {
+export function calculateBackoffDelay(attempt: number, config: RetryConfig = DEFAULT_RETRY_CONFIG): number {
   // Exponential backoff: baseDelay * 2^attempt
-  const exponentialDelay = config.baseDelayMs * Math.pow(2, attempt);
+  const exponentialDelay = config.baseDelayMs * 2 ** attempt;
 
   // Add jitter (0-25% of delay) to prevent thundering herd
   const jitter = exponentialDelay * Math.random() * 0.25;
@@ -252,7 +249,7 @@ export function sleep(ms: number): Promise<void> {
 export async function withRetry<T>(
   fn: (signal: AbortSignal) => Promise<T>,
   config: RetryConfig = DEFAULT_RETRY_CONFIG,
-  onRetry?: (attempt: number, error: UploadError, delay: number) => void
+  onRetry?: (attempt: number, error: UploadError, delay: number) => void,
 ): Promise<T> {
   let lastError: UploadError | null = null;
 
@@ -291,7 +288,7 @@ export async function withRetry<T>(
 
       console.log(
         `[Retry] Attempt ${attempt + 1}/${config.maxRetries} failed: ${lastError.message}. ` +
-          `Retrying in ${Math.round(delay)}ms...`
+          `Retrying in ${Math.round(delay)}ms...`,
       );
 
       await sleep(delay);
@@ -311,7 +308,7 @@ export async function withRetry<T>(
  */
 export async function fetchWithTimeout(
   url: string,
-  options: RequestInit & { timeout?: number } = {}
+  options: RequestInit & { timeout?: number } = {},
 ): Promise<Response> {
   const { timeout = DEFAULT_RETRY_CONFIG.timeoutMs, ...fetchOptions } = options;
 
@@ -342,7 +339,7 @@ export async function robustUpload(
   url: string,
   file: File | Blob,
   headers: Record<string, string> = {},
-  config: RetryConfig = DEFAULT_RETRY_CONFIG
+  config: RetryConfig = DEFAULT_RETRY_CONFIG,
 ): Promise<{ success: boolean; response?: Response; error?: UploadError }> {
   try {
     const response = await withRetry(
@@ -369,10 +366,8 @@ export async function robustUpload(
       },
       config,
       (attempt, error, delay) => {
-        console.log(
-          `[robustUpload] Retry ${attempt}: ${error.message}, waiting ${Math.round(delay)}ms`
-        );
-      }
+        console.log(`[robustUpload] Retry ${attempt}: ${error.message}, waiting ${Math.round(delay)}ms`);
+      },
     );
 
     return { success: response.ok, response };

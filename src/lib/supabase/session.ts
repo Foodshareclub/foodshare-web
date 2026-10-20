@@ -7,6 +7,7 @@
 import { supabase } from "./client";
 import type { Session } from "@supabase/supabase-js";
 import { createLogger } from "@/lib/logger";
+import type { IntervalHandle, TimerHandle } from "@/types/timer.types";
 
 const logger = createLogger("SessionManager");
 
@@ -60,8 +61,8 @@ function getSafeReturnUrl(pathname: string): string {
   return '/';
 }
 
-let refreshTimer: NodeJS.Timeout | null = null;
-let checkTimer: NodeJS.Timeout | null = null;
+let refreshTimer: TimerHandle | null = null;
+let checkTimer: IntervalHandle | null = null;
 
 /**
  * Session Manager
@@ -182,7 +183,7 @@ export const sessionManager = {
             logger.debug("User signed out from another tab");
           }
           // Clear session and redirect
-          window.location.href = "/";
+          window.location.href = new URL("/", window.location.origin).href;
           break;
 
         case "SESSION_REFRESHED":
@@ -230,7 +231,10 @@ export const sessionManager = {
 
     // Redirect to login with validated return URL (prevents open redirect)
     const safeReturnUrl = getSafeReturnUrl(window.location.pathname);
-    window.location.href = `/auth/login?returnUrl=${safeReturnUrl}&reason=timeout`;
+    window.location.href = new URL(
+      `/auth/login?returnUrl=${encodeURIComponent(safeReturnUrl)}&reason=timeout`,
+      window.location.origin
+    ).href;
   },
 
   /**

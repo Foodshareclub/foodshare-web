@@ -1,28 +1,14 @@
 "use client";
 
-import {
-  Users,
-  Send,
-  Eye,
-  MousePointerClick,
-  Mail,
-  Zap,
-  Activity,
-  ChevronRight,
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Activity, ChevronRight, Eye, Mail, MousePointerClick, Send, Users, Zap } from "lucide-react";
+import { AutomationRow } from "../automation/AutomationRow";
+import { CampaignRow } from "../campaign/CampaignRow";
+import { EmptyState } from "../shared/EmptyState";
 import { GlassCard } from "../shared/GlassCard";
 import { MetricCard } from "../shared/MetricCard";
 import { ProviderCard } from "../shared/ProviderComponents";
-import { EmptyState } from "../shared/EmptyState";
-import { CampaignRow } from "../campaign/CampaignRow";
-import { AutomationRow } from "../automation/AutomationRow";
-import type {
-  EmailDashboardStats,
-  RecentCampaign,
-  ActiveAutomation,
-  ProviderHealth,
-} from "../types";
-import { Button } from "@/components/ui/button";
+import type { ActiveAutomation, EmailDashboardStats, ProviderHealth, RecentCampaign } from "../types";
 
 export function DashboardTab({
   stats,
@@ -81,7 +67,7 @@ export function DashboardTab({
               Recent Campaigns
             </h3>
             <Button variant="ghost" size="sm" className="text-xs">
-              View All <ChevronRight className="h-3 w-3 ml-1" />
+              View All <ChevronRight className="h-3 w-3 ms-1" />
             </Button>
           </div>
           <div className="space-y-3">
@@ -100,7 +86,7 @@ export function DashboardTab({
               Active Automations
             </h3>
             <Button variant="ghost" size="sm" className="text-xs">
-              View All <ChevronRight className="h-3 w-3 ml-1" />
+              View All <ChevronRight className="h-3 w-3 ms-1" />
             </Button>
           </div>
           <div className="space-y-3">

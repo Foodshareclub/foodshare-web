@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 /**
  * WebGPU GPU rendering E2E tests.
@@ -17,7 +17,7 @@ test.describe("WebGPU Rendering", () => {
 
     // Check that the GPU provider initialized
     const gpuSupported = await page.evaluate(() => {
-      return !!(navigator as any).gpu;
+      return !!(navigator as { gpu?: unknown }).gpu;
     });
 
     // WebGPU should be available in chromium-webgpu project
@@ -38,15 +38,11 @@ test.describe("WebGPU Rendering", () => {
     await page.waitForLoadState("networkidle");
 
     // Page should load without GPU-related crashes
-    const gpuErrors = errors.filter(
-      (e) => e.includes("GPU") || e.includes("WebGPU") || e.includes("shader")
-    );
+    const gpuErrors = errors.filter((e) => e.includes("GPU") || e.includes("WebGPU") || e.includes("shader"));
     expect(gpuErrors).toHaveLength(0);
 
     // Background effects should be present (either canvas or CSS fallback)
-    const backgroundElement = page
-      .locator('[data-gpu-effect="orbs"], [data-gpu-fallback="orbs"]:visible')
-      .first();
+    const backgroundElement = page.locator('[data-gpu-effect="orbs"], [data-gpu-fallback="orbs"]:visible').first();
     await expect(backgroundElement).toBeVisible();
   });
 
@@ -57,10 +53,7 @@ test.describe("WebGPU Rendering", () => {
       return Boolean(await gpu?.requestAdapter());
     });
     test.skip(!adapterAvailable, "This browser has no GPU adapter; the fallback test covers it.");
-    await expect(page.locator('[data-gpu-effect="orbs"]')).toHaveAttribute(
-      "data-gpu-ready",
-      "true"
-    );
+    await expect(page.locator('[data-gpu-effect="orbs"]')).toHaveAttribute("data-gpu-ready", "true");
     await expect(page.locator('[data-gpu-fallback="orbs"]')).toBeHidden();
   });
 
@@ -75,7 +68,7 @@ test.describe("WebGPU Rendering", () => {
 
     // No uncaught errors from GPU imports
     const gpuPageErrors = errors.filter(
-      (e) => e.includes("vgpu") || e.includes("GPUConfetti") || e.includes("useConfetti")
+      (e) => e.includes("vgpu") || e.includes("GPUConfetti") || e.includes("useConfetti"),
     );
     expect(gpuPageErrors).toHaveLength(0);
   });
@@ -115,9 +108,6 @@ test.describe("WebGPU Fallback", () => {
     expect(errors).toHaveLength(0);
 
     await expect(page.locator('[data-gpu-fallback="orbs"]')).toBeVisible();
-    await expect(page.locator('[data-gpu-effect="orbs"]')).toHaveAttribute(
-      "data-gpu-ready",
-      "false"
-    );
+    await expect(page.locator('[data-gpu-effect="orbs"]')).toHaveAttribute("data-gpu-ready", "false");
   });
 });

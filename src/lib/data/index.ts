@@ -41,7 +41,6 @@ export {
   getProfile,
   getPublicProfile,
   getUserStats,
-  getVolunteers,
   getProfileReviews,
   type Profile,
   type PublicProfile,

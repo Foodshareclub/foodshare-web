@@ -15,8 +15,22 @@
   --popover: 0 0% 100%;
   --popover-foreground: 240 10% 3.9%;
 
-  /* Primary - FoodShare Pink/Red #FF2D55 */
-  --primary: 345 100% 59%;
+  /* Primary - FoodShare Pink/Red.
+   *
+   * Lightness is 46% rather than the 59% that reproduces the #FF2D55 brand
+   * swatch, and the reason is WCAG AA rather than taste. `--primary-foreground`
+   * is white and this is the background of the default Button at `text-sm`
+   * (14px/500) — normal text, so the requirement is 4.5:1.
+   *
+   *   59% (#ff2e62) -> 3.61:1   fails AA
+   *   46% (#eb003b) -> 4.57:1   passes
+   *
+   * 3.61:1 clears only the 3:1 large-text threshold, so every Sign in, Publish,
+   * Save, Submit and Send button was below AA — as was every `text-primary`
+   * link, which is this colour on the page background at the same ratio.
+   * scripts/check-contrast.ts fails the build if a pair drops back below.
+   */
+  --primary: 345 100% 46%;
   --primary-foreground: 0 0% 100%;
 
   /* Secondary */
@@ -33,10 +47,21 @@
   --accent-foreground: 240 5.9% 10%;
 
   /* Destructive */
-  --destructive: 0 84.2% 60.2%;
+  /* 47% rather than 60.2%: white on #ef4444 is 3.61:1 and on this 4.63:1, and
+   * `--destructive` is also used as label text on the page background, where
+   * the lighter value measured 3.76:1. */
+  --destructive: 0 84.2% 47%;
   --destructive-foreground: 0 0% 98%;
 
   /* Border, Input, Ring */
+  /* Deliberately left at 1.27:1 against the page background.
+   *
+   * WCAG 1.4.11 asks for 3:1 on the boundary of a control, and this misses it.
+   * Raising it would redraw every divider, card outline and input border in the
+   * app, which is a design decision rather than an accessibility bugfix, so it
+   * is recorded here with the number instead of being changed unilaterally.
+   * scripts/check-contrast.ts deliberately does not assert on it; see the note
+   * in that file. `--ring` at 3.61:1 does meet the 3:1 threshold and is asserted. */
   --border: 240 5.9% 90%;
   --input: 240 5.9% 90%;
   --ring: 345 100% 59%;
@@ -130,9 +155,29 @@
   --popover: 22 12% 16%;
   --popover-foreground: 35 25% 90%;
 
-  /* Primary - FoodShare Pink/Coral for warm palette */
-  --primary: 345 85% 60%;
-  --primary-foreground: 0 0% 100%;
+  /* Primary - FoodShare Pink/Coral for the warm palette.
+   *
+   * Lighter here, and paired with a dark foreground, which is the shadcn dark
+   * convention and the only arrangement that satisfies *both* jobs this token
+   * has. It is the background of the default Button, and it is also the colour
+   * of every `text-primary` link (224 call sites), and on a dark page those two
+   * want opposite things: a button background wants to be dark enough for white
+   * text, while link text wants to be light enough to read on a near-black
+   * page. Darkening the token to fix the button made the links *worse* —
+   *
+   *   60% #f0426e   white text 3.68:1, on the page 4.12:1
+   *   48% #e21246   white text 4.76:1, on the page 3.18:1   <- the link got worse
+   *
+   * Flipping the pair resolves it without touching a single call site:
+   *
+   *   72% #f47b99   dark text 7.32:1, on the page 5.87:1
+   *
+   * Both clear AA with margin, and the hue is unchanged, so it still reads as
+   * the brand pink. scripts/check-contrast.ts asserts both roles, so a
+   * lightness change that fixes one and breaks the other fails the build.
+   */
+  --primary: 345 85% 72%;
+  --primary-foreground: 345 40% 8%;
 
   /* Secondary - warm muted brown */
   --secondary: 25 12% 22%;
@@ -147,8 +192,12 @@
   --accent-foreground: 35 25% 90%;
 
   /* Destructive */
-  --destructive: 0 65% 55%;
-  --destructive-foreground: 0 0% 98%;
+  /* Same reasoning as `--primary` above, and the same shape: 55% gave 4.24:1
+   * with white text and 3.42:1 as a label on the dark page, so darkening it for
+   * the button made the label worse. 70% with a dark foreground gives 6.73:1 and
+   * 5.42:1. */
+  --destructive: 0 80% 70%;
+  --destructive-foreground: 0 30% 8%;
 
   /* Border, Input, Ring - warm brown tones */
   --border: 25 10% 24%;

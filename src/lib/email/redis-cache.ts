@@ -70,7 +70,7 @@ export async function getCachedHealth(): Promise<CachedHealthData | null> {
   }
 }
 
-export async function setCachedHealth(data: CachedHealthData, ttl: number = 300): Promise<void> {
+export async function setCachedHealth(data: CachedHealthData, ttl = 300): Promise<void> {
   try {
     const redis = getRedis();
     await redis.setex("email:health:latest", ttl, JSON.stringify(data));
@@ -89,8 +89,8 @@ export async function setCachedHealth(data: CachedHealthData, ttl: number = 300)
  */
 export async function checkRateLimit(
   email: string,
-  maxAttempts: number = 5,
-  windowSeconds: number = 3600
+  maxAttempts = 5,
+  windowSeconds = 3600,
 ): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
   try {
     const redis = getRedis();
@@ -107,9 +107,7 @@ export async function checkRateLimit(
     if (count >= maxAttempts) {
       // Get oldest attempt to calculate reset time
       const oldest = await redis.zrange<{ member: string; score: number }[]>(key, 0, 0, { withScores: true });
-      const resetAt = oldest.length > 0
-        ? oldest[0].score + windowSeconds * 1000
-        : now + windowSeconds * 1000;
+      const resetAt = oldest.length > 0 ? oldest[0].score + windowSeconds * 1000 : now + windowSeconds * 1000;
 
       return {
         allowed: false,
@@ -166,10 +164,7 @@ export async function getDailyStats(): Promise<DailyStats> {
   }
 }
 
-export async function incrementStat(
-  stat: "processed" | "successful" | "failed",
-  amount: number = 1
-): Promise<void> {
+export async function incrementStat(stat: "processed" | "successful" | "failed", amount = 1): Promise<void> {
   try {
     const redis = getRedis();
     await redis.hincrby("email:stats:daily", stat, amount);
@@ -208,7 +203,7 @@ export interface MetricPoint {
   best_provider: string | null;
 }
 
-export async function getMetricsTimeSeries(hours: number = 24): Promise<MetricPoint[]> {
+export async function getMetricsTimeSeries(hours = 24): Promise<MetricPoint[]> {
   try {
     const redis = getRedis();
     const cutoff = Date.now() - hours * 60 * 60 * 1000;
@@ -234,7 +229,7 @@ export async function getMetricsTimeSeries(hours: number = 24): Promise<MetricPo
 // Alert Management
 // ============================================================================
 
-export async function getCriticalAlerts(limit: number = 10): Promise<string[]> {
+export async function getCriticalAlerts(limit = 10): Promise<string[]> {
   try {
     const redis = getRedis();
     return await redis.lrange("email:alerts:critical", 0, limit - 1);
@@ -258,10 +253,7 @@ export async function addCriticalAlert(alert: string): Promise<void> {
 // Distributed Locking
 // ============================================================================
 
-export async function acquireLock(
-  lockKey: string,
-  ttlSeconds: number = 300
-): Promise<string | null> {
+export async function acquireLock(lockKey: string, ttlSeconds = 300): Promise<string | null> {
   try {
     const redis = getRedis();
     const lockValue = crypto.randomUUID();

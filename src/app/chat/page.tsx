@@ -1,7 +1,7 @@
+import { getAllUserChats, getChatMessages } from "@/lib/data/chat";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ChatPageClient } from "./ChatPageClient";
-import { createClient } from "@/lib/supabase/server";
-import { getAllUserChats, getChatMessages } from "@/lib/data/chat";
 
 type SearchParams = Promise<{
   food?: string;
@@ -55,9 +55,7 @@ export default async function ChatPage({ searchParams }: { searchParams: SearchP
 
   // If food param provided, find the matching room
   if (params.food && !activeRoomId) {
-    const foodRoom = chatRooms.find(
-      (r) => r.type === "food" && r.postId === parseInt(params.food!, 10)
-    );
+    const foodRoom = chatRooms.find((r) => r.type === "food" && r.postId === Number.parseInt(params.food!, 10));
     if (foodRoom) {
       activeRoomId = foodRoom.id;
     }

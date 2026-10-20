@@ -6,7 +6,7 @@
  */
 
 // Load environment variables
-import { resolve } from "path";
+import { resolve } from "bun:path";
 import { config } from "dotenv";
 
 // Load .env.local first (higher priority), then .env

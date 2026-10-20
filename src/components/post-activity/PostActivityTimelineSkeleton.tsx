@@ -24,13 +24,14 @@ export function PostActivityTimelineSkeleton({
   return (
     <div className={cn("relative", className)}>
       {/* Timeline line */}
-      <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
+      <div className="absolute start-4 top-0 bottom-0 w-px bg-border" />
 
       <div className="space-y-4">
         {Array.from({ length: count }).map((_, i) => (
-          <div key={i} className="relative pl-10">
+          // biome-ignore lint/suspicious/noArrayIndexKey: a fixed number of identical, non-interactive placeholders. No identity to key on, nothing reorders, no per-row state.
+          <div key={i} className="relative ps-10">
             {/* Icon circle skeleton */}
-            <Skeleton className="absolute left-0 w-8 h-8 rounded-full" />
+            <Skeleton className="absolute start-0 w-8 h-8 rounded-full" />
 
             <div className={cn("bg-card rounded-lg border", compact ? "p-2" : "p-4")}>
               <div className="flex items-start justify-between gap-2">

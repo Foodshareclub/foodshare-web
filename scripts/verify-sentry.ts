@@ -5,8 +5,7 @@
  * Usage: bun scripts/verify-sentry.ts
  * Exit non-zero on any failure so CI can gate on it.
  */
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join } from "bun:path";
 
 const root = join(import.meta.dir, "..");
 let failures = 0;
@@ -20,68 +19,55 @@ function check(label: string, ok: boolean, hint?: string) {
   }
 }
 
-function contains(path: string, needle: string): boolean {
+async function contains(path: string, needle: string): Promise<boolean> {
   const full = join(root, path);
-  if (!existsSync(full)) return false;
-  return readFileSync(full, "utf8").includes(needle);
+  if (!(await Bun.file(full).exists())) return false;
+  return (await Bun.file(full).text()).includes(needle);
+}
+
+/** Whether a path exists, as a promise. */
+function exists(path: string): Promise<boolean> {
+  return Bun.file(path).exists();
 }
 
 console.log("Sentry wiring verification\n");
 
 console.log("configs:");
-check("sentry.client.config.ts exists", existsSync(join(root, "sentry.client.config.ts")));
-check("sentry.server.config.ts exists", existsSync(join(root, "sentry.server.config.ts")));
-check("sentry.edge.config.ts exists", existsSync(join(root, "sentry.edge.config.ts")));
-check(
-  "client uses NEXT_PUBLIC_SENTRY_DSN",
-  contains("sentry.client.config.ts", "NEXT_PUBLIC_SENTRY_DSN")
-);
-check(
-  "server falls back SENTRY_DSN → NEXT_PUBLIC_SENTRY_DSN",
-  contains("sentry.server.config.ts", "SENTRY_DSN")
-);
+check("sentry.client.config.ts exists", await exists(join(root, "sentry.client.config.ts")));
+check("sentry.server.config.ts exists", await exists(join(root, "sentry.server.config.ts")));
+check("sentry.edge.config.ts exists", await exists(join(root, "sentry.edge.config.ts")));
+check("client uses NEXT_PUBLIC_SENTRY_DSN", await contains("sentry.client.config.ts", "NEXT_PUBLIC_SENTRY_DSN"));
+check("server falls back SENTRY_DSN → NEXT_PUBLIC_SENTRY_DSN", await contains("sentry.server.config.ts", "SENTRY_DSN"));
 
 console.log("runtime loader:");
-check(
-  "instrumentation.ts registers server config",
-  contains("src/instrumentation.ts", "sentry.server.config")
-);
-check(
-  "instrumentation.ts registers edge config",
-  contains("src/instrumentation.ts", "sentry.edge.config")
-);
-check(
-  "instrumentation.ts captures request errors",
-  contains("src/instrumentation.ts", "captureException")
-);
+check("instrumentation.ts registers server config", await contains("src/instrumentation.ts", "sentry.server.config"));
+check("instrumentation.ts registers edge config", await contains("src/instrumentation.ts", "sentry.edge.config"));
+check("instrumentation.ts captures request errors", await contains("src/instrumentation.ts", "captureException"));
 
 console.log("error boundaries:");
-check("global-error.tsx exists", existsSync(join(root, "src/app/global-error.tsx")));
-check("global-error captures to Sentry", contains("src/app/global-error.tsx", "captureException"));
-check("global-error offers retry via reset", contains("src/app/global-error.tsx", "reset"));
-check("canonical sentry helper exists", existsSync(join(root, "src/lib/observability/sentry.ts")));
-check(
-  "observability barrel exports sentry helper",
-  contains("src/lib/observability/index.ts", "sentry")
-);
-check("sentry test endpoint exists", existsSync(join(root, "src/app/api/sentry-test/route.ts")));
+check("global-error.tsx exists", await exists(join(root, "src/app/global-error.tsx")));
+check("global-error captures to Sentry", await contains("src/app/global-error.tsx", "captureException"));
+check("global-error offers retry via reset", await contains("src/app/global-error.tsx", "reset"));
+check("canonical sentry helper exists", await exists(join(root, "src/lib/observability/sentry.ts")));
+check("observability barrel exports sentry helper", await contains("src/lib/observability/index.ts", "sentry"));
+check("sentry test endpoint exists", await exists(join(root, "src/app/api/sentry-test/route.ts")));
 
 console.log("env templates:");
 for (const f of [".env.example", ".env.local.example", ".env.production.example"]) {
-  check(`${f} documents NEXT_PUBLIC_SENTRY_DSN`, contains(f, "NEXT_PUBLIC_SENTRY_DSN"));
+  check(`${f} documents NEXT_PUBLIC_SENTRY_DSN`, await contains(f, "NEXT_PUBLIC_SENTRY_DSN"));
 }
-check("next.config.ts wraps withSentryConfig", contains("next.config.ts", "withSentryConfig"));
-check("next.config.ts sets tunnelRoute", contains("next.config.ts", "tunnelRoute"));
+check("next.config.ts wraps withSentryConfig", await contains("next.config.ts", "withSentryConfig"));
+check("next.config.ts sets tunnelRoute", await contains("next.config.ts", "tunnelRoute"));
 
 console.log("CI release tracking:");
-check("web.yml sets SENTRY_RELEASE", contains(".github/workflows/web.yml", "SENTRY_RELEASE"));
+check("web.yml sets SENTRY_RELEASE", await contains(".github/workflows/web.yml", "SENTRY_RELEASE"));
 check(
   "web.yml sets NEXT_PUBLIC_SENTRY_RELEASE",
-  contains(".github/workflows/web.yml", "NEXT_PUBLIC_SENTRY_RELEASE")
+  await contains(".github/workflows/web.yml", "NEXT_PUBLIC_SENTRY_RELEASE"),
 );
 check(
   "web.yml creates Sentry release (suspect-commits → issues/PRs)",
-  contains(".github/workflows/web.yml", "getsentry/action-release")
+  await contains(".github/workflows/web.yml", "getsentry/action-release"),
 );
 
 if (failures > 0) {

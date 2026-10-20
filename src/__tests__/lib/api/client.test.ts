@@ -41,7 +41,7 @@ describe("Edge Function transport", () => {
     const headers = new Headers(init?.headers);
     expect(headers.get("Authorization")).toBe("Bearer test-user-token");
     expect(headers.get("apikey")).toBe(
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     );
     expect(init?.body).toBeUndefined();
   });
@@ -105,8 +105,8 @@ describe("Edge Function transport", () => {
           success: false,
           error: { code: "CONFLICT", message: "Refresh this listing", details: { version: 2 } },
         },
-        { status: 409 }
-      )
+        { status: 409 },
+      ),
     );
     expect(await apiGet("api-v1-products")).toMatchObject({
       success: false,
@@ -122,7 +122,7 @@ describe("Edge Function transport", () => {
         success: false,
         error: { code: "INTERNAL_ERROR" },
       });
-    }
+    },
   );
 
   test("clears the timeout after a network failure", async () => {
@@ -144,7 +144,7 @@ describe("Edge Function transport", () => {
             () => {
               controller.error(new DOMException("Aborted", "AbortError"));
             },
-            { once: true }
+            { once: true },
           );
         },
       });

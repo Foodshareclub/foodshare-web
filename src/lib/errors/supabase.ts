@@ -9,7 +9,7 @@ import type { ErrorCode, SupabaseError } from "./types";
  * Map Supabase/Postgres error codes to unified ErrorCode
  */
 export function mapSupabaseError(error: SupabaseError | string): ErrorCode {
-  const code = typeof error === "string" ? error : (error.code || "");
+  const code = typeof error === "string" ? error : error.code || "";
   const message = typeof error === "string" ? "" : (error.message || "").toLowerCase();
 
   // Network errors
@@ -69,9 +69,5 @@ export function mapSupabaseError(error: SupabaseError | string): ErrorCode {
  * Check if an error is from Supabase
  */
 export function isSupabaseError(error: unknown): error is SupabaseError {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    ("code" in error || "message" in error)
-  );
+  return typeof error === "object" && error !== null && ("code" in error || "message" in error);
 }

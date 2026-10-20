@@ -1,76 +1,66 @@
-/**
- * Password Strength Indicator
- * Visual feedback for password strength
- */
+"use client";
 
+/**
+ * Password strength meter.
+ *
+ * Every value here comes from `scorePassword()` — one scorer, in
+ * `src/lib/password-strength.ts`. This component used to carry its own copy, and
+ * the copy disagreed with the one on `/auth/reset-password`: it scored
+ * `length >= 12` and lowercase, which the product states nowhere, while omitting
+ * the uppercase rule the other page printed as a checklist. `Passw0rd!` was
+ * "Very Strong" here and "Fair" there.
+ *
+ * The label is a **catalogue key**, not a word. The old `label: "Weak"` literal
+ * was English in all 21 locales; `scorePassword` hands back
+ * `AuthFlow.strength.weak` so the component has nothing to hardcode and nothing
+ * to forget to translate.
+ */
+import { useTranslations } from "next-intl";
 import { useMemo } from "react";
+
+import { PASSWORD_RULES, scorePassword } from "@/lib/password-strength";
 
 interface PasswordStrengthProps {
   password: string;
+  /** Also print the four rules and their ticks, not just the meter. */
+  showChecklist?: boolean;
 }
 
-type StrengthLevel = "weak" | "medium" | "strong" | "very-strong";
-
-interface StrengthResult {
-  level: StrengthLevel;
-  score: number;
-  label: string;
-  color: string;
-}
-
-export const PasswordStrength: React.FC<PasswordStrengthProps> = ({ password }) => {
-  const strength = useMemo((): StrengthResult => {
-    if (!password) {
-      return { level: "weak", score: 0, label: "", color: "bg-gray-300" };
-    }
-
-    let score = 0;
-
-    // Length check
-    if (password.length >= 8) score += 1;
-    if (password.length >= 12) score += 1;
-
-    // Contains lowercase
-    if (/[a-z]/.test(password)) score += 1;
-
-    // Contains uppercase
-    if (/[A-Z]/.test(password)) score += 1;
-
-    // Contains number
-    if (/[0-9]/.test(password)) score += 1;
-
-    // Contains special character
-    if (/[^A-Za-z0-9]/.test(password)) score += 1;
-
-    // Determine strength level
-    if (score <= 2) {
-      return { level: "weak", score, label: "Weak", color: "bg-red-500" };
-    } else if (score <= 4) {
-      return { level: "medium", score, label: "Medium", color: "bg-orange-500" };
-    } else if (score === 5) {
-      return { level: "strong", score, label: "Strong", color: "bg-green-500" };
-    } else {
-      return { level: "very-strong", score, label: "Very Strong", color: "bg-green-600" };
-    }
-  }, [password]);
+export const PasswordStrength: React.FC<PasswordStrengthProps> = ({ password, showChecklist = true }) => {
+  const t = useTranslations("AuthFlow");
+  const strength = useMemo(() => scorePassword(password), [password]);
 
   if (!password) return null;
 
   return (
-    <div className="mt-2">
-      <div className="flex gap-1 mb-1">
-        {[1, 2, 3, 4, 5, 6].map((level) => (
+    <div className="mt-2" id="password-strength">
+      {/* `aria-hidden`: the four bars are a visual echo of the checklist below,
+          and a screen reader announcing four unlabelled divs is noise. The text
+          label is the accessible statement of the same fact. */}
+      <div className="flex gap-1 mb-1" aria-hidden="true">
+        {PASSWORD_RULES.map((rule, index) => (
           <div
-            key={level}
+            key={rule.id}
             className={`flex-1 h-[3px] rounded-full transition-colors duration-300 ${
-              level <= strength.score ? strength.color : "bg-gray-200"
+              index < strength.score ? strength.color : "bg-gray-200"
             }`}
           />
         ))}
       </div>
-      <p className={`text-xs font-medium ${strength.color.replace("bg-", "text-")}`}>
-        &quot;Password strength: {strength.label}&quot;
-      </p>
+
+      <p className="text-xs font-medium text-muted-foreground">{t(strength.labelKey)}</p>
+
+      {showChecklist && (
+        <ul className="text-xs text-muted-foreground space-y-1 mt-2">
+          {PASSWORD_RULES.map((rule) => (
+            <li key={rule.id} className={strength.met[rule.id] ? "text-primary" : undefined}>
+              <span aria-hidden="true">{strength.met[rule.id] ? "✓" : "•"}</span> {t(rule.labelKey)}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
+
+export default PasswordStrength;

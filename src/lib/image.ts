@@ -37,7 +37,7 @@ export function normalizeImageUrl(url: string | undefined): string | undefined {
   try {
     const parsed = new URL(value.includes("://") ? value : `https://${value}`);
     const supportedHost = CONFIGURED_IMAGE_HOSTS.some(
-      (host) => parsed.hostname === host || parsed.hostname.endsWith(`.${host}`)
+      (host) => parsed.hostname === host || parsed.hostname.endsWith(`.${host}`),
     );
     if (parsed.protocol !== "https:" || parsed.username || parsed.password || !supportedHost) {
       return undefined;

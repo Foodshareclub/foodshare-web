@@ -6,15 +6,14 @@
 
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createClient } from "@/lib/supabase/client";
 import type { ForumNotification } from "@/api/forumAPI";
+import { createClient } from "@/lib/supabase/client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const forumNotificationKeys = {
   all: ["forum-notifications"] as const,
   list: (profileId: string) => [...forumNotificationKeys.all, "list", profileId] as const,
-  unreadCount: (profileId: string) =>
-    [...forumNotificationKeys.all, "unread-count", profileId] as const,
+  unreadCount: (profileId: string) => [...forumNotificationKeys.all, "unread-count", profileId] as const,
 };
 
 async function fetchForumNotifications(profileId: string): Promise<ForumNotification[]> {
@@ -26,7 +25,7 @@ async function fetchForumNotifications(profileId: string): Promise<ForumNotifica
       *,
       actor:actor_id (id, nickname, first_name, second_name, avatar_url),
       forum:forum_id (id, forum_post_name, slug)
-    `
+    `,
     )
     .eq("recipient_id", profileId)
     .order("created_at", { ascending: false })
@@ -38,10 +37,7 @@ async function fetchForumNotifications(profileId: string): Promise<ForumNotifica
 
 async function markNotificationRead(notificationId: string): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase
-    .from("forum_notifications")
-    .update({ is_read: true })
-    .eq("id", notificationId);
+  const { error } = await supabase.from("forum_notifications").update({ is_read: true }).eq("id", notificationId);
 
   if (error) throw error;
 }
@@ -84,7 +80,7 @@ export function useMarkForumNotificationRead(profileId: string) {
 
       // Optimistic update
       queryClient.setQueryData<ForumNotification[]>(queryKey, (old) =>
-        old?.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n))
+        old?.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n)),
       );
 
       return { previous };
@@ -108,9 +104,7 @@ export function useMarkAllForumNotificationsRead(profileId: string) {
 
       const previous = queryClient.getQueryData<ForumNotification[]>(queryKey);
 
-      queryClient.setQueryData<ForumNotification[]>(queryKey, (old) =>
-        old?.map((n) => ({ ...n, is_read: true }))
-      );
+      queryClient.setQueryData<ForumNotification[]>(queryKey, (old) => old?.map((n) => ({ ...n, is_read: true })));
 
       return { previous };
     },

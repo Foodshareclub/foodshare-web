@@ -3,16 +3,10 @@
  * Free tier: 300 emails/day
  */
 
-import * as brevo from "@getbrevo/brevo";
-import type {
-  SendEmailRequest,
-  SendEmailResponse,
-  BrevoConfig,
-  ProviderQuota,
-  EmailAddress,
-} from "../types";
-import { BaseEmailProvider } from "./base";
 import { supabase } from "@/lib/supabase/client";
+import * as brevo from "@getbrevo/brevo";
+import type { BrevoConfig, EmailAddress, ProviderQuota, SendEmailRequest, SendEmailResponse } from "../types";
+import { BaseEmailProvider } from "./base";
 
 export class BrevoProvider extends BaseEmailProvider {
   readonly provider = "brevo" as const;

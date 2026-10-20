@@ -6,7 +6,7 @@
  */
 
 import { motion } from "framer-motion";
-import { TAB_PANEL_VARIANTS, TAB_PANEL_TRANSITION } from "../constants";
+import { TAB_PANEL_TRANSITION, TAB_PANEL_VARIANTS } from "../constants";
 
 interface TabPanelProps {
   children: React.ReactNode;

@@ -1,8 +1,8 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { serverActionError, serverActionSuccess } from "@/lib/errors";
 import type { ServerActionResult } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
 
 // NOTE: READ functions have been moved to @/lib/data/analytics
 // This file only contains WRITE/mutation actions per the architecture rule.
@@ -16,10 +16,7 @@ import type { ServerActionResult } from "@/lib/errors";
  * Currently a no-op since MotherDuck doesn't work in Docker.
  * In production, you'd send this to a dedicated analytics service.
  */
-export async function trackEvent(
-  _eventName: string,
-  _properties: Record<string, unknown> = {}
-): Promise<void> {
+export async function trackEvent(_eventName: string, _properties: Record<string, unknown> = {}): Promise<void> {
   // No-op - MotherDuck doesn't work in Docker
   // Consider using a service like PostHog, Mixpanel, or Amplitude
 }
@@ -40,7 +37,7 @@ export interface TriggerSyncResult {
 }
 
 export async function triggerAnalyticsSync(
-  _mode: "full" | "incremental" = "incremental"
+  _mode: "full" | "incremental" = "incremental",
 ): Promise<ServerActionResult<TriggerSyncResult>> {
   try {
     const supabase = await createClient();
@@ -53,13 +50,9 @@ export async function triggerAnalyticsSync(
     }
 
     // No sync needed - we query Supabase directly
-    const { count: userCount } = await supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true });
+    const { count: userCount } = await supabase.from("profiles").select("*", { count: "exact", head: true });
 
-    const { count: listingCount } = await supabase
-      .from("posts")
-      .select("*", { count: "exact", head: true });
+    const { count: listingCount } = await supabase.from("posts").select("*", { count: "exact", head: true });
 
     return serverActionSuccess({
       success: true,
@@ -72,9 +65,6 @@ export async function triggerAnalyticsSync(
     });
   } catch (error) {
     console.error("Failed to get sync status:", error);
-    return serverActionError(
-      error instanceof Error ? error.message : "Unknown error",
-      "SERVER_ERROR"
-    );
+    return serverActionError(error instanceof Error ? error.message : "Unknown error", "SERVER_ERROR");
   }
 }

@@ -10,9 +10,9 @@
  * - Smart suggestions based on category
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useDebounce } from "./useDebounce";
 import { supabase } from "@/lib/supabase/client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useDebounce } from "./useDebounce";
 
 export interface SearchSuggestion {
   id: string;
@@ -65,10 +65,10 @@ function getSearchHistory(): string[] {
 function saveToHistory(searchTerm: string): void {
   try {
     const history = getSearchHistory();
-    const updated = [
-      searchTerm,
-      ...history.filter((item) => item.toLowerCase() !== searchTerm.toLowerCase()),
-    ].slice(0, MAX_HISTORY_ITEMS);
+    const updated = [searchTerm, ...history.filter((item) => item.toLowerCase() !== searchTerm.toLowerCase())].slice(
+      0,
+      MAX_HISTORY_ITEMS,
+    );
     localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updated));
   } catch (error) {
     console.warn("Failed to save search history:", error);
@@ -90,43 +90,14 @@ export function clearSearchHistory(): void {
  * Popular search terms by category
  */
 const POPULAR_SEARCHES: Record<string, string[]> = {
-  food: [
-    "Fresh vegetables",
-    "Baked goods",
-    "Fruits",
-    "Dairy products",
-    "Canned food",
-    "Bread",
-    "Pasta",
-    "Rice",
-  ],
-  things: [
-    "Household items",
-    "Furniture",
-    "Electronics",
-    "Clothing",
-    "Books",
-    "Toys",
-    "Kitchen items",
-    "Tools",
-  ],
+  food: ["Fresh vegetables", "Baked goods", "Fruits", "Dairy products", "Canned food", "Bread", "Pasta", "Rice"],
+  things: ["Household items", "Furniture", "Electronics", "Clothing", "Books", "Toys", "Kitchen items", "Tools"],
   borrow: ["Tools", "Equipment", "Books", "Games", "Sports gear", "Kitchen appliances"],
   wanted: ["Food", "Furniture", "Electronics", "Clothing", "Books", "Toys"],
-  all: [
-    "Fresh vegetables",
-    "Baked goods",
-    "Household items",
-    "Books",
-    "Furniture",
-    "Tools",
-    "Clothing",
-    "Electronics",
-  ],
+  all: ["Fresh vegetables", "Baked goods", "Household items", "Books", "Furniture", "Tools", "Clothing", "Electronics"],
 };
 
-export function useSearchSuggestions(
-  options: UseSearchSuggestionsOptions = {}
-): UseSearchSuggestionsReturn {
+export function useSearchSuggestions(options: UseSearchSuggestionsOptions = {}): UseSearchSuggestionsReturn {
   const {
     category = "all",
     minLength = DEFAULT_MIN_LENGTH,
@@ -215,7 +186,7 @@ export function useSearchSuggestions(
         return [];
       }
     },
-    [category, maxSuggestions]
+    [category, maxSuggestions],
   );
 
   /**
@@ -299,7 +270,7 @@ export function useSearchSuggestions(
    * Handle search submission
    */
   const handleSearch = useCallback((term: string) => {
-    if (term && term.trim()) {
+    if (term?.trim()) {
       saveToHistory(term.trim());
       setRecentSearches(getSearchHistory());
     }

@@ -25,19 +25,32 @@ export function fuzzProductCoordinates(
     return { ...product, coordinates_approximate: false };
   }
 
+  // The public response must not reveal the exact pickup address or alternate
+  // coordinate representations, even when the scalar coordinates are absent.
+  const publicProduct: Record<string, unknown> = {
+    ...product,
+    post_address: typeof product.post_stripped_address === "string"
+      ? product.post_stripped_address
+      : null,
+    location: null,
+    location_json: null,
+    latitude: null,
+    longitude: null,
+  };
+
   const lat = product.latitude as number | undefined;
   const lng = product.longitude as number | undefined;
   const postId = product.id as number | undefined;
 
   // No coordinates to fuzz
   if (lat == null || lng == null || postId == null) {
-    return product;
+    return publicProduct;
   }
 
   const fuzzed = approximateLocation(lat, lng, postId);
 
   const result: Record<string, unknown> = {
-    ...product,
+    ...publicProduct,
     latitude: fuzzed.latitude,
     longitude: fuzzed.longitude,
     // The raw PostGIS value also contains exact coordinates.

@@ -5,21 +5,21 @@
 
 import {
   BarChart3,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Heart,
+  Inbox,
   Megaphone,
-  Zap,
-  Users,
   Send,
   Settings,
-  FileText,
-  Inbox,
-  Heart,
   Star,
-  Clock,
-  CheckCircle2,
+  Users,
+  Zap,
 } from "lucide-react";
 
-import type { TabConfig, EmailTypeOption, ProviderOption, ProviderStatusConfig } from "./types";
 import type { EmailDashboardStats } from "@/lib/data/admin-email";
+import type { EmailTypeOption, ProviderOption, ProviderStatusConfig, TabConfig } from "./types";
 
 /**
  * Dashboard tab configuration

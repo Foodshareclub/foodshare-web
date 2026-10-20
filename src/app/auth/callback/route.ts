@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
-import { invalidateTag } from "@/lib/data/cache-invalidation";
-import { safeInternalPath } from "@/lib/security/redirect";
 import { trackEvent } from "@/app/actions/analytics";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { safeInternalPath } from "@/lib/security/redirect";
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+import { NextResponse } from "next/server";
 
 /**
  * Auth Callback Route Handler

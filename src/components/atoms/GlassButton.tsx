@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import { cn } from "@/lib/cn";
+import * as React from "react";
 
 // ─── GlassButton — Standalone Atom ────────────────────────────────────────────
 //
@@ -54,7 +54,8 @@ export const GlassButton = ({
   "aria-label": ariaLabel,
   ...props
 }: GlassButtonProps) => {
-  const baseClasses = `relative inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none`;
+  const baseClasses =
+    "relative inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none";
 
   return (
     <button
@@ -64,7 +65,7 @@ export const GlassButton = ({
         sizeClasses[size],
         loading && "cursor-not-allowed opacity-50",
         "data-[state=disabled]:pointer-events-none",
-        className
+        className,
       )}
       onClick={disabled || loading ? undefined : onClick}
       disabled={disabled || loading}
@@ -73,7 +74,7 @@ export const GlassButton = ({
       {...props}
     >
       {loading ? (
-        <span className="align-middle animate-spin h-4 w-4 mr-2 -mr-px" />
+        <span className="align-middle animate-spin h-4 w-4 me-2 -me-px" />
       ) : (
         React.Children.map(children, (child) => child)
       )}

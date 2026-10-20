@@ -3,16 +3,16 @@
  * Unit tests for Telegram link token generation, status, and unlinking
  */
 
-import { mock, describe, it, expect, beforeEach } from "bun:test";
-import { getTelegramStatus, generateTelegramLink, unlinkTelegram } from "@/app/actions/telegram";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { generateTelegramLink, getTelegramStatus, unlinkTelegram } from "@/app/actions/telegram";
 
 const mockState = {
   user: null as { id: string; email: string } | null,
   profile: null as { telegram_id: number | null; telegram_username: string | null } | null,
-  rpcResult: null as any,
-  rpcError: null as any,
-  authError: null as any,
-  dbError: null as any,
+  rpcResult: null as unknown,
+  rpcError: null as { message: string } | null,
+  authError: null as { message: string } | null,
+  dbError: null as { message: string; code?: string } | null,
 };
 
 mock.module("next/cache", () => ({

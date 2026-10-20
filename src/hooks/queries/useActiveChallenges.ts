@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export interface ActiveChallenge {
   id: number;
@@ -65,7 +65,7 @@ export function useCompleteChallenge() {
 
       // Optimistically remove the completed challenge
       queryClient.setQueryData<ActiveChallenge[]>(activeChallengesKeys.list(), (old) =>
-        old?.filter((c) => c.challengeId !== challengeId)
+        old?.filter((c) => c.challengeId !== challengeId),
       );
 
       return { previous };

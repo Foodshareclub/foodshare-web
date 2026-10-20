@@ -1,13 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { ChevronRight, Heart, X } from "lucide-react";
-import type { NavItem } from "./navigation-config";
-import { accountItems, preferenceItems, supportItems } from "./navigation-config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { ChevronRight, Heart, X } from "lucide-react";
+import Link from "next/link";
+import type { NavItem } from "./navigation-config";
+import { accountItems, preferenceItems, supportItems } from "./navigation-config";
 
 function NavSection({
   title,
@@ -20,9 +20,7 @@ function NavSection({
 }) {
   return (
     <div className="space-y-1">
-      <p className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-        {title}
-      </p>
+      <p className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</p>
       {items.map((item) => {
         const Icon = item.icon;
         const isActive = currentPath === item.href;
@@ -36,7 +34,7 @@ function NavSection({
               <div
                 className={cn(
                   "w-9 h-9 rounded-lg flex items-center justify-center bg-gradient-to-br opacity-40",
-                  item.gradient
+                  item.gradient,
                 )}
               >
                 <Icon className="w-4 h-4 text-white" />
@@ -62,14 +60,14 @@ function NavSection({
             href={item.href}
             className={cn(
               "group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
-              isActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted/80"
+              isActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted/80",
             )}
           >
             <div
               className={cn(
                 "w-9 h-9 rounded-lg flex items-center justify-center bg-gradient-to-br shadow-sm transition-transform duration-200",
                 "group-hover:scale-105",
-                item.gradient
+                item.gradient,
               )}
             >
               <Icon className="w-4 h-4 text-white" />
@@ -82,7 +80,7 @@ function NavSection({
               className={cn(
                 "w-4 h-4 text-muted-foreground/50 transition-all duration-200",
                 "group-hover:text-foreground group-hover:translate-x-0.5",
-                isActive && "text-primary"
+                isActive && "text-primary",
               )}
             />
           </Link>
@@ -119,8 +117,7 @@ export function SettingsSidebar({ currentPath, onClose }: SettingsSidebarProps) 
 
       <div className="p-4 border-t border-border/50">
         <p className="text-xs text-muted-foreground text-center">
-          FoodShare v1.0 · Made with <Heart className="inline w-3 h-3 text-rose-500 mx-0.5" /> for
-          the community
+          FoodShare v1.0 · Made with <Heart className="inline w-3 h-3 text-rose-500 mx-0.5" /> for the community
         </p>
       </div>
     </div>

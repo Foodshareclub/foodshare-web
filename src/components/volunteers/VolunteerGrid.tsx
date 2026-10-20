@@ -1,8 +1,8 @@
 "use client";
 
+import type { InitialProductStateType } from "@/types/product.types";
 import { useEffect, useRef } from "react";
 import { VolunteerPostcard } from "./VolunteerPostcard";
-import type { InitialProductStateType } from "@/types/product.types";
 
 interface VolunteerGridProps {
   volunteers: InitialProductStateType[];
@@ -50,7 +50,7 @@ export function VolunteerGrid({
           onLoadMore();
         }
       },
-      { rootMargin: "200px" }
+      { rootMargin: "200px" },
     );
 
     const currentRef = loadMoreRef.current;
@@ -75,10 +75,7 @@ export function VolunteerGrid({
   });
 
   return (
-    <div
-      className="overflow-y-auto"
-      style={{ transform: "translateZ(0)", WebkitOverflowScrolling: "touch" }}
-    >
+    <div className="overflow-y-auto" style={{ transform: "translateZ(0)", WebkitOverflowScrolling: "touch" }}>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 page-px py-7">
         {isLoading
           ? SKELETON_ITEMS.map((i) => <VolunteerCardSkeleton key={i} />)
@@ -91,8 +88,7 @@ export function VolunteerGrid({
             ))}
 
         {/* Loading more skeletons */}
-        {isFetchingMore &&
-          LOADING_MORE_SKELETONS.map((i) => <VolunteerCardSkeleton key={`loading-more-${i}`} />)}
+        {isFetchingMore && LOADING_MORE_SKELETONS.map((i) => <VolunteerCardSkeleton key={`loading-more-${i}`} />)}
       </div>
 
       {/* Infinite scroll trigger */}

@@ -1,17 +1,21 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { Mail, Sparkles } from "lucide-react";
+import { QueryErrorBoundary } from "@/components/ErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEmailCRMData } from "@/hooks/queries/useEmailCRM";
+import { Mail, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { QueryErrorBoundary } from "@/components/ErrorBoundary";
+import dynamic from "next/dynamic";
 
 // Dynamic import: ~150KB+ saved (Framer Motion + complex dashboard)
 const EmailCRMDashboard = dynamic(
   () => import("@/app/admin/email/components/EmailCRMDashboard").then((mod) => ({ default: mod.EmailCRMDashboard })),
-  { ssr: false }
+  { ssr: false },
 );
+
+const EMAIL_BADGE_SKELETON_KEYS = ["a", "b", "c"] as const;
+const EMAIL_TAB_SKELETON_KEYS = ["a", "b", "c", "d", "e", "f"] as const;
+const EMAIL_CARD_SKELETON_KEYS = ["a", "b", "c", "d"] as const;
 
 function EmailSkeleton() {
   return (
@@ -19,8 +23,8 @@ function EmailSkeleton() {
       <div className="border-b border-border/40 bg-card/60 backdrop-blur-sm p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-7 w-20 rounded-full" />
+            {EMAIL_BADGE_SKELETON_KEYS.map((k) => (
+              <Skeleton key={k} className="h-7 w-20 rounded-full" />
             ))}
           </div>
           <div className="flex items-center gap-3">
@@ -29,15 +33,15 @@ function EmailSkeleton() {
           </div>
         </div>
         <div className="flex gap-2 mt-4">
-          {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} className="h-10 w-24 rounded-lg" />
+          {EMAIL_TAB_SKELETON_KEYS.map((k) => (
+            <Skeleton key={k} className="h-10 w-24 rounded-lg" />
           ))}
         </div>
       </div>
       <div className="p-5 space-y-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="rounded-xl border border-border/50 bg-card/50 p-4">
+          {EMAIL_CARD_SKELETON_KEYS.map((k) => (
+            <div key={k} className="rounded-xl border border-border/50 bg-card/50 p-4">
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
                   <Skeleton className="h-3 w-20" />
@@ -70,9 +74,7 @@ export default function AdminEmailCRMPage() {
             <Mail className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-foreground tracking-tight">
-              {t("email_management_crm")}
-            </h1>
+            <h1 className="text-xl font-bold text-foreground tracking-tight">{t("email_management_crm")}</h1>
             <p className="text-sm text-muted-foreground flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5" />
               {t("smart_routing_quota_monitoring_and_complete_email_control")}
@@ -90,7 +92,8 @@ export default function AdminEmailCRMPage() {
 }
 
 function EmailCRMContent() {
-  const { stats, providerHealth, campaigns, automations, segments, quotaDetails, bounceStats, isLoading } = useEmailCRMData();
+  const { stats, providerHealth, campaigns, automations, segments, quotaDetails, bounceStats, isLoading } =
+    useEmailCRMData();
 
   // Show skeleton while loading or if data is not yet available
   const hasData = stats && providerHealth && campaigns && automations && segments && quotaDetails && bounceStats;

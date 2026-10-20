@@ -3,9 +3,9 @@
  * Endpoint for testing Sentry error reporting in development
  */
 
-import { NextResponse } from "next/server";
-import * as Sentry from "@sentry/nextjs";
 import type { ApiResponse } from "@/lib/api-types";
+import * as Sentry from "@sentry/nextjs";
+import { NextResponse } from "next/server";
 
 export async function GET(): Promise<NextResponse<ApiResponse<{ sent: boolean }>>> {
   try {

@@ -3,32 +3,32 @@
  * Supabase API calls for Campaign Management, Segments, Templates, and Workflows
  */
 
+import { createLogger } from "@/lib/logger";
 import { supabase } from "@/lib/supabase/client";
 import type {
   Campaign,
+  CampaignAnalytics,
+  CampaignLaunchResult,
+  CampaignListFilters,
+  CreateCampaignPayload,
+  CreateSegmentPayload,
+  CreateTemplatePayload,
+  EmailTemplate,
+  EmailTemplateCategory,
+  LaunchCampaignPayload,
+  PaginatedResponse,
+  PaginationParams,
   Segment,
   SegmentFilters,
   SegmentPreviewResult,
-  EmailTemplate,
   TemplatePreview,
-  WorkflowTemplate,
-  WorkflowExecution,
-  WorkflowExecutionWithDetails,
-  WorkflowExecutionStatus,
-  CampaignAnalytics,
-  CreateCampaignPayload,
   UpdateCampaignPayload,
-  CreateSegmentPayload,
   UpdateSegmentPayload,
-  CreateTemplatePayload,
-  LaunchCampaignPayload,
-  CampaignLaunchResult,
-  CampaignListFilters,
-  PaginationParams,
-  PaginatedResponse,
-  EmailTemplateCategory,
+  WorkflowExecution,
+  WorkflowExecutionStatus,
+  WorkflowExecutionWithDetails,
+  WorkflowTemplate,
 } from "@/types/campaign.types";
-import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("CampaignAPI");
 
@@ -93,18 +93,12 @@ export async function updateCampaign(id: string, payload: UpdateCampaignPayload)
   if (payload.name !== undefined) updateData.name = payload.name;
   if (payload.description !== undefined) updateData.description = payload.description;
   if (payload.status !== undefined) updateData.status = payload.status;
-  if (payload.audience_filters !== undefined)
-    updateData.audience_filters = payload.audience_filters;
+  if (payload.audience_filters !== undefined) updateData.audience_filters = payload.audience_filters;
   if (payload.email_subject !== undefined) updateData.email_subject = payload.email_subject;
   if (payload.email_content !== undefined) updateData.email_content = payload.email_content;
   if (payload.scheduled_at !== undefined) updateData.scheduled_at = payload.scheduled_at;
 
-  const { data, error } = await supabase
-    .from("crm_campaigns")
-    .update(updateData)
-    .eq("id", id)
-    .select()
-    .single();
+  const { data, error } = await supabase.from("crm_campaigns").update(updateData).eq("id", id).select().single();
 
   if (error) {
     logger.error("Error updating campaign", error);
@@ -131,10 +125,7 @@ export async function deleteCampaign(id: string) {
 /**
  * Fetch campaigns with filters and pagination
  */
-export async function fetchCampaigns(
-  filters?: Partial<CampaignListFilters>,
-  pagination?: Partial<PaginationParams>
-) {
+export async function fetchCampaigns(filters?: Partial<CampaignListFilters>, pagination?: Partial<PaginationParams>) {
   let query = supabase.from("crm_campaigns").select("*", { count: "exact" });
 
   // Apply filters
@@ -223,13 +214,10 @@ export async function launchCampaign(payload: LaunchCampaignPayload) {
 
     // If immediate launch, queue emails
     if (payload.immediate) {
-      const { data: queueResult, error: queueError } = await supabase.rpc(
-        "queue_campaign_emails_batch",
-        {
-          p_campaign_id: payload.campaign_id,
-          p_batch_size: 1000,
-        }
-      );
+      const { data: queueResult, error: queueError } = await supabase.rpc("queue_campaign_emails_batch", {
+        p_campaign_id: payload.campaign_id,
+        p_batch_size: 1000,
+      });
 
       if (queueError) {
         logger.error("Error queuing campaign emails", queueError);
@@ -287,10 +275,7 @@ export async function pauseCampaign(id: string) {
 /**
  * Fetch campaign analytics for a date range
  */
-export async function fetchCampaignAnalytics(
-  id: string,
-  dateRange?: { start: string; end: string }
-) {
+export async function fetchCampaignAnalytics(id: string, dateRange?: { start: string; end: string }) {
   let query = supabase.from("crm_campaign_analytics").select("*").eq("campaign_id", id);
 
   if (dateRange) {
@@ -355,12 +340,7 @@ export async function updateSegment(id: string, payload: UpdateSegmentPayload) {
   if (payload.filters !== undefined) updateData.filters = payload.filters;
   if (payload.is_dynamic !== undefined) updateData.is_dynamic = payload.is_dynamic;
 
-  const { data, error } = await supabase
-    .from("crm_segments")
-    .update(updateData)
-    .eq("id", id)
-    .select()
-    .single();
+  const { data, error } = await supabase.from("crm_segments").update(updateData).eq("id", id).select().single();
 
   if (error) {
     logger.error("Error updating segment", error);
@@ -388,10 +368,7 @@ export async function deleteSegment(id: string) {
  * Fetch all segments
  */
 export async function fetchSegments() {
-  const { data, error } = await supabase
-    .from("crm_segments")
-    .select("*")
-    .order("name", { ascending: true });
+  const { data, error } = await supabase.from("crm_segments").select("*").order("name", { ascending: true });
 
   if (error) {
     logger.error("Error fetching segments", error);
@@ -424,7 +401,7 @@ export async function previewSegment(filters: SegmentFilters) {
           items_shared
         )
       `,
-        { count: "exact" }
+        { count: "exact" },
       )
       .eq("is_archived", false);
 
@@ -492,9 +469,8 @@ export async function previewSegment(filters: SegmentFilters) {
         (data as unknown as RawPreviewCustomer[] | null)?.map((customer) => ({
           customer_id: customer.id,
           full_name:
-            [customer.profiles?.[0]?.first_name, customer.profiles?.[0]?.second_name]
-              .filter(Boolean)
-              .join(" ") || "Unknown",
+            [customer.profiles?.[0]?.first_name, customer.profiles?.[0]?.second_name].filter(Boolean).join(" ") ||
+            "Unknown",
           email: customer.profiles?.[0]?.email || "",
           lifecycle_stage: customer.lifecycle_stage,
           engagement_score: customer.engagement_score || 0,
@@ -522,10 +498,7 @@ export async function refreshSegmentMembers(id: string) {
       .single();
 
     if (segmentError || !segment) {
-      logger.error(
-        "Error fetching segment",
-        segmentError ? new Error(segmentError.message) : undefined
-      );
+      logger.error("Error fetching segment", segmentError ? new Error(segmentError.message) : undefined);
       return { data: null, error: segmentError };
     }
 
@@ -538,15 +511,10 @@ export async function refreshSegmentMembers(id: string) {
     await supabase.from("crm_segment_members").delete().eq("segment_id", id);
 
     // Calculate new members using preview logic
-    const { data: previewResult, error: previewError } = await previewSegment(
-      segment.filters as SegmentFilters
-    );
+    const { data: previewResult, error: previewError } = await previewSegment(segment.filters as SegmentFilters);
 
     if (previewError || !previewResult) {
-      logger.error(
-        "Error calculating segment members",
-        previewError ? new Error(String(previewError)) : undefined
-      );
+      logger.error("Error calculating segment members", previewError ? new Error(String(previewError)) : undefined);
       return { data: null, error: previewError };
     }
 
@@ -654,14 +622,11 @@ export async function updateTemplate(id: string, payload: Partial<CreateTemplate
 
   if (payload.name !== undefined) updateData.name = payload.name;
   if (payload.category !== undefined) updateData.category = payload.category;
-  if (payload.subject_template !== undefined)
-    updateData.subject_template = payload.subject_template;
+  if (payload.subject_template !== undefined) updateData.subject_template = payload.subject_template;
   if (payload.html_template !== undefined) updateData.html_template = payload.html_template;
   if (payload.text_template !== undefined) updateData.text_template = payload.text_template;
-  if (payload.required_variables !== undefined)
-    updateData.required_variables = payload.required_variables;
-  if (payload.optional_variables !== undefined)
-    updateData.optional_variables = payload.optional_variables;
+  if (payload.required_variables !== undefined) updateData.required_variables = payload.required_variables;
+  if (payload.optional_variables !== undefined) updateData.optional_variables = payload.optional_variables;
 
   const { data, error } = await supabase
     .from("crm_email_templates")
@@ -683,11 +648,7 @@ export async function updateTemplate(id: string, payload: Partial<CreateTemplate
  * Delete an email template
  */
 export async function deleteTemplate(id: string) {
-  const { error } = await supabase
-    .from("crm_email_templates")
-    .delete()
-    .eq("id", id)
-    .eq("is_system_template", false); // Can only delete non-system templates
+  const { error } = await supabase.from("crm_email_templates").delete().eq("id", id).eq("is_system_template", false); // Can only delete non-system templates
 
   if (error) {
     logger.error("Error deleting template", error);
@@ -732,10 +693,7 @@ export async function previewTemplate(id: string, variables: Record<string, unkn
       .single();
 
     if (templateError || !template) {
-      logger.error(
-        "Error fetching template",
-        templateError ? new Error(templateError.message) : undefined
-      );
+      logger.error("Error fetching template", templateError ? new Error(templateError.message) : undefined);
       return { data: null, error: templateError };
     }
 
@@ -773,10 +731,7 @@ export async function previewTemplate(id: string, variables: Record<string, unkn
  * Fetch all workflow templates
  */
 export async function fetchWorkflows() {
-  const { data, error } = await supabase
-    .from("crm_workflow_templates")
-    .select("*")
-    .order("name", { ascending: true });
+  const { data, error } = await supabase.from("crm_workflow_templates").select("*").order("name", { ascending: true });
 
   if (error) {
     logger.error("Error fetching workflows", error);
@@ -800,7 +755,7 @@ export async function fetchWorkflowExecutions(workflowId: string) {
         profile_id,
         profiles:profile_id (first_name, second_name, email)
       )
-    `
+    `,
     )
     .eq("workflow_id", workflowId)
     .order("started_at", { ascending: false });

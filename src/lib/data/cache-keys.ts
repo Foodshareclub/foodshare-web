@@ -16,12 +16,11 @@ const IS_DEV = process.env.NODE_ENV === "development";
 function logCacheOperation(
   operation: "hit" | "miss" | "set" | "invalidate",
   key: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): void {
   if (!IS_DEV) return;
 
-  const emoji =
-    operation === "hit" ? "✅" : operation === "miss" ? "❌" : operation === "set" ? "💾" : "🗑️";
+  const emoji = operation === "hit" ? "✅" : operation === "miss" ? "❌" : operation === "set" ? "💾" : "🗑️";
   const color =
     operation === "hit"
       ? "\x1b[32m"
@@ -34,9 +33,7 @@ function logCacheOperation(
   const time = new Date().toISOString().split("T")[1].slice(0, 12);
 
   const metaStr = metadata ? ` ${JSON.stringify(metadata)}` : "";
-  console.log(
-    `${emoji} ${color}[${time}] CACHE ${operation.toUpperCase()}${reset} ${key}${metaStr}`
-  );
+  console.log(`${emoji} ${color}[${time}] CACHE ${operation.toUpperCase()}${reset} ${key}${metaStr}`);
 }
 
 // ============================================================================
@@ -55,6 +52,9 @@ export const CACHE_TAGS = {
   // Nearby Posts (PostGIS geo-queries)
   NEARBY_POSTS: "nearby-posts",
   NEARBY_POSTS_COUNTS: "nearby-posts-counts",
+
+  // Public stats (homepage hero + category counts)
+  PUBLIC_STATS: "public-stats",
 
   // Profiles
   PROFILES: "profiles",
@@ -247,11 +247,7 @@ export function getAdminTags(): string[] {
   ];
 }
 
-export function getNewsletterTags(
-  campaignId?: string,
-  segmentId?: string,
-  automationId?: string
-): string[] {
+export function getNewsletterTags(campaignId?: string, segmentId?: string, automationId?: string): string[] {
   const tags: string[] = [
     CACHE_TAGS.NEWSLETTER,
     CACHE_TAGS.CAMPAIGNS,
@@ -286,4 +282,3 @@ export function getEmailTags(): string[] {
     CACHE_TAGS.PROVIDER_METRICS,
   ];
 }
-

@@ -2,6 +2,8 @@
  * Profile Settings Loading Component
  * Matches ProfileSettingsSkeleton from page.tsx
  */
+const PROFILE_SETTINGS_CARD_SKELETON_KEYS = ["a", "b"] as const;
+
 export default function Loading() {
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">
@@ -21,8 +23,8 @@ export default function Loading() {
 
         {/* Settings Cards Grid Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="glass rounded-xl p-6">
+          {PROFILE_SETTINGS_CARD_SKELETON_KEYS.map((k) => (
+            <div key={k} className="glass rounded-xl p-6">
               <div className="flex items-start gap-4">
                 <div className="h-12 w-12 bg-muted animate-pulse rounded-lg" />
                 <div className="flex-1 space-y-2">
@@ -35,5 +37,5 @@ export default function Loading() {
         </div>
       </div>
     </div>
-  )
+  );
 }

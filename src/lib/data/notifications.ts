@@ -26,7 +26,7 @@ export async function getUserNotifications(
     limit?: number;
     offset?: number;
     unreadOnly?: boolean;
-  } = {}
+  } = {},
 ): Promise<UserNotification[]> {
   const { limit = 20, offset = 0, unreadOnly = false } = options;
   const supabase = await createClient();
@@ -38,7 +38,7 @@ export async function getUserNotifications(
       *,
       actor:actor_id (id, first_name, second_name, avatar_url),
       post:post_id (id, post_name, images)
-    `
+    `,
     )
     .eq("recipient_id", userId)
     .order("created_at", { ascending: false })
@@ -91,7 +91,7 @@ export async function getNotification(notificationId: string): Promise<UserNotif
       *,
       actor:actor_id (id, first_name, second_name, avatar_url),
       post:post_id (id, post_name, images)
-    `
+    `,
     )
     .eq("id", notificationId)
     .single();
@@ -110,11 +110,7 @@ export async function getNotification(notificationId: string): Promise<UserNotif
 export async function getNotificationPreferences(userId: string) {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("notification_preferences")
-    .eq("id", userId)
-    .single();
+  const { data, error } = await supabase.from("profiles").select("notification_preferences").eq("id", userId).single();
 
   if (error) {
     console.error("Error fetching notification preferences:", error);

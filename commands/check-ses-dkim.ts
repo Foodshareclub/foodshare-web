@@ -1,9 +1,9 @@
-import { resolveCname } from "dns/promises";
-import path from "path";
+import { resolveCname } from "bun:dns/promises";
+import path from "bun:path";
 import {
-  SESClient,
   GetIdentityDkimAttributesCommand,
   GetIdentityVerificationAttributesCommand,
+  SESClient,
 } from "@aws-sdk/client-ses";
 import * as dotenv from "dotenv";
 
@@ -19,7 +19,7 @@ async function checkSESDkim() {
 
   if (!accessKeyId || !secretAccessKey) {
     console.error(
-      "Error: AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) not found in environment variables."
+      "Error: AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) not found in environment variables.",
     );
     process.exit(1);
   }
@@ -96,10 +96,7 @@ async function checkSESDkim() {
             console.log(`\nRecord: ${recordName}`);
             if (output) {
               console.log(`  ✅ Found: ${output}`);
-              if (
-                output === `${token}.dkim.amazonses.com` ||
-                output === `${token}.dkim.amazonses.com.`
-              ) {
+              if (output === `${token}.dkim.amazonses.com` || output === `${token}.dkim.amazonses.com.`) {
                 console.log("  ✅ Value matches AWS expectation.");
               } else {
                 console.log(`  ⚠️ Value mismatch! Expected ${token}.dkim.amazonses.com`);

@@ -1,19 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import {
-  Scale,
-  DollarSign,
-  Flame,
-  Droplet,
-  RefreshCw,
-  BarChart2,
-  AlertTriangle,
-  Terminal,
-} from "lucide-react";
 import { Card, CardContent } from "@/components/foodlytics/ui/card";
-import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase/client";
+import { AnimatePresence, motion } from "framer-motion";
+import { AlertTriangle, BarChart2, DollarSign, Droplet, Flame, RefreshCw, Scale, Terminal } from "lucide-react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 
 interface FoodWasteCategory {
   id: string;
@@ -35,12 +26,10 @@ export function UsWasteTracker() {
 
   const terminalEndRef = useRef<HTMLDivElement | null>(null);
 
-  const fetchUSWasteData = async (refresh = false) => {
+  const fetchUSWasteData = useCallback(async (refresh = false) => {
     if (refresh) {
       setIsRefreshing(true);
-      setConsoleLogs([
-        "🚀 [" + new Date().toLocaleTimeString() + "] Dispatching agentic crawler request...",
-      ]);
+      setConsoleLogs([`🚀 [${new Date().toLocaleTimeString()}] Dispatching agentic crawler request...`]);
     } else {
       setIsLoading(true);
     }
@@ -53,7 +42,7 @@ export function UsWasteTracker() {
 
       if (error) throw error;
 
-      if (resData && resData.success) {
+      if (resData?.success) {
         setCategories(resData.data || []);
 
         if (refresh && resData.logs) {
@@ -70,32 +59,31 @@ export function UsWasteTracker() {
           }, 350);
         } else {
           setConsoleLogs([
-            "📊 [" +
-              new Date().toLocaleTimeString() +
-              "] Telemetry parsed successfully from database cache.",
+            `📊 [${new Date().toLocaleTimeString()}] Telemetry parsed successfully from database cache.`,
             "🔒 Enforcing RLS policy check: Public read access enabled.",
-            "📦 Total categories loaded: " + (resData.data?.length || 0),
+            `📦 Total categories loaded: ${resData.data?.length || 0}`,
           ]);
           setIsLoading(false);
         }
       } else {
         throw new Error(resData?.error || "Failed to load telemetry.");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error loading US waste stats:", err);
       setConsoleLogs((prev) => [
         ...prev,
-        `❌ [ERROR] ${err.message || "Unknown error during refresh."}`,
+        `❌ [ERROR] ${err instanceof Error ? err.message : "Unknown error during refresh."}`,
       ]);
       setIsRefreshing(false);
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchUSWasteData();
-  }, []);
+  }, [fetchUSWasteData]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `consoleLogs` is the trigger — the body only touches the ref, and each appended terminal line must keep the log pinned to the bottom
   useEffect(() => {
     // Auto-scroll terminal log to bottom
     if (terminalEndRef.current) {
@@ -105,14 +93,8 @@ export function UsWasteTracker() {
 
   // Aggregate stats
   const totalWasteTons = categories.reduce((sum, c) => sum + Number(c.waste_tonnes), 0);
-  const totalCostBillions = categories.reduce(
-    (sum, c) => sum + Number(c.cost_usd_billions || 0),
-    0
-  );
-  const totalCO2Millions = categories.reduce(
-    (sum, c) => sum + Number(c.co2_impact_million_tonnes || 0),
-    0
-  );
+  const totalCostBillions = categories.reduce((sum, c) => sum + Number(c.cost_usd_billions || 0), 0);
+  const totalCO2Millions = categories.reduce((sum, c) => sum + Number(c.co2_impact_million_tonnes || 0), 0);
   const maxTonnage = Math.max(...categories.map((c) => Number(c.waste_tonnes)), 1);
 
   const containerVariants = {
@@ -136,9 +118,7 @@ export function UsWasteTracker() {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <div className="h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-        <span className="text-xs font-bold text-stone-400 tracking-wider uppercase">
-          Loading US Waste Telemetry...
-        </span>
+        <span className="text-xs font-bold text-stone-400 tracking-wider uppercase">Loading US Waste Telemetry...</span>
       </div>
     );
   }
@@ -153,12 +133,12 @@ export function UsWasteTracker() {
             US Nationwide Food Waste Analytics
           </h2>
           <p className="text-xs text-stone-400">
-            Comprehensive sector analysis showing overall supply-chain breakdown from top to bottom
-            (decreasing tonnage)
+            Comprehensive sector analysis showing overall supply-chain breakdown from top to bottom (decreasing tonnage)
           </p>
         </div>
 
         <button
+          type="button"
           onClick={() => fetchUSWasteData(true)}
           disabled={isRefreshing}
           className="shrink-0 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-extrabold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 border border-emerald-500/20 hover:border-emerald-400 shadow-md shadow-emerald-950/20 transition-all cursor-pointer h-10"
@@ -210,8 +190,7 @@ export function UsWasteTracker() {
                   Economic Burden
                 </span>
                 <h3 className="text-2xl font-extrabold text-white tracking-tight">
-                  ${totalCostBillions.toFixed(1)}B{" "}
-                  <span className="text-xs font-medium text-stone-400">USD</span>
+                  ${totalCostBillions.toFixed(1)}B <span className="text-xs font-medium text-stone-400">USD</span>
                 </h3>
                 <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">
                   Lost commercial retail value
@@ -233,8 +212,7 @@ export function UsWasteTracker() {
                   Ecological Damage
                 </span>
                 <h3 className="text-2xl font-extrabold text-white tracking-tight">
-                  {totalCO2Millions.toFixed(1)}M{" "}
-                  <span className="text-xs font-medium text-stone-400">tons CO2e</span>
+                  {totalCO2Millions.toFixed(1)}M <span className="text-xs font-medium text-stone-400">tons CO2e</span>
                 </h3>
                 <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">
                   ≈ 23 million cars driven / yr
@@ -277,9 +255,7 @@ export function UsWasteTracker() {
                 <h3 className="text-sm font-black text-white uppercase tracking-wider">
                   Waste Breakdown by Food Category
                 </h3>
-                <span className="text-[10px] text-stone-500 font-bold uppercase">
-                  Ordered descending
-                </span>
+                <span className="text-[10px] text-stone-500 font-bold uppercase">Ordered descending</span>
               </div>
 
               <div className="space-y-4">
@@ -291,7 +267,9 @@ export function UsWasteTracker() {
                       key={c.id}
                       onMouseEnter={() => setActiveHoverCategory(c.id)}
                       onMouseLeave={() => setActiveHoverCategory(null)}
-                      className={`p-3 rounded-xl transition-all duration-200 border border-transparent hover:border-white/5 hover:bg-white/[0.02] flex flex-col gap-2 relative group cursor-default`}
+                      className={
+                        "p-3 rounded-xl transition-all duration-200 border border-transparent hover:border-white/5 hover:bg-white/[0.02] flex flex-col gap-2 relative group cursor-default"
+                      }
                     >
                       {/* Name & Tonnage */}
                       <div className="flex items-center justify-between text-xs font-bold">
@@ -299,9 +277,7 @@ export function UsWasteTracker() {
                           {c.category}
                         </span>
                         <div className="flex items-center gap-2 font-mono text-[11px]">
-                          <span className="text-stone-300">
-                            {(c.waste_tonnes / 1000000).toFixed(2)}M tons
-                          </span>
+                          <span className="text-stone-300">{(c.waste_tonnes / 1000000).toFixed(2)}M tons</span>
                           <span className="text-emerald-400/90">({c.waste_pct}%)</span>
                         </div>
                       </div>
@@ -342,19 +318,17 @@ export function UsWasteTracker() {
                               <span className="block text-[8px] uppercase tracking-wider text-stone-500">
                                 Economic Value
                               </span>
-                              <span className="text-rose-450 text-rose-400 font-mono">
-                                ${c.cost_usd_billions} Billion USD
-                              </span>
+                              <span className="text-rose-400 font-mono">${c.cost_usd_billions} Billion USD</span>
                             </div>
                             <div>
                               <span className="block text-[8px] uppercase tracking-wider text-stone-500">
                                 Carbon Burden
                               </span>
-                              <span className="text-emerald-450 text-emerald-400 font-mono">
+                              <span className="text-emerald-400 font-mono">
                                 {c.co2_impact_million_tonnes}M tons CO2eq
                               </span>
                             </div>
-                            <div className="text-right">
+                            <div className="text-end">
                               <span className="block text-[8px] uppercase tracking-wider text-stone-500">
                                 Source Database
                               </span>
@@ -377,23 +351,22 @@ export function UsWasteTracker() {
             <div className="p-4 border-b border-white/5 bg-white/[0.01] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Terminal className="h-4 w-4 text-emerald-400 animate-pulse" />
-                <span className="text-xs font-black uppercase text-white tracking-wider">
-                  Agent Telemetry Logs
-                </span>
+                <span className="text-xs font-black uppercase text-white tracking-wider">Agent Telemetry Logs</span>
               </div>
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
             </div>
 
-            <div className="p-4 bg-stone-950 font-mono text-[10px] text-emerald-450 text-emerald-400 h-64 overflow-y-auto space-y-2 select-text scrollbar-thin flex flex-col">
+            <div className="p-4 bg-stone-950 font-mono text-[10px] text-emerald-400 h-64 overflow-y-auto space-y-2 select-text scrollbar-thin flex flex-col">
               {consoleLogs.map((log, index) => {
-                let colorClass = "text-emerald-450 text-emerald-400";
-                if (log.includes("❌")) colorClass = "text-rose-450 text-rose-400 font-extrabold";
-                if (log.includes("⚠️")) colorClass = "text-amber-450 text-amber-400 font-extrabold";
+                let colorClass = "text-emerald-400";
+                if (log.includes("❌")) colorClass = "text-rose-400 font-extrabold";
+                if (log.includes("⚠️")) colorClass = "text-amber-400 font-extrabold";
                 if (log.includes("🔍")) colorClass = "text-sky-400 font-bold";
                 if (log.includes("✅")) colorClass = "text-emerald-300 font-bold";
 
                 return (
                   <div
+                    // biome-ignore lint/suspicious/noArrayIndexKey: append-only read-only agent console where repeated log lines are expected, so entry order is the identity
                     key={index}
                     className={`leading-relaxed border-b border-white/[0.02] pb-1 break-words ${colorClass}`}
                   >
@@ -418,10 +391,9 @@ export function UsWasteTracker() {
               US Waste Allocation Insights
             </h4>
             <p className="text-[11px] text-stone-400 leading-relaxed font-bold">
-              National data highlights that households represent the single largest waste node (47%
-              by weight), followed by restaurants & foodservice (25%). Combating retail and
-              farm-gate supply volatility remains critical to close the 50% target reduction pathway
-              by 2030.
+              National data highlights that households represent the single largest waste node (47% by weight), followed
+              by restaurants & foodservice (25%). Combating retail and farm-gate supply volatility remains critical to
+              close the 50% target reduction pathway by 2030.
             </p>
           </Card>
         </div>

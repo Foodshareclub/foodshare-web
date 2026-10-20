@@ -3,4 +3,4 @@
 Next.js API route handlers. These are HTTP endpoints exposed by the app, consumed by client-side code (React Query hooks) and external services (webhooks).
 
 **Owner**: Full-stack team
-**Runtime**: Node.js (serverless functions)
+**Runtime**: Server-only (Bun, Node.js-compatible)

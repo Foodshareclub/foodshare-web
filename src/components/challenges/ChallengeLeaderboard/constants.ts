@@ -37,7 +37,7 @@ export const CHALLENGE_TIERS: Record<ChallengeTier, TierConfig> = {
   },
   legend: {
     min: 11,
-    max: Infinity,
+    max: Number.POSITIVE_INFINITY,
     label: "Legend",
     emoji: "🏆",
     color: "text-amber-400",

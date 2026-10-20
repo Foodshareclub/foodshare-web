@@ -5,21 +5,21 @@
  * Receives pre-fetched locations and user data from Server Component
  */
 
-import React, { useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import React, { useEffect, useState, useCallback } from "react";
 import "leaflet/dist/leaflet.css";
 import "@/components/leaflet/leaflet.css";
 
-import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 import Navbar from "@/components/header/navbar/Navbar";
-import { useCustomMarkerIcon, useUserLocationIcon, createClusterIcon } from "@/hooks/useMarkerIcon";
+import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 import { useDefaultMapCenter } from "@/hooks/useDefaultMapCenter";
-import { useWebGLRenderer } from "@/hooks/useWebGLRenderer";
-import { useMapZoom } from "@/hooks/useMapZoom";
 import { useMapPosition } from "@/hooks/useMapPosition";
-import { getCoordinates, type LocationType } from "@/types/product.types";
+import { useMapZoom } from "@/hooks/useMapZoom";
+import { createClusterIcon, useCustomMarkerIcon, useUserLocationIcon } from "@/hooks/useMarkerIcon";
+import { useWebGLRenderer } from "@/hooks/useWebGLRenderer";
 import type { AuthUser } from "@/lib/data/auth";
+import { type LocationType, getCoordinates } from "@/types/product.types";
 
 // Dynamic imports for Leaflet components (SSR: false is critical!)
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), {
@@ -41,22 +41,22 @@ const MarkerClusterGroup = dynamic(() => import("react-leaflet-cluster"), {
 // Import other map components dynamically
 const MapViewController = dynamic(
   () => import("@/components/leaflet/MapViewController").then((mod) => ({ default: mod.default })),
-  { ssr: false }
+  { ssr: false },
 );
 
 const ZoomTracker = dynamic(
   () => import("@/components/leaflet/ZoomTracker").then((mod) => ({ default: mod.default })),
-  { ssr: false }
+  { ssr: false },
 );
 
 const MapPositionTracker = dynamic(
   () => import("@/components/leaflet/MapPositionTracker").then((mod) => ({ default: mod.default })),
-  { ssr: false }
+  { ssr: false },
 );
 
 const SearchMenu = dynamic(
   () => import("@/components/leaflet/SearchMenu").then((mod) => ({ default: mod.SearchMenu })),
-  { ssr: false }
+  { ssr: false },
 );
 
 const UserLocationMarker = dynamic(() => import("@/components/leaflet/UserLocationMarker"), {
@@ -65,7 +65,7 @@ const UserLocationMarker = dynamic(() => import("@/components/leaflet/UserLocati
 
 const ProductPopup = dynamic(
   () => import("@/components/map/ProductPopup").then((mod) => ({ default: mod.ProductPopup })),
-  { ssr: false }
+  { ssr: false },
 );
 
 const ViewportLoader = dynamic(() => import("@/components/leaflet/ViewportLoader"), { ssr: false });
@@ -100,7 +100,7 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
     (route: string) => {
       router.push(`/map/${route}`);
     },
-    [router]
+    [router],
   );
 
   const handleProductTypeChange = useCallback(
@@ -108,7 +108,7 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
       // Navigate to new map type - Server Component will refetch
       router.push(`/map/${newType}`);
     },
-    [router]
+    [router],
   );
 
   // Custom marker icons
@@ -119,11 +119,7 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
   const webglRenderer = useWebGLRenderer({ padding: 0.5, tolerance: 0 });
 
   // Dynamic map center based on user's location/timezone/locale
-  const {
-    center: dynamicCenter,
-    isLoading: isCenterLoading,
-    isUserLocation,
-  } = useDefaultMapCenter();
+  const { center: dynamicCenter, isLoading: isCenterLoading, isUserLocation } = useDefaultMapCenter();
 
   // Map position persistence - remembers where user was on each category
   const { savedPosition, savePosition, hasSavedPosition } = useMapPosition({
@@ -306,11 +302,7 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
                         key={`marker-${item.id}-${index}`}
                         position={[coords.lat, coords.lng]}
                       >
-                        <Popup
-                          className="custom-popup product-card-popup"
-                          closeButton={true}
-                          maxWidth={280}
-                        >
+                        <Popup className="custom-popup product-card-popup" closeButton={true} maxWidth={280}>
                           <ProductPopup
                             id={item.id}
                             productType={type}

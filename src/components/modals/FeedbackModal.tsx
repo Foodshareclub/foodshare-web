@@ -5,18 +5,14 @@
  * Allows users to submit feedback, bug reports, and feature requests
  */
 
-import React, { useState, useEffect, useRef, useTransition } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { submitFeedback, getCurrentUserInfo, type FeedbackType } from "@/app/actions/feedback";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { type FeedbackType, getCurrentUserInfo, submitFeedback } from "@/app/actions/feedback";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import type { TimerHandle } from "@/types/timer.types";
+import { AnimatePresence, motion } from "framer-motion";
+import type React from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 
 type FeedbackModalProps = {
   isOpen: boolean;
@@ -32,7 +28,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const closeTimeoutRef = useRef<TimerHandle | null>(null);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -129,8 +125,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                     &quot;Send us your feedback&quot;
                   </DialogTitle>
                   <DialogDescription className="text-sm text-muted-foreground mt-2">
-                    We&apos;d love to hear from you! Share your thoughts, report bugs, or suggest
-                    new features.
+                    We&apos;d love to hear from you! Share your thoughts, report bugs, or suggest new features.
                   </DialogDescription>
                 </DialogHeader>
               </div>
@@ -141,6 +136,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0">
                       <svg
+                        aria-hidden="true"
                         className="h-5 w-5 text-green-400"
                         viewBox="0 0 20 20"
                         fill="currentColor"
@@ -153,9 +149,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-green-800">
-                        &quot;Thank you for your feedback!&quot;
-                      </h3>
+                      <h3 className="text-sm font-medium text-green-800">&quot;Thank you for your feedback!&quot;</h3>
                       <p className="mt-1 text-sm text-green-700">
                         &quot;We&apos;ll review your message and get back to you soon.&quot;
                       </p>
@@ -169,7 +163,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                 <div className="rounded-xl border border-red-200 bg-red-50 p-4">
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <svg aria-hidden="true" className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                         <path
                           fillRule="evenodd"
                           d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -191,10 +185,14 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                   <div className="flex flex-col gap-4 items-stretch">
                     {/* Feedback Type */}
                     <div>
-                      <label className="text-sm font-medium mb-2 block text-foreground/80">
+                      <label
+                        htmlFor="feedback-modal-type"
+                        className="text-sm font-medium mb-2 block text-foreground/80"
+                      >
                         &quot;Type of feedback&quot;
                       </label>
                       <select
+                        id="feedback-modal-type"
                         value={feedbackType}
                         onChange={(e) => setFeedbackType(e.target.value as FeedbackType)}
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -208,10 +206,14 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
 
                     {/* Name */}
                     <div>
-                      <label className="text-sm font-medium mb-2 block text-foreground/80">
+                      <label
+                        htmlFor="feedback-modal-name"
+                        className="text-sm font-medium mb-2 block text-foreground/80"
+                      >
                         &quot;Your name&quot;
                       </label>
                       <Input
+                        id="feedback-modal-name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder={"John Doe"}
@@ -222,10 +224,14 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
 
                     {/* Email */}
                     <div>
-                      <label className="text-sm font-medium mb-2 block text-foreground/80">
+                      <label
+                        htmlFor="feedback-modal-email"
+                        className="text-sm font-medium mb-2 block text-foreground/80"
+                      >
                         &quot;Email address&quot;
                       </label>
                       <Input
+                        id="feedback-modal-email"
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -237,10 +243,14 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
 
                     {/* Subject */}
                     <div>
-                      <label className="text-sm font-medium mb-2 block text-foreground/80">
+                      <label
+                        htmlFor="feedback-modal-subject"
+                        className="text-sm font-medium mb-2 block text-foreground/80"
+                      >
                         &quot;Subject&quot;
                       </label>
                       <Input
+                        id="feedback-modal-subject"
                         value={subject}
                         onChange={(e) => setSubject(e.target.value)}
                         placeholder={"Brief description of your feedback"}
@@ -251,10 +261,14 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
 
                     {/* Message */}
                     <div>
-                      <label className="text-sm font-medium mb-2 block text-foreground/80">
+                      <label
+                        htmlFor="feedback-modal-message"
+                        className="text-sm font-medium mb-2 block text-foreground/80"
+                      >
                         &quot;Message&quot;
                       </label>
                       <textarea
+                        id="feedback-modal-message"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder={"Tell us more about your feedback..."}

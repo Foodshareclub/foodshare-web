@@ -36,14 +36,13 @@ foodshare/
 ├── supabase/                   # Supabase migrations and functions
 ├── .env.local                  # Environment variables (not tracked)
 ├── .gitignore                  # Git ignore patterns
-├── .nvmrc                      # Node.js version (24.11.1)
 ├── .prettierrc                 # Prettier configuration
 ├── components.json             # shadcn/ui configuration
 ├── eslint.config.mjs           # ESLint 9 flat config
 ├── lefthook.yml                # Git hooks configuration
 ├── next.config.ts              # Next.js configuration
 ├── package.json                # Bun dependencies and scripts
-├── package-lock.json           # Locked dependency versions
+├── bun.lock                    # Locked dependency versions
 ├── postcss.config.mjs          # PostCSS configuration
 ├── README.md                   # Project overview
 └── tsconfig.json               # TypeScript configuration

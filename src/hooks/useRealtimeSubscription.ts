@@ -12,9 +12,10 @@
  * Based on patterns from useUnifiedChat.ts and RealtimeComments.tsx
  */
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import type { TimerHandle } from "@/types/timer.types";
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type RealtimeEvent = "INSERT" | "UPDATE" | "DELETE" | "*";
 
@@ -65,7 +66,7 @@ export function useRealtimeSubscription<T extends Record<string, unknown>>({
 }: RealtimeSubscriptionConfig<T>): UseRealtimeSubscriptionReturn {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const reconnectAttempts = useRef(0);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<TimerHandle | null>(null);
   const subscribeRef = useRef<() => void>(undefined);
 
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
@@ -76,7 +77,7 @@ export function useRealtimeSubscription<T extends Record<string, unknown>>({
       setConnectionStatus(status);
       onStatusChange?.(status);
     },
-    [onStatusChange]
+    [onStatusChange],
   );
 
   // Clean up channel
@@ -115,7 +116,7 @@ export function useRealtimeSubscription<T extends Record<string, unknown>>({
         },
         (payload) => {
           onData(payload as RealtimePostgresChangesPayload<T>);
-        }
+        },
       )
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
@@ -126,7 +127,7 @@ export function useRealtimeSubscription<T extends Record<string, unknown>>({
 
           // Exponential backoff reconnection
           if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
-            const delay = Math.min(BASE_DELAY * Math.pow(2, reconnectAttempts.current), MAX_DELAY);
+            const delay = Math.min(BASE_DELAY * 2 ** reconnectAttempts.current, MAX_DELAY);
             reconnectAttempts.current++;
 
             reconnectTimeoutRef.current = setTimeout(() => {
@@ -203,7 +204,7 @@ export function useMultiRealtimeSubscription<T extends Record<string, unknown>>(
 }: MultiRealtimeSubscriptionConfig<T>): UseRealtimeSubscriptionReturn {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const reconnectAttempts = useRef(0);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<TimerHandle | null>(null);
   const multiSubscribeRef = useRef<() => void>(undefined);
 
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
@@ -213,7 +214,7 @@ export function useMultiRealtimeSubscription<T extends Record<string, unknown>>(
       setConnectionStatus(status);
       onStatusChange?.(status);
     },
-    [onStatusChange]
+    [onStatusChange],
   );
 
   const cleanup = useCallback(() => {
@@ -250,7 +251,7 @@ export function useMultiRealtimeSubscription<T extends Record<string, unknown>>(
         },
         (payload) => {
           sub.onData(payload as RealtimePostgresChangesPayload<T>);
-        }
+        },
       );
     }
 
@@ -262,7 +263,7 @@ export function useMultiRealtimeSubscription<T extends Record<string, unknown>>(
         updateStatus("reconnecting");
 
         if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
-          const delay = Math.min(BASE_DELAY * Math.pow(2, reconnectAttempts.current), MAX_DELAY);
+          const delay = Math.min(BASE_DELAY * 2 ** reconnectAttempts.current, MAX_DELAY);
           reconnectAttempts.current++;
 
           reconnectTimeoutRef.current = setTimeout(() => {

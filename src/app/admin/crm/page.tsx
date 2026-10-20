@@ -1,27 +1,30 @@
-import { Suspense } from "react";
-import dynamic from "next/dynamic";
-import { getTranslations } from "next-intl/server";
-import { UserCircle, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCRMCustomers, getCRMDashboardStats, getCustomerTags } from "@/lib/data/crm";
+import { TrendingUp, UserCircle } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 
 // Dynamic import for code-splitting (~150KB saved from initial bundle)
 const CRMDashboardClient = dynamic(() =>
-  import("@/app/admin/crm/components/CRMDashboardClient").then((mod) => mod.CRMDashboardClient)
+  import("@/app/admin/crm/components/CRMDashboardClient").then((mod) => mod.CRMDashboardClient),
 );
+
+const CRM_STAT_SKELETON_KEYS = ["a", "b", "c", "d"] as const;
+const CRM_ROW_SKELETON_KEYS = ["a", "b", "c", "d", "e"] as const;
 
 function CRMSkeleton() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-24 rounded-xl" />
+        {CRM_STAT_SKELETON_KEYS.map((k) => (
+          <Skeleton key={k} className="h-24 rounded-xl" />
         ))}
       </div>
       <Skeleton className="h-12 w-full rounded-lg" />
       <div className="space-y-3">
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-20 w-full rounded-lg" />
+        {CRM_ROW_SKELETON_KEYS.map((k) => (
+          <Skeleton key={k} className="h-20 w-full rounded-lg" />
         ))}
       </div>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface GPUMetrics {
   fps: number;
@@ -22,13 +22,14 @@ export function useGPUPerformance(): GPUMetrics {
   });
 
   const frameTimesRef = useRef<number[]>([]);
-  const lastFrameRef = useRef(performance.now());
+  const lastFrameRef = useRef(0);
   const rafRef = useRef<number>(0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const supported = !!(navigator as any).gpu;
+    const supported = !!(navigator as { gpu?: unknown }).gpu;
+    lastFrameRef.current = performance.now();
 
     function measure() {
       const now = performance.now();

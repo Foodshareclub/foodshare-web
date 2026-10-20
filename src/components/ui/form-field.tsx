@@ -1,10 +1,10 @@
 "use client";
 
-import { forwardRef, useId, ReactNode, useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
-import { Label } from "./label";
 import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { type ReactNode, forwardRef, useEffect, useId, useState } from "react";
+import { Label } from "./label";
 
 export interface FormFieldProps {
   /** Field label */
@@ -139,7 +139,7 @@ export const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
       id: providedId,
       size = "md",
     },
-    ref
+    ref,
   ) => {
     const autoId = useId();
     const id = providedId || autoId;
@@ -177,15 +177,11 @@ export const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
           <div className="flex items-center justify-between">
             <Label
               htmlFor={id}
-              className={cn(
-                sizes.label,
-                disabled && "opacity-50 cursor-not-allowed",
-                hasError && "text-destructive"
-              )}
+              className={cn(sizes.label, disabled && "opacity-50 cursor-not-allowed", hasError && "text-destructive")}
             >
               {label}
               {required && (
-                <span className="text-destructive ml-0.5" aria-hidden="true">
+                <span className="text-destructive ms-0.5" aria-hidden="true">
                   *
                 </span>
               )}
@@ -213,7 +209,7 @@ export const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
         <div
           className={cn(
             "relative transition-all duration-200",
-            hasError && "[&>*]:border-destructive [&>*]:focus-visible:ring-destructive/30"
+            hasError && "[&>*]:border-destructive [&>*]:focus-visible:ring-destructive/30",
           )}
         >
           {children}
@@ -256,7 +252,7 @@ export const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
         </AnimatePresence>
       </motion.div>
     );
-  }
+  },
 );
 
 FormField.displayName = "FormField";

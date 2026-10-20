@@ -1,5 +1,5 @@
 /* tslint:disable */
-/* eslint-disable */
+
 export const memory: WebAssembly.Memory;
 export const calculate_smart_width: (a: number, b: number, c: number) => number;
 export const detect_image_format: (a: number, b: number, c: number) => void;

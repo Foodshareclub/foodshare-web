@@ -4,22 +4,20 @@
  * Uses bleeding-edge Next.js 16 patterns with type-safe responses
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { getChallengesPaginated } from "@/lib/data/challenges";
 import type { ApiResponse } from "@/lib/api-types";
+import { type PaginatedChallengesResponse, getChallengesPaginated } from "@/lib/data/challenges";
+import { type NextRequest, NextResponse } from "next/server";
 
 /**
  * GET /api/challenges
  * Fetches paginated challenges with proper type safety
  */
-export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<any>>> {
+export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<PaginatedChallengesResponse>>> {
   const { searchParams } = new URL(request.url);
   const requestedPage = Number(searchParams.get("page") || "1");
   const requestedLimit = Number(searchParams.get("limit") || "20");
   const page = Number.isFinite(requestedPage) ? Math.max(1, Math.floor(requestedPage)) : 1;
-  const limit = Number.isFinite(requestedLimit)
-    ? Math.max(1, Math.min(100, Math.floor(requestedLimit)))
-    : 20;
+  const limit = Number.isFinite(requestedLimit) ? Math.max(1, Math.min(100, Math.floor(requestedLimit))) : 20;
 
   const challenges = await getChallengesPaginated({
     page,
@@ -29,10 +27,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
   });
 
   if (!challenges) {
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch challenges" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Failed to fetch challenges" }, { status: 500 });
   }
 
   return NextResponse.json({ success: true, data: challenges }, { status: 200 });

@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import CategoryPageContent, { generateCategoryMetadata, PageProps } from "./CategoryPageContent";
+import { redirect } from "next/navigation";
+import CategoryPageContent, { generateCategoryMetadata, type PageProps } from "./CategoryPageContent";
 
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const searchParams = await props.searchParams;
@@ -36,12 +36,7 @@ export default async function ProductsPage(props: PageProps) {
     }
   }
 
-  return (
-    <CategoryPageContent
-      type={productType === "all" ? "all" : "food"}
-      searchParams={props.searchParams}
-    />
-  );
+  return <CategoryPageContent type={productType === "all" ? "all" : "food"} searchParams={props.searchParams} />;
 }
 
 const REDIRECT_TARGETS = [

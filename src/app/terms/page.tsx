@@ -1,102 +1,105 @@
-import Link from 'next/link'
-import { PageHeader } from '@/components/navigation/PageHeader'
-import { generatePageMetadata } from '@/lib/metadata'
+import { PageHeader } from "@/components/navigation/PageHeader";
+import { generatePageMetadata } from "@/lib/metadata";
+import type { Metadata } from "next";
+import { getLocale, getTranslations } from "next-intl/server";
+import Link from "next/link";
 
-export const metadata = generatePageMetadata({
-  title: 'Terms of Service',
-  description: 'FoodShare Terms of Service - Read our terms and conditions for using the platform.',
-  keywords: ['terms of service', 'terms', 'conditions', 'legal'],
-  path: '/terms',
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const [t, locale] = await Promise.all([getTranslations("Terms"), getLocale()]);
 
-export default function TermsPage() {
+  return generatePageMetadata({
+    title: t("meta_title"),
+    description: t("meta_description"),
+    keywords: ["terms of service", "terms", "conditions", "legal"],
+    path: "/terms",
+    locale,
+  });
+}
+
+/** @see src/app/privacy/page.tsx — the number is a reading aid, not copy. */
+function SectionHeading({ n, children }: { n: number; children: React.ReactNode }) {
+  return (
+    <h2 className="text-xl font-semibold text-foreground mb-4">
+      <span className="text-muted-foreground">{n}.</span> {children}
+    </h2>
+  );
+}
+
+export default async function TermsPage() {
+  const t = await getTranslations("Terms");
+
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">
-      <PageHeader title="Terms of Service" />
+      <PageHeader title={t("title")} />
 
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="bg-card rounded-2xl shadow-sm p-8 md:p-12">
           <div className="prose prose-gray dark:prose-invert max-w-none">
-            <p className="text-muted-foreground mb-6">
-              Last updated: December 2024
-            </p>
+            <p className="text-muted-foreground mb-6">{t("lastUpdated")}</p>
 
             <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">1. Acceptance of Terms</h2>
-              <p className="text-foreground/80 mb-4">
-                By accessing and using FoodShare, you accept and agree to be bound by the terms and
-                provisions of this agreement. If you do not agree to these terms, please do not use our service.
-              </p>
+              <SectionHeading n={1}>{t("s1_title")}</SectionHeading>
+              <p className="text-foreground/80 mb-4">{t("s1_body")}</p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">2. Description of Service</h2>
-              <p className="text-foreground/80 mb-4">
-                FoodShare is a community platform that connects people to share surplus food, reducing
-                food waste and helping those in need. Users can list available food items, discover
-                local offerings on an interactive map, and coordinate exchanges via real-time chat.
-              </p>
+              <SectionHeading n={2}>{t("s2_title")}</SectionHeading>
+              <p className="text-foreground/80 mb-4">{t("s2_body")}</p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">3. User Responsibilities</h2>
-              <p className="text-foreground/80 mb-4">As a user of FoodShare, you agree to:</p>
-              <ul className="list-disc list-inside text-foreground/80 space-y-2 ml-4">
-                <li>Provide accurate information about food items you share</li>
-                <li>Ensure all shared food is safe for consumption</li>
-                <li>Respect other community members</li>
-                <li>Use the platform only for its intended purpose</li>
-                <li>Not engage in any fraudulent or harmful activities</li>
+              <SectionHeading n={3}>{t("s3_title")}</SectionHeading>
+              <p className="text-foreground/80 mb-4">{t("s3_intro")}</p>
+              <ul className="list-disc list-inside text-foreground/80 space-y-2 ms-4">
+                <li>{t("s3_accurate")}</li>
+                <li>{t("s3_safe")}</li>
+                <li>{t("s3_respect")}</li>
+                <li>{t("s3_purpose")}</li>
+                <li>{t("s3_lawful")}</li>
               </ul>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">4. Food Safety</h2>
+              <SectionHeading n={4}>{t("s4_title")}</SectionHeading>
+              <p className="text-foreground/80 mb-4">{t("s4_body")}</p>
+            </section>
+
+            <section className="mb-8">
+              <SectionHeading n={5}>{t("s5_title")}</SectionHeading>
               <p className="text-foreground/80 mb-4">
-                FoodShare is a platform for connecting food sharers and recipients. We do not guarantee
-                the safety or quality of any food items shared through our platform. Users are responsible
-                for ensuring food safety and making informed decisions about accepting shared food.
+                {/* The link is inside a sentence, and `TranslationValues` is
+                    `string | number | Date` — so it cannot be an interpolated
+                    string. The tag lives in the ICU message, which also means
+                    the link's own text follows the word order of the language
+                    instead of being pinned to English between two English
+                    fragments. */}
+                {t.rich("privacy_link", {
+                  privacy: (chunks) => (
+                    <Link href="/privacy" className="text-[#FF2D55] hover:underline">
+                      {chunks}
+                    </Link>
+                  ),
+                })}
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">5. Privacy</h2>
-              <p className="text-foreground/80 mb-4">
-                Your privacy is important to us. Please review our{' '}
-                <Link href="/privacy" className="text-[#FF2D55] hover:underline">
-                  Privacy Policy
-                </Link>{' '}
-                to understand how we collect, use, and protect your information.
-              </p>
+              <SectionHeading n={6}>{t("s6_title")}</SectionHeading>
+              <p className="text-foreground/80 mb-4">{t("s6_body")}</p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">6. Limitation of Liability</h2>
-              <p className="text-foreground/80 mb-4">
-                FoodShare is provided &quot;as is&quot; without warranties of any kind. We are not liable
-                for any damages arising from the use of our platform, including but not limited to
-                issues related to food quality, safety, or user interactions.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">7. Changes to Terms</h2>
-              <p className="text-foreground/80 mb-4">
-                We reserve the right to modify these terms at any time. Continued use of FoodShare
-                after changes constitutes acceptance of the new terms.
-              </p>
+              <SectionHeading n={7}>{t("s7_title")}</SectionHeading>
+              <p className="text-foreground/80 mb-4">{t("s7_body")}</p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-foreground mb-4">8. Contact</h2>
-              <p className="text-foreground/80">
-                If you have questions about these Terms of Service, please contact us through the
-                feedback form in your account settings.
-              </p>
+              <SectionHeading n={8}>{t("s8_title")}</SectionHeading>
+              <p className="text-foreground/80">{t("s8_body")}</p>
             </section>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

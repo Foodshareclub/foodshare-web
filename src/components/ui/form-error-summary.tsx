@@ -1,7 +1,7 @@
 "use client";
 
-import { AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AlertCircle } from "lucide-react";
 
 export interface FormError {
   /** Field name or identifier */
@@ -71,7 +71,7 @@ export function FormErrorSummary({
                 {onErrorClick ? (
                   <button
                     type="button"
-                    className="hover:underline focus:underline focus:outline-none text-left"
+                    className="hover:underline focus:underline focus:outline-none text-start"
                     onClick={() => onErrorClick(error.field)}
                   >
                     <span className="font-medium">{error.field}:</span> {error.message}
@@ -101,9 +101,7 @@ export function FormErrorSummary({
  *
  * <FormErrorSummary errors={formErrors} />
  */
-export function rhfErrorsToFormErrors(
-  errors: Record<string, { message?: string } | undefined>
-): FormError[] {
+export function rhfErrorsToFormErrors(errors: Record<string, { message?: string } | undefined>): FormError[] {
   return Object.entries(errors)
     .filter(([, error]) => error?.message)
     .map(([field, error]) => ({

@@ -227,10 +227,7 @@ export function configureTracing(newConfig: TracingConfig): void {
 /**
  * Start a new span
  */
-export function startSpan(
-  name: string,
-  attributes: Record<string, string | number | boolean> = {}
-): Span {
+export function startSpan(name: string, attributes: Record<string, string | number | boolean> = {}): Span {
   const ctx = currentContext || createTraceContext();
 
   const span: Span = {
@@ -279,10 +276,7 @@ export function endSpan(span: Span, status: "ok" | "error" = "ok", error?: strin
   // Log if enabled
   if (config.enableConsoleLogging) {
     const statusIcon = status === "ok" ? "✓" : "✗";
-    console.log(
-      `[Trace] ${statusIcon} ${span.name} (${span.durationMs.toFixed(1)}ms)`,
-      span.attributes
-    );
+    console.log(`[Trace] ${statusIcon} ${span.name} (${span.durationMs.toFixed(1)}ms)`, span.attributes);
   }
 
   // Callback
@@ -302,10 +296,7 @@ export function endSpan(span: Span, status: "ok" | "error" = "ok", error?: strin
 /**
  * Add attributes to a span
  */
-export function addSpanAttributes(
-  span: Span,
-  attributes: Record<string, string | number | boolean>
-): void {
+export function addSpanAttributes(span: Span, attributes: Record<string, string | number | boolean>): void {
   Object.assign(span.attributes, attributes);
 }
 
@@ -315,7 +306,7 @@ export function addSpanAttributes(
 export async function trace<T>(
   name: string,
   fn: () => Promise<T>,
-  attributes: Record<string, string | number | boolean> = {}
+  attributes: Record<string, string | number | boolean> = {},
 ): Promise<T> {
   const span = startSpan(name, attributes);
 

@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { deleteProduct } from '@/app/actions/products';
-import type { InitialProductStateType } from '@/types/product.types';
-import { DeleteConfirmationModal } from './ConfirmationModal';
+import { deleteProduct } from "@/app/actions/products";
+import type { InitialProductStateType } from "@/types/product.types";
+import { useRouter } from "next/navigation";
+import type React from "react";
+import { useState } from "react";
+import { DeleteConfirmationModal } from "./ConfirmationModal";
 
 type PropsType = {
   onClose: () => void;
@@ -23,16 +24,16 @@ const DeleteCardModal: React.FC<PropsType> = ({ isOpen, onClose, product }) => {
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    
+
     const result = await deleteProduct(product.id);
-    
+
     setIsDeleting(false);
-    
+
     if (result.success) {
       onClose();
       router.refresh();
     } else {
-      console.error('Failed to delete product:', result.error);
+      console.error("Failed to delete product:", result.error);
     }
   };
 

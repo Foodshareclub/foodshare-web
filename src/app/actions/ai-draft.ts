@@ -1,15 +1,8 @@
 "use server";
 
-import { z } from "zod";
+import { type ActionResult, createError, failure, success, unauthorizedError, validationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
-import {
-  type ActionResult,
-  unauthorizedError,
-  failure,
-  success,
-  validationError,
-  createError,
-} from "@/lib/errors";
+import { z } from "zod";
 
 // ============================================================================
 // Types
@@ -95,8 +88,7 @@ function getSystemPrompt(postType: string): string {
     foodbank:
       "This is a food bank listing. Describe available items, quantities, " +
       "and any relevant details for people in need.",
-    business:
-      "This is an organisation listing. Describe the organisation and what they offer to the community.",
+    business: "This is an organisation listing. Describe the organisation and what they offer to the community.",
     challenge:
       "This is a community challenge listing. Describe what the challenge involves and how people can participate.",
   };
@@ -109,10 +101,7 @@ function getSystemPrompt(postType: string): string {
 // Server Action
 // ============================================================================
 
-export async function generateListingDraft(
-  images: string[],
-  postType: string
-): Promise<ActionResult<DraftResult>> {
+export async function generateListingDraft(images: string[], postType: string): Promise<ActionResult<DraftResult>> {
   // Auth check
   const supabase = await createClient();
   const {
@@ -125,9 +114,7 @@ export async function generateListingDraft(
 
   // Rate limit
   if (!checkRateLimit(user.id)) {
-    return failure(
-      createError("RATE_LIMIT", "You've reached the AI draft limit. Please try again later.")
-    );
+    return failure(createError("RATE_LIMIT", "You've reached the AI draft limit. Please try again later."));
   }
 
   // Validate input
@@ -138,9 +125,7 @@ export async function generateListingDraft(
   }
 
   // Build vision message content
-  const content: Array<
-    { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }
-  > = [
+  const content: Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }> = [
     {
       type: "text",
       text: "Please analyze these images and generate a title and description for this community listing.",
@@ -155,9 +140,7 @@ export async function generateListingDraft(
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     console.error("[ai-draft] GROQ_API_KEY is not configured");
-    return failure(
-      createError("INTERNAL_ERROR", "AI drafting is not available. Please try again later.")
-    );
+    return failure(createError("INTERNAL_ERROR", "AI drafting is not available. Please try again later."));
   }
 
   try {
@@ -182,9 +165,7 @@ export async function generateListingDraft(
     if (!response.ok) {
       const errorText = await response.text().catch(() => "Unknown error");
       console.error("[ai-draft] Groq API error:", response.status, errorText);
-      return failure(
-        createError("INTERNAL_ERROR", "AI service is temporarily unavailable. Please try again.")
-      );
+      return failure(createError("INTERNAL_ERROR", "AI service is temporarily unavailable. Please try again."));
     }
 
     const data = await response.json();
@@ -192,18 +173,14 @@ export async function generateListingDraft(
 
     if (!messageContent) {
       console.error("[ai-draft] Empty response from Groq");
-      return failure(
-        createError("INTERNAL_ERROR", "AI returned an empty response. Please try again.")
-      );
+      return failure(createError("INTERNAL_ERROR", "AI returned an empty response. Please try again."));
     }
 
     const parsed_response = JSON.parse(messageContent) as { title?: string; description?: string };
 
     if (!parsed_response.title || !parsed_response.description) {
       console.error("[ai-draft] Invalid JSON structure from Groq:", messageContent);
-      return failure(
-        createError("INTERNAL_ERROR", "AI returned an unexpected format. Please try again.")
-      );
+      return failure(createError("INTERNAL_ERROR", "AI returned an unexpected format. Please try again."));
     }
 
     return success({

@@ -5,10 +5,14 @@
  * Manual queue processing, cron control, queue status, and automation insights
  */
 
-import { z } from "zod";
-import { success, error, type ActionResult } from "./types";
-import { requireAuth, logAuditEvent, invalidateAutomationCache } from "./helpers";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
+import { invalidateAutomationCache, logAuditEvent, requireAuth } from "./helpers";
+import { type ActionResult, error, success } from "./types";
+
+interface QueueStatusRow {
+  status: string;
+}
 
 // ============================================================================
 // Manual Queue Processing (Admin Control)
@@ -76,7 +80,7 @@ export async function triggerQueueProcessing(): Promise<
 // ============================================================================
 
 export async function toggleAutomationCron(
-  enabled: boolean
+  enabled: boolean,
 ): Promise<ActionResult<{ enabled: boolean; message: string }>> {
   try {
     const supabase = await createClient();
@@ -99,7 +103,7 @@ export async function toggleAutomationCron(
       enabled ? "ENABLE_CRON" : "DISABLE_CRON",
       "automation_cron",
       "api-v1-email/process/automation",
-      { enabled }
+      { enabled },
     );
 
     return success({
@@ -170,9 +174,7 @@ export async function getQueueStatus(): Promise<
   }
 }
 
-export async function cancelPendingEmails(
-  flowId?: string
-): Promise<ActionResult<{ cancelled: number }>> {
+export async function cancelPendingEmails(flowId?: string): Promise<ActionResult<{ cancelled: number }>> {
   try {
     const supabase = await createClient();
     const user = await requireAuth(supabase);
@@ -197,17 +199,10 @@ export async function cancelPendingEmails(
 
     const cancelled = data?.length || 0;
 
-    await logAuditEvent(
-      supabase,
-      user.id,
-      "CANCEL_PENDING_EMAILS",
-      "automation_queue",
-      flowId || "all",
-      {
-        cancelled,
-        flowId: flowId || "all",
-      }
-    );
+    await logAuditEvent(supabase, user.id, "CANCEL_PENDING_EMAILS", "automation_queue", flowId || "all", {
+      cancelled,
+      flowId: flowId || "all",
+    });
 
     invalidateAutomationCache();
 
@@ -226,9 +221,7 @@ export async function cancelPendingEmails(
 // Retry Failed Emails
 // ============================================================================
 
-export async function retryFailedEmails(
-  flowId?: string
-): Promise<ActionResult<{ retried: number }>> {
+export async function retryFailedEmails(flowId?: string): Promise<ActionResult<{ retried: number }>> {
   try {
     const supabase = await createClient();
     const user = await requireAuth(supabase);
@@ -258,17 +251,10 @@ export async function retryFailedEmails(
 
     const retried = data?.length || 0;
 
-    await logAuditEvent(
-      supabase,
-      user.id,
-      "RETRY_FAILED_EMAILS",
-      "automation_queue",
-      flowId || "all",
-      {
-        retried,
-        flowId: flowId || "all",
-      }
-    );
+    await logAuditEvent(supabase, user.id, "RETRY_FAILED_EMAILS", "automation_queue", flowId || "all", {
+      retried,
+      flowId: flowId || "all",
+    });
 
     invalidateAutomationCache();
 
@@ -303,28 +289,26 @@ export async function getAutomationInsights(flowId: string): Promise<
     await requireAuth(supabase);
 
     // Get enrollment stats
-    const { data: enrollments } = await supabase
-      .from("automation_enrollments")
-      .select("status")
-      .eq("flow_id", flowId);
+    const { data: enrollments } = await supabase.from("automation_enrollments").select("status").eq("flow_id", flowId);
+
+    const enrollmentRows = (enrollments ?? []) as QueueStatusRow[];
 
     const enrollmentStats = {
-      total: enrollments?.length || 0,
-      active: enrollments?.filter((e: any) => e.status === "active").length || 0,
-      completed: enrollments?.filter((e: any) => e.status === "completed").length || 0,
-      exited: enrollments?.filter((e: any) => e.status === "exited").length || 0,
+      total: enrollmentRows.length,
+      active: enrollmentRows.filter((e) => e.status === "active").length,
+      completed: enrollmentRows.filter((e) => e.status === "completed").length,
+      exited: enrollmentRows.filter((e) => e.status === "exited").length,
     };
 
     // Get email stats
-    const { data: emails } = await supabase
-      .from("email_automation_queue")
-      .select("status")
-      .eq("flow_id", flowId);
+    const { data: emails } = await supabase.from("email_automation_queue").select("status").eq("flow_id", flowId);
+
+    const emailRows = (emails ?? []) as QueueStatusRow[];
 
     const emailStats = {
-      sent: emails?.filter((e: any) => e.status === "sent").length || 0,
-      failed: emails?.filter((e: any) => e.status === "failed").length || 0,
-      pending: emails?.filter((e: any) => e.status === "pending").length || 0,
+      sent: emailRows.filter((e) => e.status === "sent").length,
+      failed: emailRows.filter((e) => e.status === "failed").length,
+      pending: emailRows.filter((e) => e.status === "pending").length,
     };
 
     // Get flow for conversion data
@@ -335,9 +319,7 @@ export async function getAutomationInsights(flowId: string): Promise<
       .single();
 
     const conversionRate =
-      flow && flow.total_completed > 0
-        ? Math.round((flow.total_converted / flow.total_completed) * 100)
-        : 0;
+      flow && flow.total_completed > 0 ? Math.round((flow.total_converted / flow.total_completed) * 100) : 0;
 
     return success({
       enrollments: enrollmentStats,

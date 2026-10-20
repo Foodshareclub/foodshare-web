@@ -1,9 +1,9 @@
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import { ProfileWithAuth } from "./ProfileWithAuth";
 import { getPublicProfile } from "@/lib/data/profiles";
 import { generatePersonJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import { siteConfig } from "@/lib/metadata";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { ProfileWithAuth } from "./ProfileWithAuth";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -43,6 +43,7 @@ export default async function ViewProfilePage({ params }: PageProps) {
     <>
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD needs a raw script tag; safeJsonLdStringify escapes angle brackets and ampersands so a script-tag breakout is impossible
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(personJsonLd) }}
       />
       <Suspense fallback={<ProfileSkeleton />}>

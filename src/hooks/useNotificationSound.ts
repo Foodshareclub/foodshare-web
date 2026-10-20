@@ -6,11 +6,11 @@
  * Falls back to Web Audio API beep if sound file is unavailable
  */
 
-import { useEffect, useRef, useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 const NOTIFICATION_SOUND_URL = "/sounds/notification.mp3";
 
-export function useNotificationSound(enabled: boolean = true) {
+export function useNotificationSound(enabled = true) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const soundLoadedRef = useRef(false);
@@ -51,8 +51,7 @@ export function useNotificationSound(enabled: boolean = true) {
     try {
       if (!audioContextRef.current) {
         audioContextRef.current = new (
-          window.AudioContext ||
-          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+          window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
         )();
       }
 

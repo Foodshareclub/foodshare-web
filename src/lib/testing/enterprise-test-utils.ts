@@ -11,8 +11,8 @@
  * @module lib/testing/enterprise-test-utils
  */
 
-import { CircuitBreaker, CircuitState } from "../api/circuit-breaker";
-import { RetryConfig } from "../api/retry";
+import { CircuitBreaker, type CircuitState } from "../api/circuit-breaker";
+import type { RetryConfig } from "../api/retry";
 
 // =============================================================================
 // Circuit Breaker Testing
@@ -26,7 +26,7 @@ export function createTestCircuitBreaker(
     failureThreshold: number;
     resetTimeoutMs: number;
     halfOpenRequests: number;
-  }> = {}
+  }> = {},
 ): CircuitBreaker {
   return new CircuitBreaker({
     name: "test-breaker",
@@ -39,10 +39,7 @@ export function createTestCircuitBreaker(
 /**
  * Force circuit breaker to a specific state (for testing)
  */
-export function forceCircuitState(
-  breaker: CircuitBreaker,
-  state: CircuitState
-): void {
+export function forceCircuitState(breaker: CircuitBreaker, state: CircuitState): void {
   if (state === "OPEN") {
     // Trigger enough failures to open the circuit (use default threshold of 5)
     for (let i = 0; i < 6; i++) {
@@ -58,7 +55,7 @@ export function forceCircuitState(
 export async function waitForCircuitState(
   breaker: CircuitBreaker,
   targetState: CircuitState,
-  timeoutMs: number = 5000
+  timeoutMs = 5000,
 ): Promise<void> {
   const startTime = Date.now();
 
@@ -70,9 +67,7 @@ export async function waitForCircuitState(
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
 
-  throw new Error(
-    `Circuit breaker did not reach state ${targetState} within ${timeoutMs}ms`
-  );
+  throw new Error(`Circuit breaker did not reach state ${targetState} within ${timeoutMs}ms`);
 }
 
 /**
@@ -81,7 +76,7 @@ export async function waitForCircuitState(
 export function createFailingThenSucceedingFn<T>(
   failCount: number,
   successValue: T,
-  errorMessage: string = "Simulated failure"
+  errorMessage = "Simulated failure",
 ): () => Promise<T> {
   let callCount = 0;
 
@@ -113,9 +108,7 @@ export const testRetryConfig: RetryConfig = {
 /**
  * Track retry attempts
  */
-export function createRetryTracker<T>(
-  fn: () => Promise<T>
-): {
+export function createRetryTracker<T>(fn: () => Promise<T>): {
   execute: () => Promise<T>;
   attempts: number[];
   reset: () => void;
@@ -245,7 +238,7 @@ export function createMockCacheLayer() {
       return entry.value as T;
     },
 
-    set: async <T>(key: string, value: T, ttl: number = 60000): Promise<void> => {
+    set: async <T>(key: string, value: T, ttl = 60000): Promise<void> => {
       cache.set(key, {
         value,
         expiresAt: Date.now() + ttl,
@@ -302,11 +295,7 @@ export function createMockRealtimeChannel() {
   let status: "SUBSCRIBED" | "CLOSED" | "CHANNEL_ERROR" = "CLOSED";
 
   return {
-    on: (
-      event: string,
-      filter: unknown,
-      callback: (payload: unknown) => void
-    ) => {
+    on: (event: string, _filter: unknown, callback: (payload: unknown) => void) => {
       const id = `${event}-${Date.now()}`;
       subscriptions.set(id, { event, callback });
       return {
@@ -450,11 +439,7 @@ export function createMetricsCapture() {
   }> = [];
 
   return {
-    record: (
-      name: string,
-      value: number,
-      tags?: Record<string, string>
-    ) => {
+    record: (name: string, value: number, tags?: Record<string, string>) => {
       metrics.push({
         name,
         value,

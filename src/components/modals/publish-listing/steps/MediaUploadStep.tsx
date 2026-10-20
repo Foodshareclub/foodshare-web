@@ -4,6 +4,7 @@ import { RequiredStar } from "@/components/requiredStar/RequiredStar";
 import { Label } from "@/components/ui/label";
 import { ALLOWED_MIME_TYPES } from "@/constants/mime-types";
 import { AlertCircle, GripVertical, Loader2, Plus, X, ZoomIn } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type React from "react";
 import type { RefObject } from "react";
 import { MAX_IMAGES } from "../constants";
@@ -48,12 +49,13 @@ export function MediaUploadStep({
   handleImageDragEnd,
   onOpenLightbox,
 }: MediaUploadStepProps) {
+  const t = useTranslations();
   return (
     <div className="space-y-2">
       <Label className="flex items-center gap-1">
         Photos
         <RequiredStar />
-        <span className="text-xs text-muted-foreground ml-1">
+        <span className="text-xs text-muted-foreground ms-1">
           ({images.length}/{MAX_IMAGES})
         </span>
       </Label>
@@ -72,14 +74,10 @@ export function MediaUploadStep({
               `}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={image.url}
-              alt={`Listing preview ${index + 1}`}
-              className="w-full h-full object-cover"
-            />
+            <img src={image.url} alt={`Listing preview ${index + 1}`} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors" />
             {index === 0 && (
-              <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-primary text-primary-foreground text-[10px] font-medium rounded">
+              <span className="absolute top-1 start-1 px-1.5 py-0.5 bg-primary text-primary-foreground text-[10px] font-medium rounded">
                 Primary
               </span>
             )}
@@ -90,14 +88,14 @@ export function MediaUploadStep({
             >
               <ZoomIn className="h-3 w-3 text-white" />
             </button>
-            <div className="absolute top-1 right-8 p-1 bg-black/50 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-1 end-8 p-1 bg-black/50 rounded opacity-0 group-hover:opacity-100 transition-opacity">
               <GripVertical className="h-3 w-3 text-white" />
             </div>
             <button
               type="button"
               onClick={() => removeImage(image.id)}
-              className="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-              aria-label="Remove image"
+              className="absolute top-1 end-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label={t("remove_image")}
             >
               <X className="h-3 w-3" />
             </button>
@@ -121,20 +119,16 @@ export function MediaUploadStep({
             <button
               type="button"
               onClick={onFileInputClick}
-              aria-label="Add image"
+              aria-label={t("add_image")}
               className="flex h-full w-full flex-col items-center justify-center gap-1"
             >
               {isCompressing ? (
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               ) : (
                 <>
-                  <Plus
-                    className={`h-6 w-6 ${showImageError ? "text-destructive" : "text-muted-foreground"}`}
-                  />
+                  <Plus className={`h-6 w-6 ${showImageError ? "text-destructive" : "text-muted-foreground"}`} />
                   {images.length === 0 && (
-                    <span className="text-xs text-muted-foreground text-center px-2">
-                      Drop images or click
-                    </span>
+                    <span className="text-xs text-muted-foreground text-center px-2">Drop images or click</span>
                   )}
                 </>
               )}
@@ -164,9 +158,7 @@ export function MediaUploadStep({
           Please add at least one photo
         </p>
       )}
-      <p className="text-xs text-muted-foreground">
-        Drag to reorder. First image will be the cover.
-      </p>
+      <p className="text-xs text-muted-foreground">Drag to reorder. First image will be the cover.</p>
     </div>
   );
 }

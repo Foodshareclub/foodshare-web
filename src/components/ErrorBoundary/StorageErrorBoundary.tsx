@@ -1,8 +1,9 @@
-import type { ReactNode } from "react";
-import React, { Component } from "react";
-import { detectStorageError, clearSupabaseStorage } from "@/lib/errors/storage-handler";
 import { Button } from "@/components/ui/button";
+import { clearSupabaseStorage, detectStorageError } from "@/lib/errors/storage-handler";
 import { AlertCircle } from "lucide-react";
+import type { ReactNode } from "react";
+import type React from "react";
+import { Component } from "react";
 
 interface Props {
   children: ReactNode;
@@ -91,8 +92,7 @@ export class StorageErrorBoundary extends Component<Props, State> {
                     {storageError?.message || "An error occurred with browser storage."}
                   </p>
                   <p className="text-sm text-muted-foreground mb-3">
-                    {storageError?.userGuidance ||
-                      "Please clear your browser cache and reload the page."}
+                    {storageError?.userGuidance || "Please clear your browser cache and reload the page."}
                   </p>
 
                   <div className="flex gap-2">
@@ -105,19 +105,15 @@ export class StorageErrorBoundary extends Component<Props, State> {
                         {this.state.isRecovering ? "Clearing..." : "Clear Storage & Reload"}
                       </Button>
                     )}
-                    <Button
-                      variant="outline"
-                      onClick={this.handleReload}
-                      disabled={this.state.isRecovering}
-                    >
+                    <Button variant="outline" onClick={this.handleReload} disabled={this.state.isRecovering}>
                       Reload Page
                     </Button>
                   </div>
 
                   {!storageError?.canRecover && (
                     <p className="mt-3 text-xs text-muted-foreground">
-                      This issue cannot be automatically recovered. Please check your browser
-                      settings or try using a regular browser window (not private/incognito).
+                      This issue cannot be automatically recovered. Please check your browser settings or try using a
+                      regular browser window (not private/incognito).
                     </p>
                   )}
                 </div>

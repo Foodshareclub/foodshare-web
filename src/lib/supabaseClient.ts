@@ -7,9 +7,9 @@
  * typed helpers — there is exactly one client implementation.
  */
 
-import type { User } from "@supabase/supabase-js";
-import type { Database } from "@/types/database.types";
 import { createClient, supabase } from "@/lib/supabase/client";
+import type { Database } from "@/types/database.types";
+import type { User } from "@supabase/supabase-js";
 
 export { supabase, createClient };
 
@@ -45,19 +45,15 @@ export const subscribeToTable = (
   channelOptions?: {
     schema?: string;
     filter?: string;
-  }
+  },
 ) => {
   // Use the fully-typed client (not the lazy Proxy) so channel overloads resolve.
   const client = createClient();
   const channel = client
     .channel(`table:${String(table)}`)
-    .on(
-      "postgres_changes",
-      { event, schema: "public", table: String(table), ...channelOptions },
-      (payload) => {
-        callback(payload);
-      }
-    )
+    .on("postgres_changes", { event, schema: "public", table: String(table), ...channelOptions }, (payload) => {
+      callback(payload);
+    })
     .subscribe();
 
   return () => {

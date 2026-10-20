@@ -1,5 +1,5 @@
-import { ProductDetailModal } from "./ProductDetailModal";
 import type { InitialProductStateType } from "@/types/product.types";
+import { ProductDetailModal } from "./ProductDetailModal";
 
 /**
  * Safely get user - only if DB is healthy

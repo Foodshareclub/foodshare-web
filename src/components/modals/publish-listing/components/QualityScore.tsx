@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
 import { BarChart3, Lightbulb, X } from "lucide-react";
+import type React from "react";
 
 interface QualityScoreProps {
   score: number;
@@ -28,16 +28,8 @@ export const QualityScore: React.FC<QualityScoreProps> = ({ score, suggestions, 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative h-12 w-12">
-            <svg className="h-12 w-12 -rotate-90" viewBox="0 0 36 36">
-              <circle
-                cx="18"
-                cy="18"
-                r="16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-muted"
-              />
+            <svg aria-hidden="true" className="h-12 w-12 -rotate-90" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted" />
               <circle
                 cx="18"
                 cy="18"
@@ -50,9 +42,7 @@ export const QualityScore: React.FC<QualityScoreProps> = ({ score, suggestions, 
                 strokeLinecap="round"
               />
             </svg>
-            <span
-              className={`absolute inset-0 flex items-center justify-center text-sm font-bold ${getScoreColor()}`}
-            >
+            <span className={`absolute inset-0 flex items-center justify-center text-sm font-bold ${getScoreColor()}`}>
               {score}
             </span>
           </div>
@@ -64,11 +54,7 @@ export const QualityScore: React.FC<QualityScoreProps> = ({ score, suggestions, 
             <p className={`text-sm ${getScoreColor()}`}>{getScoreLabel()}</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="p-1 rounded hover:bg-muted transition-colors"
-        >
+        <button type="button" onClick={onClose} className="p-1 rounded hover:bg-muted transition-colors">
           <X className="h-4 w-4 text-muted-foreground" />
         </button>
       </div>
@@ -77,8 +63,8 @@ export const QualityScore: React.FC<QualityScoreProps> = ({ score, suggestions, 
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground font-medium">Tips to improve:</p>
           <ul className="space-y-1">
-            {suggestions.slice(0, 3).map((suggestion, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+            {suggestions.slice(0, 3).map((suggestion) => (
+              <li key={suggestion} className="flex items-start gap-2 text-xs text-muted-foreground">
                 <Lightbulb className="h-3 w-3 mt-0.5 text-yellow-500 flex-shrink-0" />
                 {suggestion}
               </li>

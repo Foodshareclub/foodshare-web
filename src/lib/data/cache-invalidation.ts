@@ -9,11 +9,11 @@ import "server-only";
 
 import { revalidateTag as nextRevalidateTag } from "next/cache";
 import {
-  CACHE_TAGS,
   CACHE_PROFILES,
+  CACHE_TAGS,
   getAdminTags,
-  getPostActivityTags,
   getEmailTags,
+  getPostActivityTags,
   logCacheOperation,
 } from "./cache-keys";
 

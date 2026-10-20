@@ -7,14 +7,17 @@
 
 "use client";
 
-import { useRef, useState } from "react";
-import { MapView } from "./MapView";
-import { useGridSize, useMediaQuery } from "@/hooks";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 import { ProductCard } from "@/components/productCard/ProductCard";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
+import { useGridSize } from "@/hooks/useGridSize";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { InitialProductStateType, ProductWithCoordinates } from "@/types/product.types";
 import { getCoordinates } from "@/types/product.types";
+import { useRef, useState } from "react";
+import { MapView } from "./MapView";
+
+const MAIN_GRID_SKELETON_KEYS = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"] as const;
 
 type MainWithMapProps = {
   /** Products to display (passed from Server Component) */
@@ -84,7 +87,7 @@ export function MainWithMap({ products, isLoading = false }: MainWithMapProps) {
             }}
           >
             {!loaded
-              ? [...Array(10)].map((_, i) => <SkeletonCard key={i} isLoaded={false} />)
+              ? MAIN_GRID_SKELETON_KEYS.map((k) => <SkeletonCard key={k} isLoaded={false} />)
               : products.map((product: InitialProductStateType) => (
                   <ProductCard
                     product={product}

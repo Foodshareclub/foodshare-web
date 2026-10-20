@@ -168,7 +168,7 @@ export function RichTextViewer({ content, className }: RichTextViewerProps) {
     "prose-headings:font-semibold prose-h2:text-xl prose-h3:text-lg",
     "prose-a:text-primary prose-a:underline",
     "prose-img:rounded-lg prose-img:max-w-full",
-    className
+    className,
   );
   return (
     // biome-ignore lint/security/noDangerouslySetInnerHtml: DOMPurify sanitizes browser HTML; SSR and initial hydration return empty HTML.

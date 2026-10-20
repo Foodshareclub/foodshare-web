@@ -12,12 +12,13 @@
  * - Better engagement
  */
 
-import { useEffect, useCallback, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
+import type { TimerHandle } from "@/types/timer.types";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ConnectionStatus } from "../useRealtimeSubscription";
 import { leaderboardKeys } from "./useChallengeLeaderboard";
-import { createClient } from "@/lib/supabase/client";
 
 interface UseLeaderboardRealtimeOptions {
   /** Whether realtime is enabled (default: true) */
@@ -51,7 +52,7 @@ export function useLeaderboardRealtime({
   const queryClient = useQueryClient();
   const channelRef = useRef<RealtimeChannel | null>(null);
   const reconnectAttempts = useRef(0);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<TimerHandle | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
   const subscribeRef = useRef<() => void>(undefined);
 
@@ -60,7 +61,7 @@ export function useLeaderboardRealtime({
       setConnectionStatus(status);
       onStatusChange?.(status);
     },
-    [onStatusChange]
+    [onStatusChange],
   );
 
   const cleanup = useCallback(() => {
@@ -109,7 +110,7 @@ export function useLeaderboardRealtime({
           if (newRecord.is_completed && !oldRecord.is_completed) {
             handleLeaderboardChange();
           }
-        }
+        },
       )
       .on(
         "postgres_changes" as const,
@@ -124,7 +125,7 @@ export function useLeaderboardRealtime({
           if (newRecord.user_completed_challenge) {
             handleLeaderboardChange();
           }
-        }
+        },
       )
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
@@ -134,7 +135,7 @@ export function useLeaderboardRealtime({
           updateStatus("reconnecting");
 
           if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
-            const delay = Math.min(BASE_DELAY * Math.pow(2, reconnectAttempts.current), MAX_DELAY);
+            const delay = Math.min(BASE_DELAY * 2 ** reconnectAttempts.current, MAX_DELAY);
             reconnectAttempts.current++;
 
             reconnectTimeoutRef.current = setTimeout(() => {

@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { isStorageHealthy } from "@/lib/supabase/client";
-import { testStorageAvailability, clearSupabaseStorage } from "@/lib/errors/storage-handler";
 import { Button } from "@/components/ui/button";
+import { clearSupabaseStorage, testStorageAvailability } from "@/lib/errors/storage-handler";
+import { isStorageHealthy } from "@/lib/supabase/client";
 import { AlertCircle } from "lucide-react";
+import type React from "react";
+import { useEffect, useState } from "react";
 
 /**
  * StorageErrorBanner - Shows a persistent warning when browser storage is unavailable
@@ -39,11 +40,10 @@ export const StorageErrorBanner: React.FC = () => {
     if (showBanner) {
       const timer = setTimeout(() => setIsVisible(true), 100);
       return () => clearTimeout(timer);
-    } else {
-      setTimeout(() => {
-        setIsVisible(false);
-      }, 0);
     }
+    setTimeout(() => {
+      setIsVisible(false);
+    }, 0);
   }, [showBanner]);
 
   const handleClearStorage = async () => {
@@ -92,7 +92,7 @@ export const StorageErrorBanner: React.FC = () => {
       </style>
 
       <div
-        className={`fixed top-0 left-0 right-0 z-[9999] px-2 md:px-4 py-2 transition-all duration-[400ms] ${
+        className={`fixed top-0 inset-x-0 z-[9999] px-2 md:px-4 py-2 transition-all duration-[400ms] ${
           isVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
         } ${isVisible ? "pointer-events-auto" : "pointer-events-none"}`}
         style={{ transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)" }}
@@ -101,10 +101,9 @@ export const StorageErrorBanner: React.FC = () => {
           <div className="relative px-4 md:px-6 py-4">
             {/* Decorative gradient overlay */}
             <div
-              className="absolute top-0 left-0 right-0 bottom-0 pointer-events-none"
+              className="absolute top-0 inset-x-0 bottom-0 pointer-events-none"
               style={{
-                backgroundImage:
-                  "linear-gradient(to right, rgba(255, 168, 102, 0.1), rgba(255, 140, 66, 0.05))",
+                backgroundImage: "linear-gradient(to right, rgba(255, 168, 102, 0.1), rgba(255, 140, 66, 0.05))",
               }}
             />
 
@@ -129,8 +128,8 @@ export const StorageErrorBanner: React.FC = () => {
                       Storage Limited Mode
                     </h3>
                     <p className="text-xs md:text-sm text-orange-700 leading-relaxed opacity-95">
-                      Your session will not persist across page refreshes. To fix this, try clearing
-                      your browser cache or use the button below to clear app storage.
+                      Your session will not persist across page refreshes. To fix this, try clearing your browser cache
+                      or use the button below to clear app storage.
                     </p>
                   </div>
                 </div>

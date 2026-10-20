@@ -5,7 +5,7 @@
  */
 
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 // ============================================================================
 // Types
@@ -37,14 +37,7 @@ export type AccentColor =
 
 export type ContrastMode = "normal" | "high" | "reduced";
 
-export type ThemePreset =
-  | "default"
-  | "midnight"
-  | "forest"
-  | "sunset"
-  | "ocean"
-  | "lavender"
-  | "custom";
+export type ThemePreset = "default" | "midnight" | "forest" | "sunset" | "ocean" | "lavender" | "custom";
 
 export interface AccentColorConfig {
   name: AccentColor;
@@ -255,8 +248,8 @@ export const useUIStore = create<UIState>()(
 
         return persistedState as UIState;
       },
-    }
-  )
+    },
+  ),
 );
 
 // ============================================================================

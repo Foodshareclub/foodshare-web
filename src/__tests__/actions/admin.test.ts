@@ -1,9 +1,10 @@
+/* oxlint-disable unicorn/no-thenable -- Supabase query builder mocks must be thenable. */
 /**
  * Admin Server Actions Tests
  * Unit tests for admin management server actions
  */
 
-import { mock, describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 
 // Isolated local mock state to prevent race conditions with other test files
 const mockState = {
@@ -156,7 +157,6 @@ const createSupabaseMock = () => {
     // For user_roles table (array result)
     if (tableName === "user_roles") {
       Object.assign(chain, {
-        // eslint-disable-next-line unicorn/no-thenable
         then: (resolve: (value: unknown) => void) =>
           resolve({
             data: mockState.userRoles,
@@ -168,7 +168,6 @@ const createSupabaseMock = () => {
     // For profiles list query
     if (tableName === "profiles" && mockState.usersData.length > 0) {
       Object.assign(chain, {
-        // eslint-disable-next-line unicorn/no-thenable
         then: (resolve: (value: unknown) => void) =>
           resolve({
             data: mockState.usersData,
@@ -187,7 +186,7 @@ const createSupabaseMock = () => {
         Promise.resolve({
           data: { user: mockState.user },
           error: mockState.authError,
-        })
+        }),
       ),
     },
     from: mock((tableName: string) => createSelectChain(tableName)),
@@ -211,14 +210,7 @@ mock.module("@/lib/supabase/admin", () => ({
 // The tests will use the real admin-check which relies on the mocked createAdminClient.
 
 // Import actions after mocks
-import {
-  approveListing,
-  rejectListing,
-  updateUserRole,
-  banUser,
-  unbanUser,
-  getUsers,
-} from "@/app/actions/admin";
+import { approveListing, banUser, getUsers, rejectListing, unbanUser, updateUserRole } from "@/app/actions/admin";
 
 // Helper type to extract error from failed result
 type FailedResult = { success: false; error: { message: string; code: string } };

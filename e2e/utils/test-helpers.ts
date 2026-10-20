@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 /**
  * Wait for page to finish hydrating (SSR apps show loading spinners initially)
@@ -29,11 +29,7 @@ export async function waitForHydration(page: Page, options: { timeout?: number }
 /**
  * Wait for a specific content element to appear (not just loading state)
  */
-export async function waitForContent(
-  page: Page,
-  selector: string,
-  options: { timeout?: number } = {}
-) {
+export async function waitForContent(page: Page, selector: string, options: { timeout?: number } = {}) {
   const { timeout = 30000 } = options;
 
   try {
@@ -51,7 +47,7 @@ export async function navigateAndWait(
   page: Page,
   url: string,
   contentSelector: string,
-  options: { timeout?: number } = {}
+  options: { timeout?: number } = {},
 ) {
   const { timeout = 30000 } = options;
 

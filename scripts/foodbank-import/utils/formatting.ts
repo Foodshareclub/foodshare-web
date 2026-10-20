@@ -6,7 +6,7 @@
  */
 
 import { SYSTEM_USER_ID } from "../config";
-import type { RawFoodbankData, FoodbankImportRecord, Coordinates } from "../types";
+import type { Coordinates, FoodbankImportRecord, RawFoodbankData } from "../types";
 
 /**
  * Format the structured description field
@@ -84,7 +84,7 @@ function formatStrippedAddress(data: RawFoodbankData): string {
 export function toImportRecord(
   data: RawFoodbankData,
   coordinates: Coordinates,
-  postType: "foodbank" | "fridge" = "foodbank"
+  postType: "foodbank" | "fridge" = "foodbank",
 ): FoodbankImportRecord {
   // Format PostGIS location string
   const locationStr = `SRID=4326;POINT(${coordinates.longitude} ${coordinates.latitude})`;

@@ -1,8 +1,8 @@
-import React from "react";
-import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui-library/atoms/Avatar";
 import { FrequencyBadge } from "@/components/ui-library/atoms/FrequencyBadge";
 import { StatusIndicator } from "@/components/ui-library/atoms/StatusIndicator";
+import { cn } from "@/lib/utils";
+import type React from "react";
 
 /**
  * UserProfileCard - Organism displaying user profile with avatar, status, and activity count
@@ -31,18 +31,12 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
       {avatarSrc ? (
         <Avatar src={avatarSrc} alt={name} size={avatarSize} />
       ) : (
-        <span
-          className={cn(
-            "w-10 h-10 rounded-full bg-border flex items-center justify-center text-muted-foreground"
-          )}
-        >
+        <span className={cn("w-10 h-10 rounded-full bg-border flex items-center justify-center text-muted-foreground")}>
           {name.charAt(0)}
         </span>
       )}
       {status !== undefined && <StatusIndicator status={status} size="sm" />}
-      {activityCount !== undefined && (
-        <FrequencyBadge count={activityCount} label={activityLabel} size="sm" />
-      )}
+      {activityCount !== undefined && <FrequencyBadge count={activityCount} label={activityLabel} size="sm" />}
       <span className="font-medium text-foreground">{name}</span>
     </div>
   );

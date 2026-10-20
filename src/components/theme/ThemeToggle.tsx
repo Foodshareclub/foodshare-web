@@ -6,10 +6,13 @@
  * Uses pure CSS animations for optimal performance (no Framer Motion)
  */
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useTheme } from "@/hooks";
+import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import type { Theme } from "@/store/zustand/useUIStore";
+import type React from "react";
+import { useCallback, useEffect, useState } from "react";
+
+const TWINKLING_STAR_KEYS = ["a", "b", "c", "d", "e", "f"] as const;
 
 interface ThemeToggleProps {
   className?: string;
@@ -42,11 +45,9 @@ const knobTranslate = {
 };
 
 // Sun icon with animated rays (CSS animation)
-const SunIcon: React.FC<{ className?: string; animate?: boolean }> = ({
-  className,
-  animate = false,
-}) => (
+const SunIcon: React.FC<{ className?: string; animate?: boolean }> = ({ className, animate = false }) => (
   <svg
+    aria-hidden="true"
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
     fill="none"
@@ -72,6 +73,7 @@ const SunIcon: React.FC<{ className?: string; animate?: boolean }> = ({
 // Moon icon with craters
 const MoonIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
+    aria-hidden="true"
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
     fill="none"
@@ -88,6 +90,7 @@ const MoonIcon: React.FC<{ className?: string }> = ({ className }) => (
 // Monitor icon for system theme
 const MonitorIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
+    aria-hidden="true"
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
     fill="none"
@@ -107,9 +110,9 @@ const MonitorIcon: React.FC<{ className?: string }> = ({ className }) => (
 const Stars: React.FC = () => (
   <>
     {/* Twinkling stars with CSS animation */}
-    {[...Array(6)].map((_, i) => (
+    {TWINKLING_STAR_KEYS.map((k, i) => (
       <div
-        key={i}
+        key={k}
         className="absolute rounded-full bg-white animate-twinkle"
         style={{
           width: i % 2 === 0 ? 2 : 1.5,
@@ -140,38 +143,21 @@ const Clouds: React.FC = () => (
     <div className="absolute animate-cloud-drift" style={{ top: "22%", left: "12%" }}>
       <div className="relative">
         <div className="absolute rounded-full bg-white/60" style={{ width: 8, height: 5 }} />
-        <div
-          className="absolute rounded-full bg-white/50"
-          style={{ width: 6, height: 4, top: -2, left: 4 }}
-        />
-        <div
-          className="absolute rounded-full bg-white/55"
-          style={{ width: 5, height: 3, top: 1, left: 7 }}
-        />
+        <div className="absolute rounded-full bg-white/50" style={{ width: 6, height: 4, top: -2, left: 4 }} />
+        <div className="absolute rounded-full bg-white/55" style={{ width: 5, height: 3, top: 1, left: 7 }} />
       </div>
     </div>
     {/* Fluffy cloud 2 */}
-    <div
-      className="absolute animate-cloud-drift-reverse"
-      style={{ top: "55%", left: "22%", animationDelay: "0.5s" }}
-    >
+    <div className="absolute animate-cloud-drift-reverse" style={{ top: "55%", left: "22%", animationDelay: "0.5s" }}>
       <div className="relative">
         <div className="absolute rounded-full bg-white/50" style={{ width: 7, height: 4 }} />
-        <div
-          className="absolute rounded-full bg-white/45"
-          style={{ width: 5, height: 3, top: -1, left: 3 }}
-        />
+        <div className="absolute rounded-full bg-white/45" style={{ width: 5, height: 3, top: -1, left: 3 }} />
       </div>
     </div>
     {/* Flying bird silhouette */}
     <div className="absolute animate-bird-fly" style={{ top: "35%", left: "45%" }}>
-      <svg width="6" height="3" viewBox="0 0 6 3" className="text-slate-600/40">
-        <path
-          d="M0 1.5 Q1.5 0 3 1.5 Q4.5 0 6 1.5"
-          stroke="currentColor"
-          fill="none"
-          strokeWidth="0.5"
-        />
+      <svg aria-hidden="true" width="6" height="3" viewBox="0 0 6 3" className="text-slate-600/40">
+        <path d="M0 1.5 Q1.5 0 3 1.5 Q4.5 0 6 1.5" stroke="currentColor" fill="none" strokeWidth="0.5" />
       </svg>
     </div>
     {/* Sun lens flare */}
@@ -197,6 +183,7 @@ const ThemeMenuItem: React.FC<{
   onClick: () => void;
 }> = ({ theme, currentTheme, label, icon, onClick }) => (
   <button
+    type="button"
     onClick={onClick}
     className={cn(
       "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium",
@@ -204,14 +191,15 @@ const ThemeMenuItem: React.FC<{
       "hover:translate-x-1 active:scale-[0.98]",
       currentTheme === theme
         ? "bg-primary/10 text-primary dark:bg-primary/20"
-        : "hover:bg-muted text-foreground/80 hover:text-foreground"
+        : "hover:bg-muted text-foreground/80 hover:text-foreground",
     )}
   >
     <span className="w-5 h-5 flex items-center justify-center">{icon}</span>
     <span>{label}</span>
     {currentTheme === theme && (
-      <div className="ml-auto animate-scale-in">
+      <div className="ms-auto animate-scale-in">
         <svg
+          aria-hidden="true"
           className="w-4 h-4 text-primary"
           fill="none"
           viewBox="0 0 24 24"
@@ -271,23 +259,22 @@ function ThemeToggle({ className, size = "md", showDropdown = true }: ThemeToggl
       setTheme(newTheme);
       setIsOpen(false);
     },
-    [setTheme]
+    [setTheme],
   );
 
   return (
     <div className="relative" data-theme-toggle>
       {/* Main Toggle Button - CSS transitions replace Framer Motion */}
       <button
+        type="button"
         onClick={handleToggleClick}
         className={cn(
           "relative rounded-full p-0.5 overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background shadow-lg",
           "transition-all duration-200 ease-out",
           "hover:scale-105 active:scale-95",
-          isDark
-            ? "hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]"
-            : "hover:shadow-[0_0_20px_rgba(251,191,36,0.4)]",
+          isDark ? "hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]" : "hover:shadow-[0_0_20px_rgba(251,191,36,0.4)]",
           sizeClasses[size],
-          className
+          className,
         )}
         style={{
           background: isDark
@@ -302,7 +289,7 @@ function ThemeToggle({ className, size = "md", showDropdown = true }: ThemeToggl
         <div
           className={cn(
             "absolute inset-0 overflow-hidden transition-opacity duration-300",
-            isDark ? "opacity-100" : "opacity-0"
+            isDark ? "opacity-100" : "opacity-0",
           )}
         >
           <Stars />
@@ -315,7 +302,7 @@ function ThemeToggle({ className, size = "md", showDropdown = true }: ThemeToggl
         <div
           className={cn(
             "absolute inset-0 overflow-hidden transition-opacity duration-300",
-            isDark ? "opacity-0" : "opacity-100"
+            isDark ? "opacity-0" : "opacity-100",
           )}
         >
           <Clouds />
@@ -331,7 +318,7 @@ function ThemeToggle({ className, size = "md", showDropdown = true }: ThemeToggl
           className={cn(
             "relative z-10 flex items-center justify-center rounded-full shadow-xl",
             "transition-transform duration-300",
-            knobSizeClasses[size]
+            knobSizeClasses[size],
           )}
           style={{
             transform: `translateX(${isDark ? knobTranslate[size] : 0}px)`,
@@ -348,7 +335,7 @@ function ThemeToggle({ className, size = "md", showDropdown = true }: ThemeToggl
           <div
             className={cn(
               "transition-all duration-250",
-              isDark ? "opacity-100 rotate-0 scale-100" : "opacity-0 rotate-90 scale-0 absolute"
+              isDark ? "opacity-100 rotate-0 scale-100" : "opacity-0 rotate-90 scale-0 absolute",
             )}
           >
             <MoonIcon className={cn(iconSizeClasses[size], "text-blue-200")} />
@@ -356,7 +343,7 @@ function ThemeToggle({ className, size = "md", showDropdown = true }: ThemeToggl
           <div
             className={cn(
               "transition-all duration-250",
-              isDark ? "opacity-0 -rotate-90 scale-0 absolute" : "opacity-100 rotate-0 scale-100"
+              isDark ? "opacity-0 -rotate-90 scale-0 absolute" : "opacity-100 rotate-0 scale-100",
             )}
           >
             <SunIcon className={cn(iconSizeClasses[size], "text-amber-600")} animate />
@@ -366,7 +353,7 @@ function ThemeToggle({ className, size = "md", showDropdown = true }: ThemeToggl
         {/* System indicator dot */}
         {isSystem && (
           <div
-            className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background animate-scale-in"
+            className="absolute -top-0.5 -end-0.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background animate-scale-in"
             title="Following system preference"
           />
         )}
@@ -376,14 +363,12 @@ function ThemeToggle({ className, size = "md", showDropdown = true }: ThemeToggl
       {isOpen && showDropdown && (
         <div
           className={cn(
-            "absolute right-0 mt-2 w-48 py-2 bg-card/95 backdrop-blur-xl rounded-xl shadow-2xl border border-border/50 z-50",
-            "animate-dropdown-in"
+            "absolute end-0 mt-2 w-48 py-2 bg-card/95 backdrop-blur-xl rounded-xl shadow-2xl border border-border/50 z-50",
+            "animate-dropdown-in",
           )}
         >
           <div className="px-3 pb-2 mb-2 border-b border-border/50">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Theme
-            </p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Theme</p>
           </div>
           <div className="px-1 space-y-0.5">
             <ThemeMenuItem
@@ -437,15 +422,14 @@ function ThemeToggleInline({ className }: { className?: string }) {
     <div className={cn("flex items-center gap-1 p-1 bg-muted/50 rounded-xl", className)}>
       {themes.map(({ value, label, icon }) => (
         <button
+          type="button"
           key={value}
           onClick={() => setTheme(value)}
           className={cn(
             "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium",
             "transition-all duration-150 ease-out",
             "hover:scale-[1.02] active:scale-[0.98]",
-            theme === value
-              ? "bg-background text-foreground shadow-md"
-              : "text-muted-foreground hover:text-foreground"
+            theme === value ? "bg-background text-foreground shadow-md" : "text-muted-foreground hover:text-foreground",
           )}
         >
           {icon}

@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { usePathname } from "next/navigation";
-import Navbar from "@/components/header/navbar/Navbar";
-import { useAuth } from "@/hooks/useAuth";
-import type { AuthUser } from "@/lib/data/auth";
 import type { CustomRoomType } from "@/api/chatAPI";
+import Navbar from "@/components/header/navbar/Navbar";
 import { CATEGORIES } from "@/constants/categories";
+import type { AuthUser } from "@/lib/data/auth";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 interface NavbarWrapperProps {
   defaultProductType?: string;
@@ -59,18 +58,17 @@ export function NavbarWrapper({
     setProductType(validCategory.id);
   }
 
-  // Client-side auth for real-time updates (login/logout)
-  // Must be called before any conditional returns (React hooks rules)
-  const { isAuthenticated, user, isAdmin: clientIsAdmin } = useAuth();
-
   // Don't render navbar on map pages - MapClient renders its own navbar
   if (pathname?.startsWith("/map")) {
     return null;
   }
 
-  // Prefer client auth state if available, fall back to server data
-  const effectiveUser = user || (initialUser ? { id: initialUser.id } : null);
-  const userId = effectiveUser?.id || "";
+  // Identity comes from the server. This used to layer `useAuth()` on top for
+  // "real-time updates", which pulled the browser Supabase client into the
+  // root layout of every route to mirror state the server had already resolved
+  // in the same request. Sign-in and sign-out are navigations, so a re-render
+  // always follows the change.
+  const userId = initialUser?.id || "";
 
   // Use server-provided profile data
   const serverProfile = initialUser?.profile || initialProfile;
@@ -80,11 +78,8 @@ export function NavbarWrapper({
   const effectiveSecondName = serverProfile?.second_name || "";
   const effectiveEmail = serverProfile?.email || "";
 
-  // Auth state: client takes precedence for real-time updates
-  const effectiveIsAuth = isAuthenticated || !!initialUser;
-
-  // Use client admin status (from useAuth) with server fallback
-  const isAdmin = clientIsAdmin || initialIsAdmin;
+  const effectiveIsAuth = !!initialUser;
+  const isAdmin = initialIsAdmin;
 
   const handleRouteChange = (_route: string) => {
     // Navigation is handled directly by Navbar.handleCategoryChange

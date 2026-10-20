@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Home Page", () => {
   test.beforeEach(async ({ page }) => {
@@ -80,9 +80,7 @@ test.describe("Home Page", () => {
 
   test("should have search bar in navbar", async ({ page }) => {
     // SearchBar is in the second row of navbar
-    const searchBar = page
-      .locator('[class*="search"], input[type="search"], [placeholder*="search" i]')
-      .first();
+    const searchBar = page.locator('[class*="search"], input[type="search"], [placeholder*="search" i]').first();
     const hasSearchBar = await searchBar.isVisible();
 
     // Search functionality exists (may be a search button or input)
@@ -91,7 +89,7 @@ test.describe("Home Page", () => {
         page
           .locator("button")
           .filter({ hasText: /search/i })
-          .isVisible()
+          .isVisible(),
     ).toBeTruthy();
   });
 });

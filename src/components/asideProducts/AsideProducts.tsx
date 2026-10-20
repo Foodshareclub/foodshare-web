@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import dynamic from "next/dynamic";
-import { DeleteIcon } from "@/utils/icons";
-import { getProductDetailUrl } from "@/utils/categoryMapping";
 import type { InitialProductStateType } from "@/types/product.types";
+import { getProductDetailUrl } from "@/utils/categoryMapping";
+import { DeleteIcon } from "@/utils/icons";
+import dynamic from "next/dynamic";
+import { usePathname, useRouter } from "next/navigation";
+import type React from "react";
+import { useState } from "react";
 
 // Lazy load the heavy modal (3000+ lines)
 const PublishListingModal = dynamic(() => import("@/components/modals/PublishListingModal"), {
@@ -40,6 +41,13 @@ const AsideProducts: React.FC<AsideProdType> = ({
     router.push(getProductDetailUrl(product?.post_type, product?.id ?? 0));
   };
 
+  const onProductKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      goToProduct();
+    }
+  };
+
   const deleteHandler = () => {
     if (deleteProductHandler) {
       deleteProductHandler(product?.id as number);
@@ -54,21 +62,24 @@ const AsideProducts: React.FC<AsideProdType> = ({
         src={img}
         alt="profile img"
         onClick={goToProduct}
+        onKeyDown={onProductKeyDown}
+        onKeyUp={onProductKeyDown}
         loading="lazy"
         decoding="async"
       />
 
-      <div className="flex-1 self-center p-4" onClick={goToProduct}>
+      <button type="button" className="flex-1 self-center p-4 w-full" onClick={goToProduct}>
         <h2 className="text-2xl font-medium text-center line-clamp-1 font-body">{name}</h2>
         <p className="text-center line-clamp-1 text-muted-foreground text-sm uppercase">{about}</p>
-      </div>
+      </button>
 
       {pathname === "/user-listings" && (
         <div className="self-center flex gap-2 p-4">
           <PublishListingModal isOpen={isOpen} onClose={() => setIsOpen(false)} product={product} />
           <button
+            type="button"
             onClick={deleteHandler}
-            className="ml-4 p-2 rounded-lg border border-border bg-background/20 backdrop-blur-md hover:bg-background/30 card-button-hover"
+            className="ms-4 p-2 rounded-lg border border-border bg-background/20 backdrop-blur-md hover:bg-background/30 card-button-hover"
             aria-label="delete"
           >
             <DeleteIcon />

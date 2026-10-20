@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // Types
 export type AccuracyLevel = "precise" | "approximate" | "city-level";
@@ -63,21 +63,17 @@ const getUserFriendlyError = (error: GeolocationPositionError): PositionError =>
   };
 };
 
-export const usePosition = (
-  watch = false,
-  userSettings: UsePositionSettings = {}
-): UsePositionReturn => {
+export const usePosition = (watch = false, userSettings: UsePositionSettings = {}): UsePositionReturn => {
+  const { enableHighAccuracy, timeout, maximumAge, fallbackToApproximate } = userSettings;
   const settings = useMemo(
     () => ({
       ...defaultSettings,
-      ...userSettings,
+      ...(enableHighAccuracy === undefined ? {} : { enableHighAccuracy }),
+      ...(timeout === undefined ? {} : { timeout }),
+      ...(maximumAge === undefined ? {} : { maximumAge }),
+      ...(fallbackToApproximate === undefined ? {} : { fallbackToApproximate }),
     }),
-    [
-      userSettings.enableHighAccuracy,
-      userSettings.timeout,
-      userSettings.maximumAge,
-      userSettings.fallbackToApproximate,
-    ]
+    [enableHighAccuracy, timeout, maximumAge, fallbackToApproximate],
   );
 
   const [position, setPosition] = useState<PositionData>({});
@@ -108,11 +104,7 @@ export const usePosition = (
       const friendlyError = getUserFriendlyError(geolocationError);
 
       // Fallback strategy: If high accuracy fails and fallback is enabled, try approximate
-      if (
-        settings.fallbackToApproximate &&
-        settings.enableHighAccuracy &&
-        !hasTriedFallback.current
-      ) {
+      if (settings.fallbackToApproximate && settings.enableHighAccuracy && !hasTriedFallback.current) {
         hasTriedFallback.current = true;
 
         // Try again with low accuracy
@@ -129,14 +121,14 @@ export const usePosition = (
             setError(getUserFriendlyError(fallbackError));
             setIsLoading(false);
           },
-          fallbackSettings
+          fallbackSettings,
         );
       } else {
         setError(friendlyError);
         setIsLoading(false);
       }
     },
-    [settings, onChange]
+    [settings, onChange],
   );
 
   const requestPosition = useCallback(() => {
@@ -144,8 +136,7 @@ export const usePosition = (
       setError({
         code: 0,
         message: "Geolocation is not supported",
-        userFriendlyMessage:
-          "Your browser doesn't support location services. Please enter your location manually.",
+        userFriendlyMessage: "Your browser doesn't support location services. Please enter your location manually.",
       });
       setIsLoading(false);
       return;

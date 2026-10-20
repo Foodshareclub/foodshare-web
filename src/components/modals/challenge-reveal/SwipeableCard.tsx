@@ -1,16 +1,16 @@
 "use client";
 
-import { useCallback } from "react";
-import {
-  motion,
-  useMotionValue,
-  useTransform,
-  useMotionValueEvent,
-  useAnimation,
-  PanInfo,
-  useReducedMotion,
-} from "framer-motion";
 import { cn } from "@/lib/utils";
+import {
+  type PanInfo,
+  motion,
+  useAnimation,
+  useMotionValue,
+  useMotionValueEvent,
+  useReducedMotion,
+  useTransform,
+} from "framer-motion";
+import { useCallback } from "react";
 import { CardFace } from "./CardFace";
 import { CardOverlayIndicators } from "./SwipeIndicators";
 import { snapBackSpring } from "./animations";
@@ -35,15 +35,11 @@ export function SwipeableCard({ challenge, onSwipeLeft, onSwipeRight, dragX }: S
   const rotate = useTransform(
     x,
     [-SWIPE_CONFIG.EXIT_DISTANCE, 0, SWIPE_CONFIG.EXIT_DISTANCE],
-    [-SWIPE_CONFIG.MAX_ROTATION, 0, SWIPE_CONFIG.MAX_ROTATION]
+    [-SWIPE_CONFIG.MAX_ROTATION, 0, SWIPE_CONFIG.MAX_ROTATION],
   );
 
   // Scale slightly during drag
-  const scale = useTransform(
-    x,
-    [-SWIPE_CONFIG.EXIT_DISTANCE, 0, SWIPE_CONFIG.EXIT_DISTANCE],
-    [0.95, 1, 0.95]
-  );
+  const scale = useTransform(x, [-SWIPE_CONFIG.EXIT_DISTANCE, 0, SWIPE_CONFIG.EXIT_DISTANCE], [0.95, 1, 0.95]);
 
   const handleDragEnd = useCallback(
     (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -52,10 +48,8 @@ export function SwipeableCard({ challenge, onSwipeLeft, onSwipeRight, dragX }: S
       const swipeVelocity = velocity.x;
 
       // Check if swipe threshold is met (either by distance or velocity)
-      const isSwipeRight =
-        swipeDistance > SWIPE_CONFIG.THRESHOLD || swipeVelocity > SWIPE_CONFIG.VELOCITY_THRESHOLD;
-      const isSwipeLeft =
-        swipeDistance < -SWIPE_CONFIG.THRESHOLD || swipeVelocity < -SWIPE_CONFIG.VELOCITY_THRESHOLD;
+      const isSwipeRight = swipeDistance > SWIPE_CONFIG.THRESHOLD || swipeVelocity > SWIPE_CONFIG.VELOCITY_THRESHOLD;
+      const isSwipeLeft = swipeDistance < -SWIPE_CONFIG.THRESHOLD || swipeVelocity < -SWIPE_CONFIG.VELOCITY_THRESHOLD;
 
       if (isSwipeRight) {
         // Notify parent immediately — AnimatePresence handles the exit animation
@@ -73,7 +67,7 @@ export function SwipeableCard({ challenge, onSwipeLeft, onSwipeRight, dragX }: S
         });
       }
     },
-    [controls, onSwipeLeft, onSwipeRight]
+    [controls, onSwipeLeft, onSwipeRight],
   );
 
   // For reduced motion, just use button controls
@@ -89,7 +83,7 @@ export function SwipeableCard({ challenge, onSwipeLeft, onSwipeRight, dragX }: S
     <motion.div
       className={cn(
         "relative z-10 cursor-grab active:cursor-grabbing",
-        "touch-none select-none" // Prevent text selection during drag
+        "touch-none select-none", // Prevent text selection during drag
       )}
       style={{
         x,

@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
-import { ChevronRight, RotateCcw, Send, AlertCircle, Info, Bot, HelpCircle } from "lucide-react";
-import { ChatMessage, CATEGORY_METRIC_MAP } from "@/lib/foodlytics/types";
-import { Card, CardContent } from "@/components/foodlytics/ui/card";
 import { Button } from "@/components/foodlytics/ui/button";
+import { Card, CardContent } from "@/components/foodlytics/ui/card";
 import { Input } from "@/components/foodlytics/ui/input";
-import { motion, AnimatePresence } from "framer-motion";
+import { CATEGORY_METRIC_MAP, type ChatMessage } from "@/lib/foodlytics/types";
+import { AnimatePresence, motion } from "framer-motion";
+import { AlertCircle, Bot, ChevronRight, HelpCircle, Info, RotateCcw, Send } from "lucide-react";
+import type React from "react";
+import { useEffect, useRef } from "react";
 
 interface AdvisorChatProps {
   chatMessages: ChatMessage[];
@@ -30,6 +31,7 @@ export function AdvisorChat({
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom on new messages
+  // biome-ignore lint/correctness/useExhaustiveDependencies: these are component props, not outer-scope bindings
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages, isChatLoading]);
@@ -76,7 +78,7 @@ export function AdvisorChat({
         {/* Advisor Persona Card */}
         <Card className="glass-panel border-none rounded-2xl shadow-xl relative overflow-hidden bg-gradient-to-br from-emerald-950/20 to-emerald-900/10">
           <CardContent className="p-6">
-            <div className="absolute right-0 top-0 h-32 w-32 bg-emerald-500/10 rounded-full blur-3xl -mr-6 -mt-6" />
+            <div className="absolute end-0 top-0 h-32 w-32 bg-emerald-500/10 rounded-full blur-3xl -me-6 -mt-6" />
             <div className="h-10 w-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-400 border border-emerald-500/20 mb-4 shadow-inner">
               <Bot className="h-5 w-5" />
             </div>
@@ -84,8 +86,8 @@ export function AdvisorChat({
               Preservation Advisor
             </h3>
             <p className="text-xs text-stone-400 mt-2.5 leading-relaxed font-bold">
-              Powered by Deno Cloud Edge Functions & Gemini 3.5 Flash. Ask operational preservation
-              guides or custom leftover recipes.
+              Powered by Deno Cloud Edge Functions & Gemini 3.5 Flash. Ask operational preservation guides or custom
+              leftover recipes.
             </p>
           </CardContent>
         </Card>
@@ -101,10 +103,11 @@ export function AdvisorChat({
             <div className="space-y-2 text-xs">
               {Object.entries(CATEGORY_METRIC_MAP).map(([key, val]) => (
                 <button
+                  type="button"
                   key={key}
                   onClick={() => handleShortcutClick(val.label)}
                   disabled={isChatLoading}
-                  className="w-full p-2.5 rounded-xl bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 text-stone-300 hover:text-white flex items-center justify-between text-left font-bold transition duration-200 cursor-pointer disabled:opacity-50"
+                  className="w-full p-2.5 rounded-xl bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 text-stone-300 hover:text-white flex items-center justify-between text-start font-bold transition duration-200 cursor-pointer disabled:opacity-50"
                 >
                   <span className="flex items-center gap-2.5 truncate">
                     <span
@@ -122,17 +125,16 @@ export function AdvisorChat({
 
         {/* Practical storage checklist mini card */}
         <div className="glass-panel border-none rounded-2xl p-6 text-xs text-amber-300 space-y-3.5 font-bold shadow-xl">
-          <span className="font-bold flex items-center gap-1.5 text-amber-250 text-amber-200">
+          <span className="font-bold flex items-center gap-1.5 text-amber-200">
             <Info className="h-4.5 w-4.5 text-amber-400" />
             Kitchen Quick-Save Win
           </span>
-          <p className="leading-relaxed font-semibold text-stone-350 text-stone-300">
-            <strong>Tomatoes:</strong> Store at room temp away from sunlight, stem-side down to
-            prevent rotting.
+          <p className="leading-relaxed font-semibold text-stone-300">
+            <strong>Tomatoes:</strong> Store at room temp away from sunlight, stem-side down to prevent rotting.
           </p>
-          <p className="leading-relaxed font-semibold text-stone-350 text-stone-300">
-            <strong>Herb Bundles:</strong> Trim stems, place in water glasses (like flowers), and
-            cover loosely with a reusable bag.
+          <p className="leading-relaxed font-semibold text-stone-300">
+            <strong>Herb Bundles:</strong> Trim stems, place in water glasses (like flowers), and cover loosely with a
+            reusable bag.
           </p>
         </div>
       </div>
@@ -150,13 +152,14 @@ export function AdvisorChat({
                 Preservation Advisor Console
               </h3>
               <div className="text-[10px] text-emerald-400 font-bold flex items-center gap-1.5 mt-0.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-455 bg-emerald-500 inline-block animate-ping" />
+                <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block animate-ping" />
                 Cloud sync active & online
               </div>
             </div>
           </div>
 
           <button
+            type="button"
             onClick={onClearChat}
             title="Clear Chat Conversation"
             className="p-1.5 px-3.5 text-xs font-extrabold text-stone-400 hover:text-white rounded-xl bg-white/5 border border-white/10 hover:border-white/20 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
@@ -177,7 +180,7 @@ export function AdvisorChat({
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 className={`flex flex-col max-w-[85%] ${
-                  msg.role === "user" ? "ml-auto items-end" : "mr-auto items-start"
+                  msg.role === "user" ? "ms-auto items-end" : "me-auto items-start"
                 }`}
               >
                 {(() => {
@@ -200,7 +203,7 @@ export function AdvisorChat({
                         className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm border ${
                           msg.role === "user"
                             ? "bg-emerald-600/25 border-emerald-500/30 text-emerald-250 text-stone-100 rounded-br-none font-bold"
-                            : "bg-white/[0.03] border-white/5 text-stone-250 text-stone-200 rounded-bl-none font-semibold"
+                            : "bg-white/[0.03] border-white/5 text-stone-200 rounded-bl-none font-semibold"
                         }`}
                       >
                         <div className="whitespace-pre-line space-y-2">{cleanText}</div>
@@ -212,14 +215,14 @@ export function AdvisorChat({
                               Grounded Citations:
                             </span>
                             <div className="flex flex-wrap gap-2">
-                              {sourcesList.map((src, sIdx) => (
+                              {sourcesList.map((src) => (
                                 <span
-                                  key={sIdx}
+                                  key={`${src.source_doc}#${src.chunk_id}`}
                                   title={`Document: ${src.source_doc} // Chunk: ${src.chunk_id}`}
                                   className="px-2 py-0.5 bg-white/5 border border-white/10 hover:border-emerald-500/20 text-stone-400 hover:text-white rounded-lg cursor-help transition-all flex items-center gap-1 font-mono font-bold"
                                 >
-                                  📄 {src.source_doc.replace("ZeroWaste_", "").replace(".txt", "")}{" "}
-                                  ({src.chunk_id.replace("chunk_", "C")})
+                                  📄 {src.source_doc.replace("ZeroWaste_", "").replace(".txt", "")} (
+                                  {src.chunk_id.replace("chunk_", "C")})
                                 </span>
                               ))}
                             </div>
@@ -229,9 +232,7 @@ export function AdvisorChat({
                     </>
                   );
                 })()}
-                <span className="text-[9px] text-stone-500 font-bold mt-1 px-1">
-                  {msg.timestamp}
-                </span>
+                <span className="text-[9px] text-stone-500 font-bold mt-1 px-1">{msg.timestamp}</span>
               </motion.div>
             ))}
           </AnimatePresence>
@@ -259,8 +260,7 @@ export function AdvisorChat({
               <div>
                 <span className="font-extrabold text-white">Advisor Query Issue:</span> {apiWarning}
                 <p className="mt-1 font-medium text-stone-400">
-                  Make sure that the Vercel or cloud secrets correctly contain your authorized
-                  Gemini key.
+                  Make sure that the Vercel or cloud secrets correctly contain your authorized Gemini key.
                 </p>
               </div>
             </div>
@@ -275,9 +275,10 @@ export function AdvisorChat({
           </span>
 
           <div className="flex flex-wrap gap-2">
-            {presetPrompts.map((p, idx) => (
+            {presetPrompts.map((p) => (
               <button
-                key={idx}
+                type="button"
+                key={p.text}
                 onClick={() => handlePresetClick(p.text)}
                 disabled={isChatLoading}
                 className="px-3.5 py-2 bg-white/5 border border-white/10 hover:border-emerald-500/50 text-stone-300 hover:text-white rounded-xl text-xs font-bold cursor-pointer select-none transition disabled:opacity-50"
@@ -301,13 +302,13 @@ export function AdvisorChat({
             value={chatInput}
             onChange={(e) => onSetChatInput(e.target.value)}
             disabled={isChatLoading}
-            className="flex-1 px-4 py-3 bg-black/35 border border-white/10 focus:border-emerald-500/50 rounded-xl font-bold text-sm text-stone-250 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-emerald-500 h-11"
+            className="flex-1 px-4 py-3 bg-black/35 border border-white/10 focus:border-emerald-500/50 rounded-xl font-bold text-sm text-stone-200 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-emerald-500 h-11"
           />
           <Button
             id="chat-send-btn"
             type="submit"
             disabled={isChatLoading || !chatInput.trim()}
-            className="h-11 w-11 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex items-center justify-center shrink-0 border border-emerald-500/20 hover:border-emerald-450 transition shadow-md disabled:opacity-50 cursor-pointer p-0"
+            className="h-11 w-11 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex items-center justify-center shrink-0 border border-emerald-500/20 hover:border-emerald-500 transition shadow-md disabled:opacity-50 cursor-pointer p-0"
           >
             <Send className="h-4.5 w-4.5" />
           </Button>

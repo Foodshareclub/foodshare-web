@@ -1,7 +1,7 @@
-import { getPublicProfile } from "@/lib/data/profiles";
+import type { AllValuesType } from "@/api/profileAPI";
 import { ProductsLocation } from "@/components/productsLocation/ProductLocation";
 import { VolunteerCards } from "@/components/volunteerCard/VolonterCards";
-import type { AllValuesType } from "@/api/profileAPI";
+import { getPublicProfile } from "@/lib/data/profiles";
 
 interface OneVolunteerProps {
   id: string;

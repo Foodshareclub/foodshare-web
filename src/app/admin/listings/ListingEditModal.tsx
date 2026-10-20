@@ -5,49 +5,43 @@
  * Full admin control over all listing fields with modern UI
  */
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import {
-  Save,
-  MapPin,
-  Clock,
-  User,
-  Eye,
-  EyeOff,
-  Trash2,
-  RotateCcw,
-  ExternalLink,
-  FileText,
-  Image as ImageIcon,
-  Settings,
-  Activity,
-  AlertTriangle,
-  CheckCircle,
-  MessageSquare,
-  Calendar,
-  Tag,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { type UpdateListingData, updateListing } from "@/app/actions/admin-listings";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { updateListing, type UpdateListingData } from "@/app/actions/admin-listings";
-import type { AdminListing } from "@/lib/data/admin-listings";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import type { AdminListing } from "@/lib/data/admin-listings";
 import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Activity,
+  AlertTriangle,
+  Calendar,
+  CheckCircle,
+  Clock,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  FileText,
+  Image as ImageIcon,
+  MapPin,
+  MessageSquare,
+  RotateCcw,
+  Save,
+  Settings,
+  Tag,
+  Trash2,
+  User,
+} from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface Props {
   listing: AdminListing;
@@ -171,7 +165,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
                       "text-xs",
                       listing.is_active
                         ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                        : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                        : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400",
                     )}
                   >
                     {listing.is_active ? "Active" : "Inactive"}
@@ -183,7 +177,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 -mr-2 -mt-1"
+              className="h-8 w-8 -me-2 -mt-1"
               onClick={() => window.open(`/listing/${listing.id}`, "_blank")}
             >
               <ExternalLink className="h-4 w-4" />
@@ -199,28 +193,28 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
                 value="details"
                 className="px-0 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
               >
-                <FileText className="h-4 w-4 mr-2" />
+                <FileText className="h-4 w-4 me-2" />
                 Details
               </TabsTrigger>
               <TabsTrigger
                 value="media"
                 className="px-0 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
               >
-                <ImageIcon className="h-4 w-4 mr-2" />
+                <ImageIcon className="h-4 w-4 me-2" />
                 Media ({images.length})
               </TabsTrigger>
               <TabsTrigger
                 value="settings"
                 className="px-0 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
               >
-                <Settings className="h-4 w-4 mr-2" />
+                <Settings className="h-4 w-4 me-2" />
                 Settings
               </TabsTrigger>
               <TabsTrigger
                 value="activity"
                 className="px-0 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
               >
-                <Activity className="h-4 w-4 mr-2" />
+                <Activity className="h-4 w-4 me-2" />
                 Activity
               </TabsTrigger>
             </TabsList>
@@ -243,7 +237,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
                       <p className="text-sm text-muted-foreground">{listing.profile?.email}</p>
                     </div>
                     <Button variant="outline" size="sm">
-                      <MessageSquare className="h-4 w-4 mr-2" />
+                      <MessageSquare className="h-4 w-4 me-2" />
                       Contact
                     </Button>
                   </div>
@@ -276,10 +270,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="post_type">Category</Label>
-                      <Select
-                        value={formData.post_type}
-                        onValueChange={(value) => handleChange("post_type", value)}
-                      >
+                      <Select value={formData.post_type} onValueChange={(value) => handleChange("post_type", value)}>
                         <SelectTrigger className="mt-1.5">
                           <SelectValue />
                         </SelectTrigger>
@@ -287,9 +278,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
                           {CATEGORIES.map((cat) => (
                             <SelectItem key={cat.value} value={cat.value}>
                               <div className="flex items-center gap-2">
-                                <span
-                                  className={cn("w-2 h-2 rounded-full", cat.color.split(" ")[0])}
-                                />
+                                <span className={cn("w-2 h-2 rounded-full", cat.color.split(" ")[0])} />
                                 {cat.label}
                               </div>
                             </SelectItem>
@@ -300,11 +289,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
 
                     <div>
                       <Label>Views</Label>
-                      <Input
-                        value={listing.post_views.toLocaleString()}
-                        disabled
-                        className="mt-1.5 bg-muted"
-                      />
+                      <Input value={listing.post_views.toLocaleString()} disabled className="mt-1.5 bg-muted" />
                     </div>
                   </div>
                 </div>
@@ -343,12 +328,12 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
                   <div>
                     <Label htmlFor="post_address">Address</Label>
                     <div className="relative mt-1.5">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <MapPin className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="post_address"
                         value={formData.post_address}
                         onChange={(e) => handleChange("post_address", e.target.value)}
-                        className="pl-9"
+                        className="ps-9"
                       />
                     </div>
                   </div>
@@ -362,7 +347,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
                   {images.length > 0 ? (
                     <div className="grid grid-cols-3 gap-4">
                       {images.map((url, index) => (
-                        <div key={index} className="relative group">
+                        <div key={url} className="relative group">
                           <Image
                             src={url!}
                             alt={`${listing.post_name} ${index + 1}`}
@@ -378,9 +363,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                          {index === 0 && (
-                            <Badge className="absolute top-2 left-2 text-xs">Primary</Badge>
-                          )}
+                          {index === 0 && <Badge className="absolute top-2 start-2 text-xs">Primary</Badge>}
                         </div>
                       ))}
                     </div>
@@ -434,25 +417,19 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
                     placeholder="Internal notes about this listing..."
                     className="mt-1.5 bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/50 dark:border-amber-800/50"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    These notes are only visible to admins
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">These notes are only visible to admins</p>
                 </div>
 
                 {/* Danger Zone */}
                 <div className="rounded-lg border border-rose-200 dark:border-rose-800/50 bg-rose-50/50 dark:bg-rose-950/20 p-4">
                   <h4 className="font-medium text-rose-700 dark:text-rose-400 mb-3">Danger Zone</h4>
                   <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-rose-600 border-rose-200 hover:bg-rose-50"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
+                    <Button variant="outline" size="sm" className="text-rose-600 border-rose-200 hover:bg-rose-50">
+                      <Trash2 className="h-4 w-4 me-2" />
                       Delete Listing
                     </Button>
                     <Button variant="outline" size="sm">
-                      <RotateCcw className="h-4 w-4 mr-2" />
+                      <RotateCcw className="h-4 w-4 me-2" />
                       Reset to Original
                     </Button>
                   </div>
@@ -516,7 +493,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
 
             <div className="flex items-center justify-between">
               <Button type="button" variant="ghost" onClick={resetForm} disabled={saving}>
-                <RotateCcw className="h-4 w-4 mr-2" />
+                <RotateCcw className="h-4 w-4 me-2" />
                 Reset
               </Button>
               <div className="flex gap-3">
@@ -524,7 +501,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
                   Cancel
                 </Button>
                 <Button onClick={handleSubmit} disabled={saving}>
-                  <Save className="h-4 w-4 mr-2" />
+                  <Save className="h-4 w-4 me-2" />
                   {saving ? "Saving..." : "Save Changes"}
                 </Button>
               </div>

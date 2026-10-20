@@ -8,29 +8,17 @@
  * - Proper auth checks
  */
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS, getNotificationTags } from "@/lib/data/cache-keys";
 import { invalidateTag } from "@/lib/data/cache-invalidation";
-import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
-import type { FullNotificationPreferencesData, NotificationType } from "@/types";
+import { CACHE_TAGS, getNotificationTags } from "@/lib/data/cache-keys";
+import { type ServerActionResult, serverActionError, successVoid } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
+import type { FullNotificationPreferencesData } from "@/types";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 // ============================================================================
 // Zod Schemas
 // ============================================================================
-
-const CreateNotificationSchema = z.object({
-  recipientId: z.string().uuid("Invalid recipient ID"),
-  actorId: z.string().uuid().optional().nullable(),
-  type: z.string().min(1, "Notification type is required"),
-  title: z.string().min(1, "Title is required").max(200),
-  body: z.string().max(1000).optional().nullable(),
-  postId: z.number().int().positive().optional().nullable(),
-  roomId: z.string().uuid().optional().nullable(),
-  reviewId: z.number().int().positive().optional().nullable(),
-  data: z.record(z.string(), z.unknown()).optional().default({}),
-});
 
 const NotificationPreferencesSchema = z.object({
   messages: z.boolean().optional(),
@@ -64,9 +52,7 @@ async function verifyAuth() {
 /**
  * Mark a single notification as read
  */
-export async function markNotificationAsRead(
-  notificationId: string
-): Promise<ServerActionResult<void>> {
+export async function markNotificationAsRead(notificationId: string): Promise<ServerActionResult<void>> {
   try {
     // Validate ID
     if (!notificationId || !z.string().uuid().safeParse(notificationId).success) {
@@ -143,9 +129,7 @@ export async function markAllNotificationsAsRead(): Promise<ServerActionResult<v
 /**
  * Delete a single notification
  */
-export async function deleteNotification(
-  notificationId: string
-): Promise<ServerActionResult<void>> {
+export async function deleteNotification(notificationId: string): Promise<ServerActionResult<void>> {
   try {
     // Validate ID
     if (!notificationId || !z.string().uuid().safeParse(notificationId).success) {
@@ -210,66 +194,6 @@ export async function deleteReadNotifications(): Promise<ServerActionResult<void
 }
 
 // ============================================================================
-// Create Notification (Internal use / Edge Functions)
-// ============================================================================
-
-interface CreateNotificationParams {
-  recipientId: string;
-  actorId?: string | null;
-  type: NotificationType;
-  title: string;
-  body?: string | null;
-  postId?: number | null;
-  roomId?: string | null;
-  reviewId?: number | null;
-  data?: Record<string, unknown>;
-}
-
-/**
- * Create a notification for a user
- * Used internally by triggers and edge functions
- */
-export async function createNotification(
-  params: CreateNotificationParams
-): Promise<ServerActionResult<void>> {
-  try {
-    // Validate inputs
-    const validated = CreateNotificationSchema.safeParse(params);
-    if (!validated.success) {
-      const firstError = validated.error.issues[0];
-      return serverActionError(firstError.message, "VALIDATION_ERROR");
-    }
-
-    const supabase = await createClient();
-
-    const { error } = await supabase.from("user_notifications").insert({
-      recipient_id: validated.data.recipientId,
-      actor_id: validated.data.actorId || null,
-      type: validated.data.type,
-      title: validated.data.title,
-      body: validated.data.body || null,
-      post_id: validated.data.postId || null,
-      room_id: validated.data.roomId || null,
-      review_id: validated.data.reviewId || null,
-      data: validated.data.data,
-    });
-
-    if (error) {
-      console.error("Failed to create notification:", error);
-      return serverActionError(error.message, "DATABASE_ERROR");
-    }
-
-    // Invalidate cache for recipient
-    getNotificationTags(validated.data.recipientId).forEach((tag) => invalidateTag(tag));
-
-    return successVoid();
-  } catch (error) {
-    console.error("Failed to create notification:", error);
-    return serverActionError("Failed to create notification", "UNKNOWN_ERROR");
-  }
-}
-
-// ============================================================================
 // Preferences Actions
 // ============================================================================
 
@@ -277,7 +201,7 @@ export async function createNotification(
  * Update notification preferences for the current user
  */
 export async function updateNotificationPreferences(
-  preferences: z.infer<typeof NotificationPreferencesSchema>
+  preferences: z.infer<typeof NotificationPreferencesSchema>,
 ): Promise<ServerActionResult<void>> {
   try {
     // Validate inputs
@@ -356,9 +280,7 @@ export async function getUnreadNotificationCount(): Promise<ServerActionResult<n
 /**
  * Fetch full authoritative notification preferences from backend
  */
-export async function getFullNotificationPreferences(): Promise<
-  ServerActionResult<FullNotificationPreferencesData>
-> {
+export async function getFullNotificationPreferences(): Promise<ServerActionResult<FullNotificationPreferencesData>> {
   try {
     const { supabase, user, error: authError } = await verifyAuth();
     if (authError || !supabase || !user) {
@@ -388,7 +310,7 @@ export async function getFullNotificationPreferences(): Promise<
  * Update global notification settings in backend
  */
 export async function updateNotificationSettingsAction(
-  settings: Record<string, unknown>
+  settings: Record<string, unknown>,
 ): Promise<ServerActionResult<void>> {
   try {
     const { supabase, user, error: authError } = await verifyAuth();
@@ -423,7 +345,7 @@ export async function updateCategoryChannelAction(
   category: string,
   channel: string,
   enabled: boolean,
-  frequency = "instant"
+  frequency = "instant",
 ): Promise<ServerActionResult<void>> {
   try {
     const { supabase, user, error: authError } = await verifyAuth();

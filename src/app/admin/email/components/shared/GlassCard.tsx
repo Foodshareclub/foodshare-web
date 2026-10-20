@@ -8,12 +8,7 @@ export function GlassCard({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm p-5",
-        className
-      )}
-    >
+    <div className={cn("rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm p-5", className)}>
       {children}
     </div>
   );

@@ -1,6 +1,6 @@
-import { type ReactNode, type ButtonHTMLAttributes } from "react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** Icon to display */
@@ -51,29 +51,29 @@ export function IconButton({
   className,
   ...props
 }: IconButtonProps) {
-    return (
-      <Button
-        variant={variant}
-        className={cn(
-          "relative rounded-full transition-all",
-          sizeClasses[size],
-          isActive && "bg-accent text-accent-foreground",
-          className
-        )}
-        aria-label={label}
-        {...props}
-      >
-        {icon}
-        {hasNotification && (
-          <span
-            className={cn(
-              "absolute bottom-0 right-0",
-              "w-3 h-3 rounded-full",
-              "bg-green-300 border-2 border-white dark:border-gray-900"
-            )}
-            aria-label="Has notification"
-          />
-        )}
-      </Button>
-    );
+  return (
+    <Button
+      variant={variant}
+      className={cn(
+        "relative rounded-full transition-all",
+        sizeClasses[size],
+        isActive && "bg-accent text-accent-foreground",
+        className,
+      )}
+      aria-label={label}
+      {...props}
+    >
+      {icon}
+      {hasNotification && (
+        <span
+          className={cn(
+            "absolute bottom-0 end-0",
+            "w-3 h-3 rounded-full",
+            "bg-green-300 border-2 border-white dark:border-gray-900",
+          )}
+          aria-label="Has notification"
+        />
+      )}
+    </Button>
+  );
 }

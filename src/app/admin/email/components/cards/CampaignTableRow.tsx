@@ -4,11 +4,8 @@
  * CampaignTableRow - Full table row for campaigns list view
  */
 
-import { MoreVertical, Eye, Edit, Copy, Send, Trash2 } from "lucide-react";
-import type { RecentCampaign } from "../types";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +13,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import { Copy, Edit, Eye, MoreVertical, Send, Trash2 } from "lucide-react";
+import type { RecentCampaign } from "../types";
 
 const statusConfig = {
   draft: {
@@ -50,10 +50,8 @@ interface CampaignTableRowProps {
 
 export function CampaignTableRow({ campaign }: CampaignTableRowProps) {
   const config = statusConfig[campaign.status];
-  const openRate =
-    campaign.totalSent > 0 ? Math.round((campaign.totalOpened / campaign.totalSent) * 100) : 0;
-  const clickRate =
-    campaign.totalOpened > 0 ? Math.round((campaign.totalClicked / campaign.totalOpened) * 100) : 0;
+  const openRate = campaign.totalSent > 0 ? Math.round((campaign.totalOpened / campaign.totalSent) * 100) : 0;
+  const clickRate = campaign.totalOpened > 0 ? Math.round((campaign.totalClicked / campaign.totalOpened) * 100) : 0;
 
   return (
     <tr className="hover:bg-muted/30 transition-colors">
@@ -76,7 +74,7 @@ export function CampaignTableRow({ campaign }: CampaignTableRowProps) {
             ? new Date(campaign.scheduledAt).toLocaleDateString()
             : "—"}
       </td>
-      <td className="p-3 text-right">
+      <td className="p-3 text-end">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -85,26 +83,26 @@ export function CampaignTableRow({ campaign }: CampaignTableRowProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem>
-              <Eye className="h-4 w-4 mr-2" />
+              <Eye className="h-4 w-4 me-2" />
               View Details
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="h-4 w-4 me-2" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Copy className="h-4 w-4 mr-2" />
+              <Copy className="h-4 w-4 me-2" />
               Duplicate
             </DropdownMenuItem>
             {campaign.status === "draft" && (
               <DropdownMenuItem>
-                <Send className="h-4 w-4 mr-2" />
+                <Send className="h-4 w-4 me-2" />
                 Send Now
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-rose-600">
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="h-4 w-4 me-2" />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>

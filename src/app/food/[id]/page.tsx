@@ -1,7 +1,7 @@
-import { notFound, permanentRedirect } from "next/navigation";
-import { getProductById } from "@/lib/data/products";
 import { getChallengeById } from "@/lib/data/challenges";
+import { getProductById } from "@/lib/data/products";
 import { slugify } from "@/lib/utils";
+import { notFound, permanentRedirect } from "next/navigation";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -15,8 +15,8 @@ interface PageProps {
  */
 export default async function FoodLegacyRedirect({ params, searchParams }: PageProps) {
   const [{ id }, search] = await Promise.all([params, searchParams]);
-  const productId = parseInt(id, 10);
-  if (isNaN(productId)) notFound();
+  const productId = Number.parseInt(id, 10);
+  if (Number.isNaN(productId)) notFound();
 
   const isChallenge = search.type === "challenge";
   if (isChallenge) {
@@ -36,8 +36,8 @@ export default async function FoodLegacyRedirect({ params, searchParams }: PageP
 export async function generateMetadata({ params, searchParams }: PageProps) {
   // No metadata — redirect only. Provide minimal to avoid 500.
   const [{ id }, search] = await Promise.all([params, searchParams]);
-  const productId = parseInt(id, 10);
-  if (isNaN(productId)) return { title: "Not Found" };
+  const productId = Number.parseInt(id, 10);
+  if (Number.isNaN(productId)) return { title: "Not Found" };
   if (search.type === "challenge") {
     return { title: "Redirecting..." };
   }

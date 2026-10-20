@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Site Navigation", () => {
   test("should navigate between main pages", async ({ page }) => {
@@ -97,10 +97,9 @@ test.describe("Static Pages", () => {
 
   test("should display help page", async ({ page }) => {
     await page.goto("/help");
-    await page.waitForSelector(
-      'h1, h2, [class*="heading"], main p, [class*="faq"], [class*="help"]',
-      { timeout: 30000 }
-    );
+    await page.waitForSelector('h1, h2, [class*="heading"], main p, [class*="faq"], [class*="help"]', {
+      timeout: 30000,
+    });
     await expect(page).toHaveURL(/\/help/);
 
     const content = page.locator('main, [class*="content"], article, body').first();

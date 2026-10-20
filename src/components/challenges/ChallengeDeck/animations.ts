@@ -1,5 +1,5 @@
-import { Variants } from "framer-motion";
-import { HERO_DECK_CONFIG, ANIMATION_DURATIONS } from "./constants";
+import type { Variants } from "framer-motion";
+import { ANIMATION_DURATIONS, HERO_DECK_CONFIG } from "./constants";
 
 /**
  * GPU-Optimized Animation Variants
@@ -91,11 +91,7 @@ export const shuffleFlyVariants = (index: number): Variants => ({
       index * HERO_DECK_CONFIG.ROTATION_VARIANCE,
     ],
     rotateY: [0, (index % 2 === 0 ? 1 : -1) * 25, 0],
-    scale: [
-      1 - index * HERO_DECK_CONFIG.SCALE_REDUCTION,
-      1.12,
-      1 - index * HERO_DECK_CONFIG.SCALE_REDUCTION,
-    ],
+    scale: [1 - index * HERO_DECK_CONFIG.SCALE_REDUCTION, 1.12, 1 - index * HERO_DECK_CONFIG.SCALE_REDUCTION],
     transition: {
       duration: 0.7,
       delay: index * 0.05,
@@ -164,7 +160,7 @@ export const idleWobbleVariants: Variants = {
     y: [0, -6, 0],
     transition: {
       duration: ANIMATION_DURATIONS.FLOAT / 1000,
-      repeat: Infinity,
+      repeat: Number.POSITIVE_INFINITY,
       ease: "easeInOut",
     },
   },
@@ -219,7 +215,7 @@ export const glowPulseVariants: Variants = {
     scale: [1, 1.08, 1],
     transition: {
       duration: ANIMATION_DURATIONS.GLOW_PULSE / 1000,
-      repeat: Infinity,
+      repeat: Number.POSITIVE_INFINITY,
       ease: "easeInOut",
     },
   },
@@ -232,7 +228,7 @@ export const hintBounceVariants: Variants = {
     opacity: [0.7, 1, 0.7],
     transition: {
       duration: 2,
-      repeat: Infinity,
+      repeat: Number.POSITIVE_INFINITY,
       ease: "easeInOut",
     },
   },
@@ -259,7 +255,7 @@ export const shimmerVariants: Variants = {
     backgroundPosition: ["-200% 0", "200% 0"],
     transition: {
       duration: 2.5,
-      repeat: Infinity,
+      repeat: Number.POSITIVE_INFINITY,
       ease: "linear",
     },
   },
@@ -271,7 +267,7 @@ export const scalePulseVariants: Variants = {
     scale: [1, 1.02, 1],
     transition: {
       duration: 2,
-      repeat: Infinity,
+      repeat: Number.POSITIVE_INFINITY,
       ease: "easeInOut",
     },
   },

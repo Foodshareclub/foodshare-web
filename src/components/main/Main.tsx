@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 import { ProductCard } from "@/components/productCard/ProductCard";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
 import type { InitialProductStateType } from "@/types/product.types";
+import type React from "react";
+import { useEffect, useRef } from "react";
 
 // Pre-computed skeleton arrays
 const SKELETON_ITEMS = Array.from({ length: 10 }, (_, i) => i);
@@ -50,7 +51,7 @@ export const Main: React.FC<MainProps> = ({
           onLoadMore();
         }
       },
-      { rootMargin: "200px" }
+      { rootMargin: "200px" },
     );
 
     const currentRef = loadMoreRef.current;
@@ -89,15 +90,11 @@ export const Main: React.FC<MainProps> = ({
         >
           {!loaded
             ? SKELETON_ITEMS.map((i) => <SkeletonCard key={i} isLoaded={false} />)
-            : products.map((product: InitialProductStateType) => (
-                <ProductCard product={product} key={product.id} />
-              ))}
+            : products.map((product: InitialProductStateType) => <ProductCard product={product} key={product.id} />)}
 
           {/* Loading more skeletons */}
           {isFetchingMore &&
-            LOADING_MORE_SKELETONS.map((i) => (
-              <SkeletonCard key={`loading-more-${i}`} isLoaded={false} />
-            ))}
+            LOADING_MORE_SKELETONS.map((i) => <SkeletonCard key={`loading-more-${i}`} isLoaded={false} />)}
         </div>
 
         {/* Infinite scroll trigger */}

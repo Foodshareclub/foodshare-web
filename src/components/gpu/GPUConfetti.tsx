@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
 import { useGPUContext } from "@/lib/gpu";
 import { acquireGPU, releaseGPU } from "@/lib/gpu/GPUDevicePool";
-import type { FrameLoopHandle } from "vgpu";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { FrameLoopHandle, draw, surface } from "vgpu";
+
+interface ConfettiGPUResources {
+  gpu: unknown;
+  canvasSurface: ReturnType<typeof surface>;
+  confetti: ReturnType<typeof draw>;
+}
 
 interface GPUConfettiProps {
   /** Trigger a confetti burst */
@@ -22,24 +28,22 @@ interface GPUConfettiProps {
  *
  * Uses shared GPU device pool. Pre-warms pipeline on first burst.
  */
-export function GPUConfetti({
-  active = false,
-  particles = 5000,
-  duration = 3,
-  className = "",
-}: GPUConfettiProps) {
+export function GPUConfetti({ active = false, particles = 5000, duration = 3, className = "" }: GPUConfettiProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { supported } = useGPUContext();
   const loopRef = useRef<FrameLoopHandle | null>(null);
-  const gpuRef = useRef<any>(null);
+  const gpuRef = useRef<ConfettiGPUResources | null>(null);
   const hasAcquired = useRef(false);
   const [burstTime, setBurstTime] = useState(-10);
 
-  // Trigger burst
+  // Trigger burst — deferred to the next frame so the effect body stays
+  // free of synchronous setState (the loop reads burstTime when it starts)
   useEffect(() => {
-    if (active) {
+    if (!active) return;
+    const raf = requestAnimationFrame(() => {
       setBurstTime(performance.now() / 1000);
-    }
+    });
+    return () => cancelAnimationFrame(raf);
   }, [active]);
 
   useEffect(() => {

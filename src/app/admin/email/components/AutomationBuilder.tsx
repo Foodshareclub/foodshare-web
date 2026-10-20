@@ -10,58 +10,49 @@
  * - Preview mode
  */
 
-import React, { useState, useTransition } from "react";
-import { motion } from "framer-motion";
-import {
-  Mail,
-  Clock,
-  GitBranch,
-  Plus,
-  Trash2,
-  ChevronRight,
-  Save,
-  X,
-  AlertCircle,
-  CheckCircle,
-  UserPlus,
-  Package,
-  Heart,
-  MapPin,
-  Star,
-  MessageCircle,
-  Trophy,
-  Users,
-  Hand,
-  Calendar,
-  Zap,
-  ArrowDown,
-  Settings,
-  FileText,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-
-import type { AutomationStep, AutomationFlow, EmailTemplate } from "@/types/automations.types";
-import { TRIGGER_TYPES } from "@/types/automations.types";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import {
-  createAutomationFlow,
-  updateAutomationFlow,
-  createPresetAutomation,
-} from "@/app/actions/automations";
+  AlertCircle,
+  ArrowDown,
+  Calendar,
+  CheckCircle,
+  ChevronRight,
+  Clock,
+  FileText,
+  GitBranch,
+  Hand,
+  Heart,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Package,
+  Plus,
+  Save,
+  Settings,
+  Star,
+  Trash2,
+  Trophy,
+  UserPlus,
+  Users,
+  X,
+  Zap,
+} from "lucide-react";
+import type React from "react";
+import { useState, useTransition } from "react";
+
+import { createAutomationFlow, createPresetAutomation, updateAutomationFlow } from "@/app/actions/automations";
+import type { AutomationFlow, AutomationStep, EmailTemplate } from "@/types/automations.types";
+import { TRIGGER_TYPES } from "@/types/automations.types";
 
 // ============================================================================
 // Types
@@ -163,9 +154,7 @@ export function AutomationBuilder({
   const [name, setName] = useState(flow?.name || "");
   const [description, setDescription] = useState(flow?.description || "");
   const [triggerType, setTriggerType] = useState(flow?.trigger_type || "user_signup");
-  const [triggerConfig, setTriggerConfig] = useState<Record<string, unknown>>(
-    flow?.trigger_config || {}
-  );
+  const [triggerConfig, setTriggerConfig] = useState<Record<string, unknown>>(flow?.trigger_config || {});
   const [steps, setSteps] = useState<AutomationStep[]>(flow?.steps || []);
   const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(null);
 
@@ -217,9 +206,7 @@ export function AutomationBuilder({
         steps,
       };
 
-      const response = isEditing
-        ? await updateAutomationFlow(flow.id, data)
-        : await createAutomationFlow(data);
+      const response = isEditing ? await updateAutomationFlow(flow.id, data) : await createAutomationFlow(data);
 
       if (response.success) {
         setResult({
@@ -230,9 +217,7 @@ export function AutomationBuilder({
         setTimeout(() => onClose(), 1000);
       } else {
         const errorMsg =
-          typeof response.error === "string"
-            ? response.error
-            : response.error?.message || "Failed to save automation";
+          typeof response.error === "string" ? response.error : response.error?.message || "Failed to save automation";
         setResult({ success: false, message: errorMsg });
       }
     });
@@ -243,12 +228,8 @@ export function AutomationBuilder({
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
         <div>
-          <h2 className="text-lg font-semibold">
-            {isEditing ? "Edit Automation" : "Create Automation"}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Build automated email flows to engage your users
-          </p>
+          <h2 className="text-lg font-semibold">{isEditing ? "Edit Automation" : "Create Automation"}</h2>
+          <p className="text-sm text-muted-foreground">Build automated email flows to engage your users</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={onClose} disabled={isPending}>
@@ -319,11 +300,7 @@ export function AutomationBuilder({
           </Card>
 
           {/* Trigger Info */}
-          <TriggerCard
-            triggerType={triggerType}
-            triggerConfig={triggerConfig}
-            onConfigChange={setTriggerConfig}
-          />
+          <TriggerCard triggerType={triggerType} triggerConfig={triggerConfig} onConfigChange={setTriggerConfig} />
 
           {/* Flow Steps */}
           <Card className="bg-card/50 border-border/50">
@@ -337,12 +314,7 @@ export function AutomationBuilder({
                   {(["email", "delay", "condition"] as StepType[]).map((type) => (
                     <Tooltip key={type}>
                       <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 gap-1.5"
-                          onClick={() => handleAddStep(type)}
-                        >
+                        <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => handleAddStep(type)}>
                           <Plus className="h-3 w-3" />
                           {STEP_CONFIGS[type].icon}
                         </Button>
@@ -364,6 +336,7 @@ export function AutomationBuilder({
                 <div className="space-y-2">
                   {steps.map((step, index) => (
                     <StepCard
+                      // biome-ignore lint/suspicious/noArrayIndexKey: an automation flow step has no id of its own — its position in the ordered steps array is its identity
                       key={index}
                       step={step}
                       index={index}
@@ -386,7 +359,7 @@ export function AutomationBuilder({
                 "p-4 rounded-xl flex items-center gap-3",
                 result.success
                   ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-                  : "bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400"
+                  : "bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400",
               )}
             >
               {result.success ? (
@@ -400,7 +373,7 @@ export function AutomationBuilder({
         </div>
 
         {/* Right Panel - Step Editor */}
-        <div className="w-80 border-l border-border/50 bg-muted/20 overflow-y-auto">
+        <div className="w-80 border-s border-border/50 bg-muted/20 overflow-y-auto">
           {selectedStepIndex !== null && steps[selectedStepIndex] ? (
             <StepEditor
               step={steps[selectedStepIndex]}
@@ -456,7 +429,10 @@ function TriggerCard({
                   type="number"
                   value={(triggerConfig.days_inactive as number) || 30}
                   onChange={(e) =>
-                    onConfigChange({ ...triggerConfig, days_inactive: parseInt(e.target.value) })
+                    onConfigChange({
+                      ...triggerConfig,
+                      days_inactive: Number.parseInt(e.target.value),
+                    })
                   }
                   className="w-20 h-8 text-sm"
                   min={1}
@@ -471,7 +447,10 @@ function TriggerCard({
                     type="number"
                     value={(triggerConfig.radius_km as number) || 5}
                     onChange={(e) =>
-                      onConfigChange({ ...triggerConfig, radius_km: parseInt(e.target.value) })
+                      onConfigChange({
+                        ...triggerConfig,
+                        radius_km: Number.parseInt(e.target.value),
+                      })
                     }
                     className="w-16 h-8 text-sm"
                     min={1}
@@ -483,7 +462,10 @@ function TriggerCard({
                     type="number"
                     value={(triggerConfig.max_per_day as number) || 3}
                     onChange={(e) =>
-                      onConfigChange({ ...triggerConfig, max_per_day: parseInt(e.target.value) })
+                      onConfigChange({
+                        ...triggerConfig,
+                        max_per_day: Number.parseInt(e.target.value),
+                      })
                     }
                     className="w-16 h-8 text-sm"
                     min={1}
@@ -535,16 +517,16 @@ function StepCard({
   return (
     <div className="relative">
       {/* Connector line */}
-      {index > 0 && <div className="absolute left-6 -top-2 w-0.5 h-2 bg-border" />}
+      {index > 0 && <div className="absolute start-6 -top-2 w-0.5 h-2 bg-border" />}
 
       <motion.button
         layout
         onClick={onSelect}
         className={cn(
-          "w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left group",
+          "w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-start group",
           isSelected
             ? "border-primary bg-primary/5 shadow-sm"
-            : "border-border/50 bg-background/50 hover:border-primary/30 hover:bg-muted/30"
+            : "border-border/50 bg-background/50 hover:border-primary/30 hover:bg-muted/30",
         )}
       >
         {/* Step number & icon */}
@@ -637,9 +619,7 @@ function StepEditor({
             <Label className="text-xs">Template (optional)</Label>
             <Select
               value={step.template_slug || "none"}
-              onValueChange={(value) =>
-                onUpdate({ template_slug: value === "none" ? undefined : value })
-              }
+              onValueChange={(value) => onUpdate({ template_slug: value === "none" ? undefined : value })}
             >
               <SelectTrigger className="bg-background/50 h-9 text-sm">
                 <SelectValue placeholder="Select a template..." />
@@ -685,7 +665,7 @@ function StepEditor({
             <Label className="text-xs">Wait Duration</Label>
             <Select
               value={String(step.delay_minutes || 1440)}
-              onValueChange={(value) => onUpdate({ delay_minutes: parseInt(value) })}
+              onValueChange={(value) => onUpdate({ delay_minutes: Number.parseInt(value) })}
             >
               <SelectTrigger className="bg-background/50 h-9 text-sm">
                 <SelectValue />
@@ -705,7 +685,7 @@ function StepEditor({
             <Input
               type="number"
               value={step.delay_minutes || 1440}
-              onChange={(e) => onUpdate({ delay_minutes: parseInt(e.target.value) })}
+              onChange={(e) => onUpdate({ delay_minutes: Number.parseInt(e.target.value) })}
               className="bg-background/50 h-9 text-sm"
               min={1}
             />
@@ -713,7 +693,7 @@ function StepEditor({
 
           <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
             <p className="text-xs text-amber-700 dark:text-amber-400">
-              <Clock className="h-3 w-3 inline mr-1" />
+              <Clock className="h-3 w-3 inline me-1" />
               User will wait {formatDelay(step.delay_minutes || 0)} before the next step
             </p>
           </div>
@@ -830,9 +810,7 @@ interface PresetAutomationCreatorProps {
   onCreated: () => void;
 }
 
-export function PresetAutomationCreator({
-  onCreated,
-}: PresetAutomationCreatorProps): React.ReactElement {
+export function PresetAutomationCreator({ onCreated }: PresetAutomationCreatorProps): React.ReactElement {
   const [isPending, startTransition] = useTransition();
   const [creatingPreset, setCreatingPreset] = useState<string | null>(null);
 
@@ -875,10 +853,8 @@ export function PresetAutomationCreator({
   ];
 
   const colorClasses = {
-    emerald:
-      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20",
-    amber:
-      "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20",
+    emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20",
+    amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20",
     rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 hover:bg-rose-500/20",
   };
 
@@ -886,12 +862,13 @@ export function PresetAutomationCreator({
     <div className="grid md:grid-cols-3 gap-4">
       {presets.map((preset) => (
         <button
+          type="button"
           key={preset.id}
           onClick={() => handleCreatePreset(preset.id)}
           disabled={isPending}
           className={cn(
-            "flex items-start gap-3 p-4 rounded-xl border transition-all text-left group disabled:opacity-50",
-            colorClasses[preset.color as keyof typeof colorClasses]
+            "flex items-start gap-3 p-4 rounded-xl border transition-all text-start group disabled:opacity-50",
+            colorClasses[preset.color as keyof typeof colorClasses],
           )}
         >
           <div className="p-2 rounded-lg bg-current/10">
@@ -905,7 +882,7 @@ export function PresetAutomationCreator({
             <p className="font-medium text-sm">{preset.name}</p>
             <p className="text-xs opacity-80 line-clamp-2 mt-0.5">{preset.description}</p>
             <Badge variant="secondary" className="mt-2 text-[10px]">
-              <Zap className="h-3 w-3 mr-1" />
+              <Zap className="h-3 w-3 me-1" />
               {preset.trigger}
             </Badge>
           </div>

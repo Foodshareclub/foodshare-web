@@ -1,7 +1,7 @@
-import * as React from "react";
+import { cn } from "@/lib/utils";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import * as React from "react";
 
 const Drawer = DialogPrimitive.Root;
 const DrawerTrigger = DialogPrimitive.Trigger;
@@ -16,56 +16,53 @@ const DrawerOverlay = React.forwardRef<
     ref={ref}
     className={cn(
       "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-      className
+      className,
     )}
     {...props}
   />
 ));
 DrawerOverlay.displayName = "DrawerOverlay";
 
-interface DrawerContentProps extends React.ComponentPropsWithoutRef<
-  typeof DialogPrimitive.Content
-> {
+interface DrawerContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
   position?: "right" | "left" | "top" | "bottom";
   variant?: "glass" | "standard";
 }
 
-const DrawerContent = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Content>,
-  DrawerContentProps
->(({ className, children, position = "right", variant = "glass", ...props }, ref) => {
-  const positionClasses = {
-    right:
-      "right-0 top-0 h-full w-full max-w-md data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right",
-    left: "left-0 top-0 h-full w-full max-w-md data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left",
-    top: "top-0 left-0 right-0 h-auto max-h-[90vh] data-[state=open]:slide-in-from-top data-[state=closed]:slide-out-to-top",
-    bottom:
-      "bottom-0 left-0 right-0 h-auto max-h-[90vh] data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
-  };
+const DrawerContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Content>, DrawerContentProps>(
+  ({ className, children, position = "right", variant = "glass", ...props }, ref) => {
+    const positionClasses = {
+      right:
+        "right-0 top-0 h-full w-full max-w-md data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right",
+      left: "left-0 top-0 h-full w-full max-w-md data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left",
+      top: "top-0 inset-x-0 h-auto max-h-[90vh] data-[state=open]:slide-in-from-top data-[state=closed]:slide-out-to-top",
+      bottom:
+        "bottom-0 inset-x-0 h-auto max-h-[90vh] data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
+    };
 
-  return (
-    <DrawerPortal>
-      <DrawerOverlay />
-      <DialogPrimitive.Content
-        ref={ref}
-        className={cn(
-          "fixed z-50 gap-4 p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-300",
-          variant === "glass" ? "glass-overlay" : "bg-background border-l",
-          positionClasses[position],
-          "overflow-y-auto",
-          className
-        )}
-        {...props}
-      >
-        {children}
-        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
-        </DialogPrimitive.Close>
-      </DialogPrimitive.Content>
-    </DrawerPortal>
-  );
-});
+    return (
+      <DrawerPortal>
+        <DrawerOverlay />
+        <DialogPrimitive.Content
+          ref={ref}
+          className={cn(
+            "fixed z-50 gap-4 p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-300",
+            variant === "glass" ? "glass-overlay" : "bg-background border-e",
+            positionClasses[position],
+            "overflow-y-auto",
+            className,
+          )}
+          {...props}
+        >
+          {children}
+          <DialogPrimitive.Close className="absolute end-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        </DialogPrimitive.Content>
+      </DrawerPortal>
+    );
+  },
+);
 DrawerContent.displayName = "DrawerContent";
 
 const DrawerHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -74,10 +71,7 @@ const DrawerHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 DrawerHeader.displayName = "DrawerHeader";
 
 const DrawerFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)}
-    {...props}
-  />
+  <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)} {...props} />
 );
 DrawerFooter.displayName = "DrawerFooter";
 
@@ -97,11 +91,7 @@ const DrawerDescription = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description
-    ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
-    {...props}
-  />
+  <DialogPrimitive.Description ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />
 ));
 DrawerDescription.displayName = "DrawerDescription";
 

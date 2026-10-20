@@ -1,7 +1,7 @@
-import { supabase } from "@/lib/supabase/client";
 import type { AllValuesType } from "@/api/profileAPI";
-import type { PostgrestSingleResponse, RealtimeChannel } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase/client";
 import type { InitialProductStateType } from "@/types/product.types";
+import type { PostgrestSingleResponse, RealtimeChannel } from "@supabase/supabase-js";
 
 export type PayloadForGEtRoom = {
   sharerId: string;
@@ -61,7 +61,7 @@ export const chatAPI = {
           if (payloadFunc) {
             payloadFunc(newMessage);
           }
-        }
+        },
       )
       .subscribe();
   },
@@ -71,10 +71,7 @@ export const chatAPI = {
   writeReview(feedBack: Partial<ReviewsType>) {
     return supabase.from("reviews").insert(feedBack);
   },
-  checkRoomAvailability(
-    userID: string,
-    postID: string
-  ): PromiseLike<PostgrestSingleResponse<Array<RoomType>>> {
+  checkRoomAvailability(userID: string, postID: string): PromiseLike<PostgrestSingleResponse<Array<RoomType>>> {
     return supabase.from("rooms").select("*").match({ requester: userID, post_id: postID });
   },
   createRoom(room: Partial<RoomType>): PromiseLike<PostgrestSingleResponse<Array<RoomType>>> {
@@ -84,17 +81,15 @@ export const chatAPI = {
     sharerId,
     requesterId,
     postId,
-  }: PayloadForGEtRoom): PromiseLike<
-    PostgrestSingleResponse<Array<RoomType & { profiles: AllValuesType }>>
-  > {
-    return supabase.from("rooms").select(`*,profiles!rooms_requester_fkey(*)`).match({
+  }: PayloadForGEtRoom): PromiseLike<PostgrestSingleResponse<Array<RoomType & { profiles: AllValuesType }>>> {
+    return supabase.from("rooms").select("*,profiles!rooms_requester_fkey(*)").match({
       sharer: sharerId,
       requester: requesterId,
       post_id: postId,
     });
   },
   getAllMessagesInRoomParticipantsFromOneRoom(
-    roomId: string
+    roomId: string,
   ): PromiseLike<PostgrestSingleResponse<Array<RoomParticipantsType>>> {
     return supabase
       .from("room_participants") ///need to know roomID
@@ -103,12 +98,10 @@ export const chatAPI = {
       .order("timestamp", { ascending: false })
       .range(0, 9);
   },
-  getAllRoomsForCurrentUser(
-    userID: string
-  ): PromiseLike<PostgrestSingleResponse<Array<CustomRoomType>>> {
+  getAllRoomsForCurrentUser(userID: string): PromiseLike<PostgrestSingleResponse<Array<CustomRoomType>>> {
     return supabase
       .from("rooms")
-      .select(`*, posts(*), room_participants(*), profiles!rooms_sharer_fkey(*)`)
+      .select("*, posts(*), room_participants(*), profiles!rooms_sharer_fkey(*)")
       .or(`sharer.eq.${userID}, requester.eq.${userID}`);
   },
   updateRoom(room: Partial<RoomType>) {

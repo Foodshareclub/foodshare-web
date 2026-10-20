@@ -13,8 +13,8 @@
  * - Client (realtime only): Keep using this file
  */
 
-import type { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase/client";
+import type { PostgrestSingleResponse } from "@supabase/supabase-js";
 
 export type CountryType = {
   continent: string | null;

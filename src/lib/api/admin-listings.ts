@@ -5,8 +5,8 @@
  * Used for admin listing management operations.
  */
 
-import { apiCall, apiDelete } from "./client";
 import type { ActionResult } from "@/lib/errors";
+import { apiCall, apiDelete } from "./client";
 
 // =============================================================================
 // Types
@@ -65,7 +65,7 @@ const ENDPOINT = "api-v1-admin-listings";
  */
 export async function updateListingAPI(
   id: number,
-  data: UpdateListingRequest
+  data: UpdateListingRequest,
 ): Promise<ActionResult<ListingActionResponse>> {
   return apiCall<ListingActionResponse, UpdateListingRequest>(`${ENDPOINT}/${id}`, {
     method: "PUT",
@@ -76,9 +76,7 @@ export async function updateListingAPI(
 /**
  * Activate a listing
  */
-export async function activateListingAPI(
-  id: number
-): Promise<ActionResult<ListingActionResponse>> {
+export async function activateListingAPI(id: number): Promise<ActionResult<ListingActionResponse>> {
   return apiCall<ListingActionResponse, Record<string, never>>(`${ENDPOINT}/${id}/activate`, {
     method: "PUT",
     body: {},
@@ -88,10 +86,7 @@ export async function activateListingAPI(
 /**
  * Deactivate a listing
  */
-export async function deactivateListingAPI(
-  id: number,
-  reason?: string
-): Promise<ActionResult<ListingActionResponse>> {
+export async function deactivateListingAPI(id: number, reason?: string): Promise<ActionResult<ListingActionResponse>> {
   return apiCall<ListingActionResponse, DeactivateRequest>(`${ENDPOINT}/${id}/deactivate`, {
     method: "PUT",
     body: { reason },
@@ -108,10 +103,7 @@ export async function deleteListingAPI(id: number): Promise<ActionResult<void>> 
 /**
  * Update admin notes for a listing
  */
-export async function updateAdminNotesAPI(
-  id: number,
-  notes: string
-): Promise<ActionResult<ListingActionResponse>> {
+export async function updateAdminNotesAPI(id: number, notes: string): Promise<ActionResult<ListingActionResponse>> {
   return apiCall<ListingActionResponse, UpdateNotesRequest>(`${ENDPOINT}/${id}/notes`, {
     method: "PUT",
     body: { notes },
@@ -121,9 +113,7 @@ export async function updateAdminNotesAPI(
 /**
  * Bulk activate listings
  */
-export async function bulkActivateListingsAPI(
-  ids: number[]
-): Promise<ActionResult<BulkActionResponse>> {
+export async function bulkActivateListingsAPI(ids: number[]): Promise<ActionResult<BulkActionResponse>> {
   return apiCall<BulkActionResponse, BulkIdsRequest>(`${ENDPOINT}/bulk/activate`, {
     method: "POST",
     body: { ids },
@@ -135,7 +125,7 @@ export async function bulkActivateListingsAPI(
  */
 export async function bulkDeactivateListingsAPI(
   ids: number[],
-  reason?: string
+  reason?: string,
 ): Promise<ActionResult<BulkActionResponse>> {
   return apiCall<BulkActionResponse, BulkDeactivateRequest>(`${ENDPOINT}/bulk/deactivate`, {
     method: "POST",
@@ -146,9 +136,7 @@ export async function bulkDeactivateListingsAPI(
 /**
  * Bulk delete listings
  */
-export async function bulkDeleteListingsAPI(
-  ids: number[]
-): Promise<ActionResult<BulkActionResponse>> {
+export async function bulkDeleteListingsAPI(ids: number[]): Promise<ActionResult<BulkActionResponse>> {
   return apiCall<BulkActionResponse, BulkIdsRequest>(`${ENDPOINT}/bulk/delete`, {
     method: "POST",
     body: { ids },

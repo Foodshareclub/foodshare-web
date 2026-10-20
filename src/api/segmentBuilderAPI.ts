@@ -3,9 +3,9 @@
  * Advanced segment calculation and query building for dynamic customer segmentation
  */
 
+import { createLogger } from "@/lib/logger";
 import { supabase } from "@/lib/supabase/client";
 import type { SegmentFilters } from "@/types/campaign.types";
-import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("SegmentBuilderAPI");
 
@@ -19,10 +19,7 @@ const logger = createLogger("SegmentBuilderAPI");
  */
 export async function calculateSegmentSize(filters: SegmentFilters) {
   try {
-    let query = supabase
-      .from("crm_customers")
-      .select("id", { count: "exact", head: true })
-      .eq("is_archived", false);
+    let query = supabase.from("crm_customers").select("id", { count: "exact", head: true }).eq("is_archived", false);
 
     // Apply filters
     query = applySegmentFilters(query, filters);
@@ -45,7 +42,7 @@ export async function calculateSegmentSize(filters: SegmentFilters) {
  * Get sample members from a segment
  * Returns a preview of customers matching the filters
  */
-export async function getSampleMembers(filters: SegmentFilters, limit: number = 10) {
+export async function getSampleMembers(filters: SegmentFilters, limit = 10) {
   try {
     let query = supabase
       .from("crm_customers")
@@ -78,7 +75,7 @@ export async function getSampleMembers(filters: SegmentFilters, limit: number = 
             color
           )
         )
-      `
+      `,
       )
       .eq("is_archived", false);
 
@@ -125,9 +122,8 @@ export async function getSampleMembers(filters: SegmentFilters, limit: number = 
         customer_id: customer.id,
         profile_id: customer.profile_id,
         full_name:
-          [customer.profiles?.[0]?.first_name, customer.profiles?.[0]?.second_name]
-            .filter(Boolean)
-            .join(" ") || "Unknown",
+          [customer.profiles?.[0]?.first_name, customer.profiles?.[0]?.second_name].filter(Boolean).join(" ") ||
+          "Unknown",
         email: customer.profiles?.[0]?.email || "",
         avatar_url: customer.profiles?.[0]?.avatar_url || null,
         customer_type: customer.customer_type,
@@ -138,10 +134,7 @@ export async function getSampleMembers(filters: SegmentFilters, limit: number = 
         items_shared: customer.profile_stats?.[0]?.items_shared || 0,
         items_received: customer.profile_stats?.[0]?.items_received || 0,
         rating_average: customer.profile_stats?.[0]?.rating_average || null,
-        tags:
-          customer.crm_customer_tag_assignments
-            ?.map((assignment) => assignment.tag?.[0])
-            .filter(Boolean) || [],
+        tags: customer.crm_customer_tag_assignments?.map((assignment) => assignment.tag?.[0]).filter(Boolean) || [],
         total_interactions: customer.total_interactions || 0,
         last_interaction_at: customer.last_interaction_at,
       })) || [];
@@ -206,21 +199,17 @@ export function buildSegmentQuery(filters: SegmentFilters): string {
 
   // Last interaction
   if (filters.last_interaction?.days_ago_min !== undefined) {
-    conditions.push(
-      `last_interaction_at <= NOW() - INTERVAL '${filters.last_interaction.days_ago_min} days'`
-    );
+    conditions.push(`last_interaction_at <= NOW() - INTERVAL '${filters.last_interaction.days_ago_min} days'`);
   }
   if (filters.last_interaction?.days_ago_max !== undefined) {
-    conditions.push(
-      `last_interaction_at >= NOW() - INTERVAL '${filters.last_interaction.days_ago_max} days'`
-    );
+    conditions.push(`last_interaction_at >= NOW() - INTERVAL '${filters.last_interaction.days_ago_max} days'`);
   }
 
   // Tags
   if (filters.tags && filters.tags.length > 0) {
     const operator = filters.tags_operator || "OR";
     conditions.push(
-      `/* Tag filter (${operator}): ${filters.tags.join(", ")} (requires JOIN with crm_customer_tag_assignments) */`
+      `/* Tag filter (${operator}): ${filters.tags.join(", ")} (requires JOIN with crm_customer_tag_assignments) */`,
     );
   }
 
@@ -232,7 +221,7 @@ export function buildSegmentQuery(filters: SegmentFilters): string {
   // Trust level
   if (filters.trust_level && filters.trust_level.length > 0) {
     conditions.push(
-      `/* Trust level filter: ${filters.trust_level.join(", ")} (requires JOIN with forum_user_stats) */`
+      `/* Trust level filter: ${filters.trust_level.join(", ")} (requires JOIN with forum_user_stats) */`,
     );
   }
 
@@ -266,9 +255,7 @@ export function validateSegmentFilters(filters: SegmentFilters): {
   if (filters.customer_type) {
     const validTypes = ["donor", "receiver", "both", "all"];
     if (!validTypes.includes(filters.customer_type)) {
-      errors.push(
-        `Invalid customer_type: ${filters.customer_type}. Must be one of: ${validTypes.join(", ")}`
-      );
+      errors.push(`Invalid customer_type: ${filters.customer_type}. Must be one of: ${validTypes.join(", ")}`);
     }
   }
 
@@ -276,9 +263,7 @@ export function validateSegmentFilters(filters: SegmentFilters): {
   if (filters.lifecycle_stage) {
     const validStages = ["lead", "active", "champion", "at_risk", "churned", "all"];
     if (!validStages.includes(filters.lifecycle_stage)) {
-      errors.push(
-        `Invalid lifecycle_stage: ${filters.lifecycle_stage}. Must be one of: ${validStages.join(", ")}`
-      );
+      errors.push(`Invalid lifecycle_stage: ${filters.lifecycle_stage}. Must be one of: ${validStages.join(", ")}`);
     }
   }
 
@@ -330,16 +315,10 @@ export function validateSegmentFilters(filters: SegmentFilters): {
 
   // Validate LTV score
   if (filters.ltv_score) {
-    if (
-      filters.ltv_score.min !== undefined &&
-      (filters.ltv_score.min < 0 || filters.ltv_score.min > 100)
-    ) {
+    if (filters.ltv_score.min !== undefined && (filters.ltv_score.min < 0 || filters.ltv_score.min > 100)) {
       errors.push("ltv_score.min must be between 0 and 100");
     }
-    if (
-      filters.ltv_score.max !== undefined &&
-      (filters.ltv_score.max < 0 || filters.ltv_score.max > 100)
-    ) {
+    if (filters.ltv_score.max !== undefined && (filters.ltv_score.max < 0 || filters.ltv_score.max > 100)) {
       errors.push("ltv_score.max must be between 0 and 100");
     }
     if (
@@ -387,16 +366,10 @@ export function validateSegmentFilters(filters: SegmentFilters): {
 
   // Validate last interaction
   if (filters.last_interaction) {
-    if (
-      filters.last_interaction.days_ago_min !== undefined &&
-      filters.last_interaction.days_ago_min < 0
-    ) {
+    if (filters.last_interaction.days_ago_min !== undefined && filters.last_interaction.days_ago_min < 0) {
       errors.push("last_interaction.days_ago_min must be >= 0");
     }
-    if (
-      filters.last_interaction.days_ago_max !== undefined &&
-      filters.last_interaction.days_ago_max < 0
-    ) {
+    if (filters.last_interaction.days_ago_max !== undefined && filters.last_interaction.days_ago_max < 0) {
       errors.push("last_interaction.days_ago_max must be >= 0");
     }
     if (
@@ -404,9 +377,7 @@ export function validateSegmentFilters(filters: SegmentFilters): {
       filters.last_interaction.days_ago_max !== undefined &&
       filters.last_interaction.days_ago_min < filters.last_interaction.days_ago_max
     ) {
-      errors.push(
-        "last_interaction.days_ago_min should be >= days_ago_max (more recent is smaller number)"
-      );
+      errors.push("last_interaction.days_ago_min should be >= days_ago_max (more recent is smaller number)");
     }
   }
 
@@ -414,9 +385,7 @@ export function validateSegmentFilters(filters: SegmentFilters): {
   if (filters.tags_operator) {
     const validOperators = ["AND", "OR"];
     if (!validOperators.includes(filters.tags_operator)) {
-      errors.push(
-        `Invalid tags_operator: ${filters.tags_operator}. Must be one of: ${validOperators.join(", ")}`
-      );
+      errors.push(`Invalid tags_operator: ${filters.tags_operator}. Must be one of: ${validOperators.join(", ")}`);
     }
   }
 
@@ -440,18 +409,22 @@ export function validateSegmentFilters(filters: SegmentFilters): {
 // =============================================================================
 
 /**
- * Apply segment filters to a Supabase query
- * Internal helper function to consistently apply filters across all queries
- * Uses generic type to preserve Supabase query builder chain type
- *
- * Note: Using `any` here because PostgrestFilterBuilder has complex generics
- * that are difficult to type correctly while maintaining chainability
+ * Structural view of the PostgREST filter builder surface used by
+ * `applySegmentFilters`. Declared with a polymorphic `this` return so the
+ * concrete builder type flows through unchanged — Supabase's real generics
+ * cannot be expressed in a constraint without losing chainability.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function applySegmentFilters<T extends { eq: any; gte: any; lte: any; in: any; contains: any }>(
-  query: T,
-  filters: SegmentFilters
-): T {
+interface SegmentFilterBuilder {
+  eq(column: string, value: unknown): this;
+  gte(column: string, value: unknown): this;
+  lte(column: string, value: unknown): this;
+  in(column: string, values: readonly unknown[]): this;
+  contains(column: string, value: string): this;
+}
+
+function applySegmentFilters<T extends SegmentFilterBuilder>(initialQuery: T, filters: SegmentFilters): T {
+  let query = initialQuery;
+
   // Customer type
   if (filters.customer_type && filters.customer_type !== "all") {
     query = query.eq("customer_type", filters.customer_type);

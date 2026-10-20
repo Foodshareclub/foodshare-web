@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import { cn } from "@/lib/cn";
+import * as React from "react";
 
 // ─── FrequencyBadge — Standalone Atom ───────────────────────────────────────
 //
@@ -59,7 +59,7 @@ export const FrequencyBadge = ({
     sizeStyles[size],
     frequencyColors[frequency],
     frequencyBg[frequency],
-    className
+    className,
   );
 
   const label = customText || frequency;

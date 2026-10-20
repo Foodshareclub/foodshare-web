@@ -1,5 +1,5 @@
-import { type LucideIcon, type LucideProps } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { LucideIcon, LucideProps } from "lucide-react";
 
 const sizeClasses = {
   xs: "h-3 w-3",

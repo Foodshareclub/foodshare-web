@@ -15,7 +15,7 @@ function useMediaQuery(query: string): boolean {
       media.addListener(onChange);
       return () => media.removeListener(onChange);
     },
-    [query]
+    [query],
   );
 
   const getSnapshot = useCallback(() => window.matchMedia(query).matches, [query]);

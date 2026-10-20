@@ -12,12 +12,9 @@
  * @module lib/realtime/manager
  */
 
-import type {
-  RealtimeChannel,
-  RealtimePostgresChangesPayload,
-  SupabaseClient,
-} from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase/client";
+import type { IntervalHandle, TimerHandle } from "@/types/timer.types";
+import type { RealtimeChannel, RealtimePostgresChangesPayload, SupabaseClient } from "@supabase/supabase-js";
 
 // =============================================================================
 // Types
@@ -145,8 +142,8 @@ export class RealtimeManager {
   private subscriptions = new Map<string, SubscriptionConfig[]>();
   private status: ConnectionStatus = "disconnected";
   private reconnectAttempts = 0;
-  private reconnectTimeout: NodeJS.Timeout | null = null;
-  private heartbeatInterval: NodeJS.Timeout | null = null;
+  private reconnectTimeout: TimerHandle | null = null;
+  private heartbeatInterval: IntervalHandle | null = null;
   private connectedAt: number | null = null;
 
   // Metrics
@@ -156,7 +153,7 @@ export class RealtimeManager {
 
   // Batching
   private batchedEvents = new Map<string, RealtimePostgresChangesPayload<Record<string, unknown>>[]>();
-  private batchTimeouts = new Map<string, NodeJS.Timeout>();
+  private batchTimeouts = new Map<string, TimerHandle>();
 
   private constructor(config: RealtimeManagerConfig = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -202,9 +199,7 @@ export class RealtimeManager {
 
     // Calculate average latency
     const avgLatency =
-      this.latencies.length > 0
-        ? this.latencies.reduce((a, b) => a + b, 0) / this.latencies.length
-        : 0;
+      this.latencies.length > 0 ? this.latencies.reduce((a, b) => a + b, 0) / this.latencies.length : 0;
 
     return {
       status: this.status,
@@ -245,9 +240,7 @@ export class RealtimeManager {
   /**
    * Subscribe to a table
    */
-  subscribe<T extends Record<string, unknown>>(
-    config: SubscriptionConfig<T>
-  ): SubscriptionHandle {
+  subscribe<T extends Record<string, unknown>>(config: SubscriptionConfig<T>): SubscriptionHandle {
     const { table, schema = "public", event, filter } = config;
     const subscriptionId = config.id || crypto.randomUUID();
     const channelName = this.getChannelName(table, schema, filter);
@@ -303,7 +296,7 @@ export class RealtimeManager {
     table: string,
     schema: string,
     event: RealtimeEvent,
-    filter?: string
+    filter?: string,
   ): RealtimeChannel {
     const channel = this.client
       .channel(channelName)
@@ -315,7 +308,7 @@ export class RealtimeManager {
           table,
           ...(filter ? { filter } : {}),
         },
-        (payload) => this.handlePayload(channelName, payload)
+        (payload) => this.handlePayload(channelName, payload),
       )
       .subscribe((status) => this.handleChannelStatus(channelName, status));
 
@@ -325,10 +318,7 @@ export class RealtimeManager {
   /**
    * Handle incoming payload
    */
-  private handlePayload(
-    channelName: string,
-    payload: RealtimePostgresChangesPayload<Record<string, unknown>>
-  ): void {
+  private handlePayload(channelName: string, payload: RealtimePostgresChangesPayload<Record<string, unknown>>): void {
     this.totalMessages++;
     this.messageTimestamps.push(Date.now());
 
@@ -353,10 +343,7 @@ export class RealtimeManager {
   /**
    * Batch payloads to prevent UI thrashing
    */
-  private batchPayload(
-    channelName: string,
-    payload: RealtimePostgresChangesPayload<Record<string, unknown>>
-  ): void {
+  private batchPayload(channelName: string, payload: RealtimePostgresChangesPayload<Record<string, unknown>>): void {
     const batch = this.batchedEvents.get(channelName) || [];
     batch.push(payload);
     this.batchedEvents.set(channelName, batch);
@@ -395,10 +382,7 @@ export class RealtimeManager {
   /**
    * Deliver payload to subscribers
    */
-  private deliverPayload(
-    channelName: string,
-    payload: RealtimePostgresChangesPayload<Record<string, unknown>>
-  ): void {
+  private deliverPayload(channelName: string, payload: RealtimePostgresChangesPayload<Record<string, unknown>>): void {
     const subs = this.subscriptions.get(channelName);
     if (!subs) return;
 
@@ -417,7 +401,7 @@ export class RealtimeManager {
    */
   private handleChannelStatus(
     channelName: string,
-    status: "SUBSCRIBED" | "CHANNEL_ERROR" | "TIMED_OUT" | "CLOSED"
+    status: "SUBSCRIBED" | "CHANNEL_ERROR" | "TIMED_OUT" | "CLOSED",
   ): void {
     switch (status) {
       case "SUBSCRIBED":
@@ -451,15 +435,13 @@ export class RealtimeManager {
     }
 
     const delay = Math.min(
-      this.config.initialReconnectDelayMs * Math.pow(2, this.reconnectAttempts),
-      this.config.maxReconnectDelayMs
+      this.config.initialReconnectDelayMs * 2 ** this.reconnectAttempts,
+      this.config.maxReconnectDelayMs,
     );
 
     this.reconnectAttempts++;
 
-    console.log(
-      `[RealtimeManager] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`
-    );
+    console.log(`[RealtimeManager] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
 
     this.reconnectTimeout = setTimeout(() => {
       this.reconnect(channelName);
@@ -485,7 +467,7 @@ export class RealtimeManager {
       firstSub.table,
       firstSub.schema || "public",
       firstSub.event,
-      firstSub.filter
+      firstSub.filter,
     );
 
     this.channels.set(channelName, newChannel);
@@ -589,7 +571,7 @@ export function getRealtimeManager(config?: RealtimeManagerConfig): RealtimeMana
  * Subscribe to realtime changes
  */
 export function subscribeToChanges<T extends Record<string, unknown>>(
-  config: SubscriptionConfig<T>
+  config: SubscriptionConfig<T>,
 ): SubscriptionHandle {
   return getRealtimeManager().subscribe(config);
 }

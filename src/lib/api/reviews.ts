@@ -5,8 +5,8 @@
  * Used for review operations after food exchanges.
  */
 
-import { apiGet, apiPost } from "./client";
 import type { ActionResult } from "@/lib/errors";
+import { apiGet, apiPost } from "./client";
 
 // =============================================================================
 // Types (match Edge Function schemas)
@@ -53,7 +53,7 @@ const ENDPOINT = "api-v1-reviews";
  */
 export async function getReviewsForUserAPI(
   userId: string,
-  options?: { cursor?: string; limit?: number }
+  options?: { cursor?: string; limit?: number },
 ): Promise<ActionResult<ReviewsListResponse>> {
   return apiGet<ReviewsListResponse>(ENDPOINT, {
     userId,
@@ -67,7 +67,7 @@ export async function getReviewsForUserAPI(
  */
 export async function getReviewsForPostAPI(
   postId: number,
-  options?: { cursor?: string; limit?: number }
+  options?: { cursor?: string; limit?: number },
 ): Promise<ActionResult<ReviewsListResponse>> {
   return apiGet<ReviewsListResponse>(ENDPOINT, {
     postId: postId.toString(),
@@ -79,9 +79,7 @@ export async function getReviewsForPostAPI(
 /**
  * Submit a review
  */
-export async function submitReviewAPI(
-  input: SubmitReviewRequest
-): Promise<ActionResult<ReviewResponse>> {
+export async function submitReviewAPI(input: SubmitReviewRequest): Promise<ActionResult<ReviewResponse>> {
   return apiPost<ReviewResponse, SubmitReviewRequest>(ENDPOINT, input);
 }
 

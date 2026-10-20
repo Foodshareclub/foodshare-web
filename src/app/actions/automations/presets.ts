@@ -6,14 +6,14 @@
  */
 
 import { createAutomationFlow } from "./flow-crud";
-import { error, type ActionResult } from "./types";
+import { type ActionResult, error } from "./types";
 
 // ============================================================================
 // Preset Automations
 // ============================================================================
 
 export async function createPresetAutomation(
-  preset: "welcome" | "reengagement" | "food_alert" | "welcome_with_testers"
+  preset: "welcome" | "reengagement" | "food_alert" | "welcome_with_testers",
 ): Promise<ActionResult<{ id: string; name: string }>> {
   const presets = {
     welcome: {

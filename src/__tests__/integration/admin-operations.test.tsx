@@ -3,7 +3,7 @@
  * Tests admin functionality flow and validation logic
  */
 
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 
 describe("Admin Operations Integration", () => {
   // ==========================================================================
@@ -208,13 +208,7 @@ describe("Admin Operations Integration", () => {
 
   describe("Audit Logging Flow", () => {
     it("should define admin action types", () => {
-      const actionTypes = [
-        "user_ban",
-        "user_unban",
-        "role_change",
-        "listing_approve",
-        "listing_reject",
-      ];
+      const actionTypes = ["user_ban", "user_unban", "role_change", "listing_approve", "listing_reject"];
 
       expect(actionTypes.length).toBeGreaterThan(0);
     });

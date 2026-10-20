@@ -1,6 +1,6 @@
-import path from "path";
-import { Resend } from "resend";
+import path from "bun:path";
 import * as dotenv from "dotenv";
+import { Resend } from "resend";
 
 // Load environment variables
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
@@ -37,14 +37,12 @@ async function checkResendDNS() {
       // Get specific domain details to see DNS records
       const { data: domainDetails } = await resend.domains.get(domain.id);
 
-      if (domainDetails && domainDetails.records) {
+      if (domainDetails?.records) {
         console.log("Expected DNS Records:");
-        domainDetails.records.forEach(
-          (record: { record: string; name: string; value: string; status?: string }) => {
-            console.log(`  - Type: ${record.record}, Name: ${record.name}, Value: ${record.value}`);
-            if (record.status) console.log(`    Status: ${record.status}`);
-          }
-        );
+        domainDetails.records.forEach((record: { record: string; name: string; value: string; status?: string }) => {
+          console.log(`  - Type: ${record.record}, Name: ${record.name}, Value: ${record.value}`);
+          if (record.status) console.log(`    Status: ${record.status}`);
+        });
       }
     }
   } catch (e) {

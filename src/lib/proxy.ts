@@ -29,9 +29,7 @@ import type { NextRequest } from "next/server";
 export const proxies = {
   // Supabase Edge Functions during development
   supabase: {
-    target:
-      process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(`/rest/v1`, "") ||
-      "https://your-project.supabase.co",
+    target: process.env.NEXT_PUBLIC_SUPABASE_URL?.replace("/rest/v1", "") || "https://your-project.supabase.co",
     // Path prefix to match in middleware
     prefix: "/api/supabase",
   },
@@ -57,7 +55,7 @@ export async function handleProxy(
     modifyResponse?: (resp: Response) => Response;
     // Which headers to preserve
     preserveHeaders?: string[];
-  } = {}
+  } = {},
 ): Promise<Response> {
   const { modifyRequest, modifyResponse, preserveHeaders = [] } = options;
 
@@ -130,7 +128,7 @@ export async function handleProxy(
 // ✅ Safe for ISR/Cache Components — no runtime in production
 export async function createDevProxyMiddleware(
   request: NextRequest,
-  config: (typeof proxies)[keyof typeof proxies]
+  config: (typeof proxies)[keyof typeof proxies],
 ): Promise<Response | null> {
   // Only active in development
   if (process.env.NODE_ENV !== "development") {

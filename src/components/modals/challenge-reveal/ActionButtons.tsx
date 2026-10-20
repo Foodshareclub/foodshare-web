@@ -1,8 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { X, Heart, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { Heart, RotateCcw, X } from "lucide-react";
 import { buttonVariants } from "./animations";
 
 interface ActionButtonsProps {
@@ -40,7 +40,7 @@ export function ActionButtons({
           "transition-colors duration-200",
           "hover:bg-red-500/10 hover:border-red-500",
           "focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-background",
-          disabled && "opacity-50 cursor-not-allowed"
+          disabled && "opacity-50 cursor-not-allowed",
         )}
         aria-label="Skip challenge"
       >
@@ -66,7 +66,7 @@ export function ActionButtons({
             "transition-colors duration-200",
             "hover:bg-primary/10 hover:border-primary",
             "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background",
-            disabled && "opacity-50 cursor-not-allowed"
+            disabled && "opacity-50 cursor-not-allowed",
           )}
           aria-label="Shuffle deck"
         >
@@ -92,7 +92,7 @@ export function ActionButtons({
           "transition-all duration-200",
           "hover:shadow-xl hover:shadow-green-500/40",
           "focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 focus:ring-offset-background",
-          disabled && "opacity-50 cursor-not-allowed"
+          disabled && "opacity-50 cursor-not-allowed",
         )}
         aria-label="Accept challenge"
       >

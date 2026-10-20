@@ -1,24 +1,24 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Shuffle, Sparkles, Wand2 } from "lucide-react";
-import { HeroDeckCard } from "./HeroDeckCard";
-import {
-  heroEntryVariants,
-  stackCardVariants,
-  shuffleDeckVariants,
-  shuffleFlyVariants,
-  hoverFloatVariants,
-  shuffleButtonVariants,
-  idleWobbleVariants,
-  particleBurstVariants,
-  glowPulseVariants,
-  hintBounceVariants,
-} from "./animations";
-import { HERO_DECK_CONFIG, ANIMATION_DURATIONS } from "./constants";
 import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Shuffle, Sparkles, Wand2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { HeroDeckCard } from "./HeroDeckCard";
+import {
+  glowPulseVariants,
+  heroEntryVariants,
+  hintBounceVariants,
+  hoverFloatVariants,
+  idleWobbleVariants,
+  particleBurstVariants,
+  shuffleButtonVariants,
+  shuffleDeckVariants,
+  shuffleFlyVariants,
+  stackCardVariants,
+} from "./animations";
+import { ANIMATION_DURATIONS, HERO_DECK_CONFIG } from "./constants";
 
 interface ChallengeDeckProps {
   challenges: InitialProductStateType[];
@@ -113,7 +113,7 @@ export function ChallengeDeck({
         handleShuffle();
       }
     },
-    [handleCardClick, handleShuffle]
+    [handleCardClick, handleShuffle],
   );
 
   if (challenges.length === 0) {
@@ -124,10 +124,7 @@ export function ChallengeDeck({
   const topCard = visibleCards[0];
 
   return (
-    <div
-      className={cn("relative", className)}
-      style={{ perspective: `${HERO_DECK_CONFIG.PERSPECTIVE}px` }}
-    >
+    <div className={cn("relative", className)} style={{ perspective: `${HERO_DECK_CONFIG.PERSPECTIVE}px` }}>
       {/* Screen reader announcement */}
       <div aria-live="polite" className="sr-only">
         {isShuffling && "Shuffling challenges..."}
@@ -138,7 +135,7 @@ export function ChallengeDeck({
       <motion.div
         variants={prefersReducedMotion ? undefined : glowPulseVariants}
         animate="idle"
-        className="absolute -inset-16 rounded-[4rem] bg-gradient-conic from-primary/30 via-teal-500/20 via-50% to-orange-500/30 blur-3xl opacity-60 -z-10 gpu-glow gpu-isolated"
+        className="absolute -inset-16 rounded-[4rem] bg-conic from-primary/30 via-teal-500/20 via-50% to-orange-500/30 blur-3xl opacity-60 -z-10 gpu-glow gpu-isolated"
       />
 
       {/* Secondary rotating glow - GPU rotation layer */}
@@ -152,8 +149,8 @@ export function ChallengeDeck({
               }
         }
         transition={{
-          rotate: { duration: 20, repeat: Infinity, ease: "linear" },
-          scale: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+          rotate: { duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" },
+          scale: { duration: 4, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
         }}
         className="absolute -inset-12 rounded-full bg-gradient-to-r from-primary/20 via-transparent to-teal-500/20 blur-2xl -z-10 gpu-rotate gpu-blur"
       />
@@ -178,7 +175,7 @@ export function ChallengeDeck({
                   exit={{ opacity: 0 }}
                   className={cn(
                     "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full z-30 gpu-particles",
-                    particle.color
+                    particle.color,
                   )}
                   style={{
                     width: particle.size,
@@ -191,16 +188,15 @@ export function ChallengeDeck({
         </AnimatePresence>
 
         {/* Deck with cards - GPU composite layer */}
-        <motion.div
+        <motion.button
+          type="button"
           variants={prefersReducedMotion ? undefined : shuffleDeckVariants}
           animate={isShuffling ? "shuffle" : "idle"}
-          className="relative cursor-pointer gpu-composite gpu-animate"
+          className="relative cursor-pointer gpu-composite gpu-animate block w-full text-start"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onClick={handleCardClick}
           onKeyDown={handleKeyDown}
-          tabIndex={0}
-          role="button"
           aria-label={`Challenge: ${topCard?.post_name}. Press Enter to explore, S to shuffle.`}
         >
           {/* Subtle idle wobble wrapper */}
@@ -226,7 +222,7 @@ export function ChallengeDeck({
               }
               initial="idle"
               animate={isShuffling ? "fly" : isHovered ? "hover" : "idle"}
-              className="absolute top-0 left-0 z-20 gpu-3d-child w-full h-full"
+              className="absolute inset-x-0 top-0 z-20 gpu-3d-child w-full h-full"
             >
               <HeroDeckCard challenge={topCard} isFaceUp={!isShuffling} className="group" isLarge />
 
@@ -246,8 +242,8 @@ export function ChallengeDeck({
               const index = idx + 1;
               return (
                 <motion.div
-                  key={`bg-${idx}`}
-                  className="absolute top-0 left-0 w-full h-full card-stack-item"
+                  key={challenge.id}
+                  className="absolute inset-x-0 top-0 w-full h-full card-stack-item"
                   variants={
                     prefersReducedMotion
                       ? undefined
@@ -267,7 +263,7 @@ export function ChallengeDeck({
               );
             })}
           </motion.div>
-        </motion.div>
+        </motion.button>
 
         {/* Enhanced shuffle button with gradient border and glow */}
         <motion.div
@@ -285,7 +281,7 @@ export function ChallengeDeck({
               }}
               transition={{
                 duration: 2,
-                repeat: Infinity,
+                repeat: Number.POSITIVE_INFINITY,
                 ease: "easeInOut",
               }}
               className="absolute -inset-2 bg-gradient-to-r from-primary via-teal-500 to-orange-500 rounded-full blur-lg opacity-50"
@@ -310,7 +306,7 @@ export function ChallengeDeck({
                   "hover:bg-card/80",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
-                  "transition-colors duration-200"
+                  "transition-colors duration-200",
                 )}
                 aria-label="Shuffle challenges"
               >
@@ -318,11 +314,7 @@ export function ChallengeDeck({
                   animate={isShuffling ? { rotate: 720 } : { rotate: 0 }}
                   transition={{ duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }}
                 >
-                  {isShuffling ? (
-                    <Wand2 className="w-5 h-5 text-primary" />
-                  ) : (
-                    <Shuffle className="w-5 h-5" />
-                  )}
+                  {isShuffling ? <Wand2 className="w-5 h-5 text-primary" /> : <Shuffle className="w-5 h-5" />}
                 </motion.div>
                 <span>{isShuffling ? "Magic!" : "Shuffle"}</span>
               </motion.button>
@@ -340,7 +332,7 @@ export function ChallengeDeck({
             }}
             transition={{
               duration: 3.5,
-              repeat: Infinity,
+              repeat: Number.POSITIVE_INFINITY,
               ease: "easeInOut",
             }}
           />

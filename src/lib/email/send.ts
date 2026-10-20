@@ -28,15 +28,23 @@
  * ```
  */
 
+import { getEmailSubject, renderEmail } from "@/emails/render";
+import type { EmailTemplateName, EmailTemplateProps } from "@/emails/types";
+import { type RenderedTemplate, TEMPLATE_SLUG_MAP, renderDatabaseTemplate } from "./database-templates";
 import type { EmailType, SendEmailResponse } from "./types";
 import { createUnifiedEmailService } from "./unified-service";
-import {
-  renderDatabaseTemplate,
-  TEMPLATE_SLUG_MAP,
-  type RenderedTemplate,
-} from "./database-templates";
-import { renderEmail, getEmailSubject } from "@/emails/render";
-import type { EmailTemplateName, EmailTemplateProps } from "@/emails/types";
+
+const renderEmailCompat: (
+  name: EmailTemplateName,
+  props: EmailTemplateProps["props"],
+) => Promise<{ html: string; text: string }> = renderEmail;
+
+const sendTemplateEmailSync: (options: {
+  to: string | { email: string; name?: string };
+  template: EmailTemplateName;
+  props: EmailTemplateProps["props"];
+  subject?: string;
+}) => Promise<SendEmailResponse> = sendTemplateEmail;
 
 // ============================================================================
 // Configuration
@@ -104,11 +112,10 @@ export async function sendTemplateEmail<T extends EmailTemplateName>({
   subject,
   replyTo,
 }: SendTemplateEmailOptions<T>): Promise<SendEmailResponse> {
-  const { html, text } = await renderEmail(template, props as any);
+  const { html, text } = await renderEmailCompat(template, props);
 
   // Get subject if not provided
-  const emailSubject =
-    subject || getEmailSubject(template, props as unknown as Record<string, string>);
+  const emailSubject = subject || getEmailSubject(template, props as unknown as Record<string, string>);
 
   // Normalize recipient
   const recipient = typeof to === "string" ? { email: to } : to;
@@ -169,8 +176,7 @@ export async function sendBatchTemplateEmail<T extends EmailTemplateName>({
     const promises = batch.map(async (email) => {
       try {
         const props = getProps(email);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const result = await sendTemplateEmail({ to: email, template, props, subject } as any);
+        const result = await sendTemplateEmailSync({ to: email, template, props, subject });
 
         if (result.success) {
           results.sent++;
@@ -180,9 +186,7 @@ export async function sendBatchTemplateEmail<T extends EmailTemplateName>({
         }
       } catch (error) {
         results.failed++;
-        results.errors.push(
-          `${email}: ${error instanceof Error ? error.message : "Unknown error"}`
-        );
+        results.errors.push(`${email}: ${error instanceof Error ? error.message : "Unknown error"}`);
       }
     });
 
@@ -198,9 +202,9 @@ export async function sendBatchTemplateEmail<T extends EmailTemplateName>({
  */
 export async function previewEmail<T extends EmailTemplateName>(
   template: T,
-  props: Extract<EmailTemplateProps, { template: T }>["props"]
+  props: Extract<EmailTemplateProps, { template: T }>["props"],
 ): Promise<{ html: string; text: string; subject: string }> {
-  const { html, text } = await renderEmail(template, props as any);
+  const { html, text } = await renderEmailCompat(template, props);
   const subject = getEmailSubject(template, props as unknown as Record<string, string>);
 
   return { html, text, subject };
@@ -285,22 +289,19 @@ export async function sendDatabaseTemplateEmail({
   }
 
   // Fall back to React Email template if available
-  const reactTemplateName = Object.entries(TEMPLATE_SLUG_MAP).find(
-    ([, dbSlug]) => dbSlug === slug
-  )?.[0] as EmailTemplateName | undefined;
+  const reactTemplateName = Object.entries(TEMPLATE_SLUG_MAP).find(([, dbSlug]) => dbSlug === slug)?.[0] as
+    | EmailTemplateName
+    | undefined;
 
   if (reactTemplateName) {
-    console.warn(
-      `[Email] Database template '${slug}' not found, falling back to React Email '${reactTemplateName}'`
-    );
+    console.warn(`[Email] Database template '${slug}' not found, falling back to React Email '${reactTemplateName}'`);
 
     // Convert variables to React Email props format
 
     const result = await sendTemplateEmail({
       to,
       template: reactTemplateName,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      props: variables as any,
+      props: variables as unknown as Extract<EmailTemplateProps, { template: typeof reactTemplateName }>["props"],
       subject: subjectOverride,
       replyTo,
     });
@@ -378,9 +379,7 @@ export async function sendBatchDatabaseTemplateEmail({
         }
       } catch (error) {
         results.failed++;
-        results.errors.push(
-          `${email}: ${error instanceof Error ? error.message : "Unknown error"}`
-        );
+        results.errors.push(`${email}: ${error instanceof Error ? error.message : "Unknown error"}`);
       }
     });
 
@@ -391,12 +390,7 @@ export async function sendBatchDatabaseTemplateEmail({
     sent: results.sent,
     failed: results.failed,
     errors: results.errors,
-    source:
-      results.sources.size > 1
-        ? "mixed"
-        : results.sources.has("database")
-          ? "database"
-          : "fallback",
+    source: results.sources.size > 1 ? "mixed" : results.sources.has("database") ? "database" : "fallback",
   };
 }
 
@@ -406,7 +400,7 @@ export async function sendBatchDatabaseTemplateEmail({
  */
 export async function previewDatabaseTemplate(
   slug: string,
-  variables: Record<string, unknown>
+  variables: Record<string, unknown>,
 ): Promise<RenderedTemplate | null> {
   return renderDatabaseTemplate(slug, variables);
 }

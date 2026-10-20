@@ -17,6 +17,7 @@ import { aggregateCounts } from "../../../_shared/aggregation.ts";
 import { createHealthHandler } from "../../../_shared/health-handler.ts";
 import { fuzzProductCoordinates, fuzzProductListCoordinates } from "../location-fuzzer.ts";
 import type { ListQuery } from "../schemas.ts";
+import { searchProducts } from "./search-products.ts";
 import { fetchNearbyProducts } from "../nearby-products.ts";
 import { transformProduct, transformProductDetail } from "../transformers.ts";
 
@@ -50,7 +51,6 @@ export async function getFeed(
       offset: cursor,
       postType: query.postType,
       categoryId: query.categoryId ? parseIntSafe(query.categoryId) : undefined,
-      userId: query.userId,
     }),
     aggregateCounts(supabase, userId),
   ]);
@@ -76,9 +76,14 @@ export async function getFeed(
 export async function listProducts(
   ctx: HandlerContext<unknown, ListQuery>,
 ): Promise<Response> {
-  const { supabase, query } = ctx;
+  const { supabase, userId: authUserId, query } = ctx;
 
-  const cacheKey = `products:list:${ctx.userId ?? "anon"}:${JSON.stringify(query)}`;
+  // The validated query identifies the public listing owner to filter by.
+  // Authentication separately determines coordinate privacy; an owner filter
+  // must never grant the viewer that owner's privileges.
+  const ownerFilter = query.userId;
+
+  const cacheKey = `products:list:${ownerFilter ?? "all"}:${JSON.stringify(query)}`;
   interface CachedListResult {
     items: Record<string, unknown>[];
     total: number;
@@ -89,7 +94,7 @@ export async function listProducts(
   if (cached) {
     const fuzzedCachedItems = fuzzProductListCoordinates(
       cached.items,
-      ctx.userId,
+      authUserId,
     );
     return paginated(fuzzedCachedItems, ctx, {
       offset: 0,
@@ -110,7 +115,6 @@ export async function listProducts(
     100,
     10,
   );
-  const userId = query.userId;
 
   let dbQuery;
   let isDistanceSorted = false;
@@ -133,7 +137,7 @@ export async function listProducts(
       offset: Math.max(0, offset),
       postType,
       categoryId,
-      userId,
+      userId: ownerFilter,
     }).then((data) => ({ data, error: null, count: null }));
   } else {
     const compositeCursor = query.cursor ? decodeCursor(query.cursor) : null;
@@ -154,8 +158,8 @@ export async function listProducts(
       dbQuery = dbQuery.eq("category_id", categoryId);
     }
 
-    if (userId) {
-      dbQuery = dbQuery.eq("profile_id", userId);
+    if (ownerFilter) {
+      dbQuery = dbQuery.eq("profile_id", ownerFilter);
     }
 
     if (compositeCursor) {
@@ -200,7 +204,7 @@ export async function listProducts(
     limit,
   }, 60_000);
 
-  const fuzzedItems = fuzzProductListCoordinates(transformedItems, ctx.userId);
+  const fuzzedItems = fuzzProductListCoordinates(transformedItems, authUserId);
 
   return paginated(
     fuzzedItems,
@@ -315,6 +319,10 @@ export async function handleGet(
   const url = new URL(ctx.request.url);
   if (url.pathname.endsWith("/health")) {
     return healthCheck(ctx);
+  }
+
+  if (ctx.query.mode === "search") {
+    return searchProducts(ctx);
   }
 
   if (ctx.query.mode === "feed") {

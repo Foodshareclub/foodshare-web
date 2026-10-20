@@ -2,22 +2,15 @@
 
 import { useState } from "react";
 
-import {
-  ClipboardList,
-  MessageCircle,
-  Settings,
-  LogOut,
-  HelpCircle,
-  Info,
-  LayoutGrid,
-} from "lucide-react";
 import type { CustomRoomType } from "@/api/chatAPI";
-import { DragHandleIcon } from "@/utils/icons";
-import { Button } from "@/components/ui/button";
-import UniversalDrawer from "@/components/universalDrawer/UniversalDrawer";
 import { MinifiedUserInfo } from "@/components/minifiedUserInfo/MinifiedUserInfo";
 import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
 import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
+import { Button } from "@/components/ui/button";
+import UniversalDrawer from "@/components/universalDrawer/UniversalDrawer";
+import { DragHandleIcon } from "@/utils/icons";
+import { ClipboardList, HelpCircle, Info, LayoutGrid, LogOut, MessageCircle, Settings } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 // Lucide icons
 
@@ -82,6 +75,10 @@ export function MobileMenu({
   onNavigateToMyMessages,
   onNavigateToDashboard,
 }: MobileMenuProps) {
+  // Labels were English literals; this is the mobile half of the primary
+  // navigation, so it is on the same footing as DesktopMenu.
+  const t = useTranslations("nav");
+
   const [isOpen, setIsOpen] = useState(false);
 
   const handleOpen = () => setIsOpen(true);
@@ -107,14 +104,14 @@ export function MobileMenu({
         variant="ghost"
         size="icon-lg"
         className="relative rounded-full"
-        aria-label={hasNotifications ? "See menu (new messages)" : "See menu"}
+        aria-label={hasNotifications ? t("seeMenuWithUnread") : t("seeMenu")}
         aria-haspopup="dialog"
       >
         <DragHandleIcon />
         {hasNotifications && (
           <span
-            className="absolute bottom-0 right-0 w-4 h-4 bg-green-300 border-2 border-background rounded-full"
-            aria-label={`${signalOfNewMessage.length} new messages`}
+            className="absolute bottom-0 end-0 w-4 h-4 bg-green-300 border-2 border-background rounded-full"
+            aria-label={t("newMessages", { count: signalOfNewMessage.length })}
           />
         )}
       </Button>
@@ -124,17 +121,12 @@ export function MobileMenu({
         size={size}
         onClose={handleClose}
         isOpen={isOpen}
-        headerValue={`Hi ${displayName}`}
+        headerValue={t("greeting", { name: displayName })}
         placement="end"
       >
         <>
           {/* User Info */}
-          <MinifiedUserInfo
-            src={imgUrl}
-            firstName={firstName}
-            secondName={secondName}
-            description={email}
-          />
+          <MinifiedUserInfo src={imgUrl} firstName={firstName} secondName={secondName} description={email} />
 
           <div className="mt-10">
             {/* Authenticated Menu */}
@@ -144,85 +136,81 @@ export function MobileMenu({
                 {isAdmin && onNavigateToDashboard ? (
                   <button
                     type="button"
-                    className="glass-accent-primary rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    className="glass-accent-primary rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     onClick={() => handleNavigation(onNavigateToDashboard)}
                   >
                     <LayoutGrid className="w-8 h-8 flex-shrink-0" />
-                    <span className="text-3xl font-semibold">Admin</span>
+                    <span className="text-3xl font-semibold">{t("adminDashboard")}</span>
                   </button>
                 ) : null}
 
                 <button
                   type="button"
-                  className="glass-subtle rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="glass-subtle rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   onClick={() => handleNavigation(onNavigateToMyLists)}
                 >
                   <ClipboardList className="w-8 h-8 flex-shrink-0" />
-                  <span className="text-3xl">My listings</span>
+                  <span className="text-3xl">{t("myListings")}</span>
                 </button>
 
                 <button
                   type="button"
-                  className="glass-subtle rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="glass-subtle rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   onClick={() => handleNavigation(onNavigateToAccSettings)}
                 >
                   <Settings className="w-8 h-8 flex-shrink-0" />
-                  <span className="text-3xl">Account settings</span>
+                  <span className="text-3xl">{t("accountSettings")}</span>
                 </button>
 
                 <button
                   type="button"
-                  className={`${hasNotifications ? "glass-accent-primary" : "glass-subtle"} rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary`}
+                  className={`${hasNotifications ? "glass-accent-primary" : "glass-subtle"} rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary`}
                   onClick={() => handleNavigation(onNavigateToMyMessages)}
-                  aria-label={
-                    hasNotifications ? `Chat (${signalOfNewMessage.length} unread)` : "Chat"
-                  }
+                  aria-label={t("chatWithUnread", { count: signalOfNewMessage.length })}
                 >
                   <MessageCircle className="w-8 h-8 flex-shrink-0" />
-                  <span className="text-3xl">
-                    {hasNotifications ? `Chat (${signalOfNewMessage.length} new)` : "Chat"}
-                  </span>
+                  <span className="text-3xl">{t("chatWithUnread", { count: signalOfNewMessage.length })}</span>
                 </button>
 
                 <button
                   type="button"
-                  className="glass-subtle rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="glass-subtle rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   onClick={() => handleNavigation(onNavigateToLogout)}
                 >
                   <LogOut className="w-8 h-8 flex-shrink-0" />
-                  <span className="text-3xl">Log Out</span>
+                  <span className="text-3xl">{t("logOut")}</span>
                 </button>
               </div>
             ) : (
               /* Unauthenticated Menu */
               <div className="flex flex-col gap-3">
-                <AuthenticationUserModal buttonValue="Login" fullScreen={false} />
-                <AuthenticationUserModal buttonValue="Registration" fullScreen={false} />
+                <AuthenticationUserModal mode="login" buttonLabel={t("login")} fullScreen={false} />
+                <AuthenticationUserModal mode="signup" buttonLabel={t("registration")} fullScreen={false} />
               </div>
             )}
 
             {/* Common Links */}
             <button
               type="button"
-              className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3 flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3 flex items-center gap-4 w-full text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               onClick={() => handleNavigation(onNavigateToAboutUs)}
             >
               <Info className="w-8 h-8 flex-shrink-0" />
-              <span className="text-3xl">About Us</span>
+              <span className="text-3xl">{t("about")}</span>
             </button>
 
             <button
               type="button"
-              className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3 flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3 flex items-center gap-4 w-full text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               onClick={() => handleNavigation(onNavigateToHelp)}
             >
               <HelpCircle className="w-8 h-8 flex-shrink-0" />
-              <span className="text-3xl">Help</span>
+              <span className="text-3xl">{t("help")}</span>
             </button>
 
             {/* Theme Switcher */}
             <div className="mt-6 pt-4 border-t border-border/30">
-              <p className="text-sm text-muted-foreground mb-3 font-medium">Appearance</p>
+              <p className="text-sm text-muted-foreground mb-3 font-medium">{t("appearance")}</p>
               <ThemeToggleInline />
             </div>
           </div>

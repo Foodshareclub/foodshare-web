@@ -1,4 +1,4 @@
-import { MyPostsSkeleton } from './MyPostsSkeleton';
+import { MyPostsSkeleton } from "./MyPostsSkeleton";
 
 /**
  * Loading UI for My Posts page

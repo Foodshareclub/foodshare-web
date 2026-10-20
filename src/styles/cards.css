@@ -6,10 +6,8 @@
 
 /* Base card transition - apply to all interactive cards */
 @utility card-transition {
-  transition:
-    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color
+    0.3s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform, box-shadow;
 }
 
@@ -17,9 +15,7 @@
 @utility card-hover-subtle {
   &:hover {
     transform: translateY(-2px) scale(1.01);
-    box-shadow:
-      0 8px 25px -5px hsl(0 0% 0% / 0.1),
-      0 4px 10px -6px hsl(0 0% 0% / 0.1);
+    box-shadow: 0 8px 25px -5px hsl(0 0% 0% / 0.1), 0 4px 10px -6px hsl(0 0% 0% / 0.1);
   }
   &:active {
     transform: translateY(-1px) scale(1.005);
@@ -30,9 +26,7 @@
 @utility card-hover {
   &:hover {
     transform: translateY(-4px) scale(1.02);
-    box-shadow:
-      0 12px 35px -5px hsl(0 0% 0% / 0.12),
-      0 6px 15px -8px hsl(0 0% 0% / 0.1);
+    box-shadow: 0 12px 35px -5px hsl(0 0% 0% / 0.12), 0 6px 15px -8px hsl(0 0% 0% / 0.1);
   }
   &:active {
     transform: translateY(-2px) scale(1.01);
@@ -43,9 +37,7 @@
 @utility card-hover-prominent {
   &:hover {
     transform: translateY(-6px) scale(1.03);
-    box-shadow:
-      0 20px 45px -10px hsl(0 0% 0% / 0.15),
-      0 10px 20px -10px hsl(0 0% 0% / 0.1);
+    box-shadow: 0 20px 45px -10px hsl(0 0% 0% / 0.15), 0 10px 20px -10px hsl(0 0% 0% / 0.1);
   }
   &:active {
     transform: translateY(-3px) scale(1.015);
@@ -74,9 +66,7 @@
 
 /* Button scale for card action buttons */
 @utility card-button-hover {
-  transition:
-    transform 0.2s ease-out,
-    background-color 0.2s ease-out;
+  transition: transform 0.2s ease-out, background-color 0.2s ease-out;
   &:hover {
     transform: scale(1.05);
   }
@@ -173,33 +163,23 @@
   background: hsl(var(--card));
   border-radius: 12px;
   overflow: hidden;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.08),
-    0 4px 12px rgba(0, 0, 0, 0.05);
-  transition:
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 @utility airbnb-card-hover {
   &:hover {
-    box-shadow:
-      0 2px 4px rgba(0, 0, 0, 0.08),
-      0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.12);
     transform: translateY(-2px);
   }
 }
 
 .dark .airbnb-card {
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.2),
-    0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .dark .airbnb-card:hover {
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.25),
-    0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 /* Airbnb image container - near-square aspect ratio */
@@ -225,9 +205,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition:
-    transform 0.15s ease,
-    background 0.15s ease;
+  transition: transform 0.15s ease, background 0.15s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -262,9 +240,7 @@
   height: 6px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.5);
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 @utility airbnb-dot-active {

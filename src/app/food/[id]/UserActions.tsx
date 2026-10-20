@@ -1,5 +1,5 @@
-import { PostDetailClient } from "./PostDetailClient";
 import type { InitialProductStateType } from "@/types/product.types";
+import { PostDetailClient } from "./PostDetailClient";
 
 /**
  * Safely get user - only if DB is healthy

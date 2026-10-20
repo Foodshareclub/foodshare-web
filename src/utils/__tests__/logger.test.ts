@@ -4,8 +4,8 @@
  * Migrated from Jest globals to bun:test (10x)
  */
 
-import { describe, it, expect, beforeEach, spyOn, mock } from "bun:test";
-import { logger, createLogger, getErrorHistory, clearErrorHistory } from "@/lib/logger";
+import { beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
+import { clearErrorHistory, createLogger, getErrorHistory, logger } from "@/lib/logger";
 
 describe("Logger", () => {
   beforeEach(() => {

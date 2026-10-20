@@ -4,7 +4,7 @@
  * Best practice: Cache with TTL to prevent stale positions
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Coordinates = [number, number];
 
@@ -72,9 +72,7 @@ const getCachedPosition = (category: string): MapPosition | null => {
 export const useMapPosition = (options: UseMapPositionOptions): UseMapPositionResult => {
   const { category, defaultCenter: _defaultCenter, defaultZoom: _defaultZoom } = options;
 
-  const [savedPosition, setSavedPosition] = useState<MapPosition | null>(() =>
-    getCachedPosition(category)
-  );
+  const [savedPosition, setSavedPosition] = useState<MapPosition | null>(() => getCachedPosition(category));
 
   // Load saved position when category changes
   useEffect(() => {
@@ -100,7 +98,7 @@ export const useMapPosition = (options: UseMapPositionOptions): UseMapPositionRe
         console.warn("Failed to save map position:", error);
       }
     },
-    [category]
+    [category],
   );
 
   // Clear saved position for current category

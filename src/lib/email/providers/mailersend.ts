@@ -3,15 +3,10 @@
  * Free tier: 12,000 emails/month
  */
 
-import { MailerSend, EmailParams, Sender, Recipient } from "mailersend";
-import type {
-  SendEmailRequest,
-  SendEmailResponse,
-  MailerSendConfig,
-  ProviderQuota,
-} from "../types";
-import { BaseEmailProvider } from "./base";
 import { supabase } from "@/lib/supabase/client";
+import { EmailParams, MailerSend, Recipient, Sender } from "mailersend";
+import type { MailerSendConfig, ProviderQuota, SendEmailRequest, SendEmailResponse } from "../types";
+import { BaseEmailProvider } from "./base";
 
 export class MailerSendProvider extends BaseEmailProvider {
   readonly provider = "mailersend" as const;
@@ -72,9 +67,7 @@ export class MailerSendProvider extends BaseEmailProvider {
         const attachments = options.attachments.map((att) => {
           // Convert content to base64 string
           const base64Content: string =
-            att.content instanceof Buffer
-              ? att.content.toString("base64")
-              : (att.content as string);
+            att.content instanceof Buffer ? att.content.toString("base64") : (att.content as string);
 
           return {
             filename: att.filename,
@@ -90,10 +83,7 @@ export class MailerSendProvider extends BaseEmailProvider {
 
       // MailerSend returns 202 on success
       if (response.statusCode !== 202) {
-        return this.handleError(
-          new Error(`MailerSend API returned status ${response.statusCode}`),
-          "sendEmail"
-        );
+        return this.handleError(new Error(`MailerSend API returned status ${response.statusCode}`), "sendEmail");
       }
 
       // Extract message ID from response headers

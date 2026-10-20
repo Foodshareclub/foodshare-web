@@ -6,12 +6,12 @@
  * Optimized with custom hooks and constants
  */
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
 import { useEmailLogs, useQueuedEmails } from "@/hooks/useEmailManagement";
 import { PROVIDER_NAMES } from "@/lib/email/constants";
 import type { EmailProvider } from "@/lib/email/types";
 import type { EmailLogEntry, QueuedEmailEntry } from "@/types/email-management.types";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
 
 // Re-export for backwards compatibility
 export type { EmailLogEntry, QueuedEmailEntry } from "@/types/email-management.types";
@@ -52,16 +52,10 @@ function EmailLogRow({ log }: EmailLogRowProps) {
       <td className="px-4 py-3 text-sm text-gray-800">{log.recipient_email}</td>
       <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">{log.subject}</td>
       <td className="px-4 py-3">
-        <span className={`text-xs font-medium uppercase ${getProviderColor(log.provider)}`}>
-          {log.provider}
-        </span>
+        <span className={`text-xs font-medium uppercase ${getProviderColor(log.provider)}`}>{log.provider}</span>
       </td>
       <td className="px-4 py-3">
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(log.status)}`}
-        >
-          {log.status}
-        </span>
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(log.status)}`}>{log.status}</span>
       </td>
     </tr>
   );
@@ -89,15 +83,11 @@ function QueuedEmailRow({ email, onRetry, onDelete }: QueuedEmailRowProps) {
 
   return (
     <tr className="border-b border-gray-100 hover:bg-gray-50">
-      <td className="px-4 py-3 text-sm text-gray-600">
-        {new Date(email.created_at).toLocaleString()}
-      </td>
+      <td className="px-4 py-3 text-sm text-gray-600">{new Date(email.created_at).toLocaleString()}</td>
       <td className="px-4 py-3 text-sm text-gray-800">{email.recipient_email}</td>
       <td className="px-4 py-3 text-sm text-gray-600">{email.email_type}</td>
       <td className="px-4 py-3">
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(email.status)}`}
-        >
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(email.status)}`}>
           {email.status}
         </span>
       </td>
@@ -109,12 +99,14 @@ function QueuedEmailRow({ email, onRetry, onDelete }: QueuedEmailRowProps) {
           {email.status === "failed" && (
             <>
               <button
+                type="button"
                 onClick={() => onRetry(email.id)}
                 className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
               >
                 Retry
               </button>
               <button
+                type="button"
                 onClick={() => onDelete(email.id)}
                 className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
               >
@@ -188,27 +180,26 @@ export function EmailSendingHistory() {
         <div className="flex justify-between items-center p-4">
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => setActiveTab("logs")}
               className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                activeTab === "logs"
-                  ? "bg-green-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                activeTab === "logs" ? "bg-green-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
               Delivery Logs
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab("queue")}
               className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                activeTab === "queue"
-                  ? "bg-green-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                activeTab === "queue" ? "bg-green-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
               Queue ({queuedEmails.length})
             </button>
           </div>
           <button
+            type="button"
             onClick={() => (activeTab === "logs" ? refetchLogs() : refetchQueue())}
             disabled={loading}
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50"
@@ -221,8 +212,11 @@ export function EmailSendingHistory() {
         {activeTab === "logs" && (
           <div className="flex gap-4 px-4 pb-4">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Provider</label>
+              <label htmlFor="log-provider-filter" className="block text-xs text-gray-600 mb-1">
+                Provider
+              </label>
               <select
+                id="log-provider-filter"
                 value={providerFilter}
                 onChange={(e) => setProviderFilter(e.target.value as EmailProvider | "")}
                 className="px-3 py-1 border border-gray-300 rounded text-sm"
@@ -234,8 +228,11 @@ export function EmailSendingHistory() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Status</label>
+              <label htmlFor="log-status-filter" className="block text-xs text-gray-600 mb-1">
+                Status
+              </label>
               <select
+                id="log-status-filter"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-3 py-1 border border-gray-300 rounded text-sm"
@@ -255,7 +252,7 @@ export function EmailSendingHistory() {
       <div className="overflow-x-auto">
         {loading && (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-500" />
           </div>
         )}
 
@@ -269,21 +266,11 @@ export function EmailSendingHistory() {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
-                  Sent At
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
-                  Recipient
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
-                  Subject
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
-                  Provider
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
-                  Status
-                </th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-600 uppercase">Sent At</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-600 uppercase">Recipient</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-600 uppercase">Subject</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-600 uppercase">Provider</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-600 uppercase">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -304,24 +291,12 @@ export function EmailSendingHistory() {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
-                  Created
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
-                  Recipient
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
-                  Type
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
-                  Attempts
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
-                  Actions
-                </th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-600 uppercase">Created</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-600 uppercase">Recipient</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-600 uppercase">Type</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-600 uppercase">Status</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-600 uppercase">Attempts</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-600 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -333,12 +308,7 @@ export function EmailSendingHistory() {
                 </tr>
               ) : (
                 queuedEmails.map((email) => (
-                  <QueuedEmailRow
-                    key={email.id}
-                    email={email}
-                    onRetry={handleRetry}
-                    onDelete={handleDelete}
-                  />
+                  <QueuedEmailRow key={email.id} email={email} onRetry={handleRetry} onDelete={handleDelete} />
                 ))
               )}
             </tbody>

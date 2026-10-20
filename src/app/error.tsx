@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
 import { ErrorDisplay } from "@/components/error";
+import * as Sentry from "@sentry/nextjs";
+import { useEffect } from "react";
 
 /**
  * Root Error Boundary Component
  * Catches and displays errors that occur in the application.
  * Forwards to Sentry with the route digest for issue/PR correlation.
  */
-export default function Error({
+export default function ErrorBoundary({
   error,
   reset,
 }: {

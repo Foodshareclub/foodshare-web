@@ -9,8 +9,17 @@ import { logCacheOperation } from "./cache-keys";
  */
 
 import { createCachedClient } from "@/lib/supabase/server";
+import type { GeoJSONPoint } from "@/types/postgis.types";
 import type { LocationType } from "@/types/product.types";
 import { approximateGeoJSON } from "@/utils/postgis";
+
+interface MapLocationRow {
+  id: number;
+  location_json: GeoJSONPoint | null;
+  post_name: string;
+  post_type: string;
+  images: string[];
+}
 
 // Re-export types for consumers
 export type { LocationType };
@@ -29,6 +38,15 @@ function applyLocationPrivacy(locations: LocationType[]): LocationType[] {
     ...item,
     location_json: approximateGeoJSON(item.location_json, item.id) as LocationType["location_json"],
   }));
+}
+
+/** Hard ceiling on markers per viewport request. Map panning is unauthenticated
+ *  and the RPC takes the limit verbatim, so an unbounded value is a DoS lever. */
+const MAX_VIEWPORT_LIMIT = 1000;
+
+function clampViewportLimit(limit: number): number {
+  if (!Number.isFinite(limit) || limit < 1) return 500;
+  return Math.min(Math.floor(limit), MAX_VIEWPORT_LIMIT);
 }
 
 // ============================================================================
@@ -89,7 +107,7 @@ export async function getNearbyLocations(
     west: number;
   },
   productType?: string,
-  limit: number = 500
+  limit = 500,
 ): Promise<LocationType[]> {
   // Round bounds to reduce cache fragmentation (precision: ~10m)
   const precision = 4;
@@ -102,14 +120,18 @@ export async function getNearbyLocations(
 
   const supabase = createCachedClient();
 
-  // Use PostGIS RPC for efficient spatial index query
+  // Use PostGIS RPC for efficient spatial index query.
+  // Param names must match the deployed signature exactly, otherwise PostgREST
+  // returns PGRST202 and we silently fall through to the full-table scan below.
+  // Signature: get_posts_in_bounds(min_lat, min_lng, max_lat, max_lng,
+  //                                post_type_filter, page_limit)
   const { data, error } = await supabase.rpc("get_posts_in_bounds", {
     min_lng: roundedBounds.west,
     min_lat: roundedBounds.south,
     max_lng: roundedBounds.east,
     max_lat: roundedBounds.north,
-    filter_post_type: productType?.toLowerCase() ?? null,
-    result_limit: limit,
+    post_type_filter: productType?.toLowerCase() ?? null,
+    page_limit: clampViewportLimit(limit),
   });
 
   if (error) {
@@ -132,7 +154,7 @@ export async function getNearbyLocations(
       post_type: item.post_type,
       images: item.images,
       location_json: item.location_json,
-    })
+    }),
   );
 
   // Apply location privacy (~200m approximation) for user safety
@@ -145,7 +167,7 @@ export async function getNearbyLocations(
  */
 async function getNearbyLocationsFallback(
   bounds: { north: number; south: number; east: number; west: number },
-  productType?: string
+  productType?: string,
 ): Promise<LocationType[]> {
   const supabase = createCachedClient();
 
@@ -158,11 +180,14 @@ async function getNearbyLocationsFallback(
     query = query.eq("post_type", productType.toLowerCase());
   }
 
-  const { data, error } = await query;
+  // Bound the scan. PostgREST caps us at server max-rows, but this path is only
+  // reached on RPC failure — an uncapped read here is a cheap amplification of
+  // the whole posts table for an unauthenticated caller.
+  const { data, error } = await query.limit(MAX_VIEWPORT_LIMIT);
   if (error) throw new Error(error.message);
 
   // Filter by bounds in JavaScript
-  const filtered = (data ?? []).filter((item: any) => {
+  const filtered = ((data ?? []) as MapLocationRow[]).filter((item) => {
     const loc = item.location_json as { coordinates?: [number, number] } | null;
     if (!loc?.coordinates) return false;
     const [lng, lat] = loc.coordinates;

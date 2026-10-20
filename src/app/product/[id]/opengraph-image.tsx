@@ -1,6 +1,6 @@
-import { createCachedClient } from "@/lib/supabase/server";
 import { ogImageSize } from "@/lib/og-image";
 import { generateOGImage } from "@/lib/og-image";
+import { createCachedClient } from "@/lib/supabase/server";
 
 export const alt = "FoodShare listing";
 export const size = ogImageSize;
@@ -13,9 +13,9 @@ interface Props {
 export default async function Image({ params }: Props) {
   const { id: idParam } = await params;
   const m = idParam.match(/^(\d+)/);
-  const productId = m ? parseInt(m[1], 10) : NaN;
+  const productId = m ? Number.parseInt(m[1], 10) : Number.NaN;
 
-  if (isNaN(productId)) {
+  if (Number.isNaN(productId)) {
     return generateOGImage({ title: "Listing Not Found", type: "food" });
   }
 
@@ -33,13 +33,11 @@ export default async function Image({ params }: Props) {
     const title = (data.post_name as string) || "Food Item";
     const desc = (data.post_description as string) || "";
     const images = data.images as string[] | null;
-    const firstImage =
-      Array.isArray(images) && images.length > 0 ? (images[0] as string) : undefined;
+    const firstImage = Array.isArray(images) && images.length > 0 ? (images[0] as string) : undefined;
 
     return generateOGImage({
       title,
-      subtitle:
-        desc.slice(0, 100) || `${(data.post_type as string) || "Food"} available for sharing`,
+      subtitle: desc.slice(0, 100) || `${(data.post_type as string) || "Food"} available for sharing`,
       type: "food",
       imageUrl: firstImage,
     });

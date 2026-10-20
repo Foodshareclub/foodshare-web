@@ -5,8 +5,8 @@
  * and geographic proximity.
  */
 
-import { DUPLICATE_DISTANCE_METERS, NAME_SIMILARITY_THRESHOLD } from '../config';
-import type { RawFoodbankData, Coordinates } from '../types';
+import { DUPLICATE_DISTANCE_METERS, NAME_SIMILARITY_THRESHOLD } from "../config";
+import type { Coordinates, RawFoodbankData } from "../types";
 
 /**
  * Calculate Levenshtein distance between two strings
@@ -27,11 +27,7 @@ function levenshteinDistance(a: string, b: string): number {
       if (b.charAt(i - 1) === a.charAt(j - 1)) {
         matrix[i][j] = matrix[i - 1][j - 1];
       } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        );
+        matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
       }
     }
   }
@@ -81,7 +77,7 @@ export function isDuplicate(
   a: RawFoodbankData,
   b: RawFoodbankData,
   distanceThreshold = DUPLICATE_DISTANCE_METERS,
-  similarityThreshold = NAME_SIMILARITY_THRESHOLD
+  similarityThreshold = NAME_SIMILARITY_THRESHOLD,
 ): boolean {
   // Check name similarity
   const nameSimilarity = stringSimilarity(a.name, b.name);
@@ -90,15 +86,10 @@ export function isDuplicate(
   }
 
   // If both have coordinates, check distance
-  if (
-    a.latitude !== undefined &&
-    a.longitude !== undefined &&
-    b.latitude !== undefined &&
-    b.longitude !== undefined
-  ) {
+  if (a.latitude !== undefined && a.longitude !== undefined && b.latitude !== undefined && b.longitude !== undefined) {
     const distance = haversineDistance(
       { latitude: a.latitude, longitude: a.longitude },
-      { latitude: b.latitude, longitude: b.longitude }
+      { latitude: b.latitude, longitude: b.longitude },
     );
 
     // High name similarity + close proximity = duplicate
@@ -124,7 +115,7 @@ export function isDuplicate(
  */
 export function deduplicateFoodbanks(
   foodbanks: RawFoodbankData[],
-  verbose = false
+  verbose = false,
 ): { unique: RawFoodbankData[]; duplicateCount: number } {
   const unique: RawFoodbankData[] = [];
   let duplicateCount = 0;
@@ -165,7 +156,7 @@ export interface ExistingFoodbank {
 
 export function findExistingDuplicate(
   foodbank: RawFoodbankData,
-  existing: ExistingFoodbank[]
+  existing: ExistingFoodbank[],
 ): ExistingFoodbank | null {
   if (!foodbank.latitude || !foodbank.longitude) {
     // Without coordinates, check by name only
@@ -185,7 +176,7 @@ export function findExistingDuplicate(
       if (ex.latitude !== null && ex.longitude !== null) {
         const distance = haversineDistance(
           { latitude: foodbank.latitude, longitude: foodbank.longitude },
-          { latitude: ex.latitude, longitude: ex.longitude }
+          { latitude: ex.latitude, longitude: ex.longitude },
         );
 
         if (distance <= DUPLICATE_DISTANCE_METERS) {

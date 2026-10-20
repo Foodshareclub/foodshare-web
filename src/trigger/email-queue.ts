@@ -5,8 +5,8 @@
  * Replaces synchronous email sending in Server Actions
  */
 
-import { task } from "@trigger.dev/sdk/v3";
 import type { EmailType } from "@/lib/email/types";
+import { task } from "@trigger.dev/sdk/v3";
 
 // ============================================================================
 // Types
@@ -139,7 +139,7 @@ export const batchEmailTask = task({
             return result.output;
           }
           throw new Error(String(result.error));
-        })
+        }),
       );
 
       for (const result of batchResults) {
@@ -149,9 +149,7 @@ export const batchEmailTask = task({
         } else {
           failed++;
           const errorMsg =
-            result.status === "rejected"
-              ? String(result.reason)
-              : result.value?.error || "Unknown error";
+            result.status === "rejected" ? String(result.reason) : result.value?.error || "Unknown error";
           results.push({
             success: false,
             error: errorMsg,

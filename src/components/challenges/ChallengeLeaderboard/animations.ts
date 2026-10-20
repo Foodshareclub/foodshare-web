@@ -96,7 +96,7 @@ export const topThreeShineVariants: Variants = {
     opacity: [0.5, 1, 0.5],
     transition: {
       duration: 2,
-      repeat: Infinity,
+      repeat: Number.POSITIVE_INFINITY,
       ease: "easeInOut",
     },
   },
@@ -130,7 +130,7 @@ export const avatarRingVariants: Variants = {
     rotate: 360,
     transition: {
       duration: 8,
-      repeat: Infinity,
+      repeat: Number.POSITIVE_INFINITY,
       ease: "linear",
     },
   },
@@ -244,7 +244,7 @@ export const tierGlowVariants: Variants = {
     boxShadow: ["0 0 0 0 currentColor", "0 0 20px 4px currentColor", "0 0 0 0 currentColor"],
     transition: {
       duration: 2,
-      repeat: Infinity,
+      repeat: Number.POSITIVE_INFINITY,
       ease: "easeInOut",
     },
   },
@@ -279,7 +279,7 @@ export const pulseVariants: Variants = {
     scale: [1, 1.02, 1],
     transition: {
       duration: 2,
-      repeat: Infinity,
+      repeat: Number.POSITIVE_INFINITY,
       ease: "easeInOut",
     },
   },
@@ -297,7 +297,7 @@ export const skeletonVariants: Variants = {
     opacity: [0.5, 0.8, 0.5],
     transition: {
       duration: 1.5,
-      repeat: Infinity,
+      repeat: Number.POSITIVE_INFINITY,
       ease: "easeInOut",
     },
   },

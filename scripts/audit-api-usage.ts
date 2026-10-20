@@ -6,8 +6,8 @@
  * Scans codebase to find which API routes are actually called
  */
 
-import { readdir, readFile } from "fs/promises";
-import { join } from "path";
+import { readFile, readdir } from "bun:fs/promises";
+import { join } from "bun:path";
 
 const API_ROUTES_DIR = "src/app/api";
 const SRC_DIR = "src";
@@ -23,10 +23,7 @@ async function findAPIRoutes(dir: string): Promise<string[]> {
       routes.push(...(await findAPIRoutes(path)));
     } else if (entry.name === "route.ts" || entry.name === "route.js") {
       // Extract route path from directory structure
-      const routePath = path
-        .replace("src/app", "")
-        .replace("/route.ts", "")
-        .replace("/route.js", "");
+      const routePath = path.replace("src/app", "").replace("/route.ts", "").replace("/route.js", "");
       routes.push(routePath);
     }
   }
@@ -92,13 +89,13 @@ async function audit() {
   console.log(`❌ Unused routes: ${unused.length}\n`);
 
   console.log("🗑️  Unused Routes (Safe to Delete):");
-  unused.forEach((r) => console.log(`  - ${r.route}`));
+  for (const r of unused) console.log(`  - ${r.route}`);
 
   console.log("\n✅ Used Routes (Need Migration):");
-  used.forEach((r) => {
+  for (const r of used) {
     console.log(`  - ${r.route}`);
     console.log(`    Used in: ${r.files.length} file(s)`);
-  });
+  }
 
   // Export results
   await Bun.write("api-usage-audit.json", JSON.stringify(results, null, 2));

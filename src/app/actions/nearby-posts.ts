@@ -7,9 +7,9 @@
  * For data fetching, prefer using lib/data/nearby-posts.ts directly in Server Components.
  */
 
-import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
 import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { createClient } from "@/lib/supabase/server";
 
 export interface UpdateUserLocationParams {
   lat: number;
@@ -29,19 +29,9 @@ export interface UpdateUserLocationResult {
  * - Personalized nearby post recommendations
  * - Location-based notifications
  */
-export async function saveUserLocation({
-  lat,
-  lng,
-}: UpdateUserLocationParams): Promise<UpdateUserLocationResult> {
+export async function saveUserLocation({ lat, lng }: UpdateUserLocationParams): Promise<UpdateUserLocationResult> {
   // Validate coordinates
-  if (
-    typeof lat !== "number" ||
-    typeof lng !== "number" ||
-    lat < -90 ||
-    lat > 90 ||
-    lng < -180 ||
-    lng > 180
-  ) {
+  if (typeof lat !== "number" || typeof lng !== "number" || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
     return { success: false, error: "Invalid coordinates" };
   }
 

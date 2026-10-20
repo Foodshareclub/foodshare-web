@@ -202,12 +202,7 @@ export interface CRMCustomersFilter {
   ltvScoreMin: number;
   ltvScoreMax: number;
   includeArchived: boolean;
-  sortBy:
-    | "engagement_score"
-    | "churn_risk_score"
-    | "ltv_score"
-    | "last_interaction_at"
-    | "created_at";
+  sortBy: "engagement_score" | "churn_risk_score" | "ltv_score" | "last_interaction_at" | "created_at";
   sortOrder: "asc" | "desc";
 }
 
@@ -559,10 +554,7 @@ export function isCustomerType(value: unknown): value is CustomerType {
  * Type guard for LifecycleStage
  */
 export function isLifecycleStage(value: unknown): value is LifecycleStage {
-  return (
-    typeof value === "string" &&
-    ["lead", "active", "champion", "at_risk", "churned"].includes(value)
-  );
+  return typeof value === "string" && ["lead", "active", "champion", "at_risk", "churned"].includes(value);
 }
 
 /**
@@ -570,8 +562,7 @@ export function isLifecycleStage(value: unknown): value is LifecycleStage {
  */
 export function isNoteType(value: unknown): value is NoteType {
   return (
-    typeof value === "string" &&
-    ["general", "call", "meeting", "issue", "opportunity", "follow_up"].includes(value)
+    typeof value === "string" && ["general", "call", "meeting", "issue", "opportunity", "follow_up"].includes(value)
   );
 }
 

@@ -5,8 +5,8 @@
  * Visualizes food sharing activity hotspots on an interactive map
  */
 
-import React, { useEffect, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
+import React, { useEffect, useState, useMemo } from "react";
 import "leaflet/dist/leaflet.css";
 import { Loader2, MapPin } from "lucide-react";
 
@@ -18,10 +18,10 @@ const CircleMarker = dynamic(() => import("react-leaflet").then((m) => m.CircleM
   ssr: false,
 });
 const Popup = dynamic(() => import("react-leaflet").then((m) => m.Popup), { ssr: false });
-// useMap must be imported statically for FitBounds hook but guarded by dynamic MapContainer
-import { useMap } from "react-leaflet";
 import { fetchGeographicHotspots } from "@/app/actions/analytics-data";
 import type { GeoHotspot } from "@/lib/data/analytics";
+// useMap must be imported statically for FitBounds hook but guarded by dynamic MapContainer
+import { useMap } from "react-leaflet";
 
 // Color scale for heat intensity
 function getHeatColor(count: number, maxCount: number): string {
@@ -105,12 +105,7 @@ export function GeoHeatMap() {
 
   return (
     <div className="h-[400px] rounded-lg overflow-hidden border">
-      <MapContainer
-        center={defaultCenter}
-        zoom={defaultZoom}
-        className="h-full w-full"
-        scrollWheelZoom={true}
-      >
+      <MapContainer center={defaultCenter} zoom={defaultZoom} className="h-full w-full" scrollWheelZoom={true}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -131,16 +126,14 @@ export function GeoHeatMap() {
               <div className="text-sm">
                 <p className="font-semibold">{hotspot.count} listings</p>
                 <p className="text-muted-foreground">{hotspot.arrangedCount} arranged</p>
-                <p className="text-xs text-muted-foreground capitalize">
-                  Most common: {hotspot.postType}
-                </p>
+                <p className="text-xs text-muted-foreground capitalize">Most common: {hotspot.postType}</p>
               </div>
             </Popup>
           </CircleMarker>
         ))}
       </MapContainer>
       {/* Legend */}
-      <div className="absolute bottom-4 right-4 bg-background/90 backdrop-blur-sm rounded-lg p-3 text-xs shadow-lg border z-[1000]">
+      <div className="absolute bottom-4 end-4 bg-background/90 backdrop-blur-sm rounded-lg p-3 text-xs shadow-lg border z-[1000]">
         <p className="font-medium mb-2">Activity Level</p>
         <div className="space-y-1">
           <div className="flex items-center gap-2">

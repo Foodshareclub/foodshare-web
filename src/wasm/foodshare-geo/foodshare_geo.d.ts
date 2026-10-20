@@ -1,5 +1,4 @@
 /* tslint:disable */
-/* eslint-disable */
 
 /**
  * Batch distance calculation with sorting.
@@ -17,7 +16,7 @@ export function calculate_distances_sorted(
   user_lat: number,
   user_lng: number,
   products_json: string,
-  max_results: number
+  max_results: number,
 ): string;
 
 /**
@@ -33,11 +32,7 @@ export function calculate_distances_sorted(
  * # Returns
  * JSON string of products with added distance field
  */
-export function calculate_product_distances(
-  user_lat: number,
-  user_lng: number,
-  products_json: string
-): string;
+export function calculate_product_distances(user_lat: number, user_lng: number, products_json: string): string;
 
 /**
  * Calculate distance between two coordinates.
@@ -69,7 +64,7 @@ export function filter_within_radius(
   user_lat: number,
   user_lng: number,
   products_json: string,
-  radius_km: number
+  radius_km: number,
 ): string;
 
 /**

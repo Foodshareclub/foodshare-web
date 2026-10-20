@@ -9,7 +9,7 @@
 function distance_decay(distance_km, half_life_km) {
   const ret = wasm.distance_decay(
     distance_km,
-    isLikeNone(half_life_km) ? Number.MAX_SAFE_INTEGER : Math.fround(half_life_km)
+    isLikeNone(half_life_km) ? Number.MAX_SAFE_INTEGER : Math.fround(half_life_km),
   );
   return ret;
 }
@@ -71,15 +71,13 @@ function hybrid_score(
   vector_weight,
   text_weight,
   geo_weight,
-  half_life_km
+  half_life_km,
 ) {
   const ptr0 = passStringToWasm0(text_query, wasm.__wbindgen_export, wasm.__wbindgen_export2);
   const len0 = WASM_VECTOR_LEN;
   const ptr1 = passStringToWasm0(target_text, wasm.__wbindgen_export, wasm.__wbindgen_export2);
   const len1 = WASM_VECTOR_LEN;
-  var ptr2 = isLikeNone(query_vector)
-    ? 0
-    : passArrayF32ToWasm0(query_vector, wasm.__wbindgen_export);
+  var ptr2 = isLikeNone(query_vector) ? 0 : passArrayF32ToWasm0(query_vector, wasm.__wbindgen_export);
   var len2 = WASM_VECTOR_LEN;
   var ptr3 = isLikeNone(item_vector) ? 0 : passArrayF32ToWasm0(item_vector, wasm.__wbindgen_export);
   var len3 = WASM_VECTOR_LEN;
@@ -96,7 +94,7 @@ function hybrid_score(
     isLikeNone(vector_weight) ? Number.MAX_SAFE_INTEGER : Math.fround(vector_weight),
     isLikeNone(text_weight) ? Number.MAX_SAFE_INTEGER : Math.fround(text_weight),
     isLikeNone(geo_weight) ? Number.MAX_SAFE_INTEGER : Math.fround(geo_weight),
-    isLikeNone(half_life_km) ? Number.MAX_SAFE_INTEGER : Math.fround(half_life_km)
+    isLikeNone(half_life_km) ? Number.MAX_SAFE_INTEGER : Math.fround(half_life_km),
   );
   return ret;
 }
@@ -266,8 +264,7 @@ function getDataViewMemory0() {
   if (
     cachedDataViewMemory0 === null ||
     cachedDataViewMemory0.buffer.detached === true ||
-    (cachedDataViewMemory0.buffer.detached === undefined &&
-      cachedDataViewMemory0.buffer !== wasm.memory.buffer)
+    (cachedDataViewMemory0.buffer.detached === undefined && cachedDataViewMemory0.buffer !== wasm.memory.buffer)
   ) {
     cachedDataViewMemory0 = new DataView(wasm.memory.buffer);
   }
@@ -344,7 +341,7 @@ function passStringToWasm0(arg, malloc, realloc) {
   return ptr;
 }
 
-let cachedTextDecoder = new TextDecoder("utf-8", { ignoreBOM: true, fatal: true });
+const cachedTextDecoder = new TextDecoder("utf-8", { ignoreBOM: true, fatal: true });
 cachedTextDecoder.decode();
 function decodeText(ptr, len) {
   return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
@@ -353,7 +350,7 @@ function decodeText(ptr, len) {
 const cachedTextEncoder = new TextEncoder();
 
 if (!("encodeInto" in cachedTextEncoder)) {
-  cachedTextEncoder.encodeInto = function (arg, view) {
+  cachedTextEncoder.encodeInto = (arg, view) => {
     const buf = cachedTextEncoder.encode(arg);
     view.set(buf);
     return {
@@ -382,5 +379,5 @@ function __resolveWasmPath(filename) {
 const wasmPath = __resolveWasmPath("foodshare_search_bg.wasm");
 const wasmBytes = require("fs").readFileSync(/*turbopackIgnore: true*/ wasmPath);
 const wasmModule = new WebAssembly.Module(wasmBytes);
-let wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
-let wasm = wasmInstance.exports;
+const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+const wasm = wasmInstance.exports;

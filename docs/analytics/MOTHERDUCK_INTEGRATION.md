@@ -39,7 +39,7 @@ MotherDuck (DuckDB cloud)
 | Component            | Location                                              | Purpose                                       |
 | -------------------- | ----------------------------------------------------- | --------------------------------------------- |
 | Sync Edge Function   | `foodshare-backend/functions/sync-analytics/index.ts` | Syncs profiles/posts to MotherDuck            |
-| Sync API Route       | `foodshare-web/src/app/api/admin/sync-analytics/`     | Next.js API route for sync (Node.js runtime)  |
+| Sync API Route       | `foodshare-web/src/app/api/admin/sync-analytics/`     | Next.js API route for sync (server runtime)    |
 | **WASM Sync Page**   | `foodshare-web/src/app/admin/analytics/sync/page.tsx` | Browser-based sync using MotherDuck WASM      |
 | Python Sync Script   | `foodshare-backend/tools/sync-to-motherduck.py`       | CLI tool for manual/cron sync                 |
 | MotherDuck Service   | `foodshare-web/src/lib/analytics/motherduck.ts`       | DuckDB connection (WASM only, not serverless) |
@@ -265,7 +265,7 @@ POST /functions/v1/sync-analytics?mode=full
 GET /functions/v1/sync-analytics
 ```
 
-#### 3. Next.js API Route (Node.js Runtime)
+#### 3. Next.js API Route (server runtime)
 
 The web app includes a dedicated API route that uses native DuckDB for better performance:
 
@@ -305,7 +305,7 @@ interface SyncResult {
 
 **Features:**
 
-- Uses Node.js runtime (not Edge) for native DuckDB support
+- Uses the Node.js-compatible server runtime (Bun, not Edge) for native DuckDB support
 - 60-second max duration for large syncs
 - Syncs from PostgreSQL staging tables (`analytics_daily_stats`, `analytics_user_activity`, `analytics_post_activity`)
 - Marks records as synced after successful transfer

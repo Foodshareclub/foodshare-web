@@ -1,6 +1,6 @@
-import React from "react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import type React from "react";
 
 interface AvatarProps {
   src: string;

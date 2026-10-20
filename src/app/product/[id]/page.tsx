@@ -1,16 +1,16 @@
-import { cache, Suspense } from "react";
-import { notFound, redirect } from "next/navigation";
 import { UserActions } from "@/app/food/[id]/UserActions";
-import { getProductById } from "@/lib/data/products";
-import type { InitialProductStateType } from "@/types/product.types";
+import { getPostRating, getProductById } from "@/lib/data/products";
 import {
-  generateProductJsonLd,
+  buildAggregateRating,
   generateBreadcrumbJsonLd,
+  generateProductJsonLd,
   safeJsonLdStringify,
-  calculateAggregateRating,
 } from "@/lib/jsonld";
-import { slugify } from "@/lib/utils";
-import { siteConfig, generatePageMetadata } from "@/lib/metadata";
+import { generatePageMetadata, siteConfig } from "@/lib/metadata";
+import type { InitialProductStateType } from "@/types/product.types";
+import { getProductCanonicalSlug } from "@/utils/categoryMapping";
+import { notFound, redirect } from "next/navigation";
+import { Suspense, cache } from "react";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -19,17 +19,16 @@ interface PageProps {
 function parseId(idParam: string): number | null {
   const m = idParam.match(/^(\d+)/);
   if (!m) return null;
-  return parseInt(m[1], 10);
+  return Number.parseInt(m[1], 10);
 }
 
 function canonicalSlug(product: InitialProductStateType): string {
-  const base = product.post_slug || slugify(product.post_name || "item");
-  const slug = slugify(base);
-  return `${product.id}-${slug}`;
+  return getProductCanonicalSlug(product);
 }
 
 // Dedupe fetches between generateMetadata and page component — Cache Components ready
 const getCachedProduct = cache(async (id: number) => getProductById(id));
+const getCachedRating = cache(async (id: number) => getPostRating(id));
 
 export async function generateStaticParams(): Promise<{ id: string }[]> {
   // Phase 7: skip live Supabase reads during stubbed CI builds — keeps
@@ -59,7 +58,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
   // Real product ids are positive serials; <= 0 is the build-stub sentinel
   // (see generateStaticParams) — never fetch for it.
-  if (productId === null || isNaN(productId) || productId <= 0) notFound();
+  if (productId === null || Number.isNaN(productId) || productId <= 0) notFound();
 
   const product = await getCachedProduct(productId).catch(() => null);
   if (!product) notFound();
@@ -82,7 +81,11 @@ export default async function ListingDetailPage({ params }: PageProps) {
     redirect(`/product/${expected}`);
   }
 
-  const aggregateRating = calculateAggregateRating(product.five_star, product.four_star);
+  // Resolved only after the canonical-URL checks, so a redirect out of a
+  // non-canonical URL never pays for the rating aggregate. `cache()` means
+  // this shares one round trip with anything else on the request.
+  const rating = await getCachedRating(productId);
+  const aggregateRating = buildAggregateRating(rating.avg_rating, rating.total_reviews);
   const jsonLd = generateProductJsonLd({
     id: product.id,
     name: product.post_name || "Food Item",
@@ -105,10 +108,12 @@ export default async function ListingDetailPage({ params }: PageProps) {
     <>
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD needs a raw script tag; safeJsonLdStringify escapes angle brackets and ampersands so a script-tag breakout is impossible
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(jsonLd) }}
       />
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD needs a raw script tag; safeJsonLdStringify escapes angle brackets and ampersands so a script-tag breakout is impossible
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
       />
       <Suspense fallback={<PostDetailSkeleton />}>
@@ -121,15 +126,19 @@ export default async function ListingDetailPage({ params }: PageProps) {
 export async function generateMetadata({ params }: PageProps) {
   const { id: idParam } = await params;
   const productId = parseId(idParam);
-  if (productId === null || isNaN(productId)) return { title: "Not Found" };
+
+  // Same guard as the page body, for the same reason. The build stubs
+  // `generateStaticParams` with the sentinel id `0`, and the page refuses to
+  // fetch for it — but metadata ran first and did fetch anyway, so the build
+  // still needed the database. A sentinel is a sentinel everywhere, including
+  // here.
+  if (productId === null || Number.isNaN(productId) || productId <= 0) return { title: "Not Found" };
 
   const product = await getCachedProduct(productId).catch(() => null);
   if (!product) return { title: "Not Found" };
 
   const title = product.post_name || "Food Item";
-  const description =
-    product.post_description?.slice(0, 160) ||
-    `${product.post_type || "Food"} available for sharing`;
+  const description = product.post_description?.slice(0, 160) || `${product.post_type || "Food"} available for sharing`;
   const slug = canonicalSlug(product);
   const imageUrl = product.images?.[0] || siteConfig.ogImage;
 
@@ -165,7 +174,7 @@ function PostDetailSkeleton() {
           <div className="animate-pulse">
             <div className="glass w-full overflow-hidden rounded-xl">
               <div className="relative aspect-[16/9] bg-gray-200">
-                <div className="absolute top-4 left-4 h-9 w-20 bg-white/90 rounded-lg" />
+                <div className="absolute top-4 start-4 h-9 w-20 bg-white/90 rounded-lg" />
               </div>
               <div className="p-6">
                 <div className="h-6 bg-gray-200 rounded w-20 mb-3" />
@@ -188,7 +197,7 @@ function PostDetailSkeleton() {
             </div>
           </div>
         </div>
-        <div className="w-full lg:w-1/2 h-[400px] lg:h-auto lg:fixed lg:right-0 lg:top-0 lg:bottom-0 bg-gray-200 animate-pulse flex items-center justify-center">
+        <div className="w-full lg:w-1/2 h-[400px] lg:h-auto lg:fixed lg:end-0 lg:top-0 lg:bottom-0 bg-gray-200 animate-pulse flex items-center justify-center">
           <span className="text-4xl">🗺️</span>
         </div>
       </div>

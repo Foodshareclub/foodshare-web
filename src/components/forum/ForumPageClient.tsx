@@ -1,42 +1,36 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { useTranslations } from "next-intl";
-import {
-  Plus,
-  Search,
-  Flame,
-  Clock,
-  MessageCircle,
-  Heart,
-  Filter,
-  X,
-  Lightbulb,
-  HelpCircle,
-  Trophy,
-  Star,
-  Medal,
-  Crown,
-  ArrowUp,
-  ArrowRight,
-  Hash,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
 import { ForumPostCard } from "@/components/forum";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-
+import { cn } from "@/lib/utils";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { ForumPost, ForumCategory, ForumTag } from "@/api/forumAPI";
+  ArrowRight,
+  ArrowUp,
+  Clock,
+  Crown,
+  Filter,
+  Flame,
+  Hash,
+  Heart,
+  HelpCircle,
+  Lightbulb,
+  Medal,
+  MessageCircle,
+  Plus,
+  Search,
+  Star,
+  Trophy,
+  X,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+
+import type { ForumCategory, ForumPost, ForumTag } from "@/api/forumAPI";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ForumStats, LeaderboardUser, SortOption } from "@/lib/data/forum";
 
 // ============================================================================
@@ -88,9 +82,7 @@ function _StatCard({
           <Icon className="w-5 h-5 text-white" />
         </div>
         <div>
-          <p className="text-2xl font-bold text-white">
-            {typeof value === "number" ? value.toLocaleString() : value}
-          </p>
+          <p className="text-2xl font-bold text-white">{typeof value === "number" ? value.toLocaleString() : value}</p>
           <div className="flex items-center gap-2">
             <p className="text-sm text-white/70">{label}</p>
             {trend !== undefined && trend > 0 && (
@@ -115,9 +107,7 @@ function TrendingPost({ post, rank }: { post: ForumPost; rank: number }) {
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent/50 transition-all cursor-pointer group hover:translate-x-1">
-      <span
-        className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${getRankStyle(rank)}`}
-      >
+      <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${getRankStyle(rank)}`}>
         {rank}
       </span>
       <div className="flex-1 min-w-0">
@@ -162,26 +152,22 @@ function LeaderboardCard({ user, rank }: { user: LeaderboardUser; rank: number }
           />
         ) : (
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
-            <span className="text-sm font-bold text-white">
-              {user.nickname?.charAt(0).toUpperCase() || "?"}
-            </span>
+            <span className="text-sm font-bold text-white">{user.nickname?.charAt(0).toUpperCase() || "?"}</span>
           </div>
         )}
         {rank <= 3 && (
-          <span className={`absolute -top-1 -right-1 ${badge.color}`}>
+          <span className={`absolute -top-1 -end-1 ${badge.color}`}>
             <BadgeIcon className="w-4 h-4" />
           </span>
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold truncate">
-          {user.nickname || user.first_name || "Anonymous"}
-        </p>
+        <p className="text-sm font-semibold truncate">{user.nickname || user.first_name || "Anonymous"}</p>
         <p className="text-xs text-muted-foreground">
           {user.postCount} posts · {user.likesReceived} likes
         </p>
       </div>
-      <div className="text-right">
+      <div className="text-end">
         <p className="text-sm font-bold text-primary">{user.score}</p>
         <p className="text-xs text-muted-foreground">points</p>
       </div>
@@ -212,19 +198,14 @@ function ActivityItem({ post }: { post: ForumPost }) {
         />
       ) : (
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
-          <span className="text-xs font-bold text-white">
-            {post.profiles?.nickname?.charAt(0) || "?"}
-          </span>
+          <span className="text-xs font-bold text-white">{post.profiles?.nickname?.charAt(0) || "?"}</span>
         </div>
       )}
       <div className="flex-1 min-w-0">
         <p className="text-sm">
           <span className="font-medium">{post.profiles?.nickname || "Someone"}</span>
           <span className="text-muted-foreground"> posted </span>
-          <Link
-            href={`/forum/${post.slug || post.id}`}
-            className="font-medium hover:text-primary truncate"
-          >
+          <Link href={`/forum/${post.slug || post.id}`} className="font-medium hover:text-primary truncate">
             {post.forum_post_name?.slice(0, 30)}...
           </Link>
         </p>
@@ -247,23 +228,21 @@ function CategoryCard({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       aria-pressed={isSelected}
       aria-label={`Filter by category: ${category.name}`}
       className={cn(
-        "w-full text-left p-3 rounded-xl transition-all duration-200",
+        "w-full text-start p-3 rounded-xl transition-all duration-200",
         "hover:scale-[1.02] active:scale-[0.98]",
         isSelected
           ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25"
-          : "glass hover:bg-accent"
+          : "glass hover:bg-accent",
       )}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div
-            className="w-3 h-3 rounded-full shadow-sm"
-            style={{ backgroundColor: category.color || "#4CAF50" }}
-          />
+          <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: category.color || "#4CAF50" }} />
           <span className="font-medium">{category.name}</span>
         </div>
         <Badge variant={isSelected ? "secondary" : "outline"} className="text-xs">
@@ -285,6 +264,7 @@ function TagPill({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       aria-pressed={isSelected}
       aria-label={`Filter by tag: ${tag.name}`}
@@ -293,11 +273,11 @@ function TagPill({
         "hover:scale-105 active:scale-95",
         isSelected
           ? "bg-primary text-primary-foreground shadow-md"
-          : "bg-muted hover:bg-accent border border-transparent hover:border-primary/20"
+          : "bg-muted hover:bg-accent border border-transparent hover:border-primary/20",
       )}
       style={!isSelected ? { borderLeft: `3px solid ${tag.color}` } : {}}
     >
-      <Hash className="inline w-3 h-3 mr-1 opacity-60" />
+      <Hash className="inline w-3 h-3 me-1 opacity-60" />
       {tag.name}
     </button>
   );
@@ -322,14 +302,14 @@ function QuickActionCard({
         className={cn(
           "relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br text-white cursor-pointer group",
           "transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98]",
-          gradient
+          gradient,
         )}
       >
         <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
         <Icon className="w-8 h-8 mb-3 relative z-10" />
         <h4 className="font-bold text-lg relative z-10">{title}</h4>
         <p className="text-sm text-white/80 relative z-10">{description}</p>
-        <ArrowRight className="absolute bottom-5 right-5 w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <ArrowRight className="absolute bottom-5 end-5 w-5 h-5 rtl:scale-x-100 opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
     </Link>
   );
@@ -393,14 +373,11 @@ export function ForumPageClient({
         if (b.post_type === "question" && !b.best_answer_id) return 1;
         return 0;
       default:
-        return (
-          new Date(b.forum_post_created_at).getTime() - new Date(a.forum_post_created_at).getTime()
-        );
+        return new Date(b.forum_post_created_at).getTime() - new Date(a.forum_post_created_at).getTime();
     }
   });
 
-  const hasActiveFilters =
-    selectedCategory || selectedTags.length > 0 || selectedPostType || searchQuery;
+  const hasActiveFilters = selectedCategory || selectedTags.length > 0 || selectedPostType || searchQuery;
 
   const clearFilters = () => {
     setSelectedCategory(null);
@@ -410,9 +387,7 @@ export function ForumPageClient({
   };
 
   const toggleTag = (tagId: number) => {
-    setSelectedTags((prev) =>
-      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
-    );
+    setSelectedTags((prev) => (prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]));
   };
 
   return (
@@ -511,12 +486,12 @@ export function ForumPageClient({
             <div className="bg-card rounded-2xl p-4 shadow-sm mb-6">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
                     placeholder={t("forum_search_placeholder", { defaultValue: "Search posts..." })}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
+                    className="ps-10"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -527,20 +502,17 @@ export function ForumPageClient({
                     <SelectContent>
                       <SelectItem value="latest">
                         <span className="flex items-center gap-2">
-                          <Clock className="w-3 h-3" />{" "}
-                          {t("forum_sort_latest", { defaultValue: "Latest" })}
+                          <Clock className="w-3 h-3" /> {t("forum_sort_latest", { defaultValue: "Latest" })}
                         </span>
                       </SelectItem>
                       <SelectItem value="hot">
                         <span className="flex items-center gap-2">
-                          <Flame className="w-3 h-3" />{" "}
-                          {t("forum_sort_hot", { defaultValue: "Hot" })}
+                          <Flame className="w-3 h-3" /> {t("forum_sort_hot", { defaultValue: "Hot" })}
                         </span>
                       </SelectItem>
                       <SelectItem value="top">
                         <span className="flex items-center gap-2">
-                          <Heart className="w-3 h-3" />{" "}
-                          {t("forum_sort_top", { defaultValue: "Top" })}
+                          <Heart className="w-3 h-3" /> {t("forum_sort_top", { defaultValue: "Top" })}
                         </span>
                       </SelectItem>
                       <SelectItem value="unanswered">
@@ -571,10 +543,7 @@ export function ForumPageClient({
                   {selectedCategory && (
                     <Badge variant="secondary" className="gap-1">
                       {categories.find((c) => c.id === selectedCategory)?.name}
-                      <X
-                        className="w-3 h-3 cursor-pointer"
-                        onClick={() => setSelectedCategory(null)}
-                      />
+                      <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedCategory(null)} />
                     </Badge>
                   )}
                   {selectedTags.map((tagId) => {
@@ -619,7 +588,7 @@ export function ForumPageClient({
                 </p>
                 <Link href="/forum/new">
                   <Button>
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="w-4 h-4 me-2" />
                     {t("forum_create_first", { defaultValue: "Create First Post" })}
                   </Button>
                 </Link>

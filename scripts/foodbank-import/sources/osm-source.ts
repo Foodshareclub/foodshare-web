@@ -5,8 +5,8 @@
  * Supports multiple facility types: food_bank, fridge, food_pantry
  */
 
-import { OVERPASS_API_URL, OVERPASS_TIMEOUT, USER_AGENT, COUNTRIES } from "../config";
-import type { RawFoodbankData, OSMElement, OverpassResponse } from "../types";
+import { COUNTRIES, OVERPASS_API_URL, OVERPASS_TIMEOUT, USER_AGENT } from "../config";
+import type { OSMElement, OverpassResponse, RawFoodbankData } from "../types";
 
 // Facility types for import
 export type FacilityType = "foodbank" | "fridge";
@@ -143,7 +143,7 @@ function parseOSMElement(element: OSMElement, countryCode: string): RawFoodbankD
 async function fetchOSMFacilities(
   countryCode: string,
   facilityType: FacilityType,
-  verbose = false
+  verbose = false,
 ): Promise<RawFoodbankData[]> {
   const countryConfig = COUNTRIES[countryCode];
   if (!countryConfig) {
@@ -151,9 +151,7 @@ async function fetchOSMFacilities(
   }
 
   const query =
-    facilityType === "fridge"
-      ? buildFridgeQuery(countryConfig.bbox)
-      : buildFoodbankQuery(countryConfig.bbox);
+    facilityType === "fridge" ? buildFridgeQuery(countryConfig.bbox) : buildFoodbankQuery(countryConfig.bbox);
 
   if (verbose) {
     console.log(`   Querying Overpass API for ${facilityType}s in ${countryConfig.name}...`);
@@ -201,20 +199,14 @@ async function fetchOSMFacilities(
 /**
  * Fetch foodbanks from OpenStreetMap for a specific country
  */
-export async function fetchOSMFoodbanks(
-  countryCode: string,
-  verbose = false
-): Promise<RawFoodbankData[]> {
+export async function fetchOSMFoodbanks(countryCode: string, verbose = false): Promise<RawFoodbankData[]> {
   return fetchOSMFacilities(countryCode, "foodbank", verbose);
 }
 
 /**
  * Fetch community fridges from OpenStreetMap for a specific country
  */
-export async function fetchOSMFridges(
-  countryCode: string,
-  verbose = false
-): Promise<RawFoodbankData[]> {
+export async function fetchOSMFridges(countryCode: string, verbose = false): Promise<RawFoodbankData[]> {
   return fetchOSMFacilities(countryCode, "fridge", verbose);
 }
 
@@ -223,7 +215,7 @@ export async function fetchOSMFridges(
  */
 export async function fetchAllFoodbanks(
   countryCodes: string[],
-  verbose = false
+  verbose = false,
 ): Promise<Map<string, RawFoodbankData[]>> {
   const results = new Map<string, RawFoodbankData[]>();
 

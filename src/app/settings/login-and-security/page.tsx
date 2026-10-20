@@ -1,13 +1,10 @@
+import { checkUserIsAdmin, getUser } from "@/app/actions/auth";
+import { generateNoIndexMetadata } from "@/lib/metadata";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { LoginSecurityClient } from "./LoginSecurityClient";
-import { getUser, checkUserIsAdmin } from "@/app/actions/auth";
-import { generateNoIndexMetadata } from "@/lib/metadata";
 
-export const metadata = generateNoIndexMetadata(
-  "Login & Security",
-  "Manage your password and security settings"
-);
+export const metadata = generateNoIndexMetadata("Login & Security", "Manage your password and security settings");
 
 /**
  * Login & Security Settings Page - Server Component

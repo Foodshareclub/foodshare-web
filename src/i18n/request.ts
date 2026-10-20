@@ -1,18 +1,21 @@
-import { getRequestConfig } from 'next-intl/server';
-import { defaultLocale, isValidLocale, type Locale } from './config';
+import { getRequestConfig } from "next-intl/server";
+import { type Locale, defaultLocale, isValidLocale } from "./config";
+import { loadMessagesWithFallback } from "./merge";
 
 export default getRequestConfig(async ({ requestLocale }) => {
-  // This typically corresponds to the `[locale]` segment
-  let locale = await requestLocale;
-
-  // Ensure that a valid locale is used
-  if (!locale || !isValidLocale(locale)) {
-    locale = defaultLocale;
-  }
+  // This typically corresponds to the `[locale]` segment. It is only set by
+  // next-intl's middleware, which this app does not install — so in practice it
+  // is undefined and every server component falls back to the default locale.
+  // The cookie-aware path in `src/app/layout.tsx` is what actually drives the
+  // locale for client components; see RequestContent there.
+  const requested = await requestLocale;
+  const locale: Locale = requested && isValidLocale(requested) ? requested : defaultLocale;
 
   return {
     locale,
-    messages: (await import(`../../messages/${locale}.json`)).default,
+    // English is layered underneath so a key the locale is missing renders as
+    // English rather than as its own key path — see the note in merge.ts.
+    messages: (await loadMessagesWithFallback(locale)) as Record<string, string>,
   };
 });
 
@@ -21,9 +24,9 @@ export default getRequestConfig(async ({ requestLocale }) => {
  */
 export async function getMessages(locale: Locale) {
   try {
-    return (await import(`../../messages/${locale}.json`)).default;
+    return await loadMessagesWithFallback(locale);
   } catch {
-    // Fallback to English if locale messages not found
-    return (await import(`../../messages/en.json`)).default;
+    // Fallback to English if the locale's message file cannot be loaded at all
+    return (await import(`../../messages/${defaultLocale}.json`)).default;
   }
 }

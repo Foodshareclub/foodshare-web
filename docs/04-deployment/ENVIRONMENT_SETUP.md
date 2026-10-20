@@ -233,7 +233,7 @@ testEmailService();
 Run it:
 
 ```bash
-bunx tsx scripts/test-email-service.ts
+bun scripts/test-email-service.ts
 ```
 
 ### 2. Test Supabase Connection

@@ -19,7 +19,7 @@ export const PATH = {
   aboutUsPage: "/about-us",
   contactUsPage: "/contact-us",
   volunteerPage: "/volunteer",
-  myListingsPage: `/user-listings`,
+  myListingsPage: "/user-listings",
   searchResultsPage: "/:type",
   settingsPage: "/settings",
   personalInfoPage: "/settings/personal-info",

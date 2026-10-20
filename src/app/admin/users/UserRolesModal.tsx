@@ -5,21 +5,16 @@
  * Manages roles via user_roles junction table
  */
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Save, X, Shield, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
 import { updateUserRoles } from "@/app/actions/admin-listings";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Save, Shield, User, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import type React from "react";
+import { useState } from "react";
 
 // Icons
 
@@ -145,9 +140,7 @@ export function UserRolesModal({ user, open, onClose }: Props) {
 
           {/* Role Toggles */}
           <div className="space-y-4">
-            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Assigned Roles
-            </Label>
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Assigned Roles</Label>
 
             {ROLE_DEFINITIONS.map((role) => {
               const Icon = role.icon;
@@ -170,9 +163,7 @@ export function UserRolesModal({ user, open, onClose }: Props) {
                       <Icon className={`h-4 w-4 ${role.color}`} />
                       {role.label}
                     </label>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                      {role.description}
-                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{role.description}</p>
                   </div>
                 </div>
               );
@@ -188,10 +179,10 @@ export function UserRolesModal({ user, open, onClose }: Props) {
 
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-              <FiX className="h-4 w-4 mr-2" /> Cancel
+              <FiX className="h-4 w-4 me-2" /> Cancel
             </Button>
             <Button type="submit" disabled={saving}>
-              <FiSave className="h-4 w-4 mr-2" />
+              <FiSave className="h-4 w-4 me-2" />
               {saving ? "Saving..." : "Save Roles"}
             </Button>
           </DialogFooter>

@@ -3,7 +3,7 @@
  * Unit tests for auth client exports
  */
 
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 
 describe("Auth Client", () => {
   describe("supabase export", () => {

@@ -3,12 +3,7 @@
  * Accent colors, presets, and theme utilities
  */
 
-import type {
-  AccentColor,
-  AccentColorConfig,
-  ThemePreset,
-  ContrastMode,
-} from "@/store/zustand/useUIStore";
+import type { AccentColor, AccentColorConfig, ContrastMode, ThemePreset } from "@/store/zustand/useUIStore";
 
 // ============================================================================
 // Accent Color Definitions
@@ -338,7 +333,7 @@ export const CONTRAST_MODES: Record<ContrastMode, ContrastConfig> = {
 export function generateAccentCSS(
   config: AccentColorConfig,
   contrastMode: ContrastMode = "normal",
-  isDark: boolean = false
+  isDark = false,
 ): string {
   const { hue, saturation } = config;
   const contrast = CONTRAST_MODES[contrastMode].multiplier;
@@ -364,10 +359,7 @@ export function generateAccentCSS(
  * Apply accent color to document
  * Updates CSS variables in HSL format (without hsl() wrapper) to match Tailwind 4 expectations
  */
-export function applyAccentColor(
-  config: AccentColorConfig,
-  contrastMode: ContrastMode = "normal"
-): void {
+export function applyAccentColor(config: AccentColorConfig, contrastMode: ContrastMode = "normal"): void {
   const root = document.documentElement;
   const { hue, saturation } = config;
   const contrast = CONTRAST_MODES[contrastMode].multiplier;
@@ -392,17 +384,11 @@ export function applyAccentColor(
 
   // Update primary foreground for proper contrast
   // Light mode: white text, Dark mode: dark text
-  root.style.setProperty(
-    "--primary-foreground",
-    isDark ? "240 10% 3.9%" : "0 0% 100%"
-  );
+  root.style.setProperty("--primary-foreground", isDark ? "240 10% 3.9%" : "0 0% 100%");
 
   // Also update sidebar primary to match
   root.style.setProperty("--sidebar-primary", `${hue} ${adjustedSat}% ${lightness}%`);
-  root.style.setProperty(
-    "--sidebar-primary-foreground",
-    isDark ? "240 10% 3.9%" : "0 0% 100%"
-  );
+  root.style.setProperty("--sidebar-primary-foreground", isDark ? "240 10% 3.9%" : "0 0% 100%");
   root.style.setProperty("--sidebar-ring", `${hue} ${adjustedSat}% ${lightness}%`);
 }
 
@@ -428,12 +414,12 @@ export function applyContrastMode(mode: ContrastMode): void {
  */
 export function hexToHSL(hex: string): { h: number; s: number; l: number } {
   // Remove # if present
-  hex = hex.replace(/^#/, "");
+  const cleanHex = hex.replace(/^#/, "");
 
   // Parse hex values
-  const r = parseInt(hex.substring(0, 2), 16) / 255;
-  const g = parseInt(hex.substring(2, 4), 16) / 255;
-  const b = parseInt(hex.substring(4, 6), 16) / 255;
+  const r = Number.parseInt(cleanHex.substring(0, 2), 16) / 255;
+  const g = Number.parseInt(cleanHex.substring(2, 4), 16) / 255;
+  const b = Number.parseInt(cleanHex.substring(4, 6), 16) / 255;
 
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
@@ -469,15 +455,15 @@ export function hexToHSL(hex: string): { h: number; s: number; l: number } {
  * Convert HSL to hex
  */
 export function hslToHex(h: number, s: number, l: number): string {
-  s /= 100;
-  l /= 100;
+  const saturation = s / 100;
+  const lightness = l / 100;
 
-  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const c = (1 - Math.abs(2 * lightness - 1)) * saturation;
   const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-  const m = l - c / 2;
-  let r = 0,
-    g = 0,
-    b = 0;
+  const m = lightness - c / 2;
+  let r = 0;
+  let g = 0;
+  let b = 0;
 
   if (0 <= h && h < 60) {
     r = c;
@@ -507,7 +493,7 @@ export function hslToHex(h: number, s: number, l: number): string {
 
   const toHex = (n: number) => {
     const hex = Math.round((n + m) * 255).toString(16);
-    return hex.length === 1 ? "0" + hex : hex;
+    return hex.length === 1 ? `0${hex}` : hex;
   };
 
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
@@ -517,12 +503,7 @@ export function hslToHex(h: number, s: number, l: number): string {
 // Color Blindness Simulation
 // ============================================================================
 
-export type ColorBlindnessMode =
-  | "none"
-  | "protanopia"
-  | "deuteranopia"
-  | "tritanopia"
-  | "achromatopsia";
+export type ColorBlindnessMode = "none" | "protanopia" | "deuteranopia" | "tritanopia" | "achromatopsia";
 
 export interface ColorBlindnessConfig {
   id: ColorBlindnessMode;
@@ -724,9 +705,6 @@ export function enableThemeTransition(): void {
 /**
  * Get animation variants based on reduced motion preference
  */
-export function getMotionVariants<T extends Record<string, unknown>>(
-  fullMotion: T,
-  reducedMotion: T
-): T {
+export function getMotionVariants<T extends Record<string, unknown>>(fullMotion: T, reducedMotion: T): T {
   return prefersReducedMotion() || getReducedMotionSetting() ? reducedMotion : fullMotion;
 }

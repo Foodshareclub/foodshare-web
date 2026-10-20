@@ -88,7 +88,7 @@ export async function updateProduct(
     updates.post_type = body.postType;
     updates.category_id = body.categoryId ?? null;
     updates.metadata = {
-      ...(existing.metadata ?? {}),
+      ...existing.metadata,
       classification: {
         ...manualClassification(body.postType),
         requestedPostType: existing.post_type,

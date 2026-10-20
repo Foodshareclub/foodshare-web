@@ -6,15 +6,16 @@
  * Receives product as props from parent component (no Redux)
  */
 
-import React, { useMemo } from "react";
-import { MapContainer, Marker, TileLayer, Popup, Circle } from "react-leaflet";
+import type React from "react";
+import { useMemo } from "react";
+import { Circle, MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import "./leaflet.css";
 import "./leaflet-glass.css";
 import "leaflet/dist/leaflet.css";
+import { type InitialProductStateType, getCoordinates } from "@/types/product.types";
+import { approximateLocation } from "@/utils/postgis";
 import { DivIcon } from "leaflet";
 import L from "leaflet";
-import { getCoordinates, type InitialProductStateType } from "@/types/product.types";
-import { approximateLocation } from "@/utils/postgis";
 import { useTranslations } from "next-intl";
 
 // Use Canvas renderer for GPU acceleration
@@ -47,7 +48,7 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
         iconAnchor: [20, 40],
         popupAnchor: [0, -40],
       }),
-    []
+    [],
   );
 
   if (!oneProduct) {
@@ -79,10 +80,7 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
   const position: [number, number] = [approxCoords.lat, approxCoords.lng];
 
   return (
-    <div
-      className="relative h-full"
-      style={{ transform: "translateZ(0)", willChange: "transform" }}
-    >
+    <div className="relative h-full" style={{ transform: "translateZ(0)", willChange: "transform" }}>
       {/* Map Container */}
       <MapContainer
         style={{
@@ -120,11 +118,7 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
         />
 
         {/* Custom Marker with Popup */}
-        <Marker
-          icon={customMarker}
-          position={position}
-          title={oneProduct.post_name || t("address")}
-        >
+        <Marker icon={customMarker} position={position} title={oneProduct.post_name || t("address")}>
           <Popup className="product-card-popup">
             <div className="product-popup-card">
               <p className="product-popup-title">{oneProduct.post_name}</p>
@@ -141,7 +135,7 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
       </MapContainer>
 
       {/* Floating Info Card */}
-      <div className="absolute bottom-4 left-4 right-4 lg:left-4 lg:right-auto lg:max-w-xs z-[1000]">
+      <div className="absolute bottom-4 inset-x-4 lg:start-4 lg:end-auto lg:max-w-xs z-[1000]">
         <div className="bg-card/90 backdrop-blur-lg rounded-2xl shadow-xl border border-border/50 p-4">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -149,13 +143,9 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-foreground truncate">{oneProduct.post_name}</p>
-              <p className="text-sm text-muted-foreground truncate">
-                {oneProduct.post_stripped_address}
-              </p>
+              <p className="text-sm text-muted-foreground truncate">{oneProduct.post_stripped_address}</p>
               {oneProduct.available_hours && (
-                <p className="text-xs text-muted-foreground/70 mt-1">
-                  🕐 {oneProduct.available_hours}
-                </p>
+                <p className="text-xs text-muted-foreground/70 mt-1">🕐 {oneProduct.available_hours}</p>
               )}
             </div>
           </div>

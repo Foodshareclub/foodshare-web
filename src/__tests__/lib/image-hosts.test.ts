@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { hasRemoteMatch } from "next/dist/shared/lib/match-remote-pattern";
 import { CONFIGURED_IMAGE_PATTERNS, normalizeImageUrl } from "@/lib/image";
+import { hasRemoteMatch } from "next/dist/shared/lib/match-remote-pattern";
 
 test("Next Image accepts legacy Firebase photos as well as storage subdomains", () => {
   for (const source of [

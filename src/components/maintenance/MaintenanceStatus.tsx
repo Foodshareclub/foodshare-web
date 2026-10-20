@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { safeInternalPath } from "@/lib/security/redirect";
+import { cn } from "@/lib/utils";
+import { Check, Loader2, RefreshCw, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { Check, X, Loader2, RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useCallback, useEffect, useState } from "react";
 
 interface HealthStatus {
   status: "healthy" | "degraded" | "maintenance";
@@ -57,7 +58,7 @@ export function MaintenanceStatus(): React.ReactElement {
   const router = useRouter();
   const t = useTranslations("Maintenance");
 
-  const checkHealth = async (): Promise<void> => {
+  const checkHealth = useCallback(async (): Promise<void> => {
     setIsChecking(true);
     try {
       const controller = new AbortController();
@@ -105,7 +106,7 @@ export function MaintenanceStatus(): React.ReactElement {
     } finally {
       setIsChecking(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     setTimeout(() => {
@@ -115,16 +116,19 @@ export function MaintenanceStatus(): React.ReactElement {
     // Poll every 30 seconds (less aggressive to avoid redirect loop)
     const interval = setInterval(checkHealth, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [checkHealth]);
 
   // Handle redirect countdown
   useEffect(() => {
     if (redirectCountdown === null) return;
 
     if (redirectCountdown <= 0) {
-      // Get 'from' query param if it exists, otherwise go to home
+      // `from` is user-controlled, so it must go through safeInternalPath —
+      // `router.push("//evil.com")` is a cross-origin navigation, and this
+      // component fires exactly when the app looks healthy again, which is the
+      // ideal moment to bounce someone to a lookalike page.
       const searchParams = new URLSearchParams(window.location.search);
-      const from = searchParams.get("from") || "/";
+      const from = safeInternalPath(searchParams.get("from"), "/");
       router.push(from);
       return;
     }
@@ -145,11 +149,12 @@ export function MaintenanceStatus(): React.ReactElement {
           {t("serviceStatus", { fallback: "Service Status" })}
         </h2>
         <button
+          type="button"
           onClick={checkHealth}
           disabled={isChecking}
           className={cn(
             "p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors",
-            isChecking && "animate-spin"
+            isChecking && "animate-spin",
           )}
           aria-label={t("refresh", { fallback: "Refresh status" })}
         >
@@ -163,9 +168,7 @@ export function MaintenanceStatus(): React.ReactElement {
             key={service}
             className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
           >
-            <span className="text-sm text-gray-600 dark:text-gray-300">
-              {SERVICE_LABELS[service] || service}
-            </span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">{SERVICE_LABELS[service] || service}</span>
             <div className="flex items-center gap-2">
               <ServiceStatusIcon status={serviceStatus} />
               <span
@@ -174,14 +177,10 @@ export function MaintenanceStatus(): React.ReactElement {
                   serviceStatus === "up" && "text-green-600",
                   serviceStatus === "down" && "text-red-600",
                   serviceStatus === "degraded" && "text-amber-600",
-                  serviceStatus === "unknown" && "text-gray-400"
+                  serviceStatus === "unknown" && "text-gray-400",
                 )}
               >
-                {serviceStatus === "down"
-                  ? "Maintenance"
-                  : serviceStatus === "unknown"
-                    ? "Checking..."
-                    : serviceStatus}
+                {serviceStatus === "down" ? "Maintenance" : serviceStatus === "unknown" ? "Checking..." : serviceStatus}
               </span>
             </div>
           </div>
@@ -205,15 +204,10 @@ export function MaintenanceStatus(): React.ReactElement {
               : t("redirecting", { fallback: "Redirecting you back..." })}
           </p>
           <Link
-            href={
-              typeof window !== "undefined"
-                ? new URLSearchParams(window.location.search).get("from") || "/"
-                : "/"
-            }
+            href={typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("from") || "/" : "/"}
             className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
           >
-            {typeof window !== "undefined" &&
-            new URLSearchParams(window.location.search).get("from")
+            {typeof window !== "undefined" && new URLSearchParams(window.location.search).get("from")
               ? "Go Back →"
               : "Go to Home →"}
           </Link>

@@ -3,7 +3,7 @@
  * Intercepts and beautifies all console output globally
  */
 
-import { COLORS, ANSI } from "./styles";
+import { ANSI, COLORS } from "./styles";
 
 const IS_BROWSER = typeof window !== "undefined";
 const IS_DEV = process.env.NODE_ENV !== "production";
@@ -55,41 +55,25 @@ function interceptBrowser(): void {
   console.log = (...args: unknown[]) => {
     bufferLog("log", args);
     const time = timestamp();
-    originalConsole.log(
-      `%c${time}`,
-      `color: ${COLORS.muted}; font-size: 10px;`,
-      ...formatArgs(args)
-    );
+    originalConsole.log(`%c${time}`, `color: ${COLORS.muted}; font-size: 10px;`, ...formatArgs(args));
   };
 
   console.info = (...args: unknown[]) => {
     bufferLog("info", args);
     const time = timestamp();
-    originalConsole.log(
-      `%cℹ️ ${time}`,
-      `color: ${COLORS.info}; font-weight: bold;`,
-      ...formatArgs(args)
-    );
+    originalConsole.log(`%cℹ️ ${time}`, `color: ${COLORS.info}; font-weight: bold;`, ...formatArgs(args));
   };
 
   console.warn = (...args: unknown[]) => {
     bufferLog("warn", args);
     const time = timestamp();
-    originalConsole.warn(
-      `%c⚠️ ${time}`,
-      `color: ${COLORS.warn}; font-weight: bold;`,
-      ...formatArgs(args)
-    );
+    originalConsole.warn(`%c⚠️ ${time}`, `color: ${COLORS.warn}; font-weight: bold;`, ...formatArgs(args));
   };
 
   console.error = (...args: unknown[]) => {
     bufferLog("error", args);
     const time = timestamp();
-    originalConsole.error(
-      `%c❌ ${time}`,
-      `color: ${COLORS.error}; font-weight: bold;`,
-      ...formatArgs(args)
-    );
+    originalConsole.error(`%c❌ ${time}`, `color: ${COLORS.error}; font-weight: bold;`, ...formatArgs(args));
   };
 
   console.debug = (...args: unknown[]) => {
@@ -195,7 +179,7 @@ function exportBuffer(): string {
       }),
     })),
     null,
-    2
+    2,
   );
 }
 

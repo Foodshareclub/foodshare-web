@@ -18,20 +18,12 @@ type ImageCarouselProps = {
   postType: string;
 };
 
-export function ImageCarousel({
-  images,
-  productUrl,
-  productId,
-  postName,
-  postType,
-}: ImageCarouselProps) {
+export function ImageCarousel({ images, productUrl, productId, postName, postType }: ImageCarouselProps) {
   const t = useTranslations();
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-  const validImages = [
-    ...new Set(images.filter(isValidImageUrl).map((url) => normalizeImageUrl(url) as string)),
-  ];
+  const validImages = [...new Set(images.filter(isValidImageUrl).map((url) => normalizeImageUrl(url) as string))];
   const PlaceholderIcon = postType === "food" || postType === "vegan" ? Leaf : Package;
   const placeholder = (
     <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-muted via-muted to-primary/5 text-muted-foreground">
@@ -57,9 +49,7 @@ export function ImageCarousel({
     const direction = getComputedStyle(element).direction === "rtl" ? -1 : 1;
     element.scrollTo({
       left: direction * index * element.clientWidth,
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "instant"
-        : "smooth",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
     });
     setActiveIndex(index);
   };
@@ -71,7 +61,7 @@ export function ImageCarousel({
         aria-label={postName}
         className={cn(
           LISTING_PHOTO,
-          "relative block focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-ring"
+          "relative block focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-ring",
         )}
       >
         {placeholder}
@@ -100,9 +90,7 @@ export function ImageCarousel({
             ) : (
               <Image
                 className="object-cover"
-                style={
-                  index === 0 ? { viewTransitionName: `product-hero-${productId}` } : undefined
-                }
+                style={index === 0 ? { viewTransitionName: `product-hero-${productId}` } : undefined}
                 src={image}
                 alt={postName}
                 fill

@@ -12,17 +12,11 @@ export function ChallengeContentSkeleton() {
       <Skeleton className="h-6 w-96 rounded-lg mb-8" />
       <div className="relative mb-12">
         <Skeleton className="w-64 sm:w-72 rounded-2xl" style={{ aspectRatio: "3/4" }} />
-        <div className="absolute top-2 left-1 -z-10">
-          <Skeleton
-            className="w-64 sm:w-72 rounded-2xl opacity-70"
-            style={{ aspectRatio: "3/4" }}
-          />
+        <div className="absolute top-2 start-1 -z-10">
+          <Skeleton className="w-64 sm:w-72 rounded-2xl opacity-70" style={{ aspectRatio: "3/4" }} />
         </div>
-        <div className="absolute top-4 left-2 -z-20">
-          <Skeleton
-            className="w-64 sm:w-72 rounded-2xl opacity-40"
-            style={{ aspectRatio: "3/4" }}
-          />
+        <div className="absolute top-4 start-2 -z-20">
+          <Skeleton className="w-64 sm:w-72 rounded-2xl opacity-40" style={{ aspectRatio: "3/4" }} />
         </div>
       </div>
       <div className="flex gap-4">

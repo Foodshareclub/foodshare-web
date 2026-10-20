@@ -90,10 +90,7 @@ export interface MockErrorResponse {
 /**
  * Create a successful API response matching Edge Function format
  */
-export function mockSuccess<T>(
-  data: T,
-  options: MockResponseOptions = {}
-): MockSuccessResponse<T> {
+export function mockSuccess<T>(data: T, options: MockResponseOptions = {}): MockSuccessResponse<T> {
   return {
     success: true,
     data,
@@ -108,11 +105,7 @@ export function mockSuccess<T>(
 /**
  * Create an error API response matching Edge Function format
  */
-export function mockError(
-  code: string,
-  message: string,
-  details?: unknown
-): MockErrorResponse {
+export function mockError(code: string, message: string, details?: unknown): MockErrorResponse {
   return {
     success: false,
     error: { code, message, details },

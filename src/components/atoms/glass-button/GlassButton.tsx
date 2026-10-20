@@ -1,7 +1,7 @@
-import * as React from "react";
 import { cn } from "@/lib/cn";
+import * as React from "react";
 
-import { cva, type VariantProps } from "class-variance-authority";
+import { type VariantProps, cva } from "class-variance-authority";
 
 const buttonVariantDefaults = {
   primary: "bg-primary text-primary-foreground hover:bg-primary/90",
@@ -54,16 +54,7 @@ interface GlassButtonProps extends VariantProps<typeof buttonVariants> {
 }
 
 export const GlassButton = React.memo(function GlassButton(props: GlassButtonProps) {
-  const {
-    variant,
-    size,
-    disabled,
-    loading,
-    children,
-    className,
-    "aria-label": ariaLabel,
-    ...rest
-  } = props;
+  const { variant, size, disabled, loading, children, className, "aria-label": ariaLabel, ...rest } = props;
   const classes = cn(buttonVariants({ variant, size }), className);
 
   return (
@@ -73,7 +64,7 @@ export const GlassButton = React.memo(function GlassButton(props: GlassButtonPro
       aria-label={ariaLabel || children?.toString() || "button"}
       {...rest}
     >
-      {loading ? <span className="spinner spinner-sm inline-block mr-2 animate-spin" /> : children}
+      {loading ? <span className="spinner spinner-sm inline-block me-2 animate-spin" /> : children}
     </button>
   );
 });

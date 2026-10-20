@@ -5,8 +5,8 @@
  * Provides ultra-fast marker rendering using GPU shaders
  */
 
-import { useEffect, useMemo } from "react";
 import L from "leaflet";
+import { useEffect, useMemo } from "react";
 
 interface WebGLRendererOptions {
   padding?: number;
@@ -61,14 +61,14 @@ export const useViewportCulling = () => {
       markerLat: number,
       markerLng: number,
       bounds: L.LatLngBounds,
-      buffer: number = 0.1 // 10% buffer
+      buffer = 0.1, // 10% buffer
     ): boolean => {
       const latRange = bounds.getNorth() - bounds.getSouth();
       const lngRange = bounds.getEast() - bounds.getWest();
 
       const expandedBounds = L.latLngBounds(
         [bounds.getSouth() - latRange * buffer, bounds.getWest() - lngRange * buffer],
-        [bounds.getNorth() + latRange * buffer, bounds.getEast() + lngRange * buffer]
+        [bounds.getNorth() + latRange * buffer, bounds.getEast() + lngRange * buffer],
       );
 
       return expandedBounds.contains([markerLat, markerLng]);
@@ -85,7 +85,7 @@ export const useViewportCulling = () => {
 export const useMarkerBatching = () => {
   return useMemo(() => {
     const batchMarkers = <T extends { latitude: number; longitude: number; post_type?: string }>(
-      markers: T[]
+      markers: T[],
     ): Map<string, T[]> => {
       const batches = new Map<string, T[]>();
 

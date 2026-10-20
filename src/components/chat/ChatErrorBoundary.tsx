@@ -5,9 +5,10 @@
  * Catches errors in chat components and provides graceful degradation
  */
 
-import React, { Component, type ReactNode } from "react";
-import { AlertTriangle, RefreshCw, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AlertTriangle, MessageCircle, RefreshCw } from "lucide-react";
+import type React from "react";
+import { Component, type ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -67,7 +68,7 @@ export class ChatErrorBoundary extends Component<Props, State> {
             </Button>
           </div>
           {process.env.NODE_ENV === "development" && this.state.error && (
-            <details className="mt-6 text-left w-full max-w-lg">
+            <details className="mt-6 text-start w-full max-w-lg">
               <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
                 Error details (dev only)
               </summary>

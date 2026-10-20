@@ -1,18 +1,12 @@
-import type { HistoryReducerState, HistoryAction } from "./types";
+import type { HistoryAction, HistoryReducerState } from "./types";
 
 /**
  * History reducer for undo/redo functionality
  */
-export const historyReducer = (
-  state: HistoryReducerState,
-  action: HistoryAction
-): HistoryReducerState => {
+export const historyReducer = (state: HistoryReducerState, action: HistoryAction): HistoryReducerState => {
   switch (action.type) {
     case "SET":
-      if (
-        state.present.title === action.payload.title &&
-        state.present.description === action.payload.description
-      ) {
+      if (state.present.title === action.payload.title && state.present.description === action.payload.description) {
         return state;
       }
       return {
@@ -70,7 +64,7 @@ export const calculateQualityScore = (
   images: unknown[],
   tags: string[],
   minTitleLength: number,
-  minDescriptionLength: number
+  minDescriptionLength: number,
 ): { score: number; suggestions: string[] } => {
   let score = 0;
   const suggestions: string[] = [];

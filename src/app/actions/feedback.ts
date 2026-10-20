@@ -12,12 +12,7 @@
 import { requireAdmin } from "@/lib/data/admin-check";
 import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { CACHE_TAGS } from "@/lib/data/cache-keys";
-import {
-  type ServerActionResult,
-  isPrerenderInterruption,
-  serverActionError,
-  successVoid,
-} from "@/lib/errors";
+import { type ServerActionResult, isPrerenderInterruption, serverActionError, successVoid } from "@/lib/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -74,7 +69,7 @@ async function logAuditEvent(
   action: string,
   resourceType: string,
   resourceId: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<void> {
   try {
     await supabase.rpc("log_audit_event", {
@@ -96,9 +91,7 @@ async function logAuditEvent(
 /**
  * Submit new feedback (public)
  */
-export async function submitFeedback(
-  feedback: FeedbackSubmission
-): Promise<ServerActionResult<FeedbackRecord>> {
+export async function submitFeedback(feedback: FeedbackSubmission): Promise<ServerActionResult<FeedbackRecord>> {
   try {
     // Validate input
     const validated = SubmitFeedbackSchema.safeParse(feedback);
@@ -144,9 +137,7 @@ export async function submitFeedback(
 /**
  * Get user's own feedback submissions
  */
-export async function getUserFeedback(
-  userId: string
-): Promise<ServerActionResult<FeedbackRecord[]>> {
+export async function getUserFeedback(userId: string): Promise<ServerActionResult<FeedbackRecord[]>> {
   try {
     // Validate ID
     if (!userId || !z.string().uuid().safeParse(userId).success) {
@@ -197,10 +188,7 @@ export async function getAllFeedback(): Promise<ServerActionResult<FeedbackRecor
     await requireAdmin();
     const supabase = createAdminClient();
 
-    const { data, error } = await supabase
-      .from("feedback")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("feedback").select("*").order("created_at", { ascending: false });
 
     if (error) {
       console.error("Failed to get all feedback:", error);
@@ -222,7 +210,7 @@ export async function getAllFeedback(): Promise<ServerActionResult<FeedbackRecor
  */
 export async function updateFeedbackStatus(
   feedbackId: string,
-  status: FeedbackStatus
+  status: FeedbackStatus,
 ): Promise<ServerActionResult<FeedbackRecord>> {
   try {
     // Validate inputs
@@ -337,9 +325,7 @@ export async function getCurrentUserInfo(): Promise<ServerActionResult<UserInfo 
       success: true,
       data: {
         email: user.email || null,
-        name: profile
-          ? [profile.first_name, profile.second_name].filter(Boolean).join(" ") || null
-          : null,
+        name: profile ? [profile.first_name, profile.second_name].filter(Boolean).join(" ") || null : null,
         profileId: user.id,
       },
     };

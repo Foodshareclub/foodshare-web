@@ -1,12 +1,12 @@
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import { getChallengeById } from "@/lib/data/challenges";
 import { getUser } from "@/app/actions/auth";
 import { hasAcceptedChallenge } from "@/app/actions/challenges";
-import { ChallengeDetailClient } from "./ChallengeDetailClient";
 import { Skeleton } from "@/components/ui/skeleton";
-import { generateEventJsonLd, generateBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
+import { getChallengeById } from "@/lib/data/challenges";
+import { generateBreadcrumbJsonLd, generateEventJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import { siteConfig } from "@/lib/metadata";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { ChallengeDetailClient } from "./ChallengeDetailClient";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -14,9 +14,9 @@ interface PageProps {
 
 export default async function ChallengeDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const challengeId = parseInt(id, 10);
+  const challengeId = Number.parseInt(id, 10);
 
-  if (isNaN(challengeId)) {
+  if (Number.isNaN(challengeId)) {
     notFound();
   }
 
@@ -52,10 +52,12 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
     <>
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD needs a raw script tag; safeJsonLdStringify escapes angle brackets and ampersands so a script-tag breakout is impossible
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(eventJsonLd) }}
       />
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD needs a raw script tag; safeJsonLdStringify escapes angle brackets and ampersands so a script-tag breakout is impossible
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
       />
       <Suspense fallback={<ChallengeDetailSkeleton />}>
@@ -67,9 +69,9 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
 
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params;
-  const challengeId = parseInt(id, 10);
+  const challengeId = Number.parseInt(id, 10);
 
-  if (isNaN(challengeId)) {
+  if (Number.isNaN(challengeId)) {
     return { title: "Challenge Not Found" };
   }
 
@@ -80,8 +82,7 @@ export async function generateMetadata({ params }: PageProps) {
   }
 
   const title = challenge.challenge_title || "Community Challenge";
-  const description =
-    challenge.challenge_description?.slice(0, 160) || "Join this challenge on FoodShare";
+  const description = challenge.challenge_description?.slice(0, 160) || "Join this challenge on FoodShare";
   const pageUrl = `${siteConfig.url}/challenge/${challengeId}`;
   const imageUrl = challenge.challenge_image || siteConfig.ogImage;
 

@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { initLogger } from '@/lib/logger';
-import { LogViewer } from './LogViewer';
+import { initLogger } from "@/lib/logger";
+import { useEffect } from "react";
+import { LogViewer } from "./LogViewer";
 
 interface DevToolsProps {
   /** Show the floating log viewer */
   showLogViewer?: boolean;
   /** Position of the log viewer */
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  position?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
   /** App version to display */
   version?: string;
 }
@@ -17,11 +17,7 @@ interface DevToolsProps {
  * DevTools component - includes logger initialization and dev UI
  * Only renders in development mode
  */
-export function DevTools({ 
-  showLogViewer = true, 
-  position = 'bottom-right',
-  version,
-}: DevToolsProps) {
+export function DevTools({ showLogViewer = true, position = "bottom-right", version }: DevToolsProps) {
   useEffect(() => {
     // Initialize logger on mount
     initLogger({
@@ -33,15 +29,11 @@ export function DevTools({
   }, [version]);
 
   // Only render in development
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     return null;
   }
 
-  return (
-    <>
-      {showLogViewer && <LogViewer position={position} />}
-    </>
-  );
+  return <>{showLogViewer && <LogViewer position={position} />}</>;
 }
 
 export default DevTools;

@@ -62,7 +62,12 @@ const coordinateString = (min: number, max: number) =>
   );
 
 export const listQuerySchema = z.object({
-  mode: z.enum(["feed"]).optional(),
+  mode: z.enum(["feed", "search"]).optional(),
+  q: z.string().max(200).optional(),
+  sortBy: z.enum(["distance", "newest", "oldest", "popular"]).optional(),
+  availableOnly: z.enum(["true", "false"]).optional(),
+  arrangedOnly: z.enum(["true", "false"]).optional(),
+  offset: z.string().regex(/^\d+$/).optional(),
   id: z.string().optional(),
   include: z.string().optional(), // e.g., "owner,related"
   postType: z.enum([
@@ -95,6 +100,26 @@ export const listQuerySchema = z.object({
     message: "Nearby cursor must be a non-negative offset",
   },
 );
+
+// Search is intentionally strict: unsupported filters must not silently disappear.
+export const listingSearchQuerySchema = z.object({
+  mode: z.literal("search"),
+  q: z.string().trim().max(200).optional(),
+  lat: coordinateString(-90, 90),
+  lng: coordinateString(-180, 180),
+  radiusKm: coordinateString(0.1, 100),
+  categoryId: z.string().regex(/^[1-9]\d*$/).optional(),
+  postType: postTypeSchema.optional(),
+  availableOnly: z.enum(["true", "false"]).default("true"),
+  arrangedOnly: z.enum(["true", "false"]).default("false"),
+  sortBy: z.enum(["distance", "newest", "oldest", "popular"]).default("distance"),
+  limit: z.string().regex(/^[1-9]\d*$/).refine((v) => Number(v) <= 100).default("50"),
+  offset: z.string().regex(/^\d+$/).refine((v) => Number.isSafeInteger(Number(v))).default("0"),
+}).strict().refine((q) => q.availableOnly !== "true" || q.arrangedOnly !== "true", {
+  message: "Available-only and arranged-only cannot both be selected",
+});
+
+export type ListingSearchQuery = z.infer<typeof listingSearchQuerySchema>;
 
 export type CreateProductBody = z.infer<typeof createProductSchema>;
 export type UpdateProductBody = z.infer<typeof updateProductSchema>;

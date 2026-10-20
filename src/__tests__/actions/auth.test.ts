@@ -1,9 +1,10 @@
+/* oxlint-disable unicorn/no-thenable -- Supabase query builder mocks must be thenable. */
 /**
  * Auth Server Actions Tests
  * Unit tests for authentication server actions
  */
 
-import { mock, describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 
 // Isolated local mock state to prevent race conditions with other test files
 const mockState = {
@@ -34,21 +35,38 @@ mock.module("next/navigation", () => ({
 }));
 
 // Helper to create query chain for Supabase mocks
-const createQueryChain = (tableName?: string) => {
-  const isUserRoles = tableName === "user_roles";
-  const getResult = () => Promise.resolve({
-    data: isUserRoles ? mockState.userRoles : mockState.profile,
-    error: mockState.dbError,
-  });
+type ChainQueryResult = {
+  data: typeof mockState.userRoles | typeof mockState.profile;
+  error: typeof mockState.dbError;
+};
 
-  const chain: any = {
+interface MockQueryChain {
+  eq: () => MockQueryChain;
+  in: () => MockQueryChain;
+  single: () => Promise<ChainQueryResult>;
+  maybeSingle: () => Promise<ChainQueryResult>;
+  then: (
+    onfulfilled?: ((value: ChainQueryResult) => unknown) | null,
+    onrejected?: ((reason: unknown) => unknown) | null,
+  ) => Promise<unknown>;
+  catch: (onrejected?: ((reason: unknown) => unknown) | null) => Promise<unknown>;
+}
+
+const createQueryChain = (tableName?: string): MockQueryChain => {
+  const isUserRoles = tableName === "user_roles";
+  const getResult = () =>
+    Promise.resolve({
+      data: isUserRoles ? mockState.userRoles : mockState.profile,
+      error: mockState.dbError,
+    });
+
+  const chain: MockQueryChain = {
     eq: mock(() => chain),
     in: mock(() => chain),
     single: mock(getResult),
     maybeSingle: mock(getResult),
-    // eslint-disable-next-line unicorn/no-thenable
-    then: (onfulfilled?: any, onrejected?: any) => getResult().then(onfulfilled, onrejected),
-    catch: (onrejected?: any) => getResult().catch(onrejected),
+    then: (onfulfilled, onrejected) => getResult().then(onfulfilled, onrejected),
+    catch: (onrejected) => getResult().catch(onrejected),
   };
   return chain;
 };
@@ -62,44 +80,44 @@ mock.module("@/lib/supabase/server", () => ({
           Promise.resolve({
             data: { session: mockState.session },
             error: mockState.authError,
-          })
+          }),
         ),
         getUser: mock(() =>
           Promise.resolve({
             data: { user: mockState.user },
             error: mockState.authError,
-          })
+          }),
         ),
         signInWithPassword: mock(() =>
           Promise.resolve({
             data: { user: mockState.user, session: mockState.session },
             error: mockState.authError,
-          })
+          }),
         ),
         signUp: mock(() =>
           Promise.resolve({
             data: { user: mockState.user, session: mockState.session },
             error: mockState.authError,
-          })
+          }),
         ),
         signOut: mock(() => Promise.resolve({ error: mockState.authError })),
         resetPasswordForEmail: mock(() =>
           Promise.resolve({
             data: {},
             error: mockState.authError,
-          })
+          }),
         ),
         updateUser: mock(() =>
           Promise.resolve({
             data: { user: mockState.user },
             error: mockState.authError,
-          })
+          }),
         ),
         signInWithOAuth: mock(() =>
           Promise.resolve({
             data: { url: "https://oauth.example.com/authorize" },
             error: mockState.authError,
-          })
+          }),
         ),
       },
       from: (tableName: string) => ({
@@ -121,8 +139,7 @@ mock.module("@/lib/supabase/server", () => ({
   }),
   createCachedClient: mock(() => {
     return Promise.resolve({
-      from: mock(() => ({
-      })),
+      from: mock(() => ({})),
     });
   }),
   createServerClient: mock(() => Promise.resolve({})),
@@ -159,15 +176,15 @@ mock.module("@/lib/supabase/admin", () => ({
 
 // Import actions after mocks
 import {
+  checkUserIsAdmin,
+  getOAuthSignInUrl,
   getSession,
   getUser,
-  checkUserIsAdmin,
-  signInWithPassword,
-  signUp,
-  signOut,
   resetPassword,
+  signInWithPassword,
+  signOut,
+  signUp,
   updatePassword,
-  getOAuthSignInUrl,
 } from "@/app/actions/auth";
 
 describe("Auth Server Actions", () => {
@@ -308,7 +325,12 @@ describe("Auth Server Actions", () => {
       expect(result).toEqual({ success: true });
     });
 
-    it("should return error on invalid credentials", async () => {
+    it("returns a code, not Supabase's sentence", async () => {
+      // The contract changed deliberately. `error` was `error.message` — English,
+      // from a third party, on the response body — and it was rendered verbatim in
+      // all 21 locales. It is now a catalogue-resolvable code, so the assertion
+      // names the *code*: if this ever returns the raw sentence again, it fails
+      // on the difference rather than passing on `toBeDefined()`.
       mockState.authError = { message: "Invalid login credentials" };
 
       const formData = new FormData();
@@ -318,7 +340,17 @@ describe("Auth Server Actions", () => {
       const result = await signInWithPassword(formData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Invalid login credentials");
+      expect(result.error).toBe("invalidCredentials");
+    });
+
+    it("does not put the Supabase message anywhere in the result", async () => {
+      mockState.authError = { message: "Invalid login credentials" };
+      const formData = new FormData();
+      formData.append("email", "test@example.com");
+      formData.append("password", "wrong");
+
+      const result = await signInWithPassword(formData);
+      expect(JSON.stringify(result)).not.toContain("Invalid login credentials");
     });
   });
 
@@ -351,7 +383,7 @@ describe("Auth Server Actions", () => {
       const result = await signUp(formData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("User already registered");
+      expect(result.error).toBe("emailExists");
     });
   });
 
@@ -382,13 +414,18 @@ describe("Auth Server Actions", () => {
       expect(result.success).toBe(true);
     });
 
-    it("should return error when email not found", async () => {
+    it("maps an unmapped Supabase message to `unknown` rather than passing it on", async () => {
+      // "User not found" is not in the mapping table. It used to be handed to the
+      // client verbatim; the only safe answer for an unrecognised message is a
+      // code that resolves to generic copy, because an unrecognised message is by
+      // definition a message nobody has reviewed for display.
       mockState.authError = { message: "User not found" };
 
       const result = await resetPassword("nonexistent@example.com");
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("User not found");
+      expect(result.error).toBe("unknown");
+      expect(JSON.stringify(result)).not.toContain("User not found");
     });
   });
 
@@ -414,8 +451,9 @@ describe("Auth Server Actions", () => {
 
       const result = await updatePassword(formData);
 
+      // A zod message is a code for the same reason a Supabase message is.
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Password must be at least 8 characters");
+      expect(result.error).toBe("weakPassword");
     });
   });
 
@@ -430,15 +468,26 @@ describe("Auth Server Actions", () => {
       expect(result).toEqual({ url: "https://oauth.example.com/authorize" });
     });
 
-    it("should return error on OAuth failure", async () => {
+    it("returns a code, and no provider name in English", async () => {
+      // This built `"GitHub sign-in is not configured yet. Please use
+      // email/password or magic link."` on the server and sent it to the browser.
+      // The provider's name is now interpolated by the caller, from its own
+      // translated label, so the sentence around it can be translated.
       mockState.authError = { message: "OAuth provider not configured" };
 
       const result = await getOAuthSignInUrl("github");
 
-      expect(result).toEqual({
-        url: null,
-        error: "OAuth provider not configured",
-      });
+      expect(result.url).toBeNull();
+      expect(result.code).toBe("unknown");
+      expect(JSON.stringify(result)).not.toContain("sign-in");
+    });
+
+    it("maps a missing OAuth secret to `providerNotConfigured`", async () => {
+      mockState.authError = { message: "missing OAuth secret" };
+
+      const result = await getOAuthSignInUrl("github");
+
+      expect(result.code).toBe("providerNotConfigured");
     });
   });
 });

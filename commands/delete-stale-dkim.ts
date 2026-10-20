@@ -1,4 +1,4 @@
-import path from "path";
+import path from "bun:path";
 import * as dotenv from "dotenv";
 
 // Load environment variables
@@ -43,7 +43,7 @@ async function deleteStaleRecord() {
           Authorization: `Bearer ${TOKEN}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     const listResult = (await listResponse.json()) as CloudflareListResponse;
@@ -65,7 +65,7 @@ async function deleteStaleRecord() {
               Authorization: `Bearer ${TOKEN}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         const deleteResult = (await deleteResponse.json()) as CloudflareDeleteResponse;

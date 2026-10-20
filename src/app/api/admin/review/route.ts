@@ -1,6 +1,6 @@
-import { NextRequest } from "next/server";
+import { handleError, ok } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
-import { ok, handleError } from "@/lib/api";
+import type { NextRequest } from "next/server";
 import { requireAdmin } from "../_shared/requireAdmin";
 
 export async function POST(request: NextRequest) {
@@ -21,8 +21,7 @@ export async function POST(request: NextRequest) {
     if (!owner?.includes("/")) return handleError("Invalid owner format (expected owner)");
     if (!repo?.includes("/")) return handleError("Invalid repo format (expected owner/repo)");
     if (!Number.isInteger(pr_number) || pr_number <= 0) return handleError("Invalid pr_number");
-    if (depth && !["quick", "standard", "deep"].includes(depth))
-      return handleError("Invalid depth");
+    if (depth && !["quick", "standard", "deep"].includes(depth)) return handleError("Invalid depth");
     const fullName = `${owner}/${repo}`;
 
     const supabase = await createClient();

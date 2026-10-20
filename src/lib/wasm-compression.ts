@@ -25,7 +25,7 @@ function toUint8Array(input: Uint8Array | string): Uint8Array {
 /**
  * Compress raw binary or string data using Brotli (quality 0-11, default 4).
  */
-export function compressBrotli(data: Uint8Array | string, quality: number = 4): Uint8Array {
+export function compressBrotli(data: Uint8Array | string, quality = 4): Uint8Array {
   const bytes = toUint8Array(data);
   return WasmCompression.brotli_compress(bytes, quality);
 }
@@ -48,7 +48,7 @@ export function decompressBrotliString(data: Uint8Array): string {
 /**
  * Compress raw binary or string data using Gzip (level 0-9, default 6).
  */
-export function compressGzip(data: Uint8Array | string, level: number = 6): Uint8Array {
+export function compressGzip(data: Uint8Array | string, level = 6): Uint8Array {
   const bytes = toUint8Array(data);
   return WasmCompression.gzip_compress(bytes, level);
 }

@@ -4,9 +4,9 @@
  * Note: INP (Interaction to Next Paint) replaced FID in web-vitals v3+
  */
 
+import { createLogger } from "@/lib/logger";
 // Dynamic import to avoid build-time errors with web-vitals API changes
 import type { Metric } from "web-vitals";
-import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("WebVitals");
 

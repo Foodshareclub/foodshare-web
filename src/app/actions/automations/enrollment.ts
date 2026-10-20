@@ -5,10 +5,10 @@
  * Enroll and exit users from automation flows
  */
 
-import { z } from "zod";
-import { success, error, type ActionResult } from "./types";
-import { requireAuth, logAuditEvent, invalidateAutomationCache } from "./helpers";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
+import { invalidateAutomationCache, logAuditEvent, requireAuth } from "./helpers";
+import { type ActionResult, error, success } from "./types";
 
 // ============================================================================
 // Enrollment Management
@@ -16,7 +16,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function enrollUserInAutomation(
   flowId: string,
-  profileId: string
+  profileId: string,
 ): Promise<ActionResult<{ enrollmentId: string }>> {
   try {
     if (!flowId || !z.string().uuid().safeParse(flowId).success) {
@@ -78,7 +78,7 @@ export async function enrollUserInAutomation(
 
 export async function exitUserFromAutomation(
   enrollmentId: string,
-  reason?: string
+  reason?: string,
 ): Promise<ActionResult<{ id: string }>> {
   try {
     if (!enrollmentId || !z.string().uuid().safeParse(enrollmentId).success) {

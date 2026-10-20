@@ -3,7 +3,7 @@
  * Track and visualize performance metrics
  */
 
-import { COLORS, ANSI } from "./styles";
+import { ANSI, COLORS } from "./styles";
 
 const IS_BROWSER = typeof window !== "undefined";
 
@@ -185,14 +185,11 @@ class Profiler {
     const report = this.getReport();
 
     if (IS_BROWSER) {
-      console.group(
-        "%c📊 Performance Profile",
-        `color: ${COLORS.purple}; font-weight: bold; font-size: 14px;`
-      );
+      console.group("%c📊 Performance Profile", `color: ${COLORS.purple}; font-weight: bold; font-size: 14px;`);
 
       console.log(
         `%cTotal Duration: ${report.totalDuration.toFixed(2)}ms`,
-        `color: ${COLORS.cyan}; font-weight: bold;`
+        `color: ${COLORS.cyan}; font-weight: bold;`,
       );
       console.log("");
 
@@ -216,16 +213,14 @@ class Profiler {
       console.groupEnd();
     } else {
       console.log(`\n${ANSI.magenta}${ANSI.bold}📊 Performance Profile${ANSI.reset}`);
-      console.log(
-        `${ANSI.cyan}Total Duration: ${report.totalDuration.toFixed(2)}ms${ANSI.reset}\n`
-      );
+      console.log(`${ANSI.cyan}Total Duration: ${report.totalDuration.toFixed(2)}ms${ANSI.reset}\n`);
 
       // Print entries
       report.entries.forEach((e) => {
         const bar = "█".repeat(Math.round(e.percentage / 5));
         const color = e.percentage > 50 ? ANSI.red : e.percentage > 20 ? ANSI.yellow : ANSI.green;
         console.log(
-          `${color}${bar.padEnd(20)}${ANSI.reset} ${e.name.padEnd(30)} ${e.duration.toFixed(2).padStart(10)}ms (${e.percentage.toFixed(1)}%) x${e.calls}`
+          `${color}${bar.padEnd(20)}${ANSI.reset} ${e.name.padEnd(30)} ${e.duration.toFixed(2).padStart(10)}ms (${e.percentage.toFixed(1)}%) x${e.calls}`,
         );
       });
       console.log("");
@@ -241,14 +236,13 @@ class Profiler {
     entries.slice(0, 10).forEach((entry) => {
       const width = Math.round((entry.duration / total) * barWidth);
       const bar = "█".repeat(width);
-      const color =
-        entry.percentage > 50 ? COLORS.error : entry.percentage > 20 ? COLORS.warn : COLORS.success;
+      const color = entry.percentage > 50 ? COLORS.error : entry.percentage > 20 ? COLORS.warn : COLORS.success;
 
       console.log(
         `%c${bar.padEnd(barWidth)} %c${entry.name} %c${entry.duration.toFixed(1)}ms`,
         `color: ${color};`,
         `color: ${COLORS.dark}; font-weight: 600;`,
-        `color: ${COLORS.muted};`
+        `color: ${COLORS.muted};`,
       );
     });
   }
@@ -276,28 +270,20 @@ class Profiler {
       const prefix = isLast ? "└─" : "├─";
       const duration = entry.duration?.toFixed(2) || "?";
       const color =
-        (entry.duration || 0) > 100
-          ? COLORS.error
-          : (entry.duration || 0) > 50
-            ? COLORS.warn
-            : COLORS.success;
+        (entry.duration || 0) > 100 ? COLORS.error : (entry.duration || 0) > 50 ? COLORS.warn : COLORS.success;
 
       if (IS_BROWSER) {
         console.log(
           `%c${indent}${prefix} %c${entry.name} %c${duration}ms`,
           `color: ${COLORS.muted};`,
           `color: ${COLORS.purple}; font-weight: 600;`,
-          `color: ${color};`
+          `color: ${color};`,
         );
       } else {
         const ansiColor =
-          (entry.duration || 0) > 100
-            ? ANSI.red
-            : (entry.duration || 0) > 50
-              ? ANSI.yellow
-              : ANSI.green;
+          (entry.duration || 0) > 100 ? ANSI.red : (entry.duration || 0) > 50 ? ANSI.yellow : ANSI.green;
         console.log(
-          `${ANSI.gray}${indent}${prefix}${ANSI.reset} ${ANSI.magenta}${entry.name}${ANSI.reset} ${ansiColor}${duration}ms${ANSI.reset}`
+          `${ANSI.gray}${indent}${prefix}${ANSI.reset} ${ANSI.magenta}${entry.name}${ANSI.reset} ${ansiColor}${duration}ms${ANSI.reset}`,
         );
       }
 

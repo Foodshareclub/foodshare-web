@@ -1,1 +1,1 @@
-export { ReportPostDialog } from './ReportPostDialog';
+export { ReportPostDialog } from "./ReportPostDialog";

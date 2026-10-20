@@ -1,10 +1,10 @@
-import { describe, it, expect, mock, beforeAll, afterEach } from "bun:test";
-import React from "react";
-import { render, screen, cleanup } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { GlobalRegistrator } from "@happy-dom/global-registrator";
+import { afterEach, beforeAll, describe, expect, it, mock } from "bun:test";
 import { CardDeck } from "@/components/modals/challenge-reveal/CardDeck";
 import type { InitialProductStateType } from "@/types/product.types";
+import { GlobalRegistrator } from "@happy-dom/global-registrator";
+import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import type React from "react";
 
 // Setup DOM for bun test
 beforeAll(() => {
@@ -19,53 +19,74 @@ afterEach(() => {
 
 // We need to mock next/image because it throws an invalid URL error in happy-dom
 mock.module("next/image", () => ({
-  default: ({ src, alt, ...props }: any) => <img src={src} alt={alt} {...props} />,
+  // biome-ignore lint/a11y/useAltText: the mock forwards the caller-supplied alt text.
+  default: ({ src, alt, ...props }: React.ComponentProps<"img">) => <img src={src} alt={alt} {...props} />,
 }));
 
 // We need to mock framer-motion to simplify testing components that use it heavily
 mock.module("framer-motion", () => {
   const React = require("react");
-  const AnimatePresence = ({ children }: any) => <>{children}</>;
+  const AnimatePresence = ({ children }: { children?: React.ReactNode }) => <>{children}</>;
+  const MotionDiv = React.forwardRef(
+    (
+      {
+        children,
+        _animate,
+        _initial,
+        _exit,
+        _variants,
+        _style,
+        _onMouseEnter,
+        _onMouseLeave,
+        _onClick,
+        _onKeyDown,
+        _whileHover,
+        _whileTap,
+        _drag,
+        _dragConstraints,
+        _dragElastic,
+        _onDragEnd,
+        ...props
+      }: { children?: React.ReactNode } & Record<string, unknown>,
+      ref: React.Ref<HTMLDivElement>,
+    ) => (
+      <div ref={ref} {...(props as React.HTMLAttributes<HTMLDivElement>)}>
+        {children}
+      </div>
+    ),
+  );
+  MotionDiv.displayName = "MotionDiv";
+  const MotionButton = React.forwardRef(
+    (
+      {
+        children,
+        _animate,
+        _initial,
+        _exit,
+        _variants,
+        _whileHover,
+        _whileTap,
+        ...props
+      }: { children?: React.ReactNode } & Record<string, unknown>,
+      ref: React.Ref<HTMLButtonElement>,
+    ) => (
+      <button ref={ref} {...(props as React.HTMLAttributes<HTMLButtonElement>)}>
+        {children}
+      </button>
+    ),
+  );
+  MotionButton.displayName = "MotionButton";
+  const MotionImg = React.forwardRef(
+    ({ _children, alt, ...props }: { alt?: string } & Record<string, unknown>, ref: React.Ref<HTMLImageElement>) => (
+      // biome-ignore lint/a11y/useAltText: the mock forwards the caller-supplied alt text.
+      <img ref={ref} alt={alt ?? ""} {...(props as React.ImgHTMLAttributes<HTMLImageElement>)} />
+    ),
+  );
+  MotionImg.displayName = "MotionImg";
   const motion = {
-    div: React.forwardRef(
-      (
-        {
-          children,
-          _animate,
-          _initial,
-          _exit,
-          _variants,
-          _style,
-          _onMouseEnter,
-          _onMouseLeave,
-          _onClick,
-          _onKeyDown,
-          _whileHover,
-          _whileTap,
-          _drag,
-          _dragConstraints,
-          _dragElastic,
-          _onDragEnd,
-          ...props
-        }: any,
-        ref: any
-      ) => (
-        <div ref={ref} {...props}>
-          {children}
-        </div>
-      )
-    ),
-    button: React.forwardRef(
-      (
-        { children, _animate, _initial, _exit, _variants, _whileHover, _whileTap, ...props }: any,
-        ref: any
-      ) => (
-        <button ref={ref} {...props}>
-          {children}
-        </button>
-      )
-    ),
-    img: React.forwardRef(({ _children, ...props }: any, ref: any) => <img ref={ref} {...props} />),
+    div: MotionDiv,
+    button: MotionButton,
+    img: MotionImg,
   };
   const createMotionValue = () => ({
     get: () => 0,
@@ -105,13 +126,7 @@ describe("CardDeck Interactions", () => {
     const user = userEvent.setup();
     const onAcceptMock = mock(() => {});
 
-    render(
-      <CardDeck
-        challenges={mockChallenges}
-        activeChallenge={mockChallenges[0]}
-        onAccept={onAcceptMock}
-      />
-    );
+    render(<CardDeck challenges={mockChallenges} activeChallenge={mockChallenges[0]} onAccept={onAcceptMock} />);
 
     const acceptButton = screen.getByLabelText("Accept challenge");
     await user.click(acceptButton);
@@ -129,9 +144,7 @@ describe("CardDeck Interactions", () => {
 
   it("shows empty state when all challenges are consumed", async () => {
     const user = userEvent.setup();
-    render(
-      <CardDeck challenges={mockChallenges.slice(0, 1)} activeChallenge={mockChallenges[0]} />
-    );
+    render(<CardDeck challenges={mockChallenges.slice(0, 1)} activeChallenge={mockChallenges[0]} />);
 
     const skipButton = screen.getByLabelText("Skip challenge");
     await user.click(skipButton);

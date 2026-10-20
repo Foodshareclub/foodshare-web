@@ -7,7 +7,7 @@ const updateProduct = mock(
   async (_id: number, _form: FormData): Promise<ActionResult<undefined>> => ({
     success: true,
     data: undefined,
-  })
+  }),
 );
 const updateRoom = mock(async (_id: string, _form: FormData) => ({
   success: true,
@@ -50,17 +50,10 @@ describe("handover confirmation", () => {
       error: { code: "CONFLICT", message: "This listing changed. Reload before confirming." },
     }));
     const view = render(
-      <OneProduct
-        product={product}
-        buttonValue="approval pending"
-        roomId="room-1"
-        requesterId="requester-1"
-      />
+      <OneProduct product={product} buttonValue="approval pending" roomId="room-1" requesterId="requester-1" />,
     );
     fireEvent.click(view.getByRole("button", { name: "approval pending" }));
-    await waitFor(() =>
-      expect(view.getByRole("alert").textContent).toContain("This listing changed")
-    );
+    await waitFor(() => expect(view.getByRole("alert").textContent).toContain("This listing changed"));
     expect(updateProduct).toHaveBeenCalledTimes(1);
     const [id, form] = updateProduct.mock.calls[0];
     expect(id).toBe(42);
@@ -77,15 +70,10 @@ describe("handover confirmation", () => {
       () =>
         new Promise((resolve) => {
           completeUpdate = resolve;
-        })
+        }),
     );
     const view = render(
-      <OneProduct
-        product={product}
-        buttonValue="approval pending"
-        roomId="room-1"
-        requesterId="requester-1"
-      />
+      <OneProduct product={product} buttonValue="approval pending" roomId="room-1" requesterId="requester-1" />,
     );
     const button = view.getByRole("button", { name: "approval pending" });
     fireEvent.click(button);

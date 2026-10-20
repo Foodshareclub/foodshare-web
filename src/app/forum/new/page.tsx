@@ -1,13 +1,13 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import type { ForumCategory } from "@/api/forumAPI";
 import { CreatePostForm } from "@/components/forum/CreatePostForm";
 import { BackButton } from "@/components/navigation/BackButton";
-import type { ForumCategory } from "@/api/forumAPI";
 import { generateNoIndexMetadata } from "@/lib/metadata";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
 export const metadata = generateNoIndexMetadata(
   "Create Forum Post",
-  "Share your thoughts with the FoodShare community"
+  "Share your thoughts with the FoodShare community",
 );
 
 async function getCategories(): Promise<ForumCategory[]> {

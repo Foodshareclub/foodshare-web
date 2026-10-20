@@ -3,8 +3,9 @@
  * Server-side data fetching for admin user management
  */
 
-import {} from "@/lib/supabase/server";
+import { escapeFilterValue } from "@/lib/strings";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {} from "@/lib/supabase/server";
 import { requireAdmin } from "./admin-check";
 
 // ============================================================================
@@ -61,15 +62,7 @@ export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<Adm
   await requireAdmin();
   const supabase = createAdminClient();
 
-  const {
-    search,
-    role,
-    isActive,
-    page = 1,
-    limit = 20,
-    sortBy = "created_time",
-    sortOrder = "desc",
-  } = filters;
+  const { search, role, isActive, page = 1, limit = 20, sortBy = "created_time", sortOrder = "desc" } = filters;
 
   const offset = (page - 1) * limit;
 
@@ -87,19 +80,34 @@ export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<Adm
       last_seen_at,
       user_roles(roles(name))
     `,
-    { count: "exact" }
+    { count: "exact" },
   );
 
-  // Apply search filter
+  // Apply search filter.
+  // Escaped, because `.or()` takes a raw PostgREST filter expression: an
+  // unescaped value containing a comma or a parenthesis changes the
+  // expression rather than searching for it. `getAdminListings` already
+  // escapes its equivalent; this one did not.
   if (search?.trim()) {
-    query = query.or(
-      `first_name.ilike.%${search}%,second_name.ilike.%${search}%,email.ilike.%${search}%`
-    );
+    const safe = escapeFilterValue(search.trim());
+    query = query.or(`first_name.ilike.%${safe}%,second_name.ilike.%${safe}%,email.ilike.%${safe}%`);
   }
 
   // Apply active filter
   if (isActive !== undefined) {
     query = query.eq("is_active", isActive);
+  }
+
+  // Role filter, in the query rather than after it.
+  //
+  // Filtering the page in JS meant the role predicate never affected which
+  // rows were fetched: an admin filtering `?role=admin` got whichever 20
+  // users that page happened to contain, filtered down to zero, while
+  // `total` still counted the unfiltered table. The list was empty and the
+  // pager still claimed twelve pages of admins. `user_roles!inner` makes the
+  // role both a filter and a join condition, so the count and the rows agree.
+  if (role && role !== "all") {
+    query = query.eq("user_roles.roles.name", role);
   }
 
   // Apply sorting
@@ -115,8 +123,7 @@ export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<Adm
   // Transform data to extract roles from user_roles join
   const users: AdminUserProfile[] = (data ?? []).map((user) => {
     // Supabase returns user_roles as array with nested roles object
-    const userRoles =
-      (user.user_roles as unknown as Array<{ roles: { name: string } | null }>) ?? [];
+    const userRoles = (user.user_roles as unknown as Array<{ roles: { name: string } | null }>) ?? [];
     const roles = userRoles.map((ur) => ur.roles?.name).filter((name): name is string => !!name);
 
     return {
@@ -133,14 +140,8 @@ export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<Adm
     };
   });
 
-  // Filter by role if specified (post-query filtering)
-  let filteredUsers = users;
-  if (role && role !== "all") {
-    filteredUsers = users.filter((u) => u.roles?.includes(role));
-  }
-
   return {
-    users: filteredUsers,
+    users,
     total: count ?? 0,
     page,
     totalPages: Math.ceil((count ?? 0) / limit),
@@ -174,7 +175,7 @@ export async function getAdminUserById(id: string): Promise<AdminUserProfile | n
       is_verified,
       created_time,
       last_seen_at
-    `
+    `,
     )
     .eq("id", id)
     .single();
@@ -196,26 +197,21 @@ export async function getUserStats(): Promise<UserStats> {
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-  const [
-    { count: total },
-    { count: active },
-    { count: verified },
-    { count: admins },
-    { count: newThisWeek },
-  ] = await Promise.all([
-    supabase.from("profiles").select("*", { count: "exact", head: true }),
-    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_active", true),
-    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_verified", true),
-    // Count admins from user_roles table by joining with roles
-    supabase
-      .from("user_roles")
-      .select("*, roles!inner(name)", { count: "exact", head: true })
-      .eq("roles.name", "admin"),
-    supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true })
-      .gte("created_time", oneWeekAgo.toISOString()),
-  ]);
+  const [{ count: total }, { count: active }, { count: verified }, { count: admins }, { count: newThisWeek }] =
+    await Promise.all([
+      supabase.from("profiles").select("*", { count: "exact", head: true }),
+      supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_active", true),
+      supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_verified", true),
+      // Count admins from user_roles table by joining with roles
+      supabase
+        .from("user_roles")
+        .select("*, roles!inner(name)", { count: "exact", head: true })
+        .eq("roles.name", "admin"),
+      supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .gte("created_time", oneWeekAgo.toISOString()),
+    ]);
 
   return {
     total: total ?? 0,

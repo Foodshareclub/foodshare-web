@@ -13,12 +13,13 @@
  * - Better admin experience
  */
 
-import { useEffect, useCallback, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
+import type { TimerHandle } from "@/types/timer.types";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ConnectionStatus } from "../useRealtimeSubscription";
 import { emailCRMKeys } from "./useEmailCRM";
-import { createClient } from "@/lib/supabase/client";
 
 interface UseEmailCRMRealtimeOptions {
   /** Whether realtime is enabled (default: true) */
@@ -71,7 +72,7 @@ export function useEmailCRMRealtime({
   const queryClient = useQueryClient();
   const channelRef = useRef<RealtimeChannel | null>(null);
   const reconnectAttempts = useRef(0);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<TimerHandle | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
   const subscribeRef = useRef<() => void>(undefined);
 
@@ -81,7 +82,7 @@ export function useEmailCRMRealtime({
       setConnectionStatus(status);
       onStatusChange?.(status);
     },
-    [onStatusChange]
+    [onStatusChange],
   );
 
   // Cleanup channel
@@ -108,7 +109,7 @@ export function useEmailCRMRealtime({
         }
       }
     },
-    [queryClient]
+    [queryClient],
   );
 
   // Subscribe to all email tables
@@ -132,7 +133,7 @@ export function useEmailCRMRealtime({
         (payload) => {
           // Invalidate relevant queries when data changes
           handleTableChange(payload.table);
-        }
+        },
       );
     }
 
@@ -145,7 +146,7 @@ export function useEmailCRMRealtime({
         updateStatus("reconnecting");
 
         if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
-          const delay = Math.min(BASE_DELAY * Math.pow(2, reconnectAttempts.current), MAX_DELAY);
+          const delay = Math.min(BASE_DELAY * 2 ** reconnectAttempts.current, MAX_DELAY);
           reconnectAttempts.current++;
 
           reconnectTimeoutRef.current = setTimeout(() => {

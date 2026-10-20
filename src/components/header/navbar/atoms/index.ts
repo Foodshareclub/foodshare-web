@@ -14,5 +14,8 @@ export type { IconButtonProps } from "./IconButton";
 export { MenuItem } from "./MenuItem";
 export type { MenuItemProps } from "./MenuItem";
 
+export { DropdownMenuEntry } from "./DropdownMenuEntry";
+export type { DropdownMenuEntryProps } from "./DropdownMenuEntry";
+
 export { CategoryItem } from "./CategoryItem";
 export type { CategoryItemProps } from "./CategoryItem";

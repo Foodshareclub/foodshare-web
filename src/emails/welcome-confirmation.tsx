@@ -5,15 +5,8 @@
  * Uses Supabase Auth's {{ .ConfirmationURL }} template variable.
  */
 
-import { Text, Section } from "@react-email/components";
-import {
-  EmailLayout,
-  EmailCard,
-  EmailButton,
-  EmailInfoBox,
-  colors,
-  styles,
-} from "./components/base";
+import { Section, Text } from "@react-email/components";
+import { EmailButton, EmailCard, EmailInfoBox, EmailLayout, colors, styles } from "./components/base";
 
 interface WelcomeConfirmationEmailProps {
   confirmationUrl?: string;
@@ -32,13 +25,11 @@ export function WelcomeConfirmationEmail({
     >
       <EmailCard>
         <Text style={styles.paragraph}>
-          Thanks for signing up for{" "}
-          <strong style={{ color: colors.primary, fontWeight: 700 }}>Foodshare</strong>! 🥗
+          Thanks for signing up for <strong style={{ color: colors.primary, fontWeight: 700 }}>Foodshare</strong>! 🥗
         </Text>
         <Text style={styles.paragraph}>
-          We&apos;re excited to have you join our community dedicated to reducing food waste and
-          sharing delicious meals. To complete your registration and start making a difference,
-          please confirm your email address below:
+          We&apos;re excited to have you join our community dedicated to reducing food waste and sharing delicious
+          meals. To complete your registration and start making a difference, please confirm your email address below:
         </Text>
 
         <EmailButton href={confirmationUrl}>✓ Confirm Your Email</EmailButton>
@@ -46,8 +37,8 @@ export function WelcomeConfirmationEmail({
         <EmailInfoBox color={colors.primary}>
           <strong style={{ color: colors.primary }}>✨ What happens next?</strong>
           <br />
-          Once confirmed, your email will be uniquely associated with your account, and you&apos;ll
-          gain full access to share and discover food in your community.
+          Once confirmed, your email will be uniquely associated with your account, and you&apos;ll gain full access to
+          share and discover food in your community.
         </EmailInfoBox>
       </EmailCard>
 

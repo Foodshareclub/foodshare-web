@@ -8,6 +8,6 @@ export {
   resetMockAuthState,
   createMockSupabaseClient,
   mockSupabase,
-} from './supabase';
+} from "./supabase";
 
-export { createTestQueryClient, createQueryWrapper, TestQueryProvider } from './react-query';
+export { createTestQueryClient, createQueryWrapper, TestQueryProvider } from "./react-query";

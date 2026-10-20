@@ -3,12 +3,12 @@
  * AI generates and executes SQL queries for detailed analysis
  */
 
+import { createClient } from "@/lib/supabase/server";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { getAiConfig } from "./api-key";
+import { ALLOWED_SQL_PATTERNS, DATABASE_SCHEMA, FORBIDDEN_SQL_PATTERNS, MODELS } from "./config";
 import { executeWithRateLimitHandling } from "./rate-limiter";
-import { MODELS, DATABASE_SCHEMA, ALLOWED_SQL_PATTERNS, FORBIDDEN_SQL_PATTERNS } from "./config";
-import { createClient } from "@/lib/supabase/server";
 
 /**
  * Validate SQL query for safety
@@ -41,7 +41,7 @@ function validateSqlQuery(sql: string): { valid: boolean; error?: string } {
  * Execute a validated SQL query
  */
 async function executeSqlQuery(
-  sql: string
+  sql: string,
 ): Promise<{ data: unknown[] | null; error: string | null; rowCount: number }> {
   const validation = validateSqlQuery(sql);
   if (!validation.valid) {
@@ -115,7 +115,7 @@ RULES:
         temperature: 0.3,
         maxRetries: 0,
       }),
-    3
+    3,
   );
 
   const generatedSql = sqlGenerationResult.text?.trim() || "";
@@ -140,9 +140,7 @@ RULES:
 
   // Step 3: Analyze results with AI
   const dataPreview =
-    queryResult.rowCount > 0
-      ? JSON.stringify(queryResult.data?.slice(0, 20), null, 2)
-      : "No results found";
+    queryResult.rowCount > 0 ? JSON.stringify(queryResult.data?.slice(0, 20), null, 2) : "No results found";
 
   const analysisResult = await executeWithRateLimitHandling(
     () =>
@@ -164,7 +162,7 @@ Provide a clear analysis of these results.`,
         temperature: 0.7,
         maxRetries: 0,
       }),
-    3
+    3,
   );
 
   const analysis = analysisResult.text || "Analysis complete.";

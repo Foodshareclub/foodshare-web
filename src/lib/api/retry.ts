@@ -42,15 +42,12 @@ const DEFAULT_CONFIG: Required<RetryConfig> = {
  */
 export function calculateBackoffDelay(
   attempt: number,
-  config: Pick<
-    Required<RetryConfig>,
-    "initialDelayMs" | "maxDelayMs" | "backoffMultiplier" | "jitter"
-  >
+  config: Pick<Required<RetryConfig>, "initialDelayMs" | "maxDelayMs" | "backoffMultiplier" | "jitter">,
 ): number {
   const { initialDelayMs, maxDelayMs, backoffMultiplier, jitter } = config;
 
   // Exponential backoff: initialDelay * multiplier^attempt
-  let delay = initialDelayMs * Math.pow(backoffMultiplier, attempt);
+  let delay = initialDelayMs * backoffMultiplier ** attempt;
 
   // Cap at max delay
   delay = Math.min(delay, maxDelayMs);
@@ -69,7 +66,7 @@ export function calculateBackoffDelay(
  */
 export function isRetryableError(
   error: unknown,
-  config: Pick<Required<RetryConfig>, "retryableStatuses" | "isRetryable">
+  config: Pick<Required<RetryConfig>, "retryableStatuses" | "isRetryable">,
 ): boolean {
   // Check custom isRetryable function first
   if (!config.isRetryable(error)) {
@@ -84,11 +81,7 @@ export function isRetryableError(
   // Check for timeout errors
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
-    if (
-      message.includes("timeout") ||
-      message.includes("network") ||
-      message.includes("abort")
-    ) {
+    if (message.includes("timeout") || message.includes("network") || message.includes("abort")) {
       return true;
     }
   }
@@ -125,10 +118,7 @@ function sleep(ms: number): Promise<void> {
  * );
  * ```
  */
-export async function withRetry<T>(
-  fn: () => Promise<T>,
-  config: RetryConfig = {}
-): Promise<T> {
+export async function withRetry<T>(fn: () => Promise<T>, config: RetryConfig = {}): Promise<T> {
   const mergedConfig = { ...DEFAULT_CONFIG, ...config };
   const { maxRetries, onRetry } = mergedConfig;
 
@@ -170,7 +160,7 @@ export async function withRetry<T>(
  * ```
  */
 export function createRetryWrapper(
-  defaultConfig: RetryConfig = {}
+  defaultConfig: RetryConfig = {},
 ): <T>(fn: () => Promise<T>, overrideConfig?: RetryConfig) => Promise<T> {
   return <T>(fn: () => Promise<T>, overrideConfig: RetryConfig = {}) => {
     return withRetry(fn, { ...defaultConfig, ...overrideConfig });

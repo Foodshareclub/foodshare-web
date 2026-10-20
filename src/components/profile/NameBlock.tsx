@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import type React from "react";
+import { useState } from "react";
 
 interface NameBlockProps {
   firstName: string;
@@ -62,16 +63,8 @@ export const NameBlock: React.FC<NameBlockProps> = ({
         {edit ? (
           <>
             <div className="flex justify-between gap-4">
-              <Input
-                variant="glass"
-                value={firstName}
-                onChange={(e) => setFirstName(e.currentTarget.value)}
-              />
-              <Input
-                variant="glass"
-                value={secondName}
-                onChange={(e) => setSecondName(e.currentTarget.value)}
-              />
+              <Input variant="glass" value={firstName} onChange={(e) => setFirstName(e.currentTarget.value)} />
+              <Input variant="glass" value={secondName} onChange={(e) => setSecondName(e.currentTarget.value)} />
             </div>
             <Button variant="ghost" onClick={handleSave} className="my-3">
               Save
@@ -83,12 +76,7 @@ export const NameBlock: React.FC<NameBlockProps> = ({
           </p>
         )}
       </div>
-      <Button
-        variant="ghost"
-        className="self-start cursor-pointer"
-        disabled={disableNameEdit}
-        onClick={toggleEditMode}
-      >
+      <Button variant="ghost" className="self-start cursor-pointer" disabled={disableNameEdit} onClick={toggleEditMode}>
         {edit ? "Cancel" : "Edit"}
       </Button>
     </div>

@@ -12,13 +12,13 @@
  * @module app/actions/post-views
  */
 
-import { z } from "zod";
-import { headers, cookies } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
-import { type ActionResult, withErrorHandling, failure, createError } from "@/lib/errors";
 import { logPostView } from "@/app/actions/post-activity";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
 import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { type ActionResult, createError, failure, withErrorHandling } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
+import { cookies, headers } from "next/headers";
+import { z } from "zod";
 
 // ============================================================================
 // View Deduplication (Session-based)
@@ -74,7 +74,7 @@ const incrementViewSchema = z.object({
  */
 export async function incrementPostView(
   postId: number,
-  options?: { referrer?: string; source?: "direct" | "search" | "social" | "internal" }
+  options?: { referrer?: string; source?: "direct" | "search" | "social" | "internal" },
 ): Promise<ActionResult<{ views: number; recorded: boolean }>> {
   // Validate input
   const validation = incrementViewSchema.safeParse({ postId, ...options });
@@ -89,9 +89,7 @@ export async function incrementPostView(
 
     // Get session identifier (use cookie or IP as fallback)
     const sessionId =
-      cookieStore.get("session_id")?.value ||
-      headersList.get("x-forwarded-for")?.split(",")[0] ||
-      "anonymous";
+      cookieStore.get("session_id")?.value || headersList.get("x-forwarded-for")?.split(",")[0] || "anonymous";
 
     // Get current user (optional - views can be anonymous)
     const {
@@ -101,12 +99,9 @@ export async function incrementPostView(
     // Check if we should record this view (deduplication)
     const shouldRecord = canRecordView(sessionId, postId);
 
-    // Get current view count first (for optimistic response)
-    const { data: currentPost } = await supabase
-      .from("posts")
-      .select("post_views")
-      .eq("id", postId)
-      .single();
+    // Only needed for the two paths that cannot learn the count from the RPC:
+    // a deduplicated view, and the graceful-degradation path if it errors.
+    const { data: currentPost } = await supabase.from("posts").select("post_views").eq("id", postId).single();
 
     const currentViews = currentPost?.post_views || 0;
 
@@ -115,18 +110,17 @@ export async function incrementPostView(
       return { views: currentViews, recorded: false };
     }
 
-    // Increment view count atomically
-    const newViews = currentViews + 1;
-    const { error } = await supabase
-      .from("posts")
-      .update({
-        post_views: newViews,
-        post_viewed_at: new Date().toISOString(),
-      })
-      .eq("id", postId);
+    // Increment atomically in the database. This used to be a read-modify-write
+    // (SELECT then UPDATE with the incremented value), which silently lost
+    // updates whenever two views landed concurrently. The RPC does the
+    // increment under a row lock and returns the authoritative value, so no
+    // second round-trip is needed.
+    const { data: newViews, error } = await supabase.rpc("increment_post_view", {
+      p_post_id: postId,
+    });
 
     if (error) {
-      console.error("[incrementPostView] Update error:", error.message);
+      console.error("[incrementPostView] Increment error:", error.message);
       // Return current count on error (graceful degradation)
       return { views: currentViews, recorded: false };
     }
@@ -144,7 +138,13 @@ export async function incrementPostView(
     // Invalidate cache for this post
     invalidateTag(CACHE_TAGS.PRODUCT(postId));
 
-    return { views: newViews, recorded: true };
+    // A null return means the post row does not exist (the UPDATE matched
+    // nothing), so nothing was recorded.
+    if (newViews === null) {
+      return { views: currentViews, recorded: false };
+    }
+
+    return { views: Number(newViews), recorded: true };
   }, "incrementPostView");
 }
 
@@ -159,11 +159,7 @@ export async function getPostViewCount(postId: number): Promise<ActionResult<{ v
   return withErrorHandling(async () => {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
-      .from("posts")
-      .select("post_views")
-      .eq("id", postId)
-      .single();
+    const { data, error } = await supabase.from("posts").select("post_views").eq("id", postId).single();
 
     if (error) throw new Error(error.message);
 
@@ -175,9 +171,7 @@ export async function getPostViewCount(postId: number): Promise<ActionResult<{ v
  * Batch get view counts for multiple posts
  * Optimized for list views
  */
-export async function getBatchViewCounts(
-  postIds: number[]
-): Promise<ActionResult<Record<number, number>>> {
+export async function getBatchViewCounts(postIds: number[]): Promise<ActionResult<Record<number, number>>> {
   if (!postIds.length || postIds.length > 100) {
     return failure(createError("VALIDATION_ERROR", "Invalid post IDs (max 100)"));
   }
@@ -209,7 +203,7 @@ export async function recordDetailedView(
     source?: "direct" | "search" | "social" | "internal";
     duration?: number;
     scrollDepth?: number;
-  }
+  },
 ): Promise<ActionResult<void>> {
   return withErrorHandling(async () => {
     const supabase = await createClient();

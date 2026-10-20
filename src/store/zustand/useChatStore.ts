@@ -4,13 +4,9 @@
  * Replaces Redux chat slice
  */
 
-import { create } from "zustand";
+import type { CustomRoomType, RoomParticipantsType, RoomType } from "@/api/chatAPI";
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import type {
-  RoomType,
-  CustomRoomType,
-  RoomParticipantsType,
-} from "@/api/chatAPI";
+import { create } from "zustand";
 
 // ============================================================================
 // Types
@@ -95,9 +91,7 @@ export const useChatStore = create<ChatState>((set) => ({
   addRoom: (room) => set((state) => ({ rooms: [room, ...state.rooms] })),
   updateRoomInList: (roomId, updates) =>
     set((state) => ({
-      rooms: state.rooms.map((room) =>
-        room.id === roomId ? { ...room, ...updates } : room
-      ),
+      rooms: state.rooms.map((room) => (room.id === roomId ? { ...room, ...updates } : room)),
     })),
 
   // Messages (capped at MAX_MESSAGES_PER_ROOM to prevent unbounded memory growth)

@@ -4,9 +4,9 @@
  * RoutingRule - Smart routing rule display
  */
 
-import { Layers, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { ChevronRight, Layers } from "lucide-react";
 
 const priorityConfig = {
   High: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20",
@@ -36,9 +36,7 @@ export function RoutingRule({ condition, action, priority }: RoutingRuleProps) {
           </p>
         </div>
       </div>
-      <Badge className={cn("text-xs", priorityConfig[priority as keyof typeof priorityConfig])}>
-        {priority}
-      </Badge>
+      <Badge className={cn("text-xs", priorityConfig[priority as keyof typeof priorityConfig])}>{priority}</Badge>
     </div>
   );
 }

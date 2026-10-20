@@ -1,6 +1,6 @@
 "use client";
 
-import { ErrorDisplay, AdminTroubleshootingSteps, AdminLinksFooter } from "@/components/error";
+import { AdminLinksFooter, AdminTroubleshootingSteps, ErrorDisplay } from "@/components/error";
 
 /**
  * Admin Error Boundary Component

@@ -6,13 +6,13 @@
  * Optimized with custom hooks and constants
  */
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
 import { useManualEmailSender } from "@/hooks/useEmailManagement";
-import { PROVIDER_NAMES, PROVIDER_LIMITS, EMAIL_TYPE_NAMES } from "@/lib/email/constants";
+import { EMAIL_TYPE_NAMES, PROVIDER_LIMITS, PROVIDER_NAMES } from "@/lib/email/constants";
 import type { EmailProvider, EmailType } from "@/lib/email/types";
-import type { ManualEmailRequest } from "@/types/email-management.types";
 import { escapeHtml } from "@/lib/utils";
+import type { ManualEmailRequest } from "@/types/email-management.types";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
 
 // Re-export for backwards compatibility
 export type { ManualEmailRequest } from "@/types/email-management.types";
@@ -48,9 +48,7 @@ export function ManualEmailSender() {
     }
 
     // Convert plain text to HTML if needed (escape to prevent XSS)
-    const html = formData.useHtml
-      ? formData.message
-      : `<p>${escapeHtml(formData.message).replace(/\n/g, "<br>")}</p>`;
+    const html = formData.useHtml ? formData.message : `<p>${escapeHtml(formData.message).replace(/\n/g, "<br>")}</p>`;
 
     const request: ManualEmailRequest = {
       to: formData.to,
@@ -123,7 +121,7 @@ export function ManualEmailSender() {
                 type="checkbox"
                 checked={formData.useHtml}
                 onChange={(e) => setFormData({ ...formData, useHtml: e.target.checked })}
-                className="mr-2 rounded"
+                className="me-2 rounded"
               />
               HTML Mode
             </label>

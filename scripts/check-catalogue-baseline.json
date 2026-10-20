@@ -1,0 +1,27 @@
+{
+  "(root)": {
+    "identical-to-english": 381,
+    "stray-latin": 20,
+    "wrong-script": 510
+  },
+  "categories": {
+    "identical-to-english": 1,
+    "wrong-script": 1
+  },
+  "Common": {
+    "identical-to-english": 2,
+    "wrong-script": 3
+  },
+  "ForgotPassword": {
+    "identical-to-english": 10,
+    "wrong-script": 10
+  },
+  "Maintenance": {
+    "identical-to-english": 8,
+    "wrong-script": 8
+  },
+  "Reports": {
+    "identical-to-english": 12,
+    "wrong-script": 21
+  }
+}

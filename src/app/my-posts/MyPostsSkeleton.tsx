@@ -1,4 +1,7 @@
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from "@/components/ui/skeleton";
+
+const STATS_SKELETON_KEYS = ["s-1", "s-2", "s-3", "s-4"] as const;
+const CARD_SKELETON_KEYS = ["g-1", "g-2", "g-3", "g-4", "g-5", "g-6", "g-7", "g-8"] as const;
 
 /**
  * Skeleton loader for My Posts page
@@ -18,8 +21,8 @@ export function MyPostsSkeleton() {
 
         {/* Stats skeleton */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="glass rounded-xl p-4">
+          {STATS_SKELETON_KEYS.map((skeletonKey) => (
+            <div key={skeletonKey} className="glass rounded-xl p-4">
               <Skeleton className="h-8 w-16 mb-2" />
               <Skeleton className="h-4 w-24" />
             </div>
@@ -35,8 +38,8 @@ export function MyPostsSkeleton() {
 
         {/* Grid skeleton */}
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="glass rounded-xl overflow-hidden">
+          {CARD_SKELETON_KEYS.map((skeletonKey) => (
+            <div key={skeletonKey} className="glass rounded-xl overflow-hidden">
               <Skeleton className="aspect-[4/3] w-full" />
               <div className="p-4 space-y-2">
                 <Skeleton className="h-5 w-3/4" />

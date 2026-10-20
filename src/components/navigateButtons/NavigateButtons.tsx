@@ -1,10 +1,11 @@
 "use client";
 
-import type { RefObject } from "react";
-import React, { useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { useWindowEvent } from "@/hooks/useEvent";
 import { Button } from "@/components/ui/button";
+import { useWindowEvent } from "@/hooks/useEvent";
+import { usePathname, useRouter } from "next/navigation";
+import type { RefObject } from "react";
+import type React from "react";
+import { useState } from "react";
 
 type NavigateButtonsType = {
   messagesAnchorRef?: RefObject<HTMLDivElement>;
@@ -13,12 +14,7 @@ type NavigateButtonsType = {
   children?: React.ReactNode;
 };
 
-export default function NavigateButtons({
-  navigateTo,
-  messagesAnchorRef,
-  title,
-  children,
-}: NavigateButtonsType) {
+export default function NavigateButtons({ navigateTo, messagesAnchorRef, title, children }: NavigateButtonsType) {
   const [scrollTop, setScrollTop] = useState(0);
   useWindowEvent("scroll", () => {
     setScrollTop(window.scrollY);
@@ -81,6 +77,7 @@ export default function NavigateButtons({
       {showButton && (
         <div className="fixed bottom-20 md:bottom-[100px] left-1/2 -translate-x-1/2 z-[1000]">
           <button
+            type="button"
             onClick={navigateHandler}
             className="bg-foreground text-background rounded-3xl px-5 md:px-6 py-3 h-12 font-semibold text-sm flex items-center gap-2 shadow-[0_6px_16px_rgba(0,0,0,0.12)] border border-white/10 transition-all duration-200 hover:bg-foreground/90 hover:scale-105 hover:shadow-[0_8px_24px_rgba(0,0,0,0.18)] active:scale-95"
           >
@@ -93,7 +90,7 @@ export default function NavigateButtons({
       {/* Scroll to Top Button - Bottom Right */}
       {scrollTop > 400 && (
         <div
-          className="fixed bottom-5 md:bottom-10 right-5 md:right-10 z-[1000] animate-[fadeIn_0.3s_ease-out]"
+          className="fixed bottom-5 md:bottom-10 end-5 md:end-10 z-[1000] animate-[fadeIn_0.3s_ease-out]"
           style={{
             willChange: "transform, opacity",
           }}

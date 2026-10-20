@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Authentication - Login", () => {
   test.beforeEach(async ({ page }) => {
@@ -52,17 +52,11 @@ test.describe("Authentication - Login", () => {
     await toggleButton.click();
 
     // Password should now be visible (type changes to text)
-    await expect(page.locator('input[placeholder="Enter your password"]')).toHaveAttribute(
-      "type",
-      "text"
-    );
+    await expect(page.locator('input[placeholder="Enter your password"]')).toHaveAttribute("type", "text");
 
     // Click again to hide
     await toggleButton.click();
-    await expect(page.locator('input[placeholder="Enter your password"]')).toHaveAttribute(
-      "type",
-      "password"
-    );
+    await expect(page.locator('input[placeholder="Enter your password"]')).toHaveAttribute("type", "password");
   });
 
   test("should show validation on empty form submission", async ({ page }) => {
@@ -71,9 +65,7 @@ test.describe("Authentication - Login", () => {
 
     // Form should show validation (HTML5 validation)
     const emailInput = page.locator('input[type="email"]');
-    const validationMessage = await emailInput.evaluate(
-      (el: HTMLInputElement) => el.validationMessage
-    );
+    const validationMessage = await emailInput.evaluate((el: HTMLInputElement) => el.validationMessage);
     expect(validationMessage).toBeTruthy();
   });
 
@@ -189,9 +181,7 @@ test.describe("Authentication - Forgot Password", () => {
     await expect(page.getByText(/foodshare/i).first()).toBeVisible({ timeout: 45000 });
 
     // Should show email input (by placeholder)
-    await expect(
-      page.getByPlaceholder(/example\.com/i).or(page.locator('input[type="email"]'))
-    ).toBeVisible();
+    await expect(page.getByPlaceholder(/example\.com/i).or(page.locator('input[type="email"]'))).toBeVisible();
 
     // Should show submit button (page also renders header/footer buttons,
     // so target the form's submit button by name)

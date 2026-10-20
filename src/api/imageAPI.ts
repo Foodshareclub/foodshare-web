@@ -8,20 +8,9 @@
  * storageAPI is still used for downloads, deletes, and signed URLs.
  */
 
-import type {
-  ImageUploadOptions,
-  ImageUploadResponse,
-  BatchUploadResponse,
-  ImageAPIResult,
-} from "./imageAPI.types";
 import { supabase } from "@/lib/supabase/client";
-import {
-  classifyError,
-  formatUploadError,
-  calculateBackoffDelay,
-  sleep,
-  type UploadError,
-} from "@/lib/upload";
+import { type UploadError, calculateBackoffDelay, classifyError, formatUploadError, sleep } from "@/lib/upload";
+import type { BatchUploadResponse, ImageAPIResult, ImageUploadOptions, ImageUploadResponse } from "./imageAPI.types";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const UPLOAD_ENDPOINT = `${SUPABASE_URL}/functions/v1/api-v1-images/upload`;
@@ -111,15 +100,12 @@ export const imageAPI = {
    *
    * Returns the public URL, thumbnail URL, and compression metadata.
    */
-  async uploadImage(
-    file: File,
-    options: ImageUploadOptions = {}
-  ): Promise<ImageAPIResult<ImageUploadResponse>> {
+  async uploadImage(file: File, options: ImageUploadOptions = {}): Promise<ImageAPIResult<ImageUploadResponse>> {
     try {
       const token = await getAuthToken();
       const formData = buildFormData(file, options);
       const headers: Record<string, string> = {};
-      if (token) headers["Authorization"] = `Bearer ${token}`;
+      if (token) headers.Authorization = `Bearer ${token}`;
 
       const response = await fetchWithRetry(UPLOAD_ENDPOINT, {
         method: "POST",
@@ -154,12 +140,12 @@ export const imageAPI = {
   async uploadBatch(
     files: File[],
     options: ImageUploadOptions = {},
-    onProgress?: (completed: number, total: number) => void
+    onProgress?: (completed: number, total: number) => void,
   ): Promise<ImageAPIResult<BatchUploadResponse>> {
     try {
       const token = await getAuthToken();
       const headers: Record<string, string> = {};
-      if (token) headers["Authorization"] = `Bearer ${token}`;
+      if (token) headers.Authorization = `Bearer ${token}`;
 
       // Build batch FormData
       const formData = new FormData();

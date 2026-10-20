@@ -4,8 +4,8 @@
  * ProviderPerformanceCard - Compact provider stats for overview
  */
 
-import type { ProviderHealth } from "../types";
 import { cn } from "@/lib/utils";
+import type { ProviderHealth } from "../types";
 
 const providerConfig = {
   brevo: { name: "Brevo", color: "blue", description: "Primary notifications" },
@@ -29,12 +29,7 @@ export function ProviderPerformanceCard({ provider }: ProviderPerformanceCardPro
   const config = providerConfig[provider.provider];
 
   return (
-    <div
-      className={cn(
-        "p-4 rounded-xl border",
-        colorClasses[config.color as keyof typeof colorClasses]
-      )}
-    >
+    <div className={cn("p-4 rounded-xl border", colorClasses[config.color as keyof typeof colorClasses])}>
       <div className="flex items-center justify-between mb-3">
         <div>
           <p className="font-semibold text-sm">{config.name}</p>
@@ -47,7 +42,7 @@ export function ProviderPerformanceCard({ provider }: ProviderPerformanceCardPro
               ? "bg-emerald-500"
               : provider.status === "degraded"
                 ? "bg-amber-500"
-                : "bg-rose-500"
+                : "bg-rose-500",
           )}
         />
       </div>
@@ -61,9 +56,7 @@ export function ProviderPerformanceCard({ provider }: ProviderPerformanceCardPro
           <p className="text-[10px] text-muted-foreground uppercase">Latency</p>
         </div>
         <div>
-          <p className="text-lg font-bold tabular-nums">
-            {provider.totalRequests.toLocaleString()}
-          </p>
+          <p className="text-lg font-bold tabular-nums">{provider.totalRequests.toLocaleString()}</p>
           <p className="text-[10px] text-muted-foreground uppercase">Requests</p>
         </div>
       </div>

@@ -1,11 +1,4 @@
-export type FoodCategory =
-  | "produce"
-  | "dairy"
-  | "meat_seafood"
-  | "bakery"
-  | "dry_pantry"
-  | "meals"
-  | "other";
+export type FoodCategory = "produce" | "dairy" | "meat_seafood" | "bakery" | "dry_pantry" | "meals" | "other";
 
 export type WasteReason = "expired" | "spoiled" | "leftover" | "overpurchased" | "other";
 

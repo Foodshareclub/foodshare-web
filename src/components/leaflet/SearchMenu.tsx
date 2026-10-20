@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
+import { useEffect, useRef } from "react";
 import { useMap } from "react-leaflet";
 import "leaflet-geosearch/dist/geosearch.css";
-import { Control, Icon } from "leaflet";
 import icon from "@/assets/location-red.svg";
+import { type Control, Icon } from "leaflet";
 
 export const SearchMenu = () => {
   const map = useMap();

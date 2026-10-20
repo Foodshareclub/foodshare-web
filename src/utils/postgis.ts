@@ -35,9 +35,9 @@ export function parsePostGISPoint(location: unknown): PostGISPoint | null {
     // Try WKT format: "POINT(lng lat)"
     const match = location.match(/POINT\s*\(\s*([^\s]+)\s+([^\s]+)\s*\)/i);
     if (match) {
-      const lng = parseFloat(match[1]);
-      const lat = parseFloat(match[2]);
-      if (!isNaN(lat) && !isNaN(lng) && isValidCoordinate(lat, lng)) {
+      const lng = Number.parseFloat(match[1]);
+      const lat = Number.parseFloat(match[2]);
+      if (!Number.isNaN(lat) && !Number.isNaN(lng) && isValidCoordinate(lat, lng)) {
         return { latitude: lat, longitude: lng };
       }
     }
@@ -71,8 +71,8 @@ export function parsePostGISPoint(location: unknown): PostGISPoint | null {
  */
 function isValidCoordinate(lat: number, lng: number): boolean {
   return (
-    !isNaN(lat) &&
-    !isNaN(lng) &&
+    !Number.isNaN(lat) &&
+    !Number.isNaN(lng) &&
     lat >= -90 &&
     lat <= 90 &&
     lng >= -180 &&
@@ -101,9 +101,7 @@ export function calculateDistance(lat1: number, lng1: number, lat2: number, lng2
   const Δφ = ((lat2 - lat1) * Math.PI) / 180;
   const Δλ = ((lng2 - lng1) * Math.PI) / 180;
 
-  const a =
-    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -141,11 +139,7 @@ export const LOCATION_PRIVACY = {
  * @param postId - Post ID used as seed for deterministic offset
  * @returns Approximated coordinates with ~100-200m offset
  */
-export function approximateLocation(
-  lat: number,
-  lng: number,
-  postId: number
-): { lat: number; lng: number } {
+export function approximateLocation(lat: number, lng: number, postId: number): { lat: number; lng: number } {
   // Seeded pseudo-random number generator (mulberry32)
   // Using post ID ensures same offset for same post across requests
   const seed = postId * 2654435761; // Golden ratio hash
@@ -173,12 +167,45 @@ export function approximateLocation(
 }
 
 /**
+ * Coarse area label for a point that is shown to other people.
+ *
+ * `approximateLocation` moves a *listing* by 100–200 m, which is enough to
+ * stop someone from standing on a doorstep but not enough to publish as
+ * "someone's area" on a public profile. Truncating to one decimal place
+ * quantises to a ~11 km cell, which is the granularity a person would
+ * willingly publish: a district, not a house.
+ *
+ * Rounding to 1 dp is the whole trick — do not replace it with `.toFixed()`,
+ * which rounds to nearest and lets two points either side of a cell edge land
+ * in different cells. Truncation keeps a point inside its own cell, so the
+ * same address always produces the same label.
+ *
+ * @returns e.g. "51.5, -0.1", or null when the input is not a point
+ */
+export function coarseAreaLabel(coords: PostGISPoint | null): string | null {
+  if (!coords || !Number.isFinite(coords.latitude) || !Number.isFinite(coords.longitude)) {
+    return null;
+  }
+
+  // Guard the poles: cos(lat) → 0 makes the longitude cell degenerate.
+  if (Math.abs(coords.latitude) > 89.5) {
+    return null;
+  }
+
+  const latCell = Math.trunc(coords.latitude * 10) / 10;
+  const lngCell = Math.trunc(coords.longitude * 10) / 10;
+  return `${latCell.toFixed(1)}, ${lngCell.toFixed(1)}`;
+}
+
+/**
  * Mulberry32 - Fast seeded PRNG
  * Produces deterministic pseudo-random numbers from a seed
  */
-function mulberry32(seed: number): () => number {
-  return function () {
-    let t = (seed += 0x6d2b79f5);
+function mulberry32(initialSeed: number): () => number {
+  let seed = initialSeed;
+  return () => {
+    seed += 0x6d2b79f5;
+    let t = seed;
     t = Math.imul(t ^ (t >>> 15), t | 1);
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;

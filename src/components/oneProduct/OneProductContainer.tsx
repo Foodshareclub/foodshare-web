@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
 import { createFoodChatRoom } from "@/app/actions/chat";
-import { PATH } from "@/utils";
 import { OneProduct } from "@/components/oneProduct/OneProduct";
+import { useAuth } from "@/hooks/useAuth";
 import type { InitialProductStateType } from "@/types/product.types";
+import { PATH } from "@/utils";
+import { useParams, useRouter } from "next/navigation";
+import type React from "react";
+import { useState } from "react";
 
 type OneProductContainerType = {
   product: InitialProductStateType;

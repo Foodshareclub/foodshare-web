@@ -1,5 +1,25 @@
-import { createCachedClient } from "@/lib/supabase/server";
 import { siteConfig } from "@/lib/metadata";
+import { createCachedClient } from "@/lib/supabase/server";
+
+interface ForumFeedProfile {
+  nickname: string | null;
+  first_name: string | null;
+}
+
+interface ForumFeedCategory {
+  name: string;
+}
+
+interface ForumFeedPostRow {
+  id: number;
+  slug: string;
+  forum_post_name: string;
+  forum_post_description: string;
+  forum_post_created_at: string;
+  forum_post_image: string | null;
+  profiles: ForumFeedProfile | ForumFeedProfile[] | null;
+  forum_categories: ForumFeedCategory | ForumFeedCategory[] | null;
+}
 
 /**
  * RSS Feed for Forum Posts
@@ -20,24 +40,20 @@ export async function GET(): Promise<Response> {
       forum_post_image,
       profiles!forum_profile_id_profiles_fkey (nickname, first_name),
       forum_categories!forum_category_id_fkey (name)
-    `
+    `,
     )
     .eq("forum_published", true)
     .order("forum_post_created_at", { ascending: false })
     .limit(50);
 
-  const feedItems = (posts || [])
-    .map((post: any) => {
+  const feedItems = ((posts ?? []) as ForumFeedPostRow[])
+    .map((post) => {
       // Handle profiles and categories which may be arrays or single objects from the join
       const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
-      const category = Array.isArray(post.forum_categories)
-        ? post.forum_categories[0]
-        : post.forum_categories;
+      const category = Array.isArray(post.forum_categories) ? post.forum_categories[0] : post.forum_categories;
       const authorName = profile?.nickname || profile?.first_name || "Community Member";
       const postUrl = `${siteConfig.url}/forum/${post.slug || post.id}`;
-      const description = post.forum_post_description
-        ? stripHtml(post.forum_post_description).slice(0, 500)
-        : "";
+      const description = post.forum_post_description ? stripHtml(post.forum_post_description).slice(0, 500) : "";
 
       return `
     <item>

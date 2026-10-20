@@ -8,12 +8,7 @@
 
 import type { ActionResult } from "@/lib/errors";
 import { apiDelete, apiPost, apiPut } from "./client";
-import type {
-  CreateProductRequest,
-  ListingPostType,
-  ProductResponse,
-  UpdateProductRequest,
-} from "./types";
+import type { CreateProductRequest, ListingPostType, ProductResponse, UpdateProductRequest } from "./types";
 
 // =============================================================================
 // Types for Web App (matches existing form data)
@@ -156,7 +151,7 @@ export async function createProductAPI(input: WebCreateProductInput): Promise<
  */
 export async function updateProductAPI(
   productId: number,
-  input: WebUpdateProductInput
+  input: WebUpdateProductInput,
 ): Promise<ActionResult<undefined>> {
   const request = toUpdateRequest(input);
 

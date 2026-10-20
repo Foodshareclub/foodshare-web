@@ -37,11 +37,7 @@ interface ReviewReminderData {
 // Simple HTML template renderer
 function renderEmailTemplate(
   templateName: string,
-  data:
-    | ChatNotificationData
-    | FoodListingNotificationData
-    | FeedbackNotificationData
-    | ReviewReminderData
+  data: ChatNotificationData | FoodListingNotificationData | FeedbackNotificationData | ReviewReminderData,
 ): { html: string; subject: string } {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://foodshare.app";
 
@@ -390,12 +386,10 @@ export async function notifyAdminsOfFeedback(params: {
         sendFeedbackNotification({
           adminEmail: adminRole.profiles.email,
           adminName:
-            [adminRole.profiles.first_name, adminRole.profiles.second_name]
-              .filter(Boolean)
-              .join(" ") || undefined,
+            [adminRole.profiles.first_name, adminRole.profiles.second_name].filter(Boolean).join(" ") || undefined,
           ...params,
-        })
-      )
+        }),
+      ),
     );
 
     // Log results

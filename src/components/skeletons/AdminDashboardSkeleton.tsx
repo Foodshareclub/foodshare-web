@@ -1,5 +1,8 @@
-import { StatsGridSkeleton } from "./StatCardSkeleton";
 import { cn } from "@/lib/utils";
+import { StatsGridSkeleton } from "./StatCardSkeleton";
+
+const QUICK_ACTION_SKELETON_KEYS = ["a", "b", "c"] as const;
+const ACTIVITY_SKELETON_KEYS = ["a", "b", "c", "d", "e"] as const;
 
 interface AdminDashboardSkeletonProps {
   className?: string;
@@ -28,16 +31,16 @@ export function AdminDashboardSkeleton({ className }: AdminDashboardSkeletonProp
         <div className="bg-background p-6 rounded-lg border border-border">
           <div className="h-6 bg-muted rounded w-32 mb-4" />
           <div className="flex flex-col gap-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-12 bg-muted rounded" />
+            {QUICK_ACTION_SKELETON_KEYS.map((k) => (
+              <div key={k} className="h-12 bg-muted rounded" />
             ))}
           </div>
         </div>
         <div className="bg-background p-6 rounded-lg border border-border">
           <div className="h-6 bg-muted rounded w-32 mb-4" />
           <div className="flex flex-col gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-10 bg-muted rounded" />
+            {ACTIVITY_SKELETON_KEYS.map((k) => (
+              <div key={k} className="h-10 bg-muted rounded" />
             ))}
           </div>
         </div>

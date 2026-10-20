@@ -1,19 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
-import { Users, Search, Plus, Tag, UserPlus, Download, MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { AudienceSegment, EmailDashboardStats } from "@/lib/data/admin-email";
+import { Download, MoreHorizontal, Plus, Search, Tag, UserPlus, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
 
 interface AudienceClientProps {
   segments: AudienceSegment[];
@@ -27,7 +27,7 @@ export function AudienceClient({ segments, stats }: AudienceClientProps) {
   const filteredSegments = segments.filter(
     (s) =>
       s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (s.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
+      (s.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false),
   );
 
   return (
@@ -85,12 +85,12 @@ export function AudienceClient({ segments, stats }: AudienceClientProps) {
           {/* Toolbar */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t("search_segments")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9 bg-background/50"
+                className="ps-9 h-9 bg-background/50"
               />
             </div>
             <div className="flex gap-2">
@@ -125,10 +125,7 @@ export function AudienceClient({ segments, stats }: AudienceClientProps) {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: segment.color }}
-                      />
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: segment.color }} />
                       <h3 className="font-semibold text-foreground">{segment.name}</h3>
                       {segment.isSystem && (
                         <Badge variant="secondary" className="text-xs">
@@ -146,16 +143,12 @@ export function AudienceClient({ segments, stats }: AudienceClientProps) {
                         <DropdownMenuItem>{t("edit")}</DropdownMenuItem>
                         <DropdownMenuItem>{t("duplicate")}</DropdownMenuItem>
                         {!segment.isSystem && (
-                          <DropdownMenuItem className="text-destructive">
-                            {t("delete")}
-                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive">{t("delete")}</DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  {segment.description && (
-                    <p className="text-sm text-muted-foreground mb-3">{segment.description}</p>
-                  )}
+                  {segment.description && <p className="text-sm text-muted-foreground mb-3">{segment.description}</p>}
                   <div className="flex items-center justify-between pt-3 border-t border-border/50">
                     <span className="text-sm font-medium">
                       {segment.cachedCount.toLocaleString()} {t("subscribers")}

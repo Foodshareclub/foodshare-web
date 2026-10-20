@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from "react";
 import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
+import { useState } from "react";
 import { AddListingButton } from "./AddListingButton";
 
 /**
@@ -16,11 +16,7 @@ export function BecomeSharerButton() {
     <>
       <AddListingButton onClick={() => setIsAuthOpen(true)} />
 
-      <AuthenticationUserModal
-        buttonValue="Login"
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-      />
+      <AuthenticationUserModal mode="login" isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </>
   );
 }

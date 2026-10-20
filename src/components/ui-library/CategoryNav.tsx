@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useCallback, useRef, useEffect } from "react";
-import { useTranslations } from "next-intl";
 import { CATEGORIES } from "@/constants/categories";
+import { useTranslations } from "next-intl";
+import type React from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 // Simple Search Icon component
 const SearchIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" {...props}>
+  <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none" {...props}>
     <path
       d="M7 13A6 6 0 1 0 7 1a6 6 0 0 0 0 12zM13 13l-2-2"
       stroke="currentColor"
@@ -30,11 +31,12 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
   onSearch,
   onFilter,
 }) => {
-  const scrollContainerRef = useRef<HTMLUListElement>(null);
-  const activeItemRef = useRef<HTMLLIElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const activeItemRef = useRef<HTMLDivElement>(null);
   const t = useTranslations("categories");
 
   // Scroll active item into view on mount or when active category changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: activeCategory is the trigger — the active node is tracked through activeItemRef, and each category change must re-centre the nav
   useEffect(() => {
     if (activeItemRef.current && scrollContainerRef.current) {
       const container = scrollContainerRef.current;
@@ -63,7 +65,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
         onSearch();
       }
     },
-    [onCategoryChange, onSearch]
+    [onCategoryChange, onSearch],
   );
 
   // Keyboard navigation
@@ -74,14 +76,14 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
         handleCategoryClick(categoryId);
       }
     },
-    [handleCategoryClick]
+    [handleCategoryClick],
   );
 
   return (
-    <nav role="navigation" aria-label="Category navigation" className="bg-background relative">
+    <nav aria-label="Category navigation" className="bg-background relative">
       <div className="max-w-full mx-auto px-7 xl:px-20 py-2 md:py-2.5 flex items-center justify-between gap-2 md:gap-4 border-b border-border">
         {/* Categories - Scrollable */}
-        <ul
+        <div
           ref={scrollContainerRef}
           role="tablist"
           className="flex-1 max-w-[calc(100%-180px)] md:max-w-[calc(100%-220px)] flex gap-4 md:gap-6 overflow-x-auto overflow-y-hidden list-none m-0 p-0 scrollbar-hide"
@@ -93,7 +95,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
             const label = t(translationKey);
 
             return (
-              <li
+              <div
                 key={category.id}
                 ref={isActive ? activeItemRef : null}
                 role="tab"
@@ -128,10 +130,10 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
                 {isActive && (
                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-0.5 bg-foreground rounded-t-sm transition-all duration-200" />
                 )}
-              </li>
+              </div>
             );
           })}
-        </ul>
+        </div>
 
         {/* Search & Filter Buttons */}
         <div className="flex gap-1.5 md:gap-2 items-center flex-shrink-0">
@@ -154,19 +156,8 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
             onClick={onFilter}
           >
             {/* Filter Icon */}
-            <svg
-              width="14"
-              height="14"
-              fill="none"
-              className="text-muted-foreground"
-              aria-hidden="true"
-            >
-              <path
-                d="M2 4h12M4 8h8M6 12h4"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
+            <svg width="14" height="14" fill="none" className="text-muted-foreground" aria-hidden="true">
+              <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
             <span className="text-[11px] md:text-xs font-medium text-foreground">Filter</span>
           </button>

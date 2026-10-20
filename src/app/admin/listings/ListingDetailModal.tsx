@@ -1,20 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { useAdminStore } from "@/store/zustand";
 import { approveListing, rejectListing } from "@/app/actions/admin";
-import type { PostStatus } from "@/types/admin.types";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { useAdminStore } from "@/store/zustand";
+import type { PostStatus } from "@/types/admin.types";
+import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 // Type for audit logs (moved from hooks/queries)
 export interface AuditLog {
@@ -47,11 +41,7 @@ function StatusBadge({ status }: StatusBadgeProps) {
     }
   })();
 
-  return (
-    <span className={`text-sm font-medium px-2.5 py-0.5 rounded ${badgeClasses}`}>
-      {status.toUpperCase()}
-    </span>
-  );
+  return <span className={`text-sm font-medium px-2.5 py-0.5 rounded ${badgeClasses}`}>{status.toUpperCase()}</span>;
 }
 
 interface AuditLogTimelineProps {
@@ -66,20 +56,14 @@ function AuditLogTimeline({ logs }: AuditLogTimelineProps) {
   return (
     <div className="flex flex-col gap-3">
       {logs.map((log) => (
-        <div key={log.id} className="p-3 bg-gray-50 rounded-md border-l-4 border-green-400">
+        <div key={log.id} className="p-3 bg-gray-50 rounded-md border-s-4 border-green-400">
           <div className="flex justify-between items-center mb-1">
-            <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
-              {log.action}
-            </span>
+            <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">{log.action}</span>
             <p className="text-xs text-gray-500">{new Date(log.created_at).toLocaleString()}</p>
           </div>
-          {log.details?.reason ? (
-            <p className="text-sm text-gray-700 mt-2">{String(log.details.reason)}</p>
-          ) : null}
+          {log.details?.reason ? <p className="text-sm text-gray-700 mt-2">{String(log.details.reason)}</p> : null}
           {log.details?.admin_notes ? (
-            <p className="text-sm text-gray-600 mt-1 italic">
-              Note: {String(log.details.admin_notes)}
-            </p>
+            <p className="text-sm text-gray-600 mt-1 italic">Note: {String(log.details.admin_notes)}</p>
           ) : null}
         </div>
       ))}
@@ -99,10 +83,7 @@ interface ListingDetailModalProps {
  * Allows admins to approve, reject, flag, and add notes
  * Receives audit logs as props from Server Component
  */
-export function ListingDetailModal({
-  auditLogs = [],
-  isAuditLogsLoading = false,
-}: ListingDetailModalProps) {
+export function ListingDetailModal({ auditLogs = [], isAuditLogsLoading = false }: ListingDetailModalProps) {
   const t = useTranslations();
   const router = useRouter();
 
@@ -199,7 +180,7 @@ export function ListingDetailModal({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-[900px] max-h-[90vh] overflow-y-auto" variant="standard">
         <DialogHeader>
-          <div className="flex justify-between items-center w-full pr-8">
+          <div className="flex justify-between items-center w-full pe-8">
             <DialogTitle className="text-xl font-bold">{listing.post_name}</DialogTitle>
             <StatusBadge status={listing.status} />
           </div>
@@ -214,7 +195,7 @@ export function ListingDetailModal({
                 {listing.images.map((imageUrl, index) => (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    key={index}
+                    key={imageUrl}
                     src={imageUrl}
                     alt={`${listing.post_name} ${index + 1}`}
                     className="w-[150px] h-[150px] object-cover rounded-md"

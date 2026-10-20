@@ -1,17 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
-import { Plus, Sparkles, CheckCircle2 } from "lucide-react";
-import { FoodCategory, WasteReason, CATEGORY_METRIC_MAP } from "@/lib/foodlytics/types";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/foodlytics/ui/card";
-import { Input } from "@/components/foodlytics/ui/input";
 import { Button } from "@/components/foodlytics/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/foodlytics/ui/card";
+import { Input } from "@/components/foodlytics/ui/input";
+import { CATEGORY_METRIC_MAP, type FoodCategory, type WasteReason } from "@/lib/foodlytics/types";
+import { CheckCircle2, Plus, Sparkles } from "lucide-react";
+import type React from "react";
+import { useState } from "react";
 
 interface WasteFormProps {
   onAddLog: (log: {
@@ -49,8 +44,8 @@ export function WasteForm({ onAddLog }: WasteFormProps) {
       await onAddLog({
         foodName,
         category,
-        weight: parseFloat(weight),
-        cost: parseFloat(cost),
+        weight: Number.parseFloat(weight),
+        cost: Number.parseFloat(cost),
         reason,
         date: itemDate,
       });
@@ -61,8 +56,8 @@ export function WasteForm({ onAddLog }: WasteFormProps) {
       setCost("");
       setFormSuccess(true);
       setTimeout(() => setFormSuccess(false), 3000);
-    } catch (err: any) {
-      alert("Error saving your entry: " + err.message);
+    } catch (err) {
+      alert(`Error saving your entry: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -87,10 +82,7 @@ export function WasteForm({ onAddLog }: WasteFormProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Food Name input */}
           <div className="space-y-1.5">
-            <label
-              htmlFor="food-name"
-              className="text-[10px] font-bold text-stone-400 uppercase tracking-widest block"
-            >
+            <label htmlFor="food-name" className="text-[10px] font-bold text-stone-400 uppercase tracking-widest block">
               Food Item Name
             </label>
             <Input
@@ -156,9 +148,7 @@ export function WasteForm({ onAddLog }: WasteFormProps) {
                 Cost (USD)
               </label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-sm font-bold">
-                  $
-                </span>
+                <span className="absolute start-3.5 top-1/2 -translate-y-1/2 text-stone-500 text-sm font-bold">$</span>
                 <Input
                   id="food-cost"
                   type="number"
@@ -168,7 +158,7 @@ export function WasteForm({ onAddLog }: WasteFormProps) {
                   placeholder="0.00"
                   value={cost}
                   onChange={(e) => setCost(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 bg-black/20 hover:bg-black/35 focus:bg-black/50 border border-white/10 focus:border-emerald-500/50 rounded-xl text-sm text-stone-200 placeholder:text-stone-600 transition-colors font-bold h-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-emerald-500"
+                  className="w-full ps-8 pe-4 py-2 bg-black/20 hover:bg-black/35 focus:bg-black/50 border border-white/10 focus:border-emerald-500/50 rounded-xl text-sm text-stone-200 placeholder:text-stone-600 transition-colors font-bold h-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-emerald-500"
                 />
               </div>
             </div>
@@ -198,7 +188,7 @@ export function WasteForm({ onAddLog }: WasteFormProps) {
                 Leftover discarded plate scraps
               </option>
               <option value="overpurchased" className="bg-stone-900 text-stone-200">
-                Over-purchased, wasn't prepared
+                Over-purchased, wasn&apos;t prepared
               </option>
               <option value="other" className="bg-stone-900 text-stone-200">
                 Other reason

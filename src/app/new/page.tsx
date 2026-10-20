@@ -1,11 +1,11 @@
-import { redirect } from "next/navigation";
 import { NewProductForm } from "@/app/food/new/NewProductForm";
 import { getAuthSession } from "@/lib/data/auth";
 import { generateNoIndexMetadata } from "@/lib/metadata";
+import { redirect } from "next/navigation";
 
 export const metadata = generateNoIndexMetadata(
   "Create New Listing",
-  "Share food, items, or volunteer with your community"
+  "Share food, items, or volunteer with your community",
 );
 
 interface PageProps {

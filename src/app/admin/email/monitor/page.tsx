@@ -1,7 +1,9 @@
+import { Skeleton } from "@/components/ui/skeleton";
+import { getEmailMonitoringData } from "@/lib/data/admin-email";
 import { Suspense } from "react";
 import { EmailMonitorClient } from "./EmailMonitorClient";
-import { getEmailMonitoringData } from "@/lib/data/admin-email";
-import { Skeleton } from "@/components/ui/skeleton";
+
+const MONITOR_CARD_SKELETON_KEYS = ["a", "b", "c"] as const;
 
 function MonitorSkeleton() {
   return (
@@ -11,8 +13,8 @@ function MonitorSkeleton() {
         <Skeleton className="h-10 w-40" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[...Array(3)].map((_, i) => (
-          <Skeleton key={i} className="h-48 rounded-lg" />
+        {MONITOR_CARD_SKELETON_KEYS.map((k) => (
+          <Skeleton key={k} className="h-48 rounded-lg" />
         ))}
       </div>
       <Skeleton className="h-64 rounded-lg" />

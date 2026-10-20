@@ -21,13 +21,7 @@ export type PostStatus = "pending" | "approved" | "rejected" | "flagged";
 /**
  * Admin action types for audit log
  */
-export type AdminActionType =
-  | "approved"
-  | "rejected"
-  | "flagged"
-  | "unflagged"
-  | "status_changed"
-  | "edited";
+export type AdminActionType = "approved" | "rejected" | "flagged" | "unflagged" | "status_changed" | "edited";
 
 // =============================================================================
 // EXTENDED POST TYPE WITH ADMIN FIELDS

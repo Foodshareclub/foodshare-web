@@ -7,13 +7,13 @@
 
 "use client";
 
-import { motion } from "framer-motion";
-import Image from "next/image";
-import { CheckCircle2, Flame } from "lucide-react";
-import { rowVariants, rowGlowVariants, rankBadgeVariants, avatarVariants } from "./animations";
-import { getTierConfig, getRankBadgeClass, formatXp } from "./constants";
-import type { LeaderboardRowProps } from "./types";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { CheckCircle2, Flame } from "lucide-react";
+import Image from "next/image";
+import { avatarVariants, rankBadgeVariants, rowGlowVariants, rowVariants } from "./animations";
+import { formatXp, getRankBadgeClass, getTierConfig } from "./constants";
+import type { LeaderboardRowProps } from "./types";
 
 export function LeaderboardRow({ user, isCurrentUser = false, onClick }: LeaderboardRowProps) {
   const tierConfig = getTierConfig(user.tier);
@@ -23,9 +23,9 @@ export function LeaderboardRow({ user, isCurrentUser = false, onClick }: Leaderb
     <motion.button
       className={cn(
         "relative w-full flex items-center gap-3 p-2 rounded-lg",
-        "text-left transition-colors",
+        "text-start transition-colors",
         "hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-        isCurrentUser && "ring-2 ring-primary/50 bg-primary/5"
+        isCurrentUser && "ring-2 ring-primary/50 bg-primary/5",
       )}
       variants={rowVariants}
       whileHover={{ scale: 1.02 }}
@@ -44,7 +44,7 @@ export function LeaderboardRow({ user, isCurrentUser = false, onClick }: Leaderb
       <motion.div
         className={cn(
           "flex items-center justify-center h-7 w-7 rounded-full text-xs font-bold shrink-0",
-          getRankBadgeClass(user.rank)
+          getRankBadgeClass(user.rank),
         )}
         variants={rankBadgeVariants}
       >
@@ -56,18 +56,12 @@ export function LeaderboardRow({ user, isCurrentUser = false, onClick }: Leaderb
         className={cn(
           "relative h-10 w-10 rounded-full shrink-0 overflow-hidden",
           "ring-2",
-          tierConfig.color.replace("text-", "ring-")
+          tierConfig.color.replace("text-", "ring-"),
         )}
         variants={avatarVariants}
       >
         {user.avatarUrl ? (
-          <Image
-            src={user.avatarUrl}
-            alt={displayName}
-            fill
-            className="object-cover"
-            sizes="40px"
-          />
+          <Image src={user.avatarUrl} alt={displayName} fill className="object-cover" sizes="40px" />
         ) : (
           <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-sm font-medium">
             {displayName.charAt(0).toUpperCase()}

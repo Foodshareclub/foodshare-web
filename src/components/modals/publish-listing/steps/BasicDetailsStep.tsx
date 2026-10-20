@@ -3,13 +3,7 @@
 import { RequiredStar } from "@/components/requiredStar/RequiredStar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import React from "react";
 import { CharacterProgressRing, TitleSuggestions, VoiceInput } from "../components";
@@ -44,12 +38,9 @@ export function BasicDetailsStep({
   onVoiceTranscript,
   onTitleSuggestionSelect,
 }: BasicDetailsStepProps) {
-  const selectedCategoryConfig = category
-    ? categoryConfig[category as keyof typeof categoryConfig]
-    : null;
+  const selectedCategoryConfig = category ? categoryConfig[category as keyof typeof categoryConfig] : null;
   const titlePlaceholder = selectedCategoryConfig?.placeholders?.title || "What is it called";
-  const descriptionPlaceholder =
-    selectedCategoryConfig?.placeholders?.description || "A few words about...";
+  const descriptionPlaceholder = selectedCategoryConfig?.placeholders?.description || "A few words about...";
 
   return (
     <div className="space-y-4">
@@ -90,16 +81,10 @@ export function BasicDetailsStep({
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
             placeholder={titlePlaceholder}
-            className={showTitleError ? "border-destructive pr-8" : "pr-8"}
+            className={showTitleError ? "border-destructive pe-8" : "pe-8"}
           />
         </div>
-        {category && (
-          <TitleSuggestions
-            category={category}
-            currentTitle={title}
-            onSelect={onTitleSuggestionSelect}
-          />
-        )}
+        {category && <TitleSuggestions category={category} currentTitle={title} onSelect={onTitleSuggestionSelect} />}
       </div>
 
       {/* Description Textarea */}

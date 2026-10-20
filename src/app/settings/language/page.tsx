@@ -1,12 +1,12 @@
+import { getUser } from "@/app/actions/auth";
+import { generateNoIndexMetadata } from "@/lib/metadata";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { LanguageRegionClient } from "./LanguageRegionClient";
-import { getUser } from "@/app/actions/auth";
-import { generateNoIndexMetadata } from "@/lib/metadata";
 
 export const metadata = generateNoIndexMetadata(
   "Language & Region",
-  "Customize your language, location, and search preferences"
+  "Customize your language, location, and search preferences",
 );
 
 /**

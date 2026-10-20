@@ -1,35 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { acceptChallenge } from "@/app/actions/challenges";
+import { useConfetti } from "@/components/gpu/GPUConfetti";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import type { AuthUser } from "@/lib/data/auth";
+import type { Challenge } from "@/lib/data/challenges";
+import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  ArrowLeft,
+  Award,
+  CheckCircle,
+  Clock,
+  Flag,
+  Flame,
+  Gift,
+  Heart,
+  Share2,
+  Shield,
+  Sparkles,
+  Star,
+  Target,
+  TrendingUp,
+  Users,
+  Zap,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  Target,
-  Users,
-  Zap,
-  Award,
-  Clock,
-  CheckCircle,
-  Share2,
-  Heart,
-  Star,
-  TrendingUp,
-  Gift,
-  Shield,
-  Flag,
-  Flame,
-  Sparkles,
-} from "lucide-react";
-import { acceptChallenge } from "@/app/actions/challenges";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { useConfetti } from "@/components/gpu/GPUConfetti";
-import type { Challenge } from "@/lib/data/challenges";
-import type { AuthUser } from "@/lib/data/auth";
+import { useState } from "react";
+
+const HERO_PARTICLE_KEYS = ["a", "b", "c", "d", "e", "f"] as const;
 
 interface ChallengeDetailClientProps {
   challenge: Challenge;
@@ -70,11 +72,7 @@ const REWARDS = [
   { icon: "💚", name: "Eco Warrior", description: "Make a positive impact" },
 ];
 
-export function ChallengeDetailClient({
-  challenge,
-  user,
-  isAccepted: initialIsAccepted,
-}: ChallengeDetailClientProps) {
+export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAccepted }: ChallengeDetailClientProps) {
   const router = useRouter();
   const [isAccepted, setIsAccepted] = useState(initialIsAccepted);
   const [isAccepting, setIsAccepting] = useState(false);
@@ -133,14 +131,14 @@ export function ChallengeDetailClient({
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute top-20 right-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl"
+          className="absolute top-20 end-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl"
           animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 6, repeat: Infinity }}
+          transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY }}
         />
         <motion.div
-          className="absolute bottom-20 left-10 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl"
+          className="absolute bottom-20 start-10 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl"
           animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
-          transition={{ duration: 8, repeat: Infinity }}
+          transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY }}
         />
       </div>
 
@@ -159,27 +157,27 @@ export function ChallengeDetailClient({
 
           {/* Floating particles effect */}
           <div className="absolute inset-0">
-            {[...Array(6)].map((_, i) => (
+            {HERO_PARTICLE_KEYS.map((k, i) => (
               <motion.div
-                key={i}
+                key={k}
                 className="absolute w-2 h-2 bg-white/30 rounded-full"
                 style={{ left: `${15 + i * 15}%`, top: "60%" }}
                 animate={{ y: [-20, -60, -20], opacity: [0, 1, 0] }}
-                transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }}
+                transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, delay: i * 0.5 }}
               />
             ))}
           </div>
         </div>
 
         {/* Back Button */}
-        <div className="absolute top-4 left-4 z-10">
+        <div className="absolute top-4 start-4 z-10">
           <Link href="/challenge">
             <Button
               variant="ghost"
               size="sm"
               className="bg-black/30 backdrop-blur-md text-white hover:bg-black/50 border border-white/10"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="w-4 h-4 me-2" />
               Back to Challenges
             </Button>
           </Link>
@@ -190,17 +188,17 @@ export function ChallengeDetailClient({
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
-          className="absolute top-4 right-4"
+          className="absolute top-4 end-4"
         >
           <div
             className={cn(
               "flex items-center gap-2 px-5 py-3 rounded-2xl text-white shadow-2xl",
-              `bg-gradient-to-r ${config.gradient}`
+              `bg-gradient-to-r ${config.gradient}`,
             )}
           >
             <motion.div
               animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
+              transition={{ duration: 0.5, repeat: Number.POSITIVE_INFINITY, repeatDelay: 2 }}
             >
               <Zap className="w-6 h-6" />
             </motion.div>
@@ -221,15 +219,15 @@ export function ChallengeDetailClient({
             {/* Badges */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <Badge className={cn("text-white text-sm px-3 py-1", config.color)}>
-                <DifficultyIcon className="w-4 h-4 mr-1" />
+                <DifficultyIcon className="w-4 h-4 me-1" />
                 {difficulty}
               </Badge>
               <Badge variant="outline" className="text-sm px-3 py-1">
-                <Flag className="w-3 h-3 mr-1" />
+                <Flag className="w-3 h-3 me-1" />
                 {challenge.challenge_action}
               </Badge>
               <Badge variant="secondary" className="text-sm px-3 py-1">
-                <span className="mr-1">{config.badge}</span>
+                <span className="me-1">{config.badge}</span>
                 {config.xp} XP
               </Badge>
             </div>
@@ -248,9 +246,7 @@ export function ChallengeDetailClient({
               </div>
               <div className="flex items-center gap-2">
                 <Heart className="w-5 h-5 text-red-500" />
-                <span className="font-semibold text-foreground">
-                  {challenge.challenge_likes_counter}
-                </span>
+                <span className="font-semibold text-foreground">{challenge.challenge_likes_counter}</span>
                 <span>likes</span>
               </div>
               <div className="flex items-center gap-2">
@@ -266,11 +262,7 @@ export function ChallengeDetailClient({
       {/* Main Content */}
       <div className="relative max-w-4xl mx-auto px-4 py-8 space-y-8">
         {/* Accept Challenge CTA - Prominent */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <AnimatePresence mode="wait">
             {isAccepted ? (
               <motion.div
@@ -290,13 +282,11 @@ export function ChallengeDetailClient({
                   </div>
                 </motion.div>
                 <h2 className="text-2xl font-bold mb-2">Challenge Accepted! 🎉</h2>
-                <p className="text-white/80">
-                  You&apos;re now part of the movement. Let&apos;s make a difference!
-                </p>
+                <p className="text-white/80">You&apos;re now part of the movement. Let&apos;s make a difference!</p>
 
                 {/* Sparkles */}
-                <Sparkles className="absolute top-4 left-4 w-6 h-6 text-white/40" />
-                <Sparkles className="absolute bottom-4 right-4 w-8 h-8 text-white/40" />
+                <Sparkles className="absolute top-4 start-4 w-6 h-6 text-white/40" />
+                <Sparkles className="absolute bottom-4 end-4 w-8 h-8 text-white/40" />
               </motion.div>
             ) : (
               <motion.div
@@ -306,7 +296,7 @@ export function ChallengeDetailClient({
                 exit={{ opacity: 0 }}
                 className={cn(
                   "relative overflow-hidden rounded-3xl p-8 text-white",
-                  `bg-gradient-to-r ${config.gradient}`
+                  `bg-gradient-to-r ${config.gradient}`,
                 )}
               >
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -322,14 +312,14 @@ export function ChallengeDetailClient({
                     disabled={isAccepting}
                     className="bg-white text-foreground hover:bg-white/90 font-bold px-8 py-6 text-lg shadow-xl disabled:opacity-70"
                   >
-                    <Target className="w-5 h-5 mr-2" />
+                    <Target className="w-5 h-5 me-2" />
                     {isAccepting ? "Accepting..." : user ? "Accept Challenge" : "Login to Accept"}
                   </Button>
                 </div>
 
                 {/* Decorative elements */}
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
-                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-black/10 rounded-full blur-2xl" />
+                <div className="absolute -top-10 -end-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+                <div className="absolute -bottom-10 -start-10 w-32 h-32 bg-black/10 rounded-full blur-2xl" />
               </motion.div>
             )}
           </AnimatePresence>
@@ -361,7 +351,7 @@ export function ChallengeDetailClient({
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
                 animate={{ x: ["-100%", "100%"] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, repeatDelay: 1 }}
               />
             </motion.div>
           </div>
@@ -383,9 +373,7 @@ export function ChallengeDetailClient({
             <Shield className="w-5 h-5 text-primary" />
             About This Challenge
           </h3>
-          <p className="text-muted-foreground leading-relaxed text-lg">
-            {challenge.challenge_description}
-          </p>
+          <p className="text-muted-foreground leading-relaxed text-lg">{challenge.challenge_description}</p>
         </motion.div>
 
         {/* Rewards Section */}
@@ -438,21 +426,13 @@ export function ChallengeDetailClient({
             className="gap-2 flex-1 sm:flex-none"
             onClick={() => setIsLiked(!isLiked)}
           >
-            <motion.div
-              animate={isLiked ? { scale: [1, 1.3, 1] } : {}}
-              transition={{ duration: 0.3 }}
-            >
+            <motion.div animate={isLiked ? { scale: [1, 1.3, 1] } : {}} transition={{ duration: 0.3 }}>
               <Heart className={cn("w-5 h-5", isLiked && "fill-red-500 text-red-500")} />
             </motion.div>
             {isLiked ? "Liked!" : "Like"}
           </Button>
 
-          <Button
-            size="lg"
-            variant="outline"
-            className="gap-2 flex-1 sm:flex-none"
-            onClick={handleShare}
-          >
+          <Button size="lg" variant="outline" className="gap-2 flex-1 sm:flex-none" onClick={handleShare}>
             <Share2 className="w-5 h-5" />
             Share Challenge
           </Button>

@@ -11,7 +11,7 @@
  */
 
 // Re-export config
-export * from './config';
+export * from "./config";
 
 // Re-export next-intl hooks for convenience
-export { useTranslations, useLocale, useMessages, useNow, useTimeZone } from 'next-intl';
+export { useTranslations, useLocale, useMessages, useNow, useTimeZone } from "next-intl";

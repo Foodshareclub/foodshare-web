@@ -5,30 +5,21 @@
  * Premium security settings with modern design
  */
 
-import React, { useState, useRef, useEffect, useTransition } from "react";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import {
-  Shield,
-  Key,
-  ChevronLeft,
-  Check,
-  X,
-  CheckCircle,
-  AlertCircle,
-  Lock,
-  Fingerprint,
-} from "lucide-react";
-import { auth } from "@/lib/auth";
+import { MFAEnrollment } from "@/components/security/MFAEnrollment";
+import { TelegramIntegrationCard } from "@/components/settings/TelegramIntegrationCard";
 import { Button } from "@/components/ui/button";
+import { Glass } from "@/components/ui/glass";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Glass } from "@/components/ui/glass";
-import { MFAEnrollment } from "@/components/security/MFAEnrollment";
-import { TelegramIntegrationCard } from "@/components/settings/TelegramIntegrationCard";
-import { cn as _cn } from "@/lib/utils";
+import { auth } from "@/lib/auth";
 import type { AuthUser } from "@/lib/data/auth";
+import { cn as _cn } from "@/lib/utils";
+import type { TimerHandle } from "@/types/timer.types";
+import { motion } from "framer-motion";
+import { AlertCircle, Check, CheckCircle, ChevronLeft, Fingerprint, Key, Lock, Shield, X } from "lucide-react";
+import Link from "next/link";
+import React, { useState, useRef, useEffect, useTransition } from "react";
 
 interface LoginSecurityClientProps {
   user: AuthUser;
@@ -58,7 +49,7 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
   const [isEmailSent, setIsEmailSent] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<TimerHandle | null>(null);
 
   useEffect(() => {
     return () => {
@@ -109,8 +100,8 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
     <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background pb-10">
       {/* Decorative background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-500/8 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-20 w-60 h-60 bg-teal-500/8 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -end-40 w-80 h-80 bg-emerald-500/8 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -start-20 w-60 h-60 bg-teal-500/8 rounded-full blur-3xl" />
       </div>
 
       <div className="container mx-auto max-w-3xl px-4 py-6 lg:py-10">
@@ -125,7 +116,7 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
             href="/settings"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
           >
-            <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+            <ChevronLeft className="w-4 h-4 transition-transform rtl:scale-x-100 group-hover:-translate-x-0.5 rtl:group-hover:translate-x-0.5" />
             Back to Settings
           </Link>
         </motion.div>
@@ -143,27 +134,16 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
             </div>
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Login & security</h1>
-              <p className="text-sm text-muted-foreground">
-                Manage your password and account security
-              </p>
+              <p className="text-sm text-muted-foreground">Manage your password and account security</p>
             </div>
           </div>
         </motion.header>
 
         {/* Content */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="space-y-4"
-        >
+        <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
           {/* Password Section */}
           <motion.div variants={itemVariants}>
-            <Glass
-              variant="subtle"
-              hover
-              className="group relative p-6 hover:shadow-lg transition-all duration-300"
-            >
+            <Glass variant="subtle" hover className="group relative p-6 hover:shadow-lg transition-all duration-300">
               <div className="flex items-start gap-4">
                 <div className="relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg transition-transform duration-300 group-hover:scale-105">
                   <Key className="w-5 h-5 text-white" />
@@ -248,26 +228,19 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
                             "Sending..."
                           ) : (
                             <>
-                              <Check className="w-3 h-3 mr-1.5" />
+                              <Check className="w-3 h-3 me-1.5" />
                               Send reset link
                             </>
                           )}
                         </Button>
-                        <Button
-                          onClick={handleCancelPasswordEdit}
-                          variant="outline"
-                          size="sm"
-                          disabled={isPending}
-                        >
-                          <X className="w-3 h-3 mr-1.5" />
+                        <Button onClick={handleCancelPasswordEdit} variant="outline" size="sm" disabled={isPending}>
+                          <X className="w-3 h-3 me-1.5" />
                           Cancel
                         </Button>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-muted-foreground">
-                      Keep your account secure with a strong password
-                    </p>
+                    <p className="text-muted-foreground">Keep your account secure with a strong password</p>
                   )}
                 </div>
               </div>
@@ -305,8 +278,8 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
                     <div className="flex items-start gap-3">
                       <Lock className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5" />
                       <p className="text-sm text-blue-900 dark:text-blue-100">
-                        <strong>Admin Access Protection:</strong> As an administrator, MFA adds an
-                        extra layer of security to protect sensitive features and the CMS.
+                        <strong>Admin Access Protection:</strong> As an administrator, MFA adds an extra layer of
+                        security to protect sensitive features and the CMS.
                       </p>
                     </div>
                   </div>
@@ -332,7 +305,7 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
               <ul className="space-y-3">
                 {securityTips.map((tip, index) => (
                   <motion.li
-                    key={index}
+                    key={tip}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 + index * 0.1 }}

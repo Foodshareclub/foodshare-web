@@ -9,13 +9,14 @@
  * - Proper auth checks
  */
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { guardAdmin } from "@/lib/data/admin-check";
 import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { CRM_CACHE_TAGS } from "@/lib/data/crm";
-import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
+import { type ServerActionResult, serverActionError, successVoid } from "@/lib/errors";
 import type { ErrorCode } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 // ============================================================================
 // Zod Schemas
@@ -57,6 +58,10 @@ export interface TagResult {
   tagId: string;
 }
 
+interface ProfileIdRow {
+  id: string;
+}
+
 // ============================================================================
 // Helper: Verify Auth
 // ============================================================================
@@ -67,7 +72,23 @@ type AuthSuccess = {
   supabase: Awaited<ReturnType<typeof createClient>>;
 };
 
-async function verifyAuth(): Promise<AuthError | AuthSuccess> {
+/**
+ * Require an authenticated **admin**, and hand back a session-bound client.
+ *
+ * This was named `verifyAuth` and checked exactly that: a session. Every
+ * table it writes carries a `USING (public.is_admin())` policy, so the role
+ * was enforced one layer away, on the far side of a client these actions
+ * build themselves. That is defence in depth with nothing underneath it —
+ * the guard survives only for as long as nobody edits a policy — and it
+ * contradicts what the file is for. The role is checked here, before the
+ * client is built and before any query is issued.
+ */
+async function requireAdminSession(): Promise<AuthError | AuthSuccess> {
+  const adminId = await guardAdmin().then((guard) => {
+    if (!guard.ok) throw new Error(guard.error);
+    return guard.adminId;
+  });
+
   const supabase = await createClient();
 
   const {
@@ -79,7 +100,7 @@ async function verifyAuth(): Promise<AuthError | AuthSuccess> {
     return { error: "You must be logged in", code: "UNAUTHORIZED" };
   }
 
-  return { user: { id: user.id }, supabase };
+  return { user: { id: adminId }, supabase };
 }
 
 function isAuthError(result: AuthError | AuthSuccess): result is AuthError {
@@ -96,7 +117,7 @@ async function logAuditEvent(
   action: string,
   resourceType: string,
   resourceId: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<void> {
   try {
     await supabase.rpc("log_audit_event", {
@@ -121,7 +142,7 @@ async function logAuditEvent(
  */
 export async function importProfilesAsCRMCustomers(): Promise<ServerActionResult<ImportResult>> {
   try {
-    const auth = await verifyAuth();
+    const auth = await requireAdminSession();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
@@ -147,7 +168,7 @@ export async function importProfilesAsCRMCustomers(): Promise<ServerActionResult
     }
 
     // Create CRM customer records
-    const customersToInsert = profiles.map((p: any) => ({
+    const customersToInsert = (profiles as ProfileIdRow[]).map((p) => ({
       profile_id: p.id,
       status: "active",
       lifecycle_stage: "lead",
@@ -188,7 +209,7 @@ export async function importProfilesAsCRMCustomers(): Promise<ServerActionResult
  */
 export async function updateCustomerLifecycle(
   customerId: string,
-  stage: z.infer<typeof LifecycleStageSchema>
+  stage: z.infer<typeof LifecycleStageSchema>,
 ): Promise<ServerActionResult<void>> {
   try {
     // Validate inputs
@@ -201,7 +222,7 @@ export async function updateCustomerLifecycle(
       return serverActionError("Invalid lifecycle stage", "VALIDATION_ERROR");
     }
 
-    const auth = await verifyAuth();
+    const auth = await requireAdminSession();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
@@ -236,10 +257,7 @@ export async function updateCustomerLifecycle(
 /**
  * Update customer engagement score
  */
-export async function updateEngagementScore(
-  customerId: string,
-  score: number
-): Promise<ServerActionResult<void>> {
+export async function updateEngagementScore(customerId: string, score: number): Promise<ServerActionResult<void>> {
   try {
     // Validate inputs
     const validated = UpdateEngagementSchema.safeParse({ customerId, score });
@@ -248,7 +266,7 @@ export async function updateEngagementScore(
       return serverActionError(firstError.message, "VALIDATION_ERROR");
     }
 
-    const auth = await verifyAuth();
+    const auth = await requireAdminSession();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
@@ -286,10 +304,7 @@ export async function updateEngagementScore(
 /**
  * Archive a customer
  */
-export async function archiveCustomer(
-  customerId: string,
-  reason?: string
-): Promise<ServerActionResult<void>> {
+export async function archiveCustomer(customerId: string, reason?: string): Promise<ServerActionResult<void>> {
   try {
     // Validate inputs
     const validated = ArchiveCustomerSchema.safeParse({ customerId, reason });
@@ -298,7 +313,7 @@ export async function archiveCustomer(
       return serverActionError(firstError.message, "VALIDATION_ERROR");
     }
 
-    const auth = await verifyAuth();
+    const auth = await requireAdminSession();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
@@ -344,7 +359,7 @@ export async function restoreCustomer(customerId: string): Promise<ServerActionR
       return serverActionError("Invalid customer ID", "VALIDATION_ERROR");
     }
 
-    const auth = await verifyAuth();
+    const auth = await requireAdminSession();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
@@ -389,7 +404,7 @@ export async function restoreCustomer(customerId: string): Promise<ServerActionR
 export async function addCustomerNote(
   customerId: string,
   content: string,
-  noteType: "general" | "call" | "email" | "meeting" | "support" = "general"
+  noteType: "general" | "call" | "email" | "meeting" | "support" = "general",
 ): Promise<ServerActionResult<void>> {
   try {
     // Validate inputs
@@ -399,7 +414,7 @@ export async function addCustomerNote(
       return serverActionError(firstError.message, "VALIDATION_ERROR");
     }
 
-    const auth = await verifyAuth();
+    const auth = await requireAdminSession();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
@@ -446,7 +461,7 @@ export async function deleteCustomerNote(noteId: string): Promise<ServerActionRe
       return serverActionError("Invalid note ID", "VALIDATION_ERROR");
     }
 
-    const auth = await verifyAuth();
+    const auth = await requireAdminSession();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
@@ -454,11 +469,7 @@ export async function deleteCustomerNote(noteId: string): Promise<ServerActionRe
     const { supabase, user } = auth;
 
     // Get note to find customer ID for cache invalidation
-    const { data: note } = await supabase
-      .from("crm_customer_notes")
-      .select("customer_id")
-      .eq("id", noteId)
-      .single();
+    const { data: note } = await supabase.from("crm_customer_notes").select("customer_id").eq("id", noteId).single();
 
     const { error } = await supabase.from("crm_customer_notes").delete().eq("id", noteId);
 
@@ -489,11 +500,11 @@ export async function deleteCustomerNote(noteId: string): Promise<ServerActionRe
 /**
  * Assign tag to customer
  */
-export async function assignTagToCustomer(
-  customerId: string,
-  tagId: string
-): Promise<ServerActionResult<void>> {
+export async function assignTagToCustomer(customerId: string, tagId: string): Promise<ServerActionResult<void>> {
   try {
+    const auth = await requireAdminSession();
+    if (isAuthError(auth)) return serverActionError(auth.error, auth.code);
+
     // Validate IDs
     if (!customerId || !z.string().uuid().safeParse(customerId).success) {
       return serverActionError("Invalid customer ID", "VALIDATION_ERROR");
@@ -531,11 +542,11 @@ export async function assignTagToCustomer(
 /**
  * Remove tag from customer
  */
-export async function removeTagFromCustomer(
-  customerId: string,
-  tagId: string
-): Promise<ServerActionResult<void>> {
+export async function removeTagFromCustomer(customerId: string, tagId: string): Promise<ServerActionResult<void>> {
   try {
+    const auth = await requireAdminSession();
+    if (isAuthError(auth)) return serverActionError(auth.error, auth.code);
+
     // Validate IDs
     if (!customerId || !z.string().uuid().safeParse(customerId).success) {
       return serverActionError("Invalid customer ID", "VALIDATION_ERROR");
@@ -573,7 +584,7 @@ export async function removeTagFromCustomer(
 export async function createTag(
   name: string,
   color: string,
-  description?: string
+  description?: string,
 ): Promise<ServerActionResult<TagResult>> {
   try {
     // Validate inputs
@@ -583,7 +594,7 @@ export async function createTag(
       return serverActionError(firstError.message, "VALIDATION_ERROR");
     }
 
-    const auth = await verifyAuth();
+    const auth = await requireAdminSession();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
@@ -635,7 +646,7 @@ export async function deleteTag(tagId: string): Promise<ServerActionResult<void>
       return serverActionError("Invalid tag ID", "VALIDATION_ERROR");
     }
 
-    const auth = await verifyAuth();
+    const auth = await requireAdminSession();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }

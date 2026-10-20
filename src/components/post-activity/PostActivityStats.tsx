@@ -5,9 +5,9 @@
  * Pure display component - no client-side interactivity needed.
  */
 
-import { Eye, MessageCircle, CheckCircle, Package, Heart, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PostActivityCounts } from "@/types/post-activity.types";
+import { CheckCircle, Eye, Heart, MessageCircle, Package, Share2 } from "lucide-react";
 
 interface PostActivityStatsProps {
   counts: PostActivityCounts;

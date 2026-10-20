@@ -47,7 +47,7 @@ export function ProductGrid({
           onLoadMore();
         }
       },
-      { rootMargin: "200px" } // Trigger 200px before reaching the end
+      { rootMargin: "200px" }, // Trigger 200px before reaching the end
     );
 
     const currentRef = loadMoreRef.current;
@@ -73,9 +73,7 @@ export function ProductGrid({
 
           {/* Loading more skeletons */}
           {isFetchingMore &&
-            LOADING_MORE_SKELETONS.map((i) => (
-              <SkeletonCard key={`loading-more-${i}`} isLoaded={false} />
-            ))}
+            LOADING_MORE_SKELETONS.map((i) => <SkeletonCard key={`loading-more-${i}`} isLoaded={false} />)}
         </div>
       </div>
 

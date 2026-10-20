@@ -1,5 +1,5 @@
-import type { LucideIcon } from "lucide-react";
 import type { CustomRoomType } from "@/api/chatAPI";
+import type { LucideIcon } from "lucide-react";
 
 // ============================================================================
 // Navbar Core Types

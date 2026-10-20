@@ -11,10 +11,7 @@ import { siteConfig } from "./metadata";
  * Escapes </script> tags and other problematic sequences
  */
 export function safeJsonLdStringify(data: unknown): string {
-  return JSON.stringify(data)
-    .replace(/</g, "\\u003c")
-    .replace(/>/g, "\\u003e")
-    .replace(/&/g, "\\u0026");
+  return JSON.stringify(data).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
 }
 
 /**
@@ -99,27 +96,33 @@ export function generatePersonJsonLd({
 }
 
 /**
- * Calculate aggregate rating from five_star/four_star counts
- * @param fiveStar - Count of 5-star reviews
- * @param fourStar - Count of 4-star reviews
- * @returns Aggregate rating object or null if no reviews
+ * Build the Product `aggregateRating` from a mean and a count.
+ *
+ * Note what this deliberately does *not* do: it does not average the
+ * 4- and 5-star counts. A listing with nine 1-star reviews and two
+ * 5-star ones scored 4.6 that way. `aggregateRating` has to describe
+ * every review, and Google treats a rating that excludes the bad ones as
+ * a manual-action risk, so the mean must come from the whole histogram.
+ *
+ * @param average - Mean of every review for the listing, 1..5
+ * @param reviewCount - How many reviews that mean covers
+ * @returns Aggregate rating, or null when there is nothing to report
  */
-export function calculateAggregateRating(
-  fiveStar: number | null,
-  fourStar: number | null
+export function buildAggregateRating(
+  average: number | null | undefined,
+  reviewCount: number | null | undefined,
 ): { ratingValue: number; reviewCount: number } | null {
-  const five = fiveStar || 0;
-  const four = fourStar || 0;
-  const totalReviews = five + four;
+  if (!reviewCount || reviewCount <= 0) return null;
+  if (average == null || !Number.isFinite(average) || average <= 0) return null;
 
-  if (totalReviews === 0) return null;
-
-  // Weighted average: (5*five + 4*four) / total
-  const ratingValue = (5 * five + 4 * four) / totalReviews;
+  // A single review is not an aggregate. Google requires >= 2 for a
+  // visible rating snippet, and emitting reviewCount: 1 produces a
+  // review snippet nobody can reach.
+  if (reviewCount < 2) return null;
 
   return {
-    ratingValue: Math.round(ratingValue * 10) / 10,
-    reviewCount: totalReviews,
+    ratingValue: Math.round(Math.min(Math.max(average, 1), 5) * 10) / 10,
+    reviewCount,
   };
 }
 
@@ -515,13 +518,11 @@ export function generateRecipeJsonLd({
     recipeCategory: category || "Shared Food",
     recipeCuisine: cuisine || "Various",
     recipeIngredient: ingredients || [description.slice(0, 100)],
-    recipeInstructions: (instructions || ["Contact the sharer to arrange pickup"]).map(
-      (text, index) => ({
-        "@type": "HowToStep",
-        position: index + 1,
-        text,
-      })
-    ),
+    recipeInstructions: (instructions || ["Contact the sharer to arrange pickup"]).map((text, index) => ({
+      "@type": "HowToStep",
+      position: index + 1,
+      text,
+    })),
     ...(nutrition?.calories && {
       nutrition: {
         "@type": "NutritionInformation",

@@ -3,11 +3,7 @@
  * Single source of truth across FoodShare monorepo.
  */
 
-import type {
-  NotificationCategory,
-  NotificationChannel,
-  NotificationFrequency,
-} from "./notifications.types";
+import type { NotificationCategory, NotificationChannel, NotificationFrequency } from "./notifications.types";
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -474,5 +470,4 @@ export type WasteLogInsert = Database["public"]["Tables"]["waste_logs"]["Insert"
 export type WasteLogUpdate = Database["public"]["Tables"]["waste_logs"]["Update"];
 export type TelegramLinkToken = Database["public"]["Tables"]["telegram_link_tokens"]["Row"];
 export type NotificationSettings = Database["public"]["Tables"]["notification_settings"]["Row"];
-export type NotificationPreference =
-  Database["public"]["Tables"]["notification_preferences"]["Row"];
+export type NotificationPreference = Database["public"]["Tables"]["notification_preferences"]["Row"];

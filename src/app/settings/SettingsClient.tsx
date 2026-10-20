@@ -6,24 +6,33 @@
  * and modern micro-interactions. Inspired by Linear, Raycast, and Arc.
  */
 
-import { useState } from "react";
-import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { User, Shield, HelpCircle, Settings, Sparkles, LogOut, Menu } from "lucide-react";
-import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
-import {
-  SettingsSidebar,
-  UserProfileHeader,
-  BentoCard,
-  ProfileCompletionCard,
-  ActivitySummaryCard,
-  KeyboardShortcutsHint,
-  preferenceItems,
-} from "./components";
 import { Button } from "@/components/ui/button";
 import { Glass } from "@/components/ui/glass";
+import { type Locale, getLocaleDirection } from "@/i18n/config";
+import { AnimatePresence, motion } from "framer-motion";
+import { HelpCircle, LogOut, Menu, Settings, Shield, Sparkles, User } from "lucide-react";
+import { useLocale } from "next-intl";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import {
+  ActivitySummaryCard,
+  BentoCard,
+  KeyboardShortcutsHint,
+  ProfileCompletionCard,
+  SettingsSidebar,
+  UserProfileHeader,
+  preferenceItems,
+} from "./components";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 
 export function SettingsClient() {
+  // The mobile navigation drawer slides in from the inline start, which is the
+  // left in LTR and the right in Arabic. `start-0` puts the panel there, and the
+  // transform has to agree: a physical `x: "-100%"` slid it in from the left
+  // whatever the anchor said, which is how the border ended up logical
+  // (`border-e`) while the panel did not.
+  const offscreen = getLocaleDirection(useLocale() as Locale) === "rtl" ? "100%" : "-100%";
+
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -33,9 +42,9 @@ export function SettingsClient() {
     <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
       {/* Decorative background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500/8 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-1/3 -left-20 w-72 h-72 bg-blue-500/8 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute bottom-20 right-1/4 w-56 h-56 bg-purple-500/8 rounded-full blur-3xl animate-pulse delay-500" />
+        <div className="absolute -top-40 -end-40 w-96 h-96 bg-emerald-500/8 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/3 -start-20 w-72 h-72 bg-blue-500/8 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute bottom-20 end-1/4 w-56 h-56 bg-purple-500/8 rounded-full blur-3xl animate-pulse delay-500" />
       </div>
 
       <div className="container mx-auto px-4 lg:px-8 py-6 lg:py-10">
@@ -59,12 +68,7 @@ export function SettingsClient() {
               </div>
             </div>
 
-            <Button
-              variant="outline"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setMobileMenuOpen(true)}
-            >
+            <Button variant="outline" size="icon" className="lg:hidden" onClick={() => setMobileMenuOpen(true)}>
               <Menu className="w-5 h-5" />
             </Button>
           </div>
@@ -96,16 +100,13 @@ export function SettingsClient() {
                   onClick={() => setMobileMenuOpen(false)}
                 />
                 <motion.div
-                  initial={{ x: "-100%" }}
+                  initial={{ x: offscreen }}
                   animate={{ x: 0 }}
-                  exit={{ x: "-100%" }}
+                  exit={{ x: offscreen }}
                   transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                  className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-background border-r border-border z-50 lg:hidden"
+                  className="fixed inset-y-0 start-0 w-80 max-w-[85vw] bg-background border-e border-border z-50 lg:hidden"
                 >
-                  <SettingsSidebar
-                    currentPath={pathname}
-                    onClose={() => setMobileMenuOpen(false)}
-                  />
+                  <SettingsSidebar currentPath={pathname} onClose={() => setMobileMenuOpen(false)} />
                 </motion.div>
               </>
             )}
@@ -202,7 +203,7 @@ export function SettingsClient() {
                 size="sm"
                 className="text-destructive border-destructive/30 hover:bg-destructive/10"
               >
-                <LogOut className="w-4 h-4 mr-2" />
+                <LogOut className="w-4 h-4 me-2" />
                 Log out
               </Button>
             </div>

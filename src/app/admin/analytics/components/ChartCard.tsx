@@ -1,9 +1,9 @@
 "use client";
 
-import { ReactNode } from "react";
-import { motion } from "framer-motion";
 import { GlassPanel } from "@/components/ui/glass";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import type { ReactNode } from "react";
 
 interface ChartCardProps {
   title: string;
@@ -50,6 +50,7 @@ export function EmptyState({ message }: { message: string }) {
     <div className="h-[300px] flex flex-col items-center justify-center text-muted-foreground">
       <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
         <svg
+          aria-hidden="true"
           className="w-8 h-8 text-muted-foreground/50"
           fill="none"
           viewBox="0 0 24 24"

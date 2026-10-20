@@ -1,26 +1,29 @@
-import { Suspense } from "react";
-import dynamic from "next/dynamic";
-import { getTranslations } from "next-intl/server";
-import { Workflow } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getActiveAutomations, getEmailDashboardStats } from "@/lib/data/admin-email";
+import { Workflow } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 
 // Dynamic import for code-splitting (~100KB saved from initial bundle)
 const AutomationClient = dynamic(() =>
-  import("@/app/admin/crm/components/AutomationClient").then((mod) => mod.AutomationClient)
+  import("@/app/admin/crm/components/AutomationClient").then((mod) => mod.AutomationClient),
 );
+
+const AUTOMATION_STAT_SKELETON_KEYS = ["a", "b", "c", "d"] as const;
+const AUTOMATION_FLOW_SKELETON_KEYS = ["a", "b", "c", "d"] as const;
 
 function AutomationSkeleton() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-xl" />
+        {AUTOMATION_STAT_SKELETON_KEYS.map((k) => (
+          <Skeleton key={k} className="h-20 rounded-xl" />
         ))}
       </div>
       <div className="space-y-3">
-        {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-32 rounded-xl" />
+        {AUTOMATION_FLOW_SKELETON_KEYS.map((k) => (
+          <Skeleton key={k} className="h-32 rounded-xl" />
         ))}
       </div>
     </div>
@@ -28,10 +31,7 @@ function AutomationSkeleton() {
 }
 
 async function AutomationContent() {
-  const [automations, stats] = await Promise.all([
-    getActiveAutomations(),
-    getEmailDashboardStats(),
-  ]);
+  const [automations, stats] = await Promise.all([getActiveAutomations(), getEmailDashboardStats()]);
 
   return <AutomationClient automations={automations} stats={stats} />;
 }
@@ -47,12 +47,8 @@ export default async function AdminAutomationPage() {
             <Workflow className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-foreground tracking-tight">
-              {t("email_automation")}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {t("automated_email_flows_and_sequences")}
-            </p>
+            <h1 className="text-xl font-bold text-foreground tracking-tight">{t("email_automation")}</h1>
+            <p className="text-sm text-muted-foreground">{t("automated_email_flows_and_sequences")}</p>
           </div>
         </div>
       </div>

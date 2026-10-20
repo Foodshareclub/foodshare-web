@@ -76,15 +76,15 @@ export {
   type StorageErrorInfo,
 } from "./storage-handler";
 
-// Auth Errors
+// Auth Errors — codes, not sentences. See ./auth.ts for why the English-message
+// versions of these were removed rather than deprecated.
 export {
-  AUTH_ERRORS,
-  getAuthErrorMessage,
+  AUTH_ERROR_CODES,
+  authErrorKey,
+  toAuthErrorCode,
+  getAuthErrorCode,
   sanitizeErrorMessage,
-  isNetworkError,
-  isAuthError,
-  isRecoverableError,
-  getErrorSuggestion,
+  type AuthErrorCode,
 } from "./auth";
 
 // Error Handler

@@ -7,22 +7,22 @@
 
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useLeaderboardUserProfile } from "@/hooks/queries/useChallengeLeaderboard";
+import { cn, formatDate } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
+import { Calendar, CheckCircle2, Flame, Target, Trophy } from "lucide-react";
 import Image from "next/image";
-import { CheckCircle2, Flame, Target, Trophy, Calendar } from "lucide-react";
 import {
+  challengeItemVariants,
+  challengeListVariants,
   modalContentVariants,
   modalStatsVariants,
   statItemVariants,
   tierBadgeVariants,
-  challengeListVariants,
-  challengeItemVariants,
 } from "./animations";
-import { getTierConfig, formatXp } from "./constants";
+import { formatXp, getTierConfig } from "./constants";
 import type { LeaderboardUserModalProps } from "./types";
-import { useLeaderboardUserProfile } from "@/hooks/queries/useChallengeLeaderboard";
-import { cn, formatDate } from "@/lib/utils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function LeaderboardUserModal({ userId, open, onOpenChange }: LeaderboardUserModalProps) {
   const { data: profile, isLoading } = useLeaderboardUserProfile(userId);
@@ -37,13 +37,7 @@ export function LeaderboardUserModal({ userId, open, onOpenChange }: Leaderboard
           {isLoading ? (
             <ModalSkeleton key="skeleton" />
           ) : profile ? (
-            <motion.div
-              key="content"
-              variants={modalContentVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-            >
+            <motion.div key="content" variants={modalContentVariants} initial="hidden" animate="visible" exit="exit">
               <DialogHeader className="text-center pb-4">
                 {/* Avatar */}
                 <div className="flex justify-center mb-3">
@@ -51,20 +45,14 @@ export function LeaderboardUserModal({ userId, open, onOpenChange }: Leaderboard
                     className={cn(
                       "relative h-20 w-20 rounded-full overflow-hidden",
                       "ring-4",
-                      tierConfig?.color.replace("text-", "ring-")
+                      tierConfig?.color.replace("text-", "ring-"),
                     )}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 400, damping: 20 }}
                   >
                     {profile.avatarUrl ? (
-                      <Image
-                        src={profile.avatarUrl}
-                        alt={displayName}
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                      />
+                      <Image src={profile.avatarUrl} alt={displayName} fill className="object-cover" sizes="80px" />
                     ) : (
                       <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-2xl font-medium">
                         {displayName.charAt(0).toUpperCase()}
@@ -89,7 +77,7 @@ export function LeaderboardUserModal({ userId, open, onOpenChange }: Leaderboard
                         "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium",
                         "bg-gradient-to-r from-background/80 to-background/60",
                         "border border-border/50 backdrop-blur-sm",
-                        tierConfig.color
+                        tierConfig.color,
                       )}
                     >
                       <span className="text-base">{tierConfig.emoji}</span>
@@ -213,12 +201,7 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
   };
 
   return (
-    <span
-      className={cn(
-        "px-1.5 py-0.5 rounded text-[10px] font-medium",
-        colors[difficulty] || colors.Easy
-      )}
-    >
+    <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-medium", colors[difficulty] || colors.Easy)}>
       {difficulty}
     </span>
   );

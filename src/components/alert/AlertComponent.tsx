@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { CheckCircle, AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle } from "lucide-react";
+import type React from "react";
+import { useEffect, useState } from "react";
 
 export type StatusType = "info" | "warning" | "success" | "error" | "loading" | undefined;
 
@@ -20,6 +21,7 @@ type PropsType = {
 const AlertComponent: React.FC<PropsType> = ({ status, title, top, onDismiss }) => {
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `status` is the trigger — each new alert status re-arms the 3s auto-dismiss timer, which the body never reads
   useEffect(() => {
     const time = setTimeout(() => {
       setIsLoaded(true);
@@ -33,7 +35,7 @@ const AlertComponent: React.FC<PropsType> = ({ status, title, top, onDismiss }) 
     return (
       <>
         {isLoaded && (
-          <div className="fixed left-0 z-10 w-full" style={{ top }}>
+          <div className="fixed inset-x-0 z-10" style={{ top }}>
             <div className="glass-accent-primary rounded-xl p-4">
               <div className="flex items-center gap-3 bg-transparent">
                 <CheckCircle className="w-5 h-5 text-green-600" />
@@ -49,7 +51,7 @@ const AlertComponent: React.FC<PropsType> = ({ status, title, top, onDismiss }) 
     return (
       <>
         {isLoaded && (
-          <div className="fixed left-0 z-10 w-full" style={{ top }}>
+          <div className="fixed inset-x-0 z-10" style={{ top }}>
             <div className="glass-accent-orange rounded-xl p-4">
               <div className="flex items-center gap-3 bg-transparent">
                 <AlertCircle className="w-5 h-5 text-orange-600" />

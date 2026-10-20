@@ -5,19 +5,19 @@
  * Create, update, delete, toggle, and duplicate automation flows
  */
 
-import { z } from "zod";
-import { CreateAutomationSchema, UpdateAutomationSchema } from "./schemas";
-import { success, error, type ActionResult } from "./types";
-import { requireAuth, logAuditEvent, invalidateAutomationCache } from "./helpers";
 import type { AutomationStep } from "@/lib/data/automations";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
+import { invalidateAutomationCache, logAuditEvent, requireAuth } from "./helpers";
+import { CreateAutomationSchema, UpdateAutomationSchema } from "./schemas";
+import { type ActionResult, error, success } from "./types";
 
 // ============================================================================
 // Create Automation Flow
 // ============================================================================
 
 export async function createAutomationFlow(
-  input: z.infer<typeof CreateAutomationSchema>
+  input: z.infer<typeof CreateAutomationSchema>,
 ): Promise<ActionResult<{ id: string; name: string }>> {
   try {
     // Validate input
@@ -85,7 +85,7 @@ export async function createAutomationFlow(
 
 export async function updateAutomationFlow(
   id: string,
-  input: z.infer<typeof UpdateAutomationSchema>
+  input: z.infer<typeof UpdateAutomationSchema>,
 ): Promise<ActionResult<{ id: string; status: string }>> {
   try {
     if (!id || !z.string().uuid().safeParse(id).success) {
@@ -167,10 +167,7 @@ export async function updateAutomationFlow(
 // Delete Automation Flow (Soft Delete)
 // ============================================================================
 
-export async function deleteAutomationFlow(
-  id: string,
-  hardDelete = false
-): Promise<ActionResult<{ id: string }>> {
+export async function deleteAutomationFlow(id: string, hardDelete = false): Promise<ActionResult<{ id: string }>> {
   try {
     if (!id || !z.string().uuid().safeParse(id).success) {
       return error("Invalid automation ID", "INVALID_ID");
@@ -192,18 +189,12 @@ export async function deleteAutomationFlow(
 
     // Prevent deleting active automations with enrollments
     if (current.status === "active" && current.total_enrolled > 0) {
-      return error(
-        "Cannot delete active automation with enrollments. Pause it first.",
-        "HAS_ENROLLMENTS"
-      );
+      return error("Cannot delete active automation with enrollments. Pause it first.", "HAS_ENROLLMENTS");
     }
 
     if (hardDelete) {
       // Hard delete - remove from database
-      const { error: dbError } = await supabase
-        .from("email_automation_flows")
-        .delete()
-        .eq("id", id);
+      const { error: dbError } = await supabase.from("email_automation_flows").delete().eq("id", id);
 
       if (dbError) {
         return error("Failed to delete automation", "DB_ERROR");
@@ -230,16 +221,9 @@ export async function deleteAutomationFlow(
         .eq("status", "pending");
     }
 
-    await logAuditEvent(
-      supabase,
-      user.id,
-      hardDelete ? "HARD_DELETE" : "ARCHIVE",
-      "automation_flow",
-      id,
-      {
-        name: current.name,
-      }
-    );
+    await logAuditEvent(supabase, user.id, hardDelete ? "HARD_DELETE" : "ARCHIVE", "automation_flow", id, {
+      name: current.name,
+    });
 
     invalidateAutomationCache();
     return success({ id });
@@ -259,7 +243,7 @@ export async function deleteAutomationFlow(
 
 export async function toggleAutomationStatus(
   id: string,
-  newStatus: "active" | "paused"
+  newStatus: "active" | "paused",
 ): Promise<ActionResult<{ id: string; status: string; message: string }>> {
   try {
     if (!id || !z.string().uuid().safeParse(id).success) {
@@ -327,17 +311,10 @@ export async function toggleAutomationStatus(
         .eq("status", "pending");
     }
 
-    await logAuditEvent(
-      supabase,
-      user.id,
-      newStatus === "active" ? "ACTIVATE" : "PAUSE",
-      "automation_flow",
-      id,
-      {
-        name: current.name,
-        previousStatus: current.status,
-      }
-    );
+    await logAuditEvent(supabase, user.id, newStatus === "active" ? "ACTIVATE" : "PAUSE", "automation_flow", id, {
+      name: current.name,
+      previousStatus: current.status,
+    });
 
     invalidateAutomationCache();
 
@@ -361,9 +338,7 @@ export async function toggleAutomationStatus(
 // Duplicate Automation
 // ============================================================================
 
-export async function duplicateAutomation(
-  id: string
-): Promise<ActionResult<{ id: string; name: string }>> {
+export async function duplicateAutomation(id: string): Promise<ActionResult<{ id: string; name: string }>> {
   try {
     if (!id || !z.string().uuid().safeParse(id).success) {
       return error("Invalid automation ID", "INVALID_ID");
@@ -443,7 +418,7 @@ export async function duplicateAutomation(
 
 export async function bulkUpdateAutomationStatus(
   ids: string[],
-  status: "active" | "paused" | "archived"
+  status: "active" | "paused" | "archived",
 ): Promise<ActionResult<{ updated: number; failed: string[] }>> {
   try {
     if (!ids.length) {

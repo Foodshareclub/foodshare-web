@@ -2,7 +2,7 @@
  * Upstash Search Client
  * Used for full-text search across products, users, etc.
  */
-import { Search } from '@upstash/search';
+import { Search } from "@upstash/search";
 
 // Singleton instance
 let searchClient: Search | null = null;
@@ -19,9 +19,9 @@ export function getSearchClient(): Search {
 
 // Index names for different content types
 export const SEARCH_INDEXES = {
-  PRODUCTS: 'products',
-  USERS: 'users',
-  MESSAGES: 'messages',
+  PRODUCTS: "products",
+  USERS: "users",
+  MESSAGES: "messages",
 } as const;
 
 export type SearchIndexName = (typeof SEARCH_INDEXES)[keyof typeof SEARCH_INDEXES];
@@ -43,7 +43,7 @@ export interface SearchResult<T = SearchDocument> {
  */
 export async function indexDocument<T extends SearchDocument>(
   indexName: SearchIndexName,
-  document: T
+  document: T,
 ): Promise<boolean> {
   try {
     const client = getSearchClient();
@@ -61,7 +61,7 @@ export async function indexDocument<T extends SearchDocument>(
  */
 export async function indexDocuments<T extends SearchDocument>(
   indexName: SearchIndexName,
-  documents: T[]
+  documents: T[],
 ): Promise<boolean> {
   if (documents.length === 0) return true;
 
@@ -85,7 +85,7 @@ export async function searchDocuments<T = SearchDocument>(
   options?: {
     limit?: number;
     filter?: string;
-  }
+  },
 ): Promise<{
   results: SearchResult<T>[];
   total: number;
@@ -119,10 +119,7 @@ export async function searchDocuments<T = SearchDocument>(
 /**
  * Delete a document from search index
  */
-export async function deleteDocument(
-  indexName: SearchIndexName,
-  documentId: string
-): Promise<boolean> {
+export async function deleteDocument(indexName: SearchIndexName, documentId: string): Promise<boolean> {
   try {
     const client = getSearchClient();
     const index = client.index(indexName);
@@ -137,10 +134,7 @@ export async function deleteDocument(
 /**
  * Delete multiple documents from search index
  */
-export async function deleteDocuments(
-  indexName: SearchIndexName,
-  documentIds: string[]
-): Promise<number> {
+export async function deleteDocuments(indexName: SearchIndexName, documentIds: string[]): Promise<number> {
   if (documentIds.length === 0) return 0;
 
   try {
@@ -190,7 +184,7 @@ export async function searchProducts(
     type?: string;
     activeOnly?: boolean;
     location?: string;
-  }
+  },
 ): Promise<{
   results: SearchResult<ProductSearchDocument>[];
   total: number;
@@ -200,7 +194,7 @@ export async function searchProducts(
   const filters: string[] = [];
 
   if (activeOnly) {
-    filters.push('active = true');
+    filters.push("active = true");
   }
   if (type) {
     filters.push(`type = "${type}"`);
@@ -209,7 +203,7 @@ export async function searchProducts(
     filters.push(`location = "${location}"`);
   }
 
-  const filter = filters.length > 0 ? filters.join(' AND ') : undefined;
+  const filter = filters.length > 0 ? filters.join(" AND ") : undefined;
 
   return searchDocuments<ProductSearchDocument>(SEARCH_INDEXES.PRODUCTS, query, {
     limit,

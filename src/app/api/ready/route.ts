@@ -3,8 +3,8 @@
  * Health check endpoint with standardized response type
  */
 
-import { NextResponse } from "next/server";
 import type { ApiResponse } from "@/lib/api-types";
+import { NextResponse } from "next/server";
 
 /**
  * GET /api/ready

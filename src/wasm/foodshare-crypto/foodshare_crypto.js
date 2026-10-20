@@ -65,7 +65,7 @@ function generate_totp_code(secret, time_seconds) {
       ptr0,
       len0,
       !isLikeNone(time_seconds),
-      isLikeNone(time_seconds) ? BigInt(0) : time_seconds
+      isLikeNone(time_seconds) ? BigInt(0) : time_seconds,
     );
     var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
     var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
@@ -193,7 +193,7 @@ function verify_totp_code(secret, code, time_seconds, window_steps) {
     !isLikeNone(time_seconds),
     isLikeNone(time_seconds) ? BigInt(0) : time_seconds,
     !isLikeNone(window_steps),
-    isLikeNone(window_steps) ? BigInt(0) : window_steps
+    isLikeNone(window_steps) ? BigInt(0) : window_steps,
   );
   return ret !== 0;
 }
@@ -247,14 +247,14 @@ exports.verify_webhook_sha256 = verify_webhook_sha256;
 function __wbg_get_imports() {
   const import0 = {
     __proto__: null,
-    __wbg___wbindgen_throw_bb96b2010945f0bc: function (arg0, arg1) {
+    __wbg___wbindgen_throw_bb96b2010945f0bc: (arg0, arg1) => {
       throw new Error(getStringFromWasm0(arg0, arg1));
     },
-    __wbg_now_8b265300afd5f2b9: function () {
+    __wbg_now_8b265300afd5f2b9: () => {
       const ret = Date.now();
       return ret;
     },
-    __wbindgen_cast_0000000000000001: function (arg0, arg1) {
+    __wbindgen_cast_0000000000000001: (arg0, arg1) => {
       // Cast intrinsic for `Ref(String) -> Externref`.
       const ret = getStringFromWasm0(arg0, arg1);
       return addHeapObject(ret);
@@ -286,8 +286,7 @@ function getDataViewMemory0() {
   if (
     cachedDataViewMemory0 === null ||
     cachedDataViewMemory0.buffer.detached === true ||
-    (cachedDataViewMemory0.buffer.detached === undefined &&
-      cachedDataViewMemory0.buffer !== wasm.memory.buffer)
+    (cachedDataViewMemory0.buffer.detached === undefined && cachedDataViewMemory0.buffer !== wasm.memory.buffer)
   ) {
     cachedDataViewMemory0 = new DataView(wasm.memory.buffer);
   }
@@ -310,7 +309,7 @@ function getObject(idx) {
   return heap[idx];
 }
 
-let heap = new Array(1024).fill(undefined);
+const heap = new Array(1024).fill(undefined);
 heap.push(undefined, null, true, false);
 
 let heap_next = heap.length;
@@ -364,7 +363,7 @@ function takeObject(idx) {
   return ret;
 }
 
-let cachedTextDecoder = new TextDecoder("utf-8", { ignoreBOM: true, fatal: true });
+const cachedTextDecoder = new TextDecoder("utf-8", { ignoreBOM: true, fatal: true });
 cachedTextDecoder.decode();
 function decodeText(ptr, len) {
   return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
@@ -373,7 +372,7 @@ function decodeText(ptr, len) {
 const cachedTextEncoder = new TextEncoder();
 
 if (!("encodeInto" in cachedTextEncoder)) {
-  cachedTextEncoder.encodeInto = function (arg, view) {
+  cachedTextEncoder.encodeInto = (arg, view) => {
     const buf = cachedTextEncoder.encode(arg);
     view.set(buf);
     return {
@@ -402,5 +401,5 @@ function __resolveWasmPath(filename) {
 const wasmPath = __resolveWasmPath("foodshare_crypto_bg.wasm");
 const wasmBytes = require("fs").readFileSync(/*turbopackIgnore: true*/ wasmPath);
 const wasmModule = new WebAssembly.Module(wasmBytes);
-let wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
-let wasm = wasmInstance.exports;
+const wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+const wasm = wasmInstance.exports;

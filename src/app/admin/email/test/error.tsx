@@ -1,9 +1,9 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 
-export default function Error({
+export default function ErrorBoundary({
   error,
   reset,
 }: {

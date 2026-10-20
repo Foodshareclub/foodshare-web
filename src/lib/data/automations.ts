@@ -3,8 +3,8 @@
  * Server-side data fetching for automation flows
  */
 
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 // Re-export types and constants from shared types file
 export type {
@@ -17,11 +17,17 @@ export type {
 export { TRIGGER_TYPES } from "@/types/automations.types";
 
 import type {
-  AutomationFlow,
   AutomationEnrollment,
-  EmailTemplate,
+  AutomationFlow,
   AutomationQueueItem,
+  EmailTemplate,
 } from "@/types/automations.types";
+
+interface FlowStatsRow {
+  status: string;
+  total_enrolled: number | null;
+  total_completed: number | null;
+}
 
 /**
  * Get all automation flows
@@ -48,11 +54,7 @@ export async function getAutomationFlows(): Promise<AutomationFlow[]> {
 export async function getAutomationFlow(id: string): Promise<AutomationFlow | null> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("email_automation_flows")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const { data, error } = await supabase.from("email_automation_flows").select("*").eq("id", id).single();
 
   if (error) {
     console.error("Error fetching automation flow:", error);
@@ -74,7 +76,7 @@ export async function getFlowEnrollments(flowId: string): Promise<AutomationEnro
       `
       *,
       profile:profiles(email, first_name, nickname, avatar_url)
-    `
+    `,
     )
     .eq("flow_id", flowId)
     .order("enrolled_at", { ascending: false })
@@ -95,10 +97,7 @@ export async function getFlowEnrollments(flowId: string): Promise<AutomationEnro
 export async function getEmailTemplates(): Promise<EmailTemplate[]> {
   const supabase = createAdminClient();
 
-  const { data, error } = await supabase
-    .from("email_templates")
-    .select("*")
-    .order("name", { ascending: true });
+  const { data, error } = await supabase.from("email_templates").select("*").order("name", { ascending: true });
 
   if (error) {
     console.error("Error fetching email templates:", error);
@@ -111,10 +110,7 @@ export async function getEmailTemplates(): Promise<EmailTemplate[]> {
 /**
  * Get automation queue items
  */
-export async function getAutomationQueue(
-  status?: string,
-  limit = 50
-): Promise<AutomationQueueItem[]> {
+export async function getAutomationQueue(status?: string, limit = 50): Promise<AutomationQueueItem[]> {
   const supabase = await createClient();
 
   let query = supabase
@@ -151,9 +147,7 @@ export async function getAutomationStats(): Promise<{
   const supabase = await createClient();
 
   // Get flow counts
-  const { data: flows } = await supabase
-    .from("email_automation_flows")
-    .select("status,total_enrolled,total_completed");
+  const { data: flows } = await supabase.from("email_automation_flows").select("status,total_enrolled,total_completed");
 
   // Get pending queue count
   const { count: pendingCount } = await supabase
@@ -169,10 +163,11 @@ export async function getAutomationStats(): Promise<{
     .eq("status", "sent")
     .gte("sent_at", today);
 
-  const activeFlows = flows?.filter((f: any) => f.status === "active").length || 0;
-  const totalEnrolled = flows?.reduce((sum: any, f: any) => sum + (f.total_enrolled || 0), 0) || 0;
-  const totalCompleted =
-    flows?.reduce((sum: any, f: any) => sum + (f.total_completed || 0), 0) || 0;
+  const flowRows = (flows ?? []) as FlowStatsRow[];
+
+  const activeFlows = flowRows.filter((f) => f.status === "active").length;
+  const totalEnrolled = flowRows.reduce((sum, f) => sum + (f.total_enrolled || 0), 0);
+  const totalCompleted = flowRows.reduce((sum, f) => sum + (f.total_completed || 0), 0);
 
   return {
     totalFlows: flows?.length || 0,

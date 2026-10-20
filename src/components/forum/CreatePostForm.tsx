@@ -1,22 +1,16 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { Send, Upload, Loader2, X } from "lucide-react";
-import { RichTextEditor } from "./RichTextEditor";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import type { ForumCategory, ForumPostType } from "@/api/forumAPI";
 import { imageAPI } from "@/api/imageAPI";
 import { createForumPostFast } from "@/app/actions/forum";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Send, Upload, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
+import { RichTextEditor } from "./RichTextEditor";
 
 type CreatePostFormProps = {
   categories: ForumCategory[];
@@ -118,7 +112,7 @@ export function CreatePostForm({ categories }: CreatePostFormProps) {
         title,
         content,
         richContent,
-        categoryId: parseInt(categoryId),
+        categoryId: Number.parseInt(categoryId),
         postType,
         imageUrl: imageUrl || null,
       });
@@ -140,9 +134,7 @@ export function CreatePostForm({ categories }: CreatePostFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <div className="p-4 bg-destructive/10 text-destructive rounded-lg text-sm">{error}</div>
-      )}
+      {error && <div className="p-4 bg-destructive/10 text-destructive rounded-lg text-sm">{error}</div>}
 
       {/* Title */}
       <div className="space-y-2">
@@ -206,16 +198,12 @@ export function CreatePostForm({ categories }: CreatePostFormProps) {
         {imagePreview || imageUrl ? (
           <div className="relative w-full h-48 rounded-lg overflow-hidden border bg-muted">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imagePreview || imageUrl}
-              alt="Cover preview"
-              className="w-full h-full object-cover"
-            />
+            <img src={imagePreview || imageUrl} alt="Cover preview" className="w-full h-full object-cover" />
             <Button
               type="button"
               variant="destructive"
               size="icon"
-              className="absolute top-2 right-2"
+              className="absolute top-2 end-2"
               onClick={clearImage}
               disabled={uploading}
             >
@@ -259,7 +247,7 @@ export function CreatePostForm({ categories }: CreatePostFormProps) {
           Cancel
         </Button>
         <Button type="submit" disabled={submitting}>
-          <Send className="mr-2 h-4 w-4" />
+          <Send className="me-2 h-4 w-4" />
           {submitting ? "Publishing..." : "Publish Post"}
         </Button>
       </div>

@@ -6,9 +6,34 @@
  * Server Actions handle WRITES; data layer handles READS.
  */
 
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/data/admin-check";
 import { serverActionError, serverActionSuccess } from "@/lib/errors";
 import type { ServerActionResult } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
+
+interface ProfileCreatedRow {
+  id: string;
+  created_time: string | null;
+  last_seen_at: string | null;
+}
+
+interface PostCreatedRow {
+  created_at: string | null;
+  is_active?: boolean | null;
+  is_arranged?: boolean | null;
+  post_type?: string | null;
+  post_views?: number | null;
+  post_like_counter?: number | null;
+  profile_id?: string | null;
+  location_json?: unknown;
+  profiles?: { nickname?: string | null } | null;
+}
+
+interface PostEngagementTotals {
+  total_views: number | null;
+  total_likes: number | null;
+  listings_counted: number | null;
+}
 
 // ============================================================================
 // Types
@@ -44,12 +69,6 @@ export interface MonthlyGrowth {
 export interface DailyActiveUsers {
   date: string;
   count: number;
-}
-
-export interface EventDistribution {
-  name: string;
-  value: number;
-  [key: string]: unknown;
 }
 
 export interface FunnelStep {
@@ -109,156 +128,130 @@ export interface HourlyActivity {
 // ============================================================================
 
 export async function getAnalyticsSummary(): Promise<ServerActionResult<AnalyticsSummary>> {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  // Platform-wide business metrics, so admin-only. The `is_active`/count
+  // columns here are exactly the kind of thing a normal member has no
+  // business reading, and the RLS policies behind them are not the only
+  // thing that should decide.
+  await requireAdmin();
 
-    if (!user) {
-      return serverActionError("Unauthorized", "UNAUTHORIZED");
+  const supabase = await createClient();
+
+  // Query Supabase directly (MotherDuck doesn't work in Docker)
+  // Note: profiles uses created_time, last_seen_at; posts uses is_active, is_arranged
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const sixtyDaysAgo = new Date();
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const thirty = thirtyDaysAgo.toISOString();
+  const sixty = sixtyDaysAgo.toISOString();
+  const seven = sevenDaysAgo.toISOString();
+
+  // Every one of these is an independent count. They were awaited in
+  // sequence, so the dashboard paid twelve serialised round trips, and the
+  // caller fires eight actions like this at once. `head: true` means no
+  // rows come back, only the count.
+  const [
+    totalUsers,
+    activeUsers,
+    activeUsers7d,
+    totalListings,
+    activeListings,
+    arrangedListings,
+    usersThisMonth,
+    usersLastMonth,
+    listingsThisMonth,
+    listingsLastMonth,
+    totalConversations,
+    usersWithPosts,
+    engagement,
+  ] = await Promise.all([
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase.from("profiles").select("*", { count: "exact", head: true }).gte("last_seen_at", thirty),
+    supabase.from("profiles").select("*", { count: "exact", head: true }).gte("last_seen_at", seven),
+    supabase.from("posts").select("*", { count: "exact", head: true }),
+    supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", true).eq("is_arranged", false),
+    supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_arranged", true),
+    supabase.from("profiles").select("*", { count: "exact", head: true }).gte("created_time", thirty),
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .gte("created_time", sixty)
+      .lt("created_time", thirty),
+    supabase.from("posts").select("*", { count: "exact", head: true }).gte("created_at", thirty),
+    supabase
+      .from("posts")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", sixty)
+      .lt("created_at", thirty),
+    supabase.from("rooms").select("*", { count: "exact", head: true }),
+    supabase.from("posts").select("profile_id", { count: "exact", head: true }).not("profile_id", "is", null),
+    // Summed in the database. This used to be
+    // `.from("posts").select("post_views,post_like_counter")` with no filter,
+    // which transferred every row of the largest table in the schema into
+    // this process to add up two columns.
+    supabase.rpc("get_post_engagement_totals"),
+  ]);
+
+  // A count that fails looks exactly like a count of zero unless the error
+  // is looked at. Report it.
+  for (const [label, result] of [
+    ["total users", totalUsers],
+    ["active users", activeUsers],
+    ["7-day active users", activeUsers7d],
+    ["total listings", totalListings],
+    ["active listings", activeListings],
+    ["arranged listings", arrangedListings],
+    ["new users this month", usersThisMonth],
+    ["new users last month", usersLastMonth],
+    ["new listings this month", listingsThisMonth],
+    ["new listings last month", listingsLastMonth],
+    ["conversations", totalConversations],
+    ["users with posts", usersWithPosts],
+    ["engagement totals", engagement],
+  ] as const) {
+    if (result.error) {
+      return serverActionError(`Analytics unavailable: ${label} failed to load`, "DATABASE_ERROR");
     }
-
-    // Query Supabase directly (MotherDuck doesn't work in Docker)
-    // Note: profiles uses created_time, last_seen_at; posts uses is_active, is_arranged
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const sixtyDaysAgo = new Date();
-    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    // Get total users
-    const { count: totalUsers } = await supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true });
-
-    // Get active users (last_seen_at in last 30 days)
-    const { count: activeUsers } = await supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true })
-      .gte("last_seen_at", thirtyDaysAgo.toISOString());
-
-    // Get active users in last 7 days
-    const { count: activeUsers7d } = await supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true })
-      .gte("last_seen_at", sevenDaysAgo.toISOString());
-
-    // Get total listings
-    const { count: totalListings } = await supabase
-      .from("posts")
-      .select("*", { count: "exact", head: true });
-
-    // Get active listings (is_active=true and is_arranged=false)
-    const { count: activeListings } = await supabase
-      .from("posts")
-      .select("*", { count: "exact", head: true })
-      .eq("is_active", true)
-      .eq("is_arranged", false);
-
-    // Get arranged listings
-    const { count: arrangedListings } = await supabase
-      .from("posts")
-      .select("*", { count: "exact", head: true })
-      .eq("is_arranged", true);
-
-    // Get users created this month vs last month (profiles uses created_time)
-    const { count: usersThisMonth } = await supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true })
-      .gte("created_time", thirtyDaysAgo.toISOString());
-
-    const { count: usersLastMonth } = await supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true })
-      .gte("created_time", sixtyDaysAgo.toISOString())
-      .lt("created_time", thirtyDaysAgo.toISOString());
-
-    // Get listings created this month vs last month
-    const { count: listingsThisMonth } = await supabase
-      .from("posts")
-      .select("*", { count: "exact", head: true })
-      .gte("created_at", thirtyDaysAgo.toISOString());
-
-    const { count: listingsLastMonth } = await supabase
-      .from("posts")
-      .select("*", { count: "exact", head: true })
-      .gte("created_at", sixtyDaysAgo.toISOString())
-      .lt("created_at", thirtyDaysAgo.toISOString());
-
-    // Engagement metrics
-    const { count: totalConversations } = await supabase
-      .from("rooms")
-      .select("*", { count: "exact", head: true });
-
-    const { count: usersWithPosts } = await supabase
-      .from("posts")
-      .select("profile_id", { count: "exact", head: true })
-      .not("profile_id", "is", null);
-
-    // Get aggregate stats (views and likes)
-    const { data: statsData } = await supabase.from("posts").select("post_views,post_like_counter");
-
-    const totalViews = statsData?.reduce((sum: any, p: any) => sum + (p.post_views || 0), 0) || 0;
-    const totalLikes =
-      statsData?.reduce((sum: any, p: any) => sum + (p.post_like_counter || 0), 0) || 0;
-
-    // Calculate percentage changes
-    const usersChange =
-      usersLastMonth && usersLastMonth > 0
-        ? (((usersThisMonth || 0) - usersLastMonth) / usersLastMonth) * 100
-        : 0;
-
-    const listingsChange =
-      listingsLastMonth && listingsLastMonth > 0
-        ? (((listingsThisMonth || 0) - listingsLastMonth) / listingsLastMonth) * 100
-        : 0;
-
-    // Estimate food saved: ~2kg average per arranged listing
-    const foodSavedKg = (arrangedListings || 0) * 2;
-
-    return serverActionSuccess({
-      totalUsers: totalUsers || 0,
-      activeUsers: activeUsers || 0,
-      activeUsers7d: activeUsers7d || 0,
-      totalListings: totalListings || 0,
-      activeListings: activeListings || 0,
-      arrangedListings: arrangedListings || 0,
-      listingsChange: Math.round(listingsChange * 10) / 10,
-      usersChange: Math.round(usersChange * 10) / 10,
-      activeUsersChange: 0,
-      arrangedChange: 0,
-      foodSavedKg,
-      totalConversations: totalConversations || 0,
-      totalViews,
-      totalLikes,
-      usersWithPosts: usersWithPosts || 0,
-      newUsersThisMonth: usersThisMonth || 0,
-      newListingsThisMonth: listingsThisMonth || 0,
-    });
-  } catch (error) {
-    console.error("Analytics error:", error);
-    return serverActionSuccess({
-      totalUsers: 0,
-      activeUsers: 0,
-      activeUsers7d: 0,
-      totalListings: 0,
-      activeListings: 0,
-      arrangedListings: 0,
-      listingsChange: 0,
-      usersChange: 0,
-      activeUsersChange: 0,
-      arrangedChange: 0,
-      foodSavedKg: 0,
-      totalConversations: 0,
-      totalViews: 0,
-      totalLikes: 0,
-      usersWithPosts: 0,
-      newUsersThisMonth: 0,
-      newListingsThisMonth: 0,
-    });
   }
+
+  const totals = (engagement.data?.[0] ?? {}) as Partial<PostEngagementTotals>;
+
+  // Calculate percentage changes
+  const usersChange =
+    usersLastMonth.count && usersLastMonth.count > 0
+      ? (((usersThisMonth.count || 0) - usersLastMonth.count) / usersLastMonth.count) * 100
+      : 0;
+
+  const listingsChange =
+    listingsLastMonth.count && listingsLastMonth.count > 0
+      ? (((listingsThisMonth.count || 0) - listingsLastMonth.count) / listingsLastMonth.count) * 100
+      : 0;
+
+  // Estimate food saved: ~2kg average per arranged listing
+  const foodSavedKg = (arrangedListings.count || 0) * 2;
+
+  return serverActionSuccess({
+    totalUsers: totalUsers.count || 0,
+    activeUsers: activeUsers.count || 0,
+    activeUsers7d: activeUsers7d.count || 0,
+    totalListings: totalListings.count || 0,
+    activeListings: activeListings.count || 0,
+    arrangedListings: arrangedListings.count || 0,
+    listingsChange: Math.round(listingsChange * 10) / 10,
+    usersChange: Math.round(usersChange * 10) / 10,
+    activeUsersChange: 0,
+    arrangedChange: 0,
+    foodSavedKg,
+    totalConversations: totalConversations.count || 0,
+    totalViews: Number(totals.total_views ?? 0),
+    totalLikes: Number(totals.total_likes ?? 0),
+    usersWithPosts: usersWithPosts.count || 0,
+    newUsersThisMonth: usersThisMonth.count || 0,
+    newListingsThisMonth: listingsThisMonth.count || 0,
+  });
 }
 
 export async function getMonthlyGrowth(): Promise<ServerActionResult<MonthlyGrowth[]>> {
@@ -287,6 +280,9 @@ export async function getMonthlyGrowth(): Promise<ServerActionResult<MonthlyGrow
       .select("created_at")
       .gte("created_at", twelveMonthsAgo.toISOString());
 
+    const userRows = (users ?? []) as ProfileCreatedRow[];
+    const listingRows = (listings ?? []) as PostCreatedRow[];
+
     // Aggregate by month
     const monthlyData: Record<string, { users: number; listings: number }> = {};
 
@@ -298,7 +294,7 @@ export async function getMonthlyGrowth(): Promise<ServerActionResult<MonthlyGrow
       monthlyData[monthKey] = { users: 0, listings: 0 };
     }
 
-    users?.forEach((u: any) => {
+    userRows.forEach((u) => {
       if (u.created_time) {
         const date = new Date(u.created_time);
         const monthKey = date.toLocaleString("en-US", { month: "short" });
@@ -308,7 +304,7 @@ export async function getMonthlyGrowth(): Promise<ServerActionResult<MonthlyGrow
       }
     });
 
-    listings?.forEach((l: any) => {
+    listingRows.forEach((l) => {
       if (l.created_at) {
         const date = new Date(l.created_at);
         const monthKey = date.toLocaleString("en-US", { month: "short" });
@@ -352,10 +348,12 @@ export async function getDailyActiveUsers(): Promise<ServerActionResult<DailyAct
       .select("last_seen_at")
       .gte("last_seen_at", thirtyDaysAgo.toISOString());
 
+    const userRows = (users ?? []) as ProfileCreatedRow[];
+
     // Aggregate by day
     const dailyData: Record<string, number> = {};
 
-    users?.forEach((u: any) => {
+    userRows.forEach((u) => {
       if (u.last_seen_at) {
         const date = u.last_seen_at.substring(0, 10);
         dailyData[date] = (dailyData[date] || 0) + 1;
@@ -374,33 +372,6 @@ export async function getDailyActiveUsers(): Promise<ServerActionResult<DailyAct
 }
 
 /**
- * Get distribution of event types (Top Actions)
- */
-export async function getEventDistribution(): Promise<ServerActionResult<EventDistribution[]>> {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) return serverActionError("Unauthorized", "UNAUTHORIZED");
-
-    // Return mock data since we don't have an events table in Supabase
-    // In production, you'd track events in a dedicated table
-    return serverActionSuccess([
-      { name: "Page View", value: 1250 },
-      { name: "Listing Created", value: 340 },
-      { name: "Food Requested", value: 180 },
-      { name: "Food Arranged", value: 95 },
-      { name: "Message Sent", value: 420 },
-    ]);
-  } catch (error) {
-    console.error("Failed to fetch event distribution:", error);
-    return serverActionSuccess([]);
-  }
-}
-
-/**
  * Get Conversion Funnel Data
  */
 export async function getConversionFunnel(): Promise<ServerActionResult<FunnelStep[]>> {
@@ -413,14 +384,10 @@ export async function getConversionFunnel(): Promise<ServerActionResult<FunnelSt
     if (!user) return serverActionError("Unauthorized", "UNAUTHORIZED");
 
     // Query Supabase directly
-    const { count: totalListings } = await supabase
-      .from("posts")
-      .select("*", { count: "exact", head: true });
+    const { count: totalListings } = await supabase.from("posts").select("*", { count: "exact", head: true });
 
     // Get listings that have been requested (have rooms)
-    const { count: requestedListings } = await supabase
-      .from("rooms")
-      .select("*", { count: "exact", head: true });
+    const { count: requestedListings } = await supabase.from("rooms").select("*", { count: "exact", head: true });
 
     // Get arranged listings (use is_arranged column)
     const { count: arrangedListings } = await supabase
@@ -464,10 +431,12 @@ export async function getUserRetentionCohorts(): Promise<ServerActionResult<Rete
       .select("id,created_time,last_seen_at")
       .gte("created_time", sixMonthsAgo.toISOString());
 
+    const userRows = (users ?? []) as ProfileCreatedRow[];
+
     // Group by cohort month
     const cohorts: Record<string, { size: number; month1: number; month2: number }> = {};
 
-    users?.forEach((u: any) => {
+    userRows.forEach((u) => {
       if (!u.created_time) return;
       const cohort = u.created_time.substring(0, 7);
 
@@ -479,8 +448,7 @@ export async function getUserRetentionCohorts(): Promise<ServerActionResult<Rete
         const created = new Date(u.created_time);
         const lastSeen = new Date(u.last_seen_at);
         const monthsDiff =
-          (lastSeen.getFullYear() - created.getFullYear()) * 12 +
-          (lastSeen.getMonth() - created.getMonth());
+          (lastSeen.getFullYear() - created.getFullYear()) * 12 + (lastSeen.getMonth() - created.getMonth());
 
         if (monthsDiff >= 1) cohorts[cohort].month1++;
         if (monthsDiff >= 2) cohorts[cohort].month2++;
@@ -518,10 +486,12 @@ export async function getInventoryAging(): Promise<ServerActionResult<InventoryA
       .eq("is_active", true)
       .eq("is_arranged", false);
 
+    const listingRows = (listings ?? []) as PostCreatedRow[];
+
     const now = Date.now();
     const buckets = { "0-7 days": 0, "7-30 days": 0, "30+ days": 0 };
 
-    listings?.forEach((l: any) => {
+    listingRows.forEach((l) => {
       if (!l.created_at) return;
       const daysDiff = Math.floor((now - new Date(l.created_at).getTime()) / (1000 * 60 * 60 * 24));
 
@@ -545,9 +515,7 @@ export async function getInventoryAging(): Promise<ServerActionResult<InventoryA
  * Get Listing Type Distribution
  * Shows breakdown of listings by post_type (food, thing, borrow, etc.)
  */
-export async function getListingTypeDistribution(): Promise<
-  ServerActionResult<ListingTypeDistribution[]>
-> {
+export async function getListingTypeDistribution(): Promise<ServerActionResult<ListingTypeDistribution[]>> {
   try {
     const supabase = await createClient();
     const {
@@ -556,15 +524,12 @@ export async function getListingTypeDistribution(): Promise<
     if (!user) return serverActionError("Unauthorized", "UNAUTHORIZED");
 
     // Query Supabase directly (use is_active column)
-    const { data: listings } = await supabase
-      .from("posts")
-      .select("post_type")
-      .eq("is_active", true);
+    const { data: listings } = await supabase.from("posts").select("post_type").eq("is_active", true);
 
     const typeCounts: Record<string, number> = {};
     let total = 0;
 
-    listings?.forEach((l: any) => {
+    ((listings ?? []) as PostCreatedRow[]).forEach((l) => {
       const type = l.post_type || "unknown";
       typeCounts[type] = (typeCounts[type] || 0) + 1;
       total++;
@@ -589,7 +554,7 @@ export async function getListingTypeDistribution(): Promise<
  * Get Top Sharers
  * Users with most arranged (successful) listings
  */
-export async function getTopSharers(limit: number = 10): Promise<ServerActionResult<TopSharer[]>> {
+export async function getTopSharers(limit = 10): Promise<ServerActionResult<TopSharer[]>> {
   try {
     const supabase = await createClient();
     const {
@@ -603,13 +568,12 @@ export async function getTopSharers(limit: number = 10): Promise<ServerActionRes
       .select("profile_id,is_arranged,profiles(nickname)")
       .not("profile_id", "is", null);
 
-    // Aggregate by user
-    const userStats: Record<
-      string,
-      { nickname: string; totalListings: number; arrangedCount: number }
-    > = {};
+    const listingRows = (listings ?? []) as PostCreatedRow[];
 
-    listings?.forEach((l: any) => {
+    // Aggregate by user
+    const userStats: Record<string, { nickname: string; totalListings: number; arrangedCount: number }> = {};
+
+    listingRows.forEach((l) => {
       const userId = l.profile_id;
       if (!userId) return;
 
@@ -651,17 +615,11 @@ export async function getSyncStatus(): Promise<ServerActionResult<SyncStatus[]>>
     if (!user) return serverActionError("Unauthorized", "UNAUTHORIZED");
 
     // Return info about Supabase tables since we're querying directly
-    const { count: profileCount } = await supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true });
+    const { count: profileCount } = await supabase.from("profiles").select("*", { count: "exact", head: true });
 
-    const { count: postCount } = await supabase
-      .from("posts")
-      .select("*", { count: "exact", head: true });
+    const { count: postCount } = await supabase.from("posts").select("*", { count: "exact", head: true });
 
-    const { count: roomCount } = await supabase
-      .from("rooms")
-      .select("*", { count: "exact", head: true });
+    const { count: roomCount } = await supabase.from("rooms").select("*", { count: "exact", head: true });
 
     return serverActionSuccess([
       {
@@ -708,13 +666,12 @@ export async function getGeographicHotspots(): Promise<ServerActionResult<GeoHot
       .eq("is_active", true)
       .not("location_json", "is", null);
 
-    // Grid-based aggregation - round coordinates to ~1km precision
-    const grid: Record<
-      string,
-      { count: number; arrangedCount: number; types: Record<string, number> }
-    > = {};
+    const listingRows = (listings ?? []) as PostCreatedRow[];
 
-    listings?.forEach((l: any) => {
+    // Grid-based aggregation - round coordinates to ~1km precision
+    const grid: Record<string, { count: number; arrangedCount: number; types: Record<string, number> }> = {};
+
+    listingRows.forEach((l) => {
       // location_json is GeoJSON: { type: "Point", coordinates: [lng, lat] }
       const locationJson = l.location_json as {
         type: string;
@@ -785,6 +742,8 @@ export async function getActivityByHour(): Promise<ServerActionResult<HourlyActi
       .select("created_at")
       .gte("created_at", thirtyDaysAgo.toISOString());
 
+    const listingRows = (listings ?? []) as PostCreatedRow[];
+
     // Aggregate by hour
     const hourlyData: Record<number, { listingCount: number; eventCount: number }> = {};
 
@@ -793,7 +752,7 @@ export async function getActivityByHour(): Promise<ServerActionResult<HourlyActi
       hourlyData[i] = { listingCount: 0, eventCount: 0 };
     }
 
-    listings?.forEach((l: any) => {
+    listingRows.forEach((l) => {
       if (l.created_at) {
         const hour = new Date(l.created_at).getHours();
         hourlyData[hour].listingCount++;
@@ -802,7 +761,7 @@ export async function getActivityByHour(): Promise<ServerActionResult<HourlyActi
 
     const results = Object.entries(hourlyData)
       .map(([hour, data]) => ({
-        hour: parseInt(hour),
+        hour: Number.parseInt(hour),
         listingCount: data.listingCount,
         eventCount: data.eventCount,
       }))

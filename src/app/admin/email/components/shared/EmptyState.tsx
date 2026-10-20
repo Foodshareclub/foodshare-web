@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 export function EmptyState({
   icon,
@@ -94,11 +94,11 @@ export function QuickTemplateButton({
       whileTap={{ scale: 0.99 }}
       onClick={onClick}
       className={cn(
-        "w-full text-left px-4 py-3 rounded-xl",
+        "w-full text-start px-4 py-3 rounded-xl",
         "border border-border/50 bg-card/50",
         "hover:bg-card hover:border-border hover:shadow-sm",
         "transition-all duration-200",
-        "flex items-center gap-3"
+        "flex items-center gap-3",
       )}
     >
       {icon && <div className="text-muted-foreground">{icon}</div>}

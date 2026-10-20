@@ -15,13 +15,7 @@ export type CampaignType = "email" | "push" | "in_app" | "multi_channel";
 /**
  * Campaign status
  */
-export type CampaignStatus =
-  | "draft"
-  | "scheduled"
-  | "active"
-  | "paused"
-  | "completed"
-  | "cancelled";
+export type CampaignStatus = "draft" | "scheduled" | "active" | "paused" | "completed" | "cancelled";
 
 /**
  * Campaign trigger type
@@ -54,12 +48,7 @@ export type CampaignGoalType = "engagement" | "conversion" | "retention" | "reve
 /**
  * Workflow trigger type
  */
-export type WorkflowTriggerType =
-  | "lifecycle_change"
-  | "score_threshold"
-  | "inactivity"
-  | "milestone"
-  | "manual";
+export type WorkflowTriggerType = "lifecycle_change" | "score_threshold" | "inactivity" | "milestone" | "manual";
 
 /**
  * Workflow execution status
@@ -762,8 +751,7 @@ export function isCampaignType(value: unknown): value is CampaignType {
  */
 export function isCampaignStatus(value: unknown): value is CampaignStatus {
   return (
-    typeof value === "string" &&
-    ["draft", "scheduled", "active", "paused", "completed", "cancelled"].includes(value)
+    typeof value === "string" && ["draft", "scheduled", "active", "paused", "completed", "cancelled"].includes(value)
   );
 }
 
@@ -771,10 +759,7 @@ export function isCampaignStatus(value: unknown): value is CampaignStatus {
  * Type guard for CampaignTriggerType
  */
 export function isCampaignTriggerType(value: unknown): value is CampaignTriggerType {
-  return (
-    typeof value === "string" &&
-    ["immediate", "scheduled", "lifecycle_event", "score_threshold"].includes(value)
-  );
+  return typeof value === "string" && ["immediate", "scheduled", "lifecycle_event", "score_threshold"].includes(value);
 }
 
 // =============================================================================

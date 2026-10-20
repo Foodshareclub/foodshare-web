@@ -14,8 +14,8 @@
  * - Memory-efficient caching
  */
 
-import { useEffect, useState, useCallback, useRef } from "react";
 import { createLogger } from "@/lib/logger";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const logger = createLogger("TranslationClient");
 
@@ -41,15 +41,7 @@ export type Locale =
   | "ja"
   | "ko"
   | "tr";
-export type Platform =
-  | "web"
-  | "ios"
-  | "android"
-  | "desktop"
-  | "browser_extension"
-  | "api"
-  | "react_native"
-  | "flutter";
+export type Platform = "web" | "ios" | "android" | "desktop" | "browser_extension" | "api" | "react_native" | "flutter";
 
 export interface TranslationData {
   messages: Record<string, string>;
@@ -218,6 +210,23 @@ class MemoryAdapter implements StorageAdapter {
 // ============================================================================
 
 export class TranslationClient {
+  /**
+   * Registers a listener that fires whenever the client receives an update for
+   * a locale. Returns an unsubscribe function.
+   *
+   * Callers must not reach into `config` — it is private, and the previous
+   * bracket-access workaround broke the moment the field was made private.
+   */
+  subscribeToUpdates(listener: (locale: Locale, data: TranslationData) => void): () => void {
+    const previous = this.config.onUpdate;
+    this.config.onUpdate = listener;
+    return () => {
+      if (this.config.onUpdate === listener) {
+        this.config.onUpdate = previous;
+      }
+    };
+  }
+
   private config: TranslationClientConfig & { apiKey: string };
   private storage: StorageAdapter;
   private ws: WebSocket | null = null;
@@ -296,7 +305,7 @@ export class TranslationClient {
   }
 
   private connectWebSocket() {
-    const wsUrl = this.config.apiUrl.replace(/^http/, "ws") + "/ws";
+    const wsUrl = `${this.config.apiUrl.replace(/^http/, "ws")}/ws`;
 
     try {
       this.ws = new WebSocket(wsUrl);
@@ -307,7 +316,7 @@ export class TranslationClient {
           JSON.stringify({
             type: "subscribe",
             locale: this.config.locale,
-          })
+          }),
         );
       };
 
@@ -390,7 +399,7 @@ export class TranslationClient {
       prefetch?: boolean;
       stream?: boolean;
       keys?: string[];
-    } = {}
+    } = {},
   ): Record<string, string> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -403,7 +412,7 @@ export class TranslationClient {
       headers["X-Locale"] = options.locale || this.config.locale || "";
     }
     if (this.config.apiKey) {
-      headers["apikey"] = this.config.apiKey;
+      headers.apikey = this.config.apiKey;
     }
     if (options.version) {
       headers["X-Version"] = options.version;
@@ -459,11 +468,7 @@ export class TranslationClient {
     return null;
   }
 
-  private async retryFetch(
-    url: string,
-    options: RequestInit,
-    attempts = this.config.retryAttempts
-  ): Promise<Response> {
+  private async retryFetch(url: string, options: RequestInit, attempts = this.config.retryAttempts): Promise<Response> {
     const maxAttempts = this.config.retryAttempts ?? 3;
     const delay = this.config.retryDelay ?? 1000;
     const currentAttempts = attempts ?? maxAttempts;
@@ -472,18 +477,14 @@ export class TranslationClient {
       const response = await fetch(url, options);
 
       if (!response.ok && currentAttempts > 0) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, delay * (maxAttempts - currentAttempts + 1))
-        );
+        await new Promise((resolve) => setTimeout(resolve, delay * (maxAttempts - currentAttempts + 1)));
         return this.retryFetch(url, options, currentAttempts - 1);
       }
 
       return response;
     } catch (err) {
       if (currentAttempts > 0) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, delay * (maxAttempts - currentAttempts + 1))
-        );
+        await new Promise((resolve) => setTimeout(resolve, delay * (maxAttempts - currentAttempts + 1)));
         return this.retryFetch(url, options, currentAttempts - 1);
       }
       throw err;
@@ -497,7 +498,7 @@ export class TranslationClient {
       version?: string;
       prefetch?: boolean;
       forceRefresh?: boolean;
-    } = {}
+    } = {},
   ): Promise<TranslationData> {
     const targetLocale = locale ?? this.config.locale ?? "en";
     // Check cache first (unless force refresh)
@@ -528,9 +529,7 @@ export class TranslationClient {
         const result: TranslationResponse = await response.json();
 
         if (!result.success) {
-          throw new Error(
-            (result as unknown as { error?: string }).error || "Translation fetch failed"
-          );
+          throw new Error((result as unknown as { error?: string }).error || "Translation fetch failed");
         }
 
         // Cache the result
@@ -586,10 +585,7 @@ export class TranslationClient {
     }
   }
 
-  async streamTranslations(
-    locales: Locale[],
-    onChunk: (locale: Locale, data: TranslationData) => void
-  ) {
+  async streamTranslations(_locales: Locale[], onChunk: (locale: Locale, data: TranslationData) => void) {
     if (!this.config.enableStreaming) {
       throw new Error("Streaming not enabled");
     }
@@ -658,10 +654,7 @@ export function initTranslationClient(config: TranslationClientConfig) {
   return globalClient;
 }
 
-export function useTranslations(
-  locale?: Locale,
-  options?: { keys?: string[]; suspense?: boolean }
-) {
+export function useTranslations(locale?: Locale, options?: { keys?: string[]; suspense?: boolean }) {
   const [data, setData] = useState<TranslationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -693,13 +686,12 @@ export function useTranslations(
 
     // Subscribe to real-time updates
     if (clientRef.current) {
-      const originalOnUpdate = clientRef.current["config"].onUpdate;
-      clientRef.current["config"].onUpdate = (updatedLocale, updatedData) => {
+      const unsubscribe = clientRef.current.subscribeToUpdates((updatedLocale, updatedData) => {
         if (updatedLocale === locale) {
           setData(updatedData);
         }
-        originalOnUpdate?.(updatedLocale, updatedData);
-      };
+      });
+      return () => unsubscribe();
     }
   }, [fetchTranslations, locale]);
 
@@ -738,9 +730,7 @@ export function useBatchTranslations(locales: Locale[]) {
 }
 
 export function useTranslationStream(locales: Locale[]) {
-  const [chunks, setChunks] = useState<Record<Locale, TranslationData>>(
-    {} as Record<Locale, TranslationData>
-  );
+  const [chunks, setChunks] = useState<Record<Locale, TranslationData>>({} as Record<Locale, TranslationData>);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 

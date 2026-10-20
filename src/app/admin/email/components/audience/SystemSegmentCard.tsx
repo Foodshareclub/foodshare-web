@@ -1,5 +1,5 @@
-import { Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Users } from "lucide-react";
 
 export function SystemSegmentCard({
   name,

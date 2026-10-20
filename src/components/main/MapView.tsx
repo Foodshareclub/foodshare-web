@@ -6,17 +6,17 @@
 
 "use client";
 
-import { useEffect, useRef } from "react";
-import L from "leaflet";
-import type { ProductWithCoordinates } from "@/types/product.types";
 import markerIconRed from "@/assets/location-red.svg";
 import { useCustomMarkerIcon } from "@/hooks/useMarkerIcon";
+import type { ProductWithCoordinates } from "@/types/product.types";
 import { generateProductPopupHTML } from "@/utils/mapHelpers";
+import L from "leaflet";
+import { useEffect, useRef } from "react";
 
 // Fix Leaflet default marker icon issue - using custom red markers
 // This is a known Leaflet issue where _getIconUrl needs to be deleted
 
-delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
+(L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl = undefined;
 L.Icon.Default.mergeOptions({
   iconUrl: markerIconRed,
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
@@ -30,12 +30,7 @@ type MapViewProps = {
 };
 
 // React Compiler handles memoization automatically
-export function MapView({
-  products,
-  hoveredProductId,
-  selectedProductId,
-  onMarkerClick,
-}: MapViewProps) {
+export function MapView({ products, hoveredProductId, selectedProductId, onMarkerClick }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<number, L.Marker>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -127,9 +122,7 @@ export function MapView({
     if (products.length > 0) {
       const validProducts = products.filter((p) => p.latitude && p.longitude);
       if (validProducts.length > 0) {
-        const bounds = L.latLngBounds(
-          validProducts.map((p) => [p.latitude, p.longitude] as [number, number])
-        );
+        const bounds = L.latLngBounds(validProducts.map((p) => [p.latitude, p.longitude] as [number, number]));
         map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
       }
     }

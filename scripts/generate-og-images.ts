@@ -7,8 +7,8 @@
  * Saves ~50,000 function invocations per month
  */
 
-import { mkdir, writeFile } from "fs/promises";
-import { join } from "path";
+import { mkdir, writeFile } from "bun:fs/promises";
+import { join } from "bun:path";
 
 const OG_DIR = join(process.cwd(), "public", "og");
 

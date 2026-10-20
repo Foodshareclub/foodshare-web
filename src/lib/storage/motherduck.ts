@@ -16,11 +16,11 @@ export interface MotherDuckConfig {
 export function getMotherDuckConfig(): MotherDuckConfig {
   const token = process.env.MOTHERDUCK_TOKEN;
   if (!token) {
-    throw new Error('MOTHERDUCK_TOKEN environment variable is not set');
+    throw new Error("MOTHERDUCK_TOKEN environment variable is not set");
   }
   return {
     token,
-    database: 'my_db',
+    database: "my_db",
   };
 }
 
@@ -77,33 +77,33 @@ export interface AnalyticsResult<T = Record<string, unknown>> {
 
 /**
  * Note: MotherDuck WASM client must be used in client components only.
- * 
+ *
  * Example usage in a client component:
- * 
+ *
  * ```typescript
  * 'use client';
- * 
+ *
  * import { useEffect, useState } from 'react';
  * import { MDConnection } from '@motherduck/wasm-client';
  * import { getMotherDuckConfig, ANALYTICS_QUERIES } from '@/lib/storage/motherduck';
- * 
+ *
  * export function AnalyticsDashboard() {
  *   const [data, setData] = useState(null);
- * 
+ *
  *   useEffect(() => {
  *     async function fetchAnalytics() {
  *       const config = getMotherDuckConfig();
  *       const connection = MDConnection.create({ mdToken: config.token });
  *       await connection.connect();
- *       
+ *
  *       const result = await connection.evaluateQuery(ANALYTICS_QUERIES.PRODUCTS_BY_TYPE);
  *       setData(result.data.toRows());
- *       
+ *
  *       await connection.close();
  *     }
  *     fetchAnalytics();
  *   }, []);
- * 
+ *
  *   return <div>{JSON.stringify(data)}</div>;
  * }
  * ```
@@ -111,6 +111,6 @@ export interface AnalyticsResult<T = Record<string, unknown>> {
 
 // Export environment variable names for reference
 export const MOTHERDUCK_ENV = {
-  TOKEN: 'MOTHERDUCK_TOKEN',
-  READ_SCALING_TOKEN: 'MOTHERDUCK_READ_SCALING_TOKEN',
+  TOKEN: "MOTHERDUCK_TOKEN",
+  READ_SCALING_TOKEN: "MOTHERDUCK_READ_SCALING_TOKEN",
 } as const;

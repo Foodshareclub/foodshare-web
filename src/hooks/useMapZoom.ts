@@ -3,7 +3,7 @@
  * Best practices: Context-aware defaults + User preference persistence
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface ZoomConfig {
   minZoom: number;
@@ -69,7 +69,7 @@ export const useMapZoom = (options: UseMapZoomOptions) => {
     try {
       const cached = localStorage.getItem(STORAGE_KEY);
       if (cached) {
-        const zoom = parseInt(cached, 10);
+        const zoom = Number.parseInt(cached, 10);
         if (zoom >= ZOOM_CONFIG.minZoom && zoom <= ZOOM_CONFIG.maxZoom) {
           return zoom;
         }
@@ -102,7 +102,7 @@ export const useMapZoom = (options: UseMapZoomOptions) => {
   }, [optimalZoom, hasUserInteracted, getCachedZoom]);
 
   // Save zoom to cache when it changes
-  const updateZoom = useCallback((newZoom: number, userInitiated: boolean = false) => {
+  const updateZoom = useCallback((newZoom: number, userInitiated = false) => {
     // Clamp zoom to valid range
     const clampedZoom = Math.max(ZOOM_CONFIG.minZoom, Math.min(ZOOM_CONFIG.maxZoom, newZoom));
 

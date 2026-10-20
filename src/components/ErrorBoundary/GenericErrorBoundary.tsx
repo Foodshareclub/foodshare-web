@@ -3,10 +3,11 @@
  * Consolidates AppErrorBoundary, StorageErrorBoundary, and EmailCRMErrorBoundary
  */
 
-import type { ReactNode, ErrorInfo } from "react";
-import React, { Component } from "react";
 import { Button } from "@/components/ui/button";
-import { detectStorageError, clearSupabaseStorage } from "@/lib/errors/storage-handler";
+import { clearSupabaseStorage, detectStorageError } from "@/lib/errors/storage-handler";
+import type { ErrorInfo, ReactNode } from "react";
+import type React from "react";
+import { Component } from "react";
 
 // ============================================================================
 // Types
@@ -46,20 +47,12 @@ function detectErrorType(error: Error): ErrorType {
   }
 
   // Check for network errors
-  if (
-    error.message.includes("fetch") ||
-    error.message.includes("network") ||
-    error.name === "NetworkError"
-  ) {
+  if (error.message.includes("fetch") || error.message.includes("network") || error.name === "NetworkError") {
     return "network";
   }
 
   // Check for auth errors
-  if (
-    error.message.includes("auth") ||
-    error.message.includes("unauthorized") ||
-    error.message.includes("session")
-  ) {
+  if (error.message.includes("auth") || error.message.includes("unauthorized") || error.message.includes("session")) {
     return "auth";
   }
 
@@ -200,9 +193,7 @@ export class GenericErrorBoundary extends Component<ErrorBoundaryProps, ErrorBou
           {/* Header */}
           <div className="bg-gradient-to-r from-red-500 to-orange-500 p-6 text-white">
             <div className="flex items-center gap-3">
-              <div className="text-4xl">
-                {errorType === "storage" ? "💾" : errorType === "network" ? "🌐" : "💥"}
-              </div>
+              <div className="text-4xl">{errorType === "storage" ? "💾" : errorType === "network" ? "🌐" : "💥"}</div>
               <div>
                 <h1 className="text-xl font-bold">
                   {errorType === "storage"
@@ -242,9 +233,7 @@ export class GenericErrorBoundary extends Component<ErrorBoundaryProps, ErrorBou
             {showDetails && error.stack && (
               <details className="bg-muted border border-border rounded-lg p-4">
                 <summary className="font-semibold cursor-pointer">🔍 Stack Trace</summary>
-                <pre className="mt-3 text-xs overflow-x-auto whitespace-pre-wrap break-words">
-                  {error.stack}
-                </pre>
+                <pre className="mt-3 text-xs overflow-x-auto whitespace-pre-wrap break-words">{error.stack}</pre>
               </details>
             )}
 
@@ -272,12 +261,7 @@ export class GenericErrorBoundary extends Component<ErrorBoundaryProps, ErrorBou
 
             {/* Clear cache option */}
             {errorCount > 1 && (
-              <Button
-                onClick={this.clearCacheAndReload}
-                variant="secondary"
-                className="w-full"
-                disabled={isRecovering}
-              >
+              <Button onClick={this.clearCacheAndReload} variant="secondary" className="w-full" disabled={isRecovering}>
                 🧹 Clear All Cache & Reload
               </Button>
             )}
@@ -294,7 +278,7 @@ export class GenericErrorBoundary extends Component<ErrorBoundaryProps, ErrorBou
 
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<ErrorBoundaryProps, "children">
+  errorBoundaryProps?: Omit<ErrorBoundaryProps, "children">,
 ): React.FC<P> {
   return function WrappedComponent(props: P) {
     return (

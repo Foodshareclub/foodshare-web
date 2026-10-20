@@ -1,8 +1,8 @@
 "use client";
 
-import { motion, MotionValue, useTransform } from "framer-motion";
-import { X, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { type MotionValue, motion, useTransform } from "framer-motion";
+import { Heart, X } from "lucide-react";
 import { SWIPE_CONFIG } from "./constants";
 
 interface SwipeIndicatorsProps {
@@ -28,7 +28,7 @@ export function SwipeIndicators({ dragX }: SwipeIndicatorsProps) {
           "w-14 h-14 rounded-full",
           "bg-red-500/90 backdrop-blur-sm",
           "border-2 border-red-400",
-          "shadow-lg shadow-red-500/30"
+          "shadow-lg shadow-red-500/30",
         )}
         style={{
           opacity: leftOpacity,
@@ -46,7 +46,7 @@ export function SwipeIndicators({ dragX }: SwipeIndicatorsProps) {
           "w-14 h-14 rounded-full",
           "bg-green-500/90 backdrop-blur-sm",
           "border-2 border-green-400",
-          "shadow-lg shadow-green-500/30"
+          "shadow-lg shadow-green-500/30",
         )}
         style={{
           opacity: rightOpacity,
@@ -73,7 +73,7 @@ export function CardOverlayIndicators({ dragX }: SwipeIndicatorsProps) {
           "px-4 py-2 rounded-lg",
           "border-4 border-red-500",
           "bg-red-500/10 backdrop-blur-sm",
-          "-rotate-12"
+          "-rotate-12",
         )}
         style={{ opacity: leftOpacity }}
       >
@@ -87,7 +87,7 @@ export function CardOverlayIndicators({ dragX }: SwipeIndicatorsProps) {
           "px-4 py-2 rounded-lg",
           "border-4 border-green-500",
           "bg-green-500/10 backdrop-blur-sm",
-          "rotate-12"
+          "rotate-12",
         )}
         style={{ opacity: rightOpacity }}
       >

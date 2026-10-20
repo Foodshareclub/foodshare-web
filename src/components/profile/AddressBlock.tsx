@@ -1,19 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { getAllCountries } from "@/hooks";
 import type { AddressType, CountryType } from "@/api/profileAPI";
 import { updateAddressDirect } from "@/app/actions/profile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getAllCountries } from "@/hooks/getAllCountries";
+import { useRouter } from "next/navigation";
+import type React from "react";
+import { useEffect, useState } from "react";
 
 interface AddressBlockProps {
   address: AddressType;
@@ -64,9 +59,7 @@ export const AddressBlock: React.FC<AddressBlockProps> = ({
     }
   }, [propCountries]);
 
-  const userCountry = (
-    address.country ? { id: address.country, name: "" } : null
-  ) as CountryType | null;
+  const userCountry = (address.country ? { id: address.country, name: "" } : null) as CountryType | null;
 
   const [edit, setEdit] = useState(false);
   const [lineOne, setLineOne] = useState(address.address_line_1);
@@ -107,12 +100,15 @@ export const AddressBlock: React.FC<AddressBlockProps> = ({
     <div className="glass rounded-xl p-4 mb-4">
       <div className="flex">
         <div className="w-full max-w-screen-lg">
-          <h2 className="text-2xl font-medium pb-2 text-left text-foreground">Address</h2>
+          <h2 className="text-2xl font-medium pb-2 text-start text-foreground">Address</h2>
           {edit ? (
             <>
               <div className="mt-2">
-                <label className="block text-sm font-medium mb-1">Address Line 1 *</label>
+                <label htmlFor="address-line-one" className="block text-sm font-medium mb-1">
+                  Address Line 1 *
+                </label>
                 <Input
+                  id="address-line-one"
                   variant="glass"
                   placeholder="Address Line 1"
                   value={lineOne}
@@ -121,8 +117,11 @@ export const AddressBlock: React.FC<AddressBlockProps> = ({
               </div>
 
               <div className="mt-2">
-                <label className="block text-sm font-medium mb-1">Address Line 2</label>
+                <label htmlFor="address-line-two" className="block text-sm font-medium mb-1">
+                  Address Line 2
+                </label>
                 <Input
+                  id="address-line-two"
                   variant="glass"
                   placeholder="Address Line 2"
                   value={lineTwo}
@@ -131,8 +130,11 @@ export const AddressBlock: React.FC<AddressBlockProps> = ({
               </div>
 
               <div className="mt-2">
-                <label className="block text-sm font-medium mb-1">City *</label>
+                <label htmlFor="address-city" className="block text-sm font-medium mb-1">
+                  City *
+                </label>
                 <Input
+                  id="address-city"
                   variant="glass"
                   placeholder="City"
                   value={city}
@@ -142,8 +144,11 @@ export const AddressBlock: React.FC<AddressBlockProps> = ({
 
               <div className="flex justify-between gap-4 mt-2">
                 <div className="w-[45%]">
-                  <label className="block text-sm font-medium mb-1">State/Province *</label>
+                  <label htmlFor="address-province" className="block text-sm font-medium mb-1">
+                    State/Province *
+                  </label>
                   <Input
+                    id="address-province"
                     variant="glass"
                     placeholder="State/Province"
                     value={province}
@@ -151,8 +156,11 @@ export const AddressBlock: React.FC<AddressBlockProps> = ({
                   />
                 </div>
                 <div className="w-[45%]">
-                  <label className="block text-sm font-medium mb-1">County *</label>
+                  <label htmlFor="address-county" className="block text-sm font-medium mb-1">
+                    County *
+                  </label>
                   <Input
+                    id="address-county"
                     variant="glass"
                     placeholder="County"
                     value={county}
@@ -163,8 +171,11 @@ export const AddressBlock: React.FC<AddressBlockProps> = ({
 
               <div className="flex justify-between gap-4 mt-2">
                 <div className="w-[45%]">
-                  <label className="block text-sm font-medium mb-1">Zip/Postal Code *</label>
+                  <label htmlFor="address-postal-code" className="block text-sm font-medium mb-1">
+                    Zip/Postal Code *
+                  </label>
                   <Input
+                    id="address-postal-code"
                     variant="glass"
                     placeholder="Zip/Postal Code"
                     value={postalCode}
@@ -172,14 +183,16 @@ export const AddressBlock: React.FC<AddressBlockProps> = ({
                   />
                 </div>
                 <div className="w-[45%]">
-                  <label className="block text-sm font-medium mb-1">Country</label>
+                  <label htmlFor="address-country" className="block text-sm font-medium mb-1">
+                    Country
+                  </label>
                   <Select value={country} onValueChange={setCountry}>
-                    <SelectTrigger variant="glass">
+                    <SelectTrigger id="address-country" variant="glass">
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
                     <SelectContent variant="glass">
-                      {allCountries.map((item: CountryType, index: number) => (
-                        <SelectItem key={index} value={item.id.toString()}>
+                      {allCountries.map((item: CountryType) => (
+                        <SelectItem key={item.id.toString()} value={item.id.toString()}>
                           {item.name}
                         </SelectItem>
                       ))}

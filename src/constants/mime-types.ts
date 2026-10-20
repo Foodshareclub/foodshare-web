@@ -10,25 +10,8 @@
  */
 export const ALLOWED_MIME_TYPES = {
   PROFILES: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"],
-  POSTS: [
-    "image/png",
-    "image/jpeg",
-    "image/jpg",
-    "image/webp",
-    "image/gif",
-    "image/avif",
-    "image/heic",
-    "image/heif",
-  ],
-  FLAGS: [
-    "image/png",
-    "image/jpeg",
-    "image/jpg",
-    "image/webp",
-    "image/gif",
-    "image/svg+xml",
-    "image/avif",
-  ],
+  POSTS: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif", "image/heic", "image/heif"],
+  FLAGS: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/svg+xml", "image/avif"],
   FORUM: [
     "image/png",
     "image/jpeg",

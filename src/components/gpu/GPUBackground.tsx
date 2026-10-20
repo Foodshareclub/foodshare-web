@@ -1,9 +1,9 @@
 "use client";
 
-import React, { type ReactNode } from "react";
-import { GPUErrorBoundary } from "@/lib/gpu";
 import { FloatingOrbs } from "@/components/gpu/FloatingOrbs";
 import { GradientBackground } from "@/components/gpu/GradientBackground";
+import { GPUErrorBoundary } from "@/lib/gpu";
+import React, { type ReactNode } from "react";
 
 interface GPUBackgroundProps {
   children: ReactNode;

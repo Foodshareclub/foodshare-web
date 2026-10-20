@@ -1,22 +1,25 @@
-import { Suspense } from "react";
-import { getTranslations } from "next-intl/server";
-import { Megaphone } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { getRecentCampaigns, getEmailDashboardStats } from "@/lib/data/admin-email";
 import { CampaignsClient } from "@/app/admin/crm/components/CampaignsClient";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getEmailDashboardStats, getRecentCampaigns } from "@/lib/data/admin-email";
+import { Megaphone } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
+
+const CAMPAIGN_STAT_SKELETON_KEYS = ["a", "b", "c", "d"] as const;
+const CAMPAIGN_CARD_SKELETON_KEYS = ["a", "b", "c", "d", "e", "f"] as const;
 
 function CampaignsSkeleton() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-xl" />
+        {CAMPAIGN_STAT_SKELETON_KEYS.map((k) => (
+          <Skeleton key={k} className="h-20 rounded-xl" />
         ))}
       </div>
       <Skeleton className="h-12 w-full rounded-lg" />
       <div className="grid grid-cols-3 gap-4">
-        {[...Array(6)].map((_, i) => (
-          <Skeleton key={i} className="h-48 rounded-xl" />
+        {CAMPAIGN_CARD_SKELETON_KEYS.map((k) => (
+          <Skeleton key={k} className="h-48 rounded-xl" />
         ))}
       </div>
     </div>
@@ -40,12 +43,8 @@ export default async function AdminCampaignsPage() {
             <Megaphone className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-foreground tracking-tight">
-              {t("email_campaigns")}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {t("create_and_manage_email_campaigns")}
-            </p>
+            <h1 className="text-xl font-bold text-foreground tracking-tight">{t("email_campaigns")}</h1>
+            <p className="text-sm text-muted-foreground">{t("create_and_manage_email_campaigns")}</p>
           </div>
         </div>
       </div>

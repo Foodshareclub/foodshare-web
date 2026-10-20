@@ -3,8 +3,8 @@
  * Helpers for testing components that use TanStack Query
  */
 
-import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type React from "react";
 
 /**
  * Create a test-specific QueryClient with sensible defaults

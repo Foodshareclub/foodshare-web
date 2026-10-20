@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import { cn } from "@/lib/cn";
+import * as React from "react";
 
 // ─── StatusIndicator — Standalone Atom ───────────────────────────────────────
 //
@@ -49,7 +49,7 @@ export const StatusIndicator = ({
   "aria-label": ariaLabel,
   ...props
 }: StatusIndicatorProps) => {
-  const baseClasses = `inline-flex items-center rounded-full transition-colors`;
+  const baseClasses = "inline-flex items-center rounded-full transition-colors";
 
   return (
     <button
@@ -58,11 +58,7 @@ export const StatusIndicator = ({
       aria-label={ariaLabel || text || "status"}
       {...props}
     >
-      {text ? (
-        <span className="align-middle text-xs font-medium">{text}</span>
-      ) : (
-        <span className="align-middle" />
-      )}
+      {text ? <span className="align-middle text-xs font-medium">{text}</span> : <span className="align-middle" />}
     </button>
   );
 }; // end StatusIndicator

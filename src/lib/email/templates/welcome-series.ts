@@ -34,7 +34,7 @@ const emailWrapper = (
   options: {
     preheader?: string;
     title?: string;
-  } = {}
+  } = {},
 ) => `
 <!DOCTYPE html>
 <html>
@@ -234,7 +234,7 @@ const emailStats = (stats: { value: string; label: string; color?: string }[]) =
                   <td width="${Math.floor(100 / stats.length)}%" style="text-align: center; padding: 28px 12px;${i > 0 ? " border-left: 1px solid #3d3d3d;" : ""}">
                     <p style="margin: 0; font-size: 36px; font-weight: 800; color: ${stat.color || BRAND_COLOR};">${stat.value}</p>
                     <p style="margin: 8px 0 0; font-size: 12px; color: #86868b; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.4;">${stat.label}</p>
-                  </td>`
+                  </td>`,
                     )
                     .join("")}
                 </tr>
@@ -324,7 +324,7 @@ FoodShare - Reducing food waste, one share at a time
     {
       preheader: "Welcome to FoodShare! Start sharing food with your community today.",
       title: "Welcome to FoodShare",
-    }
+    },
   ),
 };
 
@@ -387,7 +387,7 @@ The FoodShare Team
     {
       preheader: "Complete your profile to get the most out of FoodShare!",
       title: "Complete Your Profile",
-    }
+    },
   ),
 };
 
@@ -502,7 +502,7 @@ The FoodShare Team
     {
       preheader: "Join our beta program and help shape FoodShare's future!",
       title: "Beta Tester Recruitment",
-    }
+    },
   ),
 };
 
@@ -579,7 +579,7 @@ The FoodShare Team
     {
       preheader: "Tips for creating your first food listing on FoodShare!",
       title: "First Share Tips",
-    }
+    },
   ),
 };
 
@@ -641,7 +641,7 @@ The FoodShare Team
                       The average American household wastes about 30-40% of the food they buy. By sharing through FoodShare, you're directly fighting this waste.
                     </p>
               `,
-                "#ecfdf5"
+                "#ecfdf5",
               )}
 
               ${emailButton("Browse Food Near You", "https://foodshare.club/map")}
@@ -649,7 +649,7 @@ The FoodShare Team
     {
       preheader: "Your community is thriving! See what neighbors are sharing this week.",
       title: "Community Highlights",
-    }
+    },
   ),
 };
 
@@ -787,7 +787,7 @@ The FoodShare Team
     {
       preheader: "Join our volunteer team and help reduce food waste in Sacramento!",
       title: "Volunteer with FoodShare",
-    }
+    },
   ),
 };
 
@@ -881,7 +881,7 @@ The FoodShare Team
     {
       preheader: "See what our community accomplished together this month!",
       title: "Monthly Impact Digest",
-    }
+    },
   ),
 };
 
@@ -893,14 +893,7 @@ export const milestoneCelebrationTemplate: EmailTemplateDefinition = {
   slug: "milestone-celebration",
   subject: "🎉 You've reached a milestone on FoodShare!",
   category: "automation",
-  variables: [
-    "first_name",
-    "milestone_type",
-    "milestone_number",
-    "total_meals",
-    "total_co2",
-    "unsubscribe_url",
-  ],
+  variables: ["first_name", "milestone_type", "milestone_number", "total_meals", "total_co2", "unsubscribe_url"],
   plain_text_content: `
 Hi {{first_name}},
 
@@ -964,7 +957,7 @@ P.S. Share this milestone on social media and inspire others to join the movemen
     {
       preheader: "Congratulations! You've reached a milestone on FoodShare!",
       title: "Milestone Celebration",
-    }
+    },
   ),
 };
 
@@ -976,13 +969,7 @@ export const welcomeNeighborhoodTemplate: EmailTemplateDefinition = {
   slug: "welcome-neighborhood",
   subject: "Welcome to the neighborhood, {{first_name}}! 🏘️",
   category: "automation",
-  variables: [
-    "first_name",
-    "neighborhood_name",
-    "nearby_sharers",
-    "recent_listings",
-    "unsubscribe_url",
-  ],
+  variables: ["first_name", "neighborhood_name", "nearby_sharers", "recent_listings", "unsubscribe_url"],
   plain_text_content: `
 Hi {{first_name}},
 
@@ -1064,7 +1051,7 @@ The FoodShare Team
     {
       preheader: "Welcome to your neighborhood on FoodShare! Your neighbors are ready to share.",
       title: "Welcome to the Neighborhood",
-    }
+    },
   ),
 };
 
@@ -1076,13 +1063,7 @@ export const reengagementTemplate: EmailTemplateDefinition = {
   slug: "reengagement-miss-you",
   subject: "We miss you, {{first_name}}! Your neighbors are still sharing 🥗",
   category: "automation",
-  variables: [
-    "first_name",
-    "days_inactive",
-    "nearby_listings",
-    "community_meals_saved",
-    "unsubscribe_url",
-  ],
+  variables: ["first_name", "days_inactive", "nearby_listings", "community_meals_saved", "unsubscribe_url"],
   plain_text_content: `
 Hi {{first_name}},
 
@@ -1149,7 +1130,7 @@ P.S. Got feedback? We'd love to hear why you've been away. Just reply to this em
     {
       preheader: "We miss you! Your neighbors are still sharing food on FoodShare.",
       title: "We Miss You",
-    }
+    },
   ),
 };
 

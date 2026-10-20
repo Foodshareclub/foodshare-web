@@ -62,7 +62,7 @@ export interface ScheduleInfo {
 export async function publishMessage<T extends Record<string, unknown>>(
   url: string,
   body: T,
-  options?: PublishOptions
+  options?: PublishOptions,
 ): Promise<PublishResult> {
   try {
     const client = getQStashClient();
@@ -93,7 +93,7 @@ export async function publishDelayed<T extends Record<string, unknown>>(
   url: string,
   body: T,
   delaySeconds: number,
-  options?: Omit<PublishOptions, "delay">
+  options?: Omit<PublishOptions, "delay">,
 ): Promise<PublishResult> {
   return publishMessage(url, body, { ...options, delay: delaySeconds });
 }
@@ -105,7 +105,7 @@ export async function createSchedule<T extends Record<string, unknown>>(
   scheduleId: string,
   url: string,
   cron: string,
-  body?: T
+  body?: T,
 ): Promise<{ scheduleId: string; success: boolean }> {
   try {
     const client = getQStashClient();
@@ -202,7 +202,7 @@ export async function listSchedules(): Promise<ScheduleInfo[]> {
       isPaused: s.isPaused,
     }));
   } catch (error) {
-    console.error(`[QStash] Failed to list schedules:`, error);
+    console.error("[QStash] Failed to list schedules:", error);
     return [];
   }
 }
@@ -271,26 +271,23 @@ export async function queueEmail(
   subject: string,
   template: string,
   data: Record<string, unknown>,
-  options?: { delay?: number }
+  options?: { delay?: number },
 ): Promise<PublishResult> {
   return publishMessage(
     getJobEndpoint(JOB_TYPES.SEND_EMAIL),
     { to, subject, template, data },
-    { delay: options?.delay, deduplicationId: `email-${to}-${template}-${Date.now()}` }
+    { delay: options?.delay, deduplicationId: `email-${to}-${template}-${Date.now()}` },
   );
 }
 
 /**
  * Queue image processing
  */
-export async function queueImageProcessing(
-  imageUrl: string,
-  productId: string
-): Promise<PublishResult> {
+export async function queueImageProcessing(imageUrl: string, productId: string): Promise<PublishResult> {
   return publishMessage(
     getJobEndpoint(JOB_TYPES.PROCESS_IMAGE),
     { imageUrl, productId },
-    { deduplicationId: `image-${productId}` }
+    { deduplicationId: `image-${productId}` },
   );
 }
 
@@ -300,7 +297,7 @@ export async function queueImageProcessing(
 export async function queueNotification(
   userId: string,
   type: string,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ): Promise<PublishResult> {
   return publishMessage(getJobEndpoint(JOB_TYPES.SEND_NOTIFICATION), {
     userId,
@@ -313,14 +310,11 @@ export async function queueNotification(
 /**
  * Queue search index sync for a product
  */
-export async function queueSearchIndexSync(
-  productId: string,
-  action: "upsert" | "delete"
-): Promise<PublishResult> {
+export async function queueSearchIndexSync(productId: string, action: "upsert" | "delete"): Promise<PublishResult> {
   return publishMessage(
     getJobEndpoint(JOB_TYPES.SYNC_SEARCH_INDEX),
     { productId, action },
-    { deduplicationId: `search-sync-${productId}-${action}` }
+    { deduplicationId: `search-sync-${productId}-${action}` },
   );
 }
 
@@ -330,11 +324,11 @@ export async function queueSearchIndexSync(
 export async function queueEmbeddingGeneration(
   contentId: string,
   contentType: "product" | "user" | "message",
-  content: string
+  content: string,
 ): Promise<PublishResult> {
   return publishMessage(
     getJobEndpoint(JOB_TYPES.GENERATE_EMBEDDINGS),
     { contentId, contentType, content },
-    { deduplicationId: `embedding-${contentType}-${contentId}` }
+    { deduplicationId: `embedding-${contentType}-${contentId}` },
   );
 }

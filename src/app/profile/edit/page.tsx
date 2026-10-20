@@ -8,11 +8,11 @@
  * and passes it to a Client Component. For now, using useAuth for auth state.
  */
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { ChevronRight } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
 import { AddressBlock, EmailBlock, NameBlock, PhoneNumberBlock } from "@/components/profile";
+import { useAuth } from "@/hooks/useAuth";
+import { ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 // Simplified profile type for this component
 interface ProfileData {
@@ -93,6 +93,7 @@ export default function ProfileEditPage({ initialProfile, initialAddress }: Prof
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 mb-8">
           <button
+            type="button"
             onClick={() => router.push("/profile")}
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >

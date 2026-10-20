@@ -13,9 +13,6 @@ export * from "./useChallenges";
 export * from "./useChallengeLeaderboard";
 export * from "./useActiveChallenges";
 
-// Map - viewport-based location loading
-export * from "./useViewportLocations";
-
 // Admin - email CRM dashboard
 export * from "./useEmailCRM";
 

@@ -12,8 +12,8 @@
  * @module lib/security/mfa
  */
 
-import { supabase } from "@/lib/supabase/client";
 import { createLogger } from "@/lib/logger";
+import { supabase } from "@/lib/supabase/client";
 
 const logger = createLogger("MFAService");
 
@@ -138,11 +138,7 @@ export class MFAService {
    * Get user's MFA configuration
    */
   static async getConfiguration(profileId: string): Promise<MFAConfiguration | null> {
-    const { data, error } = await supabase
-      .from("mfa_configuration")
-      .select("*")
-      .eq("profile_id", profileId)
-      .single();
+    const { data, error } = await supabase.from("mfa_configuration").select("*").eq("profile_id", profileId).single();
 
     if (error) {
       logger.error("Error fetching configuration", error);
@@ -159,7 +155,7 @@ export class MFAService {
   static async createChallenge(profileId: string, method: "sms" | "email"): Promise<MFAChallenge> {
     try {
       // Get IP address and user agent for rate limiting
-      const ipAddress = await this.getClientIPAddress();
+      const ipAddress = await MFAService.getClientIPAddress();
       const userAgent = navigator.userAgent;
 
       // Create challenge via database function
@@ -182,7 +178,7 @@ export class MFAService {
 
       // If successful, send the code
       if (result.success && result.code) {
-        await this.sendVerificationCode(profileId, method, result.code);
+        await MFAService.sendVerificationCode(profileId, method, result.code);
       }
 
       return result;
@@ -198,11 +194,7 @@ export class MFAService {
   /**
    * Verify MFA challenge code
    */
-  static async verifyChallenge(
-    challengeId: string,
-    code: string,
-    profileId: string
-  ): Promise<MFAVerificationResult> {
+  static async verifyChallenge(challengeId: string, code: string, profileId: string): Promise<MFAVerificationResult> {
     try {
       const { data, error } = await supabase.rpc("verify_mfa_challenge", {
         p_challenge_id: challengeId,
@@ -244,14 +236,11 @@ export class MFAService {
   static async enrollMFA(
     profileId: string,
     method: MFAMethod,
-    phoneNumber?: string
+    phoneNumber?: string,
   ): Promise<{ success: boolean; error?: string; backup_codes?: string[] }> {
     try {
       // Generate backup codes
-      const { data: backupCodes, error: backupError } = await supabase.rpc(
-        "generate_backup_codes",
-        { count: 10 }
-      );
+      const { data: backupCodes, error: backupError } = await supabase.rpc("generate_backup_codes", { count: 10 });
 
       if (backupError) {
         logger.error("Error generating backup codes", backupError);
@@ -361,7 +350,7 @@ export class MFAService {
   static async verifyBackupCode(profileId: string, code: string): Promise<MFAVerificationResult> {
     try {
       // Get MFA configuration
-      const config = await this.getConfiguration(profileId);
+      const config = await MFAService.getConfiguration(profileId);
       if (!config || !config.backup_codes) {
         return {
           success: false,
@@ -427,11 +416,7 @@ export class MFAService {
   /**
    * Send verification code via SMS or Email
    */
-  private static async sendVerificationCode(
-    profileId: string,
-    method: "sms" | "email",
-    code: string
-  ): Promise<void> {
+  private static async sendVerificationCode(profileId: string, method: "sms" | "email", code: string): Promise<void> {
     try {
       // Get user details
       const { data: profile } = await supabase
@@ -465,7 +450,7 @@ export class MFAService {
         if (process.env.NODE_ENV !== "production") {
           logger.debug("SMS verification code (dev mode)", { code, phone: profile.phone });
         } else {
-          await this.sendSMSBridge(profile.phone, `Your verification code is: ${code}`);
+          await MFAService.sendSMSBridge(profile.phone, `Your verification code is: ${code}`);
         }
       }
     } catch (error) {

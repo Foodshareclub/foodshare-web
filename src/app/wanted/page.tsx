@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import CategoryPageContent, { generateCategoryMetadata, PageProps } from "../food/CategoryPageContent";
+import CategoryPageContent, { generateCategoryMetadata, type PageProps } from "../food/CategoryPageContent";
 
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
   return generateCategoryMetadata("wanted", props.searchParams);

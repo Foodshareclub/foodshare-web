@@ -1,21 +1,11 @@
 "use client";
 
+import type { ForumPost } from "@/api/forumAPI";
+import { Bookmark, CheckCircle, Clock, Eye, Heart, Lock, MessageCircle, Pin, Share2, TrendingUp } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import {
-  TrendingUp,
-  CheckCircle,
-  Clock,
-  MessageCircle,
-  Eye,
-  Heart,
-  Lock,
-  Pin,
-  Bookmark,
-  Share2,
-} from "lucide-react";
 import { ForumCategoryBadge } from "./ForumCategoryBadge";
 import { ForumTagBadge } from "./ForumTagBadge";
-import type { ForumPost } from "@/api/forumAPI";
 
 const MODULE_LOAD_TIME = Date.now();
 
@@ -98,22 +88,22 @@ export function ForumPostCard({
       onMouseLeave={onMouseLeave}
     >
       <div className="transition-transform duration-200 ease-out hover:-translate-y-1.5 active:scale-[0.98]">
-        <div
-          className="relative bg-card rounded-2xl overflow-hidden cursor-pointer group border border-border/50 hover:border-primary/40 shadow-sm hover:shadow-xl transition-all duration-300"
+        <button
+          type="button"
+          className="relative bg-card rounded-2xl overflow-hidden cursor-pointer group border border-border/50 hover:border-primary/40 shadow-sm hover:shadow-xl transition-all duration-300 w-full text-start block"
           onClick={onNavigateToPost}
         >
           {/* Gradient border effect on hover */}
           <div
             className="absolute inset-0 rounded-2xl transition-opacity duration-300 pointer-events-none opacity-0 group-hover:opacity-100"
             style={{
-              background:
-                "linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05))",
+              background: "linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05))",
             }}
           />
 
           {/* New badge */}
           {isNew && !post.is_pinned && (
-            <div className="absolute top-3 left-3 z-20">
+            <div className="absolute top-3 start-3 z-20">
               <span className="px-2 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full shadow-lg animate-pulse">
                 NEW
               </span>
@@ -138,7 +128,7 @@ export function ForumPostCard({
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
               {/* Overlay badges */}
-              <div className="absolute top-3 left-3 flex flex-wrap gap-2 z-10">
+              <div className="absolute top-3 start-3 flex flex-wrap gap-2 z-10">
                 {post.is_pinned && (
                   <span className="bg-gradient-to-r from-amber-500 to-orange-500 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-lg animate-in zoom-in duration-300">
                     <Pin className="w-3 h-3" />
@@ -160,7 +150,7 @@ export function ForumPostCard({
               </div>
 
               {/* Quick stats overlay */}
-              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10">
+              <div className="absolute bottom-3 inset-x-3 flex items-center justify-between z-10">
                 <div className="flex items-center gap-2">
                   <span className="bg-black/40 backdrop-blur-md text-white px-2.5 py-1 rounded-full text-xs flex items-center gap-1.5">
                     <Eye className="w-3 h-3" />
@@ -174,7 +164,7 @@ export function ForumPostCard({
               </div>
 
               {/* Hover actions */}
-              <div className="absolute top-3 right-3 flex gap-2 z-10 transition-all duration-200 opacity-0 -translate-y-2.5 group-hover:opacity-100 group-hover:translate-y-0">
+              <div className="absolute top-3 end-3 flex gap-2 z-10 transition-all duration-200 opacity-0 -translate-y-2.5 group-hover:opacity-100 group-hover:translate-y-0">
                 <span className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-2 rounded-full shadow-lg block hover:bg-primary hover:text-white transition-colors">
                   <Bookmark className="w-3.5 h-3.5" />
                 </span>
@@ -225,11 +215,7 @@ export function ForumPostCard({
             {post.forum_post_tags && post.forum_post_tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-4">
                 {post.forum_post_tags.slice(0, 3).map((tagRelation) => (
-                  <ForumTagBadge
-                    key={tagRelation.forum_tags.id}
-                    tag={tagRelation.forum_tags}
-                    size="sm"
-                  />
+                  <ForumTagBadge key={tagRelation.forum_tags.id} tag={tagRelation.forum_tags} size="sm" />
                 ))}
                 {post.forum_post_tags.length > 3 && (
                   <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded-full">
@@ -244,9 +230,11 @@ export function ForumPostCard({
               <div className="flex items-center gap-3">
                 <div className="relative">
                   {post.profiles?.avatar_url ? (
-                    <img
+                    <Image
                       src={post.profiles.avatar_url}
                       alt={post.profiles.nickname || "User"}
+                      width={36}
+                      height={36}
                       className="w-9 h-9 rounded-full object-cover ring-2 ring-background shadow-md"
                     />
                   ) : (
@@ -257,7 +245,7 @@ export function ForumPostCard({
                     </div>
                   )}
                   {hasActivity && (
-                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-background rounded-full animate-pulse" />
+                    <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-green-500 border-2 border-background rounded-full animate-pulse" />
                   )}
                 </div>
                 <div className="flex flex-col">
@@ -289,13 +277,11 @@ export function ForumPostCard({
           {post.post_type === "question" && !post.best_answer_id && (
             <div className="h-1 bg-gradient-to-r from-amber-400 to-orange-400" />
           )}
-          {post.best_answer_id && (
-            <div className="h-1 bg-gradient-to-r from-green-400 to-emerald-400" />
-          )}
+          {post.best_answer_id && <div className="h-1 bg-gradient-to-r from-green-400 to-emerald-400" />}
           {post.is_pinned && !post.best_answer_id && post.post_type !== "question" && (
-            <div className="h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
+            <div className="h-1 bg-gradient-to-r from-amber-500 to-amber-500" />
           )}
-        </div>
+        </button>
       </div>
     </div>
   );

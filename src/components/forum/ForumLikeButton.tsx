@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Heart } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { toggleForumLike } from "@/app/actions/forum";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Heart } from "lucide-react";
+import { useState, useTransition } from "react";
 
 type ForumLikeButtonProps = {
   forumId: number;
@@ -54,7 +54,7 @@ export function ForumLikeButton({
       className={cn(
         "flex items-center gap-1.5 transition-colors",
         isLiked && "text-red-500 hover:text-red-600",
-        className
+        className,
       )}
       aria-label={
         isAuthenticated

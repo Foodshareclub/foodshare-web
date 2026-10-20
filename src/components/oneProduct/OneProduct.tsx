@@ -33,15 +33,7 @@ export type OneProductType = {
  * Displays product details with actions
  * Uses React Query instead of Redux for mutations
  */
-export function OneProduct({
-  chat,
-  product,
-  buttonValue,
-  navigateHandler,
-  size,
-  requesterId,
-  roomId,
-}: OneProductType) {
+export function OneProduct({ chat, product, buttonValue, navigateHandler, size, requesterId, roomId }: OneProductType) {
   const router = useRouter();
   const [rating, setRating] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -80,11 +72,7 @@ export function OneProduct({
         router.refresh();
       } catch (error) {
         console.error("Failed to update:", error);
-        setUpdateError(
-          error instanceof Error
-            ? error.message
-            : "Could not update this listing. Please try again."
-        );
+        setUpdateError(error instanceof Error ? error.message : "Could not update this listing. Please try again.");
       } finally {
         setIsUpdating(false);
       }
@@ -106,10 +94,7 @@ export function OneProduct({
   // Chat mode - compact view
   if (chat) {
     return (
-      <div
-        className="glass rounded-xl p-5 transition-all duration-300 ease-in-out"
-        style={{ width: size }}
-      >
+      <div className="glass rounded-xl p-5 transition-all duration-300 ease-in-out" style={{ width: size }}>
         <div className="flex flex-col gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -201,9 +186,7 @@ export function OneProduct({
                 <span className="text-lg">📦</span>
                 <p className="font-medium">&quot;Details&quot;</p>
               </div>
-              <p className="text-muted-foreground text-right max-w-[60%]">
-                {product.post_description}
-              </p>
+              <p className="text-muted-foreground text-end max-w-[60%]">{product.post_description}</p>
             </div>
           )}
 
@@ -227,7 +210,7 @@ export function OneProduct({
             </p>
           )}
           {!isAuthenticated ? (
-            <AuthenticationUserModal oneProductComponent buttonValue="Login" />
+            <AuthenticationUserModal oneProductComponent mode="login" />
           ) : (
             <Button
               variant="glass"

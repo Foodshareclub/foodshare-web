@@ -3,11 +3,11 @@
  * Tests for Zustand authentication store
  */
 
-import { describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 import { act } from "@testing-library/react";
 
-import type { User, Session } from "@supabase/supabase-js";
-import { useAuthStore, authActions } from "../useAuthStore";
+import type { Session, User } from "@supabase/supabase-js";
+import { authActions, useAuthStore } from "../useAuthStore";
 
 // Mock user and session for testing
 const mockUser: User = {
@@ -264,7 +264,7 @@ describe("useAuthStore", () => {
         });
 
         expect(useAuthStore.getState().adminCheckStatus).toBe(status);
-      }
+      },
     );
   });
 

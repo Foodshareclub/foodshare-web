@@ -1,5 +1,5 @@
-import * as React from "react";
 import { cn } from "@/lib/utils";
+import * as React from "react";
 
 type MinifiedUserInfoType = {
   userId?: string;
@@ -34,10 +34,11 @@ export function MinifiedUserInfo({
   const isActive = roomIDFromUrl === roomId;
 
   return (
-    <div
+    <button
+      type="button"
       className={cn(
-        "cursor-pointer rounded-xl py-2 px-2 flex items-center gap-4 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] gpu",
-        isActive ? "glass" : "glass-subtle hover:opacity-90"
+        "cursor-pointer rounded-xl py-2 px-2 flex items-center gap-4 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] gpu w-full text-start",
+        isActive ? "glass" : "glass-subtle hover:opacity-90",
       )}
       onClick={onClick}
     >
@@ -51,7 +52,7 @@ export function MinifiedUserInfo({
           decoding="async"
         />
         {lastUserSeen !== userId && (
-          <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-300 border-2 border-white rounded-full" />
+          <div className="absolute bottom-0 end-0 w-4 h-4 bg-green-300 border-2 border-white rounded-full" />
         )}
       </div>
 
@@ -61,6 +62,6 @@ export function MinifiedUserInfo({
           {firstName} {secondName}
         </p>
       </div>
-    </div>
+    </button>
   );
 }

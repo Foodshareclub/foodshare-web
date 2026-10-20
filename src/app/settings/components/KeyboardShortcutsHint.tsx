@@ -1,7 +1,7 @@
 "use client";
 
-import { Keyboard } from "lucide-react";
 import { Glass } from "@/components/ui/glass";
+import { Keyboard } from "lucide-react";
 
 export function KeyboardShortcutsHint() {
   return (
@@ -14,8 +14,7 @@ export function KeyboardShortcutsHint() {
           <p className="text-sm font-medium text-foreground">Keyboard shortcuts</p>
           <p className="text-xs text-muted-foreground">
             Press <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">⌘</kbd> +{" "}
-            <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">,</kbd> to open
-            settings
+            <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">,</kbd> to open settings
           </p>
         </div>
       </div>

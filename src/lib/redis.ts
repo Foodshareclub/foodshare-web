@@ -75,11 +75,7 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
 /**
  * Set cached value in Redis with TTL
  */
-export async function cacheSet<T>(
-  key: string,
-  value: T,
-  ttlSeconds: number = REDIS_TTL.LEADERBOARD
-): Promise<boolean> {
+export async function cacheSet<T>(key: string, value: T, ttlSeconds: number = REDIS_TTL.LEADERBOARD): Promise<boolean> {
   if (!redis) return false;
 
   try {
@@ -151,7 +147,7 @@ export async function cacheDeletePattern(pattern: string): Promise<number> {
 export async function cacheThrough<T>(
   key: string,
   fetchFn: () => Promise<T>,
-  ttlSeconds: number = REDIS_TTL.LEADERBOARD
+  ttlSeconds: number = REDIS_TTL.LEADERBOARD,
 ): Promise<T> {
   // Try to get from cache first
   const cached = await cacheGet<T>(key);
@@ -177,7 +173,7 @@ export async function cacheThrough<T>(
 /**
  * Get leaderboard cache key
  */
-export function getLeaderboardKey(limit: number = 100): string {
+export function getLeaderboardKey(limit = 100): string {
   return `${REDIS_PREFIXES.LEADERBOARD}:top${limit}`;
 }
 
@@ -211,10 +207,7 @@ export async function isRequestInFlight(key: string): Promise<boolean> {
 /**
  * Mark a request as in-flight
  */
-export async function markRequestInFlight(
-  key: string,
-  ttlSeconds: number = REDIS_TTL.DEDUP
-): Promise<boolean> {
+export async function markRequestInFlight(key: string, ttlSeconds: number = REDIS_TTL.DEDUP): Promise<boolean> {
   if (!redis) return false;
 
   try {

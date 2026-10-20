@@ -9,13 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { STORAGE_BUCKETS } from "@/constants/storage";
 import { LISTING } from "@/constants/validation";
@@ -182,7 +176,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
       setSelectedImages((prev) => [...prev, ...validFiles]);
       setImagePreviews((prev) => [...prev, ...newPreviews]);
     },
-    [selectedImages]
+    [selectedImages],
   );
 
   const handleRemoveImage = useCallback((index: number) => {
@@ -398,10 +392,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
               <Label htmlFor="post_type" className="text-base font-semibold mb-2 block">
                 {t("category")} <span className="text-red-500">*</span>
               </Label>
-              <Select
-                value={formData.post_type}
-                onValueChange={(value) => handleInputChange("post_type", value)}
-              >
+              <Select value={formData.post_type} onValueChange={(value) => handleInputChange("post_type", value)}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -508,7 +499,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                           <button
                             type="button"
                             onClick={() => handleRemoveImage(0)}
-                            className="absolute -top-1 -right-1 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute -top-1 -end-1 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -530,9 +521,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                           <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mb-3">
                             <Camera className="w-8 h-8 text-emerald-600" />
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            Click to upload your photo
-                          </p>
+                          <p className="text-sm text-muted-foreground">Click to upload your photo</p>
                         </label>
                       </div>
                     )}
@@ -579,10 +568,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                 {/* Skills Multi-Select */}
                 <div className="mb-6">
                   <Label className="text-base font-semibold mb-2 block">
-                    Your Skills{" "}
-                    <span className="text-muted-foreground font-normal">
-                      (select all that apply)
-                    </span>
+                    Your Skills <span className="text-muted-foreground font-normal">(select all that apply)</span>
                   </Label>
                   <div className="grid grid-cols-2 gap-3 mt-3">
                     {VOLUNTEER_SKILLS.map((skill) => (
@@ -630,11 +616,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                             : "border-border hover:border-emerald-300 dark:hover:border-emerald-700"
                         }`}
                       >
-                        <RadioGroupItem
-                          value={option.value}
-                          id={option.value}
-                          className="text-emerald-500"
-                        />
+                        <RadioGroupItem value={option.value} id={option.value} className="text-emerald-500" />
                         <span className="text-sm font-medium cursor-pointer">{option.label}</span>
                       </label>
                     ))}
@@ -676,8 +658,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                     )}
                   </button>
                   <p className="text-center text-sm text-muted-foreground">
-                    Your application will be reviewed by our team. We&apos;ll notify you once
-                    approved!
+                    Your application will be reviewed by our team. We&apos;ll notify you once approved!
                   </p>
                   <Button
                     type="button"
@@ -715,7 +696,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                             <button
                               type="button"
                               onClick={() => handleRemoveImage(index)}
-                              className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-2 end-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                               <X className="w-3 h-3" />
                             </button>

@@ -6,11 +6,12 @@
  * time-based scheduling, and accessibility support
  */
 
-import React, { useEffect, useRef, useState, useCallback, type ReactNode } from "react";
-import { ThemeToastProvider } from "./ThemeToast";
-import { useTheme } from "@/hooks";
-import { useGPUContext } from "@/lib/gpu";
 import { ThemeTransition } from "@/components/gpu/ThemeTransition";
+import { useTheme } from "@/hooks/useTheme";
+import { useGPUContext } from "@/lib/gpu";
+import type React from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { ThemeToastProvider } from "./ThemeToast";
 
 interface ThemeProviderProps {
   children: ReactNode;
@@ -46,16 +47,13 @@ const initClickTracking = () => {
 /**
  * Creates a radial reveal animation from the click point (CSS fallback)
  */
-const createRadialReveal = (
-  resolvedTheme: "light" | "dark",
-  position: { x: number; y: number }
-) => {
+const createRadialReveal = (resolvedTheme: "light" | "dark", position: { x: number; y: number }) => {
   // Skip if reduced motion preferred or SSR
   if (prefersReducedMotion() || typeof window === "undefined") return;
 
-  // Check for View Transitions API support (use bracket notation to avoid TypeScript narrowing)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if ((document as any).startViewTransition !== undefined) {
+  // Check for View Transitions API support
+  const viewTransitionDoc = document as Document & { startViewTransition?: unknown };
+  if (viewTransitionDoc.startViewTransition !== undefined) {
     // Use native View Transitions API for buttery smooth animation
     return;
   }
@@ -67,7 +65,7 @@ const createRadialReveal = (
   // Calculate the maximum distance to cover the entire screen
   const maxDist = Math.hypot(
     Math.max(position.x, window.innerWidth - position.x),
-    Math.max(position.y, window.innerHeight - position.y)
+    Math.max(position.y, window.innerHeight - position.y),
   );
 
   const bgColor = resolvedTheme === "dark" ? "#030712" : "#ffffff";
@@ -152,8 +150,10 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     const { x, y } = lastClickPosition;
 
     if (gpuSupported) {
-      // GPU path: radial wipe shader
-      setTransition({ active: true, isDark, x, y });
+      // GPU path: radial wipe shader — defer overlay mount to next frame
+      // so the effect body stays free of synchronous setState
+      const transition = { active: true, isDark, x, y };
+      requestAnimationFrame(() => setTransition(transition));
     } else {
       // CSS fallback: clip-path radial reveal
       createRadialReveal(resolvedTheme, lastClickPosition);

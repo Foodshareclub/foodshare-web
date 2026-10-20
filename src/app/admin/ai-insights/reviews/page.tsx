@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 type ReviewResult = { line_comments?: Array<{ severity?: string }> } | null;
 
@@ -86,7 +86,12 @@ export default function ReviewsPage() {
       const res = await fetch("/api/admin/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ owner, repo, pr_number: parseInt(selectedPr), post: postToGithub }),
+        body: JSON.stringify({
+          owner,
+          repo,
+          pr_number: Number.parseInt(selectedPr),
+          post: postToGithub,
+        }),
       });
       if (res.ok) {
         setReviewProgress("Review complete!");
@@ -110,10 +115,9 @@ export default function ReviewsPage() {
   const criticalIssues = reviews.reduce(
     (acc, r) =>
       acc +
-      (r.result?.line_comments?.filter(
-        (c: { severity?: string }) => c.severity === "critical" || c.severity === "high"
-      ).length || 0),
-    0
+      (r.result?.line_comments?.filter((c: { severity?: string }) => c.severity === "critical" || c.severity === "high")
+        .length || 0),
+    0,
   );
 
   if (loading) {
@@ -130,13 +134,11 @@ export default function ReviewsPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-white">AI Code Reviews</h1>
-          <p className="text-zinc-500 text-sm md:text-base">
-            AI-powered code review for pull requests
-          </p>
+          <p className="text-zinc-500 text-sm md:text-base">AI-powered code review for pull requests</p>
         </div>
         <div className="text-xs text-zinc-600 hidden md:block">
           <kbd className="px-2 py-1 bg-zinc-800 rounded">⌘+Enter</kbd> Run review •
-          <kbd className="px-2 py-1 bg-zinc-800 rounded ml-2">⌘+R</kbd> View reviews
+          <kbd className="px-2 py-1 bg-zinc-800 rounded ms-2">⌘+R</kbd> View reviews
         </div>
       </div>
 
@@ -150,7 +152,9 @@ export default function ReviewsPage() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div>
-              <label className="text-sm text-zinc-400 block mb-1">Repository</label>
+              <label htmlFor="review-filter-repo" className="text-sm text-zinc-400 block mb-1">
+                Repository
+              </label>
               <select
                 value={selectedRepo}
                 onChange={(e) => {
@@ -170,7 +174,9 @@ export default function ReviewsPage() {
               </select>
             </div>
             <div>
-              <label className="text-sm text-zinc-400 block mb-1">Pull Request</label>
+              <label htmlFor="review-filter-pr" className="text-sm text-zinc-400 block mb-1">
+                Pull Request
+              </label>
               <div className="flex gap-2">
                 <select
                   value={selectedPr}
@@ -179,11 +185,7 @@ export default function ReviewsPage() {
                   className="flex-1 px-3 md:px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm disabled:opacity-50"
                 >
                   <option value="">
-                    {loading
-                      ? "Loading PRs..."
-                      : prs.length === 0 && selectedRepo
-                        ? "No PRs found"
-                        : "Select PR..."}
+                    {loading ? "Loading PRs..." : prs.length === 0 && selectedRepo ? "No PRs found" : "Select PR..."}
                   </option>
                   {prs.map((pr) => (
                     <option key={pr.number} value={pr.number}>
@@ -192,9 +194,9 @@ export default function ReviewsPage() {
                     </option>
                   ))}
                 </select>
-                {selectedPr && prs.find((p) => p.number === parseInt(selectedPr))?.url && (
+                {selectedPr && prs.find((p) => p.number === Number.parseInt(selectedPr))?.url && (
                   <a
-                    href={prs.find((p) => p.number === parseInt(selectedPr))?.url}
+                    href={prs.find((p) => p.number === Number.parseInt(selectedPr))?.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-400 hover:text-white hover:border-zinc-600 transition-colors"
@@ -276,9 +278,10 @@ export default function ReviewsPage() {
             </p>
           ) : (
             reviews.slice(0, 10).map((review) => (
-              <div
+              <button
+                type="button"
                 key={review.id}
-                className="flex items-center justify-between p-2 md:p-3 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="flex w-full items-center justify-between p-2 md:p-3 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 transition-colors cursor-pointer"
                 onClick={() => router.push(`/admin/ai-insights/reviews/${review.id}`)}
               >
                 <div className="flex items-center gap-2 md:gap-3 min-w-0">
@@ -286,9 +289,7 @@ export default function ReviewsPage() {
                     className={`w-2 h-2 rounded-full flex-shrink-0 ${review.result?.line_comments?.[0]?.severity === "critical" ? "bg-red-500" : review.result?.line_comments?.[0]?.severity === "high" ? "bg-orange-500" : "bg-emerald-500"}`}
                   />
                   <div className="min-w-0">
-                    <div className="text-sm font-medium text-white truncate">
-                      {review.repo_full_name.split("/")[1]}
-                    </div>
+                    <div className="text-sm font-medium text-white truncate">{review.repo_full_name.split("/")[1]}</div>
                     <div className="text-xs text-zinc-500">
                       PR #{review.pr_number} • {review.result?.line_comments?.length || 0} issues
                     </div>
@@ -300,7 +301,7 @@ export default function ReviewsPage() {
                 >
                   {review.status === "completed" ? "✓" : "✗"}
                 </Badge>
-              </div>
+              </button>
             ))
           )}
         </CardContent>

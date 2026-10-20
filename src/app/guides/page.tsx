@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { PageHeader } from "@/components/navigation/PageHeader";
 import { guides } from "@/lib/guides";
+import Link from "next/link";
 
 const categoryLabels: Record<string, string> = {
   Safety: "Safety",
@@ -11,7 +11,8 @@ const categoryLabels: Record<string, string> = {
 };
 
 const grouped = guides.reduce<Record<string, typeof guides>>((acc, g) => {
-  (acc[g.category] ??= []).push(g);
+  acc[g.category] ??= [];
+  acc[g.category].push(g);
   return acc;
 }, {});
 
@@ -21,8 +22,7 @@ export default function GuidesPage() {
       <PageHeader title="Guides" />
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <p className="text-muted-foreground mb-8">
-          Practical guides from the FoodShare community — migrated from our legacy docs. Everything
-          here also lives in{" "}
+          Practical guides from the FoodShare community — migrated from our legacy docs. Everything here also lives in{" "}
           <Link href="/help" className="text-[#FF2D55] hover:underline">
             Help Center
           </Link>
@@ -40,9 +40,7 @@ export default function GuidesPage() {
                     className="block rounded-2xl border bg-card p-5 shadow-sm hover:shadow-md transition-shadow"
                   >
                     <h3 className="font-medium text-foreground">{g.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                      {g.description}
-                    </p>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{g.description}</p>
                   </Link>
                 ))}
               </div>

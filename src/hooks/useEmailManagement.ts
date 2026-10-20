@@ -3,22 +3,22 @@
  * Optimized with request cancellation, caching, and error handling
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import type { EmailProvider, EmailType } from "@/lib/email/types";
 import { REFRESH_INTERVALS } from "@/lib/email/constants";
+import type { EmailProvider, EmailType } from "@/lib/email/types";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // Import types from centralized types file
 import type {
-  ProviderQuotaStatus,
   EmailLogEntry,
-  QueuedEmailEntry,
   ManualEmailRequest,
+  ProviderQuotaStatus,
+  QueuedEmailEntry,
 } from "@/types/email-management.types";
 
 // Import Server Actions for mutations
 import {
-  retryEmail as retryEmailAction,
   deleteQueuedEmail as deleteQueuedEmailAction,
+  retryEmail as retryEmailAction,
   sendManualEmail as sendManualEmailAction,
 } from "@/app/actions/admin-email";
 
@@ -182,7 +182,12 @@ export function useEmailStats(autoRefresh = true) {
 }
 
 // Hook for email logs with filtering
-export function useEmailLogs(params: {
+export function useEmailLogs({
+  provider,
+  emailType,
+  status,
+  hours,
+}: {
   provider?: EmailProvider;
   emailType?: EmailType;
   status?: string;
@@ -203,7 +208,9 @@ export function useEmailLogs(params: {
     try {
       setLoading(true);
       setError(null);
-      const data = await getEmailLogs(params);
+      // Rebuilt from the destructured filters: callers pass an inline object, so
+      // depending on the object itself would refetch on every render.
+      const data = await getEmailLogs({ provider, emailType, status, hours });
       setLogs(data);
     } catch (err) {
       if (err instanceof Error && err.name !== "AbortError") {
@@ -212,8 +219,7 @@ export function useEmailLogs(params: {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Using individual params properties for granular control
-  }, [params.provider, params.emailType, params.status, params.hours]);
+  }, [provider, emailType, status, hours]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -285,7 +291,7 @@ export function useQueuedEmails(status?: string) {
         };
       }
     },
-    [fetchQueue]
+    [fetchQueue],
   );
 
   const handleDelete = useCallback(
@@ -303,7 +309,7 @@ export function useQueuedEmails(status?: string) {
         };
       }
     },
-    [fetchQueue]
+    [fetchQueue],
   );
 
   return {
@@ -334,13 +340,12 @@ export function useManualEmailSender() {
           message: `Email queued successfully! Message ID: ${response.data?.messageId || "N/A"}`,
         });
         return { success: true, messageId: response.data?.messageId };
-      } else {
-        setResult({
-          success: false,
-          message: response.error || "Failed to send email",
-        });
-        return { success: false, error: response.error };
       }
+      setResult({
+        success: false,
+        message: response.error || "Failed to send email",
+      });
+      return { success: false, error: response.error };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An error occurred";
       setResult({

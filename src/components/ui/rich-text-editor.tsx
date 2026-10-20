@@ -5,41 +5,59 @@
  * Features: formatting toolbar, link insertion, image support, code blocks
  */
 
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
-import Placeholder from "@tiptap/extension-placeholder";
-import { useState, useEffect, useRef } from "react";
-import {
-  Bold,
-  Italic,
-  Strikethrough,
-  Code,
-  List,
-  ListOrdered,
-  Quote,
-  Undo,
-  Redo,
-  Link as LinkIcon,
-  Unlink,
-  Image as ImageIcon,
-  Heading1,
-  Heading2,
-  Heading3,
-  Pilcrow,
-  Code2,
-  Minus,
-  Eye,
-  FileCode,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import {
+  Bold,
+  Code,
+  Code2,
+  Eye,
+  FileCode,
+  Heading1,
+  Heading2,
+  Heading3,
+  Image as ImageIcon,
+  Italic,
+  Link as LinkIcon,
+  List,
+  ListOrdered,
+  Minus,
+  Pilcrow,
+  Quote,
+  Redo,
+  Strikethrough,
+  Undo,
+  Unlink,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
+interface FocusChainCommands {
+  extendMarkRange: (mark: string) => FocusChainCommands;
+  setLink: (opts: { href: string }) => FocusChainCommands;
+  setImage: (opts: { src: string }) => FocusChainCommands;
+  toggleBold: () => FocusChainCommands;
+  toggleItalic: () => FocusChainCommands;
+  toggleStrike: () => FocusChainCommands;
+  toggleCode: () => FocusChainCommands;
+  setParagraph: () => FocusChainCommands;
+  toggleHeading: (opts: { level: number }) => FocusChainCommands;
+  toggleBulletList: () => FocusChainCommands;
+  toggleOrderedList: () => FocusChainCommands;
+  toggleBlockquote: () => FocusChainCommands;
+  toggleCodeBlock: () => FocusChainCommands;
+  setHorizontalRule: () => FocusChainCommands;
+  run: () => void;
+}
 
 interface RichTextEditorProps {
   value: string;
@@ -92,9 +110,9 @@ export function RichTextEditor({
           "prose-headings:font-semibold prose-headings:text-foreground",
           "prose-p:text-foreground prose-p:leading-relaxed",
           "prose-a:text-primary prose-a:no-underline hover:prose-a:underline",
-          "prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground",
+          "prose-blockquote:border-s-primary prose-blockquote:text-muted-foreground",
           "prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm",
-          "prose-pre:bg-muted prose-pre:rounded-lg"
+          "prose-pre:bg-muted prose-pre:rounded-lg",
         ),
       },
     },
@@ -108,7 +126,7 @@ export function RichTextEditor({
     }
   }, [value, editor]);
 
-  const chain = () => editor?.chain().focus() as any;
+  const chain = (): FocusChainCommands => editor?.chain().focus() as unknown as FocusChainCommands;
 
   const addLink = () => {
     if (linkUrl && editor) {
@@ -135,7 +153,7 @@ export function RichTextEditor({
         "backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)]",
         "transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]",
         "hover:shadow-[0_12px_48px_rgba(0,0,0,0.12)] hover:border-white/30",
-        className
+        className,
       )}
     >
       {/* Toolbar */}
@@ -238,10 +256,7 @@ export function RichTextEditor({
           >
             <Code2 className="h-4 w-4" />
           </ToolbarButton>
-          <ToolbarButton
-            onClick={() => chain().setHorizontalRule().run()}
-            tooltip="Horizontal Rule"
-          >
+          <ToolbarButton onClick={() => chain().setHorizontalRule().run()} tooltip="Horizontal Rule">
             <Minus className="h-4 w-4" />
           </ToolbarButton>
         </ToolbarGroup>
@@ -274,11 +289,7 @@ export function RichTextEditor({
                     Add Link
                   </Button>
                   {editor.isActive("link") && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => editor.chain().focus().unsetLink().run()}
-                    >
+                    <Button size="sm" variant="outline" onClick={() => editor.chain().focus().unsetLink().run()}>
                       <Unlink className="h-4 w-4" />
                     </Button>
                   )}
@@ -362,7 +373,7 @@ export function RichTextEditor({
             }}
             className={cn(
               "w-full p-4 font-mono text-sm bg-transparent resize-none focus:outline-none",
-              "text-foreground placeholder:text-muted-foreground"
+              "text-foreground placeholder:text-muted-foreground",
             )}
             style={{ minHeight }}
             spellCheck={false}
@@ -387,14 +398,7 @@ interface ToolbarButtonProps {
   children: React.ReactNode;
 }
 
-function ToolbarButton({
-  onClick,
-  isActive,
-  disabled,
-  tooltip,
-  size = "default",
-  children,
-}: ToolbarButtonProps) {
+function ToolbarButton({ onClick, isActive, disabled, tooltip, size = "default", children }: ToolbarButtonProps) {
   const button = (
     <Button
       type="button"
@@ -408,7 +412,7 @@ function ToolbarButton({
         "hover:bg-white/10 dark:hover:bg-white/5",
         !disabled && "hover:scale-110 active:scale-95",
         isActive && "bg-white/20 dark:bg-white/10 text-primary shadow-[inset_0_1px_2px_rgba(255,255,255,0.2)]",
-        disabled && "opacity-50 cursor-not-allowed"
+        disabled && "opacity-50 cursor-not-allowed",
       )}
     >
       {children}

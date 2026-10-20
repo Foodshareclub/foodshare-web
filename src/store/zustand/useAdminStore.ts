@@ -4,8 +4,8 @@
  * Works alongside React Query for server state
  */
 
+import type { AdminListingsFilter, PostWithAdminFields } from "@/types/admin.types";
 import { create } from "zustand";
-import type { PostWithAdminFields, AdminListingsFilter } from "@/types/admin.types";
 
 // ============================================================================
 // Types

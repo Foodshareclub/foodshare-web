@@ -1,6 +1,6 @@
-import React from "react";
-import Image from "next/image";
 import light from "@/assets/noto-v1_light-bulb.svg";
+import Image from "next/image";
+import React from "react";
 
 const TopTips = () => {
   return (
@@ -10,7 +10,7 @@ const TopTips = () => {
           <Image className="w-5" src={light} alt="light" width={20} height={20} />
           <h3 className="font-medium text-xl">Top tips</h3>
         </div>
-        <ul className="list-inside pl-2 space-y-1">
+        <ul className="list-inside ps-2 space-y-1">
           <li>Have safe pick ups during COVID</li>
           <li>Say when you can pick up this listings</li>
           <li>Be polite by saying please and thank you</li>

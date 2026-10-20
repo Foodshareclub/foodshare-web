@@ -5,22 +5,23 @@
  * Premium profile editing with avatar upload and modern design
  */
 
-import React, { useEffect, useState, useRef } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { motion } from "framer-motion";
-import { User, Mail, Phone, MapPin, ChevronLeft, Check, X, Camera, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { uploadProfileAvatar, updateProfile, updateUserAddress } from "@/app/actions/profile";
+import { updateProfile, updateUserAddress, uploadProfileAvatar } from "@/app/actions/profile";
 import { Button } from "@/components/ui/button";
+import { Glass } from "@/components/ui/glass";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Glass } from "@/components/ui/glass";
-import { cn } from "@/lib/utils";
 import { ALLOWED_MIME_TYPES } from "@/constants/mime-types";
 import type { AuthUser } from "@/lib/data/auth";
 import type { Profile } from "@/lib/data/profiles";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { Camera, Check, ChevronLeft, Loader2, Mail, MapPin, Phone, User, X } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface PersonalInfoClientProps {
   user: AuthUser;
@@ -82,18 +83,14 @@ function InfoCard({
 }: InfoCardProps) {
   return (
     <motion.div variants={itemVariants}>
-      <Glass
-        variant="subtle"
-        hover
-        className="group relative p-6 hover:shadow-lg transition-all duration-300"
-      >
+      <Glass variant="subtle" hover className="group relative p-6 hover:shadow-lg transition-all duration-300">
         <div className="flex items-start gap-4">
           <div
             className={cn(
               "relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center",
               "bg-gradient-to-br shadow-lg transition-transform duration-300",
               "group-hover:scale-105",
-              gradient
+              gradient,
             )}
           >
             <span className="text-white">{icon}</span>
@@ -118,21 +115,16 @@ function InfoCard({
             {children}
             {isEditing && (
               <div className="flex gap-2 mt-4">
-                <Button
-                  onClick={onSave}
-                  size="sm"
-                  disabled={isSaving}
-                  className="bg-emerald-600 hover:bg-emerald-700"
-                >
+                <Button onClick={onSave} size="sm" disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700">
                   {isSaving ? (
-                    <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+                    <Loader2 className="w-3 h-3 me-1.5 animate-spin" />
                   ) : (
-                    <Check className="w-3 h-3 mr-1.5" />
+                    <Check className="w-3 h-3 me-1.5" />
                   )}
                   {isSaving ? "Saving..." : "Save"}
                 </Button>
                 <Button onClick={onCancel} variant="outline" size="sm" disabled={isSaving}>
-                  <X className="w-3 h-3 mr-1.5" />
+                  <X className="w-3 h-3 me-1.5" />
                   Cancel
                 </Button>
               </div>
@@ -144,11 +136,7 @@ function InfoCard({
   );
 }
 
-export function PersonalInfoClient({
-  user,
-  initialProfile,
-  initialAddress,
-}: PersonalInfoClientProps) {
+export function PersonalInfoClient({ user, initialProfile, initialAddress }: PersonalInfoClientProps) {
   const router = useRouter();
 
   // Use server-provided data
@@ -318,10 +306,7 @@ export function PersonalInfoClient({
         <div className="container mx-auto max-w-3xl px-4 py-8">
           <div className="space-y-4">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div
-                key={i}
-                className="h-32 bg-card rounded-2xl border border-border animate-pulse"
-              />
+              <div key={i} className="h-32 bg-card rounded-2xl border border-border animate-pulse" />
             ))}
           </div>
         </div>
@@ -333,8 +318,8 @@ export function PersonalInfoClient({
     <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background pb-10">
       {/* Decorative background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/8 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-20 w-60 h-60 bg-cyan-500/8 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -end-40 w-80 h-80 bg-blue-500/8 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -start-20 w-60 h-60 bg-cyan-500/8 rounded-full blur-3xl" />
       </div>
 
       <div className="container mx-auto max-w-3xl px-4 py-6 lg:py-10">
@@ -349,7 +334,7 @@ export function PersonalInfoClient({
             href="/settings"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
           >
-            <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+            <ChevronLeft className="w-4 h-4 transition-transform rtl:scale-x-100 group-hover:-translate-x-0.5 rtl:group-hover:translate-x-0.5" />
             Back to Settings
           </Link>
         </motion.div>
@@ -367,27 +352,16 @@ export function PersonalInfoClient({
             </div>
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Personal info</h1>
-              <p className="text-sm text-muted-foreground">
-                Manage your personal details and contact info
-              </p>
+              <p className="text-sm text-muted-foreground">Manage your personal details and contact info</p>
             </div>
           </div>
         </motion.header>
 
         {/* Content */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="space-y-4"
-        >
+        <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
           {/* Profile Photo */}
           <motion.div variants={itemVariants}>
-            <Glass
-              variant="subtle"
-              hover
-              className="p-6 hover:shadow-lg transition-all duration-300"
-            >
+            <Glass variant="subtle" hover className="p-6 hover:shadow-lg transition-all duration-300">
               <div className="flex items-center gap-6">
                 {/* Avatar */}
                 <div className="relative group">
@@ -395,17 +369,11 @@ export function PersonalInfoClient({
                     className={cn(
                       "relative w-24 h-24 rounded-full overflow-hidden",
                       "ring-4 ring-background shadow-xl",
-                      "transition-transform duration-300 group-hover:scale-105"
+                      "transition-transform duration-300 group-hover:scale-105",
                     )}
                   >
                     {displayAvatarUrl ? (
-                      <Image
-                        src={displayAvatarUrl}
-                        alt="Profile photo"
-                        fill
-                        className="object-cover"
-                        sizes="96px"
-                      />
+                      <Image src={displayAvatarUrl} alt="Profile photo" fill className="object-cover" sizes="96px" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
                         <span className="text-3xl text-white font-semibold">
@@ -416,12 +384,13 @@ export function PersonalInfoClient({
 
                     {/* Upload overlay */}
                     <button
+                      type="button"
                       onClick={handleAvatarClick}
                       disabled={isUploadingAvatar}
                       className={cn(
                         "absolute inset-0 bg-black/50 flex items-center justify-center",
                         "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
-                        "cursor-pointer"
+                        "cursor-pointer",
                       )}
                     >
                       {isUploadingAvatar ? (
@@ -457,12 +426,12 @@ export function PersonalInfoClient({
                   >
                     {isUploadingAvatar ? (
                       <>
-                        <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+                        <Loader2 className="w-3 h-3 me-1.5 animate-spin" />
                         Uploading...
                       </>
                     ) : (
                       <>
-                        <Camera className="w-3 h-3 mr-1.5" />
+                        <Camera className="w-3 h-3 me-1.5" />
                         Change photo
                       </>
                     )}
@@ -514,9 +483,7 @@ export function PersonalInfoClient({
                 </div>
               </div>
             ) : (
-              <p className="text-foreground">
-                {firstName && lastName ? `${firstName} ${lastName}` : "Not provided"}
-              </p>
+              <p className="text-foreground">{firstName && lastName ? `${firstName} ${lastName}` : "Not provided"}</p>
             )}
           </InfoCard>
 
@@ -640,9 +607,7 @@ export function PersonalInfoClient({
                 {streetAddress ? (
                   <>
                     <p>{streetAddress}</p>
-                    <p className="text-muted-foreground">
-                      {[city, postalCode].filter(Boolean).join(", ")}
-                    </p>
+                    <p className="text-muted-foreground">{[city, postalCode].filter(Boolean).join(", ")}</p>
                     {country && <p className="text-muted-foreground">{country}</p>}
                   </>
                 ) : (

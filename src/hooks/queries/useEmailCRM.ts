@@ -5,17 +5,17 @@
 
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
-  EmailDashboardStats,
-  ProviderHealth,
-  RecentCampaign,
   ActiveAutomation,
   AudienceSegment,
-  ProviderQuotaDetails,
   BounceStats,
+  EmailDashboardStats,
+  ProviderHealth,
+  ProviderQuotaDetails,
+  RecentCampaign,
 } from "@/lib/data/admin-email";
 import type { EmailTemplate } from "@/types/automations.types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Query keys
 export const emailCRMKeys = {

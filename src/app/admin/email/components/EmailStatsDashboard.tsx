@@ -6,14 +6,17 @@
  * Optimized with custom hooks and modern UI
  */
 
-import React from "react";
-import { Activity, CheckCircle2, Clock, Mail, TrendingUp, XCircle, Zap } from "lucide-react";
 import { motion } from "framer-motion";
+import { Activity, CheckCircle2, Clock, Mail, TrendingUp, XCircle, Zap } from "lucide-react";
+import type React from "react";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { useEmailStats } from "@/hooks/useEmailManagement";
 import { PROVIDER_NAMES } from "@/lib/email/constants";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
+
+const STAT_CARD_SKELETON_KEYS = ["a", "b", "c", "d"] as const;
+const PROVIDER_CARD_SKELETON_KEYS = ["a", "b", "c"] as const;
 
 interface StatCardProps {
   label: string;
@@ -84,7 +87,7 @@ function StatCard({
       className={cn(
         "relative overflow-hidden rounded-xl border p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5",
         colors.bg,
-        colors.border
+        colors.border,
       )}
     >
       <div className="flex items-start justify-between">
@@ -177,12 +180,7 @@ function ProviderCard({ provider, sent, failed, successRate, delay = 0 }: Provid
             <p className="text-xs text-muted-foreground">Email Provider</p>
           </div>
         </div>
-        <div
-          className={cn(
-            "rounded-full px-2.5 py-1 text-xs font-semibold",
-            statusClasses[statusColor].badge
-          )}
-        >
+        <div className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", statusClasses[statusColor].badge)}>
           {successRate.toFixed(1)}%
         </div>
       </div>
@@ -261,15 +259,15 @@ export function EmailStatsDashboard() {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <StatCardSkeleton key={i} />
+          {STAT_CARD_SKELETON_KEYS.map((k) => (
+            <StatCardSkeleton key={k} />
           ))}
         </div>
         <div>
           <Skeleton className="h-6 w-48 mb-4" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[...Array(3)].map((_, i) => (
-              <ProviderCardSkeleton key={i} />
+            {PROVIDER_CARD_SKELETON_KEYS.map((k) => (
+              <ProviderCardSkeleton key={k} />
             ))}
           </div>
         </div>
@@ -285,12 +283,8 @@ export function EmailStatsDashboard() {
         className="rounded-xl border border-rose-200 dark:border-rose-800/50 bg-rose-50 dark:bg-rose-950/30 p-6 text-center"
       >
         <XCircle className="h-10 w-10 text-rose-500 mx-auto mb-3" />
-        <p className="text-rose-700 dark:text-rose-300 font-medium">
-          {error || "Failed to load statistics"}
-        </p>
-        <p className="text-rose-600/70 dark:text-rose-400/70 text-sm mt-1">
-          Please try refreshing the page
-        </p>
+        <p className="text-rose-700 dark:text-rose-300 font-medium">{error || "Failed to load statistics"}</p>
+        <p className="text-rose-600/70 dark:text-rose-400/70 text-sm mt-1">Please try refreshing the page</p>
       </motion.div>
     );
   }
@@ -327,9 +321,7 @@ export function EmailStatsDashboard() {
           value={stats.successRate.toFixed(1)}
           suffix="%"
           icon={<CheckCircle2 className="h-5 w-5" />}
-          colorScheme={
-            stats.successRate >= 95 ? "emerald" : stats.successRate >= 80 ? "amber" : "rose"
-          }
+          colorScheme={stats.successRate >= 95 ? "emerald" : stats.successRate >= 80 ? "amber" : "rose"}
           delay={0.3}
         />
       </div>

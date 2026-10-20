@@ -1233,7 +1233,7 @@ As the project matured and moved towards a self-hosted Supabase infrastructure, 
 
 2. **Control & Customization:**
    - No "Edge Function" limitations or cold starts.
-   - Standard Node.js runtime for proxy and background tasks.
+   - Standard Node.js-compatible server runtime (Bun) for proxy and background tasks.
    - Direct access to server-level logs and metrics.
 
 3. **CI/CD:**

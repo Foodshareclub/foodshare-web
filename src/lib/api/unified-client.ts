@@ -3,8 +3,8 @@
  * Gradual rollout with automatic fallback
  */
 
-import type { InitialProductStateType } from "@/types/product.types";
 import { logger } from "@/lib/logger";
+import type { InitialProductStateType } from "@/types/product.types";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;

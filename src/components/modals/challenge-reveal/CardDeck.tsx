@@ -1,23 +1,18 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Sparkles, RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useMotionValue } from "framer-motion";
-import { SwipeableCard } from "./SwipeableCard";
-import { DeckStack } from "./DeckStack";
-import { SwipeIndicators } from "./SwipeIndicators";
+import { RefreshCw, Sparkles } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { ActionButtons, KeyboardHints } from "./ActionButtons";
 import { CardBack } from "./CardFace";
-import {
-  shuffleVariants,
-  emptyStateVariants,
-  nextCardVariants,
-  swipeExitVariants,
-} from "./animations";
-import { DECK_CONFIG, ANIMATION_DURATIONS } from "./constants";
+import { DeckStack } from "./DeckStack";
+import { SwipeIndicators } from "./SwipeIndicators";
+import { SwipeableCard } from "./SwipeableCard";
+import { emptyStateVariants, nextCardVariants, shuffleVariants, swipeExitVariants } from "./animations";
+import { ANIMATION_DURATIONS, DECK_CONFIG } from "./constants";
 import type { CardDeckProps, ChallengeItem } from "./types";
-import { cn } from "@/lib/utils";
 
 // Fisher-Yates shuffle
 function shuffleArray<T>(array: T[]): T[] {
@@ -29,12 +24,7 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-export function CardDeck({
-  challenges: initialChallenges,
-  activeChallenge,
-  onAccept,
-  onComplete,
-}: CardDeckProps) {
+export function CardDeck({ challenges: initialChallenges, activeChallenge, onAccept, onComplete }: CardDeckProps) {
   const prefersReducedMotion = useReducedMotion();
 
   // Order challenges with activeChallenge first, then shuffle the rest
@@ -55,10 +45,7 @@ export function CardDeck({
   const dragX = useMotionValue(0);
 
   const currentChallenge = challenges[currentIndex];
-  const nextChallenges = challenges.slice(
-    currentIndex + 1,
-    currentIndex + 1 + DECK_CONFIG.VISIBLE_CARDS
-  );
+  const nextChallenges = challenges.slice(currentIndex + 1, currentIndex + 1 + DECK_CONFIG.VISIBLE_CARDS);
   const remainingCount = challenges.length - currentIndex;
   const isEmpty = currentIndex >= challenges.length;
 
@@ -158,7 +145,7 @@ export function CardDeck({
               <motion.div
                 className="absolute inset-0 rounded-full bg-primary/20"
                 animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
               />
             </div>
 
@@ -179,7 +166,7 @@ export function CardDeck({
                 "shadow-lg shadow-primary/30",
                 "hover:shadow-xl hover:shadow-primary/40",
                 "transition-shadow duration-200",
-                isShuffling && "opacity-70 cursor-not-allowed"
+                isShuffling && "opacity-70 cursor-not-allowed",
               )}
             >
               <RefreshCw className={cn("w-5 h-5", isShuffling && "animate-spin")} />
@@ -215,13 +202,7 @@ export function CardDeck({
               variants={{ ...nextCardVariants, ...swipeExitVariants }}
               initial="hidden"
               animate="visible"
-              exit={
-                exitDirection === "left"
-                  ? "exitLeft"
-                  : exitDirection === "right"
-                    ? "exitRight"
-                    : "hidden"
-              }
+              exit={exitDirection === "left" ? "exitLeft" : exitDirection === "right" ? "exitRight" : "hidden"}
               className="absolute inset-0"
             >
               <SwipeableCard
@@ -236,9 +217,9 @@ export function CardDeck({
 
         {/* Show card back during shuffle */}
         {isShuffling && (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0"
           >

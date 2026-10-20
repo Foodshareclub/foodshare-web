@@ -1,4 +1,4 @@
-import { User, Shield, Bell, Globe, Palette, HelpCircle, Leaf } from "lucide-react";
+import { Bell, Globe, HelpCircle, Leaf, Palette, Shield, User } from "lucide-react";
 
 export interface NavItem {
   icon: React.ElementType;

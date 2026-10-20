@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import { CheckCircle, Facebook, Link, Share2, Twitter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CheckCircle, Facebook, Link, Share2, Twitter, X } from "lucide-react";
+import type React from "react";
+import { useState } from "react";
 
 interface SharePreviewProps {
   title: string;
@@ -11,16 +12,11 @@ interface SharePreviewProps {
   onClose: () => void;
 }
 
-export const SharePreview: React.FC<SharePreviewProps> = ({
-  title,
-  description,
-  imageUrl,
-  onClose,
-}) => {
+export const SharePreview: React.FC<SharePreviewProps> = ({ title, description, imageUrl, onClose }) => {
   const [copied, setCopied] = useState(false);
 
   const copyLink = () => {
-    navigator.clipboard.writeText(window.location.origin + "/listing/preview");
+    navigator.clipboard.writeText(`${window.location.origin}/listing/preview`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -32,11 +28,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
           <Share2 className="h-4 w-4 text-muted-foreground" />
           Share Preview
         </p>
-        <button
-          type="button"
-          onClick={onClose}
-          className="p-1 rounded hover:bg-muted transition-colors"
-        >
+        <button type="button" onClick={onClose} className="p-1 rounded hover:bg-muted transition-colors">
           <X className="h-4 w-4 text-muted-foreground" />
         </button>
       </div>
@@ -46,13 +38,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
         {imageUrl && (
           <div className="h-32 bg-muted">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageUrl}
-              alt=""
-              className="w-full h-full object-cover"
-              loading="lazy"
-              decoding="async"
-            />
+            <img src={imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
           </div>
         )}
         <div className="p-3">
@@ -69,12 +55,12 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
         <Button type="button" variant="outline" size="sm" className="flex-1" onClick={copyLink}>
           {copied ? (
             <>
-              <CheckCircle className="h-4 w-4 mr-1.5 text-green-500" />
+              <CheckCircle className="h-4 w-4 me-1.5 text-green-500" />
               Copied!
             </>
           ) : (
             <>
-              <Link className="h-4 w-4 mr-1.5" />
+              <Link className="h-4 w-4 me-1.5" />
               Copy Link
             </>
           )}

@@ -3,16 +3,10 @@
  * Free tier: 100 emails/day, 3,000/month
  */
 
-import { Resend } from "resend";
-import type {
-  SendEmailRequest,
-  SendEmailResponse,
-  ResendConfig,
-  ProviderQuota,
-  EmailAddress,
-} from "../types";
-import { BaseEmailProvider } from "./base";
 import { supabase } from "@/lib/supabase/client";
+import { Resend } from "resend";
+import type { EmailAddress, ProviderQuota, ResendConfig, SendEmailRequest, SendEmailResponse } from "../types";
+import { BaseEmailProvider } from "./base";
 
 export class ResendProvider extends BaseEmailProvider {
   readonly provider = "resend" as const;

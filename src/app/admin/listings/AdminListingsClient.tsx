@@ -5,39 +5,33 @@
  * Handles filtering, selection, bulk actions, and editing
  */
 
-import React, { useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
-import Image from "next/image";
-import { Search, MoreVertical, Pencil, Trash2, Check, X, Eye, RefreshCw } from "lucide-react";
-import { ListingEditModal } from "./ListingEditModal";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  activateListing,
+  bulkActivateListings,
+  bulkDeactivateListings,
+  bulkDeleteListings,
+  deactivateListing,
+  deleteListing,
+} from "@/app/actions/admin-listings";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import {
-  activateListing,
-  deactivateListing,
-  deleteListing,
-  bulkActivateListings,
-  bulkDeactivateListings,
-  bulkDeleteListings,
-} from "@/app/actions/admin-listings";
-import type { AdminListing, ListingStats, AdminListingsFilter } from "@/lib/data/admin-listings";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { AdminListing, AdminListingsFilter, ListingStats } from "@/lib/data/admin-listings";
+import { cn } from "@/lib/utils";
+import { Check, Eye, MoreVertical, Pencil, RefreshCw, Search, Trash2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useTransition } from "react";
+import { ListingEditModal } from "./ListingEditModal";
 
 // Icons
 
@@ -203,7 +197,7 @@ export function AdminListingsClient({
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               className="flex-1"
             />
-            <Button onClick={handleSearch} variant="outline" size="icon" aria-label="Search">
+            <Button onClick={handleSearch} variant="outline" size="icon" aria-label={t("msgsearch")}>
               <FiSearch className="h-4 w-4" />
             </Button>
           </div>
@@ -211,9 +205,7 @@ export function AdminListingsClient({
           {/* Status Filter */}
           <Select
             value={filters.status || "all"}
-            onValueChange={(value) =>
-              updateFilters({ status: value as AdminListingsFilter["status"] })
-            }
+            onValueChange={(value) => updateFilters({ status: value as AdminListingsFilter["status"] })}
           >
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Status" />
@@ -226,10 +218,7 @@ export function AdminListingsClient({
           </Select>
 
           {/* Category Filter */}
-          <Select
-            value={filters.category || "all"}
-            onValueChange={(value) => updateFilters({ category: value })}
-          >
+          <Select value={filters.category || "all"} onValueChange={(value) => updateFilters({ category: value })}>
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
@@ -245,9 +234,7 @@ export function AdminListingsClient({
           {/* Sort */}
           <Select
             value={filters.sortBy || "created_at"}
-            onValueChange={(value) =>
-              updateFilters({ sortBy: value as AdminListingsFilter["sortBy"] })
-            }
+            onValueChange={(value) => updateFilters({ sortBy: value as AdminListingsFilter["sortBy"] })}
           >
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Sort by" />
@@ -276,18 +263,16 @@ export function AdminListingsClient({
       {/* Bulk Actions */}
       {selectedIds.size > 0 && (
         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4 flex items-center justify-between">
-          <span className="text-blue-800 dark:text-blue-200 font-medium">
-            {selectedIds.size} listing(s) selected
-          </span>
+          <span className="text-blue-800 dark:text-blue-200 font-medium">{selectedIds.size} listing(s) selected</span>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={handleBulkActivate}>
-              <FiCheck className="h-4 w-4 mr-1" /> Activate
+              <FiCheck className="h-4 w-4 me-1" /> Activate
             </Button>
             <Button size="sm" variant="outline" onClick={handleBulkDeactivate}>
-              <FiX className="h-4 w-4 mr-1" /> Deactivate
+              <FiX className="h-4 w-4 me-1" /> Deactivate
             </Button>
             <Button size="sm" variant="destructive" onClick={handleBulkDelete}>
-              <FiTrash2 className="h-4 w-4 mr-1" /> Delete
+              <FiTrash2 className="h-4 w-4 me-1" /> Delete
             </Button>
           </div>
         </div>
@@ -298,42 +283,25 @@ export function AdminListingsClient({
         <table className="w-full">
           <thead className="bg-gray-50 dark:bg-gray-900">
             <tr>
-              <th className="p-3 text-left">
+              <th className="p-3 text-start">
                 <Checkbox
-                  checked={
-                    selectedIds.size === initialListings.length && initialListings.length > 0
-                  }
+                  checked={selectedIds.size === initialListings.length && initialListings.length > 0}
                   onCheckedChange={toggleSelectAll}
                 />
               </th>
-              <th className="p-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">
-                Listing
-              </th>
-              <th className="p-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">
-                Category
-              </th>
-              <th className="p-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">
-                Status
-              </th>
-              <th className="p-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">
-                Views
-              </th>
-              <th className="p-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">
-                Created
-              </th>
-              <th className="p-3 text-right text-sm font-medium text-gray-600 dark:text-gray-400">
-                Actions
-              </th>
+              <th className="p-3 text-start text-sm font-medium text-gray-600 dark:text-gray-400">Listing</th>
+              <th className="p-3 text-start text-sm font-medium text-gray-600 dark:text-gray-400">Category</th>
+              <th className="p-3 text-start text-sm font-medium text-gray-600 dark:text-gray-400">Status</th>
+              <th className="p-3 text-start text-sm font-medium text-gray-600 dark:text-gray-400">Views</th>
+              <th className="p-3 text-start text-sm font-medium text-gray-600 dark:text-gray-400">Created</th>
+              <th className="p-3 text-end text-sm font-medium text-gray-600 dark:text-gray-400">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {initialListings.map((listing) => (
               <tr key={listing.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50">
                 <td className="p-3">
-                  <Checkbox
-                    checked={selectedIds.has(listing.id)}
-                    onCheckedChange={() => toggleSelect(listing.id)}
-                  />
+                  <Checkbox checked={selectedIds.has(listing.id)} onCheckedChange={() => toggleSelect(listing.id)} />
                 </td>
                 <td className="p-3">
                   <div className="flex items-center gap-3">
@@ -347,9 +315,7 @@ export function AdminListingsClient({
                       />
                     )}
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-100 line-clamp-1">
-                        {listing.post_name}
-                      </p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100 line-clamp-1">{listing.post_name}</p>
                       <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">
                         {listing.profile?.email || "Unknown user"}
                       </p>
@@ -367,7 +333,7 @@ export function AdminListingsClient({
                     className={cn(
                       listing.is_active
                         ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                        : "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
+                        : "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
                     )}
                   >
                     {listing.is_active ? "Active" : "Inactive"}
@@ -377,7 +343,7 @@ export function AdminListingsClient({
                 <td className="p-3 text-sm text-gray-500 dark:text-gray-400">
                   {new Date(listing.created_at).toLocaleDateString()}
                 </td>
-                <td className="p-3 text-right">
+                <td className="p-3 text-end">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon">
@@ -386,27 +352,25 @@ export function AdminListingsClient({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => setEditingListing(listing)}>
-                        <FiEdit2 className="h-4 w-4 mr-2" /> Edit
+                        <FiEdit2 className="h-4 w-4 me-2" /> Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => window.open(`/listing/${listing.id}`, "_blank")}
-                      >
-                        <FiEye className="h-4 w-4 mr-2" /> View
+                      <DropdownMenuItem onClick={() => window.open(`/listing/${listing.id}`, "_blank")}>
+                        <FiEye className="h-4 w-4 me-2" /> View
                       </DropdownMenuItem>
                       {listing.is_active ? (
                         <DropdownMenuItem onClick={() => handleDeactivate(listing.id)}>
-                          <FiX className="h-4 w-4 mr-2" /> Deactivate
+                          <FiX className="h-4 w-4 me-2" /> Deactivate
                         </DropdownMenuItem>
                       ) : (
                         <DropdownMenuItem onClick={() => handleActivate(listing.id)}>
-                          <FiCheck className="h-4 w-4 mr-2" /> Activate
+                          <FiCheck className="h-4 w-4 me-2" /> Activate
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem
                         onClick={() => handleDelete(listing.id)}
                         className="text-red-600 dark:text-red-400"
                       >
-                        <FiTrash2 className="h-4 w-4 mr-2" /> Delete
+                        <FiTrash2 className="h-4 w-4 me-2" /> Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -446,11 +410,7 @@ export function AdminListingsClient({
 
       {/* Edit Modal */}
       {editingListing && (
-        <ListingEditModal
-          listing={editingListing}
-          open={!!editingListing}
-          onClose={() => setEditingListing(null)}
-        />
+        <ListingEditModal listing={editingListing} open={!!editingListing} onClose={() => setEditingListing(null)} />
       )}
     </div>
   );
@@ -460,8 +420,7 @@ export function AdminListingsClient({
 function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
   const colorClasses = {
     blue: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400",
-    green:
-      "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-600 dark:text-green-400",
+    green: "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-600 dark:text-green-400",
     orange:
       "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400",
     purple:

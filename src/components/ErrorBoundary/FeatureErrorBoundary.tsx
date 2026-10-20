@@ -53,21 +53,11 @@ interface State {
 // Default Fallback Component
 // =============================================================================
 
-function DefaultErrorFallback({
-  error,
-  resetErrorBoundary,
-  retryAction,
-  featureName,
-}: ErrorFallbackProps) {
+function DefaultErrorFallback({ error, resetErrorBoundary, retryAction, featureName }: ErrorFallbackProps) {
   return (
     <div className="flex flex-col items-center justify-center p-6 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
       <div className="text-red-600 dark:text-red-400 mb-2">
-        <svg
-          className="w-12 h-12"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg aria-hidden="true" className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -88,6 +78,7 @@ function DefaultErrorFallback({
       <div className="flex gap-2">
         {retryAction && (
           <button
+            type="button"
             onClick={retryAction}
             className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm font-medium"
           >
@@ -96,6 +87,7 @@ function DefaultErrorFallback({
         )}
 
         <button
+          type="button"
           onClick={resetErrorBoundary}
           className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
         >
@@ -106,7 +98,7 @@ function DefaultErrorFallback({
       {process.env.NODE_ENV !== "production" && (
         <details className="mt-4 text-xs text-red-500 dark:text-red-400 max-w-full overflow-auto">
           <summary className="cursor-pointer">Error Details</summary>
-          <pre className="mt-2 p-2 bg-red-100 dark:bg-red-900/40 rounded text-left whitespace-pre-wrap">
+          <pre className="mt-2 p-2 bg-red-100 dark:bg-red-900/40 rounded text-start whitespace-pre-wrap">
             {error.stack}
           </pre>
         </details>
@@ -115,17 +107,11 @@ function DefaultErrorFallback({
   );
 }
 
-function MinimalErrorFallback({
-  error,
-  resetErrorBoundary,
-}: ErrorFallbackProps) {
+function MinimalErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
   return (
     <div className="flex items-center gap-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm text-red-600 dark:text-red-400">
       <span>Error: {error.message}</span>
-      <button
-        onClick={resetErrorBoundary}
-        className="underline hover:no-underline"
-      >
+      <button type="button" onClick={resetErrorBoundary} className="underline hover:no-underline">
         Retry
       </button>
     </div>
@@ -150,10 +136,7 @@ function MinimalErrorFallback({
  * </FeatureErrorBoundary>
  * ```
  */
-export class FeatureErrorBoundary extends Component<
-  FeatureErrorBoundaryProps,
-  State
-> {
+export class FeatureErrorBoundary extends Component<FeatureErrorBoundaryProps, State> {
   constructor(props: FeatureErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -167,11 +150,7 @@ export class FeatureErrorBoundary extends Component<
     const { onError, featureName } = this.props;
 
     // Log error
-    console.error(
-      `[ErrorBoundary${featureName ? `:${featureName}` : ""}]`,
-      error,
-      errorInfo
-    );
+    console.error(`[ErrorBoundary${featureName ? `:${featureName}` : ""}]`, error, errorInfo);
 
     // Call error callback
     onError?.(error, errorInfo);
@@ -183,9 +162,7 @@ export class FeatureErrorBoundary extends Component<
 
     // Reset if resetKeys changed
     if (hasError && resetKeys && prevProps.resetKeys) {
-      const hasKeyChanged = resetKeys.some(
-        (key, index) => key !== prevProps.resetKeys?.[index]
-      );
+      const hasKeyChanged = resetKeys.some((key, index) => key !== prevProps.resetKeys?.[index]);
 
       if (hasKeyChanged) {
         this.reset();
@@ -201,28 +178,13 @@ export class FeatureErrorBoundary extends Component<
 
   override render(): ReactNode {
     const { hasError, error } = this.state;
-    const {
-      children,
-      fallback: FallbackComponent,
-      featureName,
-      retryAction,
-      minimal,
-    } = this.props;
+    const { children, fallback: FallbackComponent, featureName, retryAction, minimal } = this.props;
 
     if (hasError && error) {
-      const Fallback = FallbackComponent
-        ? FallbackComponent
-        : minimal
-          ? MinimalErrorFallback
-          : DefaultErrorFallback;
+      const Fallback = FallbackComponent ? FallbackComponent : minimal ? MinimalErrorFallback : DefaultErrorFallback;
 
       return (
-        <Fallback
-          error={error}
-          resetErrorBoundary={this.reset}
-          retryAction={retryAction}
-          featureName={featureName}
-        />
+        <Fallback error={error} resetErrorBoundary={this.reset} retryAction={retryAction} featureName={featureName} />
       );
     }
 
@@ -239,7 +201,7 @@ export class FeatureErrorBoundary extends Component<
  */
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  boundaryProps?: Omit<FeatureErrorBoundaryProps, "children">
+  boundaryProps?: Omit<FeatureErrorBoundaryProps, "children">,
 ): React.FC<P> {
   const WrappedComponent: React.FC<P> = (props) => (
     <FeatureErrorBoundary {...boundaryProps}>
@@ -264,16 +226,10 @@ interface AsyncErrorBoundaryProps extends FeatureErrorBoundaryProps {
 /**
  * Error boundary that works with React Suspense
  */
-export function AsyncErrorBoundary({
-  children,
-  loadingFallback,
-  ...props
-}: AsyncErrorBoundaryProps) {
+export function AsyncErrorBoundary({ children, loadingFallback, ...props }: AsyncErrorBoundaryProps) {
   return (
     <FeatureErrorBoundary {...props}>
-      <React.Suspense fallback={loadingFallback || <DefaultLoadingFallback />}>
-        {children}
-      </React.Suspense>
+      <React.Suspense fallback={loadingFallback || <DefaultLoadingFallback />}>{children}</React.Suspense>
     </FeatureErrorBoundary>
   );
 }

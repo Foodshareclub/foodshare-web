@@ -7,14 +7,14 @@
  * connection status queries, and account unlinking for Telegram bot integration.
  */
 
-import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
-import { invalidateTag } from "@/lib/data/cache-invalidation";
-import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
-import { createActionLogger } from "@/lib/structured-logger";
 import { trackEvent } from "@/app/actions/analytics";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { type ServerActionResult, serverActionError, successVoid } from "@/lib/errors";
+import { createActionLogger } from "@/lib/structured-logger";
+import { createClient } from "@/lib/supabase/server";
 import type { TelegramLinkTokenResult, TelegramStatusResult } from "@/types";
+import { revalidatePath } from "next/cache";
 
 export type { TelegramLinkTokenResult, TelegramStatusResult };
 
@@ -86,9 +86,7 @@ export async function generateTelegramLink(): Promise<ServerActionResult<Telegra
     }
 
     const botUsername =
-      process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ||
-      process.env.TELEGRAM_BOT_USERNAME ||
-      "foodshare_club_bot";
+      process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || process.env.TELEGRAM_BOT_USERNAME || "foodshare_club_bot";
 
     const deepLink = `https://t.me/${botUsername}?start=link_${data.token}`;
 

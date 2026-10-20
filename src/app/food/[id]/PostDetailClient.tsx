@@ -53,16 +53,14 @@ export function PostDetailClient({ post, user, isAdmin = false }: PostDetailClie
             className={cn(
               "relative overflow-hidden rounded-3xl border border-border/40 bg-card/80 backdrop-blur-xl p-8 sm:p-12 text-center max-w-md mx-auto shadow-lg",
               "transform transition-all duration-700",
-              isLoaded ? "translate-y-0" : "translate-y-8"
+              isLoaded ? "translate-y-0" : "translate-y-8",
             )}
           >
-            <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-gradient-to-br from-orange-500/20 to-rose-500/10 blur-3xl animate-pulse" />
-            <div className="absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-gradient-to-br from-rose-500/10 to-orange-500/20 blur-3xl animate-pulse delay-1000" />
+            <div className="absolute -top-20 -end-20 h-40 w-40 rounded-full bg-gradient-to-br from-orange-500/20 to-rose-500/10 blur-3xl animate-pulse" />
+            <div className="absolute -bottom-20 -start-20 h-40 w-40 rounded-full bg-gradient-to-br from-rose-500/10 to-orange-500/20 blur-3xl animate-pulse delay-1000" />
             <div className="relative">
               <div className="text-6xl sm:text-7xl mb-6 animate-bounce">📭</div>
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">
-                {t("product_not_found")}
-              </h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">{t("product_not_found")}</h2>
               <p className="text-sm sm:text-base text-muted-foreground mb-8 leading-relaxed">
                 This listing may have been removed or is no longer available.
               </p>
@@ -83,22 +81,12 @@ export function PostDetailClient({ post, user, isAdmin = false }: PostDetailClie
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
       {/* Main Content - Two Column Layout */}
-      <div
-        className={cn(
-          LISTING_CONTAINER,
-          "grid items-start gap-6 py-6 sm:py-8 lg:grid-cols-2 lg:gap-8"
-        )}
-      >
+      <div className={cn(LISTING_CONTAINER, "grid items-start gap-6 py-6 sm:py-8 lg:grid-cols-2 lg:gap-8")}>
         {/* The root layout owns navigation; both columns use the page scroll. */}
         <div className="min-w-0 pb-6">
           {/* Back Button on Page (Desktop/Tablet) */}
           <div className="pb-4">
-            <Button
-              type="button"
-              onClick={() => router.back()}
-              variant="outline"
-              className="h-12 rounded-xl"
-            >
+            <Button type="button" onClick={() => router.back()} variant="outline" className="h-12 rounded-xl">
               <ArrowLeft className="h-4 w-4" />
               <span className="text-sm font-medium">{t("back")}</span>
             </Button>
@@ -111,7 +99,7 @@ export function PostDetailClient({ post, user, isAdmin = false }: PostDetailClie
         <div
           className={cn(
             "min-w-0 h-[400px] lg:h-[600px] overflow-hidden rounded-3xl border border-border transform transition-all duration-700 delay-300 motion-reduce:transform-none motion-reduce:transition-none",
-            isLoaded ? "translate-x-0" : "translate-x-8"
+            isLoaded ? "translate-x-0" : "translate-x-8",
           )}
         >
           <Leaflet product={post} />

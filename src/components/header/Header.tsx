@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
 import { Navbar } from "@/components/header/navbar";
+import React from "react";
 
 import type { CustomRoomType } from "@/api/chatAPI";
 

@@ -41,25 +41,8 @@ export type StorageBucket = (typeof STORAGE_BUCKETS)[keyof typeof STORAGE_BUCKET
 export const ALLOWED_MIME_TYPES = {
   PROFILES: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"],
   AVATARS: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"],
-  POSTS: [
-    "image/png",
-    "image/jpeg",
-    "image/jpg",
-    "image/webp",
-    "image/gif",
-    "image/avif",
-    "image/heic",
-    "image/heif",
-  ],
-  FLAGS: [
-    "image/png",
-    "image/jpeg",
-    "image/jpg",
-    "image/webp",
-    "image/gif",
-    "image/svg+xml",
-    "image/avif",
-  ],
+  POSTS: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif", "image/heic", "image/heif"],
+  FLAGS: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/svg+xml", "image/avif"],
   FORUM: [
     "image/png",
     "image/jpeg",
@@ -132,14 +115,9 @@ export const isValidFileSize = (file: File, bucket: keyof typeof STORAGE_BUCKETS
  * @param bucket - Target storage bucket
  * @returns Validation result with error message if invalid
  */
-export const validateFile = (
-  file: File,
-  bucket: keyof typeof STORAGE_BUCKETS
-): { valid: boolean; error?: string } => {
+export const validateFile = (file: File, bucket: keyof typeof STORAGE_BUCKETS): { valid: boolean; error?: string } => {
   if (!isValidFileType(file, bucket)) {
-    const allowedTypes = ALLOWED_MIME_TYPES[bucket]
-      .map((type) => type.split("/")[1].toUpperCase())
-      .join(", ");
+    const allowedTypes = ALLOWED_MIME_TYPES[bucket].map((type) => type.split("/")[1].toUpperCase()).join(", ");
     return {
       valid: false,
       error: `Invalid file type. Allowed types: ${allowedTypes}`,
@@ -167,5 +145,5 @@ export const formatFileSize = (bytes: number): string => {
   const k = 1024;
   const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  return `${Math.round((bytes / k ** i) * 100) / 100} ${sizes[i]}`;
 };

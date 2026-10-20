@@ -1,7 +1,8 @@
 "use client";
 
-import React, { type ReactNode } from "react";
 import { useGPUContext } from "@/lib/gpu";
+import type React from "react";
+import type { ReactNode } from "react";
 
 interface GlassBlurProps {
   children: ReactNode;
@@ -23,13 +24,7 @@ interface GlassBlurProps {
  * and the GPU path is opt-in via a separate component for performance-critical
  * surfaces like modals and overlays.
  */
-export function GlassBlur({
-  children,
-  className = "",
-  blur = 15,
-  saturation = 1.8,
-  as: Tag = "div",
-}: GlassBlurProps) {
+export function GlassBlur({ children, className = "", blur = 15, saturation = 1.8, as: Tag = "div" }: GlassBlurProps) {
   // CSS path (works everywhere, including Safari)
   // The GPU blur path requires reading back the screen content which adds
   // complexity. CSS backdrop-filter is well-optimized on modern browsers.

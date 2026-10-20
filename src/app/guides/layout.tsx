@@ -2,8 +2,7 @@ import { generatePageMetadata } from "@/lib/metadata";
 
 export const metadata = generatePageMetadata({
   title: "Guides",
-  description:
-    "FoodShare guides — food safety, sharing guidelines, expiry dates, borrowing and more.",
+  description: "FoodShare guides — food safety, sharing guidelines, expiry dates, borrowing and more.",
   keywords: ["guides", "help", "FoodShare", "food safety", "borrow"],
   path: "/guides",
 });

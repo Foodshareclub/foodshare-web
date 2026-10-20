@@ -70,7 +70,7 @@ export function PageContainer({
         centered && "mx-auto",
         padding && "px-4 md:px-7 xl:px-20",
         maxWidthClasses[maxWidth],
-        className
+        className,
       )}
       {...props}
     >
@@ -94,9 +94,6 @@ export function SettingsContainer({ className, ...props }: Omit<PageContainerPro
 }
 
 /** Container for full-width content like maps */
-export function FullWidthContainer({
-  className,
-  ...props
-}: Omit<PageContainerProps, "maxWidth" | "padding">) {
+export function FullWidthContainer({ className, ...props }: Omit<PageContainerProps, "maxWidth" | "padding">) {
   return <PageContainer maxWidth="full" padding={false} className={className} {...props} />;
 }

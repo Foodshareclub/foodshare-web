@@ -1,9 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
-import { createUnifiedEmailService } from "@/lib/email/unified-service";
 import { trackEvent } from "@/app/actions/analytics";
+import { createUnifiedEmailService } from "@/lib/email/unified-service";
+import { type ServerActionResult, serverActionError, successVoid } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * Send invitations to collaborators
@@ -58,7 +58,7 @@ export async function sendInvitations(emails: string[]): Promise<ServerActionRes
           from: { email: "contact@foodshare.club", name: "FoodShare" },
         },
         emailType: "announcement",
-      })
+      }),
     );
 
     await Promise.allSettled(promises);

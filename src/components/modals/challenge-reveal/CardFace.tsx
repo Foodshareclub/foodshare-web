@@ -1,11 +1,11 @@
 "use client";
 
+import { cn } from "@/lib/utils";
+import { Flame, Star, Users, Zap } from "lucide-react";
 import Image from "next/image";
-import { Zap, Star, Flame, Users } from "lucide-react";
 import { DIFFICULTY_CONFIG } from "./constants";
 import type { CardFaceProps } from "./types";
 import { getChallengeData } from "./types";
-import { cn } from "@/lib/utils";
 
 const DifficultyIcons = {
   Easy: Star,
@@ -27,20 +27,13 @@ export function CardFace({ challenge, className }: CardFaceProps) {
         "border border-border/50",
         "shadow-2xl shadow-black/20",
         "gpu-composite contain-card render-smooth",
-        className
+        className,
       )}
       style={{ aspectRatio: "3/4" }}
     >
       {/* Challenge Image */}
       <div className="relative h-48 overflow-hidden">
-        <Image
-          src={data.image}
-          alt={data.title}
-          fill
-          className="object-cover"
-          sizes="288px"
-          priority
-        />
+        <Image src={data.image} alt={data.title} fill className="object-cover" sizes="288px" priority />
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
@@ -99,26 +92,19 @@ export function CardFace({ challenge, className }: CardFaceProps) {
                 "backdrop-blur-md border",
                 difficultyConfig.color,
                 difficultyConfig.borderColor,
-                data.difficulty === "Hard" && "border-orange-400/70 shadow-orange-500/50"
+                data.difficulty === "Hard" && "border-orange-400/70 shadow-orange-500/50",
               )}
             >
               <DifficultyIcon
                 className={cn(
                   "w-3.5 h-3.5",
-                  data.difficulty === "Hard" &&
-                    "text-yellow-300 drop-shadow-[0_0_6px_rgba(251,146,60,1)]"
+                  data.difficulty === "Hard" && "text-yellow-300 drop-shadow-[0_0_6px_rgba(251,146,60,1)]",
                 )}
                 style={
-                  data.difficulty === "Hard"
-                    ? { animation: "fireIcon 0.5s ease-in-out infinite alternate" }
-                    : undefined
+                  data.difficulty === "Hard" ? { animation: "fireIcon 0.5s ease-in-out infinite alternate" } : undefined
                 }
               />
-              <span
-                className={cn(
-                  data.difficulty === "Hard" && "drop-shadow-[0_0_4px_rgba(251,146,60,0.8)]"
-                )}
-              >
+              <span className={cn(data.difficulty === "Hard" && "drop-shadow-[0_0_4px_rgba(251,146,60,0.8)]")}>
                 {data.difficulty}
               </span>
             </div>
@@ -136,13 +122,9 @@ export function CardFace({ challenge, className }: CardFaceProps) {
 
       {/* Content */}
       <div className="p-4 space-y-3">
-        <h3 className="font-bold text-lg text-foreground leading-tight line-clamp-2">
-          {data.title}
-        </h3>
+        <h3 className="font-bold text-lg text-foreground leading-tight line-clamp-2">{data.title}</h3>
 
-        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-          {data.description}
-        </p>
+        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">{data.description}</p>
 
         {/* Swipe hint */}
         <div className="flex items-center justify-center gap-4 pt-2 text-xs text-muted-foreground/70">
@@ -157,7 +139,7 @@ export function CardFace({ challenge, className }: CardFaceProps) {
       </div>
 
       {/* Bottom gradient accent */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/50 via-teal-500/50 to-orange-500/50" />
+      <div className="absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r from-primary/50 via-teal-500/50 to-orange-500/50" />
     </div>
   );
 }
@@ -172,7 +154,7 @@ export function CardBack({ className }: { className?: string }) {
         "border border-border/50",
         "shadow-xl shadow-black/10",
         "gpu-composite contain-card render-smooth",
-        className
+        className,
       )}
       style={{ aspectRatio: "3/4" }}
     >
@@ -200,10 +182,10 @@ export function CardBack({ className }: { className?: string }) {
       </div>
 
       {/* Corner decorations */}
-      <div className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-primary/30 rounded-tl-lg" />
-      <div className="absolute top-4 right-4 w-8 h-8 border-r-2 border-t-2 border-primary/30 rounded-tr-lg" />
-      <div className="absolute bottom-4 left-4 w-8 h-8 border-l-2 border-b-2 border-primary/30 rounded-bl-lg" />
-      <div className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-primary/30 rounded-br-lg" />
+      <div className="absolute top-4 left-4 w-8 h-8 border-s-2 border-t-2 border-primary/30 rounded-tl-lg" />
+      <div className="absolute top-4 right-4 w-8 h-8 border-e-2 border-t-2 border-primary/30 rounded-tr-lg" />
+      <div className="absolute bottom-4 left-4 w-8 h-8 border-s-2 border-b-2 border-primary/30 rounded-bl-lg" />
+      <div className="absolute bottom-4 right-4 w-8 h-8 border-e-2 border-b-2 border-primary/30 rounded-br-lg" />
     </div>
   );
 }

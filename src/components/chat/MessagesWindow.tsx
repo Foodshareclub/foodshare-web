@@ -2,7 +2,7 @@
 
 import type { CustomRoomType, RoomParticipantsType } from "@/api/chatAPI";
 import { InputSection } from "@/components/chat/InputSection";
-import { useMediaQuery } from "@/hooks";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef } from "react";
@@ -47,7 +47,7 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(
         const targetId = isUserRequester ? currentRoom?.profiles.id : requesterId;
         router.push(`/volunteers/${targetId}`);
       },
-      [currentRoom?.profiles.id, requesterId, router]
+      [currentRoom?.profiles.id, requesterId, router],
     );
 
     return (
@@ -59,7 +59,7 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(
         }}
       >
         <div
-          className="h-[60vh] overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-400/60 scrollbar-track-gray-100/20 scrollbar-thumb-rounded-lg scrollbar-track-rounded-lg"
+          className="h-[60vh] overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-400/60 scrollbar-track-gray-100/20"
           style={{
             scrollbarWidth: "thin",
             scrollbarColor: "rgba(211, 211, 211, 0.6) rgba(249, 249, 253, 0.2)",
@@ -114,10 +114,9 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(
       prevProps.userID === nextProps.userID &&
       prevProps.roomId === nextProps.roomId &&
       prevProps.messages.length === nextProps.messages.length &&
-      prevProps.messages[prevProps.messages.length - 1]?.id ===
-        nextProps.messages[nextProps.messages.length - 1]?.id
+      prevProps.messages[prevProps.messages.length - 1]?.id === nextProps.messages[nextProps.messages.length - 1]?.id
     );
-  }
+  },
 );
 
 MessagesWindow.displayName = "MessagesWindow";

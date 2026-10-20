@@ -10,8 +10,8 @@
  * @module lib/errors/recovery
  */
 
+import { type RetryConfig, RetryPresets, withRetry } from "@/lib/api/retry";
 import { cacheGet } from "@/lib/cache";
-import { withRetry, RetryConfig, RetryPresets } from "@/lib/api/retry";
 
 // =============================================================================
 // Types
@@ -52,11 +52,7 @@ export interface PromptStrategy {
   cancelText?: string;
 }
 
-export type RecoveryStrategy =
-  | RetryStrategy
-  | CacheStrategy
-  | DegradeStrategy
-  | PromptStrategy;
+export type RecoveryStrategy = RetryStrategy | CacheStrategy | DegradeStrategy | PromptStrategy;
 
 export interface RecoveryConfig {
   /** Strategies to try in order */
@@ -91,7 +87,7 @@ export interface RecoveryResult<T> {
  */
 export async function executeRecovery<T>(
   operation: () => Promise<T>,
-  config: RecoveryConfig
+  config: RecoveryConfig,
 ): Promise<RecoveryResult<T>> {
   const { strategies, onRecoverySuccess, onRecoveryFailed } = config;
 
@@ -121,10 +117,7 @@ export async function executeRecovery<T>(
 /**
  * Execute a single recovery strategy
  */
-async function executeStrategy<T>(
-  operation: () => Promise<T>,
-  strategy: RecoveryStrategy
-): Promise<RecoveryResult<T>> {
+async function executeStrategy<T>(operation: () => Promise<T>, strategy: RecoveryStrategy): Promise<RecoveryResult<T>> {
   switch (strategy.type) {
     case "retry":
       return executeRetryStrategy(operation, strategy);
@@ -148,7 +141,7 @@ async function executeStrategy<T>(
  */
 async function executeRetryStrategy<T>(
   operation: () => Promise<T>,
-  strategy: RetryStrategy
+  strategy: RetryStrategy,
 ): Promise<RecoveryResult<T>> {
   try {
     const data = await withRetry(operation, strategy.config);
@@ -161,9 +154,7 @@ async function executeRetryStrategy<T>(
 /**
  * Execute cache fallback strategy
  */
-async function executeCacheStrategy<T>(
-  strategy: CacheStrategy
-): Promise<RecoveryResult<T>> {
+async function executeCacheStrategy<T>(strategy: CacheStrategy): Promise<RecoveryResult<T>> {
   const cached = await cacheGet<{ data: T; timestamp: number }>(strategy.cacheKey);
 
   if (!cached) {
@@ -189,9 +180,7 @@ async function executeCacheStrategy<T>(
 /**
  * Execute degrade strategy
  */
-async function executeDegradeStrategy<T>(
-  strategy: DegradeStrategy
-): Promise<RecoveryResult<T>> {
+async function executeDegradeStrategy<T>(strategy: DegradeStrategy): Promise<RecoveryResult<T>> {
   if (strategy.logDegradation) {
     console.warn("[Recovery] Degrading to fallback value");
   }
@@ -209,14 +198,12 @@ async function executeDegradeStrategy<T>(
  */
 async function executePromptStrategy<T>(
   operation: () => Promise<T>,
-  strategy: PromptStrategy
+  strategy: PromptStrategy,
 ): Promise<RecoveryResult<T>> {
   // In a real implementation, this would show a UI prompt
   // For now, we'll just retry once
   if (typeof window !== "undefined") {
-    const shouldRetry = window.confirm(
-      `${strategy.title}\n\n${strategy.message}\n\nRetry?`
-    );
+    const shouldRetry = window.confirm(`${strategy.title}\n\n${strategy.message}\n\nRetry?`);
 
     if (shouldRetry) {
       try {
@@ -238,10 +225,7 @@ async function executePromptStrategy<T>(
 /**
  * Standard recovery: retry → cache → degrade
  */
-export function createStandardRecovery<T>(
-  cacheKey: string,
-  fallbackValue: T
-): RecoveryConfig {
+export function createStandardRecovery<T>(cacheKey: string, fallbackValue: T): RecoveryConfig {
   return {
     strategies: [
       { type: "retry", config: RetryPresets.standard },
@@ -254,10 +238,7 @@ export function createStandardRecovery<T>(
 /**
  * Aggressive recovery: more retries, longer cache
  */
-export function createAggressiveRecovery<T>(
-  cacheKey: string,
-  fallbackValue: T
-): RecoveryConfig {
+export function createAggressiveRecovery<T>(cacheKey: string, fallbackValue: T): RecoveryConfig {
   return {
     strategies: [
       { type: "retry", config: RetryPresets.aggressive },
@@ -273,7 +254,7 @@ export function createAggressiveRecovery<T>(
 export function createInteractiveRecovery<T>(
   cacheKey: string,
   fallbackValue: T,
-  promptMessage: string
+  promptMessage: string,
 ): RecoveryConfig {
   return {
     strategies: [
@@ -361,7 +342,7 @@ export function useRecovery<T>(config: RecoveryConfig) {
  */
 export function withRecovery<T, Args extends unknown[]>(
   fn: (...args: Args) => Promise<T>,
-  config: RecoveryConfig
+  config: RecoveryConfig,
 ): (...args: Args) => Promise<RecoveryResult<T>> {
   return async (...args: Args) => {
     return executeRecovery(() => fn(...args), config);
@@ -374,7 +355,7 @@ export function withRecovery<T, Args extends unknown[]>(
 export function createRecoverableFetch<T>(
   url: string,
   options: RequestInit,
-  recoveryConfig: RecoveryConfig
+  recoveryConfig: RecoveryConfig,
 ): () => Promise<RecoveryResult<T>> {
   return () =>
     executeRecovery(async () => {

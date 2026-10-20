@@ -1,16 +1,10 @@
 "use client";
 
-import React from "react";
-import { Leaf, Award, Sparkles } from "lucide-react";
-import { FoodCategory, WasteReason, CATEGORY_METRIC_MAP, WasteEntry } from "@/lib/foodlytics/types";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/foodlytics/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/foodlytics/ui/card";
+import { CATEGORY_METRIC_MAP, type FoodCategory, type WasteEntry, type WasteReason } from "@/lib/foodlytics/types";
 import { motion } from "framer-motion";
+import { Award, Leaf, Sparkles } from "lucide-react";
+import React from "react";
 
 interface CategoryInsightsProps {
   logs: WasteEntry[];
@@ -32,10 +26,7 @@ export function CategoryInsights({
   onAskCategoryAdvisor,
 }: CategoryInsightsProps) {
   return (
-    <Card
-      id="chart-weight-cost-breakdown"
-      className="glass-panel border-none rounded-2xl shadow-xl overflow-hidden"
-    >
+    <Card id="chart-weight-cost-breakdown" className="glass-panel border-none rounded-2xl shadow-xl overflow-hidden">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/5 bg-white/[0.02]">
         <div>
           <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
@@ -92,9 +83,7 @@ export function CategoryInsights({
                             boxShadow: `0 0 8px ${value.color}`,
                           }}
                         />
-                        <span className="text-sm font-bold text-stone-200 truncate">
-                          {value.label.split(" (")[0]}
-                        </span>
+                        <span className="text-sm font-bold text-stone-200 truncate">{value.label.split(" (")[0]}</span>
                       </div>
 
                       {/* Custom premium slider line */}
@@ -111,11 +100,12 @@ export function CategoryInsights({
                         />
                       </div>
 
-                      <div className="sm:w-32 text-right flex items-center justify-between sm:justify-end gap-3.5">
+                      <div className="sm:w-32 text-end flex items-center justify-between sm:justify-end gap-3.5">
                         <span className="text-sm font-bold text-stone-100 font-mono tracking-tight">
                           {curWeight.toFixed(1)} lbs
                         </span>
                         <button
+                          type="button"
                           onClick={() => onAskCategoryAdvisor(key as FoodCategory)}
                           className="text-[10px] px-2.5 py-1.5 font-bold border border-white/10 rounded-lg bg-white/5 text-stone-300 hover:text-white hover:border-emerald-500 hover:bg-emerald-500/10 transition duration-150 cursor-pointer shadow-sm"
                           title={`Ask AI preservation advisor about ${value.label}`}
@@ -150,13 +140,8 @@ export function CategoryInsights({
                         className="flex justify-between items-center bg-white/[0.02] hover:bg-white/[0.04] px-4 py-3 rounded-xl border border-white/5 transition-colors"
                       >
                         <div className="flex items-center gap-2.5 truncate">
-                          <span
-                            className="h-2 w-2 rounded-full shrink-0"
-                            style={{ backgroundColor: item.val.color }}
-                          />
-                          <span className="text-stone-300 font-bold truncate">
-                            {item.val.label.split(" (")[0]}
-                          </span>
+                          <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: item.val.color }} />
+                          <span className="text-stone-300 font-bold truncate">{item.val.label.split(" (")[0]}</span>
                         </div>
                         <span className="font-bold text-white font-mono text-sm tracking-tight">
                           ${item.cost.toFixed(2)}
@@ -173,9 +158,7 @@ export function CategoryInsights({
                 </span>
 
                 <div className="grid grid-cols-5 gap-3 h-52 items-end mt-4 px-2">
-                  {(
-                    ["spoiled", "expired", "leftover", "overpurchased", "other"] as WasteReason[]
-                  ).map((r) => {
+                  {(["spoiled", "expired", "leftover", "overpurchased", "other"] as WasteReason[]).map((r) => {
                     const count = reasonCounts[r] || 0;
                     const heightPct = (count / totalReasons) * 100;
 
@@ -187,18 +170,13 @@ export function CategoryInsights({
                     if (r === "other") reasonColor = "oklch(0.65 0.02 150)"; // stone
 
                     return (
-                      <div
-                        key={r}
-                        className="flex flex-col items-center gap-2.5 group h-full justify-end"
-                      >
+                      <div key={r} className="flex flex-col items-center gap-2.5 group h-full justify-end">
                         {count > 0 ? (
                           <span className="text-[10px] font-bold text-white font-mono bg-white/5 border border-white/10 rounded-md px-1.5 py-0.5 shadow-sm">
                             {count}
                           </span>
                         ) : (
-                          <span className="text-[10px] font-medium text-stone-600 font-mono">
-                            —
-                          </span>
+                          <span className="text-[10px] font-medium text-stone-600 font-mono">—</span>
                         )}
 
                         <div className="w-full bg-white/[0.02] hover:bg-white/[0.04] rounded-lg border border-white/5 h-36 relative flex items-end overflow-hidden">

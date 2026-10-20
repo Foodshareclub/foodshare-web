@@ -1,132 +1,101 @@
-import Link from "next/link";
 import { PageHeader } from "@/components/navigation/PageHeader";
-import { generatePageMetadata } from "@/lib/metadata";
 import { generateFAQJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
+import { generatePageMetadata } from "@/lib/metadata";
+import type { Metadata } from "next";
+import { getLocale, getTranslations } from "next-intl/server";
+import Link from "next/link";
 
-export const metadata = generatePageMetadata({
-  title: "Help Center",
-  description:
-    "Get help with FoodShare - FAQs, guides, and support for sharing food in your community.",
-  keywords: ["help", "support", "FAQ", "guide", "how to"],
-  path: "/help",
-});
+// The title and description have to resolve per request: a German visitor
+// should not be handed an English <title> for a page whose body is in German.
+// Keywords stay English — they are an indexing hint, not visible copy, and the
+// terms people actually search in are English here.
+export async function generateMetadata(): Promise<Metadata> {
+  const [t, locale] = await Promise.all([getTranslations("Help"), getLocale()]);
 
-// FAQ data for structured data
-const faqs = [
-  {
-    question: "How do I create an account?",
-    answer:
-      'Click the "Sign Up" button and register with your email or social account. Complete your profile to start sharing food with your community.',
-  },
-  {
-    question: "How do I share food?",
-    answer:
-      'Click the "+" button to create a new listing. Add photos, description, pickup location, and availability. Your listing will appear on the map for nearby users.',
-  },
-  {
-    question: "How do I find food near me?",
-    answer:
-      "Use the interactive map to browse available food in your area. You can filter by food type, distance, and availability. Tap on a listing to see details and contact the sharer.",
-  },
-  {
-    question: "What food can I share?",
-    answer:
-      "Share surplus food that is still safe to eat - unopened packaged goods, fresh produce, home-cooked meals, and baked goods. Always be honest about ingredients and preparation date.",
-  },
-  {
-    question: "How do I message someone?",
-    answer:
-      'Open a listing and tap "Message" to start a chat with the sharer. Use chat to coordinate pickup time and location.',
-  },
-  {
-    question: "Is FoodShare free?",
-    answer:
-      "Yes, FoodShare is completely free to use. We believe in building community through sharing.",
-  },
-];
+  return generatePageMetadata({
+    title: t("title"),
+    description: t("metaDescription"),
+    keywords: ["help", "support", "FAQ", "guide", "how to"],
+    path: "/help",
+    locale,
+  });
+}
 
-export default function HelpPage() {
+export default async function HelpPage() {
+  const t = await getTranslations("Help");
+
+  const faqs = [
+    { question: t("qCreateAccount"), answer: t("aCreateAccount") },
+    { question: t("qShareFood"), answer: t("aShareFood") },
+    { question: t("qFindFood"), answer: t("aFindFood") },
+    { question: t("qWhatFood"), answer: t("aWhatFood") },
+    { question: t("qMessage"), answer: t("aMessage") },
+    { question: t("qFree"), answer: t("aFree") },
+  ];
+
   const faqJsonLd = generateFAQJsonLd(faqs);
 
   return (
     <>
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD needs a raw script tag; safeJsonLdStringify escapes angle brackets and ampersands so a script-tag breakout is impossible
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(faqJsonLd) }}
       />
       <div className="min-h-screen bg-muted/30 dark:bg-background">
-        <PageHeader title="Help Center" />
+        <PageHeader title={t("title")} />
 
         <div className="container mx-auto max-w-4xl py-8 px-4">
           <div className="bg-card rounded-2xl shadow-sm p-8 md:p-12">
             <div className="prose prose-gray dark:prose-invert max-w-none">
               <section className="mb-10">
-                <h2 className="text-xl font-semibold text-foreground mb-4">Getting Started</h2>
+                <h2 className="text-xl font-semibold text-foreground mb-4">{t("gettingStarted")}</h2>
                 <div className="space-y-4">
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <h3 className="font-medium text-foreground mb-2">
-                      How do I create an account?
-                    </h3>
-                    <p className="text-foreground/80 text-sm">
-                      Click the &quot;Sign Up&quot; button and register with your email or social
-                      account. Complete your profile to start sharing food with your community.
-                    </p>
+                    <h3 className="font-medium text-foreground mb-2">{t("qCreateAccount")}</h3>
+                    <p className="text-foreground/80 text-sm">{t("aCreateAccount")}</p>
                   </div>
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <h3 className="font-medium text-foreground mb-2">How do I share food?</h3>
-                    <p className="text-foreground/80 text-sm">
-                      Click the &quot;+&quot; button to create a new listing. Add photos,
-                      description, pickup location, and availability. Your listing will appear on
-                      the map for nearby users.
-                    </p>
+                    <h3 className="font-medium text-foreground mb-2">{t("qShareFood")}</h3>
+                    <p className="text-foreground/80 text-sm">{t("aShareFood")}</p>
                   </div>
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <h3 className="font-medium text-foreground mb-2">
-                      How do I find food near me?
-                    </h3>
-                    <p className="text-foreground/80 text-sm">
-                      Use the interactive map to browse available food in your area. You can filter
-                      by food type, distance, and availability. Tap on a listing to see details and
-                      contact the sharer.
-                    </p>
+                    <h3 className="font-medium text-foreground mb-2">{t("qFindFood")}</h3>
+                    <p className="text-foreground/80 text-sm">{t("aFindFood")}</p>
                   </div>
                 </div>
               </section>
 
               <section className="mb-10">
-                <h2 className="text-xl font-semibold text-foreground mb-4">Food Safety</h2>
+                <h2 className="text-xl font-semibold text-foreground mb-4">{t("foodSafety")}</h2>
                 <div className="space-y-4">
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <h3 className="font-medium text-foreground mb-2">What food can I share?</h3>
-                    <p className="text-foreground/80 text-sm">
-                      Share surplus food that is still safe to eat - unopened packaged goods, fresh
-                      produce, home-cooked meals, and baked goods. Always be honest about
-                      ingredients and preparation date.
-                    </p>
+                    <h3 className="font-medium text-foreground mb-2">{t("qWhatFood")}</h3>
+                    <p className="text-foreground/80 text-sm">{t("aWhatFood")}</p>
                   </div>
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <h3 className="font-medium text-foreground mb-2">Food safety tips</h3>
+                    <h3 className="font-medium text-foreground mb-2">{t("safetyTips")}</h3>
                     <ul className="text-foreground/80 text-sm list-disc list-inside space-y-1">
-                      <li>Check expiration dates before sharing</li>
-                      <li>Store food at proper temperatures</li>
-                      <li>List all allergens and ingredients</li>
-                      <li>Use clean containers for transport</li>
-                      <li>When in doubt, don&apos;t share it</li>
+                      <li>{t("tipExpiry")}</li>
+                      <li>{t("tipTemperature")}</li>
+                      <li>{t("tipAllergens")}</li>
+                      <li>{t("tipContainers")}</li>
+                      <li>{t("tipDoubt")}</li>
                     </ul>
                   </div>
                   <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-900">
                     <p className="text-sm text-amber-900 dark:text-amber-100">
-                      Deep dive:{" "}
+                      {t("deepDive")}{" "}
                       <Link href="/guides/food-safety" className="underline font-medium">
-                        Food Safety guide
+                        {t("guideFoodSafety")}
                       </Link>{" "}
                       ·{" "}
                       <Link href="/guides/expiry-dates" className="underline font-medium">
-                        Expiry Dates
+                        {t("guideExpiryDates")}
                       </Link>{" "}
                       ·{" "}
                       <Link href="/guides/what-can-i-share" className="underline font-medium">
-                        What can I share?
+                        {t("guideWhatCanShare")}
                       </Link>
                     </p>
                   </div>
@@ -134,126 +103,102 @@ export default function HelpPage() {
               </section>
 
               <section className="mb-10">
-                <h2 className="text-xl font-semibold text-foreground mb-4">Using the App</h2>
+                <h2 className="text-xl font-semibold text-foreground mb-4">{t("usingTheApp")}</h2>
                 <div className="space-y-4">
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <h3 className="font-medium text-foreground mb-2">How do I message someone?</h3>
-                    <p className="text-foreground/80 text-sm">
-                      Open a listing and tap &quot;Message&quot; to start a chat with the sharer.
-                      Use chat to coordinate pickup time and location.
-                    </p>
+                    <h3 className="font-medium text-foreground mb-2">{t("qMessage")}</h3>
+                    <p className="text-foreground/80 text-sm">{t("aMessage")}</p>
                   </div>
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <h3 className="font-medium text-foreground mb-2">
-                      How do I edit or delete my listing?
-                    </h3>
-                    <p className="text-foreground/80 text-sm">
-                      Go to your profile and find the listing under &quot;My Listings&quot;. Tap the
-                      menu icon to edit details or mark as collected/delete.
-                    </p>
+                    <h3 className="font-medium text-foreground mb-2">{t("qEditListing")}</h3>
+                    <p className="text-foreground/80 text-sm">{t("aEditListing")}</p>
                   </div>
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <h3 className="font-medium text-foreground mb-2">
-                      What are community fridges?
-                    </h3>
-                    <p className="text-foreground/80 text-sm">
-                      Community fridges are public refrigerators where anyone can leave or take
-                      food. They appear on the map with a special icon. Check their hours and
-                      guidelines before visiting.
-                    </p>
+                    <h3 className="font-medium text-foreground mb-2">{t("qCommunityFridges")}</h3>
+                    <p className="text-foreground/80 text-sm">{t("aCommunityFridges")}</p>
                   </div>
                 </div>
               </section>
 
               <section className="mb-10">
-                <h2 className="text-xl font-semibold text-foreground mb-4">Account & Privacy</h2>
+                <h2 className="text-xl font-semibold text-foreground mb-4">{t("accountPrivacy")}</h2>
                 <div className="space-y-4">
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <h3 className="font-medium text-foreground mb-2">
-                      How do I change my settings?
-                    </h3>
-                    <p className="text-foreground/80 text-sm">
-                      Go to Settings from your profile menu. You can update your email, password,
-                      notification preferences, and privacy settings.
-                    </p>
+                    <h3 className="font-medium text-foreground mb-2">{t("qSettings")}</h3>
+                    <p className="text-foreground/80 text-sm">{t("aSettings")}</p>
                   </div>
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <h3 className="font-medium text-foreground mb-2">Is my location shared?</h3>
-                    <p className="text-foreground/80 text-sm">
-                      Your exact location is never shared. Listings show an approximate area. You
-                      control what location details to share when coordinating pickup.
-                    </p>
+                    <h3 className="font-medium text-foreground mb-2">{t("qLocation")}</h3>
+                    <p className="text-foreground/80 text-sm">{t("aLocation")}</p>
                   </div>
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <h3 className="font-medium text-foreground mb-2">
-                      How do I delete my account?
-                    </h3>
-                    <p className="text-foreground/80 text-sm">
-                      Go to Settings &gt; Account &gt; Delete Account. This will permanently remove
-                      your profile, listings, and messages.
-                    </p>
+                    <h3 className="font-medium text-foreground mb-2">{t("qDeleteAccount")}</h3>
+                    <p className="text-foreground/80 text-sm">{t("aDeleteAccount")}</p>
                   </div>
                 </div>
               </section>
 
               <section className="mb-10">
-                <h2 className="text-xl font-semibold text-foreground mb-4">Guides</h2>
-                <p className="text-foreground/80 mb-4 text-sm">
-                  Migrated from legacy docs — now part of the web:
-                </p>
+                <h2 className="text-xl font-semibold text-foreground mb-4">{t("guides")}</h2>
+                <p className="text-foreground/80 mb-4 text-sm">{t("legacyNote")}</p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Link
                     href="/guides/sharing-guidelines"
                     className="p-3 bg-muted/50 rounded-lg hover:bg-muted transition text-sm font-medium"
                   >
-                    📒 Sharing Guidelines
+                    {t("guideSharingGuidelines")}
                   </Link>
                   <Link
                     href="/guides/safe-sharing"
                     className="p-3 bg-muted/50 rounded-lg hover:bg-muted transition text-sm font-medium"
                   >
-                    🚁 Safe Sharing
+                    {t("guideSafeSharing")}
                   </Link>
                   <Link
                     href="/guides/borrow"
                     className="p-3 bg-muted/50 rounded-lg hover:bg-muted transition text-sm font-medium"
                   >
-                    📚 Borrow
+                    {t("guideBorrow")}
                   </Link>
                   <Link
                     href="/guides/cookie-policy"
                     className="p-3 bg-muted/50 rounded-lg hover:bg-muted transition text-sm font-medium"
                   >
-                    🍪 Cookie Policy
+                    {t("guideCookiePolicy")}
                   </Link>
                   <Link
                     href="/guides"
                     className="p-3 bg-[#FF2D55]/10 rounded-lg hover:bg-[#FF2D55]/20 transition text-sm font-medium text-[#FF2D55]"
                   >
-                    View all 7 guides →
+                    {t("viewAllGuides")}
                   </Link>
                 </div>
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-foreground mb-4">Need More Help?</h2>
+                <h2 className="text-xl font-semibold text-foreground mb-4">{t("needMoreHelp")}</h2>
                 <p className="text-foreground/80 mb-4">
-                  Can&apos;t find what you&apos;re looking for? Send us feedback through your{" "}
-                  <Link href="/settings" className="text-[#FF2D55] hover:underline">
-                    account settings
-                  </Link>
-                  . We typically respond within 24-48 hours.
+                  {t.rich("cantFind", {
+                    accountSettings: (chunks) => (
+                      <Link href="/settings" className="text-[#FF2D55] hover:underline">
+                        {chunks}
+                      </Link>
+                    ),
+                  })}
                 </p>
                 <p className="text-foreground/80">
-                  You can also review our{" "}
-                  <Link href="/terms" className="text-[#FF2D55] hover:underline">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link href="/privacy" className="text-[#FF2D55] hover:underline">
-                    Privacy Policy
-                  </Link>
-                  .
+                  {t.rich("alsoReview", {
+                    terms: (chunks) => (
+                      <Link href="/terms" className="text-[#FF2D55] hover:underline">
+                        {chunks}
+                      </Link>
+                    ),
+                    privacy: (chunks) => (
+                      <Link href="/privacy" className="text-[#FF2D55] hover:underline">
+                        {chunks}
+                      </Link>
+                    ),
+                  })}
                 </p>
               </section>
             </div>

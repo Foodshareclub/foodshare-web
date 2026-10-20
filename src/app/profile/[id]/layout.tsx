@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
 import { generatePageMetadata } from "@/lib/metadata";
+import type { Metadata } from "next";
 
 /**
  * Static metadata for user profile pages
@@ -7,7 +7,8 @@ import { generatePageMetadata } from "@/lib/metadata";
  */
 export const metadata: Metadata = generatePageMetadata({
   title: "User Profile",
-  description: "View this user's profile on FoodShare - connect with community members, share food, and reduce waste together.",
+  description:
+    "View this user's profile on FoodShare - connect with community members, share food, and reduce waste together.",
   path: "/profile",
   keywords: ["user profile", "foodshare member", "community", "food sharing", "connect"],
 });

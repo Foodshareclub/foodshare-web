@@ -3,10 +3,10 @@
  * Tests for Zustand chat store
  */
 
-import { act } from "@testing-library/react";
+import type { CustomRoomType, RoomParticipantsType, RoomType } from "@/api/chatAPI";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { act } from "@testing-library/react";
 import { useChatStore } from "../useChatStore";
-import type { RoomType, CustomRoomType, RoomParticipantsType } from "@/api/chatAPI";
 
 // Mock data
 const mockRoom: RoomType = {
@@ -324,29 +324,23 @@ describe("useChatStore", () => {
   // ==========================================================================
 
   describe("setCreationStatus", () => {
-    it.each(["idle", "creating", "created", "error"] as const)(
-      "should set creation status to %s",
-      (status) => {
-        act(() => {
-          useChatStore.getState().setCreationStatus(status);
-        });
+    it.each(["idle", "creating", "created", "error"] as const)("should set creation status to %s", (status) => {
+      act(() => {
+        useChatStore.getState().setCreationStatus(status);
+      });
 
-        expect(useChatStore.getState().creationStatus).toBe(status);
-      }
-    );
+      expect(useChatStore.getState().creationStatus).toBe(status);
+    });
   });
 
   describe("setUpdateStatus", () => {
-    it.each(["idle", "updating", "updated", "error"] as const)(
-      "should set update status to %s",
-      (status) => {
-        act(() => {
-          useChatStore.getState().setUpdateStatus(status);
-        });
+    it.each(["idle", "updating", "updated", "error"] as const)("should set update status to %s", (status) => {
+      act(() => {
+        useChatStore.getState().setUpdateStatus(status);
+      });
 
-        expect(useChatStore.getState().updateStatus).toBe(status);
-      }
-    );
+      expect(useChatStore.getState().updateStatus).toBe(status);
+    });
   });
 
   describe("setFeedbackStatus", () => {

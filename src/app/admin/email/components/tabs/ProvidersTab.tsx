@@ -10,32 +10,32 @@
  * - Provider-specific settings
  */
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  Settings,
-  Globe,
-  Zap,
-  Shield,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  ArrowRight,
-  Sparkles,
-  ExternalLink,
-  Mail,
-  Activity,
-  TrendingUp,
-  Server,
-} from "lucide-react";
-import type { ProviderHealth } from "../types";
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  ExternalLink,
+  Globe,
+  Mail,
+  Server,
+  Settings,
+  Shield,
+  Sparkles,
+  TrendingUp,
+  XCircle,
+  Zap,
+} from "lucide-react";
+import { useState } from "react";
+import type { ProviderHealth } from "../types";
 
 const PROVIDER_CONFIG = {
   resend: {
@@ -152,12 +152,7 @@ export function ProvidersTab({ providerHealth }: { providerHealth: ProviderHealt
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
         {/* Header Stats */}
         <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <QuickStat
-            label="Total Providers"
-            value="4"
-            icon={<Server className="h-4 w-4" />}
-            color="blue"
-          />
+          <QuickStat label="Total Providers" value="4" icon={<Server className="h-4 w-4" />} color="blue" />
           <QuickStat
             label="Healthy"
             value={providers.filter((p) => p.status === "healthy").length.toString()}
@@ -198,9 +193,7 @@ export function ProvidersTab({ providerHealth }: { providerHealth: ProviderHealt
                   </div>
                   <div>
                     <CardTitle className="text-base">Smart Routing Engine</CardTitle>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Automatic provider selection based on rules
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Automatic provider selection based on rules</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -242,9 +235,7 @@ export function ProvidersTab({ providerHealth }: { providerHealth: ProviderHealt
                 </div>
                 <div>
                   <CardTitle className="text-base">Provider Configuration</CardTitle>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Priority and email type assignments
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Priority and email type assignments</p>
                 </div>
               </div>
             </CardHeader>
@@ -334,14 +325,14 @@ function ProviderDetailCard({ provider, index }: { provider: ProviderHealth; ind
       <Card
         className={cn(
           "group relative overflow-hidden border-border/50 hover:shadow-xl hover:shadow-black/5 transition-all duration-300",
-          "bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm"
+          "bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm",
         )}
       >
         {/* Gradient overlay */}
         <div
           className={cn(
             "absolute inset-0 bg-gradient-to-br opacity-[0.03] group-hover:opacity-[0.06] transition-opacity",
-            config.color
+            config.color,
           )}
         />
 
@@ -349,12 +340,7 @@ function ProviderDetailCard({ provider, index }: { provider: ProviderHealth; ind
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center gap-4">
-              <div
-                className={cn(
-                  "flex items-center justify-center h-14 w-14 rounded-2xl text-2xl",
-                  config.lightColor
-                )}
-              >
+              <div className={cn("flex items-center justify-center h-14 w-14 rounded-2xl text-2xl", config.lightColor)}>
                 {config.icon}
               </div>
               <div>
@@ -364,9 +350,7 @@ function ProviderDetailCard({ provider, index }: { provider: ProviderHealth; ind
             </div>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div
-                  className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-full", status.bg)}
-                >
+                <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-full", status.bg)}>
                   <StatusIcon className={cn("h-3.5 w-3.5", status.color)} />
                   <span className={cn("text-xs font-medium", status.color)}>{status.label}</span>
                 </div>
@@ -399,13 +383,8 @@ function ProviderDetailCard({ provider, index }: { provider: ProviderHealth; ind
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Daily Quota</span>
               <span className="text-sm tabular-nums">
-                <span className="font-semibold">
-                  {(provider.dailyQuotaUsed || 0).toLocaleString()}
-                </span>
-                <span className="text-muted-foreground">
-                  {" "}
-                  / {(provider.dailyQuotaLimit || 0).toLocaleString()}
-                </span>
+                <span className="font-semibold">{(provider.dailyQuotaUsed || 0).toLocaleString()}</span>
+                <span className="text-muted-foreground"> / {(provider.dailyQuotaLimit || 0).toLocaleString()}</span>
               </span>
             </div>
             <div className="relative h-3 rounded-full bg-muted/50 overflow-hidden">
@@ -414,22 +393,19 @@ function ProviderDetailCard({ provider, index }: { provider: ProviderHealth; ind
                 animate={{ width: `${Math.min(quotaPercent, 100)}%` }}
                 transition={{ duration: 1, ease: "easeOut", delay: index * 0.2 }}
                 className={cn(
-                  "absolute inset-y-0 left-0 rounded-full bg-gradient-to-r",
+                  "absolute inset-y-0 start-0 rounded-full bg-gradient-to-r",
                   quotaPercent > 90
                     ? "from-rose-500 to-rose-600"
                     : quotaPercent > 70
                       ? "from-amber-500 to-amber-600"
-                      : config.color
+                      : config.color,
                 )}
               />
             </div>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>{quotaPercent}% used</span>
               <span>
-                {(
-                  (provider.dailyQuotaLimit || 0) - (provider.dailyQuotaUsed || 0)
-                ).toLocaleString()}{" "}
-                remaining
+                {((provider.dailyQuotaLimit || 0) - (provider.dailyQuotaUsed || 0)).toLocaleString()} remaining
               </span>
             </div>
           </div>
@@ -475,14 +451,10 @@ function RoutingRuleCard({ rule }: { rule: (typeof ROUTING_RULES)[0] }) {
         variant="outline"
         className={cn(
           "text-[10px] px-2",
-          rule.priority === "Critical" &&
-            "border-zinc-300 text-zinc-700 dark:border-zinc-600 dark:text-zinc-300",
-          rule.priority === "High" &&
-            "border-amber-300 text-amber-700 dark:border-amber-600 dark:text-amber-300",
-          rule.priority === "Normal" &&
-            "border-blue-300 text-blue-700 dark:border-blue-600 dark:text-blue-300",
-          rule.priority === "Fallback" &&
-            "border-rose-300 text-rose-700 dark:border-rose-600 dark:text-rose-300"
+          rule.priority === "Critical" && "border-zinc-300 text-zinc-700 dark:border-zinc-600 dark:text-zinc-300",
+          rule.priority === "High" && "border-amber-300 text-amber-700 dark:border-amber-600 dark:text-amber-300",
+          rule.priority === "Normal" && "border-blue-300 text-blue-700 dark:border-blue-600 dark:text-blue-300",
+          rule.priority === "Fallback" && "border-rose-300 text-rose-700 dark:border-rose-600 dark:text-rose-300",
         )}
       >
         {rule.priority}
@@ -497,12 +469,7 @@ function ConfigCard({
   config: (typeof PROVIDER_CONFIG)[keyof typeof PROVIDER_CONFIG];
 }) {
   return (
-    <div
-      className={cn(
-        "rounded-xl border p-4 transition-colors hover:bg-muted/20",
-        config.borderColor
-      )}
-    >
+    <div className={cn("rounded-xl border p-4 transition-colors hover:bg-muted/20", config.borderColor)}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-lg">{config.icon}</span>

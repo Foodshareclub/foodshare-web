@@ -7,11 +7,11 @@
  * and LLM-powered insights generation.
  */
 
-import { createClient } from "@/lib/supabase/server";
+import { checkUserIsAdmin } from "@/lib/data/admin-check";
+import { getMotherDuckToken } from "@/lib/email/vault";
 import { serverActionError, serverActionSuccess } from "@/lib/errors";
 import type { ServerActionResult } from "@/lib/errors";
-import { getMotherDuckToken } from "@/lib/email/vault";
-import { checkUserIsAdmin } from "@/lib/data/admin-check";
+import { createClient } from "@/lib/supabase/server";
 
 // MotherDuck REST API endpoint
 const MOTHERDUCK_API = "https://api.motherduck.com/v1/sql";
@@ -54,7 +54,8 @@ async function executeMotherDuckSQL(sql: string): Promise<MotherDuckResponse> {
 }
 
 // SQL safety: blocked keywords for LLM-generated queries
-const SQL_BLOCKLIST = /\b(DROP|DELETE|INSERT|UPDATE|ALTER|TRUNCATE|CREATE|GRANT|REVOKE|EXEC|EXECUTE|MERGE|REPLACE|CALL|COPY|LOAD|ATTACH|DETACH)\b/i;
+const SQL_BLOCKLIST =
+  /\b(DROP|DELETE|INSERT|UPDATE|ALTER|TRUNCATE|CREATE|GRANT|REVOKE|EXEC|EXECUTE|MERGE|REPLACE|CALL|COPY|LOAD|ATTACH|DETACH)\b/i;
 const MAX_QUERY_ROWS = 1000;
 
 /**
@@ -101,9 +102,7 @@ export interface NLQueryResult {
   executionTimeMs: number;
 }
 
-export async function askAnalyticsQuestion(
-  question: string
-): Promise<ServerActionResult<NLQueryResult>> {
+export async function askAnalyticsQuestion(question: string): Promise<ServerActionResult<NLQueryResult>> {
   try {
     const supabase = await createClient();
     const {
@@ -172,9 +171,7 @@ export async function askAnalyticsQuestion(
     `;
 
     const answerResult = await executeMotherDuckSQL(answerQuery);
-    const answer =
-      (answerResult.data?.[0]?.result as { answer?: string })?.answer ||
-      "Unable to generate answer";
+    const answer = (answerResult.data?.[0]?.result as { answer?: string })?.answer || "Unable to generate answer";
 
     const executionTimeMs = Date.now() - startTime;
 
@@ -187,10 +184,7 @@ export async function askAnalyticsQuestion(
     });
   } catch (error) {
     console.error("AI query error:", error);
-    return serverActionError(
-      error instanceof Error ? error.message : "Failed to process question",
-      "UNKNOWN_ERROR"
-    );
+    return serverActionError(error instanceof Error ? error.message : "Failed to process question", "UNKNOWN_ERROR");
   }
 }
 
@@ -289,10 +283,7 @@ export async function generateWeeklyReport(): Promise<ServerActionResult<WeeklyR
     });
   } catch (error) {
     console.error("Weekly report error:", error);
-    return serverActionError(
-      error instanceof Error ? error.message : "Failed to generate report",
-      "UNKNOWN_ERROR"
-    );
+    return serverActionError(error instanceof Error ? error.message : "Failed to generate report", "UNKNOWN_ERROR");
   }
 }
 

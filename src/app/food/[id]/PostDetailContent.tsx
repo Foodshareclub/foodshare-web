@@ -1,24 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
-import Image from "next/image";
-import { Flag, Heart, Eye, Calendar, Clock, MapPin, Truck, FileText, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { StarIcon } from "@/utils/icons";
+const STAR_VALUES = [1, 2, 3, 4, 5] as const;
+
+import { PostDetailSection } from "@/components/post/PostDetailSection";
+import { PostStatsCard } from "@/components/post/PostStatsCard";
+import { PostTypeBadge } from "@/components/post/PostTypeBadge";
 import { ReportPostDialog } from "@/components/reports";
 import { ShareButton } from "@/components/share/ShareButton";
-import { PostTypeBadge } from "@/components/post/PostTypeBadge";
-import { PostStatsCard } from "@/components/post/PostStatsCard";
-import { PostDetailSection } from "@/components/post/PostDetailSection";
-import { cn } from "@/lib/utils";
-import type { InitialProductStateType } from "@/types/product.types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import type { AuthUser } from "@/lib/data/auth";
 import { normalizeImageUrl } from "@/lib/image";
+import { cn } from "@/lib/utils";
+import type { InitialProductStateType } from "@/types/product.types";
+import { StarIcon } from "@/utils/icons";
+import { Calendar, Clock, Eye, FileText, Flag, Heart, MapPin, Sparkles, Truck } from "lucide-react";
+import { useTranslations } from "next-intl";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface PostDetailContentProps {
   post: InitialProductStateType;
@@ -27,12 +29,7 @@ interface PostDetailContentProps {
   isModal?: boolean;
 }
 
-export function PostDetailContent({
-  post,
-  user,
-  isAdmin = false,
-  isModal = false,
-}: PostDetailContentProps) {
+export function PostDetailContent({ post, user, isAdmin = false, isModal = false }: PostDetailContentProps) {
   const t = useTranslations();
   const router = useRouter();
 
@@ -44,9 +41,7 @@ export function PostDetailContent({
   const [rating, setRating] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
-  const validImages = [
-    ...new Set(post.images?.map(normalizeImageUrl).filter((url): url is string => !!url)),
-  ];
+  const validImages = [...new Set(post.images?.map(normalizeImageUrl).filter((url): url is string => !!url))];
   const heroImage = validImages.find((url) => !failedImages[url]);
 
   useEffect(() => {
@@ -77,12 +72,12 @@ export function PostDetailContent({
         className={cn(
           "relative overflow-hidden rounded-2xl border border-border/40 bg-card/80 backdrop-blur-xl shadow-sm transition-all duration-500",
           "hover:shadow-xl hover:border-border/60",
-          isLoaded ? "translate-y-0" : "translate-y-8"
+          isLoaded ? "translate-y-0" : "translate-y-8",
         )}
       >
         {/* Decorative gradient orbs */}
-        <div className="absolute -top-32 -right-32 h-64 w-64 rounded-full bg-gradient-to-br from-orange-500/10 to-rose-500/5 blur-3xl animate-pulse pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 h-64 w-64 rounded-full bg-gradient-to-br from-teal-500/10 to-emerald-500/5 blur-3xl animate-pulse delay-1000 pointer-events-none" />
+        <div className="absolute -top-32 -end-32 h-64 w-64 rounded-full bg-gradient-to-br from-orange-500/10 to-rose-500/5 blur-3xl animate-pulse pointer-events-none" />
+        <div className="absolute -bottom-32 -start-32 h-64 w-64 rounded-full bg-gradient-to-br from-teal-500/10 to-emerald-500/5 blur-3xl animate-pulse delay-1000 pointer-events-none" />
 
         {/* Hero Image */}
         <div className="relative w-full group" style={{ aspectRatio: "16/9" }}>
@@ -108,19 +103,19 @@ export function PostDetailContent({
 
           {/* Photo count badge */}
           {validImages.length > 1 && (
-            <Badge className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-sm text-white border-0 px-3 py-1.5">
+            <Badge className="absolute bottom-4 end-4 bg-black/60 backdrop-blur-sm text-white border-0 px-3 py-1.5">
               📷 {validImages.length} photos
             </Badge>
           )}
 
           {/* Status badges */}
           {!post.is_active && (
-            <Badge className="absolute top-4 right-4 bg-yellow-500/90 backdrop-blur-sm text-white border-0">
+            <Badge className="absolute top-4 end-4 bg-yellow-500/90 backdrop-blur-sm text-white border-0">
               ⏸️ Inactive
             </Badge>
           )}
           {post.is_arranged && (
-            <Badge className="absolute top-4 right-4 bg-emerald-500/90 backdrop-blur-sm text-white border-0">
+            <Badge className="absolute top-4 end-4 bg-emerald-500/90 backdrop-blur-sm text-white border-0">
               ✅ Arranged
             </Badge>
           )}
@@ -132,7 +127,7 @@ export function PostDetailContent({
           <div
             className={cn(
               "mb-4 transform transition-all duration-500 delay-100",
-              isLoaded ? "translate-y-0" : "translate-y-4"
+              isLoaded ? "translate-y-0" : "translate-y-4",
             )}
           >
             <PostTypeBadge postType={post.post_type} variant="gradient" />
@@ -142,7 +137,7 @@ export function PostDetailContent({
           <h1
             className={cn(
               "text-2xl sm:text-3xl font-bold text-foreground mb-4 transform transition-all duration-500 delay-150",
-              isLoaded ? "translate-y-0" : "translate-y-4"
+              isLoaded ? "translate-y-0" : "translate-y-4",
             )}
           >
             {post.post_name}
@@ -152,7 +147,7 @@ export function PostDetailContent({
           <div
             className={cn(
               "flex flex-col gap-2 mb-6 transform transition-all duration-500 delay-200",
-              isLoaded ? "translate-y-0" : "translate-y-4"
+              isLoaded ? "translate-y-0" : "translate-y-4",
             )}
           >
             <div className="flex items-center gap-3">
@@ -161,7 +156,7 @@ export function PostDetailContent({
               </div>
               <p className="text-muted-foreground">{post.post_stripped_address}</p>
             </div>
-            <p className="text-xs text-muted-foreground/70 flex items-center gap-1.5 ml-13">
+            <p className="text-xs text-muted-foreground/70 flex items-center gap-1.5 ms-13">
               <span className="text-amber-500">&#9888;</span>
               {t("location_approximate_disclaimer")}
             </p>
@@ -173,21 +168,11 @@ export function PostDetailContent({
           <div
             className={cn(
               "grid grid-cols-3 gap-3 mb-6 transform transition-all duration-500 delay-250",
-              isLoaded ? "translate-y-0" : "translate-y-4"
+              isLoaded ? "translate-y-0" : "translate-y-4",
             )}
           >
-            <PostStatsCard
-              icon={Heart}
-              value={post.post_like_counter || 0}
-              label="likes"
-              colorScheme="rose"
-            />
-            <PostStatsCard
-              icon={Eye}
-              value={post.post_views || 0}
-              label="views"
-              colorScheme="blue"
-            />
+            <PostStatsCard icon={Heart} value={post.post_like_counter || 0} label="likes" colorScheme="rose" />
+            <PostStatsCard icon={Eye} value={post.post_views || 0} label="views" colorScheme="blue" />
             <PostStatsCard
               icon={Calendar}
               value={new Date(post.created_at).toLocaleDateString("en-US", {
@@ -204,20 +189,18 @@ export function PostDetailContent({
             <div
               className={cn(
                 "flex justify-center gap-2 mb-6 p-4 rounded-xl bg-muted/30 transform transition-all duration-500 delay-300",
-                isLoaded ? "translate-y-0" : "translate-y-4"
+                isLoaded ? "translate-y-0" : "translate-y-4",
               )}
             >
-              <span className="text-sm text-muted-foreground mr-2">Rate this listing:</span>
-              {Array(5)
-                .fill("")
-                .map((_, i) => (
-                  <StarIcon
-                    key={i}
-                    onClick={() => onStarClick(i)}
-                    color={i < rating ? "teal.500" : "gray.300"}
-                    cursor="pointer"
-                  />
-                ))}
+              <span className="text-sm text-muted-foreground me-2">Rate this listing:</span>
+              {STAR_VALUES.map((star) => (
+                <StarIcon
+                  key={star}
+                  onClick={() => onStarClick(star - 1)}
+                  color={star <= rating ? "teal.500" : "gray.300"}
+                  cursor="pointer"
+                />
+              ))}
             </div>
           )}
 
@@ -227,16 +210,11 @@ export function PostDetailContent({
           <div
             className={cn(
               "space-y-4 mb-6 transform transition-all duration-500 delay-350",
-              isLoaded ? "translate-y-0" : "translate-y-4"
+              isLoaded ? "translate-y-0" : "translate-y-4",
             )}
           >
             {/* Available Hours */}
-            <PostDetailSection
-              icon={Clock}
-              title={t("available")}
-              colorScheme="purple"
-              variant="inline"
-            >
+            <PostDetailSection icon={Clock} title={t("available")} colorScheme="purple" variant="inline">
               {post.available_hours || "Anytime"}
             </PostDetailSection>
 
@@ -249,12 +227,7 @@ export function PostDetailContent({
 
             {/* Transportation */}
             {post.transportation && (
-              <PostDetailSection
-                icon={Truck}
-                title={t("transport")}
-                colorScheme="sky"
-                variant="inline"
-              >
+              <PostDetailSection icon={Truck} title={t("transport")} colorScheme="sky" variant="inline">
                 <Badge variant="outline" className="uppercase text-xs">
                   {post.transportation}
                 </Badge>
@@ -266,7 +239,7 @@ export function PostDetailContent({
           <div
             className={cn(
               "mt-8 flex gap-3 transform transition-all duration-500 delay-400",
-              isLoaded ? "translate-y-0" : "translate-y-4"
+              isLoaded ? "translate-y-0" : "translate-y-4",
             )}
           >
             {canEdit ? (
@@ -276,7 +249,7 @@ export function PostDetailContent({
                   size="lg"
                   className="flex-1 h-12 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 shadow-lg shadow-orange-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/30 hover:scale-[1.02] font-semibold"
                 >
-                  {isAdmin && !isOwner ? t("edit_listing") + " (Admin)" : t("edit_listing")}
+                  {isAdmin && !isOwner ? `${t("edit_listing")} (Admin)` : t("edit_listing")}
                 </Button>
                 {isOwner && (
                   <Link href="/user-listings" className="flex-1">
@@ -333,7 +306,7 @@ export function PostDetailContent({
             <div
               className={cn(
                 "mt-6 p-4 rounded-xl bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/20 border border-yellow-200/50 dark:border-yellow-800/30 text-center transform transition-all duration-500 delay-450",
-                isLoaded ? "translate-y-0" : "translate-y-4"
+                isLoaded ? "translate-y-0" : "translate-y-4",
               )}
             >
               <p className="text-yellow-800 dark:text-yellow-300 text-sm font-medium flex items-center justify-center gap-2">
@@ -347,7 +320,7 @@ export function PostDetailContent({
             <div
               className={cn(
                 "mt-6 p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-200/50 dark:border-emerald-800/30 text-center transform transition-all duration-500 delay-450",
-                isLoaded ? "translate-y-0" : "translate-y-4"
+                isLoaded ? "translate-y-0" : "translate-y-4",
               )}
             >
               <p className="text-emerald-800 dark:text-emerald-300 text-sm font-medium flex items-center justify-center gap-2">
@@ -376,7 +349,7 @@ function AboutPostCard({ post }: { post: InitialProductStateType }) {
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-card/80 backdrop-blur-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300">
-      <div className="absolute -top-16 -right-16 h-32 w-32 rounded-full bg-gradient-to-br from-teal-500/20 to-emerald-500/10 blur-3xl animate-pulse pointer-events-none" />
+      <div className="absolute -top-16 -end-16 h-32 w-32 rounded-full bg-gradient-to-br from-teal-500/20 to-emerald-500/10 blur-3xl animate-pulse pointer-events-none" />
 
       <div className="relative">
         <div className="flex items-center gap-2 mb-4">
@@ -409,7 +382,7 @@ function AboutPostCard({ post }: { post: InitialProductStateType }) {
                 "font-medium",
                 post.is_active
                   ? "border-emerald-500/50 bg-emerald-50/80 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"
-                  : "border-muted-foreground/30 text-muted-foreground"
+                  : "border-muted-foreground/30 text-muted-foreground",
               )}
             >
               {post.is_active ? "Active" : "Inactive"}

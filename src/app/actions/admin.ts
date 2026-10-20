@@ -10,16 +10,16 @@
  * - Dual-mode routing (Edge Functions when enabled)
  */
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
-import { invalidateTag } from "@/lib/data/cache-invalidation";
-import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
-import type { ErrorCode } from "@/lib/errors";
-import { escapeFilterValue } from "@/lib/utils";
-import { checkUserIsAdmin } from "@/lib/data/admin-check";
 import { banUserAPI, unbanUserAPI, updateUserRoleAPI } from "@/lib/api";
+import { checkUserIsAdmin } from "@/lib/data/admin-check";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { type ServerActionResult, serverActionError, successVoid } from "@/lib/errors";
+import type { ErrorCode } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
+import { escapeFilterValue } from "@/lib/utils";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 // Feature flag for Edge Function migration
 const USE_EDGE_FUNCTIONS = process.env.USE_EDGE_FUNCTIONS_FOR_ADMIN === "true";
@@ -64,6 +64,19 @@ export interface AdminUser {
   is_active: boolean;
   products_count: number;
   roles?: string[];
+}
+
+interface AdminProfileRow {
+  id: string;
+  first_name: string | null;
+  second_name: string | null;
+  email: string;
+  created_time: string | null;
+  is_active: boolean;
+}
+
+interface AdminUserRoleRow {
+  roles: { name: string } | { name: string }[];
 }
 
 export type UserFilters = z.input<typeof UserFiltersSchema>;
@@ -113,7 +126,7 @@ async function logAuditEvent(
   action: string,
   resourceType: string,
   resourceId: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<void> {
   try {
     await supabase.rpc("log_audit_event", {
@@ -150,11 +163,7 @@ export async function approveListing(id: number): Promise<ServerActionResult<voi
     const { supabase, user } = auth;
 
     // Check if listing exists
-    const { data: listing } = await supabase
-      .from("posts")
-      .select("id,post_name")
-      .eq("id", id)
-      .single();
+    const { data: listing } = await supabase.from("posts").select("id,post_name").eq("id", id).single();
 
     if (!listing) {
       return serverActionError("Listing not found", "NOT_FOUND");
@@ -204,11 +213,7 @@ export async function rejectListing(id: number, reason: string): Promise<ServerA
     const { supabase, user } = auth;
 
     // Check if listing exists
-    const { data: listing } = await supabase
-      .from("posts")
-      .select("id,post_name,profile_id")
-      .eq("id", id)
-      .single();
+    const { data: listing } = await supabase.from("posts").select("id,post_name,profile_id").eq("id", id).single();
 
     if (!listing) {
       return serverActionError("Listing not found", "NOT_FOUND");
@@ -250,9 +255,7 @@ interface GetUsersResult {
 /**
  * Get users list with filters
  */
-export async function getUsers(
-  filters: UserFilters = {}
-): Promise<ServerActionResult<GetUsersResult>> {
+export async function getUsers(filters: UserFilters = {}): Promise<ServerActionResult<GetUsersResult>> {
   try {
     // Validate filters
     const validated = UserFiltersSchema.safeParse(filters);
@@ -277,7 +280,7 @@ export async function getUsers(
     if (search) {
       const safeSearch = escapeFilterValue(search);
       query = query.or(
-        `first_name.ilike.%${safeSearch}%,second_name.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%`
+        `first_name.ilike.%${safeSearch}%,second_name.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%`,
       );
     }
 
@@ -295,19 +298,20 @@ export async function getUsers(
     }
 
     // Get product counts and roles for each user
+    const profileRows = (data ?? []) as AdminProfileRow[];
+
     const usersWithData = await Promise.all(
-      (data ?? []).map(async (user: any) => {
+      profileRows.map(async (user) => {
         const [{ count: productsCount }, { data: userRoles }] = await Promise.all([
-          supabase
-            .from("posts")
-            .select("*", { count: "exact", head: true })
-            .eq("profile_id", user.id),
+          supabase.from("posts").select("*", { count: "exact", head: true }).eq("profile_id", user.id),
           supabase.from("user_roles").select("roles!inner(name)").eq("profile_id", user.id),
         ]);
 
-        const roles = (userRoles ?? [])
-          .map((r: any) => {
-            const roleData = r.roles as unknown as { name: string } | { name: string }[];
+        const roleRows = (userRoles ?? []) as AdminUserRoleRow[];
+
+        const roles = roleRows
+          .map((r) => {
+            const roleData: { name: string } | { name: string }[] = r.roles;
             return Array.isArray(roleData) ? roleData[0]?.name : roleData?.name;
           })
           .filter(Boolean) as string[];
@@ -317,7 +321,7 @@ export async function getUsers(
           products_count: productsCount ?? 0,
           roles,
         };
-      })
+      }),
     );
 
     // Filter by role if specified
@@ -342,10 +346,15 @@ export async function getUsers(
 /**
  * Update user role
  */
-export async function updateUserRole(
-  userId: string,
-  role: string
-): Promise<ServerActionResult<void>> {
+export async function updateUserRole(userId: string, role: string): Promise<ServerActionResult<void>> {
+  // Authorize BEFORE branching on transport. Previously the edge path returned
+  // ahead of verifyAdminAccess(), so with USE_EDGE_FUNCTIONS_FOR_ADMIN=true these
+  // actions authorized nobody and skipped the self-target guard below.
+  const auth = await verifyAdminAccess();
+  if (isAuthError(auth)) {
+    return serverActionError(auth.error, auth.code);
+  }
+
   // Validate input
   const validated = UpdateUserRoleSchema.safeParse({ userId, role });
   if (!validated.success) {
@@ -366,21 +375,13 @@ export async function updateUserRole(
       return successVoid();
     }
 
-    return serverActionError(
-      result.error?.message || "Failed to update user role",
-      "UNKNOWN_ERROR"
-    );
+    return serverActionError(result.error?.message || "Failed to update user role", "UNKNOWN_ERROR");
   }
 
   // ==========================================================================
   // Direct Supabase Path (fallback)
   // ==========================================================================
   try {
-    const auth = await verifyAdminAccess();
-    if (isAuthError(auth)) {
-      return serverActionError(auth.error, auth.code);
-    }
-
     const { supabase, user } = auth;
 
     // Prevent changing own role
@@ -389,11 +390,7 @@ export async function updateUserRole(
     }
 
     // Get role_id from roles table
-    const { data: roleData, error: roleError } = await supabase
-      .from("roles")
-      .select("id")
-      .eq("name", role)
-      .single();
+    const { data: roleData, error: roleError } = await supabase.from("roles").select("id").eq("name", role).single();
 
     if (roleError || !roleData) {
       return serverActionError(`Role '${role}' not found`, "NOT_FOUND");
@@ -429,6 +426,14 @@ export async function updateUserRole(
  * Ban a user
  */
 export async function banUser(userId: string, reason: string): Promise<ServerActionResult<void>> {
+  // Authorize BEFORE branching on transport. Previously the edge path returned
+  // ahead of verifyAdminAccess(), so with USE_EDGE_FUNCTIONS_FOR_ADMIN=true these
+  // actions authorized nobody and skipped the self-target guard below.
+  const auth = await verifyAdminAccess();
+  if (isAuthError(auth)) {
+    return serverActionError(auth.error, auth.code);
+  }
+
   // Validate input
   const validated = BanUserSchema.safeParse({ userId, reason });
   if (!validated.success) {
@@ -457,11 +462,6 @@ export async function banUser(userId: string, reason: string): Promise<ServerAct
   // Direct Supabase Path (fallback)
   // ==========================================================================
   try {
-    const auth = await verifyAdminAccess();
-    if (isAuthError(auth)) {
-      return serverActionError(auth.error, auth.code);
-    }
-
     const { supabase, user } = auth;
 
     // Prevent banning yourself
@@ -480,10 +480,7 @@ export async function banUser(userId: string, reason: string): Promise<ServerAct
       return serverActionError("User not found", "NOT_FOUND");
     }
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_active: false, ban_reason: reason })
-      .eq("id", userId);
+    const { error } = await supabase.from("profiles").update({ is_active: false, ban_reason: reason }).eq("id", userId);
 
     if (error) {
       console.error("Failed to ban user:", error);
@@ -515,6 +512,14 @@ export async function banUser(userId: string, reason: string): Promise<ServerAct
  * Unban a user
  */
 export async function unbanUser(userId: string): Promise<ServerActionResult<void>> {
+  // Authorize BEFORE branching on transport. Previously the edge path returned
+  // ahead of verifyAdminAccess(), so with USE_EDGE_FUNCTIONS_FOR_ADMIN=true these
+  // actions authorized nobody and skipped the self-target guard below.
+  const auth = await verifyAdminAccess();
+  if (isAuthError(auth)) {
+    return serverActionError(auth.error, auth.code);
+  }
+
   // Validate ID
   if (!userId || !z.string().uuid().safeParse(userId).success) {
     return serverActionError("Invalid user ID", "VALIDATION_ERROR");
@@ -540,19 +545,10 @@ export async function unbanUser(userId: string): Promise<ServerActionResult<void
   // Direct Supabase Path (fallback)
   // ==========================================================================
   try {
-    const auth = await verifyAdminAccess();
-    if (isAuthError(auth)) {
-      return serverActionError(auth.error, auth.code);
-    }
-
     const { supabase, user } = auth;
 
     // Check if user exists
-    const { data: targetUser } = await supabase
-      .from("profiles")
-      .select("id,email,is_active")
-      .eq("id", userId)
-      .single();
+    const { data: targetUser } = await supabase.from("profiles").select("id,email,is_active").eq("id", userId).single();
 
     if (!targetUser) {
       return serverActionError("User not found", "NOT_FOUND");
@@ -562,10 +558,7 @@ export async function unbanUser(userId: string): Promise<ServerActionResult<void
       return serverActionError("User is not banned", "VALIDATION_ERROR");
     }
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_active: true, ban_reason: null })
-      .eq("id", userId);
+    const { error } = await supabase.from("profiles").update({ is_active: true, ban_reason: null }).eq("id", userId);
 
     if (error) {
       console.error("Failed to unban user:", error);

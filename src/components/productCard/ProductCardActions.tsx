@@ -75,9 +75,7 @@ export function ProductCardActions({ product }: ProductCardActionsProps) {
         aria-label="Save listing"
         aria-pressed={isLiked}
       >
-        <Heart
-          className={cn("motion-safe:transition-colors", isLiked && "fill-current text-brand")}
-        />
+        <Heart className={cn("motion-safe:transition-colors", isLiked && "fill-current text-brand")} />
       </Button>
 
       {/* Report button */}

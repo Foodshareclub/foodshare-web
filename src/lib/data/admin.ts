@@ -39,6 +39,31 @@ export interface PendingListing {
   profile: { name: string; email: string } | null;
 }
 
+interface AdminInfo {
+  first_name: string | null;
+  second_name: string | null;
+  email: string;
+}
+
+interface AuditLogRow {
+  id: string;
+  action: string;
+  resource_type: string | null;
+  resource_id: string | null;
+  admin_id: string;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  admin: AdminInfo[] | AdminInfo | null;
+}
+
+interface PendingListingRow {
+  id: number;
+  post_name: string;
+  post_type: string;
+  created_at: string;
+  profile: AdminInfo[] | AdminInfo | null;
+}
+
 // Helper to extract first item from Supabase join array
 function extractFirst<T>(data: T[] | T | null | undefined): T | null {
   if (Array.isArray(data)) return data[0] ?? null;
@@ -72,10 +97,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", true),
     supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", false),
     supabase.from("rooms").select("*", { count: "exact", head: true }),
-    supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true })
-      .gte("created_time", oneWeekAgo.toISOString()),
+    supabase.from("profiles").select("*", { count: "exact", head: true }).gte("created_time", oneWeekAgo.toISOString()),
   ]);
 
   return {
@@ -92,7 +114,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
  * Get recent audit logs
  * Note: Cannot use unstable_cache with createClient() as it uses cookies()
  */
-export async function getAuditLogs(limit: number = 20): Promise<AuditLog[]> {
+export async function getAuditLogs(limit = 20): Promise<AuditLog[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -107,7 +129,7 @@ export async function getAuditLogs(limit: number = 20): Promise<AuditLog[]> {
       metadata,
       created_at,
       admin:profiles!admin_id(first_name, second_name, email)
-    `
+    `,
     )
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -117,10 +139,8 @@ export async function getAuditLogs(limit: number = 20): Promise<AuditLog[]> {
     return [];
   }
 
-  return (data ?? []).map((log: any) => {
-    const admin = extractFirst(
-      log.admin as Array<{ first_name: string; second_name: string; email: string }>
-    );
+  return ((data ?? []) as AuditLogRow[]).map((log) => {
+    const admin = extractFirst(log.admin as AdminInfo[]);
     const fullName = admin ? [admin.first_name, admin.second_name].filter(Boolean).join(" ") : null;
     return {
       id: log.id,
@@ -151,7 +171,7 @@ export async function getPendingListings(): Promise<PendingListing[]> {
       post_type,
       created_at,
       profile:profiles!profile_id(first_name, second_name, email)
-    `
+    `,
     )
     .eq("is_active", false)
     .order("created_at", { ascending: false });
@@ -161,13 +181,9 @@ export async function getPendingListings(): Promise<PendingListing[]> {
     return [];
   }
 
-  return (data ?? []).map((listing: any) => {
-    const profile = extractFirst(
-      listing.profile as Array<{ first_name: string; second_name: string; email: string }>
-    );
-    const fullName = profile
-      ? [profile.first_name, profile.second_name].filter(Boolean).join(" ")
-      : null;
+  return ((data ?? []) as PendingListingRow[]).map((listing) => {
+    const profile = extractFirst(listing.profile as AdminInfo[]);
+    const fullName = profile ? [profile.first_name, profile.second_name].filter(Boolean).join(" ") : null;
     return {
       id: listing.id,
       post_name: listing.post_name || "",

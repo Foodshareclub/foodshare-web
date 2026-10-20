@@ -1,9 +1,10 @@
-import React from "react";
-import { cn } from "@/lib/utils";
-import { SearchField } from "@/components/ui-library/molecules/SearchField";
+import type { CustomRoomType } from "@/api/chatAPI";
 import { NavbarActions } from "@/components/header/navbar/NavbarActions";
 import NavbarLogo from "@/components/header/navbar/NavbarLogo";
 import { Avatar } from "@/components/ui-library/atoms/Avatar";
+import { SearchField } from "@/components/ui-library/molecules/SearchField";
+import { cn } from "@/lib/utils";
+import type React from "react";
 
 /**
  * NavigationHeader - Organism combining header navigation elements
@@ -28,19 +29,14 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
   className,
 }) => {
   return (
-    <nav
-      className={cn(
-        "flex w-full items-center justify-between gap-4 border-b border-border pb-4",
-        className
-      )}
-    >
+    <nav className={cn("flex w-full items-center justify-between gap-4 border-b border-border pb-4", className)}>
       <NavbarLogo />
 
       <div className="flex items-center gap-3">
         {isAdmin && (
           <NavbarActions
             isAuth={false}
-            signalOfNewMessage={[] as any}
+            signalOfNewMessage={[] as CustomRoomType[]}
             onNavigateToMyLists={() => {}}
             onNavigateToLogout={() => {}}
             onNavigateToAccSettings={() => {}}
@@ -61,9 +57,8 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
       {showSearch && (
         <SearchField
           placeholder={searchPlaceholder}
-          onChange={(e: any) => {
-            const val = e.target?.value || "";
-            console.log("Search:", val);
+          onChange={(value: string) => {
+            console.log("Search:", value);
           }}
           className="flex-1"
         />

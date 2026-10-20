@@ -1,5 +1,6 @@
-import React from "react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import type React from "react";
 
 /**
  * SearchField - A search input molecule
@@ -24,12 +25,13 @@ export const SearchField: React.FC<SearchFieldProps> = ({
   className,
   label,
 }) => {
+  const t = useTranslations();
   return (
     <div className={cn("relative w-full", className)}>
       {label && (
         <label
           htmlFor="search-field"
-          className="absolute left-0 top-1/2 -translate-y-1/2 pl-2 text-muted-foreground text-xs"
+          className="absolute start-0 top-1/2 -translate-y-1/2 ps-2 text-muted-foreground text-xs"
         >
           {label}
         </label>
@@ -42,16 +44,16 @@ export const SearchField: React.FC<SearchFieldProps> = ({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         className={cn(
-          "w-full pl-10 pr-4 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-          disabled && "opacity-50 cursor-not-allowed"
+          "w-full ps-10 pe-4 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+          disabled && "opacity-50 cursor-not-allowed",
         )}
       />
       {onSubmit && (
         <button
           type="submit"
-          className="absolute right-0 top-1/2 -translate-y-1/2 pr-2"
+          className="absolute end-0 top-1/2 -translate-y-1/2 pe-2"
           onClick={() => onSubmit(value || "")}
-          aria-label="Search"
+          aria-label={t("msgsearch")}
         >
           ⏱️
         </button>

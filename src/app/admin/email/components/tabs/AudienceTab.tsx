@@ -1,13 +1,13 @@
 "use client";
 
-import { Users, UserPlus, UserMinus, TrendingUp, Target, Plus } from "lucide-react";
-import { GlassCard } from "../shared/GlassCard";
-import { MetricCard } from "../shared/MetricCard";
-import { EmptyState } from "../shared/EmptyState";
+import { Button } from "@/components/ui/button";
+import { Plus, Target, TrendingUp, UserMinus, UserPlus, Users } from "lucide-react";
 import { SegmentCard } from "../audience/SegmentCard";
 import { SystemSegmentCard } from "../audience/SystemSegmentCard";
+import { EmptyState } from "../shared/EmptyState";
+import { GlassCard } from "../shared/GlassCard";
+import { MetricCard } from "../shared/MetricCard";
 import type { AudienceSegment, EmailDashboardStats } from "../types";
-import { Button } from "@/components/ui/button";
 
 export function AudienceTab({
   segments,
@@ -34,9 +34,7 @@ export function AudienceTab({
         />
         <MetricCard
           label="Unsubscribed (30d)"
-          value={Math.round(
-            (stats.totalSubscribers * stats.unsubscribeRate) / 100
-          ).toLocaleString()}
+          value={Math.round((stats.totalSubscribers * stats.unsubscribeRate) / 100).toLocaleString()}
           icon={<UserMinus className="h-5 w-5" />}
           color="rose"
         />
@@ -87,11 +85,7 @@ export function AudienceTab({
         <div className="grid md:grid-cols-4 gap-4">
           <SystemSegmentCard name="All Subscribers" count={stats.totalSubscribers} color="blue" />
           <SystemSegmentCard name="Active Users" count={stats.activeSubscribers} color="emerald" />
-          <SystemSegmentCard
-            name="New (7 days)"
-            count={Math.round(stats.totalSubscribers * 0.05)}
-            color="violet"
-          />
+          <SystemSegmentCard name="New (7 days)" count={Math.round(stats.totalSubscribers * 0.05)} color="violet" />
           <SystemSegmentCard
             name="Engaged"
             count={Math.round((stats.totalSubscribers * stats.avgOpenRate) / 100)}

@@ -1,7 +1,7 @@
-import * as React from "react";
 import { cn } from "@/lib/cn";
+import * as React from "react";
 
-import { cva, type VariantProps } from "class-variance-authority";
+import { type VariantProps, cva } from "class-variance-authority";
 
 const statusVariantDefaults = {
   active: "bg-success text-success-foreground",
@@ -58,12 +58,7 @@ export const StatusIndicator = React.memo(function StatusIndicator(props: Status
   const classes = cn(statusVariants({ variant, size }), className);
 
   return (
-    <span
-      className={classes}
-      onClick={onClick}
-      aria-label={ariaLabel || text || "status"}
-      {...rest}
-    >
+    <span className={classes} onClick={onClick} aria-label={ariaLabel || text || "status"} {...rest}>
       {text ? <span>{text}</span> : <span />}
     </span>
   );

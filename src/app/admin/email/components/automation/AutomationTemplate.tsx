@@ -1,5 +1,5 @@
-import { Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Zap } from "lucide-react";
 
 export function AutomationTemplate({
   name,

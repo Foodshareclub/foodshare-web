@@ -1,21 +1,22 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import type React from "react";
+import { useState, useTransition } from "react";
 
-import stars from "@/assets/starsForPopup.webp";
+import strawberry from "@/assets/clubnika-min.webp";
 import calendar from "@/assets/image 22.png";
 import likeUp from "@/assets/likeUp.svg";
-import strawberry from "@/assets/clubnika-min.webp";
+import stars from "@/assets/starsForPopup.webp";
 
-import { StarIcon } from "@/utils/icons";
-import { useAuth } from "@/hooks/useAuth";
 import { writeReview } from "@/app/actions/chat";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/hooks/useAuth";
+import { StarIcon } from "@/utils/icons";
 
 // ============================================================================
 // Types & Constants
@@ -40,6 +41,7 @@ interface _FeedbackData {
 
 const STAR_COUNT = 5;
 const STAR_SIZE = 40;
+const STAR_BUTTON_KEYS = Array.from({ length: STAR_COUNT }, (_, i) => `star-button-${i}`);
 const STAR_COLORS = {
   active: "#319795",
   inactive: "#D1D5DB",
@@ -58,24 +60,20 @@ function StarRating({ value, onChange }: StarRatingProps) {
   const t = useTranslations();
 
   return (
-    <div className="flex justify-center" role="group" aria-label={t("rate_your_experience")}>
+    <fieldset className="flex justify-center" aria-label={t("rate_your_experience")}>
       {Array.from({ length: STAR_COUNT }, (_, i) => (
         <button
-          key={i}
+          key={STAR_BUTTON_KEYS[i]}
           type="button"
           aria-label={t("rate_count_of_total_stars", { count: i + 1, total: STAR_COUNT })}
           aria-pressed={i < value}
           onClick={() => onChange(i + 1)}
           className="p-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
         >
-          <StarIcon
-            size={STAR_SIZE}
-            color={i < value ? STAR_COLORS.active : STAR_COLORS.inactive}
-            cursor="pointer"
-          />
+          <StarIcon size={STAR_SIZE} color={i < value ? STAR_COLORS.active : STAR_COLORS.inactive} cursor="pointer" />
         </button>
       ))}
-    </div>
+    </fieldset>
   );
 }
 
@@ -172,23 +170,11 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
               <Image src={calendar} alt="" width={200} height={200} className="m-auto" />
               <div className="mt-4 space-y-4">
                 <div className="flex">
-                  <Image
-                    src={likeUp}
-                    alt=""
-                    width={16}
-                    height={16}
-                    className="pt-2 self-start mr-2"
-                  />
+                  <Image src={likeUp} alt="" width={16} height={16} className="pt-2 self-start me-2" />
                   <p>{t("pickup_time_tip")}</p>
                 </div>
                 <div className="flex">
-                  <Image
-                    src={likeUp}
-                    alt=""
-                    width={16}
-                    height={16}
-                    className="pb-2 mr-2 rotate-180"
-                  />
+                  <Image src={likeUp} alt="" width={16} height={16} className="pb-2 me-2 rotate-180" />
                   <p>{t("no_delivery_allowed")}</p>
                 </div>
               </div>
@@ -198,13 +184,7 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
           {/* Step 2: Congratulations */}
           {step === "second" && (
             <>
-              <Image
-                src={stars}
-                alt=""
-                width={250}
-                height={80}
-                className="object-cover m-auto mb-2.5"
-              />
+              <Image src={stars} alt="" width={250} height={80} className="object-cover m-auto mb-2.5" />
               <p className="font-medium text-center">{t("would_you_like_to_leave_feedback")}</p>
             </>
           )}
@@ -224,9 +204,7 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
           )}
 
           {/* Step 4: Thank you */}
-          {step === "fourth" && (
-            <Image src={strawberry} alt="" width={200} height={200} className="m-auto" />
-          )}
+          {step === "fourth" && <Image src={strawberry} alt="" width={200} height={200} className="m-auto" />}
 
           {/* Action button for steps 2 & 3 */}
           {(step === "second" || step === "third") && (

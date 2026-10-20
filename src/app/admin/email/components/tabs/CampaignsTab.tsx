@@ -1,21 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Plus, List, LayoutGrid, Mail } from "lucide-react";
-import { GlassCard } from "../shared/GlassCard";
-import { EmptyState } from "../shared/EmptyState";
-import { CampaignRow } from "../campaign/CampaignRow";
-import { CampaignCard } from "../campaign/CampaignCard";
-import type { RecentCampaign } from "../types";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LayoutGrid, List, Mail, Plus, Search } from "lucide-react";
+import { useState } from "react";
+import { CampaignCard } from "../campaign/CampaignCard";
+import { CampaignRow } from "../campaign/CampaignRow";
+import { EmptyState } from "../shared/EmptyState";
+import { GlassCard } from "../shared/GlassCard";
+import type { RecentCampaign } from "../types";
 
 export function CampaignsTab({ campaigns }: { campaigns: RecentCampaign[] }) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
@@ -36,12 +30,12 @@ export function CampaignsTab({ campaigns }: { campaigns: RecentCampaign[] }) {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-1">
           <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search campaigns..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="ps-9"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -90,23 +84,13 @@ export function CampaignsTab({ campaigns }: { campaigns: RecentCampaign[] }) {
           <table className="w-full">
             <thead className="bg-muted/50">
               <tr>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  Campaign
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  Recipients
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  Open Rate
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  Click Rate
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">Date</th>
-                <th className="text-right p-4 text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
+                <th className="text-start p-4 text-sm font-medium text-muted-foreground">Campaign</th>
+                <th className="text-start p-4 text-sm font-medium text-muted-foreground">Status</th>
+                <th className="text-start p-4 text-sm font-medium text-muted-foreground">Recipients</th>
+                <th className="text-start p-4 text-sm font-medium text-muted-foreground">Open Rate</th>
+                <th className="text-start p-4 text-sm font-medium text-muted-foreground">Click Rate</th>
+                <th className="text-start p-4 text-sm font-medium text-muted-foreground">Date</th>
+                <th className="text-end p-4 text-sm font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

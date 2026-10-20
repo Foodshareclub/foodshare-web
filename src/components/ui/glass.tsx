@@ -1,6 +1,6 @@
-import * as React from "react";
-import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import { type VariantProps, cva } from "class-variance-authority";
+import * as React from "react";
 
 /**
  * Glass Component - Tailwind v4 Implementation
@@ -58,8 +58,7 @@ const glassVariants = cva("", {
   },
 });
 
-export interface GlassProps
-  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof glassVariants> {
+export interface GlassProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof glassVariants> {
   /**
    * @deprecated Use hoverEffect="default" instead
    * Enable hover transition effects (legacy, maps to hoverEffect="default")
@@ -74,10 +73,7 @@ export interface GlassProps
 }
 
 const Glass = React.forwardRef<HTMLDivElement, GlassProps>(
-  (
-    { className, variant, rounded, hoverEffect, hover, glow, gpu, as: Component = "div", ...props },
-    ref
-  ) => {
+  ({ className, variant, rounded, hoverEffect, hover, glow, gpu, as: Component = "div", ...props }, ref) => {
     // Map legacy hover prop to new hoverEffect system
     const resolvedHoverEffect = hoverEffect ?? (hover ? "default" : "none");
 
@@ -88,12 +84,12 @@ const Glass = React.forwardRef<HTMLDivElement, GlassProps>(
           glassVariants({ variant, rounded, hoverEffect: resolvedHoverEffect }),
           glow && "card-hover-glow",
           gpu && "gpu",
-          className
+          className,
         )}
         {...props}
       />
     );
-  }
+  },
 );
 Glass.displayName = "Glass";
 
@@ -102,23 +98,14 @@ Glass.displayName = "Glass";
  */
 const GlassCard = React.forwardRef<HTMLDivElement, Omit<GlassProps, "variant">>(
   ({ className, hoverEffect = "default", ...props }, ref) => (
-    <Glass
-      ref={ref}
-      variant="default"
-      hoverEffect={hoverEffect}
-      glow
-      className={cn("p-5", className)}
-      {...props}
-    />
-  )
+    <Glass ref={ref} variant="default" hoverEffect={hoverEffect} glow className={cn("p-5", className)} {...props} />
+  ),
 );
 GlassCard.displayName = "GlassCard";
 
-const GlassPanel = React.forwardRef<HTMLDivElement, Omit<GlassProps, "variant">>(
-  ({ className, ...props }, ref) => (
-    <Glass ref={ref} variant="prominent" className={cn("p-6", className)} {...props} />
-  )
-);
+const GlassPanel = React.forwardRef<HTMLDivElement, Omit<GlassProps, "variant">>(({ className, ...props }, ref) => (
+  <Glass ref={ref} variant="prominent" className={cn("p-6", className)} {...props} />
+));
 GlassPanel.displayName = "GlassPanel";
 
 export { Glass, GlassCard, GlassPanel, glassVariants };

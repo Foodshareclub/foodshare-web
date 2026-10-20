@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ImageItem } from "../types";
 
 interface ImageLightboxProps {
@@ -26,8 +27,7 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, initialInd
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
       if (e.key === "ArrowRight") setCurrentIndex((prev) => (prev + 1) % images.length);
-      if (e.key === "ArrowLeft")
-        setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+      if (e.key === "ArrowLeft") setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -52,15 +52,24 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, initialInd
     touchStartX.current = null;
   };
 
+  const handleBackdropKey = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.stopPropagation();
+      onClose();
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center animate-in fade-in duration-200"
       onClick={onClose}
+      onKeyDown={handleBackdropKey}
+      onKeyUp={handleBackdropKey}
     >
       <button
         type="button"
         onClick={onClose}
-        className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
+        className="absolute top-4 end-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
       >
         <X className="h-6 w-6" />
       </button>
@@ -68,6 +77,8 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, initialInd
       <div
         className="relative w-full h-full flex items-center justify-center p-4"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        onKeyUp={(e) => e.stopPropagation()}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -76,16 +87,16 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, initialInd
             <button
               type="button"
               onClick={goPrev}
-              className="absolute left-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
+              className="absolute end-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
             >
-              <ChevronLeft className="h-6 w-6" />
+              <ChevronLeft className="h-6 w-6 rtl:scale-x-100" />
             </button>
             <button
               type="button"
               onClick={goNext}
-              className="absolute right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
+              className="absolute start-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
             >
-              <ChevronRight className="h-6 w-6" />
+              <ChevronRight className="h-6 w-6 rtl:scale-x-100" />
             </button>
           </>
         )}
@@ -93,7 +104,7 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, initialInd
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={images[currentIndex].url}
-          alt={`Image ${currentIndex + 1}`}
+          alt={`${currentIndex + 1} of ${images.length}`}
           className="max-w-full max-h-full object-contain rounded-lg"
           loading="lazy"
           decoding="async"
@@ -101,14 +112,12 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, initialInd
 
         {images.length > 1 && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-            {images.map((_, i) => (
+            {images.map((image, i) => (
               <button
-                key={i}
+                key={image.id}
                 type="button"
                 onClick={() => setCurrentIndex(i)}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  i === currentIndex ? "bg-white" : "bg-white/40"
-                }`}
+                className={`w-2 h-2 rounded-full transition-colors ${i === currentIndex ? "bg-white" : "bg-white/40"}`}
               />
             ))}
           </div>

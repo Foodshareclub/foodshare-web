@@ -34,7 +34,7 @@
 
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // ============================================================================
 // Types
@@ -110,11 +110,7 @@ export const emailTemplateKeys = {
 
 const EDGE_FUNCTION_NAME = "api-v1-email-template";
 
-async function invokeEdgeFunction<T>(
-  path: string,
-  method: "GET" | "POST" = "GET",
-  body?: unknown
-): Promise<T> {
+async function invokeEdgeFunction<T>(path: string, method: "GET" | "POST" = "GET", body?: unknown): Promise<T> {
   // Build the full URL for the edge function
   const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/${EDGE_FUNCTION_NAME}${path}`;
 
@@ -188,11 +184,7 @@ export function useEmailTemplate(slug: string) {
 export function useRenderTemplate() {
   return useMutation({
     mutationFn: async (params: RenderTemplateParams) => {
-      const result = await invokeEdgeFunction<{ success: boolean } & RenderedEmail>(
-        "/render",
-        "POST",
-        params
-      );
+      const result = await invokeEdgeFunction<{ success: boolean } & RenderedEmail>("/render", "POST", params);
       return result;
     },
   });

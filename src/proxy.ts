@@ -1,8 +1,10 @@
+import { defaultLocale, isValidLocale } from "@/i18n/config";
+import { negotiateLocale, resolveRequestLocale } from "@/i18n/resolve";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { NextResponse, type NextRequest } from "next/server";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { type NextRequest, NextResponse } from "next/server";
 
 // ============================================================================
 // Admin Client (Service Role — singleton, request-safe)
@@ -15,16 +17,10 @@ import { Redis } from "@upstash/redis";
 
 let _adminClient: ReturnType<typeof createClient> | null = null;
 function getAdminClient() {
-  if (
-    !_adminClient &&
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  ) {
-    _adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
+  if (!_adminClient && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    _adminClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
   }
   return _adminClient;
 }
@@ -43,6 +39,19 @@ const ipReputations = new Map<string, IPReputation>();
 const IP_VIOLATION_THRESHOLD = 10;
 const IP_BLOCK_DURATION = 3600000; // 1 hour
 
+/**
+ * Ceiling on tracked IPs.
+ *
+ * Entries were only ever removed when the *same* IP was checked again, so
+ * every distinct address that tripped a suspicious-URL or CSRF check added a
+ * permanent entry. The container runs with `Memory=1G` and
+ * `label=autoheal=true`, so an attacker walking the header could grow this
+ * until the process was OOM-killed and restarted — turning a throttling map
+ * into a denial of service. Past the ceiling the oldest entry is evicted: an
+ * unreviewed IP that has not been seen since is the cheapest thing to lose.
+ */
+const MAX_TRACKED_IPS = 10000;
+
 function recordIPViolation(ip: string) {
   const rep = ipReputations.get(ip) || { violations: 0, lastViolation: 0, blocked: false };
   rep.violations++;
@@ -53,7 +62,38 @@ function recordIPViolation(ip: string) {
     console.warn(`[Security] IP blocked due to violations: ${ip}`);
   }
 
+  if (!ipReputations.has(ip) && ipReputations.size >= MAX_TRACKED_IPS) {
+    evictOldestIP();
+  }
+
   ipReputations.set(ip, rep);
+}
+
+/**
+ * Drop expired entries first, and only then the oldest surviving one.
+ *
+ * Dropping by insertion order alone would evict the very addresses that are
+ * blocked, which is the opposite of what the map is for. `Map` preserves
+ * insertion order, and `recordIPViolation` re-`set`s an existing key without
+ * moving it, so the sweep is cheap and needs no extra bookkeeping structure.
+ */
+function evictOldestIP(): void {
+  const now = Date.now();
+
+  for (const [ip, rep] of ipReputations) {
+    if (now - rep.lastViolation > IP_BLOCK_DURATION) {
+      ipReputations.delete(ip);
+    }
+  }
+
+  if (ipReputations.size >= MAX_TRACKED_IPS) {
+    const oldest = ipReputations.keys().next();
+    if (!oldest.done) {
+      const victim = ipReputations.get(oldest.value);
+      // Never evict an address that is currently blocked.
+      if (!victim?.blocked) ipReputations.delete(oldest.value);
+    }
+  }
 }
 
 function isIPBlocked(ip: string): boolean {
@@ -110,9 +150,9 @@ function getMetricsSummary() {
 
 // Expose metrics globally for admin endpoint
 if (typeof global !== "undefined") {
-  (
-    global as { proxyMetrics?: { getMetricsSummary: () => ReturnType<typeof getMetricsSummary> } }
-  ).proxyMetrics = { getMetricsSummary };
+  (global as { proxyMetrics?: { getMetricsSummary: () => ReturnType<typeof getMetricsSummary> } }).proxyMetrics = {
+    getMetricsSummary,
+  };
 }
 
 // ============================================================================
@@ -231,11 +271,44 @@ const mutationLimiter = redis
     })
   : null;
 
+/**
+ * True when the limiters are wired up. Separate from `redis` being non-null so
+ * a future limiter added here is covered by the same assertion.
+ */
+const rateLimitingConfigured = Boolean(globalLimiter && authLimiter && mutationLimiter);
+
+/**
+ * Without Redis the three limiters are `null`, and every call site is guarded
+ * with `if (limiter && …)`. That combination is a *silent* no-op: a production
+ * deploy missing UPSTASH_REDIS_REST_URL/…_TOKEN ran with no rate limiting at
+ * all and looked identical to one that was rate limiting — no error, no log, no
+ * metric. Unthrottled in practice were password spraying on signInWithPassword,
+ * password-reset mail to arbitrary addresses, and every mutation in the app.
+ *
+ * So the absence is now loud, once, at module load, and a production request is
+ * answered with 503 rather than being allowed through unbounded. Failing closed
+ * is the right direction for a control whose failure mode is "unlimited traffic":
+ * a brief 503 is recoverable, an open door is not.
+ *
+ * Development and CI are unaffected — they have no Redis and do not need one.
+ */
+const rateLimitingRequired = process.env.NODE_ENV === "production";
+
+if (rateLimitingRequired && !rateLimitingConfigured && typeof console !== "undefined") {
+  console.error(
+    "[proxy] FATAL: rate limiting is disabled in production because UPSTASH_REDIS_REST_URL / " +
+      "UPSTASH_REDIS_REST_TOKEN are missing. Every request will be answered with 503. " +
+      "Set both GitHub production secrets, and add them to the env file the deploy " +
+      "workflow writes, or this deployment has no abuse controls at all.",
+  );
+}
+
 // ============================================================================
 // Security Configuration
 // ============================================================================
-// NOTE: CSP and security headers are configured in next.config.ts
-// The proxy only handles CSRF protection and rate limiting
+// CSP and the other security headers are configured in next.config.ts
+// (Content-Security-Policy is built by src/lib/security/csp.ts, which is
+// unit-tested). The proxy only handles CSRF protection and rate limiting.
 
 /**
  * Allowed origins for CSRF protection
@@ -247,12 +320,16 @@ const ALLOWED_ORIGINS = [
   "https://www.foodshare.club",
   "https://foodshare.app",
   "https://www.foodshare.app",
-  process.env.NODE_ENV === "development" ? "http://localhost:3000" : null,
-  process.env.NODE_ENV === "development" ? "http://127.0.0.1:3000" : null,
-  // Allow localhost in CI for E2E tests
-  process.env.CI === "true" ? "http://localhost:3000" : null,
-  process.env.CI === "true" ? "http://127.0.0.1:3000" : null,
-].filter((origin): origin is string => Boolean(origin));
+  // Loopback for local development and for the E2E job, which runs the app
+  // directly. Listed once each: development *and* CI used to append the same
+  // two origins, so the comparison below walked duplicates on every mutation.
+  process.env.NODE_ENV === "development" || process.env.CI === "true" ? "http://localhost:3000" : null,
+  process.env.NODE_ENV === "development" || process.env.CI === "true" ? "http://127.0.0.1:3000" : null,
+]
+  .filter((origin): origin is string => Boolean(origin))
+  // NEXT_PUBLIC_APP_URL is usually https://foodshare.club, so the literal above
+  // is a duplicate. A Set is the honest representation of "a set of origins".
+  .filter((origin, index, all) => all.indexOf(origin) === index);
 
 /**
  * HTTP methods that modify state (require CSRF protection)
@@ -263,13 +340,47 @@ const MUTATION_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
 // Security Helpers
 // ============================================================================
 
+/**
+ * The IP every rate limit, ban and reputation decision is keyed on, so it has
+ * to be one the client cannot choose.
+ *
+ * The headers this used to trust — `cf-connecting-ip`, then `x-real-ip`, then
+ * `x-forwarded-for` — are only meaningful because Cloudflare rewrites them,
+ * and that assumption needs the origin to be unreachable except through the
+ * tunnel. `foodshare-web.container` published `3000:3000`, which binds
+ * `0.0.0.0:3000` on the VPS: the origin was directly reachable from the
+ * internet, so `curl -H 'X-Forwarded-For: 10.0.0.1'` rotated the key of every
+ * IP-keyed limiter, of the reputation ban, and of the 400-request block on
+ * suspicious URLs. The port is now bound to loopback, which is what makes the
+ * header trustworthy.
+ *
+ * Belt and braces, so a future change to the port binding cannot silently
+ * reopen it: a forwarded header is only honoured when the request also
+ * carries Cloudflare's own `CF-Ray`. An attacker reaching the origin directly
+ * can set any single header, so this is not a security boundary on its own —
+ * it is the check that fails loudly instead of quietly trusting a header from a
+ * source that has no reason to have one.
+ *
+ * Everything else shares one bucket. An unidentifiable client is not an
+ * unlimited one, because the global limiter still applies to the bucket — it
+ * is just a shared budget, which is the correct trade when the identity is
+ * unknown.
+ */
 function getClientIp(request: NextRequest): string {
-  return (
-    request.headers.get("cf-connecting-ip") ||
-    request.headers.get("x-real-ip") ||
-    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    "unknown"
-  );
+  const viaTunnel = request.headers.has("cf-ray");
+  if (viaTunnel) {
+    const cfIp = request.headers.get("cf-connecting-ip");
+    if (cfIp) return cfIp;
+  }
+
+  // Local development and CI have no tunnel in front of them, and the app
+  // reaches itself over loopback. Trusting a forwarded header there would be
+  // trusting the developer's own curl.
+  if (process.env.NODE_ENV !== "production") {
+    return request.headers.get("x-forwarded-for")?.split(",")[0].trim() || "local";
+  }
+
+  return "unidentified";
 }
 
 function getClientFingerprint(request: NextRequest): string {
@@ -382,13 +493,23 @@ export async function proxy(request: NextRequest) {
   const isProd = process.env.NODE_ENV === "production";
 
   if (isProd) {
+    // See the module-level note: a missing limiter is a misconfiguration, not an
+    // unlimited allowance. This is the only place that decides it, so no call
+    // site can forget.
+    if (!rateLimitingConfigured) {
+      return new NextResponse("Service Unavailable", {
+        status: 503,
+        headers: { "Retry-After": "30", "X-RateLimit-Type": "unavailable" },
+      });
+    }
+
     const isAuthEndpoint = pathname.startsWith("/auth") || pathname.startsWith("/api/auth");
     const isMutation = MUTATION_METHODS.includes(request.method.toUpperCase());
 
     if (authLimiter && isAuthEndpoint) {
       const { success, reset } = await authLimiter.limit(fingerprint);
       if (!success) {
-        console.warn(`[RateLimit] Auth limit exceeded`, { ip, pathname });
+        console.warn("[RateLimit] Auth limit exceeded", { ip, pathname });
         metricData.rateLimitHit = "auth";
         recordMetric({
           ...metricData,
@@ -408,7 +529,7 @@ export async function proxy(request: NextRequest) {
     if (mutationLimiter && isMutation) {
       const { success, reset } = await mutationLimiter.limit(`mutation:${fingerprint}`);
       if (!success) {
-        console.warn(`[RateLimit] Mutation limit exceeded`, { ip, pathname });
+        console.warn("[RateLimit] Mutation limit exceeded", { ip, pathname });
         metricData.rateLimitHit = "mutation";
         recordMetric({
           ...metricData,
@@ -428,7 +549,7 @@ export async function proxy(request: NextRequest) {
     if (globalLimiter) {
       const { success, reset } = await globalLimiter.limit(ip);
       if (!success) {
-        console.warn(`[RateLimit] Global limit exceeded`, { ip });
+        console.warn("[RateLimit] Global limit exceeded", { ip });
         metricData.rateLimitHit = "global";
         recordMetric({
           ...metricData,
@@ -446,7 +567,33 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  let response = NextResponse.next({ request: { headers: request.headers } });
+  // `getTranslations()` in a Server Component resolves the locale from
+  // `getRequestConfig`, which reads the `X-NEXT-INTL-LOCALE` **request** header.
+  // next-intl's own middleware normally sets it, but this app has no
+  // `[locale]` route segment and does not install that middleware, so without
+  // this the server components calling `getTranslations` (admin pages and
+  // /maintenance) rendered in English for every user.
+  //
+  // With no cookie yet, the locale comes from `Accept-Language` and is then
+  // persisted below. Previously the fallback was `en`, written straight into the
+  // cookie, which meant a visitor whose *browser* was set to German and who had
+  // never picked a language got an English server render for the rest of the
+  // session: `lang="en"` in the HTML, every Server Component in English, and a
+  // silent swap to German after hydration. `Accept-Language` is on the request
+  // the proxy already holds, so it was available and unread.
+  const cookieLocale = request.cookies.get("locale")?.value;
+  const hasValidLocaleCookie = Boolean(cookieLocale && isValidLocale(cookieLocale));
+  const requestLocale = hasValidLocaleCookie
+    ? resolveRequestLocale(cookieLocale)
+    : (negotiateLocale(request.headers.get("accept-language")) ?? defaultLocale);
+
+  const requestHeaders = new Headers(request.headers);
+  // Overwrites any client-supplied value: the header is a function of the
+  // validated cookie and nothing else, so it can select one of the 21 known
+  // locales and never carry text.
+  requestHeaders.set("X-NEXT-INTL-LOCALE", requestLocale);
+
+  let response = NextResponse.next({ request: { headers: requestHeaders } });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -461,16 +608,19 @@ export async function proxy(request: NextRequest) {
         getAll: () => request.cookies.getAll(),
         setAll: (cookiesToSet) => {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
+          // Reuse requestHeaders, not `request`: rebuilding from the raw
+          // request here would drop X-NEXT-INTL-LOCALE and silently send
+          // Server Components back to the default locale.
+          response = NextResponse.next({ request: { headers: requestHeaders } });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, {
               ...options,
               domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || options.domain,
-            })
+            }),
           );
         },
       },
-    }
+    },
   );
 
   const isHealthCheck = pathname.startsWith("/api/health") || pathname.startsWith("/api/ready");
@@ -527,10 +677,7 @@ export async function proxy(request: NextRequest) {
     let isAdmin = false;
 
     if (adminClient) {
-      const { data: userRoles } = await adminClient
-        .from("user_roles")
-        .select("roles(name)")
-        .eq("profile_id", user.id);
+      const { data: userRoles } = await adminClient.from("user_roles").select("roles(name)").eq("profile_id", user.id);
 
       const roles = ((userRoles as unknown[]) || [])
         .map((r: unknown) => {
@@ -558,11 +705,25 @@ export async function proxy(request: NextRequest) {
   response.headers.set("x-correlation-id", correlationId);
   response.headers.set("x-request-duration", `${Date.now() - startTime}ms`);
 
-  // Locale cookie (migrated from legacy `middleware.ts` — Next 16 uses `proxy.ts` only):
-  // ensure a `locale` cookie exists so server components can resolve i18n without
-  // reading the `Accept-Language` header on every request.
-  if (!request.cookies.has("locale")) {
-    response.cookies.set("locale", "en", { path: "/", sameSite: "lax" });
+  // Locale cookie (migrated from legacy `middleware.ts` — Next 16 uses `proxy.ts` only).
+  //
+  // Written only when the request carried no usable cookie, and with the
+  // negotiated locale rather than a hard-coded `en`, so the *next* request is
+  // resolved from the cookie and agrees with the client. A missing or invalid
+  // cookie is rewritten too: leaving a bogus value in place means every request
+  // re-runs negotiation for a visitor who has already expressed a preference.
+  //
+  // One year, and `secure` in production. The previous version wrote a session
+  // cookie with no `secure` flag, which meant the one cookie that now drives
+  // server-side rendering was both shorter-lived and less protected than every
+  // other cookie the proxy sets.
+  if (!hasValidLocaleCookie) {
+    response.cookies.set("locale", requestLocale, {
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
+      secure: process.env.NODE_ENV === "production",
+    });
   }
 
   return response;

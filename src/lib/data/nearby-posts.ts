@@ -11,7 +11,10 @@
  * - Bounding box queries for map viewport loading
  */
 
-import { createClient, createCachedClient } from "@/lib/supabase/server";
+import { createCachedClient, createClient } from "@/lib/supabase/server";
+import { approximateGeoJSON } from "@/utils/postgis";
+import { cacheLife, cacheTag } from "next/cache";
+import { CACHE_TAGS } from "./cache-keys";
 
 // ============================================================================
 // Types
@@ -146,6 +149,30 @@ export function normalizePostType(postType: string | null | undefined): string |
 }
 
 // ============================================================================
+// Location Privacy
+// ============================================================================
+
+/**
+ * Fuzz every post's exact point by ~200m before it leaves the server.
+ *
+ * The RPCs return `posts.location` / `location_json` verbatim, which is the
+ * sharer's real pickup coordinate. This feed is public, unauthenticated and the
+ * hottest path in the app (home page, every category page, infinite scroll), so
+ * returning the raw point exposes home addresses. `products.ts` and `maps.ts`
+ * already fuzz; this module had drifted and was the one gap.
+ *
+ * The offset is deterministic in `post.id` (see `approximateGeoJSON`) so a
+ * marker doesn't jitter between renders. That is obfuscation of the last ~200m,
+ * not a confidentiality boundary — see `src/utils/postgis.ts`.
+ */
+function applyLocationPrivacy<T extends { id: number; location_json?: unknown }>(posts: T[]): T[] {
+  return posts.map((post) => ({
+    ...post,
+    location_json: approximateGeoJSON(post.location_json, post.id),
+  }));
+}
+
+// ============================================================================
 // Nearby Posts Functions
 // ============================================================================
 
@@ -169,6 +196,15 @@ export function normalizePostType(postType: string | null | undefined): string |
  * ```
  */
 export async function getNearbyPosts(options: NearbyPostsOptions): Promise<NearbyPostsResult> {
+  // The most expensive query in the app — a PostGIS `ST_DWithin` over every
+  // active listing — and the most requested, so it is the single most valuable
+  // thing to cache. Every input (`options`) is a plain serialisable object, so
+  // latitude, longitude, radius, type, cursor and search term are all part of
+  // the cache key by being arguments.
+  "use cache";
+  cacheLife("product-locations");
+  cacheTag(CACHE_TAGS.PRODUCT_LOCATIONS);
+
   const {
     lat,
     lng,
@@ -182,7 +218,20 @@ export async function getNearbyPosts(options: NearbyPostsOptions): Promise<Nearb
   // Validate post type up front so an unknown type fails loudly, not silently.
   const validatedType = normalizePostType(postType);
 
-  const supabase = await createClient();
+  // The cookie-less client, not the session one. A cached scope cannot touch
+  // request data, and the session client reads cookies — but the substance is
+  // that this is a *public* feed: `/api/listings/nearby` is unauthenticated, so
+  // the session bought nothing there, and the two entry points disagreed.
+  //
+  // Consequence, which is the correct behaviour rather than a regression: a
+  // member's own deactivated listing no longer appears in the nearby feed.
+  // `posts_select_policy` is `is_active = true OR profile_id = auth.uid()`, so
+  // the session client leaked your own hidden listing into a browse list, while
+  // the anonymous route did not. Both now behave the same, and both match what
+  // "available for sharing" means.
+  const supabase = createCachedClient();
+  cacheTag(CACHE_TAGS.PRODUCTS);
+  if (postType) cacheTag(CACHE_TAGS.PRODUCTS_BY_TYPE(validatedType ?? postType));
 
   if (searchTerm.trim()) {
     // The deployed RPC has no keyword argument. Scan bounded keyset pages so
@@ -242,11 +291,10 @@ export async function getNearbyPosts(options: NearbyPostsOptions): Promise<Nearb
   // ORDER BY distance ASC, id DESC, the next page's resume predicate is:
   //   distance > cursor.distance OR (distance = cursor.distance AND id < cursor.id)
   const last = resultItems[resultItems.length - 1];
-  const nextCursor: NearbyCursor | null =
-    hasMore && last ? { distance: last.distance_meters, id: last.id } : null;
+  const nextCursor: NearbyCursor | null = hasMore && last ? { distance: last.distance_meters, id: last.id } : null;
 
   return {
-    data: resultItems,
+    data: applyLocationPrivacy(resultItems),
     nextCursor,
     hasMore,
   };
@@ -328,7 +376,7 @@ export async function getPostsInBounds(options: {
     throw new Error(`Failed to fetch posts in bounds: ${error.message}`);
   }
 
-  return (data ?? []) as MapPost[];
+  return applyLocationPrivacy((data ?? []) as MapPost[]);
 }
 
 /**
@@ -341,6 +389,17 @@ export async function getPostsInBounds(options: {
  */
 export async function updateUserLocation(userId: string, coordinates: Coordinates): Promise<void> {
   const supabase = await createClient();
+
+  // A write, so not cached and not on the anon client. The id comes from the
+  // caller, so confirm it is the caller's own before writing: the RPC takes
+  // `p_user_id` as an argument, and a session client that trusts it would write
+  // to whoever the caller named.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.id !== userId) {
+    throw new Error("You can only update your own location");
+  }
 
   const { error } = await supabase.rpc("update_user_location", {
     user_id: userId,

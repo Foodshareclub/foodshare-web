@@ -1,17 +1,13 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
+
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase/client";
 import { ViewIcon, ViewOffIcon } from "@/utils/icons";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import React, { useEffect, useState, useTransition } from "react";
 
 /**
  * PasswordRecoveryModal Component (AuthenticationUser variant)
@@ -19,6 +15,7 @@ import { Button } from "@/components/ui/button";
  * Uses direct Supabase call instead of Redux
  */
 export const PasswordRecoveryModal = () => {
+  const t = useTranslations();
   const [isOpen, setIsOpen] = useState(false);
   const [show, setShow] = useState(false);
   const [password, setPassword] = useState("");
@@ -27,7 +24,9 @@ export const PasswordRecoveryModal = () => {
   const hidePass = () => setShow(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsOpen(true);
       }
@@ -57,7 +56,7 @@ export const PasswordRecoveryModal = () => {
         onEscapeKeyDown={(e: KeyboardEvent) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Create new password</DialogTitle>
+          <DialogTitle>{t("Auth.createNewPassword")}</DialogTitle>
         </DialogHeader>
         <div className="py-6">
           <div className="relative">
@@ -67,9 +66,9 @@ export const PasswordRecoveryModal = () => {
               value={password}
               placeholder="Password"
               type={show ? "text" : "password"}
-              className="pr-16"
+              className="pe-16"
             />
-            <div className="absolute right-0 top-0 h-full flex items-center pr-3">
+            <div className="absolute end-0 top-0 h-full flex items-center pe-3">
               <Button
                 size="sm"
                 variant="ghost"

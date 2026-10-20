@@ -3,7 +3,7 @@
  * Beautiful table formatting for console output
  */
 
-import { COLORS, ANSI } from "./styles";
+import { ANSI, COLORS } from "./styles";
 
 const IS_BROWSER = typeof window !== "undefined";
 
@@ -55,11 +55,7 @@ const browserTable = {
    */
   log<T extends Record<string, unknown>>(title: string, data: T[], columns?: TableColumn[]): void {
     if (data.length === 0) {
-      console.log(
-        `%c📊 ${title}: %cNo data`,
-        `color: ${COLORS.purple}; font-weight: bold;`,
-        `color: ${COLORS.muted};`
-      );
+      console.log(`%c📊 ${title}: %cNo data`, `color: ${COLORS.purple}; font-weight: bold;`, `color: ${COLORS.muted};`);
       return;
     }
 
@@ -103,7 +99,7 @@ const browserTable = {
       console.log(
         `%c${key}: %c${formattedValue}`,
         `color: ${COLORS.muted};`,
-        `color: ${valueColor}; font-weight: 600;`
+        `color: ${valueColor}; font-weight: 600;`,
       );
     });
 
@@ -136,7 +132,7 @@ const browserTable = {
     const changedCount = tableData.filter((r) => r.Changed).length;
     console.log(
       `%c${changedCount} of ${allKeys.length} properties changed`,
-      `color: ${COLORS.muted}; font-size: 11px;`
+      `color: ${COLORS.muted}; font-size: 11px;`,
     );
     console.groupEnd();
   },
@@ -152,7 +148,7 @@ const browserTable = {
       console.log(
         `%c${label} %c${isNumber ? value.toLocaleString() : value}`,
         `color: ${COLORS.muted}; min-width: 120px; display: inline-block;`,
-        `color: ${COLORS.cyan}; font-weight: bold; font-size: 14px;`
+        `color: ${COLORS.cyan}; font-weight: bold; font-size: 14px;`,
       );
     });
 
@@ -174,12 +170,7 @@ const browserTable = {
       const isLast = index === entries.length - 1;
       const prefix = isLast ? "└─" : "├─";
 
-      if (
-        typeof value === "object" &&
-        value !== null &&
-        !Array.isArray(value) &&
-        depth < maxDepth
-      ) {
+      if (typeof value === "object" && value !== null && !Array.isArray(value) && depth < maxDepth) {
         console.log(`%c${indent}${prefix} ${key}:`, `color: ${COLORS.purple};`);
         browserTable.tree("", value as Record<string, unknown>, depth + 1, maxDepth);
       } else {
@@ -188,7 +179,7 @@ const browserTable = {
           `%c${indent}${prefix} %c${key}: %c${formattedValue}`,
           `color: ${COLORS.muted};`,
           `color: ${COLORS.purple};`,
-          `color: ${COLORS.cyan};`
+          `color: ${COLORS.cyan};`,
         );
       }
     });
@@ -209,15 +200,12 @@ const serverTable = {
       return;
     }
 
-    const cols: TableColumn[] =
-      columns || Object.keys(data[0]).map((key) => ({ key, label: key, width: 15 }));
+    const cols: TableColumn[] = columns || Object.keys(data[0]).map((key) => ({ key, label: key, width: 15 }));
 
     console.log(`\n${ANSI.magenta}${ANSI.bold}📊 ${title}${ANSI.reset}`);
 
     // Header
-    const header = cols
-      .map((col) => pad(col.label || col.key, col.width || 15, col.align))
-      .join(" │ ");
+    const header = cols.map((col) => pad(col.label || col.key, col.width || 15, col.align)).join(" │ ");
     const separator = cols.map((col) => "─".repeat(col.width || 15)).join("─┼─");
 
     console.log(`${ANSI.gray}┌─${separator.replace(/┼/g, "┬")}─┐${ANSI.reset}`);
@@ -247,9 +235,7 @@ const serverTable = {
 
     Object.entries(data).forEach(([key, value]) => {
       const paddedKey = key.padEnd(maxKeyLen);
-      console.log(
-        `  ${ANSI.gray}${paddedKey}${ANSI.reset} : ${ANSI.cyan}${formatValue(value)}${ANSI.reset}`
-      );
+      console.log(`  ${ANSI.gray}${paddedKey}${ANSI.reset} : ${ANSI.cyan}${formatValue(value)}${ANSI.reset}`);
     });
     console.log("");
   },
@@ -266,7 +252,7 @@ const serverTable = {
 
       if (changed) {
         console.log(
-          `  ${ANSI.yellow}${key}${ANSI.reset}: ${ANSI.red}${beforeVal}${ANSI.reset} → ${ANSI.green}${afterVal}${ANSI.reset}`
+          `  ${ANSI.yellow}${key}${ANSI.reset}: ${ANSI.red}${beforeVal}${ANSI.reset} → ${ANSI.green}${afterVal}${ANSI.reset}`,
         );
       } else {
         console.log(`  ${ANSI.gray}${key}: ${beforeVal}${ANSI.reset}`);
@@ -280,9 +266,7 @@ const serverTable = {
 
     Object.entries(stats).forEach(([label, value]) => {
       const formatted = typeof value === "number" ? value.toLocaleString() : value;
-      console.log(
-        `  ${ANSI.gray}${label}:${ANSI.reset} ${ANSI.cyan}${ANSI.bold}${formatted}${ANSI.reset}`
-      );
+      console.log(`  ${ANSI.gray}${label}:${ANSI.reset} ${ANSI.cyan}${ANSI.bold}${formatted}${ANSI.reset}`);
     });
     console.log("");
   },
@@ -299,19 +283,12 @@ const serverTable = {
       const isLast = index === entries.length - 1;
       const prefix = isLast ? "└─" : "├─";
 
-      if (
-        typeof value === "object" &&
-        value !== null &&
-        !Array.isArray(value) &&
-        depth < maxDepth
-      ) {
-        console.log(
-          `${indent}${ANSI.gray}${prefix}${ANSI.reset} ${ANSI.magenta}${key}:${ANSI.reset}`
-        );
+      if (typeof value === "object" && value !== null && !Array.isArray(value) && depth < maxDepth) {
+        console.log(`${indent}${ANSI.gray}${prefix}${ANSI.reset} ${ANSI.magenta}${key}:${ANSI.reset}`);
         serverTable.tree("", value as Record<string, unknown>, depth + 1, maxDepth);
       } else {
         console.log(
-          `${indent}${ANSI.gray}${prefix}${ANSI.reset} ${ANSI.magenta}${key}:${ANSI.reset} ${ANSI.cyan}${formatValue(value)}${ANSI.reset}`
+          `${indent}${ANSI.gray}${prefix}${ANSI.reset} ${ANSI.magenta}${key}:${ANSI.reset} ${ANSI.cyan}${formatValue(value)}${ANSI.reset}`,
         );
       }
     });
@@ -333,17 +310,13 @@ export const table = {
     IS_BROWSER ? browserTable.keyValue(title, data) : serverTable.keyValue(title, data),
 
   compare: <T extends Record<string, unknown>>(title: string, before: T, after: T) =>
-    IS_BROWSER
-      ? browserTable.compare(title, before, after)
-      : serverTable.compare(title, before, after),
+    IS_BROWSER ? browserTable.compare(title, before, after) : serverTable.compare(title, before, after),
 
   stats: (title: string, stats: Record<string, number | string>) =>
     IS_BROWSER ? browserTable.stats(title, stats) : serverTable.stats(title, stats),
 
   tree: (title: string, data: Record<string, unknown>, maxDepth?: number) =>
-    IS_BROWSER
-      ? browserTable.tree(title, data, 0, maxDepth)
-      : serverTable.tree(title, data, 0, maxDepth),
+    IS_BROWSER ? browserTable.tree(title, data, 0, maxDepth) : serverTable.tree(title, data, 0, maxDepth),
 };
 
 export type { TableColumn };

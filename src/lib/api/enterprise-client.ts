@@ -14,14 +14,10 @@
  * @module lib/api/enterprise-client
  */
 
-import { createClient } from "@/lib/supabase/server";
-import {
-  CircuitBreaker,
-  CircuitOpenError,
-  getCircuitBreaker,
-} from "./circuit-breaker";
-import { withRetry, RetryConfig, RetryPresets } from "./retry";
 import { createRequestDeduplicator } from "@/lib/request-deduplication";
+import { createClient } from "@/lib/supabase/server";
+import { type CircuitBreaker, CircuitOpenError, getCircuitBreaker } from "./circuit-breaker";
+import { type RetryConfig, RetryPresets, withRetry } from "./retry";
 
 // =============================================================================
 // Types
@@ -73,13 +69,11 @@ export interface RequestOptions<TBody = unknown> {
   dedupeKey?: string;
 }
 
-export type RequestInterceptor = (
-  request: RequestInit & { url: string }
-) => RequestInit & { url: string };
+export type RequestInterceptor = (request: RequestInit & { url: string }) => RequestInit & { url: string };
 
 export type ResponseInterceptor = (
   response: Response,
-  request: RequestInit & { url: string }
+  request: RequestInit & { url: string },
 ) => Response | Promise<Response>;
 
 // =============================================================================
@@ -194,10 +188,7 @@ export class EnterpriseClient {
   /**
    * Build URL with query parameters
    */
-  private buildUrl(
-    endpoint: string,
-    query?: Record<string, string | number | boolean | undefined>
-  ): string {
+  private buildUrl(endpoint: string, query?: Record<string, string | number | boolean | undefined>): string {
     const url = new URL(`${this.config.baseUrl}/${endpoint}`);
     if (query) {
       Object.entries(query).forEach(([key, value]) => {
@@ -214,7 +205,7 @@ export class EnterpriseClient {
    */
   async request<TResponse, TBody = unknown>(
     endpoint: string,
-    options: RequestOptions<TBody>
+    options: RequestOptions<TBody>,
   ): Promise<EnterpriseResult<TResponse>> {
     const {
       method,
@@ -232,8 +223,7 @@ export class EnterpriseClient {
     } = options;
 
     // Build deduplication key
-    const cacheKey =
-      dedupeKey || `${method}:${endpoint}:${JSON.stringify(query || {})}`;
+    const cacheKey = dedupeKey || `${method}:${endpoint}:${JSON.stringify(query || {})}`;
 
     // Wrap the actual request logic
     const executeRequest = async (): Promise<EnterpriseResult<TResponse>> => {
@@ -267,7 +257,7 @@ export class EnterpriseClient {
         };
 
         if (authToken) {
-          requestHeaders["Authorization"] = `Bearer ${authToken}`;
+          requestHeaders.Authorization = `Bearer ${authToken}`;
         }
 
         if (idempotencyKey) {
@@ -361,20 +351,13 @@ export class EnterpriseClient {
       return withRetry(withCircuitBreaker, {
         ...retryConfig,
         onRetry: (attempt, error, delayMs) => {
-          console.warn(
-            `[Retry] ${endpoint} attempt ${attempt}, waiting ${delayMs}ms`,
-            error
-          );
+          console.warn(`[Retry] ${endpoint} attempt ${attempt}, waiting ${delayMs}ms`, error);
         },
       });
     };
 
     // Apply deduplication (only for GET requests)
-    if (
-      method === "GET" &&
-      !skipDeduplication &&
-      this.config.enableDeduplication
-    ) {
+    if (method === "GET" && !skipDeduplication && this.config.enableDeduplication) {
       return deduplicator.dedupe(cacheKey, withRetryWrapper) as Promise<EnterpriseResult<TResponse>>;
     }
 
@@ -420,10 +403,7 @@ export class EnterpriseClient {
         };
       }
 
-      if (
-        error.message.includes("fetch") ||
-        error.message.includes("network")
-      ) {
+      if (error.message.includes("fetch") || error.message.includes("network")) {
         return {
           success: false,
           error: {
@@ -454,7 +434,7 @@ export class EnterpriseClient {
   async get<TResponse>(
     endpoint: string,
     query?: Record<string, string | number | boolean | undefined>,
-    options?: Omit<RequestOptions, "method" | "body" | "query">
+    options?: Omit<RequestOptions, "method" | "body" | "query">,
   ): Promise<EnterpriseResult<TResponse>> {
     return this.request<TResponse>(endpoint, {
       method: "GET",
@@ -469,7 +449,7 @@ export class EnterpriseClient {
   async post<TResponse, TBody = unknown>(
     endpoint: string,
     body: TBody,
-    options?: Omit<RequestOptions<TBody>, "method" | "body">
+    options?: Omit<RequestOptions<TBody>, "method" | "body">,
   ): Promise<EnterpriseResult<TResponse>> {
     return this.request<TResponse, TBody>(endpoint, {
       method: "POST",
@@ -485,7 +465,7 @@ export class EnterpriseClient {
   async put<TResponse, TBody = unknown>(
     endpoint: string,
     body: TBody,
-    options?: Omit<RequestOptions<TBody>, "method" | "body">
+    options?: Omit<RequestOptions<TBody>, "method" | "body">,
   ): Promise<EnterpriseResult<TResponse>> {
     return this.request<TResponse, TBody>(endpoint, {
       method: "PUT",
@@ -501,7 +481,7 @@ export class EnterpriseClient {
   async patch<TResponse, TBody = unknown>(
     endpoint: string,
     body: TBody,
-    options?: Omit<RequestOptions<TBody>, "method" | "body">
+    options?: Omit<RequestOptions<TBody>, "method" | "body">,
   ): Promise<EnterpriseResult<TResponse>> {
     return this.request<TResponse, TBody>(endpoint, {
       method: "PATCH",
@@ -516,7 +496,7 @@ export class EnterpriseClient {
    */
   async delete<TResponse = void>(
     endpoint: string,
-    options?: Omit<RequestOptions, "method" | "body">
+    options?: Omit<RequestOptions, "method" | "body">,
   ): Promise<EnterpriseResult<TResponse>> {
     return this.request<TResponse>(endpoint, {
       method: "DELETE",

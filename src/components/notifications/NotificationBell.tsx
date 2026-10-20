@@ -5,11 +5,11 @@
  * Shows unread notification count with realtime updates via Supabase subscription
  */
 
-import { useEffect, useState } from "react";
-import { Bell } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { Bell } from "lucide-react";
+import { useEffect, useState } from "react";
 
 type NotificationBellProps = {
   userId: string;
@@ -18,12 +18,7 @@ type NotificationBellProps = {
   className?: string;
 };
 
-export function NotificationBell({
-  userId,
-  initialCount = 0,
-  onClick,
-  className,
-}: NotificationBellProps) {
+export function NotificationBell({ userId, initialCount = 0, onClick, className }: NotificationBellProps) {
   const [unreadCount, setUnreadCount] = useState(initialCount);
 
   useEffect(() => {
@@ -43,7 +38,7 @@ export function NotificationBell({
         () => {
           // Increment count on new notification
           setUnreadCount((prev) => prev + 1);
-        }
+        },
       )
       .on(
         "postgres_changes",
@@ -58,7 +53,7 @@ export function NotificationBell({
           if (payload.new.is_read && !payload.old.is_read) {
             setUnreadCount((prev) => Math.max(0, prev - 1));
           }
-        }
+        },
       )
       .on(
         "postgres_changes",
@@ -73,7 +68,7 @@ export function NotificationBell({
           if (!payload.old.is_read) {
             setUnreadCount((prev) => Math.max(0, prev - 1));
           }
-        }
+        },
       )
       .subscribe();
 
@@ -92,7 +87,7 @@ export function NotificationBell({
     >
       <Bell className="h-5 w-5" />
       {unreadCount > 0 && (
-        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
+        <span className="absolute -top-1 -end-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
           {unreadCount > 99 ? "99+" : unreadCount}
         </span>
       )}

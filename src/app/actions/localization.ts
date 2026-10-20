@@ -18,6 +18,16 @@ export interface LocalizationAnalytics {
   localeStats: LocaleStats[];
 }
 
+interface TranslationAnalyticsRow {
+  locale: string;
+  response_time_ms: number | null;
+  cached: boolean | null;
+}
+
+interface TranslationErrorRow {
+  locale: string;
+}
+
 /**
  * Get localization analytics for admin dashboard
  * Fetches data for the last 24 hours
@@ -30,12 +40,9 @@ export async function getLocalizationAnalytics(): Promise<{
 
   try {
     // Try RPC first
-    const { data: analytics, error: analyticsError } = await supabase.rpc(
-      "get_localization_analytics",
-      {
-        time_window: "24 hours",
-      }
-    );
+    const { data: analytics, error: analyticsError } = await supabase.rpc("get_localization_analytics", {
+      time_window: "24 hours",
+    });
 
     if (!analyticsError && analytics) {
       return { data: analytics, error: null };
@@ -59,7 +66,9 @@ export async function getLocalizationAnalytics(): Promise<{
     let totalResponseTime = 0;
     let cachedRequests = 0;
 
-    rawData?.forEach((row: any) => {
+    const analyticsRows = (rawData ?? []) as TranslationAnalyticsRow[];
+
+    analyticsRows.forEach((row) => {
       totalRequests++;
       totalResponseTime += row.response_time_ms || 0;
       if (row.cached) cachedRequests++;
@@ -89,13 +98,12 @@ export async function getLocalizationAnalytics(): Promise<{
     }));
 
     // Fetch errors
-    const { data: errors } = await supabase
-      .from("translation_errors")
-      .select("locale")
-      .gte("timestamp", timeThreshold);
+    const { data: errors } = await supabase.from("translation_errors").select("locale").gte("timestamp", timeThreshold);
 
     const errorMap = new Map<string, number>();
-    errors?.forEach((err: any) => {
+    const errorRows = (errors ?? []) as TranslationErrorRow[];
+
+    errorRows.forEach((err) => {
       errorMap.set(err.locale, (errorMap.get(err.locale) || 0) + 1);
     });
 

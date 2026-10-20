@@ -1,9 +1,9 @@
-import type { FC } from "react";
-import React from "react";
-import type { UsePositionSettings } from "@/hooks/usePosition";
-import { usePosition } from "@/hooks/usePosition";
 import { LocationPermissionBanner } from "@/components/LocationPermissionBanner";
 import Leaflet from "@/components/leaflet/Leaflet";
+import type { UsePositionSettings } from "@/hooks/usePosition";
+import { usePosition } from "@/hooks/usePosition";
+import type { FC } from "react";
+import React from "react";
 
 type PropsType = {
   watch: boolean;
@@ -11,18 +11,8 @@ type PropsType = {
 };
 
 export const Demo: FC<PropsType> = ({ watch, settings }) => {
-  const {
-    latitude,
-    longitude,
-    timestamp,
-    accuracy,
-    speed,
-    heading,
-    error,
-    isLoading,
-    accuracyLevel,
-    retry,
-  } = usePosition(watch, settings);
+  const { latitude, longitude, timestamp, accuracy, speed, heading, error, isLoading, accuracyLevel, retry } =
+    usePosition(watch, settings);
 
   const loader =
     isLoading && !latitude ? (

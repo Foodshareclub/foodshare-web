@@ -5,12 +5,12 @@
  * Can be embedded in footer, homepage, or standalone page
  */
 
-import { useState, useTransition } from "react";
-import { Mail, CheckCircle2, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { addSubscriber } from "@/app/actions/newsletter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { addSubscriber } from "@/app/actions/newsletter";
+import { cn } from "@/lib/utils";
+import { CheckCircle2, Loader2, Mail } from "lucide-react";
+import { useState, useTransition } from "react";
 
 interface NewsletterSubscribeProps {
   variant?: "default" | "compact" | "card";
@@ -70,7 +70,7 @@ export function NewsletterSubscribe({ variant = "default", className }: Newslett
       <div
         className={cn(
           "rounded-2xl border border-border/50 bg-gradient-to-br from-primary/5 to-primary/10 p-6",
-          className
+          className,
         )}
       >
         <div className="flex items-center gap-3 mb-4">
@@ -93,30 +93,23 @@ export function NewsletterSubscribe({ variant = "default", className }: Newslett
           <Button type="submit" className="w-full" disabled={isPending || status === "success"}>
             {isPending ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" /> Subscribing...
+                <Loader2 className="h-4 w-4 animate-spin me-2" /> Subscribing...
               </>
             ) : status === "success" ? (
               <>
-                <CheckCircle2 className="h-4 w-4 mr-2" /> Subscribed!
+                <CheckCircle2 className="h-4 w-4 me-2" /> Subscribed!
               </>
             ) : (
               "Subscribe to Newsletter"
             )}
           </Button>
           {status !== "idle" && (
-            <p
-              className={cn(
-                "text-sm text-center",
-                status === "success" ? "text-emerald-600" : "text-rose-600"
-              )}
-            >
+            <p className={cn("text-sm text-center", status === "success" ? "text-emerald-600" : "text-rose-600")}>
               {message}
             </p>
           )}
         </form>
-        <p className="text-xs text-muted-foreground text-center mt-3">
-          No spam, unsubscribe anytime
-        </p>
+        <p className="text-xs text-muted-foreground text-center mt-3">No spam, unsubscribe anytime</p>
       </div>
     );
   }
@@ -126,9 +119,7 @@ export function NewsletterSubscribe({ variant = "default", className }: Newslett
     <div className={cn("space-y-4", className)}>
       <div className="text-center">
         <h3 className="text-lg font-semibold text-foreground mb-1">Join Our Community</h3>
-        <p className="text-sm text-muted-foreground">
-          Get updates on food sharing opportunities near you
-        </p>
+        <p className="text-sm text-muted-foreground">Get updates on food sharing opportunities near you</p>
       </div>
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
         <Input
@@ -144,7 +135,7 @@ export function NewsletterSubscribe({ variant = "default", className }: Newslett
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : status === "success" ? (
             <>
-              <CheckCircle2 className="h-4 w-4 mr-2" /> Done!
+              <CheckCircle2 className="h-4 w-4 me-2" /> Done!
             </>
           ) : (
             "Subscribe"
@@ -152,12 +143,7 @@ export function NewsletterSubscribe({ variant = "default", className }: Newslett
         </Button>
       </form>
       {status !== "idle" && (
-        <p
-          className={cn(
-            "text-sm text-center",
-            status === "success" ? "text-emerald-600" : "text-rose-600"
-          )}
-        >
+        <p className={cn("text-sm text-center", status === "success" ? "text-emerald-600" : "text-rose-600")}>
           {message}
         </p>
       )}

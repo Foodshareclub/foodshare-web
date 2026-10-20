@@ -9,13 +9,14 @@
  * - Proper auth checks
  */
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { guardAdmin } from "@/lib/data/admin-check";
 import { invalidateTag } from "@/lib/data/cache-invalidation";
-import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { type ServerActionResult, serverActionError, successVoid } from "@/lib/errors";
 import type { ErrorCode } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 // ============================================================================
 // Zod Schemas
@@ -26,19 +27,10 @@ const CreateCampaignSchema = z.object({
   subject: z.string().min(1, "Subject is required").max(200),
   previewText: z.string().max(200).optional(),
   htmlContent: z.string().min(1, "Content is required"),
-  campaignType: z
-    .enum(["newsletter", "announcement", "promotional", "transactional"])
-    .default("newsletter"),
+  campaignType: z.enum(["newsletter", "announcement", "promotional", "transactional"]).default("newsletter"),
 });
 
-const CampaignStatusSchema = z.enum([
-  "draft",
-  "scheduled",
-  "sending",
-  "sent",
-  "paused",
-  "cancelled",
-]);
+const CampaignStatusSchema = z.enum(["draft", "scheduled", "sending", "sent", "paused", "cancelled"]);
 
 const ScheduleCampaignSchema = z.object({
   campaignId: z.string().uuid("Invalid campaign ID"),
@@ -101,7 +93,21 @@ type AuthSuccess = {
   supabase: Awaited<ReturnType<typeof createClient>>;
 };
 
-async function verifyAuth(): Promise<AuthError | AuthSuccess> {
+/**
+ * Require an authenticated **admin**, and hand back a session-bound client.
+ *
+ * Campaigns, segments, automations and the subscriber list are all
+ * admin-only — and all of them write through tables whose `is_admin()` RLS
+ * policy was the *only* thing checking the role. `unsubscribeEmail` had no
+ * check at all, of any kind. The role is decided here, before the client is
+ * built and before a query is issued.
+ */
+async function requireAdminSession(): Promise<AuthError | AuthSuccess> {
+  const guard = await guardAdmin();
+  if (!guard.ok) {
+    return { error: guard.error, code: "FORBIDDEN" };
+  }
+
   const supabase = await createClient();
 
   const {
@@ -113,7 +119,7 @@ async function verifyAuth(): Promise<AuthError | AuthSuccess> {
     return { error: "You must be logged in", code: "UNAUTHORIZED" };
   }
 
-  return { user: { id: user.id }, supabase };
+  return { user: { id: guard.adminId }, supabase };
 }
 
 function isAuthError(result: AuthError | AuthSuccess): result is AuthError {
@@ -130,7 +136,7 @@ async function logAuditEvent(
   action: string,
   resourceType: string,
   resourceId: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<void> {
   try {
     await supabase.rpc("log_audit_event", {
@@ -152,11 +158,9 @@ async function logAuditEvent(
 /**
  * Create a new campaign
  */
-export async function createCampaign(
-  formData: FormData
-): Promise<ServerActionResult<CampaignResult>> {
+export async function createCampaign(formData: FormData): Promise<ServerActionResult<CampaignResult>> {
   try {
-    const auth = await verifyAuth();
+    const auth = await requireAdminSession();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
@@ -219,7 +223,7 @@ export async function createCampaign(
  */
 export async function updateCampaignStatus(
   campaignId: string,
-  status: z.infer<typeof CampaignStatusSchema>
+  status: z.infer<typeof CampaignStatusSchema>,
 ): Promise<ServerActionResult<void>> {
   try {
     // Validate inputs
@@ -232,7 +236,7 @@ export async function updateCampaignStatus(
       return serverActionError("Invalid status", "VALIDATION_ERROR");
     }
 
-    const auth = await verifyAuth();
+    const auth = await requireAdminSession();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
@@ -249,10 +253,7 @@ export async function updateCampaignStatus(
       updateData.completed_at = new Date().toISOString();
     }
 
-    const { error } = await supabase
-      .from("newsletter_campaigns")
-      .update(updateData)
-      .eq("id", campaignId);
+    const { error } = await supabase.from("newsletter_campaigns").update(updateData).eq("id", campaignId);
 
     if (error) {
       console.error("Failed to update campaign status:", error);
@@ -277,10 +278,7 @@ export async function updateCampaignStatus(
 /**
  * Schedule a campaign
  */
-export async function scheduleCampaign(
-  campaignId: string,
-  scheduledAt: string
-): Promise<ServerActionResult<void>> {
+export async function scheduleCampaign(campaignId: string, scheduledAt: string): Promise<ServerActionResult<void>> {
   try {
     // Validate inputs
     const validated = ScheduleCampaignSchema.safeParse({ campaignId, scheduledAt });
@@ -289,7 +287,7 @@ export async function scheduleCampaign(
       return serverActionError(firstError.message, "VALIDATION_ERROR");
     }
 
-    const auth = await verifyAuth();
+    const auth = await requireAdminSession();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
@@ -335,7 +333,7 @@ export async function scheduleCampaign(
 export async function addSubscriber(
   email: string,
   firstName?: string,
-  source: "website" | "import" | "api" | "referral" = "website"
+  source: "website" | "import" | "api" | "referral" = "website",
 ): Promise<ServerActionResult<SubscriberResult>> {
   try {
     // Validate inputs
@@ -378,11 +376,11 @@ export async function addSubscriber(
 /**
  * Unsubscribe an email
  */
-export async function unsubscribeEmail(
-  email: string,
-  reason?: string
-): Promise<ServerActionResult<void>> {
+export async function unsubscribeEmail(email: string, reason?: string): Promise<ServerActionResult<void>> {
   try {
+    const auth = await requireAdminSession();
+    if (isAuthError(auth)) return serverActionError(auth.error, auth.code);
+
     // Validate email
     if (!email || !z.string().email().safeParse(email).success) {
       return serverActionError("Invalid email address", "VALIDATION_ERROR");
@@ -419,11 +417,9 @@ export async function unsubscribeEmail(
 /**
  * Create a segment
  */
-export async function createSegment(
-  formData: FormData
-): Promise<ServerActionResult<SegmentResult>> {
+export async function createSegment(formData: FormData): Promise<ServerActionResult<SegmentResult>> {
   try {
-    const auth = await verifyAuth();
+    const auth = await requireAdminSession();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
@@ -494,11 +490,9 @@ export async function createSegment(
 /**
  * Create an automation flow
  */
-export async function createAutomationFlow(
-  formData: FormData
-): Promise<ServerActionResult<FlowResult>> {
+export async function createAutomationFlow(formData: FormData): Promise<ServerActionResult<FlowResult>> {
   try {
-    const auth = await verifyAuth();
+    const auth = await requireAdminSession();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
@@ -574,7 +568,7 @@ export async function createAutomationFlow(
  */
 export async function updateAutomationStatus(
   flowId: string,
-  status: z.infer<typeof AutomationStatusSchema>
+  status: z.infer<typeof AutomationStatusSchema>,
 ): Promise<ServerActionResult<void>> {
   try {
     // Validate inputs
@@ -587,7 +581,7 @@ export async function updateAutomationStatus(
       return serverActionError("Invalid status", "VALIDATION_ERROR");
     }
 
-    const auth = await verifyAuth();
+    const auth = await requireAdminSession();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
@@ -622,11 +616,14 @@ export async function updateAutomationStatus(
 /**
  * Enroll user in automation
  */
-export async function enrollUserInAutomation(
-  flowId: string,
-  profileId: string
-): Promise<ServerActionResult<void>> {
+export async function enrollUserInAutomation(flowId: string, profileId: string): Promise<ServerActionResult<void>> {
   try {
+    // Authorization first, validation second. The other way round answers an
+    // unauthenticated caller with "Invalid flow ID" versus "Invalid profile
+    // ID" — a distinction they have no business being able to draw.
+    const auth = await requireAdminSession();
+    if (isAuthError(auth)) return serverActionError(auth.error, auth.code);
+
     // Validate inputs
     if (!flowId || !z.string().uuid().safeParse(flowId).success) {
       return serverActionError("Invalid flow ID", "VALIDATION_ERROR");

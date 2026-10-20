@@ -8,8 +8,8 @@
  * - Updates campaign progress
  */
 
-import { task, schedules } from "@trigger.dev/sdk/v3";
 import { sendBatchEmailNotifications } from "@/lib/notifications";
+import { schedules, task } from "@trigger.dev/sdk/v3";
 
 // ============================================================================
 // Types
@@ -25,6 +25,11 @@ interface ProcessCampaignResult {
   totalRecipients: number;
   sent: number;
   failed: number;
+}
+
+interface DueCampaignRow {
+  id: string;
+  name: string;
 }
 
 // ============================================================================
@@ -87,23 +92,21 @@ export const processCampaignTask = task({
     }
 
     // 5. Prepare notification payloads
-    const notifications = profiles.map(
-      (profile: { id: string; email: string; first_name?: string }) => ({
-        userId: profile.id,
-        type: "digest" as const,
-        title: campaign.subject,
-        body: campaign.text_content || campaign.subject,
-        data: {
-          campaignId: campaign.id,
-          campaignName: campaign.name,
-          recipientName: profile.first_name || "",
-          templateId: campaign.template_id || "campaign",
-          htmlContent: campaign.html_content || "",
-          textContent: campaign.text_content || "",
-          ...campaign.template_data,
-        },
-      })
-    );
+    const notifications = profiles.map((profile: { id: string; email: string; first_name?: string }) => ({
+      userId: profile.id,
+      type: "digest" as const,
+      title: campaign.subject,
+      body: campaign.text_content || campaign.subject,
+      data: {
+        campaignId: campaign.id,
+        campaignName: campaign.name,
+        recipientName: profile.first_name || "",
+        templateId: campaign.template_id || "campaign",
+        htmlContent: campaign.html_content || "",
+        textContent: campaign.text_content || "",
+        ...campaign.template_data,
+      },
+    }));
 
     // 6. Send via unified notification batch endpoint
     const batchResult = await sendBatchEmailNotifications(notifications, true);
@@ -170,16 +173,17 @@ export const checkScheduledCampaignsTask = schedules.task({
     }
 
     // Trigger processing for each due campaign
+    const dueCampaignRows = (dueCampaigns ?? []) as DueCampaignRow[];
     const triggers = await Promise.allSettled(
-      dueCampaigns.map((campaign: any) => processCampaignTask.trigger({ campaignId: campaign.id }))
+      dueCampaignRows.map((campaign) => processCampaignTask.trigger({ campaignId: campaign.id })),
     );
 
     const triggered = triggers.filter((t) => t.status === "fulfilled").length;
 
     return {
-      processed: dueCampaigns.length,
+      processed: dueCampaignRows.length,
       triggered,
-      campaigns: dueCampaigns.map((c: any) => c.name),
+      campaigns: dueCampaignRows.map((c) => c.name),
     };
   },
 });

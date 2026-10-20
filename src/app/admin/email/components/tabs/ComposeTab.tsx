@@ -4,41 +4,8 @@
  * ComposeTab - Email composition with rich editor and templates
  */
 
-import React, { useState, useTransition, lazy, Suspense } from "react";
-import { motion } from "framer-motion";
-import {
-  Send,
-  Users,
-  Edit,
-  Eye,
-  FileText,
-  Layers,
-  Globe,
-  CheckCircle,
-  AlertCircle,
-  Sparkles,
-  CheckCircle2,
-  Copy,
-  UserPlus,
-  Heart,
-  Star,
-} from "lucide-react";
-import { EMAIL_TYPES, PROVIDERS } from "../constants";
-import type { EmailFormData } from "../types";
-import { cn } from "@/lib/utils";
-import { useEmailTemplates } from "@/hooks/queries/useEmailCRM";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -47,14 +14,41 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEmailTemplates } from "@/hooks/queries/useEmailCRM";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import {
+  AlertCircle,
+  CheckCircle,
+  CheckCircle2,
+  Copy,
+  Edit,
+  Eye,
+  FileText,
+  Globe,
+  Heart,
+  Layers,
+  Send,
+  Sparkles,
+  Star,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import type React from "react";
+import { Suspense, lazy, useState, useTransition } from "react";
+import { EMAIL_TYPES, PROVIDERS } from "../constants";
+import type { EmailFormData } from "../types";
 
 import { sendAdminEmail, sendTestEmailDirect } from "@/app/actions/email";
+import { getIframeSandboxAttributes, renderTemplatePreview } from "@/lib/email/template-renderer";
 import type { EmailType } from "@/lib/email/types";
 import type { EmailTemplate } from "@/types/automations.types";
-import {
-  renderTemplatePreview,
-  getIframeSandboxAttributes,
-} from "@/lib/email/template-renderer";
+
+const EDITOR_TOOLBAR_SKELETON_KEYS = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"] as const;
 
 // Secure iframe component for template preview
 function TemplatePreviewIframe({ html, slug }: { html: string; slug: string }) {
@@ -75,11 +69,11 @@ function TemplatePreviewIframe({ html, slug }: { html: string; slug: string }) {
 
 // Lazy load heavy components
 const RichTextEditor = lazy(() =>
-  import("@/components/ui/rich-text-editor").then((mod) => ({ default: mod.RichTextEditor }))
+  import("@/components/ui/rich-text-editor").then((mod) => ({ default: mod.RichTextEditor })),
 );
 
 const EmailContentEditor = lazy(() =>
-  import("../EmailContentEditor").then((mod) => ({ default: mod.EmailContentEditor }))
+  import("../EmailContentEditor").then((mod) => ({ default: mod.EmailContentEditor })),
 );
 
 // Rich Text Editor with loading state
@@ -103,8 +97,8 @@ function RichTextEditorLazy({
         >
           <div className="p-2 border-b border-border/50 bg-muted/30">
             <div className="flex gap-1">
-              {[...Array(12)].map((_, i) => (
-                <div key={i} className="h-8 w-8 rounded bg-muted" />
+              {EDITOR_TOOLBAR_SKELETON_KEYS.map((k) => (
+                <div key={k} className="h-8 w-8 rounded bg-muted" />
               ))}
             </div>
           </div>
@@ -115,12 +109,7 @@ function RichTextEditorLazy({
         </div>
       }
     >
-      <RichTextEditor
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        minHeight={minHeight}
-      />
+      <RichTextEditor value={value} onChange={onChange} placeholder={placeholder} minHeight={minHeight} />
     </Suspense>
   );
 }
@@ -136,14 +125,10 @@ function EmailTemplatesPanel({
 
   const getTemplateIcon = (slug: string) => {
     if (slug.includes("volunteer")) return <Users className="h-4 w-4" />;
-    if (slug.includes("milestone") || slug.includes("celebration"))
-      return <Star className="h-4 w-4" />;
-    if (slug.includes("impact") || slug.includes("digest"))
-      return <Sparkles className="h-4 w-4" />;
-    if (slug.includes("neighborhood") || slug.includes("welcome"))
-      return <UserPlus className="h-4 w-4" />;
-    if (slug.includes("reengagement") || slug.includes("miss"))
-      return <Heart className="h-4 w-4" />;
+    if (slug.includes("milestone") || slug.includes("celebration")) return <Star className="h-4 w-4" />;
+    if (slug.includes("impact") || slug.includes("digest")) return <Sparkles className="h-4 w-4" />;
+    if (slug.includes("neighborhood") || slug.includes("welcome")) return <UserPlus className="h-4 w-4" />;
+    if (slug.includes("reengagement") || slug.includes("miss")) return <Heart className="h-4 w-4" />;
     if (slug.includes("food") || slug.includes("alert")) return <Heart className="h-4 w-4" />;
     if (slug.includes("newsletter")) return <FileText className="h-4 w-4" />;
     return <Layers className="h-4 w-4" />;
@@ -169,9 +154,7 @@ function EmailTemplatesPanel({
             <Layers className="h-4 w-4 text-violet-500" />
             Email Templates
           </CardTitle>
-          <CardDescription className="text-xs">
-            Beautiful pre-designed templates from database
-          </CardDescription>
+          <CardDescription className="text-xs">Beautiful pre-designed templates from database</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 space-y-2">
           {isLoading ? (
@@ -188,30 +171,26 @@ function EmailTemplatesPanel({
                   <button
                     type="button"
                     onClick={() => setPreviewTemplate(template)}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 hover:border-primary/30 hover:shadow-sm transition-all text-left"
+                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 hover:border-primary/30 hover:shadow-sm transition-all text-start"
                   >
                     <div
                       className={cn(
                         "p-2 rounded-lg",
                         getTemplateColor(template.slug) === "emerald" &&
                           "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-                        getTemplateColor(template.slug) === "blue" &&
-                          "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-                        getTemplateColor(template.slug) === "rose" &&
-                          "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+                        getTemplateColor(template.slug) === "blue" && "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+                        getTemplateColor(template.slug) === "rose" && "bg-rose-500/10 text-rose-600 dark:text-rose-400",
                         getTemplateColor(template.slug) === "amber" &&
                           "bg-amber-500/10 text-amber-600 dark:text-amber-400",
                         getTemplateColor(template.slug) === "violet" &&
-                          "bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                          "bg-violet-500/10 text-violet-600 dark:text-violet-400",
                       )}
                     >
                       {getTemplateIcon(template.slug)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="text-sm font-medium block truncate">{template.name}</span>
-                      <span className="text-xs text-muted-foreground truncate block">
-                        {template.subject}
-                      </span>
+                      <span className="text-xs text-muted-foreground truncate block">{template.subject}</span>
                     </div>
                     <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                   </button>
@@ -234,7 +213,7 @@ function EmailTemplatesPanel({
             <DialogDescription>
               Subject: {previewTemplate?.subject}
               {previewTemplate?.variables && previewTemplate.variables.length > 0 && (
-                <span className="ml-2 text-xs text-muted-foreground">
+                <span className="ms-2 text-xs text-muted-foreground">
                   (Variables: {previewTemplate.variables.join(", ")})
                 </span>
               )}
@@ -242,10 +221,7 @@ function EmailTemplatesPanel({
           </DialogHeader>
           <div className="flex-1 overflow-auto border rounded-lg bg-white dark:bg-zinc-900">
             {previewTemplate && (
-              <TemplatePreviewIframe
-                html={previewTemplate.html_content}
-                slug={previewTemplate.slug}
-              />
+              <TemplatePreviewIframe html={previewTemplate.html_content} slug={previewTemplate.slug} />
             )}
           </div>
           <DialogFooter className="gap-2">
@@ -355,12 +331,7 @@ export function ComposeTab() {
                   <CardDescription>Create and send beautiful emails</CardDescription>
                 </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => setShowPreview(!showPreview)}
-              >
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowPreview(!showPreview)}>
                 <Eye className="h-4 w-4" />
                 {showPreview ? "Edit" : "Preview"}
               </Button>
@@ -402,10 +373,7 @@ export function ComposeTab() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="subject"
-                      className="text-sm font-medium flex items-center gap-2"
-                    >
+                    <Label htmlFor="subject" className="text-sm font-medium flex items-center gap-2">
                       <FileText className="h-3.5 w-3.5 text-muted-foreground" />
                       Subject Line
                     </Label>
@@ -427,10 +395,7 @@ export function ComposeTab() {
                       <Layers className="h-3.5 w-3.5 text-muted-foreground" />
                       Email Type
                     </Label>
-                    <Select
-                      value={formData.emailType}
-                      onValueChange={(value) => handleChange("emailType", value)}
-                    >
+                    <Select value={formData.emailType} onValueChange={(value) => handleChange("emailType", value)}>
                       <SelectTrigger className="bg-background/50 h-11">
                         <SelectValue />
                       </SelectTrigger>
@@ -449,10 +414,7 @@ export function ComposeTab() {
                       <Globe className="h-3.5 w-3.5 text-muted-foreground" />
                       Provider
                     </Label>
-                    <Select
-                      value={formData.provider}
-                      onValueChange={(value) => handleChange("provider", value)}
-                    >
+                    <Select value={formData.provider} onValueChange={(value) => handleChange("provider", value)}>
                       <SelectTrigger className="bg-background/50 h-11">
                         <SelectValue />
                       </SelectTrigger>
@@ -467,13 +429,11 @@ export function ComposeTab() {
                                   provider.value === "brevo" && "bg-blue-500",
                                   provider.value === "resend" && "bg-emerald-500",
                                   provider.value === "mailersend" && "bg-green-500",
-                                  provider.value === "aws_ses" && "bg-amber-500"
+                                  provider.value === "aws_ses" && "bg-amber-500",
                                 )}
                               />
                               <span>{provider.label}</span>
-                              <span className="text-xs text-muted-foreground ml-auto">
-                                {provider.description}
-                              </span>
+                              <span className="text-xs text-muted-foreground ms-auto">{provider.description}</span>
                             </div>
                           </SelectItem>
                         ))}
@@ -505,7 +465,7 @@ export function ComposeTab() {
                       "p-4 rounded-xl flex items-center gap-3",
                       result.success
                         ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-                        : "bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400"
+                        : "bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400",
                     )}
                   >
                     {result.success ? (
@@ -519,11 +479,7 @@ export function ComposeTab() {
 
                 {/* Actions */}
                 <div className="flex gap-3 pt-2">
-                  <Button
-                    type="submit"
-                    disabled={isPending}
-                    className="flex-1 gap-2 h-11 shadow-lg shadow-primary/20"
-                  >
+                  <Button type="submit" disabled={isPending} className="flex-1 gap-2 h-11 shadow-lg shadow-primary/20">
                     <Send className="h-4 w-4" />
                     {isPending ? "Sending..." : "Send Email"}
                   </Button>
@@ -617,14 +573,9 @@ export function ComposeTab() {
           <CardContent className="pt-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Content Length</span>
-              <span className="font-mono tabular-nums">
-                {formData.message.length.toLocaleString()} chars
-              </span>
+              <span className="font-mono tabular-nums">{formData.message.length.toLocaleString()} chars</span>
             </div>
-            <Progress
-              value={Math.min((formData.message.length / 10000) * 100, 100)}
-              className="h-1.5 mt-2"
-            />
+            <Progress value={Math.min((formData.message.length / 10000) * 100, 100)} className="h-1.5 mt-2" />
           </CardContent>
         </Card>
       </div>

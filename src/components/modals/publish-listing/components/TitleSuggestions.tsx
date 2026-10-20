@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
 import { Wand2 } from "lucide-react";
+import type React from "react";
+import { useMemo, useState } from "react";
 import { titleSuggestions } from "../constants";
 
 interface TitleSuggestionsProps {
@@ -10,18 +11,11 @@ interface TitleSuggestionsProps {
   currentTitle: string;
 }
 
-export const TitleSuggestions: React.FC<TitleSuggestionsProps> = ({
-  category,
-  onSelect,
-  currentTitle,
-}) => {
+export const TitleSuggestions: React.FC<TitleSuggestionsProps> = ({ category, onSelect, currentTitle }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestions = useMemo(
-    () =>
-      category && category in titleSuggestions
-        ? titleSuggestions[category as keyof typeof titleSuggestions]
-        : [],
-    [category]
+    () => (category && category in titleSuggestions ? titleSuggestions[category as keyof typeof titleSuggestions] : []),
+    [category],
   );
 
   const filteredSuggestions = useMemo(() => {
@@ -30,7 +24,7 @@ export const TitleSuggestions: React.FC<TitleSuggestionsProps> = ({
       .filter(
         (s) =>
           s.toLowerCase().includes(currentTitle.toLowerCase()) ||
-          currentTitle.toLowerCase().includes(s.toLowerCase().split(" ")[0])
+          currentTitle.toLowerCase().includes(s.toLowerCase().split(" ")[0]),
       )
       .slice(0, 4);
   }, [suggestions, currentTitle]);
@@ -50,19 +44,28 @@ export const TitleSuggestions: React.FC<TitleSuggestionsProps> = ({
 
       {showSuggestions && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setShowSuggestions(false)} />
-          <div className="absolute right-0 top-full mt-1 z-50 w-64 p-2 rounded-lg bg-popover border shadow-lg animate-in slide-in-from-top-2 duration-200">
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setShowSuggestions(false)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") setShowSuggestions(false);
+            }}
+            onKeyUp={(e) => {
+              if (e.key === "Enter" || e.key === " ") setShowSuggestions(false);
+            }}
+          />
+          <div className="absolute end-0 top-full mt-1 z-50 w-64 p-2 rounded-lg bg-popover border shadow-lg animate-in slide-in-from-top-2 duration-200">
             <p className="text-xs text-muted-foreground mb-2 px-1">Click to use suggestion</p>
             <div className="space-y-1">
-              {filteredSuggestions.map((suggestion, i) => (
+              {filteredSuggestions.map((suggestion) => (
                 <button
-                  key={i}
+                  key={suggestion}
                   type="button"
                   onClick={() => {
                     onSelect(suggestion);
                     setShowSuggestions(false);
                   }}
-                  className="w-full text-left px-2 py-1.5 rounded text-sm hover:bg-muted transition-colors"
+                  className="w-full text-start px-2 py-1.5 rounded text-sm hover:bg-muted transition-colors"
                 >
                   {suggestion}
                 </button>

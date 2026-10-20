@@ -5,12 +5,11 @@
  * every handler under here has to authorize for itself.
  */
 
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { checkUserIsAdmin } from "@/lib/data/admin-check";
+import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
-export type AdminAuthResult =
-  { authorized: true; userId: string } | { authorized: false; response: NextResponse };
+export type AdminAuthResult = { authorized: true; userId: string } | { authorized: false; response: NextResponse };
 
 export async function requireAdmin(): Promise<AdminAuthResult> {
   const supabase = await createClient();

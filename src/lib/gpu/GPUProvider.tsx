@@ -1,8 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, type ReactNode } from "react";
-import { useWebGPU, type WebGPUState } from "./useWebGPU";
+import type React from "react";
+import { type ReactNode, createContext, useContext, useEffect } from "react";
 import { initGPUMonitoring } from "./gpuMonitoring";
+import { type WebGPUState, useWebGPU } from "./useWebGPU";
 
 const GPUContext = createContext<WebGPUState>({
   supported: false,
@@ -32,10 +33,7 @@ export function useGPUContext(): WebGPUState {
 /**
  * Higher-order wrapper: renders `gpu` if supported, `fallback` otherwise.
  */
-export function withGPU<P extends object>(
-  Component: React.ComponentType<P>,
-  Fallback: React.ComponentType<P>
-) {
+export function withGPU<P extends object>(Component: React.ComponentType<P>, Fallback: React.ComponentType<P>) {
   return function GPUGate(props: P) {
     const { supported, loading } = useGPUContext();
     if (loading) return null;

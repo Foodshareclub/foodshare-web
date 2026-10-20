@@ -5,8 +5,8 @@
  * Replaces Redux forum slice UI state
  */
 
-import { create } from "zustand";
 import type { ForumPostType } from "@/api/forumAPI";
+import { create } from "zustand";
 
 // ============================================================================
 // Types

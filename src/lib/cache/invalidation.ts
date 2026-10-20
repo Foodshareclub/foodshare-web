@@ -10,8 +10,9 @@
  * @module lib/cache/invalidation
  */
 
+import { type SubscriptionHandle, subscribeToChanges } from "@/lib/realtime";
+import type { TimerHandle } from "@/types/timer.types";
 import { getCache } from "./multi-layer";
-import { subscribeToChanges, type SubscriptionHandle } from "@/lib/realtime";
 
 // =============================================================================
 // Types
@@ -87,7 +88,7 @@ export class InvalidationManager {
   private config: Required<InvalidationManagerConfig>;
   private rules = new Map<string, InvalidationRule>();
   private subscriptions = new Map<string, SubscriptionHandle>();
-  private debounceTimers = new Map<string, NodeJS.Timeout>();
+  private debounceTimers = new Map<string, TimerHandle>();
   private pendingInvalidations = new Map<string, Set<InvalidationRule>>();
 
   constructor(config: InvalidationManagerConfig = {}) {
@@ -115,9 +116,7 @@ export class InvalidationManager {
     // Unsubscribe if no more rules for this table
     const rule = this.rules.get(ruleId);
     if (rule) {
-      const hasOtherRules = Array.from(this.rules.values()).some(
-        (r) => r.table === rule.table && r.id !== ruleId
-      );
+      const hasOtherRules = Array.from(this.rules.values()).some((r) => r.table === rule.table && r.id !== ruleId);
 
       if (!hasOtherRules) {
         const sub = this.subscriptions.get(rule.table);
@@ -181,9 +180,7 @@ export class InvalidationManager {
 
     // Find matching rules
     const matchingRules = Array.from(this.rules.values()).filter(
-      (rule) =>
-        rule.table === table &&
-        rule.events.includes(eventType as "INSERT" | "UPDATE" | "DELETE")
+      (rule) => rule.table === table && rule.events.includes(eventType as "INSERT" | "UPDATE" | "DELETE"),
     );
 
     if (matchingRules.length === 0) return;
@@ -308,9 +305,7 @@ let defaultManager: InvalidationManager | null = null;
 /**
  * Get the default invalidation manager
  */
-export function getInvalidationManager(
-  config?: InvalidationManagerConfig
-): InvalidationManager {
+export function getInvalidationManager(config?: InvalidationManagerConfig): InvalidationManager {
   if (!defaultManager) {
     defaultManager = new InvalidationManager(config);
   }

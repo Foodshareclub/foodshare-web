@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { DRAFT_KEY, MIN_TITLE_LENGTH, MIN_DESCRIPTION_LENGTH } from "../constants";
 import { pretty } from "@/lib/logger";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DRAFT_KEY, MIN_DESCRIPTION_LENGTH, MIN_TITLE_LENGTH } from "../constants";
 
 export interface ListingFormData {
   category: string;
@@ -86,7 +86,7 @@ interface UseListingFormReturn {
       available_hours?: string;
       post_stripped_address?: string;
       transportation?: string;
-    } | null
+    } | null,
   ) => void;
 
   // Reset form
@@ -169,7 +169,7 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
       contactPreferences,
       scheduledDate,
       scheduledTime,
-    ]
+    ],
   );
 
   // Quality score calculation
@@ -336,9 +336,7 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
 
   // Toggle dietary label
   const toggleDietaryLabel = useCallback((labelId: string) => {
-    setDietaryLabels((prev) =>
-      prev.includes(labelId) ? prev.filter((l) => l !== labelId) : [...prev, labelId]
-    );
+    setDietaryLabels((prev) => (prev.includes(labelId) ? prev.filter((l) => l !== labelId) : [...prev, labelId]));
   }, []);
 
   // Toggle contact preference
@@ -369,7 +367,7 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
         post_stripped_address?: string;
         transportation?: string;
         condition?: string;
-      } | null
+      } | null,
     ) => {
       if (product) {
         setCategory(product.post_type || "");
@@ -381,7 +379,7 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
         setCondition(product.condition || "");
       }
     },
-    []
+    [],
   );
 
   // Reset form

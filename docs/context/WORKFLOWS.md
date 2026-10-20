@@ -47,7 +47,7 @@ This document provides step-by-step workflows for common development tasks in th
 
 **Prerequisites:**
 
-- Node.js 24+ installed (see `.nvmrc`)
+- Bun 1.4+ installed (`bun --version`) — the only runtime this project needs
 - Git installed
 - Code editor (VS Code recommended)
 - GitHub account with repository access
@@ -59,9 +59,8 @@ This document provides step-by-step workflows for common development tasks in th
 git clone https://github.com/your-org/foodshare.git
 cd foodshare
 
-# 2. Install correct Node.js version
-nvm install
-nvm use
+# 2. Install Bun (the only runtime this project needs)
+mise install bun
 
 # 3. Install dependencies
 bun install

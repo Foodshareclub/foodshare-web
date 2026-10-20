@@ -2,16 +2,12 @@
  * API Mocking Tests
  *
  * Demonstrates MSW-based API mocking for testing.
- * 
+ *
  * NOTE: These tests require Node.js 18+ with native fetch support.
  * Run with: bun test
  */
 
-import {
-  mockSuccess,
-  mockError,
-  mockFactories,
-} from "../mock-factories";
+import { mockError, mockFactories, mockSuccess } from "../mock-factories";
 
 describe("API Mocking - Unit Tests", () => {
   describe("mockSuccess", () => {

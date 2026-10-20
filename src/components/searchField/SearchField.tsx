@@ -1,11 +1,11 @@
 "use client";
 
-import type { ChangeEvent } from "react";
-import { useState } from "react";
-import { SearchIcon } from "@/utils/icons";
-import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { SearchIcon } from "@/utils/icons";
+import { useRouter } from "next/navigation";
+import type { ChangeEvent } from "react";
+import { useState } from "react";
 
 /**
  * SearchField - A search input component with product type filtering
@@ -54,12 +54,9 @@ export function SearchField({
     <div className={cn("glass-input", sizeClasses[size], className)} self-center>
       <div className="flex flex-col items-center">
         <div className="relative w-full flex items-center">
-          <div className="absolute left-3 pointer-events-none">
+          <div className="absolute start-3 pointer-events-none">
             <SearchIcon
-              className={cn(
-                "cursor-pointer",
-                showSearchParams ? "text-primary" : "text-muted-foreground"
-              )}
+              className={cn("cursor-pointer", showSearchParams ? "text-primary" : "text-muted-foreground")}
               onClick={showSearchParams ? onFindResultsHandler : undefined}
             />
           </div>
@@ -69,9 +66,9 @@ export function SearchField({
             onFocus={onFocusHandler}
             variant="glass"
             className={cn(
-              "bg-transparent border-none pl-10 focus-visible:ring-0 focus-visible:ring-offset-0",
+              "bg-transparent border-none ps-10 focus-visible:ring-0 focus-visible:ring-offset-0",
               size === "sm" && "text-sm",
-              size === "lg" && "text-base"
+              size === "lg" && "text-base",
             )}
             placeholder={placeholder}
           />
@@ -87,7 +84,7 @@ export function SearchField({
                     value={type}
                     checked={productType === type}
                     onChange={(e) => onProductTypeChange(e.target.value)}
-                    className="w-4 h-4 text-rausch-500 focus:ring-rausch-500"
+                    className="w-4 h-4 accent-brand-orange"
                   />
                   <span className="text-sm capitalize">{type}</span>
                 </label>

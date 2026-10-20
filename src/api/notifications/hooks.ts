@@ -2,14 +2,14 @@
  * React hooks for triggering email notifications
  */
 
+import { createLogger } from "@/lib/logger";
 import { useCallback } from "react";
 import {
+  notifyAdminsOfFeedback,
   sendChatNotification,
   sendFoodListingNotification,
   sendReviewReminder,
-  notifyAdminsOfFeedback,
 } from "./emailNotifications";
-import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("NotificationHooks");
 
@@ -32,7 +32,7 @@ export function useChatNotifications() {
         return null;
       }
     },
-    []
+    [],
   );
 
   return { notify };
@@ -57,7 +57,7 @@ export function useFoodListingNotifications() {
         return null;
       }
     },
-    []
+    [],
   );
 
   return { notify };
@@ -81,7 +81,7 @@ export function useReviewReminders() {
         return null;
       }
     },
-    []
+    [],
   );
 
   return { sendReminder };
@@ -107,7 +107,7 @@ export function useFeedbackNotifications() {
         return null;
       }
     },
-    []
+    [],
   );
 
   return { notifyAdmins };

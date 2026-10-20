@@ -16,10 +16,10 @@
  * ```
  */
 
-import { useEffect, useState, useCallback } from "react";
-import { PostActivityTimeline } from "./PostActivityTimeline";
 import { createClient } from "@/lib/supabase/client";
 import type { PostActivityTimelineItem, PostActivityType } from "@/types/post-activity.types";
+import { useCallback, useEffect, useState } from "react";
+import { PostActivityTimeline } from "./PostActivityTimeline";
 
 interface PostActivityRealtimeProps {
   postId: number;
@@ -67,7 +67,7 @@ export function PostActivityRealtime({
 
       onNewActivity?.(newActivity);
     },
-    [activityTypes, maxActivities, onNewActivity]
+    [activityTypes, maxActivities, onNewActivity],
   );
 
   useEffect(() => {
@@ -84,7 +84,7 @@ export function PostActivityRealtime({
           table: "post_activity_logs",
           filter: `post_id=eq.${postId}`,
         },
-        handleNewActivity
+        handleNewActivity,
       )
       .subscribe((status) => {
         setIsConnected(status === "SUBSCRIBED");

@@ -1,25 +1,25 @@
 /**
  * Logger Module
  * Centralized logging system with beautiful, structured output
- * 
+ *
  * @example
  * // Basic usage
  * import { pretty } from '@/lib/logger';
  * pretty.info('User logged in', { userId: '123' });
  * pretty.api('GET', '/api/products', 200, 45);
  * pretty.db('SELECT', 'posts', 12, 50);
- * 
+ *
  * @example
  * // In components
  * import { useLogger } from '@/hooks/useLogger';
  * const log = useLogger('ProductCard');
  * log.info('Product loaded', product);
- * 
+ *
  * @example
  * // Wrap fetch calls
  * import { loggedFetch } from '@/lib/logger';
  * const res = await loggedFetch('/api/products');
- * 
+ *
  * @example
  * // Network request logging with waterfall
  * import { network } from '@/lib/logger';
@@ -49,7 +49,7 @@ export { loggedFetch, createLoggedFetch, loggedQuery } from "./fetch";
 export { COLORS, EMOJI, STYLES, ANSI, getTimingStyle, getStatusStyle } from "./styles";
 
 // Console Theme (ASCII art, progress bars, themed output)
-export { 
+export {
   theme,
   printBanner,
   printSection,
@@ -71,7 +71,7 @@ export { table } from "./table";
 export type { TableColumn } from "./table";
 
 // Debug Utilities (trace, assert, measure, inspect)
-export { 
+export {
   debug,
   trace,
   assert,
