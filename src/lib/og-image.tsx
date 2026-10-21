@@ -1,3 +1,4 @@
+import { safeOgImageUrl, stripSvgText } from "@/lib/og-image-safety";
 import { ImageResponse } from "next/og";
 
 export const ogImageSize = { width: 1200, height: 630 };
@@ -50,9 +51,16 @@ export function generateOGImage({ title, subtitle, emoji, type = "default", imag
   const gradient = gradients[type];
   const defaultEmoji = emoji || emojis[type];
 
+  // The text is written by the listing, so it is stripped of the
+  // characters that could carry markup before it reaches the card.
+  const safeTitle = stripSvgText(title);
+  const safeSubtitle = subtitle === undefined ? undefined : stripSvgText(subtitle);
+  const safeEmoji = stripSvgText(defaultEmoji);
+  const background = safeOgImageUrl(imageUrl);
+
   // Truncate title if too long
-  const displayTitle = title.length > 50 ? `${title.slice(0, 47)}...` : title;
-  const displaySubtitle = subtitle && subtitle.length > 100 ? `${subtitle.slice(0, 97)}...` : subtitle;
+  const displayTitle = safeTitle.length > 50 ? `${safeTitle.slice(0, 47)}...` : safeTitle;
+  const displaySubtitle = safeSubtitle && safeSubtitle.length > 100 ? `${safeSubtitle.slice(0, 97)}...` : safeSubtitle;
 
   return new ImageResponse(
     <div
@@ -69,7 +77,7 @@ export function generateOGImage({ title, subtitle, emoji, type = "default", imag
       }}
     >
       {/* Background image overlay if provided */}
-      {imageUrl && (
+      {background && (
         <div
           style={{
             position: "absolute",
@@ -77,7 +85,7 @@ export function generateOGImage({ title, subtitle, emoji, type = "default", imag
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundImage: `url(${imageUrl})`,
+            backgroundImage: `url(${background})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             opacity: 0.3,
@@ -111,14 +119,14 @@ export function generateOGImage({ title, subtitle, emoji, type = "default", imag
             marginBottom: 24,
           }}
         >
-          <span style={{ fontSize: 60 }}>{defaultEmoji}</span>
+          <span style={{ fontSize: 60 }}>{safeEmoji}</span>
         </div>
 
         {/* Title */}
         <div
           style={{
             display: "flex",
-            fontSize: title.length > 30 ? 48 : 56,
+            fontSize: safeTitle.length > 30 ? 48 : 56,
             fontWeight: 800,
             color: "white",
             textShadow: "0 4px 12px rgba(0,0,0,0.3)",
