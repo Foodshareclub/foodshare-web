@@ -33,7 +33,10 @@ async function deploy(options: Record<string, string> = {}, check = false) {
   try {
     const environmentFile = join(directory, "foodshare-web.env");
     const unitDirectory = join(directory, "systemd");
-    await Bun.write(environmentFile, oldEnvironment);
+    // A host whose environment file was lost, or that was reprovisioned,
+    // has none. The deployment writes it, so the test has to be able to
+    // ask for a host without one.
+    if (options.MOCK_NO_ENV !== "1") await Bun.write(environmentFile, oldEnvironment);
     await mkdir(join(unitDirectory, "foodshare-web.container.d"), { recursive: true });
     await Bun.write(
       join(unitDirectory, "foodshare-web.container"),
@@ -95,7 +98,7 @@ printf 'systemctl %s\\n' "$*" >> "$MOCK_DIRECTORY/commands"
       error,
       commands: (await commandFile.exists()) ? await commandFile.text() : "",
       dropin: (await dropinFile.exists()) ? await dropinFile.text() : "",
-      environment: await Bun.file(environmentFile).text(),
+      environment: (await Bun.file(environmentFile).exists()) ? await Bun.file(environmentFile).text() : "",
     };
   } finally {
     await rm(directory, { recursive: true, force: true });
@@ -127,6 +130,19 @@ test("a host that has never run the app stops the deployment", async () => {
   expect(result.error).toContain("does not exist on this host");
   expect(result.dropin).toBe("");
   expect(result.environment).toBe(oldEnvironment);
+});
+test("a host with no environment file is given one", async () => {
+  // The deployment writes the file, so requiring it to be there first was
+  // the second way a deployment could not bring a host back.
+  const result = await deploy({ MOCK_NO_ENV: "1" });
+  expect(result.code).toBe(0);
+  expect(result.environment).toContain('NEXT_PUBLIC_SUPABASE_URL="https://new.example"');
+  expect(result.environment).not.toContain("EXISTING_SETTING");
+});
+test("a host that had no environment file has none again after a rollback", async () => {
+  const result = await deploy({ MOCK_NO_ENV: "1", MOCK_HEALTH_FAIL: "1" });
+  expect(result.code).not.toBe(0);
+  expect(result.environment).toBe("");
 });
 test("a registry failure or wrong revision leaves the running image and settings intact", async () => {
   for (const configuration of [{ MOCK_PULL_FAIL: "1" }, { MOCK_REVISION: "wrong-commit" }]) {

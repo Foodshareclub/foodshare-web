@@ -25,6 +25,21 @@ UNIT_DIR="${FOODSHARE_WEB_UNIT_DIR:-$HOME/.config/containers/systemd}"
 DROPIN_DIR="$UNIT_DIR/foodshare-web.container.d"
 DROPIN_FILE="$DROPIN_DIR/50-image.conf"
 
+# What this host has, printed when the deployment cannot go on. The failure
+# it explains is the difference between "the app is not on this host" and
+# "the app is on this host and something else is wrong", and a deployment
+# that says only "run the install script" makes a reader guess.
+report_host() {
+  echo "--- what this host has ---" >&2
+  echo "user: $(id -un)" >&2
+  echo "containers belonging to this user:" >&2
+  podman ps -a --format '{{.Names}}  {{.Status}}  {{.Image}}' 2>&1 | head -20 >&2 || true
+  echo "units installed in $UNIT_DIR:" >&2
+  ls -1 "$UNIT_DIR" 2>&1 | head -20 >&2 || true
+  echo "environment file: $ENV_FILE" >&2
+  if [ -f "$ENV_FILE" ]; then echo "  present" >&2; else echo "  missing" >&2; fi
+}
+
 # The container has to exist on this host, and it does not have to be running.
 #
 # It used to have to be running, which made the deployment unable to fix the
@@ -41,16 +56,28 @@ DROPIN_FILE="$DROPIN_DIR/50-image.conf"
 previous_image=$(podman container inspect --format '{{.Image}}' foodshare-web 2>/dev/null || true)
 if [ -z "$previous_image" ]; then
   echo "The Podman web container does not exist on this host; install and start the unit first (scripts/quadlet-install.sh)" >&2
+  report_host
   exit 1
 fi
 if [ ! -f "$UNIT_DIR/foodshare-web.container" ]; then
   echo "The Quadlet unit is not installed at $UNIT_DIR/foodshare-web.container; run scripts/quadlet-install.sh first" >&2
+  report_host
   exit 1
 fi
-if [ ! -f "$ENV_FILE" ]; then
-  echo "The environment file the unit reads is missing at $ENV_FILE; run scripts/quadlet-install.sh first" >&2
-  exit 1
-fi
+
+# The environment file does not have to exist yet. The deployment writes it
+# from the values it was given, and the unit reads it when it starts.
+#
+# Requiring it to be there first was the second way a deployment could not
+# bring a host back: a host whose environment file was lost, and a host
+# that was reprovisioned, were hosts the deployment refused to touch and
+# told a person to fix over SSH.
+#
+# Whether it was there is recorded, because the rollback has to put the host
+# back the way it was: a file that was there is restored, and a file that
+# was not is removed again.
+had_env=0
+if [ -f "$ENV_FILE" ]; then had_env=1; fi
 verify_listing_api() {
   podman exec -i foodshare-web bun run - <<'JS'
 const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -91,7 +118,7 @@ umask 077
 snapshot=$(mktemp -d)
 registry_auth=$(mktemp)
 trap 'rm -rf "$snapshot" "$registry_auth"' EXIT
-cp "$ENV_FILE" "$snapshot/env"
+if [ "$had_env" = 1 ]; then cp "$ENV_FILE" "$snapshot/env"; fi
 printf '%s' "$GITHUB_TOKEN" | REGISTRY_AUTH_FILE="$registry_auth" podman login ghcr.io --username "$GITHUB_ACTOR" --password-stdin >/dev/null
 REGISTRY_AUTH_FILE="$registry_auth" podman pull "$DEPLOY_IMAGE"
 revision=$(podman image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$DEPLOY_IMAGE")
@@ -131,11 +158,36 @@ lines += [key + '=' + json.dumps(value) for key, value in values.items()]
 target.write_text('\n'.join(lines) + '\n')
 target.chmod(0o600)
 PY
-install -m 600 "$snapshot/env.staged" "$ENV_FILE"
+# The environment file is written the way the install script writes it: the
+# directory is made if it is not there, and the file is owned by the user
+# the service runs as, so the next deployment can rewrite it.
+#
+# The directory under /etc is owned by root, so creating the file there
+# needs the same elevation the install script uses. Overwriting a file
+# that is already there does not -- the file belongs to the user -- so the
+# plain write is tried first and the elevated one is the fallback.
+write_env_file() {
+  local source="$1"
+  mkdir -p "$(dirname "$ENV_FILE")" 2>/dev/null ||
+    sudo -n mkdir -p "$(dirname "$ENV_FILE")" 2>/dev/null || {
+      echo "The directory $(dirname "$ENV_FILE") does not exist and cannot be created; run scripts/quadlet-install.sh first" >&2
+      return 1
+    }
+  install -m 600 "$source" "$ENV_FILE" 2>/dev/null ||
+    sudo -n install -m 600 -o "$(id -un)" "$source" "$ENV_FILE"
+}
+
+write_env_file "$snapshot/env.staged"
 
 rollback() {
   echo "Web health failed; restoring this host's previous image and application settings" >&2
-  install -m 600 "$snapshot/env" "$ENV_FILE"
+  # The host is put back the way it was. A host that had an environment
+  # file gets the file it had; a host that had none gets none again.
+  if [ "$had_env" = 1 ]; then
+    write_env_file "$snapshot/env"
+  else
+    rm -f "$ENV_FILE" 2>/dev/null || sudo -n rm -f "$ENV_FILE"
+  fi
   # The image that was running, by id. The unit's `:latest` tag may have
   # moved since it was pulled, so the tag is not what was running.
   printf 'Image=%s\n' "$previous_image" > "$DROPIN_FILE"
