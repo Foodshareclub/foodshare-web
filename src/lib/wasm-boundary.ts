@@ -44,18 +44,72 @@ export function requireFiniteNumber(value: unknown, name: string): number {
 }
 
 /**
+ * Require a number that is neither `NaN` nor infinite, and not negative.
+ *
+ * @throws TypeError if the value is not a number, or RangeError if it is
+ *   negative or not finite.
+ */
+export function requireNonNegativeNumber(value: unknown, name: string): number {
+  const num = requireFiniteNumber(value, name);
+  if (num < 0) {
+    throw new RangeError(`${name} must not be negative, got ${num}`);
+  }
+  return num;
+}
+
+/**
+ * Require a number that is neither `NaN` nor infinite, and greater than
+ * zero.
+ *
+ * @throws TypeError if the value is not a number, or RangeError if it is
+ *   zero, negative, or not finite.
+ */
+export function requirePositiveNumber(value: unknown, name: string): number {
+  const num = requireFiniteNumber(value, name);
+  if (num <= 0) {
+    throw new RangeError(`${name} must be greater than zero, got ${num}`);
+  }
+  return num;
+}
+
+/**
+ * Require a whole number.
+ *
+ * @throws TypeError if the value is not a number, or RangeError if it has
+ *   a fractional part.
+ */
+function requireInteger(value: unknown, name: string): number {
+  const num = requireFiniteNumber(value, name);
+  if (!Number.isInteger(num)) {
+    throw new RangeError(`${name} must be a whole number, got ${num}`);
+  }
+  return num;
+}
+
+/**
  * Require a whole number that is not negative.
  *
  * @throws TypeError if the value is not a number, or RangeError if it is
  *   negative or has a fractional part.
  */
 export function requireNonNegativeInteger(value: unknown, name: string): number {
-  const num = requireFiniteNumber(value, name);
-  if (!Number.isInteger(num)) {
-    throw new RangeError(`${name} must be a whole number, got ${num}`);
-  }
+  const num = requireInteger(value, name);
   if (num < 0) {
     throw new RangeError(`${name} must not be negative, got ${num}`);
+  }
+  return num;
+}
+
+/**
+ * Require a whole number within a range.
+ *
+ * @throws TypeError if the value is not a number, or RangeError if it has
+ *   a fractional part or lies outside the range.
+ */
+export function requireIntegerInRange(value: unknown, name: string, min: number, max: number): number {
+  const num = requireInteger(value, name);
+  if (num < min || num > max) {
+    throw new RangeError(`${name} must be between ${min} and ${max}, got ${num}`);
   }
   return num;
 }
@@ -73,21 +127,64 @@ export function requireByteArray(value: unknown, name: string): Uint8Array {
 }
 
 /**
- * Require an array of finite numbers, or nothing at all.
+ * Require a vector of finite numbers.
  *
- * A vector of the wrong length is not an error here: the module measures
- * the two vectors against each other and answers with a similarity of zero
+ * The module reads a vector as `&[f32]`, so a value that is not a vector
+ * cannot be handed over: `new Float32Array("abc")` is empty, and
+ * `new Float32Array(5)` is five zeros, and either would be measured as
+ * though it were the embedding the caller meant to pass.
+ *
+ * A vector of the wrong length is not an error: the module measures the
+ * two vectors against each other and answers with a similarity of zero
  * when they do not match, which is what a caller wants to see.
  *
- * @throws TypeError if the value is present and is not an array of finite
- *   numbers.
+ * @throws TypeError if the value is not a vector, or holds a value that is
+ *   not a number.
+ * @throws RangeError if the vector holds a value that is not finite.
  */
-export function requireNumberArray(value: unknown, name: string): number[] | undefined {
-  if (value === undefined || value === null) return undefined;
-  if (!Array.isArray(value)) {
-    throw new TypeError(`${name} must be an array of numbers, got ${describe(value)}`);
+export function requireVector(value: unknown, name: string): Float32Array {
+  if (value instanceof Float32Array) {
+    for (let index = 0; index < value.length; index++) {
+      const entry = value[index];
+      if (!Number.isFinite(entry)) {
+        throw new RangeError(`${name}[${index}] must be a finite number, got ${entry}`);
+      }
+    }
+    return value;
   }
-  return value.map((entry, index) => requireFiniteNumber(entry, `${name}[${index}]`));
+  if (!Array.isArray(value)) {
+    throw new TypeError(`${name} must be a vector of numbers, got ${describe(value)}`);
+  }
+  return new Float32Array(value.map((entry, index) => requireFiniteNumber(entry, `${name}[${index}]`)));
+}
+
+/**
+ * Require an array.
+ *
+ * @throws TypeError if the value is not an array.
+ */
+export function requireArray<T>(value: unknown, name: string): T[] {
+  if (!Array.isArray(value)) {
+    throw new TypeError(`${name} must be an array, got ${describe(value)}`);
+  }
+  return value as T[];
+}
+
+/**
+ * Require an identifier: a string, or a number that is not `NaN`.
+ *
+ * @throws TypeError if the value is neither a string nor a number.
+ * @throws RangeError if the value is a number that is not finite.
+ */
+export function requireIdentifier(value: unknown, name: string): string | number {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      throw new RangeError(`${name} must be a finite number, got ${value}`);
+    }
+    return value;
+  }
+  throw new TypeError(`${name} must be a string or a number, got ${describe(value)}`);
 }
 
 /**

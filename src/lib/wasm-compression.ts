@@ -10,11 +10,15 @@
  * @module lib/wasm-compression
  */
 
-import { requireByteArray, requireNonNegativeInteger } from "@/lib/wasm-boundary";
+import { requireByteArray, requireIntegerInRange } from "@/lib/wasm-boundary";
 import * as WasmCompression from "@/wasm/foodshare-compression/foodshare_compression";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
+
+/** The compression levels the module's encoders accept. */
+const BROTLI_QUALITY_MAX = 11;
+const GZIP_LEVEL_MAX = 9;
 
 function toUint8Array(input: Uint8Array | string): Uint8Array {
   if (typeof input === "string") {
@@ -25,10 +29,18 @@ function toUint8Array(input: Uint8Array | string): Uint8Array {
 
 /**
  * Compress raw binary or string data using Brotli (quality 0-11, default 4).
+ *
+ * The level is checked against the range the encoder takes. The module
+ * holds a level of its own that is above the top of the range, so a level
+ * that is too high is compressed at that level instead of the one that was
+ * asked for.
  */
 export function compressBrotli(data: Uint8Array | string, quality = 4): Uint8Array {
   const bytes = toUint8Array(data);
-  return WasmCompression.brotli_compress(bytes, requireNonNegativeInteger(quality, "quality"));
+  return WasmCompression.brotli_compress(
+    bytes,
+    requireIntegerInRange(quality, "quality", 0, BROTLI_QUALITY_MAX),
+  );
 }
 
 /**
@@ -48,10 +60,18 @@ export function decompressBrotliString(data: Uint8Array): string {
 
 /**
  * Compress raw binary or string data using Gzip (level 0-9, default 6).
+ *
+ * The level is checked against the range the encoder takes. The module
+ * holds a level of its own that is above the top of the range, so a level
+ * that is too high is compressed at that level instead of the one that was
+ * asked for.
  */
 export function compressGzip(data: Uint8Array | string, level = 6): Uint8Array {
   const bytes = toUint8Array(data);
-  return WasmCompression.gzip_compress(bytes, requireNonNegativeInteger(level, "level"));
+  return WasmCompression.gzip_compress(
+    bytes,
+    requireIntegerInRange(level, "level", 0, GZIP_LEVEL_MAX),
+  );
 }
 
 /**

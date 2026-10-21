@@ -55,6 +55,11 @@ describe("POST /api/engine/geo/distance", () => {
       ["a missing coordinate", { lat1: 51.5, lng1: 0 }],
       ["a latitude out of range", { ...VALID, lat1: 91 }],
       ["a longitude out of range", { ...VALID, lng1: 181 }],
+      // A half-life of zero is not a decay curve, and the module holds one
+      // of its own to fall back on, so it is refused rather than answered
+      // with a curve that was not asked for.
+      ["a half-life of zero", { ...VALID, halfLifeKm: 0 }],
+      ["a negative half-life", { ...VALID, halfLifeKm: -1 }],
     ];
 
     for (const [label, payload] of cases) {
@@ -152,6 +157,7 @@ describe("POST /api/engine/search/hybrid", () => {
       ["a string vector", { textQuery: "a", targetText: "b", queryVector: "abc" }],
       ["a vector of strings", { textQuery: "a", targetText: "b", queryVector: ["x", "y"] }],
       ["a non-finite distance", { textQuery: "a", targetText: "b", distanceKm: Number.NaN }],
+      ["a negative distance", { textQuery: "a", targetText: "b", distanceKm: -1 }],
     ];
 
     for (const [label, payload] of cases) {

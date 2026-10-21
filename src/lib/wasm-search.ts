@@ -11,10 +11,25 @@
  */
 
 import { createLogger } from "@/lib/logger";
-import { requireFiniteNumber, requireNumberArray, requireString } from "@/lib/wasm-boundary";
+import {
+  requireArray,
+  requireIdentifier,
+  requireIntegerInRange,
+  requireNonNegativeNumber,
+  requirePositiveNumber,
+  requireString,
+  requireVector,
+} from "@/lib/wasm-boundary";
 import * as WasmSearch from "@/wasm/foodshare-search/foodshare_search";
 
 const logger = createLogger("WasmSearch");
+
+/**
+ * The largest vector the module is asked to pad out to. The module
+ * allocates a vector of the requested size, so an unbounded request would
+ * ask for as much memory as the caller cares to name.
+ */
+const MAX_VECTOR_DIMENSIONS = 65_536;
 
 export interface RrfFusedItem {
   id: string | number;
@@ -25,26 +40,24 @@ export interface RrfFusedItem {
  * Compute cosine similarity between two float embedding vectors.
  */
 export function cosineSimilarity(a: Float32Array | number[], b: Float32Array | number[]): number {
-  const f32A = a instanceof Float32Array ? a : new Float32Array(a);
-  const f32B = b instanceof Float32Array ? b : new Float32Array(b);
-  return WasmSearch.vector_cosine_similarity(f32A, f32B);
+  return WasmSearch.vector_cosine_similarity(requireVector(a, "a"), requireVector(b, "b"));
 }
 
 /**
  * Compute Euclidean (L2) distance between two float embedding vectors.
  */
 export function l2Distance(a: Float32Array | number[], b: Float32Array | number[]): number {
-  const f32A = a instanceof Float32Array ? a : new Float32Array(a);
-  const f32B = b instanceof Float32Array ? b : new Float32Array(b);
-  return WasmSearch.vector_l2_distance(f32A, f32B);
+  return WasmSearch.vector_l2_distance(requireVector(a, "a"), requireVector(b, "b"));
 }
 
 /**
  * Pad or truncate vector to exact target dimensions (e.g. 384 for gte-small).
  */
 export function normalizeVectorDimensions(v: Float32Array | number[], targetDim = 384): Float32Array {
-  const f32V = v instanceof Float32Array ? v : new Float32Array(v);
-  return WasmSearch.vector_normalize_dimensions(f32V, targetDim);
+  return WasmSearch.vector_normalize_dimensions(
+    requireVector(v, "v"),
+    requireIntegerInRange(targetDim, "targetDim", 0, MAX_VECTOR_DIMENSIONS),
+  );
 }
 
 /**
@@ -63,23 +76,25 @@ export function normalizeVectorDimensions(v: Float32Array | number[], targetDim 
  * between runs, so the order is settled here.
  */
 export function fuseRankedLists(lists: Array<Array<string | number>>, k = 60.0): RrfFusedItem[] {
+  const smoothing = requireNonNegativeNumber(k, "k");
   const keyById = new Map<string | number, string>();
   const idByKey = new Map<string, string | number>();
   const firstSeen = new Map<string, number>();
-  const keyed = lists.map((list) =>
-    list.map((id) => {
-      const existing = keyById.get(id);
+  const keyed = requireArray<Array<string | number>>(lists, "lists").map((list, listIndex) =>
+    requireArray<string | number>(list, `lists[${listIndex}]`).map((id, idIndex) => {
+      const identifier = requireIdentifier(id, `lists[${listIndex}][${idIndex}]`);
+      const existing = keyById.get(identifier);
       if (existing !== undefined) return existing;
       const key = `k${keyById.size}`;
-      keyById.set(id, key);
-      idByKey.set(key, id);
+      keyById.set(identifier, key);
+      idByKey.set(key, identifier);
       firstSeen.set(key, keyById.size - 1);
       return key;
     }),
   );
 
   try {
-    const fused = WasmSearch.rrf_merge(keyed, k) as Array<{ id: string; score: number }>;
+    const fused = WasmSearch.rrf_merge(keyed, smoothing) as Array<{ id: string; score: number }>;
     return fused
       .map((item) => ({
         id: idByKey.get(item.id) ?? item.id,
@@ -114,9 +129,40 @@ function toVector(
   name: string,
 ): Float32Array | undefined {
   if (value === undefined || value === null) return undefined;
-  if (value instanceof Float32Array) return value;
-  const numbers = requireNumberArray(value, name);
-  return numbers ? new Float32Array(numbers) : undefined;
+  return requireVector(value, name);
+}
+
+/**
+ * Check an optional number that cannot be negative: a distance, or a share
+ * of the score.
+ *
+ * A weight is a share of the score, and the module adds the weights up and
+ * divides by the total, so a negative weight can make that total zero,
+ * which answers with a score of infinity or of no value at all. A negative
+ * distance is not a distance.
+ */
+function optionalNonNegative(
+  value: number | undefined,
+  name: string,
+): number | undefined {
+  if (value === undefined || value === null) return undefined;
+  return requireNonNegativeNumber(value, name);
+}
+
+/**
+ * Check an optional half-life.
+ *
+ * The half-life has to be greater than zero. The module holds a half-life
+ * of ten kilometres for a value of zero or less, which is a different
+ * curve from the one that was asked for, and it answers with it as though
+ * it were the one that was asked for.
+ */
+function optionalHalfLife(
+  value: number | undefined,
+  name: string,
+): number | undefined {
+  if (value === undefined || value === null) return undefined;
+  return requirePositiveNumber(value, name);
 }
 
 /**
@@ -141,21 +187,26 @@ export function calculateHybridScore(options: {
     requireString(options.targetText, "targetText"),
     qVec,
     iVec,
-    options.distanceKm,
-    options.vectorWeight,
-    options.textWeight,
-    options.geoWeight,
-    options.halfLifeKm,
+    optionalNonNegative(options.distanceKm, "distanceKm"),
+    optionalNonNegative(options.vectorWeight, "vectorWeight"),
+    optionalNonNegative(options.textWeight, "textWeight"),
+    optionalNonNegative(options.geoWeight, "geoWeight"),
+    optionalHalfLife(options.halfLifeKm, "halfLifeKm"),
   );
 }
 
 /**
  * Calculate exponential geographic proximity decay score (0.0 to 1.0).
+ *
+ * The half-life has to be greater than zero. The module falls back to ten
+ * kilometres for a half-life of zero or less, which is a different curve
+ * from the one that was asked for, and answers with it as though it were
+ * the one that was asked for.
  */
 export function calculateDistanceDecay(distanceKm: number, halfLifeKm = 10.0): number {
   return WasmSearch.distance_decay(
-    requireFiniteNumber(distanceKm, "distanceKm"),
-    requireFiniteNumber(halfLifeKm, "halfLifeKm"),
+    requireNonNegativeNumber(distanceKm, "distanceKm"),
+    requirePositiveNumber(halfLifeKm, "halfLifeKm"),
   );
 }
 

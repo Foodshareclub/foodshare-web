@@ -10,7 +10,7 @@
  */
 
 import { createLogger } from "@/lib/logger";
-import { requireString } from "@/lib/wasm-boundary";
+import { requireNonNegativeInteger, requireString } from "@/lib/wasm-boundary";
 import * as WasmCrypto from "@/wasm/foodshare-crypto/foodshare_crypto";
 
 const logger = createLogger("WasmCrypto");
@@ -46,8 +46,13 @@ function toEpochSeconds(timestampSeconds: number | undefined): bigint | null {
  */
 export function generateTotp(secret: string, timestampSeconds?: number): string {
   const key = requireString(secret, "secret");
+  // The arguments are checked before the module is called, so a caller that
+  // passes the wrong value is told, rather than being recorded as a fault
+  // of the module.
+  const time = toEpochSeconds(timestampSeconds);
+
   try {
-    return WasmCrypto.generate_totp_code(key, toEpochSeconds(timestampSeconds));
+    return WasmCrypto.generate_totp_code(key, time);
   } catch (error) {
     logger.error("WASM TOTP generation failed", error instanceof Error ? error : new Error(String(error)));
     throw error;
@@ -60,17 +65,22 @@ export function generateTotp(secret: string, timestampSeconds?: number): string 
  * A failure to verify and a failure to run the check are reported the
  * same way — as "not verified" — so a broken module cannot be used to
  * distinguish a wrong code from a broken check. The reason is logged.
+ *
+ * The arguments are the exception: a caller that passes a value the module
+ * cannot use is told so, because that is a mistake in the caller and not
+ * a fact about the code.
  */
 export function verifyTotp(secret: string, code: string, timestampSeconds?: number, windowSteps = 1): boolean {
   const key = requireString(secret, "secret");
   const token = requireString(code, "code");
+  const time = toEpochSeconds(timestampSeconds);
+  // The module steps backwards and forwards through the window, so a
+  // negative window leaves it nothing to check and every code comes back
+  // unverified.
+  const window = requireNonNegativeInteger(windowSteps, "windowSteps");
+
   try {
-    return WasmCrypto.verify_totp_code(
-      key,
-      token,
-      toEpochSeconds(timestampSeconds),
-      BigInt(Math.floor(windowSteps)),
-    );
+    return WasmCrypto.verify_totp_code(key, token, time, BigInt(window));
   } catch (error) {
     logger.error("WASM TOTP verification error", error instanceof Error ? error : new Error(String(error)));
     return false;

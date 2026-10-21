@@ -15,7 +15,7 @@
  */
 
 import { createLogger } from "@/lib/logger";
-import { requireFiniteNumber } from "@/lib/wasm-boundary";
+import { requireArray, requireFiniteNumber, requireNonNegativeNumber } from "@/lib/wasm-boundary";
 import * as WasmGeo from "@/wasm/foodshare-geo/foodshare_geo";
 
 const logger = createLogger("WasmGeo");
@@ -200,8 +200,11 @@ export function calculateItemDistances<T extends GeoItem>(
   userLng: number,
   items: T[],
 ): (T & { distance: number })[] {
-  const distances = measureDistances(userLat, userLng, items);
-  return items.map((item, index) => ({ ...item, distance: distances[index] }));
+  const lat = requireFiniteNumber(userLat, "userLat");
+  const lng = requireFiniteNumber(userLng, "userLng");
+  const list = requireArray<T>(items, "items");
+  const distances = measureDistances(lat, lng, list);
+  return list.map((item, index) => ({ ...item, distance: distances[index] }));
 }
 
 /**
@@ -218,18 +221,23 @@ export function filterItemsWithinRadius<T extends GeoItem>(
   items: T[],
   radiusKm: number,
 ): (T & { distance: number })[] {
-  const payload = items.map((item, index) => ({
+  const lat = requireFiniteNumber(userLat, "userLat");
+  const lng = requireFiniteNumber(userLng, "userLng");
+  // A radius of zero is a point, and a negative one is nothing at all.
+  const radius = requireNonNegativeNumber(radiusKm, "radiusKm");
+  const list = requireArray<T>(items, "items");
+  const payload = list.map((item, index) => ({
     id: index,
     location: normalizeLocation(resolveLocation(item)),
   }));
 
   try {
-    const results = WasmGeo.filter_within_radius(userLat, userLng, payload, radiusKm) as Array<{
+    const results = WasmGeo.filter_within_radius(lat, lng, payload, radius) as Array<{
       id: number;
       distance: number;
     }>;
     return results.flatMap((result) => {
-      const item = items[result.id];
+      const item = list[result.id];
       return item ? [{ ...item, distance: result.distance }] : [];
     });
   } catch (error) {
@@ -237,10 +245,10 @@ export function filterItemsWithinRadius<T extends GeoItem>(
       "WASM radius filter failed, filtering in JavaScript instead",
       error instanceof Error ? error : new Error(String(error)),
     );
-    const distances = measureDistances(userLat, userLng, items);
-    return items
+    const distances = measureDistances(lat, lng, list);
+    return list
       .map((item, index) => ({ item, distance: distances[index] }))
-      .filter((entry) => entry.distance <= radiusKm)
+      .filter((entry) => entry.distance <= radius)
       .sort((a, b) => a.distance - b.distance)
       .map((entry) => ({ ...entry.item, distance: entry.distance }));
   }

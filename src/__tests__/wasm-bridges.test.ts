@@ -430,6 +430,103 @@ describe("WebAssembly Boundary Guards", () => {
     expect(() => calculateHybridScore({ textQuery: "a", targetText: 42 as never })).toThrow();
   });
 
+  it("refuses a vector that is not a vector at all", () => {
+    // `new Float32Array("abc")` is empty and `new Float32Array(5)` is
+    // five zeros, so a value that is not a vector would be measured as
+    // though it were the embedding the caller meant to pass.
+    for (const value of ["abc", 5, null, undefined, {}, true]) {
+      expect(() => cosineSimilarity(value as never, [1, 2])).toThrow();
+      expect(() => l2Distance([1, 2], value as never)).toThrow();
+    }
+  });
+
+  it("refuses a vector that holds a value that is not a number", () => {
+    expect(() => cosineSimilarity([1, "2"] as never, [1, 2])).toThrow();
+    expect(() => l2Distance([1, 2], [1, Number.NaN])).toThrow();
+    expect(() => cosineSimilarity(new Float32Array([1, Number.NaN]), new Float32Array([1, 2]))).toThrow();
+  });
+
+  it("refuses a vector size that is not a whole number in range", () => {
+    expect(() => normalizeVectorDimensions([1, 2, 3], -1)).toThrow();
+    expect(() => normalizeVectorDimensions([1, 2, 3], 1.5)).toThrow();
+    expect(() => normalizeVectorDimensions([1, 2, 3], 10_000_000)).toThrow();
+  });
+
+  it("refuses an identifier that is not a string or a number", () => {
+    expect(() => fuseRankedLists([[{} as never]])).toThrow();
+    expect(() => fuseRankedLists([[Number.NaN as never]])).toThrow();
+  });
+
+  it("refuses a fusion constant that is not a number of at least zero", () => {
+    expect(() => fuseRankedLists([["a"]], -1)).toThrow();
+    expect(() => fuseRankedLists([["a"]], Number.NaN)).toThrow();
+  });
+
+  it("refuses a weight that is not a number of at least zero", () => {
+    const options = { textQuery: "a", targetText: "b" };
+
+    for (const weight of [-1, Number.NaN, "0.45"]) {
+      expect(() => calculateHybridScore({ ...options, vectorWeight: weight as never })).toThrow();
+      expect(() => calculateHybridScore({ ...options, textWeight: weight as never })).toThrow();
+      expect(() => calculateHybridScore({ ...options, geoWeight: weight as never })).toThrow();
+    }
+  });
+
+  it("refuses a half-life that is not a number greater than zero", () => {
+    const options = { textQuery: "a", targetText: "b" };
+
+    // The module holds a half-life of ten kilometres for a value of zero
+    // or less, so a half-life of zero is a different curve from the one
+    // that was asked for, and it is answered with as though it were the
+    // one that was asked for.
+    expect(() => calculateHybridScore({ ...options, halfLifeKm: 0 })).toThrow();
+    expect(() => calculateHybridScore({ ...options, halfLifeKm: -1 })).toThrow();
+    expect(() => calculateDistanceDecay(10, 0)).toThrow();
+    expect(() => calculateDistanceDecay(10, -1)).toThrow();
+  });
+
+  it("refuses a distance that is not a number of at least zero", () => {
+    expect(() => calculateDistanceDecay(-1)).toThrow();
+    expect(() => calculateHybridScore({ textQuery: "a", targetText: "b", distanceKm: -1 })).toThrow();
+  });
+
+  it("refuses a drift window that is not a whole number of at least zero", () => {
+    const secret = "12345678901234567890";
+    const code = generateTotp(secret, 1000);
+
+    // The module steps backwards and forwards through the window, so a
+    // negative window leaves it nothing to check and every code comes
+    // back unverified.
+    expect(() => verifyTotp(secret, code, 1000, -1)).toThrow();
+    expect(() => verifyTotp(secret, code, 1000, 1.5)).toThrow();
+    expect(() => verifyTotp(secret, code, 1000, Number.NaN)).toThrow();
+  });
+
+  it("refuses a reference point that is not a finite number", () => {
+    const items = [{ id: "near", location: { coordinates: [8.6821, 50.1109] } }];
+
+    for (const value of [Number.NaN, Number.POSITIVE_INFINITY, "50"]) {
+      expect(() => calculateItemDistances(value as never, 8.6821, items)).toThrow();
+      expect(() => calculateItemDistances(50.1109, value as never, items)).toThrow();
+      expect(() => filterItemsWithinRadius(value as never, 8.6821, items, 50)).toThrow();
+      expect(() => filterItemsWithinRadius(50.1109, value as never, items, 50)).toThrow();
+    }
+  });
+
+  it("refuses a radius that is not a number of at least zero", () => {
+    const items = [{ id: "near", location: { coordinates: [8.6821, 50.1109] } }];
+
+    expect(() => filterItemsWithinRadius(50.1109, 8.6821, items, -1)).toThrow();
+    expect(() => filterItemsWithinRadius(50.1109, 8.6821, items, Number.NaN)).toThrow();
+  });
+
+  it("refuses a compression level that is outside the range the encoder takes", () => {
+    expect(() => compressBrotli("payload", 12)).toThrow();
+    expect(() => compressBrotli("payload", -1)).toThrow();
+    expect(() => compressGzip("payload", 10)).toThrow();
+    expect(() => compressGzip("payload", -1)).toThrow();
+  });
+
   it("still accepts a vector of a length the other vector does not match", () => {
     // The two vectors are measured against each other, and a mismatch
     // answers with a similarity of zero, which is what a caller wants.
