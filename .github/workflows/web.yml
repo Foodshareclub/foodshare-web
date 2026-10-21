@@ -482,32 +482,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The runner fleet is rootless Podman, and the SSH action below builds
-      # the image that carries its client. Podman's Docker compatibility
-      # layer reaches for the *root* socket by default, which a rootless
-      # runner cannot open:
+      # The SSH action is a container action: it builds the image that
+      # carries its client, and the runner builds that image when it
+      # prepares the job — before the first step runs. On a runner with no
+      # Docker there is nothing to build it with, and the build reaches for
+      # the root Podman socket, which a rootless runner cannot open:
       #
       #     dial unix /run/podman/podman.sock: connect: permission denied
       #
-      # So it is pointed at the socket the runner's own Podman serves. The
-      # check is here because the failure it prevents is a confusing one:
-      # the action would report that it could not reach a container runtime,
-      # and the reader would have no way to know the runtime was there and
-      # simply at a different address.
-      - name: Point the container runtime at the runner's own socket
-        run: |
-          socket="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/podman/podman.sock"
-          if [ ! -S "$socket" ]; then
-            echo "No Podman socket at $socket" >&2
-            echo "The runner is expected to run rootless Podman with its socket in \$XDG_RUNTIME_DIR" >&2
-            exit 1
-          fi
-          echo "CONTAINER_HOST=unix://$socket" >> "$GITHUB_ENV"
-          echo "DOCKER_HOST=unix://$socket" >> "$GITHUB_ENV"
-
+      # No setting in this workflow can reach that build, because it has
+      # already happened by the time a step could set one. So the runner's
+      # own SSH client is used instead: one connection, one host, one key.
+      #
+      # The environment the deployment needs is sent as an export prelude
+      # rather than as arguments, so the values do not appear in the remote
+      # process list.
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
         env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_DEPLOY_HOST: ${{ secrets[matrix.host] }}
+          VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
           GITHUB_ACTOR: ${{ github.actor }}
@@ -529,16 +523,33 @@ jobs:
           NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED }}
           NEXT_PUBLIC_OAUTH_APPLE_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_APPLE_ENABLED }}
           NEXT_PUBLIC_OAUTH_GITHUB_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED }}
-        with:
-          host: ${{ secrets[matrix.host] }}
-          username: organic
-          key: ${{ secrets.VPS_SSH_KEY }}
-          command_timeout: 10m
-          envs: DEPLOY_SHA,DEPLOY_IMAGE,GITHUB_ACTOR,GITHUB_TOKEN,GITHUB_REPO,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,SITE_DOMAIN,CLOUDFLARE_TUNNEL_TOKEN,NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_SITE_URL,NEXT_PUBLIC_SENTRY_DSN,SENTRY_ORG,SENTRY_PROJECT,SENTRY_RELEASE,NEXT_PUBLIC_SENTRY_RELEASE,NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED,NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED,NEXT_PUBLIC_OAUTH_APPLE_ENABLED,NEXT_PUBLIC_OAUTH_GITHUB_ENABLED
-          script: |
-            set -euo pipefail
-            cd ${{ secrets.VPS_DEPLOY_PATH }}
-            git fetch "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git" "$DEPLOY_SHA"
-            git reset --hard FETCH_HEAD
-            git remote set-url origin "https://github.com/${GITHUB_REPO}.git"
-            bash scripts/deploy-production.sh
+        run: |
+          set -euo pipefail
+          if ! command -v ssh >/dev/null 2>&1; then
+            echo "The runner has no ssh client; the runner image needs openssh-client" >&2
+            exit 1
+          fi
+          key="$(mktemp)"
+          trap 'rm -f "$key"' EXIT
+          chmod 600 "$key"
+          printf '%s\n' "$VPS_SSH_KEY" > "$key"
+          {
+            for name in DEPLOY_SHA DEPLOY_IMAGE GITHUB_ACTOR GITHUB_TOKEN GITHUB_REPO \
+                        NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY \
+                        SUPABASE_SERVICE_ROLE_KEY SITE_DOMAIN CLOUDFLARE_TUNNEL_TOKEN \
+                        NEXT_PUBLIC_APP_URL NEXT_PUBLIC_SITE_URL NEXT_PUBLIC_SENTRY_DSN \
+                        SENTRY_ORG SENTRY_PROJECT SENTRY_RELEASE NEXT_PUBLIC_SENTRY_RELEASE \
+                        NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED \
+                        NEXT_PUBLIC_OAUTH_APPLE_ENABLED NEXT_PUBLIC_OAUTH_GITHUB_ENABLED \
+                        VPS_DEPLOY_PATH; do
+              printf 'export %s=%q\n' "$name" "${!name}"
+            done
+            printf '%s\n' \
+              'set -euo pipefail' \
+              'cd "$VPS_DEPLOY_PATH"' \
+              'git fetch "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git" "$DEPLOY_SHA"' \
+              'git reset --hard FETCH_HEAD' \
+              'git remote set-url origin "https://github.com/${GITHUB_REPO}.git"' \
+              'bash scripts/deploy-production.sh'
+          } | ssh -i "$key" -o BatchMode=yes -o StrictHostKeyChecking=accept-new \
+                  -o ConnectTimeout=30 "organic@$VPS_DEPLOY_HOST" 'bash -s'
