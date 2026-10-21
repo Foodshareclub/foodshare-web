@@ -9,6 +9,17 @@ const oldEnvironment =
   "EXISTING_SETTING=preserved\nNEXT_PUBLIC_SUPABASE_URL=https://old.example\nNODE_TLS_REJECT_UNAUTHORIZED=0\n";
 const script = resolve(import.meta.dir, "../../..", "scripts/deploy-production.sh");
 
+// Podman is the only container runtime this estate uses, so the mock set is
+// one runtime rather than two. The case that disappeared with the Docker
+// fallback is the one that could not happen any more: a service held by two
+// runtimes at once, which is why the script used to probe for a second
+// runtime and refuse to deploy. There is no Docker daemon on the host, on
+// the CI runner, or on a developer machine, so that probe could only ever
+// have found nothing — and a branch that hides a broken probe is worse
+// than no branch. The guarantees that remain are the ones that still have
+// to hold: the deployment talks to the runtime that owns the running
+// service, and it stops rather than assuming.
+
 /**
  * The deployment runs a Podman container described by a Quadlet unit, and
  * pins the image it deploys with a drop-in next to that unit. The test runs
@@ -31,7 +42,7 @@ async function deploy(options: Record<string, string> = {}, check = false) {
     await Bun.write(
       join(directory, "podman"),
       `#!/bin/bash
-printf '%s\\n' "$*" >> "$MOCK_DIRECTORY/commands"
+printf 'podman %s\\n' "$*" >> "$MOCK_DIRECTORY/commands"
 if [ "\${1:-}" = --config ]; then shift 2; fi
 case "$1 $2" in
   "container inspect")
@@ -52,17 +63,7 @@ printf 'systemctl %s\\n' "$*" >> "$MOCK_DIRECTORY/commands"
 `,
     );
     await Bun.write(join(directory, "sleep"), "#!/bin/sh\nexit 0\n");
-    // A Docker container with the same name, so the ambiguity guard can be
-    // exercised: two runtimes that could both own the service is the one
-    // state this project refuses to deploy into.
-    await Bun.write(
-      join(directory, "docker"),
-      `#!/bin/bash
-printf 'docker %s\\n' "$*" >> "$MOCK_DIRECTORY/commands"
-if [[ "$*" == *State.Running* ]]; then echo "\${MOCK_DOCKER_RUNNING:-false}"; fi
-`,
-    );
-    for (const name of ["podman", "systemctl", "sleep", "docker"]) await chmod(join(directory, name), 0o700);
+    for (const name of ["podman", "systemctl", "sleep"]) await chmod(join(directory, name), 0o700);
     const child = Bun.spawn(["bash", script, ...(check ? ["--check"] : [])], {
       cwd: directory,
       env: {
@@ -108,13 +109,11 @@ test("production preflight only inspects the running service and the unit", asyn
   expect(result.commands).not.toContain("login");
   expect(result.commands).not.toContain("pull");
 });
-test("a service that is not running, or a second runtime holding it, stops the deployment", async () => {
-  for (const configuration of [{ MOCK_RUNNING: "false" }, { MOCK_DOCKER_RUNNING: "true" }]) {
-    const result = await deploy(configuration);
-    expect(result.code).not.toBe(0);
-    expect(result.dropin).toBe("");
-    expect(result.environment).toBe(oldEnvironment);
-  }
+test("a service that is not running stops the deployment", async () => {
+  const result = await deploy({ MOCK_RUNNING: "false" });
+  expect(result.code).not.toBe(0);
+  expect(result.dropin).toBe("");
+  expect(result.environment).toBe(oldEnvironment);
 });
 test("a registry failure or wrong revision leaves the running image and settings intact", async () => {
   for (const configuration of [{ MOCK_PULL_FAIL: "1" }, { MOCK_REVISION: "wrong-commit" }]) {

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Verify Quadlet units: valid directives, no docker-compose-isms, copies in sync.
+# Verify Quadlet units: valid directives, no compose-isms, copies in sync.
 # Usage: bash scripts/verify-quadlet.sh
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -32,13 +32,13 @@ else
   pass "cloudflared unit is clean text"
 fi
 
-# Reject docker-compose-isms that fail `quadlet --dryrun`
+# Reject compose-isms that fail `quadlet --dryrun`
 for bad in 'image = ' 'port = \[' 'restart = "unless-stopped"' 'healthcheck = \[' 'read_only' 'cap_drop' 'security_opt' 'when-started=' 'envFILE' 'portmap' 'logdriver' 'logopts'; do
   if grep -Eq "$bad" "$ROOT"/*.container "$ROOT/.github/quadlet/"*.container 2>/dev/null; then
-    fail_msg "docker-ism detected: $bad"
+    fail_msg "compose-ism detected: $bad"
   fi
 done
-pass "no docker-compose-isms in units"
+pass "no compose-isms in units"
 
 # Copies in .github/quadlet must match canonical root units
 #
@@ -55,9 +55,8 @@ for unit in foodshare-web.container foodshare-cloudflared-web.container; do
   fi
 done
 
-# Keep optional Quadlet assets valid; production uses its existing Docker services.
+# Keep optional Quadlet assets valid; production runs these units.
 grep -Eq "needs: build-and-publish" "$ROOT/.github/workflows/web.yml" && pass "deploy needs build-and-publish" || fail_msg "deploy still needs a non-existent job"
-grep -Eq "needs: docker" "$ROOT/.github/workflows/web.yml" && fail_msg "dangling 'needs: docker' still present" || pass "no dangling needs: docker"
 grep -Eq "bash scripts/deploy-production.sh" "$ROOT/.github/workflows/web.yml" && pass "deploy uses the verified production rollout" || fail_msg "deploy is missing the production rollout script"
 grep -Eq "health-curl-fail" "$ROOT/.github/workflows/web.yml" && fail_msg "invalid --health-curl-fail flag still present" || pass "no invalid podman flags"
 

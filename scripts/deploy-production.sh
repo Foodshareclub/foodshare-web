@@ -9,6 +9,13 @@
 # deployment reproducible: the tag can move between two hosts, the digest
 # cannot.
 #
+# Podman is the only container runtime this estate uses. There is no Docker
+# daemon on the host, on the CI runner, or on a developer machine, so the
+# arbitration between two runtimes cannot happen and the case where the
+# service exists in both is gone with it. What remains is the guarantee
+# that matters: the deployment talks to the runtime that owns the running
+# service, and it stops rather than assuming.
+#
 # Two paths can be overridden, and only for the test: the environment file
 # the unit reads, and the directory the units are installed in.
 set -euo pipefail
@@ -20,10 +27,6 @@ DROPIN_FILE="$DROPIN_DIR/50-image.conf"
 
 if [ "$(podman container inspect --format '{{.State.Running}}' foodshare-web 2>/dev/null || true)" != true ]; then
   echo "The existing Podman web service must be running before deployment" >&2
-  exit 1
-fi
-if command -v docker >/dev/null 2>&1 && [ "$(docker container inspect --format '{{.State.Running}}' foodshare-web 2>/dev/null || true)" = true ]; then
-  echo "A Docker foodshare-web container is also running; refusing to deploy while two runtimes could own the service" >&2
   exit 1
 fi
 if [ ! -f "$UNIT_DIR/foodshare-web.container" ]; then
