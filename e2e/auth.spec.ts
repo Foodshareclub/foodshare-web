@@ -30,15 +30,17 @@ test.describe("Authentication - Login", () => {
   });
 
   test("should have social login buttons", async ({ page }) => {
-    // Check for Google login - exact name avoids clashing with footer social
-    // icon buttons (e.g. footer has aria-label="facebook" round icons)
-    await expect(page.getByRole("button", { name: "Google", exact: true })).toBeVisible();
+    // The buttons are labelled "Continue with Google" and so on, so the
+    // name is matched as the whole phrase. The provider alone is not the
+    // accessible name, and a name that does not exist is a test that
+    // cannot pass.
+    await expect(page.getByRole("button", { name: /continue with google/i })).toBeVisible();
 
     // Check for Facebook login
-    await expect(page.getByRole("button", { name: "Facebook", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /continue with facebook/i })).toBeVisible();
 
     // Check for Apple login
-    await expect(page.getByRole("button", { name: "Apple", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /continue with apple/i })).toBeVisible();
   });
 
   test("should toggle password visibility", async ({ page }) => {
@@ -129,6 +131,10 @@ test.describe("Authentication - Signup", () => {
   });
 
   test("should display signup form with name fields", async ({ page }) => {
+    // The page is already in the signup mode: the `beforeEach` above
+    // switched it. This test used to navigate again, which put the page
+    // back in the login mode and left it asking for fields the page was
+    // not showing.
     await expect(page.getByRole("heading", { name: /join foodshare/i })).toBeVisible();
     await expect(page.getByText("First name")).toBeVisible();
     await expect(page.getByText("Last name")).toBeVisible();
@@ -138,8 +144,12 @@ test.describe("Authentication - Signup", () => {
   });
 
   test("should toggle back to login mode", async ({ page }) => {
-    // Click on "Log in" text to switch back
-    await page.getByText("Log in").click();
+    // Click on "Log in" text to switch back.
+    //
+    // The button is named rather than matched as loose text: the page has
+    // more than one thing that says "Log in", and a locator that matches
+    // two of them is a strict-mode violation rather than a click.
+    await page.getByRole("button", { name: "Log in", exact: true }).click();
 
     // Should show login form
     await expect(page.getByRole("heading", { name: /welcome back/i })).toBeVisible();

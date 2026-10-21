@@ -50,9 +50,14 @@ test.describe("Home Page", () => {
   });
 
   test("should have working navbar with user menu", async ({ page }) => {
-    // NavbarActions shows either login button or user menu
-    // For unauthenticated users, there should be a way to login
-    const navbarActions = page.locator(".flex-shrink-0.w-\\[140px\\].flex.justify-end");
+    // NavbarActions shows the "Add listing" button for a visitor who is
+    // not signed in -- which is how a visitor signs in -- and the user
+    // menu for one who is.
+    //
+    // The test used to look for the area by its class names, and the
+    // classes it named are not on the markup any more, so it was looking
+    // for something that is not there.
+    const navbarActions = page.getByRole("button", { name: /add listing/i });
     await expect(navbarActions).toBeVisible();
   });
 

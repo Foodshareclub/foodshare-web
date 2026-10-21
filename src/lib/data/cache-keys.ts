@@ -56,6 +56,11 @@ export const CACHE_TAGS = {
   // Public stats (homepage hero + category counts)
   PUBLIC_STATS: "public-stats",
 
+  // The year the footer is written for. The year changes with the clock
+  // rather than with a write, so nothing invalidates this tag; it is the
+  // handle by which the year could be invalidated if that ever changes.
+  YEAR: "year",
+
   // Profiles
   PROFILES: "profiles",
   PROFILE: (id: string) => `profile-${id}`,

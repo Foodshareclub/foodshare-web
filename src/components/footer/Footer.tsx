@@ -13,7 +13,9 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 
 import LanguageSelector from "@/components/languageSelector/LanguageSelector";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
 import { getTranslations } from "next-intl/server";
+import { cacheLife, cacheTag } from "next/cache";
 
 type SocialButtonProps = {
   children: ReactNode;
@@ -39,9 +41,24 @@ function SocialButton({ children, label, href, w, h, target }: SocialButtonProps
   );
 }
 
+/**
+ * The year the copyright is written for.
+ *
+ * A clock read is an unstable value and a prerender refuses one, so the
+ * year is cached rather than read on every render. It changes once a
+ * year, and the cache is refreshed every hour, so the only year anyone
+ * can see the wrong one is an hour of 31 December.
+ */
+async function getCurrentYear(): Promise<number> {
+  "use cache";
+  cacheLife("year");
+  cacheTag(CACHE_TAGS.YEAR);
+  return new Date().getFullYear();
+}
+
 export default async function Footer() {
   const t = await getTranslations("Home");
-  const currentYear = new Date().getFullYear();
+  const currentYear = await getCurrentYear();
 
   return (
     <footer className="relative mt-auto border-t border-border/50 bg-background/80 backdrop-blur-xl">

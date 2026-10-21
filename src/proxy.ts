@@ -586,6 +586,11 @@ export async function proxy(request: NextRequest) {
   // validated cookie and nothing else, so it can select one of the 21 known
   // locales and never carry text.
   requestHeaders.set("X-NEXT-INTL-LOCALE", requestLocale);
+  // The request id travels on the request, so the server components can
+  // read the same id the middleware used. The logger used to make one of
+  // its own, from the clock, and a prerender refuses a value read from the
+  // clock -- which is why the home page could not be prerendered.
+  requestHeaders.set("x-request-id", correlationId);
 
   let response = NextResponse.next({ request: { headers: requestHeaders } });
 

@@ -72,22 +72,36 @@ const REDACT_FIELDS = [
 const REQUEST_ID_HEADER = "x-request-id";
 
 /**
- * Generate a unique request ID
+ * The id used when there is no request behind the call.
+ *
+ * The id is put on the request by the middleware, and a middleware only
+ * runs for a request. So a request with no id is not a request: it is a
+ * prerender, and there is nothing to correlate.
  */
-export function generateRequestId(): string {
-  return `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
-}
+const NO_REQUEST_ID = "no-request";
 
 /**
- * Get the current request ID from headers or generate a new one
+ * Get the current request ID from the request headers.
+ *
+ * The middleware puts the id on the request it forwards, and the same id
+ * goes back to the client in the response header, so one id follows a
+ * request from the edge to the log line.
+ *
+ * The id used to be made here, from the clock and from a random number.
+ * Both are unstable values and a prerender refuses them, so the home page
+ * could not be prerendered at all -- it was rendered at request time
+ * instead, and the static shell it should have had was missing. The
+ * middleware is the right place to make an id: it runs for requests and
+ * not for prerenders.
  */
 export async function getRequestId(): Promise<string> {
   try {
+    // `await` rather than a promise method: the header store is a plain
+    // object wherever this runs outside a request.
     const headerStore = await headers();
-    return headerStore.get(REQUEST_ID_HEADER) || generateRequestId();
+    return headerStore.get(REQUEST_ID_HEADER) || NO_REQUEST_ID;
   } catch {
-    // headers() not available (not in request context)
-    return generateRequestId();
+    return NO_REQUEST_ID;
   }
 }
 

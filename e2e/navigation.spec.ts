@@ -34,7 +34,10 @@ test.describe("Site Navigation", () => {
     const footer = page.getByRole("contentinfo");
     await expect(footer).toBeVisible();
     const feedback = footer.getByRole("link", { name: "Feedback", exact: true });
-    const donation = footer.getByRole("link", { name: "Donation", exact: true });
+    // The footer's link says "Donate". The test looked for "Donation",
+    // which is the name of the page rather than of the link, so it was
+    // looking for something that is not there.
+    const donation = footer.getByRole("link", { name: "Donate", exact: true });
     await expect(feedback).toHaveAttribute("href", "/feedback");
     await expect(donation).toHaveAttribute("href", "/donation");
     await feedback.click();

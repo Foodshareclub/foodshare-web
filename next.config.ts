@@ -86,6 +86,9 @@ const nextConfig: NextConfig = {
 
   // Full caching profile — revalidation times per data layer resource
   cacheLife: {
+    // The year the footer is written for. It changes once a year, and an
+    // hour of staleness is the worst anyone can see.
+    year: { stale: 3600, revalidate: 3600, expire: 86400 },
     // Short-lived (real-time data, chat, notifications)
     short: { stale: 30, revalidate: 30, expire: 300 },
     // Products cache — 60s revalidation (frequently updated inventory)
