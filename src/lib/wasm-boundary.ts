@@ -16,6 +16,24 @@
  */
 
 /**
+ * The largest vector that crosses the boundary.
+ *
+ * The module reads a vector as `&[f32]`, so a vector of a million
+ * numbers is a million numbers in the caller's memory and again in the
+ * module's. The app's embeddings are 384 or 1536 numbers long.
+ */
+export const MAX_VECTOR_LENGTH = 65_536;
+
+/**
+ * The largest number of items in a batch that crosses the boundary.
+ *
+ * Every item of a batch is an object that the module reads, so a batch
+ * of a million items is a million objects in the caller's memory and
+ * again in the module's. A page of listings is a few dozen.
+ */
+export const MAX_BATCH_LENGTH = 10_000;
+
+/**
  * Require a string.
  *
  * @throws TypeError if the value is not a string.
@@ -144,6 +162,9 @@ export function requireByteArray(value: unknown, name: string): Uint8Array {
  */
 export function requireVector(value: unknown, name: string): Float32Array {
   if (value instanceof Float32Array) {
+    if (value.length > MAX_VECTOR_LENGTH) {
+      throw new RangeError(`${name} must hold at most ${MAX_VECTOR_LENGTH} numbers, got ${value.length}`);
+    }
     for (let index = 0; index < value.length; index++) {
       const entry = value[index];
       if (!Number.isFinite(entry)) {
@@ -155,6 +176,9 @@ export function requireVector(value: unknown, name: string): Float32Array {
   if (!Array.isArray(value)) {
     throw new TypeError(`${name} must be a vector of numbers, got ${describe(value)}`);
   }
+  if (value.length > MAX_VECTOR_LENGTH) {
+    throw new RangeError(`${name} must hold at most ${MAX_VECTOR_LENGTH} numbers, got ${value.length}`);
+  }
   return new Float32Array(value.map((entry, index) => requireFiniteNumber(entry, `${name}[${index}]`)));
 }
 
@@ -162,10 +186,14 @@ export function requireVector(value: unknown, name: string): Float32Array {
  * Require an array.
  *
  * @throws TypeError if the value is not an array.
+ * @throws RangeError if the array is longer than the limit.
  */
-export function requireArray<T>(value: unknown, name: string): T[] {
+export function requireArray<T>(value: unknown, name: string, maxLength = MAX_BATCH_LENGTH): T[] {
   if (!Array.isArray(value)) {
     throw new TypeError(`${name} must be an array, got ${describe(value)}`);
+  }
+  if (value.length > maxLength) {
+    throw new RangeError(`${name} must hold at most ${maxLength} items, got ${value.length}`);
   }
   return value as T[];
 }

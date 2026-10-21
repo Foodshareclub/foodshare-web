@@ -27,6 +27,23 @@ function post(path: string, body: unknown): Request {
   });
 }
 
+/** A request whose body is written out as it is, so it can be malformed. */
+function raw(path: string, text: string, headers: Record<string, string> = {}): Request {
+  const request = new Request(`https://foodshare.club/api${path}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: text,
+  });
+  // The extra headers are set once the request is made: the DOM library
+  // the test runner loads recomputes the length of a body it is given,
+  // and one of these tests is about a body that says it is longer than
+  // it is.
+  for (const [name, value] of Object.entries(headers)) {
+    request.headers.set(name, value);
+  }
+  return request;
+}
+
 async function body(response: Response): Promise<Record<string, unknown>> {
   return (await response.json()) as Record<string, unknown>;
 }
@@ -76,6 +93,70 @@ describe("POST /api/engine/geo/distance", () => {
     const response = await POST(post("/engine/geo/distance", "nonsense"));
 
     expect(response.status).toBe(400);
+  });
+});
+
+describe("the body of an engine request", () => {
+  it("rejects a body that is not JSON", async () => {
+    // A body that cannot be parsed is a body the caller cannot use, not
+    // a fault of the server.
+    for (const text of ["{not json", "", "[1, 2", "undefined"]) {
+      const response = await POST(raw("/engine/geo/distance", text));
+
+      expect(response.status, JSON.stringify(text)).toBe(400);
+      const parsed = await body(response);
+      expect(parsed.error, JSON.stringify(text)).toBeString();
+    }
+  });
+
+  it("rejects a body that is not an object", async () => {
+    for (const text of ["[]", '"a string"', "42", "null", "true"]) {
+      const response = await POST(raw("/engine/geo/distance", text));
+
+      expect(response.status, text).toBe(400);
+    }
+  });
+
+  it("refuses a body that declares itself too large", async () => {
+    const response = await POST(
+      raw("/engine/geo/distance", JSON.stringify({ lat1: 1, lng1: 2, lat2: 3, lng2: 4 }), {
+        "content-length": String(1024 * 1024),
+      }),
+    );
+
+    expect(response.status).toBe(413);
+    const parsed = await body(response);
+    expect(parsed.error).toBeString();
+  });
+
+  it("refuses a body that is too large without declaring it", async () => {
+    // The length is checked again against the body itself, because a
+    // request does not have to say how long it is.
+    const response = await POST(
+      raw("/engine/geo/distance", JSON.stringify({ lat1: 1, lng1: 2, lat2: 3, lng2: 4, note: "x".repeat(300_000) })),
+    );
+
+    expect(response.status).toBe(413);
+  });
+
+  it("refuses a body that is too many bytes without being too many characters", async () => {
+    // Three bytes to a character, so a body of characters can be over the
+    // limit in bytes while it is under it in characters.
+    const response = await POST(
+      raw("/engine/geo/distance", JSON.stringify({ lat1: 1, lng1: 2, lat2: 3, lng2: 4, note: "€".repeat(100_000) })),
+    );
+
+    expect(response.status).toBe(413);
+  });
+
+  it("accepts a body of a size the endpoints are meant to take", async () => {
+    // A pair of embedding vectors of the size the app uses.
+    const vector = Array.from({ length: 1536 }, (_, index) => index / 1536);
+    const response = await POST(
+      post("/engine/search/hybrid", { textQuery: "bread", targetText: "Fresh bread", queryVector: vector, itemVector: vector }),
+    );
+
+    expect(response.status).toBe(200);
   });
 });
 

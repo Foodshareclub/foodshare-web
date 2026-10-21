@@ -1,11 +1,36 @@
+import { createLogger } from "@/lib/logger";
 import { verifyTotp } from "@/lib/wasm-crypto";
 import { calculateHaversineDistance } from "@/lib/wasm-geo";
 import { calculateSmartWidth } from "@/lib/wasm-image";
 import { calculateDistanceDecay, calculateHybridScore } from "@/lib/wasm-search";
 import { Hono } from "hono";
+import type { Context } from "hono";
 import { handle } from "hono/vercel";
 
 const app = new Hono().basePath("/api");
+const logger = createLogger("EngineRoute");
+
+/**
+ * The largest body the endpoints will read.
+ *
+ * The endpoints take a handful of numbers, a secret and a code, or a
+ * pair of embedding vectors. A vector of the size the app uses is a few
+ * tens of kilobytes of text, so this is generous for what is asked of
+ * them, and it keeps a body from being read into memory whole.
+ */
+const MAX_BODY_LENGTH = 256 * 1024;
+
+const encoder = new TextEncoder();
+
+/** A body that is larger than the endpoints will read. */
+class BodyTooLargeError extends Error {
+  constructor(
+    readonly limit: number,
+  ) {
+    super(`body must be at most ${limit} bytes`);
+    this.name = "BodyTooLargeError";
+  }
+}
 
 /**
  * The engine endpoints are public and unauthenticated, and their bodies
@@ -55,17 +80,60 @@ function readCoordinate(body: Record<string, unknown>, latName: string, lngName:
   return [lat, lng];
 }
 
+/**
+ * Read the body of a request.
+ *
+ * A body that is too large is refused before it is read, and one that
+ * cannot be parsed is refused as a body that cannot be used, rather than
+ * being reported as a fault of the server.
+ */
+async function readBody(c: Context): Promise<Record<string, unknown>> {
+  const declared = c.req.header("content-length");
+  if (declared !== undefined) {
+    const size = Number(declared);
+    if (!Number.isFinite(size) || size > MAX_BODY_LENGTH) {
+      throw new BodyTooLargeError(MAX_BODY_LENGTH);
+    }
+  }
+
+  const text = await c.req.text();
+  // A character is at least one byte, so a body with more characters than
+  // the limit has more bytes than the limit as well. This is the cheap
+  // check, and it bounds the copy the exact one makes.
+  if (text.length > MAX_BODY_LENGTH) {
+    throw new BodyTooLargeError(MAX_BODY_LENGTH);
+  }
+  if (encoder.encode(text).byteLength > MAX_BODY_LENGTH) {
+    throw new BodyTooLargeError(MAX_BODY_LENGTH);
+  }
+
+  let body: unknown;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    throw new TypeError("body must be valid JSON");
+  }
+
+  if (body === null || typeof body !== "object" || Array.isArray(body)) {
+    throw new TypeError("body must be a JSON object");
+  }
+  return body as Record<string, unknown>;
+}
+
 /** Answer a request whose body could not be used. */
 function errorResponse(error: unknown): Response {
   // A body that cannot be used is the caller's fault, so it is answered
   // with a 400 rather than being reported as a fault of the server.
+  if (error instanceof BodyTooLargeError) {
+    return Response.json({ error: error.message }, { status: 413 });
+  }
   if (error instanceof TypeError || error instanceof RangeError) {
     return Response.json({ error: error.message }, { status: 400 });
   }
-  return Response.json(
-    { error: error instanceof Error ? error.message : "Internal error" },
-    { status: 500 },
-  );
+  // A fault of the server is logged and not repeated to the caller: the
+  // message can name a module, a field or a file.
+  logger.error("Engine endpoint failed", error instanceof Error ? error : new Error(String(error)));
+  return Response.json({ error: "Internal error" }, { status: 500 });
 }
 
 app.get("/health-check", (c) => {
@@ -109,7 +177,7 @@ app.get("/engine/status", (c) => {
 // Hybrid Ranking Endpoint
 app.post("/engine/search/hybrid", async (c) => {
   try {
-    const body = (await c.req.json()) as Record<string, unknown>;
+    const body = await readBody(c);
     const textQuery = readString(body, "textQuery");
     const targetText = readString(body, "targetText");
     const distanceKm = body.distanceKm === undefined ? undefined : readNumber(body, "distanceKm");
@@ -129,7 +197,7 @@ app.post("/engine/search/hybrid", async (c) => {
 // Geo Distance & Decay Endpoint
 app.post("/engine/geo/distance", async (c) => {
   try {
-    const body = (await c.req.json()) as Record<string, unknown>;
+    const body = await readBody(c);
     const [lat1, lng1] = readCoordinate(body, "lat1", "lng1");
     const [lat2, lng2] = readCoordinate(body, "lat2", "lng2");
     const halfLifeKm = body.halfLifeKm === undefined ? 10 : readNumber(body, "halfLifeKm");
@@ -144,7 +212,7 @@ app.post("/engine/geo/distance", async (c) => {
 // Crypto Verification Endpoint
 app.post("/engine/crypto/verify-totp", async (c) => {
   try {
-    const body = (await c.req.json()) as Record<string, unknown>;
+    const body = await readBody(c);
     const secret = readString(body, "secret");
     const token = readString(body, "token");
     const valid = verifyTotp(secret, token);
@@ -157,7 +225,7 @@ app.post("/engine/crypto/verify-totp", async (c) => {
 // Image Geometry Smart Width Endpoint
 app.post("/engine/image/smart-width", async (c) => {
   try {
-    const body = (await c.req.json()) as Record<string, unknown>;
+    const body = await readBody(c);
     const fileSizeBytes = readNumber(body, "fileSizeBytes");
     const currentWidth = readNumber(body, "currentWidth");
     const currentHeight = readNumber(body, "currentHeight");

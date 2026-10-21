@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { MAX_BATCH_LENGTH, MAX_VECTOR_LENGTH } from "@/lib/wasm-boundary";
 import {
   compressAuto,
   compressBrotli,
@@ -525,6 +526,53 @@ describe("WebAssembly Boundary Guards", () => {
     expect(() => compressBrotli("payload", -1)).toThrow();
     expect(() => compressGzip("payload", 10)).toThrow();
     expect(() => compressGzip("payload", -1)).toThrow();
+  });
+
+  it("refuses a vector that is longer than the boundary allows", () => {
+    // The module reads a vector as `&[f32]`, so a vector of a million
+    // numbers is a million numbers in the caller's memory and again in
+    // the module's.
+    const long = new Array(MAX_VECTOR_LENGTH + 1).fill(0);
+
+    expect(() => cosineSimilarity(long, [1, 2])).toThrow();
+    expect(() => l2Distance([1, 2], long)).toThrow();
+    expect(() => normalizeVectorDimensions(long)).toThrow();
+    expect(() => calculateHybridScore({ textQuery: "a", targetText: "b", queryVector: long })).toThrow();
+    expect(() =>
+      calculateHybridScore({ textQuery: "a", targetText: "b", queryVector: new Float32Array(long) }),
+    ).toThrow();
+  });
+
+  it("still accepts a vector of the longest length the boundary allows", () => {
+    const longest = new Array(MAX_VECTOR_LENGTH).fill(0);
+
+    expect(() => cosineSimilarity(longest, longest)).not.toThrow();
+  });
+
+  it("refuses a batch that is longer than the boundary allows", () => {
+    // Every item of a batch is an object the module reads.
+    const items = new Array(MAX_BATCH_LENGTH + 1).fill(null).map((_, index) => ({
+      id: String(index),
+      location: { coordinates: [8.6821, 50.1109] },
+    }));
+
+    expect(() => calculateItemDistances(50.1109, 8.6821, items)).toThrow();
+    expect(() => filterItemsWithinRadius(50.1109, 8.6821, items, 50)).toThrow();
+  });
+
+  it("refuses a fusion of more identifiers than the boundary allows", () => {
+    const list = new Array(MAX_BATCH_LENGTH + 1).fill(null).map((_, index) => String(index));
+
+    expect(() => fuseRankedLists([list])).toThrow();
+  });
+
+  it("still accepts a batch of the longest length the boundary allows", () => {
+    const items = new Array(MAX_BATCH_LENGTH).fill(null).map((_, index) => ({
+      id: String(index),
+      location: { coordinates: [8.6821, 50.1109] },
+    }));
+
+    expect(calculateItemDistances(50.1109, 8.6821, items)).toHaveLength(MAX_BATCH_LENGTH);
   });
 
   it("still accepts a vector of a length the other vector does not match", () => {

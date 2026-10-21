@@ -12,6 +12,8 @@
 
 import { createLogger } from "@/lib/logger";
 import {
+  MAX_BATCH_LENGTH,
+  MAX_VECTOR_LENGTH,
   requireArray,
   requireIdentifier,
   requireIntegerInRange,
@@ -23,13 +25,6 @@ import {
 import * as WasmSearch from "@/wasm/foodshare-search/foodshare_search";
 
 const logger = createLogger("WasmSearch");
-
-/**
- * The largest vector the module is asked to pad out to. The module
- * allocates a vector of the requested size, so an unbounded request would
- * ask for as much memory as the caller cares to name.
- */
-const MAX_VECTOR_DIMENSIONS = 65_536;
 
 export interface RrfFusedItem {
   id: string | number;
@@ -52,11 +47,14 @@ export function l2Distance(a: Float32Array | number[], b: Float32Array | number[
 
 /**
  * Pad or truncate vector to exact target dimensions (e.g. 384 for gte-small).
+ *
+ * The module allocates a vector of the size asked for, so the size is
+ * held to the same limit as the vector that goes in.
  */
 export function normalizeVectorDimensions(v: Float32Array | number[], targetDim = 384): Float32Array {
   return WasmSearch.vector_normalize_dimensions(
     requireVector(v, "v"),
-    requireIntegerInRange(targetDim, "targetDim", 0, MAX_VECTOR_DIMENSIONS),
+    requireIntegerInRange(targetDim, "targetDim", 0, MAX_VECTOR_LENGTH),
   );
 }
 
@@ -77,10 +75,17 @@ export function normalizeVectorDimensions(v: Float32Array | number[], targetDim 
  */
 export function fuseRankedLists(lists: Array<Array<string | number>>, k = 60.0): RrfFusedItem[] {
   const smoothing = requireNonNegativeNumber(k, "k");
+  const listArray = requireArray<Array<string | number>>(lists, "lists");
+  // The module collects the scores of every identifier in a map, so the
+  // number of identifiers is what decides how much it holds.
+  const identifiers = listArray.reduce((total, list) => total + (Array.isArray(list) ? list.length : 0), 0);
+  if (identifiers > MAX_BATCH_LENGTH) {
+    throw new RangeError(`lists must hold at most ${MAX_BATCH_LENGTH} identifiers, got ${identifiers}`);
+  }
   const keyById = new Map<string | number, string>();
   const idByKey = new Map<string, string | number>();
   const firstSeen = new Map<string, number>();
-  const keyed = requireArray<Array<string | number>>(lists, "lists").map((list, listIndex) =>
+  const keyed = listArray.map((list, listIndex) =>
     requireArray<string | number>(list, `lists[${listIndex}]`).map((id, idIndex) => {
       const identifier = requireIdentifier(id, `lists[${listIndex}][${idIndex}]`);
       const existing = keyById.get(identifier);
