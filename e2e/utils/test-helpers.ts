@@ -1,6 +1,50 @@
 import type { Page } from "@playwright/test";
 
 /**
+ * Whether the live API is reachable.
+ *
+ * The end-to-end suite runs against the estate's own API, not a stub, so
+ * it can only answer questions about the app when the API is up. When the
+ * API is down, a page that needs it fails with a pile of "element not
+ * found" errors, which reads like a broken app and is not one: the app is
+ * serving, and the thing it is talking to is not.
+ *
+ * So the reason is checked once and said out loud. The answer is cached:
+ * the API does not come back mid-suite, and the check is a request.
+ */
+let apiReachable: boolean | undefined;
+
+/**
+ * Why the live API cannot be reached, or null when it can.
+ *
+ * The end-to-end suite runs against the estate's own API, not a stub, so
+ * it can only answer questions about the app when the API is up. When the
+ * API is down, a page that needs it fails with a pile of "element not
+ * found" errors, which reads like a broken app and is not one: the app is
+ * serving, and the thing it is talking to is not.
+ *
+ * So the reason is checked once and said out loud. The answer is cached:
+ * the API does not come back mid-suite, and the check is a request.
+ */
+export async function liveApiUnavailableReason(): Promise<string | null> {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!base) {
+    return "NEXT_PUBLIC_SUPABASE_URL is not set, so the live API cannot be reached";
+  }
+  if (apiReachable === undefined) {
+    try {
+      const response = await fetch(`${base}/auth/v1/settings`, {
+        signal: AbortSignal.timeout(15000),
+      });
+      apiReachable = response.ok;
+    } catch {
+      apiReachable = false;
+    }
+  }
+  return apiReachable ? null : "the live API is unreachable, so this cannot be answered";
+}
+
+/**
  * Wait for page to finish hydrating (SSR apps show loading spinners initially)
  * This waits for the loading spinner to disappear and actual content to appear.
  */

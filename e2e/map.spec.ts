@@ -1,6 +1,15 @@
 import { expect, test } from "@playwright/test";
 
+import { liveApiUnavailableReason } from "./utils/test-helpers";
+
 test("map loads without server rendering or browser runtime failures", async ({ page }) => {
+  // The map asks the estate's API for the listings it draws. When the API
+  // is down the page logs the failure, and this test then reports an
+  // inequality between two arrays -- which reads like a broken app and is
+  // not one. The reason is checked first and said out loud.
+  const unavailable = await liveApiUnavailableReason();
+  test.skip(unavailable !== null, unavailable ?? "the live API is reachable");
+
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/map/food");
