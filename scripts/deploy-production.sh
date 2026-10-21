@@ -331,6 +331,35 @@ mkdir -p "$DROPIN_DIR"
 printf 'Image=%s\n' "$DEPLOY_IMAGE" > "$DROPIN_FILE"
 chmod 600 "$DROPIN_FILE"
 systemctl --user daemon-reload
+
+# A deployment can be interrupted. A newer push cancels the run, and the
+# runner can go away -- and either way the host is left holding the new
+# image with no answer about whether it is good. The rollback only ran
+# when the health check failed, which is the one way out that was
+# handled.
+#
+# So the rollback runs on the way out, whatever the way out is. The
+# deployment is finished when the health check has passed and not before,
+# and anything else -- a signal, a failed command, a killed runner --
+# leaves the host the way it was.
+deployment_finished=0
+on_exit() {
+  local status=$?
+  if [ "$deployment_finished" = 0 ] && [ "$image_pinned" = 1 ]; then
+    echo "The deployment was interrupted; putting the host back the way it was" >&2
+    rollback || true
+  fi
+  return $status
+}
+# The host holds the new image from the moment the drop-in names it, so
+# that is the moment the rollback becomes necessary. Not when the unit is
+# restarted: an interruption between the two would leave the host with
+# the new image and no answer about it.
+image_pinned=1
+trap on_exit EXIT
+# A signal is an exit like any other: the trap above runs on the way out.
+trap 'exit 143' TERM INT
+
 # The unit has to start when the machine does. A unit that is not enabled
 # leaves the site dark after a reboot, which is how it stayed dark for
 # three weeks.
@@ -345,6 +374,7 @@ for attempt in $(seq 1 24); do
     podman exec foodshare-web curl --fail --silent --max-time 10 'http://localhost:3000/food?distance=any' >/dev/null &&
     verify_listing_api; then
     echo "Production web health, Food page, and listing API passed for $DEPLOY_SHA"
+    deployment_finished=1
     exit 0
   fi
   sleep 5

@@ -82,7 +82,9 @@ case "$1 $2" in
   "image inspect") echo "\${MOCK_REVISION:-$DEPLOY_SHA}" ;;
   "secret inspect") [ "\${MOCK_SECRET_EXISTS:-0}" = 1 ] ;;
   "secret create") cat >/dev/null ;;
-  "exec foodshare-web") [ "\${MOCK_HEALTH_FAIL:-0}" != 1 ] ;;
+  "exec foodshare-web")
+    if [ "\${MOCK_INTERRUPT:-0}" = 1 ]; then sleep 60; fi
+    [ "\${MOCK_HEALTH_FAIL:-0}" != 1 ] ;;
   "exec -i") cat >/dev/null; [ "\${MOCK_API_FAIL:-0}" != 1 ] ;;
   *) exit 2 ;;
 esac
@@ -125,6 +127,21 @@ fi
       stdout: "pipe",
       stderr: "pipe",
     });
+    // A deployment that is interrupted: the run is cancelled by a newer
+    // push, or the runner goes away. The image is pinned and the health
+    // check has not answered, and that is the state the host is left in
+    // unless the deployment puts it back.
+    if (options.MOCK_INTERRUPT === "1") {
+      const dropinPath = join(unitDirectory, "foodshare-web.container.d", "50-image.conf");
+      for (let attempt = 0; attempt < 100; attempt++) {
+        const pinned = await Bun.file(dropinPath)
+          .text()
+          .catch(() => "");
+        if (pinned.includes(image)) break;
+        await Bun.sleep(50);
+      }
+      child.kill("SIGTERM");
+    }
     const [code, output, error] = await Promise.all([
       child.exited,
       new Response(child.stdout).text(),
@@ -204,6 +221,15 @@ test("a secret that is already there is left alone", async () => {
   });
   expect(result.code).toBe(0);
   expect(result.commands).not.toContain("secret create");
+});
+test("an interrupted deployment puts the host back the way it was", async () => {
+  // A newer push cancels the run and the runner can go away. Either way
+  // the host is left holding the new image with no answer about whether
+  // it is good, unless the deployment puts it back on the way out.
+  const result = await deploy({ MOCK_INTERRUPT: "1" });
+  expect(result.code).not.toBe(0);
+  expect(result.dropin.trim()).toBe("Image=sha256:previous");
+  expect(result.environment).toBe(oldEnvironment);
 });
 test("a host that has never run the app is installed and deployed", async () => {
   // The deployment installs the unit and writes the environment file, so
