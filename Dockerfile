@@ -12,7 +12,18 @@
 FROM oven/bun:canary@sha256:d3a0f00e2cd5329c7985fccf52138a6ba375a951186c5a7b10f092ed5dfccdb6 AS deps
 WORKDIR /app
 
-COPY package.json bun.lock ./
+# `patches/` is copied because `package.json` names a patched dependency:
+# Playwright is patched so it does not clobber Bun's `require.extensions`
+# handler, and Bun applies the patch during the install. Without the file in
+# the image, the install fails with "patch file not found" before anything
+# else is built.
+#
+# `bunfig.toml` is copied for the same reason the CI install has it: the
+# install settings in it -- exact versions, and refusing a package published
+# less than an hour ago -- are part of how this tree is meant to be
+# installed, and the image should install the way CI does.
+COPY package.json bun.lock bunfig.toml ./
+COPY patches ./patches
 RUN bun install --frozen-lockfile
 
 # ---- Stage 2: Build the application ----
