@@ -8,7 +8,12 @@ import {
   generateETag,
 } from "@/lib/wasm-compression";
 import { buildOtpAuthUri, constantTimeEquals, generateTotp, verifyTotp } from "@/lib/wasm-crypto";
-import { calculateHaversineDistance, filterItemsWithinRadius, parsePostGisLocation } from "@/lib/wasm-geo";
+import {
+  calculateHaversineDistance,
+  calculateItemDistances,
+  filterItemsWithinRadius,
+  parsePostGisLocation,
+} from "@/lib/wasm-geo";
 import {
   calculateSmartWidth,
   detectImageFormat,
@@ -44,6 +49,19 @@ describe("WebAssembly Crypto & TOTP Bridges", () => {
     expect(verifyTotp(secret, code, 1025)).toBe(true);
     // Invalid code
     expect(verifyTotp(secret, "999999", 1000)).toBe(false);
+  });
+
+  it("treats the epoch as a timestamp rather than as 'now'", () => {
+    // RFC 4226 test vector: counter 0 is the epoch itself.
+    expect(generateTotp(secret, 0)).toBe("755224");
+  });
+
+  it("floors a fractional timestamp to whole seconds", () => {
+    expect(generateTotp(secret, 59.9)).toBe(generateTotp(secret, 59));
+  });
+
+  it("refuses a negative timestamp", () => {
+    expect(() => generateTotp(secret, -1)).toThrow(RangeError);
   });
 
   it("generates valid OTPAuth URI", () => {
@@ -86,6 +104,37 @@ describe("WebAssembly Vector Search & RRF Bridges", () => {
 
     expect(fused.length).toBe(4);
     expect(fused[0].score).toBeGreaterThan(fused[2].score);
+  });
+
+  it("fuses numeric identifiers", () => {
+    const fused = fuseRankedLists([
+      [1, 2, 3],
+      [2, 1, 4],
+    ]);
+
+    expect(fused.length).toBe(4);
+    expect(fused.map((item) => item.id).sort()).toEqual([1, 2, 3, 4]);
+  });
+
+  it("keeps a numeric identifier distinct from the same digits as a string", () => {
+    const fused = fuseRankedLists([[1], ["1"]]);
+
+    expect(fused.length).toBe(2);
+    expect(fused.map((item) => item.id).sort()).toEqual([1, "1"]);
+  });
+
+  it("orders equally scored results the same way every time", () => {
+    const lists = [
+      ["a", "b", "c", "d", "e"],
+      ["b", "a", "d", "c", "e"],
+    ];
+    const orders = new Set<string>();
+
+    for (let attempt = 0; attempt < 8; attempt++) {
+      orders.add(fuseRankedLists(lists).map((item) => item.id).join(","));
+    }
+
+    expect(orders.size).toBe(1);
   });
 
   it("calculates multi-modal hybrid score combining vector, text, and geo", () => {
@@ -139,12 +188,69 @@ describe("WebAssembly Geospatial Bridges", () => {
     expect(filtered[0].id).toBe("near");
   });
 
+  it("keeps the item's own fields when filtering by radius", () => {
+    const items = [
+      { id: "near", title: "Pantry on Main St", location: { coordinates: [8.6821, 50.1109] } },
+      { id: "far", title: "Far away", location: { coordinates: [13.405, 52.52] } },
+    ];
+
+    const filtered = filterItemsWithinRadius(50.1109, 8.6821, items, 50);
+
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].title).toBe("Pantry on Main St");
+    expect(filtered[0].location).toEqual({ coordinates: [8.6821, 50.1109] });
+    expect(filtered[0].distance).toBeCloseTo(0, 3);
+  });
+
+  it("keeps the item's own fields when calculating distances", () => {
+    const items = [{ id: 7, title: "Seven", location: { coordinates: [8.6821, 50.1109] } }];
+
+    const measured = calculateItemDistances(50.1109, 8.6821, items);
+
+    expect(measured).toHaveLength(1);
+    expect(measured[0].id).toBe(7);
+    expect(measured[0].title).toBe("Seven");
+    expect(measured[0].distance).toBeCloseTo(0, 3);
+  });
+
+  it("measures one item without a location as infinitely far away", () => {
+    const items = [
+      { id: "here", location: { coordinates: [8.6821, 50.1109] } },
+      { id: "nowhere" },
+    ];
+
+    const measured = calculateItemDistances(50.1109, 8.6821, items);
+
+    expect(measured[0].distance).toBeCloseTo(0, 3);
+    expect(measured[1].distance).toBe(Number.POSITIVE_INFINITY);
+  });
+
   it("parses PostGIS WKT points", () => {
     const parsed = parsePostGisLocation("POINT(8.6821 50.1109)");
 
     expect(parsed).not.toBeNull();
     expect(parsed?.latitude).toBeCloseTo(50.1109, 4);
     expect(parsed?.longitude).toBeCloseTo(8.6821, 4);
+  });
+
+  it("parses the SRID-prefixed WKT the app stores", () => {
+    const parsed = parsePostGisLocation("SRID=4326;POINT(8.6821 50.1109)");
+
+    expect(parsed).not.toBeNull();
+    expect(parsed?.latitude).toBeCloseTo(50.1109, 4);
+    expect(parsed?.longitude).toBeCloseTo(8.6821, 4);
+  });
+
+  it("parses a latitude/longitude pair", () => {
+    const parsed = parsePostGisLocation({ latitude: 50.1109, longitude: 8.6821 });
+
+    expect(parsed?.latitude).toBeCloseTo(50.1109, 4);
+    expect(parsed?.longitude).toBeCloseTo(8.6821, 4);
+  });
+
+  it("returns null for a location that holds no point", () => {
+    expect(parsePostGisLocation(null)).toBeNull();
+    expect(parsePostGisLocation("not a point")).toBeNull();
   });
 });
 
@@ -234,5 +340,29 @@ describe("WebAssembly Image Geometry & Format Detection Bridges", () => {
       expect(meta.is_square).toBe(true);
       expect(meta.aspect_ratio).toBe(1);
     }
+  });
+
+  it("extracts PNG dimensions from raw byte buffer", () => {
+    // A real 1x1 PNG, header and all.
+    const png = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+      0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4,
+      0x89, 0x00, 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
+      0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
+      0x42, 0x60, 0x82,
+    ]);
+
+    const meta = extractImageMetadata(png);
+    expect(meta).not.toBeNull();
+    if (meta) {
+      expect(meta.width).toBe(1);
+      expect(meta.height).toBe(1);
+      expect(meta.format).toBe("png");
+      expect(meta.is_square).toBe(true);
+    }
+  });
+
+  it("returns null for bytes that hold no image", () => {
+    expect(extractImageMetadata(new Uint8Array([0, 0, 0, 0]))).toBeNull();
   });
 });

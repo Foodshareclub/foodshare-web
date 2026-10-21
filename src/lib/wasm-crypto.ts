@@ -9,31 +9,66 @@
  * @module lib/wasm-crypto
  */
 
+import { createLogger } from "@/lib/logger";
 import * as WasmCrypto from "@/wasm/foodshare-crypto/foodshare_crypto";
+
+const logger = createLogger("WasmCrypto");
+
+/**
+ * Convert a number of seconds since the epoch into the whole seconds the
+ * module wants.
+ *
+ * `undefined` means "now", which the module supplies itself. Zero is a
+ * real timestamp — the epoch — and is passed through rather than being
+ * mistaken for "now". Fractional seconds are floored, because a TOTP
+ * counter only ever moves in whole steps.
+ *
+ * @throws RangeError if the timestamp is negative, which has no counter.
+ */
+function toEpochSeconds(timestampSeconds: number | undefined): bigint | null {
+  if (timestampSeconds === undefined) return null;
+  if (!Number.isFinite(timestampSeconds)) {
+    throw new RangeError(`timestamp must be a finite number of seconds, got ${timestampSeconds}`);
+  }
+  const floored = Math.floor(timestampSeconds);
+  if (floored < 0) {
+    throw new RangeError(`timestamp must not be negative, got ${timestampSeconds}`);
+  }
+  return BigInt(floored);
+}
 
 /**
  * Generate a 6-digit TOTP MFA token from a secret key.
+ *
+ * @param timestampSeconds Seconds since the epoch. Omit to use the current
+ *   time; zero is the epoch itself.
  */
 export function generateTotp(secret: string, timestampSeconds?: number): string {
   try {
-    const timeBigInt = timestampSeconds ? BigInt(timestampSeconds) : null;
-    return WasmCrypto.generate_totp_code(secret, timeBigInt);
+    return WasmCrypto.generate_totp_code(secret, toEpochSeconds(timestampSeconds));
   } catch (error) {
-    console.error("WASM TOTP generation failed:", error);
+    logger.error("WASM TOTP generation failed", error instanceof Error ? error : new Error(String(error)));
     throw error;
   }
 }
 
 /**
  * Verify user-entered TOTP token with time-drift window support (±windowSteps).
+ *
+ * A failure to verify and a failure to run the check are reported the
+ * same way — as "not verified" — so a broken module cannot be used to
+ * distinguish a wrong code from a broken check. The reason is logged.
  */
 export function verifyTotp(secret: string, code: string, timestampSeconds?: number, windowSteps = 1): boolean {
   try {
-    const timeBigInt = timestampSeconds ? BigInt(timestampSeconds) : null;
-    const windowBigInt = BigInt(windowSteps);
-    return WasmCrypto.verify_totp_code(secret, code, timeBigInt, windowBigInt);
+    return WasmCrypto.verify_totp_code(
+      secret,
+      code,
+      toEpochSeconds(timestampSeconds),
+      BigInt(Math.floor(windowSteps)),
+    );
   } catch (error) {
-    console.error("WASM TOTP verification error:", error);
+    logger.error("WASM TOTP verification error", error instanceof Error ? error : new Error(String(error)));
     return false;
   }
 }

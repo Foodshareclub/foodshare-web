@@ -10,10 +10,13 @@
  * @module lib/wasm-search
  */
 
+import { createLogger } from "@/lib/logger";
 import * as WasmSearch from "@/wasm/foodshare-search/foodshare_search";
 
+const logger = createLogger("WasmSearch");
+
 export interface RrfFusedItem {
-  id: string;
+  id: string | number;
   score: number;
 }
 
@@ -47,12 +50,45 @@ export function normalizeVectorDimensions(v: Float32Array | number[], targetDim 
  * Merge multiple ranked result lists using Reciprocal Rank Fusion (RRF).
  *
  * The module takes and returns JS arrays; there is no JSON roundtrip.
+ *
+ * Identifiers may be numbers or strings. The module works in strings, so
+ * each distinct identifier is given a private key of its own and the
+ * original value is put back afterwards, so a numeric id and the string
+ * of the same digits stay distinct.
+ *
+ * Results are ordered by score, and items with equal scores keep the
+ * order they first appeared in across the input lists. The module
+ * collects scores in a hash map, whose iteration order is not stable
+ * between runs, so the order is settled here.
  */
-export function fuseRankedLists(lists: string[][], k = 60.0): RrfFusedItem[] {
+export function fuseRankedLists(lists: Array<Array<string | number>>, k = 60.0): RrfFusedItem[] {
+  const keyById = new Map<string | number, string>();
+  const idByKey = new Map<string, string | number>();
+  const firstSeen = new Map<string, number>();
+  const keyed = lists.map((list) =>
+    list.map((id) => {
+      const existing = keyById.get(id);
+      if (existing !== undefined) return existing;
+      const key = `k${keyById.size}`;
+      keyById.set(id, key);
+      idByKey.set(key, id);
+      firstSeen.set(key, keyById.size - 1);
+      return key;
+    }),
+  );
+
   try {
-    return WasmSearch.rrf_merge(lists, k) as RrfFusedItem[];
+    const fused = WasmSearch.rrf_merge(keyed, k) as Array<{ id: string; score: number }>;
+    return fused
+      .map((item) => ({
+        id: idByKey.get(item.id) ?? item.id,
+        score: item.score,
+        order: firstSeen.get(item.id) ?? Number.MAX_SAFE_INTEGER,
+      }))
+      .sort((a, b) => b.score - a.score || a.order - b.order)
+      .map(({ id, score }) => ({ id, score }));
   } catch (error) {
-    console.error("WASM RRF merge error:", error);
+    logger.error("WASM RRF merge failed", error instanceof Error ? error : new Error(String(error)));
     return [];
   }
 }

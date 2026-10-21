@@ -60,9 +60,14 @@ export function isValidImage(data: Uint8Array): boolean {
  * roundtrip.
  */
 export function extractImageMetadata(data: Uint8Array): ImageMetadata | null {
-  const parsed = WasmImage.extract_image_metadata_json(data);
-  if (!parsed) return null;
   try {
+    const parsed = WasmImage.extract_image_metadata_json(data) as {
+      width: number;
+      height: number;
+      format: string;
+      size_bytes: number;
+    } | null;
+    if (!parsed) return null;
     return {
       ...parsed,
       aspect_ratio: parsed.width > 0 && parsed.height > 0 ? parsed.width / parsed.height : 1,
