@@ -14,15 +14,15 @@ foodshare-web/
 ├── messages/            # 🌍 i18n translation files (21 languages)
 ├── supabase/           # Vendored copy — canonical source in foodshare-backend/supabase
 ├── .env.example         # Environment variables template
-├── .dockerignore        # Docker build ignore rules
+├── .containerignore     # Container build ignore rules
 ├── .gitignore           # Git ignore rules
 ├── biome.json           # Biome formatter and linter configuration
 ├── .oxlintrc.json       # Oxlint linter configuration
 ├── bun.lock             # Bun lockfile
 ├── bunfig.toml          # Bun configuration
 ├── components.json      # shadcn/ui configuration
-├── docker-compose.yml   # Production deployment setup
-├── Dockerfile           # Standardized multi-stage build
+├── foodshare-web.container  # Quadlet unit — the production service definition
+├── Containerfile        # Standardized multi-stage build
 ├── eslint.config.mjs    # ESLint configuration
 ├── next.config.ts       # Next.js configuration
 ├── package.json         # Dependencies & Bun scripts
@@ -40,7 +40,7 @@ Documentation is organized for developer onboarding and operations:
 - **01-getting-started/** - Installation and structure (this file)
 - **02-development/** - Architecture, Style Guide, Testing, i18n
 - **03-features/** - Admin, Auth, Map, Comms, Posts
-- **04-deployment/** - VPS, Docker, Secret Management
+- **04-deployment/** - VPS, containers, Secret Management
 - **05-reference/** - API, Utilities, Tech Stack
 - **SENTRY_INTEGRATION.md** - Monitoring setup
 

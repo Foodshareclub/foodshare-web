@@ -45,13 +45,13 @@ The GitHub Secrets we configured (`GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID` and `GOTRUE
 Here's what happens:
 
 1. **GitHub Secrets** → Used during CI/CD builds and deployments
-2. **VPS `.env` file** → Used by the actual running Supabase Docker containers
+2. **VPS `.env` file** → Used by the actual running Supabase containers
 3. **Supabase Vault** → Alternative secure storage for secrets
 
 The OAuth secrets need to be in the **actual Supabase GoTrue service's environment**, which is configured via:
 
 - The `.env` file on the VPS where Supabase is running
-- OR environment variables in the `docker-compose.yml` for the GoTrue service
+- OR environment variables in the backend's `compose.yaml` for the GoTrue service
 
 ## Solution: Three-Step Fix
 
@@ -89,9 +89,9 @@ GOTRUE_EXTERNAL_GOOGLE_SECRET=your-google-client-secret-here
 GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI=https://api.foodshare.club/auth/v1/callback
 
 # Restart auth service
-docker compose restart auth
+podman compose restart auth
 # OR if using standalone GoTrue:
-docker restart gotrue
+podman restart gotrue
 ```
 
 ### Step 2: Enable in Web App
@@ -141,7 +141,7 @@ Use this checklist to verify OAuth is properly configured:
   ```
 - [ ] Auth service is running:
   ```bash
-  docker ps | grep auth
+  podman ps | grep auth
   ```
 
 ### Frontend (Web App)
@@ -190,7 +190,7 @@ Use this checklist to verify OAuth is properly configured:
 ```bash
 ssh organic@api.foodshare.club
 cd /home/organic/dev/foodshare-backend
-docker compose restart auth
+podman compose restart auth
 ```
 
 ### Issue 3: Google button doesn't appear
@@ -225,7 +225,7 @@ ssh organic@api.foodshare.club
 
 # Check if GoTrue has the secrets
 cd /home/organic/dev/foodshare-backend
-docker compose exec auth env | grep GOTRUE_EXTERNAL_GOOGLE
+podman compose exec auth env | grep GOTRUE_EXTERNAL_GOOGLE
 
 # Should output:
 # GOTRUE_EXTERNAL_GOOGLE_ENABLED=true

@@ -42,7 +42,7 @@ Production monitoring and observability.
 - [ ] Build tested locally
 - [ ] Translations compiled
 
-## ⚡ Quick Deployment (Docker)
+## ⚡ Quick Deployment (Podman/Quadlet)
 
 ### Prerequisites
 
@@ -65,7 +65,7 @@ The primary and only supported deployment method is via GitHub Actions.
 
 ```bash
 # Emergency image refresh (pull and restart)
-docker compose pull && docker compose up -d
+sudo systemctl --user restart foodshare-web
 ```
 
 ## 🔐 Environment Variables
@@ -266,7 +266,7 @@ git push origin main
 
 - Check environment variable prefix (if using Vite/Legacy) or `NEXT_PUBLIC_`
 - Restart dev server after changes
-- Verify Docker environment variables in `docker-compose.yml`
+- Verify the environment file the unit reads: /etc/foodshare/foodshare-web.env
 
 ### Translations Missing
 

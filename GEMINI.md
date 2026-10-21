@@ -34,12 +34,12 @@ by `bun install` through `patchedDependencies`; never delete `patches/`.
 
 ## Deployment
 
-All deployments are **fully automated** via GitHub Actions in full scale. **Never SSH to run `docker build` or `docker compose` manually.**
+All deployments are **fully automated** via GitHub Actions in full scale. **Never SSH to run `podman build` or the deployment script manually.**
 
 1. **GitHub Secrets:** All build arguments (e.g., OAuth keys, `SITE_DOMAIN`) and environment variables are managed securely via GitHub Secrets. Manual builds omit these critical variables.
 2. **Push to `main`**: Triggers the CI/CD pipeline which strictly injects these full scale secrets and automatically handles the `.env.production` file on the VPS.
 3. **Monitor Build**: Use `gh run list --limit 3` to track progress.
-4. **Automatic Deployment**: Docker images are rebuilt and deployed to the VPS automatically upon successful build.
+4. **Automatic Deployment**: Container images are rebuilt and deployed to the VPS automatically upon successful build.
 
 ## Commands
 

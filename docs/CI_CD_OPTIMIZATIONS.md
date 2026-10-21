@@ -99,7 +99,7 @@ SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY
 EOL
 
 # Pull all operational secrets from Vault to .env.production
-docker exec supabase-db psql -U postgres -d postgres -A -t -c \
+podman exec supabase-db psql -U postgres -d postgres -A -t -c \
   "SELECT name || '=' || secret FROM vault.decrypted_secrets;" >> .env.production
 EOF
 ```
@@ -152,7 +152,7 @@ validate (matrix: lint, type-check, test)
   ↓
 build
   ├→ e2e (4 shards) → merge-e2e-reports
-  ├→ docker → deploy
+  ├→ build-and-publish → deploy
   └→ sync-translations
 ```
 
@@ -160,8 +160,8 @@ build
 
 - `validate` runs first (3 parallel tasks)
 - `build` waits for all validate tasks
-- `e2e`, `docker`, `sync-translations` run in parallel after build
-- `deploy` waits for docker
+- `e2e`, `build-and-publish`, `sync-translations` run in parallel after build
+- `deploy` waits for build-and-publish
 - `merge-e2e-reports` waits for all e2e shards
 
 ## Best Practices Applied
@@ -184,7 +184,7 @@ build
 
 1. **Conditional E2E:** Skip E2E tests for docs-only changes
 2. **Build Cache:** Implement Next.js build cache across runs
-3. **Parallel Docker:** Build multi-arch images in parallel
+3. **Parallel image builds:** Build images for more than one architecture in parallel
 4. **Smart Deployment:** Deploy only if build artifacts changed
 5. **Workflow Reusability:** Extract common steps to reusable workflows
 

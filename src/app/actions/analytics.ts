@@ -13,11 +13,11 @@ import { createClient } from "@/lib/supabase/server";
 
 /**
  * Track an analytics event.
- * Currently a no-op since MotherDuck doesn't work in Docker.
+ * Currently a no-op since MotherDuck doesn't work in the container.
  * In production, you'd send this to a dedicated analytics service.
  */
 export async function trackEvent(_eventName: string, _properties: Record<string, unknown> = {}): Promise<void> {
-  // No-op - MotherDuck doesn't work in Docker
+  // No-op - MotherDuck doesn't work in the container
   // Consider using a service like PostHog, Mixpanel, or Amplitude
 }
 

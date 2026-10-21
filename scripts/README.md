@@ -69,7 +69,7 @@ Required for scripts:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `DOCKER_PASSWORD` (for registry authentication)
+- `GITHUB_TOKEN` (for registry authentication)
 
 ---
 

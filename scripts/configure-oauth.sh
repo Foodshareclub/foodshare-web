@@ -89,15 +89,15 @@ EOL
 echo "✓ Updated .env with $PROVIDER_UPPER OAuth configuration"
 
 # Restart Supabase auth service
-if docker ps | grep -q supabase.*auth; then
-  docker compose restart auth
+if podman ps | grep -q supabase.*auth; then
+  podman compose restart auth
   echo "✓ Restarted Supabase auth service"
-elif docker ps | grep -q gotrue; then
-  docker restart gotrue
+elif podman ps | grep -q gotrue; then
+  podman restart gotrue
   echo "✓ Restarted GoTrue service"
 else
   echo "⚠ Warning: Could not find auth service to restart"
-  echo "  Please restart manually: docker compose restart auth"
+  echo "  Please restart manually: podman compose restart auth"
 fi
 
 echo ""

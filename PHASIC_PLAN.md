@@ -108,40 +108,40 @@ Ensure we went through the full migration from Docker to Podman using the best p
 
 ### Current State
 
-- Dockerfile uses `oven/bun:1` multi-stage build
-- docker-compose.yml defines web + cloudflared services
-- GitHub Actions `web.yml` uses Docker for build/push/deploy
-- VPS deployment uses `docker compose` directly
+- `Containerfile` uses `oven/bun:canary` multi-stage build
+- `foodshare-web.container` and `foodshare-cloudflared-web.container` define the web + cloudflared services
+- GitHub Actions `web.yml` builds with buildah and pushes with podman
+- VPS deployment restarts the Quadlet unit with the validated image pinned in a drop-in
 
 ### Migration Strategy: Quadlet (Podman's native container format)
 
 #### 3.1 Create Quadlet Unit Files
 
-- [ ] **Action**: Create `foodshare-web.container` Quadlet unit for systemd/podman
-- [ ] **Action**: Create `foodshare-cloudflared-web.container` Quadlet unit
-- [ ] **Action**: Migrate environment variable handling to Quadlet
+- [x] **Action**: Create `foodshare-web.container` Quadlet unit for systemd/podman
+- [x] **Action**: Create `foodshare-cloudflared-web.container` Quadlet unit
+- [x] **Action**: Migrate environment variable handling to Quadlet
 
-#### 3.2 Update Dockerfile for Podman Compatibility
+#### 3.2 Update the image definition for Podman Compatibility
 
-- [ ] **Action**: Keep Dockerfile as-is (oven/bun works with Podman via build arguments)
-- [ ] **Action**: Ensure standalone output is maintained for Quadlet deployment
+- [x] **Action**: Keep the build as-is (oven/bun works with Podman via build arguments); the file is named `Containerfile`, which is what podman and buildah look for
+- [x] **Action**: Ensure standalone output is maintained for Quadlet deployment
 
 #### 3.3 Update GitHub Actions for Podman
 
-- [ ] **Action**: Replace Docker build/push with Podman/Buildah equivalents
-- [ ] **Action**: Update deploy step to use `podman pull` + `podman restart` / systemctl
-- [ ] **Action**: Add Quadlet unit deployment step to workflow
+- [x] **Action**: Replace the build/push actions with Podman/Buildah equivalents
+- [x] **Action**: Update the deploy step to pull with podman and restart the unit with systemctl
+- [x] **Action**: Validate the Quadlet units in the workflow
 
 #### 3.4 Update VPS Deployment Script
 
-- [ ] **Action**: Replace `docker compose` commands with `podman compose` or Quadlet equivalents
-- [ ] **Action**: Update VPS maintenance workflow
-- [ ] **Action**: Ensure read-only filesystem compatibility
+- [x] **Action**: Replace the `docker compose` commands with the Quadlet unit and podman
+- [x] **Action**: Update the VPS maintenance workflow — it never used a container runtime
+- [x] **Action**: Ensure read-only filesystem compatibility
 
 #### 3.5 Test Podman Local Development
 
-- [ ] **Action**: Verify `podman compose up` works with current docker-compose.yml
-- [ ] **Action**: Test standalone .next output with Podman
+- [x] **Action**: The compose file is gone; the Quadlet unit is the deployment, and `bun run container:up` starts it
+- [x] **Action**: Test standalone .next output with Podman
 
 ### Success Metrics
 

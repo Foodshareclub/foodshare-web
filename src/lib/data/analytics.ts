@@ -136,7 +136,7 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
 
   const supabase = await createClient();
 
-  // Query Supabase directly (MotherDuck doesn't work in Docker)
+  // Query Supabase directly (MotherDuck doesn't work in the container)
   // Note: profiles uses created_time, last_seen_at; posts uses is_active, is_arranged
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);

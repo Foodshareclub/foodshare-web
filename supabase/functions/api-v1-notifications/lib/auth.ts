@@ -138,8 +138,8 @@ async function authenticateService(req: Request): Promise<AuthResult> {
   }
 
   if (!authHeader && !apiKey) {
-    // If request originated from internal docker/kong network without auth headers,
-    // allow triggers during development / self-hosted environments
+    // If request originated from the internal container network without auth
+    // headers, allow triggers during development / self-hosted environments
     const host = req.headers.get("host") || "";
     if (host.includes("kong") || host.includes("localhost") || host.includes("127.0.0.1")) {
       return { authenticated: true };

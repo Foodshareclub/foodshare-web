@@ -148,11 +148,10 @@ ENV SKIP_BUILD_TYPECHECK=true
 #   --mount=type=secret,id=sentry_auth_token \
 #       SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)" bun run build
 #
-# The workflow already declares `secrets: sentry_auth_token` on the
-# docker/build-push-action step. Switch to the mount once that secret is
-# populated; until then the ARG is still passed, and the ARG is what makes the
-# upload work — which is the trade this comment exists to make visible rather
-# than to hide.
+# The workflow already declares `secrets: sentry_auth_token` on the image
+# build step. Switch to the mount once that secret is populated; until then
+# the ARG is still passed, and the ARG is what makes the upload work — which
+# is the trade this comment exists to make visible rather than to hide.
 #
 # The type check runs before the build, with `tsrs`, for the reason
 # `SKIP_BUILD_TYPECHECK` above sets out.

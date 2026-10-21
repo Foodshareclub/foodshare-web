@@ -56,11 +56,11 @@ fi
 
 echo "--- 2. Pulling Vault secrets (from Supabase Database) ---"
 # Check if the local database container is running
-if docker ps | grep -q 'supabase-db'; then
+if podman ps | grep -q 'supabase-db'; then
   echo "Extracting decrypted secrets from local vault..."
-  # Run purely locally assuming the user has the backend running via docker-compose
+  # Run purely locally assuming the user has the backend running via podman
   # If remote, they'd need to SSH or connect via psql, but this is a local dev script
-  SECRETS=$(docker exec supabase-db psql -U postgres -d postgres -A -t -c "SELECT name || '=' || secret FROM vault.decrypted_secrets;")
+  SECRETS=$(podman exec supabase-db psql -U postgres -d postgres -A -t -c "SELECT name || '=' || secret FROM vault.decrypted_secrets;")
   
   if [ -n "$SECRETS" ]; then
     echo "$SECRETS" | while read -r line; do
@@ -82,7 +82,7 @@ if docker ps | grep -q 'supabase-db'; then
   fi
 else
   echo "⚠️ Warning: supabase-db container is not running. Skipping vault secrets."
-  echo "Make sure you run 'docker compose up -d' in the foodshare-backend directory if you want vault secrets."
+  echo "Make sure you run 'podman compose up -d' in the foodshare-backend directory if you want vault secrets."
 fi
 
 echo "==> Done! Your $ENV_FILE is now synchronized with the backend operational secrets."

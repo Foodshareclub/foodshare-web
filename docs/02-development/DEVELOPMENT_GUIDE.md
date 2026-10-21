@@ -753,7 +753,7 @@ bun run build
 
 ### Deployment (Standard)
 
-The primary and only supported deployment method is via GitHub Actions in full scale. **Never SSH to run `docker build` or `docker compose` manually.**
+The primary and only supported deployment method is via GitHub Actions in full scale. **Never SSH to run `podman build` or the deployment script manually.**
 
 1. **GitHub Secrets:** All build arguments (e.g., OAuth keys, `SITE_DOMAIN`, `CLOUDFLARE_TUNNEL_TOKEN`) and environment variables are strictly managed securely via GitHub Secrets. Manual builds will omit these critical configuration variables.
 2. **Push to `main`**: Automatically triggers the production build and deployment, natively injecting secrets via the pipeline.
@@ -765,8 +765,8 @@ The primary and only supported deployment method is via GitHub Actions in full s
 > Manual deployment on the VPS is strictly forbidden for standard operations. It bypasses CI/CD validations and drops critical build-time secrets.
 
 ```bash
-# Emergency refresh (pull and restart from GHCR only)
-docker compose pull && docker compose up -d
+# Emergency refresh (restart the unit on the validated image)
+systemctl --user restart foodshare-web
 ```
 
 ---

@@ -30,7 +30,7 @@
 
 ## Deployment
 
-- [Deployment Guide](./04-deployment/DEPLOYMENT_GUIDE.md) - Production setup (Docker)
+- [Deployment Guide](./04-deployment/DEPLOYMENT_GUIDE.md) - Production setup (Podman/Quadlet)
 - [Environment Setup](./04-deployment/ENVIRONMENT_SETUP.md) - Configuration
 
 ## Reference

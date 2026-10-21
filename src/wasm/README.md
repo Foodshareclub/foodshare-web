@@ -6,9 +6,9 @@ The `*.wasm` binaries + wasm-pack `--target nodejs` glue (`*.js`) in each
 
 ## Why vendored?
 
-- Fresh clones, CI runners, and the **Docker image build** need runnable
+- Fresh clones, CI runners, and the **container image build** need runnable
   artifacts without a Rust/wasm-pack toolchain. The `.wasm`/`.js` files
-  total ~1.6MB — cheaper than a Rust stage in `Dockerfile`.
+  total ~1.6MB — cheaper than a Rust stage in the `Containerfile`.
 - Turbopack dev/prod builds `readFileSync` these at module scope; missing
   files break `bun run build` (see `foodshare-tools/build-wasm.ts`).
 

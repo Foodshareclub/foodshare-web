@@ -1257,6 +1257,15 @@ As the project matured and moved towards a self-hosted Supabase infrastructure, 
 
 **Current Status:** Active. Fully migrated to `web.foodshare.club`.
 
+**Update — 2026-10-21:** The decision stands; the container runtime changed.
+The deployment runs on Podman and Quadlet rather than Docker Compose, and
+the image is built by buildah rather than Buildx. The reasoning for
+self-hosting — control of the network edge, no proprietary middleware, and
+one stack shared with the backend — is unchanged. The one line above that
+said "Docker-based deployments" described the runtime at the time, not the
+requirement; the requirement is that the deployment is self-hosted and
+that the repository carries its own definition of it.
+
 - Generous limits
 
 5. **Features:**

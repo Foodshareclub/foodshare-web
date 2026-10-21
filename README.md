@@ -38,7 +38,7 @@ A modern food sharing platform that connects people to reduce food waste by enab
 ### Infrastructure
 
 - **Upstash** - Redis caching, Vector search, QStash queues
-- **Self-hosted VPS** - Hosting and deployment (Docker Compose + Cloudflare Tunnel)
+- **Self-hosted VPS** - Hosting and deployment (Podman/Quadlet + Cloudflare Tunnel)
 - **Sentry** - Error tracking and performance monitoring
 - **AWS SES / Brevo / Resend** - Email services
 - **Twilio** - Phone verification
@@ -199,13 +199,13 @@ All Edge Functions are maintained in the `foodshare-backend` repository. Locally
 
 ## Deployment
 
-The application is fully self-hosted on a VPS using Docker Compose.
+The application is fully self-hosted on a VPS using Podman and Quadlet.
 
 ### VPS Deployment (CI/CD)
 
 The application is deployed automatically via GitHub Actions. The pipeline:
 
-1.  **Builds** the Docker image locally on the runner.
+1.  **Builds** the container image locally on the runner.
 2.  **Pushes** the image to **GitHub Container Registry (GHCR)**.
 3.  **Deploys** by pulling the new image on the VPS, ensuring no heavy build processing occurs on production.
 
@@ -216,15 +216,15 @@ The application is deployed automatically via GitHub Actions. The pipeline:
 
 ```bash
 # Emergency refresh (latest tags from GHCR)
-docker compose pull && docker compose up -d
+sudo systemctl --user restart foodshare-web
 ```
 
-### Docker Build
+### Image Build
 
-The Dockerfile uses a multi-stage build to create a small production image. Build-time environment variables (like `NEXT_PUBLIC_SUPABASE_URL`) must be passed as `--build-arg` if they are not in the `.env` file at build time.
+The `Containerfile` uses a multi-stage build to create a small production image. Build-time environment variables (like `NEXT_PUBLIC_SUPABASE_URL`) must be passed as `--build-arg` if they are not in the `.env` file at build time.
 
 ```bash
-docker compose build --build-arg NEXT_PUBLIC_SUPABASE_URL=https://api.foodshare.club
+podman build --build-arg NEXT_PUBLIC_SUPABASE_URL=https://api.foodshare.club -t foodshare-web .
 ```
 
 ### Local Manual Build

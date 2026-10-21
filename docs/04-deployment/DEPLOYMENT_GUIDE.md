@@ -6,9 +6,9 @@ This guide covers the deployment of the FoodShare Web application to production 
 
 - **App**: Next.js 16 (App Router)
 - **Runtime**: Bun >=1.1 (CI: latest)
-- **Infrastructure**: Docker Compose + Cloudflare Tunnel (`cloudflared` container in compose — no host reverse proxy)
+- **Infrastructure**: Podman + Quadlet + Cloudflare Tunnel (`cloudflared` container in the Quadlet unit — no host reverse proxy)
 - **Services**: `foodshare-web` + `cloudflared`
-- **CI/CD**: GitHub Actions (Docker Build → GHCR → Deploy)
+- **CI/CD**: GitHub Actions (container build → GHCR → Deploy)
 - **Registry**: GitHub Container Registry (ghcr.io)
 - **Monitoring**: Sentry + Structured Logging
 
@@ -39,18 +39,18 @@ We use **"Latest-Wins" Concurrency**. Pushing a new commit to `main` will automa
 
 - Linting & Type-checking
 - Bun:test suite execution
-- Docker image build (multi-stage)
+- Container image build (multi-stage)
 - Push to `ghcr.io/foodshareclub/foodshare-web:latest`
 
 ### 2. Deployment Phase (Automated)
 
 The `web.yml` workflow connects to the VPS over SSH and:
 
-- Writes `.env.production` from GitHub Secrets
-- `docker compose pull && docker compose up -d --force-recreate` (services: `foodshare-web`, `cloudflared`)
+- Writes the environment file the unit reads from GitHub Secrets
+- Pulls the validated image and pins it in the unit's drop-in, then restarts the unit (services: `foodshare-web`, `cloudflared`)
 - `bun run translations:sync` (Updates Edge Function translations)
 
-Public traffic enters through the Cloudflare Tunnel container defined in `docker-compose.yml`.
+Public traffic enters through the Cloudflare Tunnel container defined in `foodshare-cloudflared-web.container`.
 
 ### 3. Debugging a Failed Deploy
 
@@ -80,10 +80,10 @@ autossh -M 0 -o ServerAliveInterval=600 -o ServerAliveCountMax=600 -o ConnectTim
 
 ```bash
 # Check service health
-docker compose ps
+systemctl --user status foodshare-web --no-pager
 
 # View production logs
-docker compose logs -f foodshare-web
+podman logs -f foodshare-web
 
 # Manual sync of translations (debugging only)
 bun run translations:sync
@@ -116,7 +116,7 @@ Runtime secrets (API keys, OAuth credentials, etc.) are stored in the **Supabase
 
 ## ⚡ Performance Optimization
 
-Our production Docker build includes:
+Our production container build includes:
 
 1. **Next.js Standalone Mode**: Minimized bundle for containerization.
 2. **Sharp**: Automatic image optimization.
@@ -151,8 +151,7 @@ If a deployment fails:
 1. **GitHub Action**: Re-run the last successful workflow.
 2. **Manual VPS** (debugging only):
    ```bash
-   docker compose pull
-   docker compose up -d --force-recreate
+   systemctl --user restart foodshare-web
    ```
 
 ---

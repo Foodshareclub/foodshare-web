@@ -54,7 +54,7 @@ NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=true
 3. **Restart Auth Service:**
    ```bash
    cd foodshare-backend
-   docker-compose restart auth
+   podman compose restart auth
    ```
 
 4. **Enable in Web App:**
