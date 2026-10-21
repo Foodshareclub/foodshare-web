@@ -337,7 +337,7 @@ jobs:
 
       - name: Build the image
         id: build
-        uses: redhat-actions/buildah-build@v2
+        uses: redhat-actions/buildah-build@v3
         with:
           image: foodshareclub/foodshare-web
           # Tags aid discovery; production deploys only the validated digest.
@@ -414,8 +414,17 @@ jobs:
             echo "quadlet binary not on runner — static checks passed"
           fi
 
+      # The release is bookkeeping — it is what links the source maps to a
+      # version and files issues for the commits the suspect-commit query
+      # finds. It is not a property of the image, and it is not what makes
+      # the image good to run. So a failure here is reported and the
+      # deployment carries on: the image has been built, validated and
+      # pushed by this point, and withholding it from production because
+      # the monitoring project is misconfigured would trade a metadata
+      # problem for an outage.
       - name: Create Sentry release (suspect-commits → issues/PRs)
         if: env.SENTRY_AUTH_TOKEN != ''
+        continue-on-error: true
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG || 'organicnz-7v' }}
