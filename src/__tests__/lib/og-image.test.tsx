@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { ImageResponse } from "next/og";
 import sharp from "sharp";
 
@@ -99,6 +99,37 @@ describe("open-graph card picture", () => {
 });
 
 describe("open-graph card rendering", () => {
+  /**
+   * The card draws an emoji, and the renderer draws an emoji by fetching
+   * its artwork from a third-party CDN, because the font it has does not
+   * carry the glyph. That made these tests depend on the internet, and a
+   * CDN having a bad afternoon failed four tests that are about markup
+   * and have nothing to do with the CDN. It also failed the deployment,
+   * because the deployment is downstream of the tests.
+   *
+   * The artwork is served from here instead: a small local SVG. What these
+   * tests are about is what the card draws, not what the emoji looks like.
+   */
+  const EMOJI_ARTWORK =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="#e11d48"/></svg>';
+  const originalFetch = globalThis.fetch;
+
+  beforeAll(() => {
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : (input as Request).url;
+      if (url.includes("twemoji") || url.includes("svgmoji")) {
+        return new Response(EMOJI_ARTWORK, {
+          headers: { "content-type": "image/svg+xml" },
+        });
+      }
+      return originalFetch(input, init);
+    }) as typeof fetch;
+  });
+
+  afterAll(() => {
+    globalThis.fetch = originalFetch;
+  });
+
   it("draws the card", async () => {
     const response = generateOGImage({ title: "Fresh sourdough", type: "default" });
 
