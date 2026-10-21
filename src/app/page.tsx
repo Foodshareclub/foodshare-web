@@ -26,11 +26,9 @@ import {
   Building2,
   HandHelping,
   HeartHandshake,
-  Home as HomeIcon,
   Landmark,
   Leaf,
   type LucideIcon,
-  Map as MapIcon,
   MessageCircle,
   Package,
   PlusCircle,
@@ -38,7 +36,6 @@ import {
   Refrigerator,
   Search,
   Share2,
-  User,
 } from "lucide-react";
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -320,11 +317,13 @@ export default async function Home({ searchParams }: PageProps) {
   const mobileNav = (
     <MobileNav
       label={t("main_navigation")}
+      // The icons are named, not passed: the navigation is a client
+      // component and a component reference cannot cross that boundary.
       items={[
-        { href: PATH.main, icon: HomeIcon, label: t("nav_home") },
-        { href: "/map/food", icon: MapIcon, label: t("nav_map") },
-        { href: PATH.food, icon: Search, label: t("nav_search") },
-        { href: "/profile", icon: User, label: t("nav_profile") },
+        { href: PATH.main, icon: "home", label: t("nav_home") },
+        { href: "/map/food", icon: "map", label: t("nav_map") },
+        { href: PATH.food, icon: "search", label: t("nav_search") },
+        { href: "/profile", icon: "profile", label: t("nav_profile") },
       ]}
     />
   );

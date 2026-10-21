@@ -1,13 +1,36 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { LucideIcon } from "lucide-react";
+import { Circle, Home, type LucideIcon, Map as MapIcon, Search, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+/**
+ * The icons the navigation offers, by name.
+ *
+ * The items are built in a server component -- the home page -- and the
+ * navigation is a client component, because it follows the pathname. A
+ * component reference cannot cross that boundary: React refuses to
+ * serialise a function, so the page failed to render with "Functions
+ * cannot be passed directly to Client Components unless you explicitly
+ * expose it by marking it with 'use server'", and the home page's own
+ * tests failed with it.
+ *
+ * So the icon travels as a name and the client component holds the
+ * component. The names are data; the icons are code, and code belongs on
+ * the side that runs it.
+ */
+const ICONS: Record<string, LucideIcon> = {
+  home: Home,
+  map: MapIcon,
+  search: Search,
+  profile: User,
+};
+
 interface MobileNavItem {
   href: string;
-  icon: LucideIcon;
+  /** The name of an icon in `ICONS`. */
+  icon: string;
   label: string;
 }
 
@@ -36,7 +59,7 @@ export function MobileNav({ items, label, className }: MobileNavProps) {
       <div className="flex items-center justify-around px-2 py-2">
         {items.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-          const Icon = item.icon;
+          const Icon = ICONS[item.icon] ?? Circle;
 
           return (
             <Link
