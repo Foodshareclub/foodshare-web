@@ -11,16 +11,23 @@
 #   package.json              ->  "packageManager": "bun@<version>"
 #   .github/workflows/*.yml   ->  BUN_VERSION: "<version>"
 #
-# The version is the newest release `oven-sh/setup-bun` can install in CI.
-# That action downloads from the GitHub *releases*, and the canary builds
-# are published to npm only — there is no `bun-v<canary>` release to
-# download. A canary therefore pins CI to a build it cannot fetch, and
-# every job fails at the setup step before it runs anything.
+# The *channel* is pinned in three places, and all three have to name the
+# same one:
 #
-# So the pin is a release, and it is the same one CI installs: a version
-# that exists only on one developer's machine cannot be installed there,
-# and pinning to it makes local and CI run different binaries.
+#   mise.toml                 ->  "npm:bun" = "canary"
+#   package.json              ->  "packageManager": "bun@canary"
+#   .github/workflows/*.yml   ->  BUN_VERSION: "canary"
 #
-# Keep all three in step when the version is refreshed.
+# The canary is published twice, and the two are not the same build. npm
+# carries the newest canary that was published there; the GitHub releases
+# carry a rolling `canary` tag that moves with every build. `mise` reads
+# the first and `oven-sh/setup-bun` reads the second, so a checkout and a
+# CI run can be a version apart.
+#
+# The channel cannot be named exactly and installed from both. Naming one
+# exact canary build pins CI to a tag that does not exist — the action has
+# no npm fallback — and every job fails at the setup step.
+#
+# Keep all three in step when the channel is changed.
 [tools]
-"npm:bun" = "1.4.3"
+"npm:bun" = "canary"
