@@ -311,43 +311,57 @@ jobs:
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     timeout-minutes: 30
     outputs:
-      image-digest: ${{ steps.image.outputs.digest }}
+      image-digest: ${{ steps.digest.outputs.digest }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Log in to the Container registry
-        uses: docker/login-action@v3
+        uses: redhat-actions/podman-login@v1
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata for container images
+      # The tags and the OCI labels used to come from a metadata action that
+      # computed them. They are computed here instead, because the two
+      # actions that replaced it take them as plain values, and the one
+      # label that matters is `org.opencontainers.image.revision`: the
+      # deployment refuses an image whose revision is not the commit it is
+      # deploying.
+      - name: Image metadata
         id: meta
-        uses: docker/metadata-action@v5
+        run: |
+          echo "created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+          echo "short=$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
+          echo "version=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' package.json | head -1)" >> "$GITHUB_OUTPUT"
+
+      - name: Build the image
+        id: build
+        uses: redhat-actions/buildah-build@v2
         with:
-          images: ghcr.io/${{ github.repository }}
+          image: foodshareclub/foodshare-web
           # Tags aid discovery; production deploys only the validated digest.
-          tags: |
-            type=raw,value=latest
-            type=sha,prefix=sha-,format=short
-
-      - name: Set up Docker Buildx (for build only)
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver: docker-container
-
-      - name: Build and push Docker image
-        id: image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          platforms: linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: latest sha-${{ steps.meta.outputs.short }}
+          containerfiles: |
+            ./Containerfile
+          labels: |
+            org.opencontainers.image.created=${{ steps.meta.outputs.created }}
+            org.opencontainers.image.description=FoodShare web, the Next.js application.
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.title=foodshare-web
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.meta.outputs.version }}
+          # The build cache lives in the registry, because there is one
+          # registry and it is already where the image goes. The cache is a
+          # separate manifest from the image, so it never collides with the
+          # tags above. The intermediate layers have to be kept for a cache
+          # to mean anything.
+          layers: "true"
+          extra-args: |
+            --cache-from=registry://ghcr.io/foodshareclub/foodshare-web:buildcache
+            --cache-to=registry://ghcr.io/foodshareclub/foodshare-web:buildcache
           build-args: |
             NEXT_PUBLIC_SUPABASE_URL=https://api.${{ secrets.SITE_DOMAIN }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -364,6 +378,26 @@ jobs:
             NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED=${{ secrets.NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED }}
             NEXT_PUBLIC_OAUTH_APPLE_ENABLED=${{ secrets.NEXT_PUBLIC_OAUTH_APPLE_ENABLED }}
             NEXT_PUBLIC_OAUTH_GITHUB_ENABLED=${{ secrets.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED }}
+
+      - name: Push the image
+        id: push
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: foodshareclub/foodshare-web
+          registry: ghcr.io
+          tags: latest sha-${{ steps.meta.outputs.short }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The digest the push reports comes from a file, and the file ends
+      # with a newline. The deployment matches the image reference exactly,
+      # so the whitespace is taken out here, once, rather than at the far
+      # end of the workflow where the reference is assembled.
+      - name: Read the pushed digest
+        id: digest
+        env:
+          PUSHED_DIGEST: ${{ steps.push.outputs.digest }}
+        run: printf 'digest=%s\n' "$(printf '%s' "$PUSHED_DIGEST" | tr -d '[:space:]')" >> "$GITHUB_OUTPUT"
 
       - name: Validate Quadlet units (single source of truth)
         run: |
