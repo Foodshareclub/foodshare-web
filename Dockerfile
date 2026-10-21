@@ -1,14 +1,22 @@
 # ---- Stage 1: Install dependencies ----
 # The canary channel, pinned by digest so the image is reproducible even
 # though the `canary` tag itself moves with every upstream build.
-FROM oven/bun:canary@sha256:7c470331ae82c6c38bca085f0302380828eb5507e1e06cd0e580f7e3b58369c9 AS deps
+#
+# The pin names the arm64 manifest on purpose. The image is built for
+# linux/arm64 only -- the publishing job runs on an ARM64 runner and asks
+# for that one platform -- and a tag resolves to a manifest list while a
+# digest resolves to exactly one manifest. The amd64 manifest of this tag
+# was pinned first, and the build died at the first `RUN` with "exec format
+# error": the amd64 `/bin/sh` cannot execute on an ARM64 kernel. The digest
+# and the target platform have to agree.
+FROM oven/bun:canary@sha256:d3a0f00e2cd5329c7985fccf52138a6ba375a951186c5a7b10f092ed5dfccdb6 AS deps
 WORKDIR /app
 
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
 # ---- Stage 2: Build the application ----
-FROM oven/bun:canary@sha256:7c470331ae82c6c38bca085f0302380828eb5507e1e06cd0e580f7e3b58369c9 AS builder
+FROM oven/bun:canary@sha256:d3a0f00e2cd5329c7985fccf52138a6ba375a951186c5a7b10f092ed5dfccdb6 AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -125,7 +133,7 @@ ENV NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 RUN bun run build
 
 # ---- Stage 3: Production runner ----
-FROM oven/bun:canary-slim@sha256:c502ea969202ebe903ad2ceac23d1140bca82c9b250096035e5480fd50e5c455 AS runner
+FROM oven/bun:canary-slim@sha256:54434615955a39b590abe1bc8be2f5a4ee1c5f2b9af655c26b6eebcbd047e66a AS runner
 WORKDIR /app
 
 # Install curl for healthchecks, dumb-init for proper process signal handling, and ca-certificates for HTTPS

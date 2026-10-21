@@ -1,5 +1,6 @@
 import { defaultLocale, isValidLocale } from "@/i18n/config";
 import { negotiateLocale, resolveRequestLocale } from "@/i18n/resolve";
+import { isRateLimitingRequired } from "@/lib/security/rateLimitPolicy";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { Ratelimit } from "@upstash/ratelimit";
@@ -278,21 +279,14 @@ const mutationLimiter = redis
 const rateLimitingConfigured = Boolean(globalLimiter && authLimiter && mutationLimiter);
 
 /**
- * Without Redis the three limiters are `null`, and every call site is guarded
- * with `if (limiter && …)`. That combination is a *silent* no-op: a production
- * deploy missing UPSTASH_REDIS_REST_URL/…_TOKEN ran with no rate limiting at
- * all and looked identical to one that was rate limiting — no error, no log, no
- * metric. Unthrottled in practice were password spraying on signInWithPassword,
- * password-reset mail to arbitrary addresses, and every mutation in the app.
+ * Whether a missing limiter is a misconfiguration that has to be answered with
+ * a 503, or a deployment that simply does not rate limit.
  *
- * So the absence is now loud, once, at module load, and a production request is
- * answered with 503 rather than being allowed through unbounded. Failing closed
- * is the right direction for a control whose failure mode is "unlimited traffic":
- * a brief 503 is recoverable, an open door is not.
- *
- * Development and CI are unaffected — they have no Redis and do not need one.
+ * The reasoning is in `src/lib/security/rateLimitPolicy.ts`, which is where
+ * the test for it lives: the proxy is a middleware file, and importing it
+ * into a test would bring the whole request path with it.
  */
-const rateLimitingRequired = process.env.NODE_ENV === "production";
+const rateLimitingRequired = isRateLimitingRequired(process.env);
 
 if (rateLimitingRequired && !rateLimitingConfigured && typeof console !== "undefined") {
   console.error(
@@ -490,12 +484,12 @@ export async function proxy(request: NextRequest) {
   }
 
   // Rate Limiting
-  const isProd = process.env.NODE_ENV === "production";
-
-  if (isProd) {
+  if (rateLimitingRequired) {
     // See the module-level note: a missing limiter is a misconfiguration, not an
     // unlimited allowance. This is the only place that decides it, so no call
-    // site can forget.
+    // site can forget. The predicate is the module-level one, so the log above
+    // and the answer here cannot disagree about whether the limiters are
+    // required.
     if (!rateLimitingConfigured) {
       return new NextResponse("Service Unavailable", {
         status: 503,
