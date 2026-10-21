@@ -355,13 +355,13 @@ jobs:
             org.opencontainers.image.version=${{ steps.meta.outputs.version }}
           # The build cache lives in the registry, because there is one
           # registry and it is already where the image goes. The cache is a
-          # separate manifest from the image, so it never collides with the
-          # tags above. The intermediate layers have to be kept for a cache
-          # to mean anything.
+          # separate image from the one being built, so it never collides
+          # with the tags above. The intermediate layers have to be kept
+          # for a cache to mean anything.
           layers: "true"
           extra-args: |
-            --cache-from=registry://ghcr.io/foodshareclub/foodshare-web:buildcache
-            --cache-to=registry://ghcr.io/foodshareclub/foodshare-web:buildcache
+            --cache-from=ghcr.io/foodshareclub/foodshare-web:buildcache
+            --cache-to=ghcr.io/foodshareclub/foodshare-web:buildcache
           build-args: |
             NEXT_PUBLIC_SUPABASE_URL=https://api.${{ secrets.SITE_DOMAIN }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
