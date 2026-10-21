@@ -72,6 +72,7 @@ All deployments are **fully automated** via GitHub Actions in full scale. **Neve
 | `bun run type-check`        | TypeScript checking (`tsrs`, the Rust port of `tsc`)            |
 | `bun run type-check:tsc`    | Same check via `tsc` on TypeScript 7.1 (strict parity gate)    |
 | `bun run check:no-node`     | Fail if Node.js creeps back into the toolchain                 |
+| `bun run check:no-docker`   | Fail if the Docker product creeps back into the toolchain      |
 | `bun run lint:fix`          | oxlint (primary) + biome format; runs both                      |
 | `bun run test:ci`           | Run all tests with bun:test                                     |
 | `bun run e2e`               | Playwright end-to-end tests (`bunx --bun playwright test`)      |

@@ -53,6 +53,11 @@ A modern food sharing platform that connects people to reduce food waste by enab
 Node.js is not part of this toolchain. `bun run check:no-node` fails the build
 if a Node tool creeps back into the scripts or the CI workflows.
 
+The container runtime is Podman, not Docker: there is no Docker daemon on the
+host, on the CI runner, or on a developer machine. `bun run check:no-docker`
+fails the build if a Docker command or a Docker-named file appears in the
+source.
+
 ## Getting Started
 
 ### 1. Clone the repository

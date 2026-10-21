@@ -48,6 +48,7 @@ jobs:
           - "lint:biome"
           - type-check
           - "type-check:tsc"
+          - "check:no-docker"
           - "check:no-node"
           - test
           # The same suite in a random order. A test that passes only
