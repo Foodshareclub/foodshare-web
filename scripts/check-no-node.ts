@@ -156,12 +156,12 @@ const BARE_NODE_BUILTINS = new Set([
 /**
  * Root-level files that carry the toolchain, found rather than listed.
  *
- * A hard-coded list goes stale the moment someone adds a Dockerfile or a
+ * A hard-coded list goes stale the moment someone adds a Containerfile or a
  * compose file, and the gap is invisible in review — the new file looks
  * covered because a sibling file is. Every file in the repo root that could
  * name a runtime is scanned instead.
  */
-const ROOT_EXACT_NAMES = new Set(["Caddyfile", "Containerfile", "Dockerfile", "Makefile", "Procfile", "justfile"]);
+const ROOT_EXACT_NAMES = new Set(["Caddyfile", "Containerfile", "Makefile", "Procfile", "justfile"]);
 
 /**
  * True when a root file's name marks it as a candidate for the scan.
@@ -390,7 +390,7 @@ function isNativeBunx(pkg: string): boolean {
  * Every place on the line where a Node tool could be launched.
  *
  * Two sources: bare tokens in command position (shell scripts, YAML hook
- * commands, Dockerfile directives) and string literals that begin with a
+ * commands, Containerfile directives) and string literals that begin with a
  * Node tool (TypeScript that spawns a command).
  */
 function commandCandidates(

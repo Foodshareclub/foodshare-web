@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 /**
- * The Dockerfile's `NEXT_PUBLIC_*` list must cover every variable `src/` reads.
+ * The Containerfile's `NEXT_PUBLIC_*` list must cover every variable `src/` reads.
  *
  * Next.js inlines `process.env.NEXT_PUBLIC_*` at build time. A variable that
- * `src/` reads but the Dockerfile does not declare as an ARG therefore arrives
+ * `src/` reads but the Containerfile does not declare as an ARG therefore arrives
  * in the built image as `undefined` — with no build error, no warning, and no
  * runtime error either. The code simply takes its "not configured" branch, and
  * the feature is off in production while looking fine in development.
@@ -17,9 +17,9 @@
  *   - NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION the verification meta tag was absent
  *   - NEXT_PUBLIC_TELEGRAM_BOT_USERNAME    Telegram login unreachable
  *
- * So the list is checked against the source rather than trusted. The Dockerfile
+ * So the list is checked against the source rather than trusted. The Containerfile
  * and this script are a matched pair: add a `NEXT_PUBLIC_` read to `src/`, and
- * this fails until the Dockerfile declares it.
+ * this fails until the Containerfile declares it.
  *
  * Variables that are deliberately *not* declared are listed in
  * `RUNTIME_ONLY`, with the reason. Those are read only on the server, or are
@@ -30,7 +30,7 @@ import { readdirSync, statSync } from "bun:fs";
 import { join } from "bun:path";
 
 const ROOT = join(import.meta.dir, "..");
-const DOCKERFILE = join(ROOT, "Dockerfile");
+const CONTAINERFILE = join(ROOT, "Containerfile");
 const SRC_DIR = join(ROOT, "src");
 
 const RED = "\x1b[31m";
@@ -55,8 +55,8 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-if (!(await Bun.file(DOCKERFILE).exists())) {
-  console.error(`${RED}No Dockerfile at ${DOCKERFILE}${RESET}`);
+if (!(await Bun.file(CONTAINERFILE).exists())) {
+  console.error(`${RED}No Containerfile at ${CONTAINERFILE}${RESET}`);
   process.exit(1);
 }
 
@@ -77,10 +77,10 @@ for (const file of files) {
   }
 }
 
-// Every NEXT_PUBLIC_* the Dockerfile declares as a build arg.
-const dockerfile = await Bun.file(DOCKERFILE).text();
+// Every NEXT_PUBLIC_* the Containerfile declares as a build arg.
+const containerfile = await Bun.file(CONTAINERFILE).text();
 const declared = new Set<string>();
-for (const match of dockerfile.matchAll(/^ARG\s+(NEXT_PUBLIC_[A-Z0-9_]+)/gm)) {
+for (const match of containerfile.matchAll(/^ARG\s+(NEXT_PUBLIC_[A-Z0-9_]+)/gm)) {
   declared.add(match[1]);
 }
 
@@ -110,7 +110,7 @@ if (missing.length > 0) {
   for (const name of missing) {
     console.error(`    ${RED}${name}${RESET}  —  ${readAt.get(name)}`);
   }
-  console.error(`\n  For each, add to Dockerfile in the builder stage:
+  console.error(`\n  For each, add to the Containerfile in the builder stage:
     ARG ${missing[0]}
     ENV ${missing[0]}=\$${missing[0]}
   and pass it as a build-arg in .github/workflows/web.yml.

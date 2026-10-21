@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
   // than bundled.
   serverExternalPackages: ["sharp"],
 
-  // Standalone output for minimal container images (Dockerfile copies
+  // Standalone output for minimal container images (the Containerfile copies
   // .next/standalone). Required for Quadlet/Podman deployment.
   output: "standalone",
 
