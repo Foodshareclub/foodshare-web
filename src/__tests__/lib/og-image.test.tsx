@@ -130,6 +130,7 @@ describe("open-graph card rendering", () => {
     // injection. A red panel drawn the ordinary way has to be counted.
     const control = new ImageResponse(
       <svg width="1200" height="630">
+        <title>Control panel</title>
         <rect x="0" y="0" width="1200" height="630" fill="#FF0000" />
       </svg>,
       { width: 1200, height: 630 },

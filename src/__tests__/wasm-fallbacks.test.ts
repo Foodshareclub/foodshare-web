@@ -142,16 +142,16 @@ describe("the search bridge without its module", () => {
   it("does not answer with nothing", () => {
     // The module used to be answered with an empty list when it failed,
     // which read as a search that found nothing.
-    const fused = fuseRankedLists([["a", "b"], ["b", "c"]]);
+    const fused = fuseRankedLists([
+      ["a", "b"],
+      ["b", "c"],
+    ]);
 
     expect(fused).toHaveLength(3);
   });
 
   it("keeps a numeric identifier distinct from the same digits as a string", () => {
-    const fused = fuseRankedLists([
-      [1],
-      ["1"],
-    ]);
+    const fused = fuseRankedLists([[1], ["1"]]);
 
     expect(fused.map((item) => item.id).sort()).toEqual([1, "1"]);
   });

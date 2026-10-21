@@ -37,10 +37,7 @@ function toUint8Array(input: Uint8Array | string): Uint8Array {
  */
 export function compressBrotli(data: Uint8Array | string, quality = 4): Uint8Array {
   const bytes = toUint8Array(data);
-  return WasmCompression.brotli_compress(
-    bytes,
-    requireIntegerInRange(quality, "quality", 0, BROTLI_QUALITY_MAX),
-  );
+  return WasmCompression.brotli_compress(bytes, requireIntegerInRange(quality, "quality", 0, BROTLI_QUALITY_MAX));
 }
 
 /**
@@ -68,10 +65,7 @@ export function decompressBrotliString(data: Uint8Array): string {
  */
 export function compressGzip(data: Uint8Array | string, level = 6): Uint8Array {
   const bytes = toUint8Array(data);
-  return WasmCompression.gzip_compress(
-    bytes,
-    requireIntegerInRange(level, "level", 0, GZIP_LEVEL_MAX),
-  );
+  return WasmCompression.gzip_compress(bytes, requireIntegerInRange(level, "level", 0, GZIP_LEVEL_MAX));
 }
 
 /**

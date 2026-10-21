@@ -129,10 +129,7 @@ export function fuseRankedLists(lists: Array<Array<string | number>>, k = 60.0):
  * order they first appeared in across the input lists, which is the
  * order the module's answers are put in as well.
  */
-export function reciprocalRankFusion(
-  lists: Array<Array<string | number>>,
-  k: number,
-): RrfFusedItem[] {
+export function reciprocalRankFusion(lists: Array<Array<string | number>>, k: number): RrfFusedItem[] {
   const scores = new Map<string | number, number>();
   const firstSeen = new Map<string | number, number>();
 
@@ -166,10 +163,7 @@ export function calculateRelevance(query: string, text: string): number {
  * do not match, which is what a caller wants to see. A vector that is not
  * made of numbers at all is an error, because there is no sensible answer.
  */
-function toVector(
-  value: Float32Array | number[] | undefined,
-  name: string,
-): Float32Array | undefined {
+function toVector(value: Float32Array | number[] | undefined, name: string): Float32Array | undefined {
   if (value === undefined || value === null) return undefined;
   return requireVector(value, name);
 }
@@ -183,10 +177,7 @@ function toVector(
  * which answers with a score of infinity or of no value at all. A negative
  * distance is not a distance.
  */
-function optionalNonNegative(
-  value: number | undefined,
-  name: string,
-): number | undefined {
+function optionalNonNegative(value: number | undefined, name: string): number | undefined {
   if (value === undefined || value === null) return undefined;
   return requireNonNegativeNumber(value, name);
 }
@@ -199,10 +190,7 @@ function optionalNonNegative(
  * curve from the one that was asked for, and it answers with it as though
  * it were the one that was asked for.
  */
-function optionalHalfLife(
-  value: number | undefined,
-  name: string,
-): number | undefined {
+function optionalHalfLife(value: number | undefined, name: string): number | undefined {
   if (value === undefined || value === null) return undefined;
   return requirePositiveNumber(value, name);
 }

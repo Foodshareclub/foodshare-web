@@ -23,8 +23,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Email template definitions
-const LOGO_URL =
-  "https://api.foodshare.club/storage/v1/object/public/assets/logo-512.png";
+const LOGO_URL = "https://api.foodshare.club/storage/v1/object/public/assets/logo-512.png";
 const BRAND_GRADIENT = "linear-gradient(135deg, #ff2d55 0%, #ff5177 100%)";
 
 const emailWrapper = (content) => `
@@ -196,21 +195,40 @@ const templates = [
 // Welcome automation flow configuration
 const automationFlow = {
   name: "Welcome Series + Tester Recruitment",
-  description:
-    "5-email onboarding: welcome → profile → tester recruitment → first share → community highlights",
+  description: "5-email onboarding: welcome → profile → tester recruitment → first share → community highlights",
   trigger_type: "user_signup",
   trigger_config: {},
   status: "active",
   steps: [
     { type: "email", delay_minutes: 0, template_slug: "welcome", subject: "Welcome to FoodShare! 🍎" },
     { type: "delay", delay_minutes: 2880 }, // 2 days
-    { type: "email", delay_minutes: 0, template_slug: "complete-profile", subject: "Complete your FoodShare profile 📝" },
+    {
+      type: "email",
+      delay_minutes: 0,
+      template_slug: "complete-profile",
+      subject: "Complete your FoodShare profile 📝",
+    },
     { type: "delay", delay_minutes: 2880 }, // 2 more days
-    { type: "email", delay_minutes: 0, template_slug: "tester-recruitment", subject: "Help Shape FoodShare's Future - Join Our Beta Program 🚀" },
+    {
+      type: "email",
+      delay_minutes: 0,
+      template_slug: "tester-recruitment",
+      subject: "Help Shape FoodShare's Future - Join Our Beta Program 🚀",
+    },
     { type: "delay", delay_minutes: 4320 }, // 3 days
-    { type: "email", delay_minutes: 0, template_slug: "first-share-tips", subject: "Ready to share your first food? 🥗" },
+    {
+      type: "email",
+      delay_minutes: 0,
+      template_slug: "first-share-tips",
+      subject: "Ready to share your first food? 🥗",
+    },
     { type: "delay", delay_minutes: 7200 }, // 5 days
-    { type: "email", delay_minutes: 0, template_slug: "community-highlights", subject: "See what your neighbors are sharing 🏘️" },
+    {
+      type: "email",
+      delay_minutes: 0,
+      template_slug: "community-highlights",
+      subject: "See what your neighbors are sharing 🏘️",
+    },
   ],
 };
 
@@ -222,11 +240,7 @@ async function main() {
   const templateResults = { created: 0, updated: 0, errors: [] };
 
   for (const template of templates) {
-    const { data: existing } = await supabase
-      .from("email_templates")
-      .select("id")
-      .eq("slug", template.slug)
-      .single();
+    const { data: existing } = await supabase.from("email_templates").select("id").eq("slug", template.slug).single();
 
     if (existing) {
       const { error } = await supabase
@@ -322,7 +336,7 @@ async function main() {
   }
 
   // Final summary
-  console.log("\n" + "=".repeat(50));
+  console.log(`\n${"=".repeat(50)}`);
   console.log("✅ SETUP COMPLETE!\n");
   console.log("📧 Templates:");
   console.log(`   Created: ${templateResults.created}`);

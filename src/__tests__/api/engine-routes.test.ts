@@ -153,7 +153,12 @@ describe("the body of an engine request", () => {
     // A pair of embedding vectors of the size the app uses.
     const vector = Array.from({ length: 1536 }, (_, index) => index / 1536);
     const response = await POST(
-      post("/engine/search/hybrid", { textQuery: "bread", targetText: "Fresh bread", queryVector: vector, itemVector: vector }),
+      post("/engine/search/hybrid", {
+        textQuery: "bread",
+        targetText: "Fresh bread",
+        queryVector: vector,
+        itemVector: vector,
+      }),
     );
 
     expect(response.status).toBe(200);

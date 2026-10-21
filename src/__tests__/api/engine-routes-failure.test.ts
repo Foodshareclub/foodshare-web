@@ -49,9 +49,7 @@ function post(path: string, body: unknown): Request {
 
 describe("an engine request that breaks on the server", () => {
   it("answers with a 500 and a message that says nothing about the fault", async () => {
-    const response = await POST(
-      post("/engine/search/hybrid", { textQuery: "bread", targetText: "Fresh bread" }),
-    );
+    const response = await POST(post("/engine/search/hybrid", { textQuery: "bread", targetText: "Fresh bread" }));
 
     expect(response.status).toBe(500);
     const parsed = (await response.json()) as Record<string, unknown>;
@@ -63,9 +61,7 @@ describe("an engine request that breaks on the server", () => {
   it("records the fault where it belongs", async () => {
     logged.length = 0;
 
-    const response = await POST(
-      post("/engine/search/hybrid", { textQuery: "bread", targetText: "Fresh bread" }),
-    );
+    const response = await POST(post("/engine/search/hybrid", { textQuery: "bread", targetText: "Fresh bread" }));
 
     expect(response.status).toBe(500);
     expect(logged).toHaveLength(1);

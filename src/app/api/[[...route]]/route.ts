@@ -24,9 +24,7 @@ const encoder = new TextEncoder();
 
 /** A body that is larger than the endpoints will read. */
 class BodyTooLargeError extends Error {
-  constructor(
-    readonly limit: number,
-  ) {
+  constructor(readonly limit: number) {
     super(`body must be at most ${limit} bytes`);
     this.name = "BodyTooLargeError";
   }

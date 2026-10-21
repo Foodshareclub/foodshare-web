@@ -86,9 +86,9 @@ function openingOf(node: ts.Node): ts.JsxOpeningElement | ts.JsxSelfClosingEleme
 function classNameAttributeOf(node: ts.Node): ts.JsxAttribute | undefined {
   const opening = openingOf(node);
   if (!opening) return undefined;
-  return ts.jsxAttributes(opening).find(
-    (property): property is ts.JsxAttribute => ts.isJsxAttribute(property) && property.name.text === "className",
-  );
+  return ts
+    .jsxAttributes(opening)
+    .find((property): property is ts.JsxAttribute => ts.isJsxAttribute(property) && property.name.text === "className");
 }
 
 /** The className strings of an element: the attribute, and anything in `cn(…)`. */

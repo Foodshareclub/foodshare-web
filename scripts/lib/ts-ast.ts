@@ -32,8 +32,8 @@
  * seconds.
  */
 
-import { API } from "tsrs/unstable/async";
 import * as ast from "tsrs/unstable/ast";
+import { API } from "tsrs/unstable/async";
 
 /**
  * Every type guard (`isJsxText`, `isCallExpression`, …), every node type
