@@ -7,6 +7,67 @@ import { handle } from "hono/vercel";
 
 const app = new Hono().basePath("/api");
 
+/**
+ * The engine endpoints are public and unauthenticated, and their bodies
+ * arrive from the network. Each value is therefore checked before it
+ * reaches a module: a `&str` parameter is read out of the module's
+ * memory by length, so a value that is not a string sends it off the end
+ * of the allocation. That is an out-of-bounds access inside the module
+ * rather than a JavaScript exception, so it does not behave like a type
+ * error and cannot be caught by the handler.
+ *
+ * A body that cannot be used is reported with a `TypeError` or a
+ * `RangeError`, the same way the bridges report one, and both are
+ * answered with a 400.
+ */
+function readNumber(body: Record<string, unknown>, name: string): number {
+  const value = body[name];
+  if (typeof value !== "number") {
+    throw new TypeError(`${name} must be a number`);
+  }
+  if (!Number.isFinite(value)) {
+    throw new RangeError(`${name} must be a finite number`);
+  }
+  return value;
+}
+
+function readString(body: Record<string, unknown>, name: string): string {
+  const value = body[name];
+  if (typeof value !== "string") {
+    throw new TypeError(`${name} must be a string`);
+  }
+  if (value.length === 0) {
+    throw new RangeError(`${name} must not be empty`);
+  }
+  return value;
+}
+
+/** A coordinate pair, in the order the modules take them. */
+function readCoordinate(body: Record<string, unknown>, latName: string, lngName: string): [number, number] {
+  const lat = readNumber(body, latName);
+  const lng = readNumber(body, lngName);
+  if (lat < -90 || lat > 90) {
+    throw new RangeError(`${latName} must be between -90 and 90`);
+  }
+  if (lng < -180 || lng > 180) {
+    throw new RangeError(`${lngName} must be between -180 and 180`);
+  }
+  return [lat, lng];
+}
+
+/** Answer a request whose body could not be used. */
+function errorResponse(error: unknown): Response {
+  // A body that cannot be used is the caller's fault, so it is answered
+  // with a 400 rather than being reported as a fault of the server.
+  if (error instanceof TypeError || error instanceof RangeError) {
+    return Response.json({ error: error.message }, { status: 400 });
+  }
+  return Response.json(
+    { error: error instanceof Error ? error.message : "Internal error" },
+    { status: 500 },
+  );
+}
+
 app.get("/health-check", (c) => {
   return c.json({
     status: "healthy",
@@ -48,67 +109,62 @@ app.get("/engine/status", (c) => {
 // Hybrid Ranking Endpoint
 app.post("/engine/search/hybrid", async (c) => {
   try {
-    const body = await c.req.json();
-    const { textQuery, targetText, queryVector, itemVector, distanceKm } = body;
-    if (!textQuery || !targetText) {
-      return c.json({ error: "textQuery and targetText are required" }, 400);
-    }
+    const body = (await c.req.json()) as Record<string, unknown>;
+    const textQuery = readString(body, "textQuery");
+    const targetText = readString(body, "targetText");
+    const distanceKm = body.distanceKm === undefined ? undefined : readNumber(body, "distanceKm");
     const score = calculateHybridScore({
       textQuery,
       targetText,
-      queryVector,
-      itemVector,
+      queryVector: body.queryVector as number[] | undefined,
+      itemVector: body.itemVector as number[] | undefined,
       distanceKm,
     });
     return c.json({ score });
   } catch (err) {
-    return c.json({ error: err instanceof Error ? err.message : "Internal error" }, 500);
+    return errorResponse(err);
   }
 });
 
 // Geo Distance & Decay Endpoint
 app.post("/engine/geo/distance", async (c) => {
   try {
-    const body = await c.req.json();
-    const { lat1, lng1, lat2, lng2, halfLifeKm = 10 } = body;
-    if (lat1 === undefined || lng1 === undefined || lat2 === undefined || lng2 === undefined) {
-      return c.json({ error: "lat1, lng1, lat2, lng2 are required" }, 400);
-    }
+    const body = (await c.req.json()) as Record<string, unknown>;
+    const [lat1, lng1] = readCoordinate(body, "lat1", "lng1");
+    const [lat2, lng2] = readCoordinate(body, "lat2", "lng2");
+    const halfLifeKm = body.halfLifeKm === undefined ? 10 : readNumber(body, "halfLifeKm");
     const distanceKm = calculateHaversineDistance(lat1, lng1, lat2, lng2);
     const decayScore = calculateDistanceDecay(distanceKm, halfLifeKm);
     return c.json({ distanceKm, decayScore });
   } catch (err) {
-    return c.json({ error: err instanceof Error ? err.message : "Internal error" }, 500);
+    return errorResponse(err);
   }
 });
 
 // Crypto Verification Endpoint
 app.post("/engine/crypto/verify-totp", async (c) => {
   try {
-    const body = await c.req.json();
-    const { secret, token } = body;
-    if (!secret || !token) {
-      return c.json({ error: "secret and token are required" }, 400);
-    }
+    const body = (await c.req.json()) as Record<string, unknown>;
+    const secret = readString(body, "secret");
+    const token = readString(body, "token");
     const valid = verifyTotp(secret, token);
     return c.json({ valid });
   } catch (err) {
-    return c.json({ error: err instanceof Error ? err.message : "Internal error" }, 500);
+    return errorResponse(err);
   }
 });
 
 // Image Geometry Smart Width Endpoint
 app.post("/engine/image/smart-width", async (c) => {
   try {
-    const body = await c.req.json();
-    const { fileSizeBytes, currentWidth, currentHeight } = body;
-    if (fileSizeBytes === undefined || currentWidth === undefined || currentHeight === undefined) {
-      return c.json({ error: "fileSizeBytes, currentWidth, and currentHeight are required" }, 400);
-    }
+    const body = (await c.req.json()) as Record<string, unknown>;
+    const fileSizeBytes = readNumber(body, "fileSizeBytes");
+    const currentWidth = readNumber(body, "currentWidth");
+    const currentHeight = readNumber(body, "currentHeight");
     const targetWidth = calculateSmartWidth(fileSizeBytes, currentWidth, currentHeight);
     return c.json({ targetWidth, needsResize: targetWidth > 0 });
   } catch (err) {
-    return c.json({ error: err instanceof Error ? err.message : "Internal error" }, 500);
+    return errorResponse(err);
   }
 });
 

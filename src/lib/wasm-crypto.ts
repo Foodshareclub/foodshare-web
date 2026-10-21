@@ -10,6 +10,7 @@
  */
 
 import { createLogger } from "@/lib/logger";
+import { requireString } from "@/lib/wasm-boundary";
 import * as WasmCrypto from "@/wasm/foodshare-crypto/foodshare_crypto";
 
 const logger = createLogger("WasmCrypto");
@@ -44,8 +45,9 @@ function toEpochSeconds(timestampSeconds: number | undefined): bigint | null {
  *   time; zero is the epoch itself.
  */
 export function generateTotp(secret: string, timestampSeconds?: number): string {
+  const key = requireString(secret, "secret");
   try {
-    return WasmCrypto.generate_totp_code(secret, toEpochSeconds(timestampSeconds));
+    return WasmCrypto.generate_totp_code(key, toEpochSeconds(timestampSeconds));
   } catch (error) {
     logger.error("WASM TOTP generation failed", error instanceof Error ? error : new Error(String(error)));
     throw error;
@@ -60,10 +62,12 @@ export function generateTotp(secret: string, timestampSeconds?: number): string 
  * distinguish a wrong code from a broken check. The reason is logged.
  */
 export function verifyTotp(secret: string, code: string, timestampSeconds?: number, windowSteps = 1): boolean {
+  const key = requireString(secret, "secret");
+  const token = requireString(code, "code");
   try {
     return WasmCrypto.verify_totp_code(
-      secret,
-      code,
+      key,
+      token,
       toEpochSeconds(timestampSeconds),
       BigInt(Math.floor(windowSteps)),
     );
@@ -77,19 +81,23 @@ export function verifyTotp(secret: string, code: string, timestampSeconds?: numb
  * Build standard otpauth URI for Google Authenticator / Apple Keychain QR Codes.
  */
 export function buildOtpAuthUri(accountName: string, base32Secret: string, issuer = "FoodShare"): string {
-  return WasmCrypto.build_totp_uri(accountName, issuer, base32Secret);
+  return WasmCrypto.build_totp_uri(
+    requireString(accountName, "accountName"),
+    requireString(issuer, "issuer"),
+    requireString(base32Secret, "base32Secret"),
+  );
 }
 
 /**
  * Constant-time string equality check to prevent timing attacks.
  */
 export function constantTimeEquals(a: string, b: string): boolean {
-  return WasmCrypto.constant_time_eq(a, b);
+  return WasmCrypto.constant_time_eq(requireString(a, "a"), requireString(b, "b"));
 }
 
 /**
  * Generate HMAC-SHA256 hex signature.
  */
 export function hmacSha256(key: string, message: string): string {
-  return WasmCrypto.hmac_sha256_hex(key, message);
+  return WasmCrypto.hmac_sha256_hex(requireString(key, "key"), requireString(message, "message"));
 }

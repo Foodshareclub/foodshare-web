@@ -15,6 +15,7 @@
  */
 
 import { createLogger } from "@/lib/logger";
+import { requireFiniteNumber } from "@/lib/wasm-boundary";
 import * as WasmGeo from "@/wasm/foodshare-geo/foodshare_geo";
 
 const logger = createLogger("WasmGeo");
@@ -178,7 +179,12 @@ function measureDistances(userLat: number, userLng: number, items: GeoItem[]): n
  * Calculate the Haversine distance between two points in kilometers.
  */
 export function calculateHaversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  return WasmGeo.distance(lat1, lng1, lat2, lng2);
+  return WasmGeo.distance(
+    requireFiniteNumber(lat1, "lat1"),
+    requireFiniteNumber(lng1, "lng1"),
+    requireFiniteNumber(lat2, "lat2"),
+    requireFiniteNumber(lng2, "lng2"),
+  );
 }
 
 /**

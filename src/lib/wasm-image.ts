@@ -10,6 +10,7 @@
  * @module lib/wasm-image
  */
 
+import { requireByteArray, requireFiniteNumber, requireNonNegativeInteger } from "@/lib/wasm-boundary";
 import * as WasmImage from "@/wasm/foodshare-image/foodshare_image";
 
 export interface ImageMetadata {
@@ -27,14 +28,14 @@ export interface ImageMetadata {
  * Detect image format from raw bytes (e.g. "jpeg", "png", "webp", "gif", "avif", "heic").
  */
 export function detectImageFormat(data: Uint8Array): string | null {
-  return WasmImage.detect_image_format(data) ?? null;
+  return WasmImage.detect_image_format(requireByteArray(data, "data")) ?? null;
 }
 
 /**
  * Get standard MIME type from raw image bytes (e.g. "image/jpeg", "image/png", "image/webp").
  */
 export function getImageMimeType(data: Uint8Array): string | null {
-  return WasmImage.get_image_mime_type(data) ?? null;
+  return WasmImage.get_image_mime_type(requireByteArray(data, "data")) ?? null;
 }
 
 /**
@@ -43,14 +44,18 @@ export function getImageMimeType(data: Uint8Array): string | null {
  * Returns target width in pixels, or 0 if no resizing is required.
  */
 export function calculateSmartWidth(fileSizeBytes: number, currentWidth: number, currentHeight: number): number {
-  return WasmImage.calculate_smart_width(fileSizeBytes, currentWidth, currentHeight);
+  return WasmImage.calculate_smart_width(
+    requireFiniteNumber(fileSizeBytes, "fileSizeBytes"),
+    requireNonNegativeInteger(currentWidth, "currentWidth"),
+    requireNonNegativeInteger(currentHeight, "currentHeight"),
+  );
 }
 
 /**
  * Check if the byte buffer is a valid recognized image format.
  */
 export function isValidImage(data: Uint8Array): boolean {
-  return WasmImage.is_valid_image(data);
+  return WasmImage.is_valid_image(requireByteArray(data, "data"));
 }
 
 /**
@@ -60,8 +65,13 @@ export function isValidImage(data: Uint8Array): boolean {
  * roundtrip.
  */
 export function extractImageMetadata(data: Uint8Array): ImageMetadata | null {
+  // Checked outside the try, so a caller that passes the wrong type is
+  // told, rather than being answered with "no metadata" as if the bytes
+  // simply held no image.
+  const bytes = requireByteArray(data, "data");
+
   try {
-    const parsed = WasmImage.extract_image_metadata_json(data) as {
+    const parsed = WasmImage.extract_image_metadata_json(bytes) as {
       width: number;
       height: number;
       format: string;

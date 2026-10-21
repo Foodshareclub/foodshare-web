@@ -7,7 +7,7 @@ import {
   decompressGzipString,
   generateETag,
 } from "@/lib/wasm-compression";
-import { buildOtpAuthUri, constantTimeEquals, generateTotp, verifyTotp } from "@/lib/wasm-crypto";
+import { buildOtpAuthUri, constantTimeEquals, generateTotp, hmacSha256, verifyTotp } from "@/lib/wasm-crypto";
 import {
   calculateHaversineDistance,
   calculateItemDistances,
@@ -364,5 +364,82 @@ describe("WebAssembly Image Geometry & Format Detection Bridges", () => {
 
   it("returns null for bytes that hold no image", () => {
     expect(extractImageMetadata(new Uint8Array([0, 0, 0, 0]))).toBeNull();
+  });
+});
+
+describe("WebAssembly Boundary Guards", () => {
+  /**
+   * The modules read their arguments out of their own memory, and a
+   * `&str` parameter is read by length. A value that is not a string
+   * sends the read off the end of the allocation: an out-of-bounds
+   * access inside the module, which is not a JavaScript exception and so
+   * cannot be caught by a caller. Every bridge therefore checks first.
+   */
+
+  it("refuses a value that is not a string", () => {
+    for (const value of [12345, null, undefined, {}, []]) {
+      expect(() => verifyTotp(value as never, "123456")).toThrow();
+      expect(() => generateTotp(value as never)).toThrow();
+      expect(() => buildOtpAuthUri(value as never, "JBSWY3DPEHPK3PXP")).toThrow();
+      expect(() => constantTimeEquals(value as never, "b")).toThrow();
+      expect(() => hmacSha256(value as never, "message")).toThrow();
+    }
+  });
+
+  it("refuses a value that is not a finite number", () => {
+    for (const value of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+      expect(() => calculateHaversineDistance(value, 0, 0, 0)).toThrow();
+      expect(() => calculateHaversineDistance(0, value, 0, 0)).toThrow();
+      expect(() => calculateDistanceDecay(value)).toThrow();
+      expect(() => calculateSmartWidth(value, 100, 100)).toThrow();
+    }
+
+    for (const value of ["50", null, undefined, {}]) {
+      expect(() => calculateHaversineDistance(value as never, 0, 0, 0)).toThrow();
+      expect(() => calculateDistanceDecay(value as never)).toThrow();
+    }
+  });
+
+  it("refuses a dimension that is not a whole, non-negative number", () => {
+    expect(() => calculateSmartWidth(1024, 4000.5, 3000)).toThrow();
+    expect(() => calculateSmartWidth(1024, -1, 3000)).toThrow();
+    expect(() => calculateSmartWidth(1024, 4000, -1)).toThrow();
+  });
+
+  it("refuses a byte buffer that is not one", () => {
+    for (const value of [null, undefined, "GIF89a", [1, 2, 3], {}]) {
+      expect(() => detectImageFormat(value as never)).toThrow();
+      expect(() => getImageMimeType(value as never)).toThrow();
+      expect(() => isValidImage(value as never)).toThrow();
+      expect(() => extractImageMetadata(value as never)).toThrow();
+      expect(() => decompressBrotliString(value as never)).toThrow();
+      expect(() => decompressGzipString(value as never)).toThrow();
+    }
+  });
+
+  it("refuses a vector that is not made of numbers", () => {
+    const options = { textQuery: "a", targetText: "b" };
+
+    expect(() => calculateHybridScore({ ...options, queryVector: "abc" as never })).toThrow();
+    expect(() => calculateHybridScore({ ...options, itemVector: ["x", "y"] as never })).toThrow();
+    expect(() => calculateHybridScore({ ...options, queryVector: [1, Number.NaN] })).toThrow();
+  });
+
+  it("refuses a query that is not a string", () => {
+    expect(() => calculateHybridScore({ textQuery: 42 as never, targetText: "b" })).toThrow();
+    expect(() => calculateHybridScore({ textQuery: "a", targetText: 42 as never })).toThrow();
+  });
+
+  it("still accepts a vector of a length the other vector does not match", () => {
+    // The two vectors are measured against each other, and a mismatch
+    // answers with a similarity of zero, which is what a caller wants.
+    const score = calculateHybridScore({
+      textQuery: "bread",
+      targetText: "bread",
+      queryVector: [1, 2],
+      itemVector: [1, 2, 3],
+    });
+
+    expect(Number.isFinite(score)).toBe(true);
   });
 });

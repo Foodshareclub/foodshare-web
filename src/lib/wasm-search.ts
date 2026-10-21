@@ -11,6 +11,7 @@
  */
 
 import { createLogger } from "@/lib/logger";
+import { requireFiniteNumber, requireNumberArray, requireString } from "@/lib/wasm-boundary";
 import * as WasmSearch from "@/wasm/foodshare-search/foodshare_search";
 
 const logger = createLogger("WasmSearch");
@@ -97,7 +98,25 @@ export function fuseRankedLists(lists: Array<Array<string | number>>, k = 60.0):
  * Calculate multi-level relevance score for fuzzy search.
  */
 export function calculateRelevance(query: string, text: string): number {
-  return WasmSearch.relevance_score(query, text);
+  return WasmSearch.relevance_score(requireString(query, "query"), requireString(text, "text"));
+}
+
+/**
+ * Turn a vector into the float array the module reads.
+ *
+ * A vector of the wrong length is not an error: the module measures the two
+ * vectors against each other and answers with a similarity of zero when they
+ * do not match, which is what a caller wants to see. A vector that is not
+ * made of numbers at all is an error, because there is no sensible answer.
+ */
+function toVector(
+  value: Float32Array | number[] | undefined,
+  name: string,
+): Float32Array | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (value instanceof Float32Array) return value;
+  const numbers = requireNumberArray(value, name);
+  return numbers ? new Float32Array(numbers) : undefined;
 }
 
 /**
@@ -114,20 +133,12 @@ export function calculateHybridScore(options: {
   geoWeight?: number;
   halfLifeKm?: number;
 }): number {
-  const qVec = options.queryVector
-    ? options.queryVector instanceof Float32Array
-      ? options.queryVector
-      : new Float32Array(options.queryVector)
-    : undefined;
-  const iVec = options.itemVector
-    ? options.itemVector instanceof Float32Array
-      ? options.itemVector
-      : new Float32Array(options.itemVector)
-    : undefined;
+  const qVec = toVector(options.queryVector, "queryVector");
+  const iVec = toVector(options.itemVector, "itemVector");
 
   return WasmSearch.hybrid_score(
-    options.textQuery,
-    options.targetText,
+    requireString(options.textQuery, "textQuery"),
+    requireString(options.targetText, "targetText"),
     qVec,
     iVec,
     options.distanceKm,
@@ -142,12 +153,15 @@ export function calculateHybridScore(options: {
  * Calculate exponential geographic proximity decay score (0.0 to 1.0).
  */
 export function calculateDistanceDecay(distanceKm: number, halfLifeKm = 10.0): number {
-  return WasmSearch.distance_decay(distanceKm, halfLifeKm);
+  return WasmSearch.distance_decay(
+    requireFiniteNumber(distanceKm, "distanceKm"),
+    requireFiniteNumber(halfLifeKm, "halfLifeKm"),
+  );
 }
 
 /**
  * Compute Levenshtein edit distance between two strings.
  */
 export function computeEditDistance(a: string, b: string): number {
-  return WasmSearch.edit_distance(a, b);
+  return WasmSearch.edit_distance(requireString(a, "a"), requireString(b, "b"));
 }

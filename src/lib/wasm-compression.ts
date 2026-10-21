@@ -10,6 +10,7 @@
  * @module lib/wasm-compression
  */
 
+import { requireByteArray, requireNonNegativeInteger } from "@/lib/wasm-boundary";
 import * as WasmCompression from "@/wasm/foodshare-compression/foodshare_compression";
 
 const encoder = new TextEncoder();
@@ -19,7 +20,7 @@ function toUint8Array(input: Uint8Array | string): Uint8Array {
   if (typeof input === "string") {
     return encoder.encode(input);
   }
-  return input;
+  return requireByteArray(input, "data");
 }
 
 /**
@@ -27,21 +28,21 @@ function toUint8Array(input: Uint8Array | string): Uint8Array {
  */
 export function compressBrotli(data: Uint8Array | string, quality = 4): Uint8Array {
   const bytes = toUint8Array(data);
-  return WasmCompression.brotli_compress(bytes, quality);
+  return WasmCompression.brotli_compress(bytes, requireNonNegativeInteger(quality, "quality"));
 }
 
 /**
  * Decompress Brotli-compressed byte stream into raw bytes.
  */
 export function decompressBrotli(data: Uint8Array): Uint8Array {
-  return WasmCompression.brotli_decompress(data);
+  return WasmCompression.brotli_decompress(requireByteArray(data, "data"));
 }
 
 /**
  * Decompress Brotli-compressed byte stream into a UTF-8 string.
  */
 export function decompressBrotliString(data: Uint8Array): string {
-  const decompressed = WasmCompression.brotli_decompress(data);
+  const decompressed = WasmCompression.brotli_decompress(requireByteArray(data, "data"));
   return decoder.decode(decompressed);
 }
 
@@ -50,21 +51,21 @@ export function decompressBrotliString(data: Uint8Array): string {
  */
 export function compressGzip(data: Uint8Array | string, level = 6): Uint8Array {
   const bytes = toUint8Array(data);
-  return WasmCompression.gzip_compress(bytes, level);
+  return WasmCompression.gzip_compress(bytes, requireNonNegativeInteger(level, "level"));
 }
 
 /**
  * Decompress Gzip-compressed byte stream into raw bytes.
  */
 export function decompressGzip(data: Uint8Array): Uint8Array {
-  return WasmCompression.gzip_decompress(data);
+  return WasmCompression.gzip_decompress(requireByteArray(data, "data"));
 }
 
 /**
  * Decompress Gzip-compressed byte stream into a UTF-8 string.
  */
 export function decompressGzipString(data: Uint8Array): string {
-  const decompressed = WasmCompression.gzip_decompress(data);
+  const decompressed = WasmCompression.gzip_decompress(requireByteArray(data, "data"));
   return decoder.decode(decompressed);
 }
 
