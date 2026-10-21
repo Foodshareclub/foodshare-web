@@ -30,6 +30,10 @@ if [ ! -f "$UNIT_DIR/foodshare-web.container" ]; then
   echo "The Quadlet unit is not installed at $UNIT_DIR/foodshare-web.container; run scripts/quadlet-install.sh first" >&2
   exit 1
 fi
+if [ ! -f "$ENV_FILE" ]; then
+  echo "The environment file the unit reads is missing at $ENV_FILE; run scripts/quadlet-install.sh first" >&2
+  exit 1
+fi
 verify_listing_api() {
   podman exec -i foodshare-web bun run - <<'JS'
 const base = process.env.NEXT_PUBLIC_SUPABASE_URL;

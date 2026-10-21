@@ -33,6 +33,10 @@ Tmpfs=/tmp
 Tmpfs=/app/.next/cache
 NoNewPrivileges=true
 DropCapability=ALL
+# The file-descriptor ceiling the service was given, so it is given here.
+# Node opens a file per socket and per log stream, and the default limit is
+# low enough to be reached by a busy day.
+Ulimit=nofile=65536:65536
 # Bounded container logs, as before: 10 MB per file, three files, 30 MB in
 # total. The default is the journal, and the journal's own bound is a host
 # setting this repository cannot state — so the bound the service was given
@@ -55,10 +59,6 @@ Label=autoheal=true
 [Service]
 Restart=always
 TimeoutStartSec=120
-# The file-descriptor ceiling the service was given, so it is given here.
-# Node opens a file per socket and per log stream, and the default limit is
-# low enough to be reached by a busy day.
-LimitNOFILE=65536
 
 [Install]
 WantedBy=default.target
