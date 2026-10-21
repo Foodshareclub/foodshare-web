@@ -1,8 +1,9 @@
-import { chmod, mkdir, mkdtemp, rm } from "bun:fs/promises";
+import { chmod, mkdir, mkdtemp, readdir, rm } from "bun:fs/promises";
 import { tmpdir } from "bun:os";
 import { dirname, join, resolve } from "bun:path";
 import { expect, test } from "bun:test";
 
+const repoRoot = resolve(import.meta.dir, "../../..");
 const sha = "a".repeat(40);
 const image = `ghcr.io/foodshareclub/foodshare-web@sha256:${"b".repeat(64)}`;
 const oldEnvironment =
@@ -53,10 +54,19 @@ async function deploy(options: Record<string, string> = {}, check = false) {
     // installs it from the repository, so the test has to be able to ask
     // for a host without one.
     if (options.MOCK_NO_UNIT !== "1") {
-      await Bun.write(
-        join(unitDirectory, "foodshare-web.container"),
-        `[Container]\nImage=ghcr.io/foodshareclub/foodshare-web:latest\nEnvironmentFile=${unitEnvironmentFile}\n`,
-      );
+      if (options.MOCK_UNIT_GENERATION === "systemd") {
+        // A host carrying the newer generation of the unit: the file is
+        // the repository's own, so the deployment recognises it.
+        await Bun.write(
+          join(unitDirectory, "foodshare-web.container"),
+          await Bun.file(join(repoRoot, "systemd", "foodshare-web.container")).text(),
+        );
+      } else {
+        await Bun.write(
+          join(unitDirectory, "foodshare-web.container"),
+          `[Container]\nImage=ghcr.io/foodshareclub/foodshare-web:latest\nEnvironmentFile=${unitEnvironmentFile}\n`,
+        );
+      }
     }
     await Bun.write(
       join(directory, "podman"),
@@ -127,6 +137,7 @@ fi
       commands: (await commandFile.exists()) ? await commandFile.text() : "",
       dropin: (await dropinFile.exists()) ? await dropinFile.text() : "",
       environment: (await Bun.file(unitEnvironmentFile).exists()) ? await Bun.file(unitEnvironmentFile).text() : "",
+      units: (await readdir(unitDirectory).catch(() => [])).sort().join(" "),
     };
   } finally {
     await rm(directory, { recursive: true, force: true });
@@ -159,6 +170,17 @@ test("the environment file is written where the unit on the host reads it", asyn
   expect(result.code).toBe(0);
   expect(result.environment).toContain('NEXT_PUBLIC_SUPABASE_URL="https://new.example"');
   expect(result.commands).toContain("systemctl --user restart foodshare-web");
+});
+test("a host running the newer generation is not given the older one's units", async () => {
+  // The two generations name their tunnel unit differently, so installing
+  // the wrong one puts a second tunnel on a host that already has one:
+  // two connectors, one token, and the second one is started by nothing.
+  const result = await deploy({ MOCK_UNIT_GENERATION: "systemd" });
+  expect(result.code).toBe(0);
+  expect(result.units).toContain("foodshare.network");
+  expect(result.units).toContain("foodshare-cloudflared.container");
+  expect(result.units).not.toContain("foodshare-cloudflared-web.container");
+  expect(result.units).not.toContain("foodshare-web-network.network");
 });
 test("a host that has never run the app is installed and deployed", async () => {
   // The deployment installs the unit and writes the environment file, so

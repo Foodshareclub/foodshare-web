@@ -70,16 +70,32 @@ report_host() {
 # the generator declines it, and the deployment then says the unit does
 # not exist when it is sitting in the directory the whole time.
 #
-# The units in the repository are the source of truth -- the install script
-# copies the same files -- so what runs on the host is what is in the
-# repository.
+# The host's unit decides the generation.
+#
+# Two generations of the units exist in this repository: the older one at
+# the top level, and a newer one under `systemd/`. A host carries one of
+# them, and the deployment installs the matching set.
+#
+# It matters which. The two generations name their tunnel unit
+# differently, so installing the wrong one puts a second tunnel on a host
+# that already has one: two connectors, one token, and the second one is
+# started by nothing and understood by no one.
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+unit_source_dir="$ROOT"
+unit_names="foodshare-web.container foodshare-cloudflared-web.container foodshare-web-network.network"
+if [ -f "$UNIT_DIR/foodshare-web.container" ]; then
+  if cmp -s "$UNIT_DIR/foodshare-web.container" "$ROOT/systemd/foodshare-web.container"; then
+    unit_source_dir="$ROOT/systemd"
+    unit_names="foodshare-web.container foodshare-cloudflared.container foodshare.network"
+  fi
+fi
+
 install_units() {
   local unit installed=0
   mkdir -p "$UNIT_DIR"
-  for unit in foodshare-web.container foodshare-web-network.network foodshare-cloudflared-web.container; do
-    if [ ! -f "$UNIT_DIR/$unit" ] && [ -f "$ROOT/$unit" ]; then
-      install -m 644 "$ROOT/$unit" "$UNIT_DIR/$unit"
+  for unit in $unit_names; do
+    if [ ! -f "$UNIT_DIR/$unit" ] && [ -f "$unit_source_dir/$unit" ]; then
+      install -m 644 "$unit_source_dir/$unit" "$UNIT_DIR/$unit"
       installed=1
     fi
   done
