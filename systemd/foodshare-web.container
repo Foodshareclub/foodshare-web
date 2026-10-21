@@ -1,0 +1,35 @@
+[Unit]
+Description=Foodshare Next.js frontend
+After=foodshare-network.service
+Requires=foodshare-network.service
+BindsTo=foodshare-network.service
+
+[Container]
+# Pinned by tag on purpose: CI builds and pushes :latest per commit.
+# For digest-pinned deploys, replace with Image=ghcr.io/foodshareclub/foodshare-web@sha256:<digest>.
+# No AutoUpdate=registry here by design — deploys are deliberate via CI (see cd.yml),
+# never timer-driven surprises.
+Image=ghcr.io/foodshareclub/foodshare-web:latest
+ContainerName=foodshare-web
+Network=foodshare.network
+PublishPort=127.0.0.1:3000:3000
+EnvironmentFile=%h/.config/foodshare/web.env
+HealthCmd=curl -f http://localhost:3000/ || exit 1
+HealthInterval=15s
+HealthTimeout=5s
+HealthRetries=3
+HealthStartPeriod=20s
+Notify=healthy
+
+ReadOnly=true
+NoNewPrivileges=true
+DropCapability=ALL
+UserNS=keep-id
+
+[Service]
+Restart=always
+TimeoutStartSec=120
+Type=notify
+
+[Install]
+WantedBy=default.target

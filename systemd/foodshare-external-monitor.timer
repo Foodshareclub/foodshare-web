@@ -1,0 +1,22 @@
+# Run the external blackbox monitor every five minutes.
+#
+# This runs on the web host, not on the backend: the monitoring that runs
+# inside the stack cannot report the stack's own outage. When the network
+# that carries the containers is broken, the monitor is broken with it, and
+# the silence looks exactly like health — which is how the estate stayed
+# dark for three weeks.
+
+[Unit]
+Description=Check the FoodShare estate from outside it
+After=network-online.target
+Wants=network-online.target
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Persistent=true
+Unit=foodshare-external-monitor.service
+
+[Install]
+WantedBy=timers.target

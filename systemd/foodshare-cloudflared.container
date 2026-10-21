@@ -1,0 +1,48 @@
+# Cloudflare Tunnel reverse proxy for the FoodShare frontend.
+#
+# Rootless, via Quadlet: no low port is bound on the host, and systemd
+# supervises the connector, so a reboot brings the site back without
+# anyone running a command.
+#
+# The token is a podman secret, mounted into the container as a file:
+#
+#   - this cloudflared version does not read TUNNEL_TOKEN for `tunnel run`
+#     without an explicit --token, so the flag has to be there;
+#   - a token on the command line is visible in the process list, and the
+#     file the container reads has to be readable by the container's user,
+#     which a 0600 file in the operator's home is not.
+#
+#   secret: podman secret create cf_tunnel_token <file with the token>
+#   install: ~/.config/containers/systemd/foodshare-cloudflared.container
+
+[Unit]
+Description=Cloudflare Tunnel for the FoodShare frontend
+After=foodshare-network.service foodshare-web.service
+Requires=foodshare-web.service
+# Wait for the web app to be healthy first (BindsTo stops the tunnel if
+# the app stops).
+BindsTo=foodshare-web.service
+
+[Container]
+# Pinned by tag on purpose: the official cloudflared image, updated
+# deliberately via CI. No AutoUpdate=registry here by design — keep the
+# tunnel version deterministic.
+Image=cloudflare/cloudflared:latest
+ContainerName=foodshare-cloudflared
+Network=foodshare.network
+EnvironmentFile=/home/organic/.config/foodshare/cloudflared.env
+Secret=cf_tunnel_token,type=mount,target=/run/secrets/tunnel.token
+Exec=tunnel --no-autoupdate run --token-file /run/secrets/tunnel.token
+
+ReadOnly=true
+NoNewPrivileges=true
+DropCapability=ALL
+UserNS=keep-id
+
+[Service]
+Restart=always
+RestartSec=5
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

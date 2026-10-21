@@ -1,0 +1,15 @@
+# The external blackbox monitor.
+#
+# Run by foodshare-external-monitor.timer every five minutes on the web
+# host, so it sees the estate the way a user does.
+
+[Unit]
+Description=Check the FoodShare estate from outside it
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/organic/dev/foodshare-web
+ExecStart=/home/organic/dev/foodshare-web/scripts/external-monitor.sh
+TimeoutStartSec=180
