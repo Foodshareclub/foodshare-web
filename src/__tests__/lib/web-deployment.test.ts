@@ -69,6 +69,13 @@ esac
       join(directory, "systemctl"),
       `#!/bin/bash
 printf 'systemctl %s\\n' "$*" >> "$MOCK_DIRECTORY/commands"
+if [ "\$1" = "--user" ] && [ "\$2" = "daemon-reload" ]; then
+  if [ -f "\${MOCK_ENV_FILE:-/nonexistent}" ]; then
+    printf 'env-file: present\\n' >> "$MOCK_DIRECTORY/commands"
+  else
+    printf 'env-file: missing\\n' >> "$MOCK_DIRECTORY/commands"
+  fi
+fi
 `,
     );
     await Bun.write(join(directory, "sleep"), "#!/bin/sh\nexit 0\n");
@@ -78,6 +85,7 @@ printf 'systemctl %s\\n' "$*" >> "$MOCK_DIRECTORY/commands"
       env: {
         PATH: `${directory}:${process.env.PATH}`,
         MOCK_DIRECTORY: directory,
+        MOCK_ENV_FILE: environmentFile,
         DEPLOY_SHA: sha,
         DEPLOY_IMAGE: image,
         GITHUB_TOKEN: "registry-test-secret",
@@ -137,6 +145,18 @@ test("a host that has never run the app is installed and deployed", async () => 
   expect(result.commands).toContain("systemctl --user restart foodshare-web");
   expect(result.dropin.trim()).toBe(`Image=${image}`);
   expect(result.environment).toContain('NEXT_PUBLIC_SUPABASE_URL="https://new.example"');
+});
+test("the environment file is written before the units are generated", async () => {
+  // Quadlet refuses to generate a unit whose EnvironmentFile is not
+  // there, and the deployment then says the unit does not exist when it
+  // is sitting in the directory the whole time.
+  //
+  // The host that matters is the one that was reprovisioned: no unit and
+  // no environment file, so the order is the whole difference.
+  const result = await deploy({ MOCK_NO_UNIT: "1", MOCK_NO_ENV: "1" });
+  expect(result.code).toBe(0);
+  expect(result.commands).not.toContain("env-file: missing");
+  expect(result.commands).toContain("env-file: present");
 });
 test("a host that had no image has no pinned image after a rollback", async () => {
   const result = await deploy({ MOCK_MISSING: "1", MOCK_HEALTH_FAIL: "1" });

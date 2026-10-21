@@ -40,14 +40,16 @@ report_host() {
   if [ -f "$ENV_FILE" ]; then echo "  present" >&2; else echo "  missing" >&2; fi
 }
 
-# The Quadlet units have to be on the host, and a host that was
-# reprovisioned has none of them. The installation is the only thing that
-# puts them there, and the estate does not install over SSH by hand.
+# The units are installed after the environment file is written, which is
+# not an ordering that looks like it means anything. It does: Quadlet
+# generates the systemd unit from the template, and it refuses to generate
+# a unit whose EnvironmentFile is not there. Install the unit first and
+# the generator declines it, and the deployment then says the unit does
+# not exist when it is sitting in the directory the whole time.
 #
-# So the deployment installs them, from the repository it has just checked
-# out. The units in the repository are the source of truth -- the install
-# script copies the same files -- so what runs on the host is what is in
-# the repository.
+# The units in the repository are the source of truth -- the install script
+# copies the same files -- so what runs on the host is what is in the
+# repository.
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 install_units() {
   local unit installed=0
@@ -60,7 +62,6 @@ install_units() {
   done
   if [ "$installed" = 1 ]; then systemctl --user daemon-reload; fi
 }
-install_units
 
 # The container does not have to exist. It used to have to be running,
 # which made the deployment unable to fix the one state it exists to fix: a
@@ -71,16 +72,9 @@ install_units
 # health check below is what decides whether the new image is good.
 #
 # A host that has never run the app is the same problem one step further
-# on: there is no previous image to roll back to, and the unit has to be
-# installed first. The installation is above, so the deployment can carry
-# on, and the rollback puts the host back the way it was -- no pinned
-# image, and the unit's own tag.
+# on: there is no previous image to roll back to. The rollback puts the
+# host back the way it was -- no pinned image, and the unit's own tag.
 previous_image=$(podman container inspect --format '{{.Image}}' foodshare-web 2>/dev/null || true)
-if [ ! -f "$UNIT_DIR/foodshare-web.container" ]; then
-  echo "The Quadlet unit could not be installed at $UNIT_DIR/foodshare-web.container" >&2
-  report_host
-  exit 1
-fi
 
 # The environment file does not have to exist yet. The deployment writes it
 # from the values it was given, and the unit reads it when it starts.
@@ -204,6 +198,15 @@ write_env_file() {
 
 write_env_file "$snapshot/env.staged"
 
+# The environment file is in place, so the units can be installed and the
+# generator can build them.
+install_units
+if [ ! -f "$UNIT_DIR/foodshare-web.container" ]; then
+  echo "The Quadlet unit could not be installed at $UNIT_DIR/foodshare-web.container" >&2
+  report_host
+  exit 1
+fi
+
 rollback() {
   echo "Web health failed; restoring this host's previous image and application settings" >&2
   # The host is put back the way it was. A host that had an environment
@@ -225,6 +228,27 @@ rollback() {
   systemctl --user daemon-reload
   systemctl --user restart foodshare-web
 }
+# Why the unit is not there, when it is not.
+#
+# "Unit foodshare-web.service not found" is a symptom: the unit is
+# generated from the template, and the generator is what says why it
+# declined. The generator is asked directly, which is the same thing the
+# CI does when it validates the units.
+report_unit() {
+  echo "--- why there is no foodshare-web.service ---" >&2
+  if [ -x /usr/libexec/podman/quadlet ]; then
+    /usr/libexec/podman/quadlet --dryrun "$UNIT_DIR/foodshare-web.container" 2>&1 | head -30 >&2 || true
+  elif command -v quadlet >/dev/null 2>&1; then
+    quadlet --dryrun "$UNIT_DIR/foodshare-web.container" 2>&1 | head -30 >&2 || true
+  else
+    echo "The Quadlet generator is not installed on this host." >&2
+    echo "A unit is generated from the template, and without the generator" >&2
+    echo "there is no unit however many templates are in the directory." >&2
+  fi
+  echo "--- the units in $UNIT_DIR ---" >&2
+  ls -1 "$UNIT_DIR" 2>&1 | head -20 >&2 || true
+}
+
 mkdir -p "$DROPIN_DIR"
 printf 'Image=%s\n' "$DEPLOY_IMAGE" > "$DROPIN_FILE"
 chmod 600 "$DROPIN_FILE"
@@ -234,6 +258,7 @@ systemctl --user daemon-reload
 # three weeks.
 systemctl --user enable foodshare-web >/dev/null 2>&1 || true
 if ! systemctl --user restart foodshare-web; then
+  report_unit
   rollback
   exit 1
 fi
