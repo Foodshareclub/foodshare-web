@@ -28,13 +28,32 @@ if [ -f "${MONITOR_ENV_FILE:-$HOME/.config/foodshare/monitor.env}" ]; then
   set +a
 fi
 
+# The key Kong gates the API behind. It is the anon key, which is public by
+# design -- it is in every browser that uses the site -- and it is the only
+# thing that lets a request past Kong to the service behind it.
+if [ -z "${ANON_KEY:-}" ] && [ -n "${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}" ]; then
+  ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY"
+fi
+if [ -z "${ANON_KEY:-}" ] && [ -f "${WEB_ENV_FILE:-/home/organic/dev/foodshare-web/.env.production}" ]; then
+  # The web app's own environment carries the key it uses, and the monitor
+  # runs on the same host, so it reads it from there rather than asking for
+  # a second copy of it.
+  ANON_KEY=$(grep -E "^NEXT_PUBLIC_SUPABASE_ANON_KEY=" "${WEB_ENV_FILE:-/home/organic/dev/foodshare-web/.env.production}" 2>/dev/null | head -1 | cut -d= -f2- | tr -d "\"'")
+fi
+
 # The endpoints that make up the estate, and what "working" means for each.
+#
+# Auth is asked for on the api hostname, with the key Kong gates it
+# behind. It used to be asked for at https://auth.foodshare.club/ -- the
+# root of the split hostname -- which answers 404 whatever the auth
+# service is doing, because Kong has no route for the root of a host. A
+# check that can never pass is a check that trains people to ignore it.
 ENDPOINTS=(
   "https://api.foodshare.club/functions/v1/api-v1-notifications/health|notification API"
   "https://api.foodshare.club/functions/v1/api-v1-email/health|email API"
   "https://api.foodshare.club/functions/v1/api-v1-health/health|health API"
   "https://foodshare.club/|website"
-  "https://auth.foodshare.club/|auth"
+  "https://api.foodshare.club/auth/v1/health|auth"
 )
 
 failures=()
@@ -43,7 +62,14 @@ report=""
 for entry in "${ENDPOINTS[@]}"; do
   url="${entry%%|*}"
   name="${entry#*|}"
-  code=$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' "$url" 2>/dev/null || echo 000)
+  if [ -z "${ANON_KEY:-}" ]; then
+    echo "::error::ANON_KEY is not set, so the monitor cannot check the API"
+    failures+=("the anon key is not set, so the API could not be checked")
+    continue
+  fi
+  code=$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' \
+    -H "apikey: ${ANON_KEY}" -H "Authorization: Bearer ${ANON_KEY}" \
+    "$url" 2>/dev/null || echo 000)
   if [ "$code" = "200" ]; then
     echo "ok    $name ($url) -> $code"
   else
