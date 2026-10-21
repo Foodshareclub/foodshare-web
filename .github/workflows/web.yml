@@ -151,6 +151,29 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: The build declares every variable the code reads
+        # Next.js inlines `process.env.NEXT_PUBLIC_*` at build time, so a
+        # variable the code reads and the Containerfile does not declare
+        # arrives in the built image as undefined: no build error, no
+        # warning, and the feature quietly off in production while it
+        # looks fine in development.
+        #
+        # The check is a pair with the Containerfile, and it runs before
+        # the build, because a build that takes five minutes is a long
+        # time to wait to hear that an argument was not declared.
+        run: bun run build:args
+
+      - name: The tsconfig keeps the shape Turbopack can parse
+        # Turbopack parses tsconfig.json itself, and when the include
+        # and exclude arrays are collapsed onto one line it drops the
+        # whole paths map. Every `@/...` import then fails to resolve,
+        # and the build reports several hundred "Module not found"
+        # errors with nothing pointing at the cause.
+        #
+        # A formatter that tidies the file is enough to do it, so the
+        # shape is checked rather than trusted.
+        run: bun run check:tsconfig-shape
+
       - name: Restore Next.js build cache
         uses: actions/cache@v4
         with:
