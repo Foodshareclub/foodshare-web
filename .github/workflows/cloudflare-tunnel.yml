@@ -1,0 +1,50 @@
+name: Cloudflare Tunnel Routes
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Write the estate's routes to the tunnel (not just report them)"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  routes:
+    name: Read and repair the estate's tunnel routes
+    runs-on: [self-hosted, Linux]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Foodshareclub/foodshare-backend
+          path: .compat/backend
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.3"
+
+      # The backend's own token cannot read the tunnel's routes: it is
+      # refused by the account's tunnel API with "not authorized", and the
+      # DNS token that can see the account is refused the same way. The
+      # web host has an account-level token of its own, so the routes are
+      # read from here, with the same tool the backend uses.
+      #
+      # The tunnel id is a constant of the estate, not a secret: it is the
+      # name in the CNAME every hostname of the estate points at.
+      - name: The estate's routes
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_TUNNEL_ID: 67dec0e5-44f0-40ee-a339-8ec6ad4bacc6
+          ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          if [ "${{ inputs.apply }}" = "true" ]; then
+            bun .compat/backend/scripts/cloudflare-tunnel.ts --apply
+          else
+            bun .compat/backend/scripts/cloudflare-tunnel.ts
+          fi
