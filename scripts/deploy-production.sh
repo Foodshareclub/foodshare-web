@@ -25,6 +25,29 @@ UNIT_DIR="${FOODSHARE_WEB_UNIT_DIR:-$HOME/.config/containers/systemd}"
 DROPIN_DIR="$UNIT_DIR/foodshare-web.container.d"
 DROPIN_FILE="$DROPIN_DIR/50-image.conf"
 
+# The unit says where the configuration is, and the deployment writes
+# where the unit reads.
+#
+# Two generations of the unit exist in this repository: one that reads
+# the environment file from /etc, and a newer one that reads it from the
+# operator's home. A host carries one of them, and the unit is what
+# decides -- the deployment follows it, so it works on either.
+#
+# A host with no unit at all gets this repository's unit, and that unit
+# names the default path, so the default is what is written.
+unit_environment_file=""
+if [ -f "$UNIT_DIR/foodshare-web.container" ] && [ -z "${FOODSHARE_WEB_ENV_FILE:-}" ]; then
+  unit_environment_file=$(grep -E "^EnvironmentFile=" "$UNIT_DIR/foodshare-web.container" 2>/dev/null | head -1 | cut -d= -f2- || true)
+  if [ -n "$unit_environment_file" ]; then
+    if [ -z "${HOME:-}" ]; then
+      echo "The unit on this host reads its environment from $unit_environment_file, and the" >&2
+      echo "home directory is not in the environment, so the path cannot be resolved." >&2
+      exit 1
+    fi
+    ENV_FILE="${unit_environment_file//%h/$HOME}"
+  fi
+fi
+
 # What this host has, printed when the deployment cannot go on. The failure
 # it explains is the difference between "the app is not on this host" and
 # "the app is on this host and something else is wrong", and a deployment
@@ -51,7 +74,6 @@ report_host() {
 # copies the same files -- so what runs on the host is what is in the
 # repository.
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-web_unit_installed=0
 install_units() {
   local unit installed=0
   mkdir -p "$UNIT_DIR"
@@ -59,9 +81,6 @@ install_units() {
     if [ ! -f "$UNIT_DIR/$unit" ] && [ -f "$ROOT/$unit" ]; then
       install -m 644 "$ROOT/$unit" "$UNIT_DIR/$unit"
       installed=1
-      # Only the web unit matters below: it is the one that reads the
-      # environment file.
-      if [ "$unit" = "foodshare-web.container" ]; then web_unit_installed=1; fi
     fi
   done
   if [ "$installed" = 1 ]; then systemctl --user daemon-reload; fi
@@ -211,32 +230,8 @@ if [ ! -f "$UNIT_DIR/foodshare-web.container" ]; then
   exit 1
 fi
 
-# The unit on the host has to read the environment file this deployment
-# writes.
-#
-# Two generations of the unit exist in this repository: the one this
-# deployment installs, which reads the file from /etc, and a newer one
-# that reads it from the operator's home. Only one of them is on a host at
-# a time, and a unit is installed only when there is none -- so a host
-# that already carries the other one keeps it.
-#
-# The service then starts with no configuration at all, and the health
-# check says so in terms of the database, which is not where the fault
-# is. The unit says where the configuration is, so the unit is what is
-# asked.
-#
-# The unit the deployment installed itself is not asked: it is this
-# repository's own unit, and the deployment knows what it reads.
-unit_environment_file=$(grep -E "^EnvironmentFile=" "$UNIT_DIR/foodshare-web.container" 2>/dev/null | head -1 | cut -d= -f2- || true)
-if [ "$web_unit_installed" = 0 ] && [ -n "$unit_environment_file" ] && [ -n "${HOME:-}" ]; then
-  unit_environment_file="${unit_environment_file//%h/$HOME}"
-  if [ "$unit_environment_file" != "$ENV_FILE" ]; then
-    echo "The unit installed on this host reads its environment from $unit_environment_file," >&2
-    echo "and this deployment writes $ENV_FILE. The host is running a different" >&2
-    echo "generation of the unit, and the service would start with no configuration." >&2
-    exit 1
-  fi
-fi
+# The unit on the host has been read above, and the environment file this
+# deployment writes is the one that unit reads.
 
 rollback() {
   echo "Web health failed; restoring this host's previous image and application settings" >&2

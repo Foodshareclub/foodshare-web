@@ -1,6 +1,6 @@
 import { chmod, mkdir, mkdtemp, rm } from "bun:fs/promises";
 import { tmpdir } from "bun:os";
-import { join, resolve } from "bun:path";
+import { dirname, join, resolve } from "bun:path";
 import { expect, test } from "bun:test";
 
 const sha = "a".repeat(40);
@@ -33,26 +33,29 @@ async function deploy(options: Record<string, string> = {}, check = false) {
   try {
     const environmentFile = join(directory, "foodshare-web.env");
     const unitDirectory = join(directory, "systemd");
+    // Where the deployment will write the environment file.
+    //
+    // A host can carry the other generation of the unit, one that reads
+    // its environment from somewhere else, and the deployment follows the
+    // unit. The test asks for that host by naming the file in the unit,
+    // and the file is not overridden -- an override would take the
+    // decision away from the unit.
+    const unitEnvironmentFile = options.MOCK_UNIT_ENV ? join(directory, options.MOCK_UNIT_ENV) : environmentFile;
+    if (options.MOCK_UNIT_ENV) {
+      await mkdir(dirname(unitEnvironmentFile), { recursive: true });
+    }
     // A host whose environment file was lost, or that was reprovisioned,
     // has none. The deployment writes it, so the test has to be able to
     // ask for a host without one.
-    if (options.MOCK_NO_ENV !== "1") await Bun.write(environmentFile, oldEnvironment);
+    if (options.MOCK_NO_ENV !== "1") await Bun.write(unitEnvironmentFile, oldEnvironment);
     await mkdir(join(unitDirectory, "foodshare-web.container.d"), { recursive: true });
     // A host that was reprovisioned has no unit either. The deployment
     // installs it from the repository, so the test has to be able to ask
     // for a host without one.
     if (options.MOCK_NO_UNIT !== "1") {
-      // The unit on the host reads the environment file the deployment
-      // writes. A host can carry a different generation of the unit, one
-      // that reads its environment from somewhere else, and the
-      // deployment has to notice: the service would start with no
-      // configuration at all.
-      const unitEnvironment = options.MOCK_UNIT_ENV
-        ? `EnvironmentFile=${options.MOCK_UNIT_ENV}\n`
-        : `EnvironmentFile=${environmentFile}\n`;
       await Bun.write(
         join(unitDirectory, "foodshare-web.container"),
-        `[Container]\nImage=ghcr.io/foodshareclub/foodshare-web:latest\n${unitEnvironment}`,
+        `[Container]\nImage=ghcr.io/foodshareclub/foodshare-web:latest\nEnvironmentFile=${unitEnvironmentFile}\n`,
       );
     }
     await Bun.write(
@@ -100,7 +103,10 @@ fi
         GITHUB_TOKEN: "registry-test-secret",
         GITHUB_ACTOR: "test-user",
         NEXT_PUBLIC_SUPABASE_URL: "https://new.example",
-        FOODSHARE_WEB_ENV_FILE: environmentFile,
+        // Only when the unit does not say where the file is: an override
+        // takes the decision away from the unit, and the unit is what
+        // decides.
+        ...(options.MOCK_UNIT_ENV ? {} : { FOODSHARE_WEB_ENV_FILE: environmentFile }),
         FOODSHARE_WEB_UNIT_DIR: unitDirectory,
         ...options,
       },
@@ -120,7 +126,7 @@ fi
       error,
       commands: (await commandFile.exists()) ? await commandFile.text() : "",
       dropin: (await dropinFile.exists()) ? await dropinFile.text() : "",
-      environment: (await Bun.file(environmentFile).exists()) ? await Bun.file(environmentFile).text() : "",
+      environment: (await Bun.file(unitEnvironmentFile).exists()) ? await Bun.file(unitEnvironmentFile).text() : "",
     };
   } finally {
     await rm(directory, { recursive: true, force: true });
@@ -144,25 +150,15 @@ test("a service that is stopped is started by the deployment", async () => {
   expect(result.commands).toContain("systemctl --user restart foodshare-web");
   expect(result.dropin.trim()).toBe(`Image=${image}`);
 });
-test("a host running a different generation of the unit stops the deployment", async () => {
-  // The unit on the host reads its environment from somewhere else, so
-  // the service would start with no configuration at all. The health
-  // check would say so in terms of the database, which is not where the
-  // fault is.
+test("the environment file is written where the unit on the host reads it", async () => {
+  // Two generations of the unit exist: one that reads the environment
+  // file from /etc, and a newer one that reads it from the operator's
+  // home. The unit on the host decides, and the deployment follows it --
+  // otherwise the service starts with no configuration at all.
   const result = await deploy({ MOCK_UNIT_ENV: "/somewhere/else/web.env" });
-  expect(result.code).not.toBe(0);
-  expect(result.error).toContain("different");
-  expect(result.dropin).toBe("");
-});
-test("a host running a different generation of the unit stops the deployment", async () => {
-  // The unit on the host reads its environment from somewhere else, so
-  // the service would start with no configuration at all. The health
-  // check would say so in terms of the database, which is not where the
-  // fault is.
-  const result = await deploy({ MOCK_UNIT_ENV: "/somewhere/else/web.env" });
-  expect(result.code).not.toBe(0);
-  expect(result.error).toContain("different");
-  expect(result.dropin).toBe("");
+  expect(result.code).toBe(0);
+  expect(result.environment).toContain('NEXT_PUBLIC_SUPABASE_URL="https://new.example"');
+  expect(result.commands).toContain("systemctl --user restart foodshare-web");
 });
 test("a host that has never run the app is installed and deployed", async () => {
   // The deployment installs the unit and writes the environment file, so
