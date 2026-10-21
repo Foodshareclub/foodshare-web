@@ -10,8 +10,12 @@ mkdir -p "$UNIT_DIR" /etc/foodshare 2>/dev/null || sudo mkdir -p /etc/foodshare 
 cp "$ROOT/foodshare-web.container" "$ROOT/foodshare-cloudflared-web.container" "$ROOT/foodshare-web-network.network" "$UNIT_DIR/"
 
 if [ -f "$ENV_SRC" ]; then
-  if [ -w /etc/foodshare ]; then cp "$ENV_SRC" /etc/foodshare/foodshare-web.env;
-  else sudo cp "$ENV_SRC" /etc/foodshare/foodshare-web.env; fi
+  # The env file holds the application's secrets, so it is not readable by
+  # anyone else. It is owned by the user who runs the service, because the
+  # deployment rewrites it on every release and has to be able to write it
+  # without elevating.
+  if [ -w /etc/foodshare ]; then install -m 600 -o "$(id -un)" "$ENV_SRC" /etc/foodshare/foodshare-web.env;
+  else sudo install -m 600 -o "$(id -un)" "$ENV_SRC" /etc/foodshare/foodshare-web.env; fi
   echo "env installed from $ENV_SRC"
 else
   echo "WARNING: $ENV_SRC not found — create /etc/foodshare/foodshare-web.env before starting" >&2

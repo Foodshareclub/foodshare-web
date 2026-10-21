@@ -1,4 +1,4 @@
-import { chmod, mkdtemp, rm } from "bun:fs/promises";
+import { chmod, mkdir, mkdtemp, rm } from "bun:fs/promises";
 import { tmpdir } from "bun:os";
 import { join, resolve } from "bun:path";
 import { expect, test } from "bun:test";
@@ -9,21 +9,33 @@ const oldEnvironment =
   "EXISTING_SETTING=preserved\nNEXT_PUBLIC_SUPABASE_URL=https://old.example\nNODE_TLS_REJECT_UNAUTHORIZED=0\n";
 const script = resolve(import.meta.dir, "../../..", "scripts/deploy-production.sh");
 
+/**
+ * The deployment runs a Podman container described by a Quadlet unit, and
+ * pins the image it deploys with a drop-in next to that unit. The test runs
+ * the real script against fake `podman`, `systemctl` and `sleep`, so the
+ * things that are checked here are the things the script actually does:
+ * which image it pulls, what it writes into the unit's drop-in, and what it
+ * puts back when the health check fails.
+ */
 async function deploy(options: Record<string, string> = {}, check = false) {
   const directory = await mkdtemp(join(tmpdir(), "foodshare-web-deploy-"));
   try {
-    await Bun.write(join(directory, ".env.production"), oldEnvironment);
-    await Bun.write(join(directory, "docker-compose.yml"), "services: {}\n");
+    const environmentFile = join(directory, "foodshare-web.env");
+    const unitDirectory = join(directory, "systemd");
+    await Bun.write(environmentFile, oldEnvironment);
+    await mkdir(join(unitDirectory, "foodshare-web.container.d"), { recursive: true });
     await Bun.write(
-      join(directory, "docker"),
+      join(unitDirectory, "foodshare-web.container"),
+      "[Container]\nImage=ghcr.io/foodshareclub/foodshare-web:latest\n",
+    );
+    await Bun.write(
+      join(directory, "podman"),
       `#!/bin/bash
 printf '%s\\n' "$*" >> "$MOCK_DIRECTORY/commands"
 if [ "\${1:-}" = --config ]; then shift 2; fi
 case "$1 $2" in
   "container inspect")
     if [[ "$*" == *State.Running* ]]; then echo "\${MOCK_RUNNING:-true}"; else echo sha256:previous; fi ;;
-  "compose -f")
-    if [[ "$*" == *" up "* ]]; then echo "$FOODSHARE_WEB_IMAGE" >> "$MOCK_DIRECTORY/images"; fi ;;
   "login ghcr.io") cat >/dev/null ;;
   "pull "*) [ "\${MOCK_PULL_FAIL:-0}" != 1 ] ;;
   "image inspect") echo "\${MOCK_REVISION:-$DEPLOY_SHA}" ;;
@@ -33,9 +45,24 @@ case "$1 $2" in
 esac
 `,
     );
-    await Bun.write(join(directory, "podman"), '#!/bin/sh\necho "${MOCK_PODMAN:-false}"\n');
+    await Bun.write(
+      join(directory, "systemctl"),
+      `#!/bin/bash
+printf 'systemctl %s\\n' "$*" >> "$MOCK_DIRECTORY/commands"
+`,
+    );
     await Bun.write(join(directory, "sleep"), "#!/bin/sh\nexit 0\n");
-    for (const name of ["docker", "podman", "sleep"]) await chmod(join(directory, name), 0o700);
+    // A Docker container with the same name, so the ambiguity guard can be
+    // exercised: two runtimes that could both own the service is the one
+    // state this project refuses to deploy into.
+    await Bun.write(
+      join(directory, "docker"),
+      `#!/bin/bash
+printf 'docker %s\\n' "$*" >> "$MOCK_DIRECTORY/commands"
+if [[ "$*" == *State.Running* ]]; then echo "\${MOCK_DOCKER_RUNNING:-false}"; fi
+`,
+    );
+    for (const name of ["podman", "systemctl", "sleep", "docker"]) await chmod(join(directory, name), 0o700);
     const child = Bun.spawn(["bash", script, ...(check ? ["--check"] : [])], {
       cwd: directory,
       env: {
@@ -46,6 +73,8 @@ esac
         GITHUB_TOKEN: "registry-test-secret",
         GITHUB_ACTOR: "test-user",
         NEXT_PUBLIC_SUPABASE_URL: "https://new.example",
+        FOODSHARE_WEB_ENV_FILE: environmentFile,
+        FOODSHARE_WEB_UNIT_DIR: unitDirectory,
         ...options,
       },
       stdout: "pipe",
@@ -57,32 +86,33 @@ esac
       new Response(child.stderr).text(),
     ]);
     const commandFile = Bun.file(join(directory, "commands"));
-    const imageFile = Bun.file(join(directory, "images"));
+    const dropinFile = Bun.file(join(unitDirectory, "foodshare-web.container.d", "50-image.conf"));
     return {
       code,
       output,
       error,
       commands: (await commandFile.exists()) ? await commandFile.text() : "",
-      images: (await imageFile.exists()) ? await imageFile.text() : "",
-      environment: await Bun.file(join(directory, ".env.production")).text(),
+      dropin: (await dropinFile.exists()) ? await dropinFile.text() : "",
+      environment: await Bun.file(environmentFile).text(),
     };
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
 }
 
-test("production preflight only inspects configuration and the existing service", async () => {
+test("production preflight only inspects the running service and the unit", async () => {
   const result = await deploy({}, true);
   expect(result.code).toBe(0);
   expect(result.environment).toBe(oldEnvironment);
-  expect(result.images).toBe("");
+  expect(result.dropin).toBe("");
   expect(result.commands).not.toContain("login");
+  expect(result.commands).not.toContain("pull");
 });
-test("missing or ambiguous services stop before any deployment", async () => {
-  for (const configuration of [{ MOCK_RUNNING: "false" }, { MOCK_PODMAN: "true" }]) {
+test("a service that is not running, or a second runtime holding it, stops the deployment", async () => {
+  for (const configuration of [{ MOCK_RUNNING: "false" }, { MOCK_DOCKER_RUNNING: "true" }]) {
     const result = await deploy(configuration);
     expect(result.code).not.toBe(0);
-    expect(result.images).toBe("");
+    expect(result.dropin).toBe("");
     expect(result.environment).toBe(oldEnvironment);
   }
 });
@@ -90,25 +120,34 @@ test("a registry failure or wrong revision leaves the running image and settings
   for (const configuration of [{ MOCK_PULL_FAIL: "1" }, { MOCK_REVISION: "wrong-commit" }]) {
     const result = await deploy(configuration);
     expect(result.code).not.toBe(0);
-    expect(result.images).toBe("");
+    expect(result.dropin).toBe("");
     expect(result.environment).toBe(oldEnvironment);
   }
 });
-test("deploys the immutable validated image without touching other services or logging credentials", async () => {
+test("deploys the immutable validated image by pinning it in the unit's drop-in", async () => {
   const result = await deploy();
   expect(result.code).toBe(0);
-  expect(result.images.trim()).toBe(image);
-  expect(result.commands).toContain("compose -f docker-compose.yml up -d --no-deps foodshare-web");
+  expect(result.commands).toContain(`pull ${image}`);
+  expect(result.dropin.trim()).toBe(`Image=${image}`);
+  expect(result.commands).toContain("systemctl --user restart foodshare-web");
   expect(result.environment).toContain("EXISTING_SETTING=preserved");
   expect(result.environment).toContain('NEXT_PUBLIC_SUPABASE_URL="https://new.example"');
   expect(result.environment).not.toContain("NODE_TLS_REJECT_UNAUTHORIZED");
   expect(result.commands + result.output + result.error).not.toContain("registry-test-secret");
 });
+test("the tunnel token is written under both names the units read", async () => {
+  const result = await deploy({ CLOUDFLARE_TUNNEL_TOKEN: "tunnel-token" });
+  expect(result.code).toBe(0);
+  expect(result.environment).toContain('CLOUDFLARE_TUNNEL_TOKEN="tunnel-token"');
+  expect(result.environment).toContain('TUNNEL_TOKEN="tunnel-token"');
+});
 test("failed health checks restore the exact previous image and settings", async () => {
   for (const configuration of [{ MOCK_HEALTH_FAIL: "1" }, { MOCK_API_FAIL: "1" }]) {
     const result = await deploy(configuration);
     expect(result.code).not.toBe(0);
-    expect(result.images.trim().split("\n")).toEqual([image, "sha256:previous"]);
+    // The image that was running, by id — the `:latest` tag may have moved
+    // since it was pulled, so the tag is not what was running.
+    expect(result.dropin.trim()).toBe("Image=sha256:previous");
     expect(result.environment).toBe(oldEnvironment);
   }
 });
