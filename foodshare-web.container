@@ -22,12 +22,24 @@ Network=foodshare-web.network
 EnvironmentFile=/etc/foodshare/foodshare-web.env
 User=nextjs
 Memory=1G
+# The floor the service is guaranteed, and the ceiling it may not pass. The
+# ceiling was `deploy.resources.limits.memory` before; the floor was
+# `deploy.resources.reservations.memory`, and it is the one that keeps the
+# service alive under pressure rather than the one that kills it.
+MemoryMin=256M
 PidsLimit=100
 ReadOnly=true
 Tmpfs=/tmp
 Tmpfs=/app/.next/cache
 NoNewPrivileges=true
 DropCapability=ALL
+# Bounded container logs, as before: 10 MB per file, three files, 30 MB in
+# total. The default is the journal, and the journal's own bound is a host
+# setting this repository cannot state — so the bound the service was given
+# is stated here, where it is visible.
+LogDriver=json-file
+LogOpt=max-size=10m
+LogOpt=max-file=3
 # /api/ready, not /api/health. /api/health probes PostgREST, GoTrue, storage and
 # Upstash — four round trips every 20 seconds, and one slow Upstash reply
 # (the route allows 3s) marks the container unhealthy, so autoheal restarts the
@@ -43,6 +55,10 @@ Label=autoheal=true
 [Service]
 Restart=always
 TimeoutStartSec=120
+# The file-descriptor ceiling the service was given, so it is given here.
+# Node opens a file per socket and per log stream, and the default limit is
+# low enough to be reached by a busy day.
+LimitNOFILE=65536
 
 [Install]
 WantedBy=default.target
