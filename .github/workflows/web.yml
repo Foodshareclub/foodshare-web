@@ -18,9 +18,12 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # The canary channel. `bun` is pinned to an exact canary build so a CI run
-  # and a local run execute the same binary.
-  BUN_VERSION: "1.4.3-canary.20261019.1"
+  # The version `bun` is pinned to, so a CI run and a local run execute
+  # the same binary. It has to be a release with a downloadable asset:
+  # `oven-sh/setup-bun` fetches Bun from the GitHub releases, and the
+  # canary builds are published to npm only, so pinning a canary here
+  # fails every job at the setup step.
+  BUN_VERSION: "1.4.3"
   # Third-party GitHub Actions are JavaScript and run on the runner's own Node
   # runtime. That is the platform's requirement, not this project's toolchain —
   # everything below runs on Bun, and `bun scripts/check-no-node.ts` fails the

@@ -11,11 +11,16 @@
 #   package.json              ->  "packageManager": "bun@<version>"
 #   .github/workflows/*.yml   ->  BUN_VERSION: "<version>"
 #
-# The version is the newest canary published to npm, which is the newest
-# build `oven-sh/setup-bun` can install in CI — a canary that exists only
-# on one developer's machine cannot be installed there, and pinning to it
-# makes local and CI run different binaries.
+# The version is the newest release `oven-sh/setup-bun` can install in CI.
+# That action downloads from the GitHub *releases*, and the canary builds
+# are published to npm only — there is no `bun-v<canary>` release to
+# download. A canary therefore pins CI to a build it cannot fetch, and
+# every job fails at the setup step before it runs anything.
 #
-# Keep all three in step when the canary is refreshed.
+# So the pin is a release, and it is the same one CI installs: a version
+# that exists only on one developer's machine cannot be installed there,
+# and pinning to it makes local and CI run different binaries.
+#
+# Keep all three in step when the version is refreshed.
 [tools]
-"npm:bun" = "1.4.3-canary.20261019.1"
+"npm:bun" = "1.4.3"
