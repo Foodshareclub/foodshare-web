@@ -15,9 +15,11 @@ test.describe("Home Page", () => {
   });
 
   test("should display category navigation in navbar", async ({ page }) => {
-    // The navbar has CategoryNavigation with categories like Food, Things, etc.
-    // Categories are clickable buttons/links
-    const navbar = page.locator(".fixed.top-0");
+    // The navbar is a header, and the test used to look for it by class
+    // names: it was `fixed top-0` once and it is `sticky top-0` now, so
+    // the locator was looking for something that is not there. The role is
+    // what the element is, and it does not change with the styling.
+    const navbar = page.getByRole("banner");
     await expect(navbar).toBeVisible();
 
     // Check for at least one category (categories are translated, so check common ones)
