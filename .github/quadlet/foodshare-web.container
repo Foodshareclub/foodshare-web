@@ -11,7 +11,13 @@ Requires=foodshare-web-network.service
 [Container]
 Image=ghcr.io/foodshareclub/foodshare-web:latest
 ContainerName=foodshare-web
-PublishPort=3000:3000
+# Loopback only. `3000:3000` binds 0.0.0.0, which made the origin reachable
+# from the internet with no Cloudflare in front — so the forwarded-IP headers
+# src/proxy.ts keys every rate limit and ban on were attacker-controlled, and
+# Cloudflare's protections could be bypassed entirely. cloudflared runs in the
+# same podman network and never needed a host port; this one exists only for
+# `curl http://localhost:3000/api/health` in HealthCmd and for local debugging.
+PublishPort=127.0.0.1:3000:3000
 Network=foodshare-web.network
 EnvironmentFile=/etc/foodshare/foodshare-web.env
 User=nextjs
@@ -22,7 +28,12 @@ Tmpfs=/tmp
 Tmpfs=/app/.next/cache
 NoNewPrivileges=true
 DropCapability=ALL
-HealthCmd=curl -f http://localhost:3000/api/health || exit 1
+# /api/ready, not /api/health. /api/health probes PostgREST, GoTrue, storage and
+# Upstash — four round trips every 20 seconds, and one slow Upstash reply
+# (the route allows 3s) marks the container unhealthy, so autoheal restarts the
+# whole app. /api/ready is a constant and is prerendered. The deep probe still
+# exists at /api/health for monitoring to scrape on a slower cadence.
+HealthCmd=curl -fsS http://localhost:3000/api/ready || exit 1
 HealthInterval=20s
 HealthTimeout=10s
 HealthRetries=5

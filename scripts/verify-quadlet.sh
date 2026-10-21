@@ -14,7 +14,13 @@ for unit in foodshare-web.container foodshare-cloudflared-web.container foodshar
 done
 
 # Required stanzas/keys in web unit
-for key in "^\[Unit\]" "^\[Container\]" "^\[Service\]" "^\[Install\]" "^Image=" "^ContainerName=foodshare-web" "^PublishPort=3000:3000" "^HealthCmd=" "^EnvironmentFile=" "WantedBy=default.target"; do
+#
+# `PublishPort` is asserted as the loopback binding. `3000:3000` publishes on
+# every interface, which made the origin reachable from the internet with no
+# Cloudflare in front of it — the forwarded-IP headers `src/proxy.ts` keys
+# every rate limit and ban on were attacker-controlled, and Cloudflare's
+# protections could be bypassed entirely. The unit binds 127.0.0.1 instead.
+for key in "^\[Unit\]" "^\[Container\]" "^\[Service\]" "^\[Install\]" "^Image=" "^ContainerName=foodshare-web" "^PublishPort=127\.0\.0\.1:3000:3000" "^HealthCmd=" "^EnvironmentFile=" "WantedBy=default.target"; do
   grep -Eq "$key" "$ROOT/foodshare-web.container" && pass "web unit: $key" || fail_msg "web unit missing: $key"
 done
 
@@ -35,11 +41,17 @@ done
 pass "no docker-compose-isms in units"
 
 # Copies in .github/quadlet must match canonical root units
+#
+# The root unit is the source of truth and the copy is for CI visibility, so
+# the copy is refreshed from the root rather than edited. A fix applied to
+# one of them and not the other is how the mirror drifted in the first
+# place: the web unit gained a loopback-only publish port and a cheap health
+# probe, and the copy kept the old ones, which left this check failing.
 for unit in foodshare-web.container foodshare-cloudflared-web.container; do
   if [ -f "$ROOT/.github/quadlet/$unit" ] && cmp -s "$ROOT/$unit" "$ROOT/.github/quadlet/$unit"; then
     pass ".github/quadlet/$unit in sync"
   else
-    fail_msg ".github/quadlet/$unit out of sync with root unit"
+    fail_msg ".github/quadlet/$unit out of sync with root unit — refresh it with: cp $unit .github/quadlet/$unit"
   fi
 done
 
