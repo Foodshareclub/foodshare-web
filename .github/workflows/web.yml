@@ -34,6 +34,35 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
+  # The web repository carries a vendored copy of the backend's migrations,
+  # and the test that proves the two are the same is skipped when the
+  # backend is not there -- which is everywhere in CI, because the
+  # repositories are siblings in a developer's checkout and not in a
+  # runner's.
+  #
+  # The copy had drifted, and only a machine with both repositories on it
+  # could see it. This is that check, in CI.
+  #
+  # It is a report, not a gate. The vendored copy is not what the deployed
+  # app runs on -- the app talks to the backend's Supabase -- so a stale
+  # copy must not be able to stop a deployment.
+  vendored:
+    name: The vendored copies match their sources
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: Foodshareclub/foodshare-backend
+          path: .compat/backend
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+
+      - name: The migrations are the backend's
+        run: |
+          diff -r supabase/migrations .compat/backend/supabase/migrations
+
   # Combined validation job - runs lint, oxlint, biome, type-check, test in parallel
   validate:
     name: Validate (${{ matrix.job }})

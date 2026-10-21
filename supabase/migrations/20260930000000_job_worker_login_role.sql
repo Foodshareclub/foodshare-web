@@ -41,7 +41,7 @@
 -- Set it from the Vault, which is the single source of truth for credentials
 -- in this stack (CLAUDE.md rule 10):
 --
---   ./scripts/deploy.sh set-secret WORKER_DB_PASSWORD "$(openssl rand -base64 48)"
+--   ./scripts/deploy.sh set-secret WORKER_DB_PASSWORD "$(openssl rand -hex 48)"
 --   podman exec -i supabase-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
 --     -f scripts/sql/set-worker-password.sql
 --
