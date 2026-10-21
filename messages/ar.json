@@ -648,7 +648,8 @@
     "footer_tagline": "نعمل على تقليل هدر الطعام ومكافحة الجوع في مجتمعنا. معًا يمكننا أن نحدث فرقًا.",
     "footer_made_with": "صُنع بـ",
     "footer_for_community": "من أجل مجتمعنا",
-    "footer_donate": "تبرع"
+    "footer_donate": "تبرع",
+    "main_navigation": "التنقل الرئيسي"
   },
   "Donation": {
     "meta_title": "ادعم FoodShare",

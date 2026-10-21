@@ -648,7 +648,8 @@
     "footer_tagline": "우리 공동체의 음식물 낭비를 줄이고 굶주림에 맞섭니다. 함께라면 변화를 만들 수 있습니다.",
     "footer_made_with": "만든 곳",
     "footer_for_community": "우리 공동체를 위해",
-    "footer_donate": "후원하기"
+    "footer_donate": "후원하기",
+    "main_navigation": "주 탐색"
   },
   "Donation": {
     "meta_title": "FoodShare 후원하기",

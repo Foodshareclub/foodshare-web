@@ -746,7 +746,8 @@
     "footer_tagline": "地域の食品ロスを減らし飢餓と戦っています。",
     "footer_made_with": "制作・提供",
     "footer_for_community": "地域のために",
-    "footer_donate": "寄付する"
+    "footer_donate": "寄付する",
+    "main_navigation": "メインナビゲーション"
   },
   "Donation": {
     "meta_title": "FoodShare をサポートする",

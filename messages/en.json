@@ -998,7 +998,8 @@
     "footer_tagline": "Reducing food waste and fighting hunger in our community. Together, we can make a difference.",
     "footer_made_with": "Made with",
     "footer_for_community": "for our community",
-    "footer_donate": "Donate"
+    "footer_donate": "Donate",
+    "main_navigation": "Main navigation"
   },
   "Donation": {
     "meta_title": "Support FoodShare",
@@ -1150,5 +1151,13 @@
       "strong": "Strong",
       "weak": "Weak"
     }
-  }
+  },
+  "audience_segments": "Audience segments",
+  "automated_email_flows_and_sequences": "Automated email flows and sequences",
+  "create_and_manage_email_campaigns": "Create and manage email campaigns",
+  "customer_relationship_management": "Customer relationship management",
+  "email_automation": "Email automation",
+  "email_campaigns": "Email campaigns",
+  "manage_engage_and_grow_your_community": "Manage, engage and grow your community",
+  "manage_subscriber_segments_and_targeting": "Manage subscriber segments and targeting"
 }

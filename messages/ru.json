@@ -647,7 +647,8 @@
     "footer_tagline": "Мы сокращаем пищевые отходы и боремся с голодом в нашем сообществе. Вместе мы можем изменить ситуацию.",
     "footer_made_with": "Сделано с",
     "footer_for_community": "для нашего сообщества",
-    "footer_donate": "Пожертвовать"
+    "footer_donate": "Пожертвовать",
+    "main_navigation": "Основная навигация"
   },
   "Donation": {
     "meta_title": "Поддержите FoodShare",

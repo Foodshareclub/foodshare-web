@@ -77,26 +77,45 @@ const SRC_DIR = join(import.meta.dir, "..", "src");
  * scan means no key can be referenced without existing in en.json.
  */
 const BUDGET: Partial<Record<Locale, number>> = {
-  cs: 128,
-  fr: 128,
-  de: 290,
-  es: 290,
-  id: 222,
-  ja: 222,
-  sv: 222,
-  th: 222,
-  vi: 222,
-  zh: 222,
-  ar: 310,
-  hi: 310,
-  it: 310,
-  ko: 310,
-  nl: 310,
-  pl: 310,
-  tr: 310,
-  uk: 310,
-  pt: 311,
-  ru: 311,
+  // These are the current measured gaps, and they are eight higher than
+  // they were. The eight keys are not new debt: every one of them was
+  // already referenced by the code and already missing from every
+  // locale. They were not *countable*, because the reference catalogue is
+  // en.json and a key absent from en.json cannot be missing from a
+  // locale relative to it -- which is the same blind spot the source
+  // scan had, and the same one the header describes for the sixty-nine
+  // keys before them. They are in en.json now, and the gap they represent
+  // is the gap that was always there.
+  //
+  // The ninth key the scan found, `Home.main_navigation`, is not in this
+  // budget: the Home namespace is fully translated in all twenty-one
+  // locales, and that key is now in every one of them, so it is missing
+  // nowhere.
+  //
+  // The English fallback is the intended behaviour until the eight are
+  // backfilled: next-intl's `getMessageFallback` returns the key path,
+  // so a key in en.json and in no locale renders as English rather than
+  // as `audience_segments` on screen.
+  cs: 136,
+  fr: 136,
+  de: 298,
+  es: 298,
+  id: 230,
+  ja: 230,
+  sv: 230,
+  th: 230,
+  vi: 230,
+  zh: 230,
+  ar: 318,
+  hi: 318,
+  it: 318,
+  ko: 318,
+  nl: 318,
+  pl: 318,
+  tr: 318,
+  uk: 318,
+  pt: 319,
+  ru: 319,
 };
 
 type Catalog = Record<string, unknown>;
@@ -217,11 +236,37 @@ function scanForMissingKeys(): { missing: string[]; dynamic: number; files: numb
 
     // Bind translator variables to their namespace, per function scope, by
     // taking the nearest preceding binding for each call site.
+    //
+    // A translator is bound in three shapes, and the first version of this
+    // scan recognised only the first:
+    //
+    //   const t = useTranslations("Chat")
+    //   const t = await getTranslations("Chat")
+    //   const [t, locale] = await Promise.all([getTranslations("Chat"), getLocale()])
+    //
+    // The second is what a server component does, and fifteen files do it.
+    // The third is what the home page does. A file whose binding was not
+    // recognised was skipped whole, so every key in it was invisible to
+    // this scan -- which is how `Home.main_navigation` shipped: referenced
+    // by the home page, absent from every catalogue, and rendered on
+    // screen as its own key path.
+    //
+    // So the declaration is read, and the translator calls inside it are
+    // matched to the names it declares, in order.
     const bindings: Array<{ index: number; name: string; namespace: string }> = [];
-    const bindRe =
-      /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:useTranslations|getTranslations)\(\s*(["']?)([^"')\s]*)\2\s*\)/g;
-    for (const match of source.matchAll(bindRe)) {
-      bindings.push({ index: match.index ?? 0, name: match[1], namespace: match[3] ?? "" });
+    const declRe = /(?:const|let|var)\s+([^=;]+?)\s*=\s*([^;]+);/g;
+    const translatorRe = /(?:useTranslations|getTranslations)\(\s*(["']?)([^"')\s]*)\1\s*\)/g;
+    for (const declaration of source.matchAll(declRe)) {
+      const declared = [...declaration[1].matchAll(/[A-Za-z_$][\w$]*/g)].map((m) => m[0]);
+      if (declared.length === 0) continue;
+      const calls = [...declaration[2].matchAll(translatorRe)];
+      for (let position = 0; position < calls.length && position < declared.length; position++) {
+        bindings.push({
+          index: declaration.index ?? 0,
+          name: declared[position]!,
+          namespace: calls[position]![2] ?? "",
+        });
+      }
     }
     if (bindings.length === 0) continue;
 

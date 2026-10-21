@@ -746,7 +746,8 @@
     "footer_tagline": "เราลดขยะอาหารและต่อสู้ความหิวโหยในชุมชนของเรา ร่วมกันเราสร้างความเปลี่ยนแปลงได้",
     "footer_made_with": "สร้างด้วย",
     "footer_for_community": "เพื่อชุมชนของเรา",
-    "footer_donate": "บริจาค"
+    "footer_donate": "บริจาค",
+    "main_navigation": "การนำทางหลัก"
   },
   "Donation": {
     "meta_title": "สนับสนุน FoodShare",
