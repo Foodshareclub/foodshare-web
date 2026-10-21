@@ -56,7 +56,7 @@ for unit in foodshare-web.container foodshare-cloudflared-web.container; do
 done
 
 # Keep optional Quadlet assets valid; production runs these units.
-grep -Eq "needs: build-and-publish" "$ROOT/.github/workflows/web.yml" && pass "deploy needs build-and-publish" || fail_msg "deploy still needs a non-existent job"
+grep -Eq "needs: \[?build-and-publish" "$ROOT/.github/workflows/web.yml" && pass "deploy needs build-and-publish" || fail_msg "deploy still needs a non-existent job"
 grep -Eq "bash scripts/deploy-production.sh" "$ROOT/.github/workflows/web.yml" && pass "deploy uses the verified production rollout" || fail_msg "deploy is missing the production rollout script"
 grep -Eq "health-curl-fail" "$ROOT/.github/workflows/web.yml" && fail_msg "invalid --health-curl-fail flag still present" || pass "no invalid podman flags"
 

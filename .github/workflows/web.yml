@@ -467,10 +467,54 @@ jobs:
           NEXT_PUBLIC_APP_URL: https://${{ secrets.SITE_DOMAIN }}
           NEXT_PUBLIC_SITE_URL: https://${{ secrets.SITE_DOMAIN }}
 
+  # The deployment needs an SSH client and a key. It does not need the
+  # estate's single ephemeral self-hosted runner, which every repository
+  # in the organisation contends for, and which is dispatched on demand:
+  # a deployment that queues behind it waits for a machine that may be
+  # busy, may be starting, or may be down, and it waits the whole time
+  # without saying why.
+  #
+  # So the reachability of the hosts is checked first, on a runner that is
+  # always there, and the deployment follows it. A host that cannot be
+  # reached is reported in a minute rather than discovered in the queue.
+  deploy-preflight:
+    name: Deploy preflight
+    runs-on: ubuntu-24.04-arm
+    needs: build-and-publish
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check that both hosts can be reached
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_BACKEND_HOST: ${{ secrets.VPS_BACKEND_HOST }}
+          VPS_FRONTEND_HOST: ${{ secrets.VPS_FRONTEND_HOST }}
+        run: |
+          set -euo pipefail
+          if ! command -v ssh >/dev/null 2>&1; then
+            echo "This runner has no ssh client" >&2
+            exit 1
+          fi
+          key="$(mktemp)"
+          trap 'rm -f "$key"' EXIT
+          chmod 600 "$key"
+          printf '%s\n' "$VPS_SSH_KEY" > "$key"
+          for name in VPS_BACKEND_HOST VPS_FRONTEND_HOST; do
+            host="${!name}"
+            echo "Checking $name"
+            if ! ssh -i "$key" -o BatchMode=yes -o StrictHostKeyChecking=accept-new \
+                    -o ConnectTimeout=30 "organic@$host" 'true'; then
+              echo "$name cannot be reached over SSH; the deployment to it will not be attempted" >&2
+              exit 1
+            fi
+            echo "$name is reachable"
+          done
+
   deploy:
     name: Deploy (${{ matrix.host }})
-    runs-on: [self-hosted, Linux]
-    needs: build-and-publish
+    runs-on: ubuntu-24.04-arm
+    needs: [build-and-publish, deploy-preflight]
     strategy:
       # The two hosts are separate serving nodes. One of them being
       # unreachable must not cancel the deployment to the other: a host
@@ -488,15 +532,16 @@ jobs:
 
       # The SSH action is a container action: it builds the image that
       # carries its client, and the runner builds that image when it
-      # prepares the job — before the first step runs. On a runner with no
-      # Docker there is nothing to build it with, and the build reaches for
-      # the root Podman socket, which a rootless runner cannot open:
+      # prepares the job — before the first step runs. That build needs a
+      # container runtime the runner can reach, and on a rootless runner
+      # it reaches for the root Podman socket, which it cannot open:
       #
       #     dial unix /run/podman/podman.sock: connect: permission denied
       #
       # No setting in this workflow can reach that build, because it has
       # already happened by the time a step could set one. So the runner's
-      # own SSH client is used instead: one connection, one host, one key.
+      # own SSH client is used instead: one connection, one host, one key,
+      # and no image to build before the deployment can start.
       #
       # The environment the deployment needs is sent as an export prelude
       # rather than as arguments, so the values do not appear in the remote
