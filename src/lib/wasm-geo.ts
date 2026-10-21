@@ -16,6 +16,7 @@
 
 import { createLogger } from "@/lib/logger";
 import { requireArray, requireFiniteNumber, requireNonNegativeNumber } from "@/lib/wasm-boundary";
+import { haversineDistanceKm } from "@/utils/postgis";
 import * as WasmGeo from "@/wasm/foodshare-geo/foodshare_geo";
 
 const logger = createLogger("WasmGeo");
@@ -54,9 +55,6 @@ export interface GeoResultItem extends GeoItem {
  * form, so the prefix comes off before the value is handed over.
  */
 const EWKT_SRID_PREFIX = /^SRID=[^;]*;\s*/i;
-
-/** Earth's radius in kilometres, as the module measures it. */
-const EARTH_RADIUS_KM = 6371;
 
 function normalizeLocation(location: unknown): unknown {
   if (typeof location !== "string") return location;
@@ -128,21 +126,14 @@ function parseCoordinates(location: unknown): GeoCoordinate | null {
 /**
  * The distance between two points, measured in JavaScript. This is the
  * fallback for when the module cannot be reached, and it mirrors the
- * module's answer: `Infinity` for a location that cannot be read.
+ * module's answer: `Infinity` for a location that cannot be read, and
+ * the same distance the module would have measured.
  */
 function distanceInKm(userLat: number, userLng: number, location: unknown): number {
   const coordinates = parseCoordinates(location);
   if (!coordinates) return Number.POSITIVE_INFINITY;
 
-  const φ1 = (userLat * Math.PI) / 180;
-  const φ2 = (coordinates.latitude * Math.PI) / 180;
-  const Δφ = (coordinates.latitude - userLat) / 2;
-  const Δλ = (coordinates.longitude - userLng) / 2;
-
-  const a =
-    Math.sin(Δφ) * Math.sin(Δφ) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ) * Math.sin(Δλ);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return EARTH_RADIUS_KM * c;
+  return haversineDistanceKm(userLat, userLng, coordinates.latitude, coordinates.longitude);
 }
 
 /**

@@ -29,7 +29,9 @@ import {
   fuseRankedLists,
   l2Distance,
   normalizeVectorDimensions,
+  reciprocalRankFusion,
 } from "@/lib/wasm-search";
+import { haversineDistanceKm } from "@/utils/postgis";
 
 describe("WebAssembly Crypto & TOTP Bridges", () => {
   const secret = "12345678901234567890";
@@ -166,6 +168,63 @@ describe("WebAssembly Vector Search & RRF Bridges", () => {
     expect(calculateDistanceDecay(0.0, 10.0)).toBeCloseTo(1.0, 3);
     expect(calculateDistanceDecay(10.0, 10.0)).toBeCloseTo(0.5, 2);
     expect(calculateDistanceDecay(20.0, 10.0)).toBeCloseTo(0.25, 2);
+  });
+});
+
+describe("the JavaScript fallbacks answer as the modules do", () => {
+  /**
+   * The bridges fall back to JavaScript when a module cannot be reached.
+   * The fallback is the path nobody sees until the module is broken, and
+   * a fallback that answered differently would be worse than the failure
+   * it was covering up.
+   */
+
+  const POINTS: Array<[number, number]> = [
+    [50.1109, 8.6821],
+    [52.52, 13.405],
+    [48.8566, 2.3522],
+    [51.5074, -0.1278],
+    [-33.8688, 151.2093],
+    [0, 0],
+    [64.1466, -21.9426],
+  ];
+
+  it("measures the same distances", () => {
+    for (const [lat1, lng1] of POINTS) {
+      for (const [lat2, lng2] of POINTS) {
+        const byModule = calculateHaversineDistance(lat1, lng1, lat2, lng2);
+        const byFallback = haversineDistanceKm(lat1, lng1, lat2, lng2);
+
+        expect(byFallback, `${lat1},${lng1} to ${lat2},${lng2}`).toBeCloseTo(byModule, 6);
+      }
+    }
+  });
+
+  it("fuses the same lists", () => {
+    const lists = [
+      ["item1", "item2", "item3", "item4"],
+      ["item2", "item1", "item5"],
+      ["item4", "item3", "item1"],
+    ];
+
+    const byModule = fuseRankedLists(lists);
+    const byFallback = reciprocalRankFusion(lists, 60);
+
+    expect(byFallback.map((item) => item.id)).toEqual(byModule.map((item) => item.id));
+    for (const [index, item] of byModule.entries()) {
+      expect(byFallback[index].score).toBeCloseTo(item.score, 6);
+    }
+  });
+
+  it("fuses the same lists when they are equal", () => {
+    // The scores of items at the same rank are the same, and the order
+    // they come back in has to be the same too.
+    const lists = [["a", "b", "c"], ["d", "e", "f"]];
+
+    const byModule = fuseRankedLists(lists);
+    const byFallback = reciprocalRankFusion(lists, 60);
+
+    expect(byFallback.map((item) => item.id)).toEqual(byModule.map((item) => item.id));
   });
 });
 

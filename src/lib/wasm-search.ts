@@ -109,9 +109,46 @@ export function fuseRankedLists(lists: Array<Array<string | number>>, k = 60.0):
       .sort((a, b) => b.score - a.score || a.order - b.order)
       .map(({ id, score }) => ({ id, score }));
   } catch (error) {
-    logger.error("WASM RRF merge failed", error instanceof Error ? error : new Error(String(error)));
-    return [];
+    logger.error(
+      "WASM RRF merge failed, fusing in JavaScript instead",
+      error instanceof Error ? error : new Error(String(error)),
+    );
+    return reciprocalRankFusion(listArray, smoothing);
   }
+}
+
+/**
+ * The fusion the module does, in JavaScript.
+ *
+ * The module's answers are used when it can be reached. This is what the
+ * bridge does when it cannot, and it is here so that the two can be
+ * compared: a fallback that answered differently would be worse than no
+ * answer at all.
+ *
+ * Results are ordered by score, and items with equal scores keep the
+ * order they first appeared in across the input lists, which is the
+ * order the module's answers are put in as well.
+ */
+export function reciprocalRankFusion(
+  lists: Array<Array<string | number>>,
+  k: number,
+): RrfFusedItem[] {
+  const scores = new Map<string | number, number>();
+  const firstSeen = new Map<string | number, number>();
+
+  for (const list of lists) {
+    for (const [index, id] of list.entries()) {
+      const rank = index + 1;
+      scores.set(id, (scores.get(id) ?? 0) + 1 / (k + rank));
+      if (!firstSeen.has(id)) {
+        firstSeen.set(id, scores.size - 1);
+      }
+    }
+  }
+
+  return [...scores.entries()]
+    .map(([id, score]) => ({ id, score }))
+    .sort((a, b) => b.score - a.score || (firstSeen.get(a.id) ?? 0) - (firstSeen.get(b.id) ?? 0));
 }
 
 /**

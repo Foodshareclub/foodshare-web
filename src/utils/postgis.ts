@@ -91,11 +91,20 @@ export function createPostGISPoint(lat: number, lng: number): string {
 }
 
 /**
- * Calculate distance between two points using Haversine formula
- * Returns distance in meters
+ * Earth's mean radius, in kilometres and in metres.
  */
-export function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371000; // Earth's radius in meters
+export const EARTH_RADIUS_KM = 6371;
+export const EARTH_RADIUS_M = 6_371_000;
+
+/**
+ * The distance between two points, on a sphere of the given radius.
+ *
+ * The same formula and the same radius as the `foodshare-geo` module, so
+ * that the two answer the same question the same way. The bridge falls
+ * back to this when the module cannot be reached, and a fallback that
+ * answered differently would be worse than no answer at all.
+ */
+function haversine(lat1: number, lng1: number, lat2: number, lng2: number, radius: number): number {
   const φ1 = (lat1 * Math.PI) / 180;
   const φ2 = (lat2 * Math.PI) / 180;
   const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -105,7 +114,22 @@ export function calculateDistance(lat1: number, lng1: number, lat2: number, lng2
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  return R * c;
+  return radius * c;
+}
+
+/**
+ * The distance between two points in kilometres.
+ */
+export function haversineDistanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  return haversine(lat1, lng1, lat2, lng2, EARTH_RADIUS_KM);
+}
+
+/**
+ * Calculate distance between two points using Haversine formula
+ * Returns distance in meters
+ */
+export function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  return haversine(lat1, lng1, lat2, lng2, EARTH_RADIUS_M);
 }
 
 /**
