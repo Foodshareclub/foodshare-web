@@ -467,54 +467,20 @@ jobs:
           NEXT_PUBLIC_APP_URL: https://${{ secrets.SITE_DOMAIN }}
           NEXT_PUBLIC_SITE_URL: https://${{ secrets.SITE_DOMAIN }}
 
-  # The deployment needs an SSH client and a key. It does not need the
-  # estate's single ephemeral self-hosted runner, which every repository
-  # in the organisation contends for, and which is dispatched on demand:
-  # a deployment that queues behind it waits for a machine that may be
-  # busy, may be starting, or may be down, and it waits the whole time
-  # without saying why.
-  #
-  # So the reachability of the hosts is checked first, on a runner that is
-  # always there, and the deployment follows it. A host that cannot be
-  # reached is reported in a minute rather than discovered in the queue.
-  deploy-preflight:
-    name: Deploy preflight
-    runs-on: ubuntu-24.04-arm
-    needs: build-and-publish
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check that both hosts can be reached
-        env:
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          VPS_BACKEND_HOST: ${{ secrets.VPS_BACKEND_HOST }}
-          VPS_FRONTEND_HOST: ${{ secrets.VPS_FRONTEND_HOST }}
-        run: |
-          set -euo pipefail
-          if ! command -v ssh >/dev/null 2>&1; then
-            echo "This runner has no ssh client" >&2
-            exit 1
-          fi
-          key="$(mktemp)"
-          trap 'rm -f "$key"' EXIT
-          chmod 600 "$key"
-          printf '%s\n' "$VPS_SSH_KEY" > "$key"
-          for name in VPS_BACKEND_HOST VPS_FRONTEND_HOST; do
-            host="${!name}"
-            echo "Checking $name"
-            if ! ssh -i "$key" -o BatchMode=yes -o StrictHostKeyChecking=accept-new \
-                    -o ConnectTimeout=30 "organic@$host" 'true'; then
-              echo "$name cannot be reached over SSH; the deployment to it will not be attempted" >&2
-              exit 1
-            fi
-            echo "$name is reachable"
-          done
-
   deploy:
     name: Deploy (${{ matrix.host }})
-    runs-on: ubuntu-24.04-arm
-    needs: [build-and-publish, deploy-preflight]
+    # The deployment runs on the estate's own runner because the servers
+    # only accept SSH from it. That was measured, not assumed: a hosted
+    # runner's connection to the backend host times out on port 22, so the
+    # hosts allow the estate's runner and nothing else.
+    #
+    # The consequence is that the deployment waits for that runner, and
+    # the wait is the runner's availability rather than anything to do
+    # with the deployment. Opening the hosts to a wider range of source
+    # addresses would take the queue out of the path; that is a change to
+    # a production host's firewall, and it is a decision for a person.
+    runs-on: [self-hosted, Linux]
+    needs: build-and-publish
     strategy:
       # The two hosts are separate serving nodes. One of them being
       # unreachable must not cancel the deployment to the other: a host
