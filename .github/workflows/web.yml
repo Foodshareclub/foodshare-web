@@ -482,6 +482,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The runner fleet is rootless Podman, and the SSH action below builds
+      # the image that carries its client. Podman's Docker compatibility
+      # layer reaches for the *root* socket by default, which a rootless
+      # runner cannot open:
+      #
+      #     dial unix /run/podman/podman.sock: connect: permission denied
+      #
+      # So it is pointed at the socket the runner's own Podman serves. The
+      # check is here because the failure it prevents is a confusing one:
+      # the action would report that it could not reach a container runtime,
+      # and the reader would have no way to know the runtime was there and
+      # simply at a different address.
+      - name: Point the container runtime at the runner's own socket
+        run: |
+          socket="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/podman/podman.sock"
+          if [ ! -S "$socket" ]; then
+            echo "No Podman socket at $socket" >&2
+            echo "The runner is expected to run rootless Podman with its socket in \$XDG_RUNTIME_DIR" >&2
+            exit 1
+          fi
+          echo "CONTAINER_HOST=unix://$socket" >> "$GITHUB_ENV"
+          echo "DOCKER_HOST=unix://$socket" >> "$GITHUB_ENV"
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
