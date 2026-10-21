@@ -163,10 +163,20 @@ GRANT SELECT, INSERT, UPDATE ON public.translation_queue TO job_worker;
 GRANT SELECT, INSERT, UPDATE ON public.dynamic_content_translations TO job_worker;
 GRANT SELECT ON public.posts TO job_worker;
 GRANT SELECT ON public.challenges TO job_worker;
-GRANT SELECT ON public.forum_posts TO job_worker;
 
--- `notification_delivery_log` uses a BIGSERIAL identity column.
-GRANT USAGE, SELECT ON SEQUENCE public.notification_delivery_log_id_seq TO job_worker;
+-- `forum_posts` is not granted on: no migration creates it, and it is not
+-- in the production database either. The translation source enum names it
+-- (services/crates/fs-db/src/translation.rs), but those variants are never
+-- constructed, so nothing reads or writes it. The GRANT is what made this
+-- migration fail -- "relation public.forum_posts does not exist" -- on
+-- every database the table was not created on, and a grant on a table that
+-- does not exist cannot be in force anyway.
+
+-- `notification_delivery_log` has no sequence: its id is a uuid with a
+-- gen_random_uuid() default (20260128195318_baseline.sql:30843). The
+-- sequence this used to be granted on was never created by any
+-- migration, so the grant failed on every database. There is nothing to
+-- grant: a uuid default needs no sequence usage.
 
 -- ─────────────────────────────────────────────────────────────────────
 -- 5. RLS policies

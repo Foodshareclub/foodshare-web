@@ -16,6 +16,16 @@ verify_jwt = false
 [functions.api-v1-images]
 verify_jwt = false
 
+# Forum API (threads, comments, reports, moderation)
+# Was served but never declared here, so it inherited the edge runtime's
+# default JWT requirement instead of the `verify_jwt = false` every other
+# function in this file sets. `createAPIHandler` does its own auth, so the
+# function has been validating tokens twice and rejecting anything that relies
+# on the runtime's exemption — which is the 401 that Common Pitfalls records as
+# a function missing from this file. Found by `__tests__/contract-drift.test.ts`.
+[functions.api-v1-forum]
+verify_jwt = false
+
 # Unified Health API (consolidates health + health-advanced)
 # Public monitoring endpoint — no auth required
 [functions.api-v1-health]
@@ -60,6 +70,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.api-v1-products]
+verify_jwt = false
+
+[functions.api-v1-revenuecat]
+# User GET validates auth; webhook POST validates a dedicated shared secret.
 verify_jwt = false
 
 [functions.api-v1-profile]

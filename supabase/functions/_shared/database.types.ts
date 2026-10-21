@@ -148,6 +148,39 @@ export type Database = {
   },
   billing: {
     Tables: {
+      revenuecat_identities: {
+        Row: {
+        customer_id: string;
+        expires_at: string | null;
+        has_access: boolean;
+        reconciled_at: string | null;
+        revision: number;
+        user_id: string;
+        verification_reference: string;
+        verified_at: string;
+        };
+        Insert: {
+        customer_id: string;
+        expires_at?: string;
+        has_access?: boolean;
+        reconciled_at?: string;
+        revision?: number;
+        user_id: string;
+        verification_reference: string;
+        verified_at?: string;
+        };
+        Update: {
+        customer_id?: string;
+        expires_at?: string | null;
+        has_access?: boolean;
+        reconciled_at?: string | null;
+        revision?: number;
+        user_id?: string;
+        verification_reference?: string;
+        verified_at?: string;
+        };
+        Relationships: [];
+      },
       subscriptions: {
         Row: {
         created_at: string | null;
@@ -11343,6 +11376,13 @@ export type Database = {
       };
         Returns: Array<Record<string, unknown>>;
       },
+      get_user_post_activity_summary_internal: {
+        Args: {
+        p_user_id: string | null;
+        p_days?: number | null;
+      };
+        Returns: Array<Record<string, unknown>>;
+      },
       get_user_preferences: {
         Args: {
         p_user_id: string | null;
@@ -11692,6 +11732,16 @@ export type Database = {
         Returns: Array<Record<string, unknown>>;
       },
       log_audit_event: {
+        Args: {
+        p_user_id: string | null;
+        p_action: string | null;
+        p_resource_type: string | null;
+        p_resource_id: string | null;
+        p_metadata?: Json | null;
+      };
+        Returns: string;
+      },
+      log_audit_event_internal: {
         Args: {
         p_user_id: string | null;
         p_action: string | null;
@@ -12396,6 +12446,25 @@ export type Database = {
         p_error_message: string | null;
       };
         Returns: boolean;
+      },
+      revenuecat_begin_reconciliation: {
+        Args: {
+        p_customer_id: string | null;
+      };
+        Returns: number;
+      },
+      revenuecat_commit: {
+        Args: {
+        p_customer_id: string | null;
+        p_revision: number | null;
+        p_has_access: boolean | null;
+        p_expires_at: string | null;
+      };
+        Returns: boolean;
+      },
+      revenuecat_my_status: {
+        Args: Record<never, never>;
+        Returns: Json;
       },
       rollup_hourly_stats: {
         Args: Record<never, never>;

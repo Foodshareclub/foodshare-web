@@ -20,6 +20,11 @@
  *     how the library is written rather than of how many defects there are.
  *   * Multi-line message continuations. A message is the text up to the
  *     `at file:` line, joined, whitespace-collapsed.
+ *
+ * And one thing is collapsed, for a different reason: the union of relation
+ * or function names the checker prints inside the message. Its members are the
+ * same set on every run, but the order and the truncated prefix are not, so
+ * the union is replaced by a marker. See `UNION` below for why that matters.
  */
 
 import { walkTypeScript } from "./scan.ts";
@@ -107,6 +112,34 @@ export async function runCheck(): Promise<string> {
 // it says the same thing without the lint having to be told.
 const ANSI = new RegExp(String.fromCharCode(27) + "\\[[0-9;]*m", "g");
 
+/**
+ * A union of string literals, as the checker renders it.
+ *
+ * `supabase-js` types `from()` over every relation and `rpc()` over every
+ * function, so one bad name is reported against a union of two hundred
+ * string literals. The checker prints that union in the order it happens to
+ * hold the members, and that order is not the order they are written in the
+ * generated type: it is the order the checker instantiated them, which
+ * depends on what it had already checked and on what its cache held. The
+ * same error therefore arrives with its members in a different order from
+ * one run to the next, and with a different truncated prefix each time.
+ *
+ * The members are the same set every run -- only their order and the
+ * prefix move -- so the union is collapsed to a marker before the message
+ * is stored. A budget keyed on the whole message was comparing the
+ * checker's rendering rather than the error, and it stopped matching the
+ * moment the checker's cache was warm instead of cold: the same command,
+ * the same code, green on one machine and red on another.
+ *
+ * The ellipsis is part of the union: the checker truncates a long union to
+ * its first members, `... N more ...`, and its last.
+ */
+const UNION = new RegExp(
+  '(?:"[^"]*"|\\.\\.\\.\\s*\\d+\\s+more\\s*\\.\\.\\.)' +
+    '(?:\\s*\\|\\s*(?:"[^"]*"|\\.\\.\\.\\s*\\d+\\s+more\\s*\\.\\.\\.))+',
+  "g",
+);
+
 export function parseDiagnostics(raw: string): DiagnosticCount[] {
   const text = raw.replace(ANSI, "");
   const lines = text.split("\n");
@@ -143,7 +176,7 @@ export function parseDiagnostics(raw: string): DiagnosticCount[] {
     found.push({
       file,
       code,
-      message: parts.join(" ").replace(/\s+/g, " ").trim(),
+      message: parts.join(" ").replace(/\s+/g, " ").replace(UNION, '"…"').trim(),
     });
   }
 

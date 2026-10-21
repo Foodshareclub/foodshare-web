@@ -89,14 +89,45 @@ DO $$
 DECLARE
     v_mean  numeric;
     v_total bigint;
+    v_post  bigint;
+    v_profile uuid;
 BEGIN
-    -- Seed two rows against a listing that cannot exist in production.
+    -- The seed has to be against rows that exist: reviews.post_id and
+    -- reviews.profile_id both have foreign keys, so ids that cannot
+    -- exist are exactly what the database refuses. The listing and the
+    -- profile are picked rather than invented, and the review rows are
+    -- removed again at the end, so nothing is left behind.
+    --
+    -- The profile is the listing's own owner, because that is what
+    -- keeps the seed's side effects to nothing: both review triggers
+    -- notify the listing's owner, and the notification helper returns
+    -- early when the recipient and the actor are the same profile. A
+    -- reviewer who is somebody else would write a notification row that
+    -- the migration would then have to clean up.
+    SELECT p.id, p.profile_id INTO v_post, v_profile
+      FROM public.posts p
+      JOIN public.profiles pr ON pr.id = p.profile_id
+     ORDER BY p.id
+     LIMIT 1;
+    IF v_post IS NULL THEN
+        -- A database with no listings -- a fresh one, or the
+        -- schema-only database the oracle builds -- has nothing to seed
+        -- against, and the check would fail for a reason that has
+        -- nothing to do with the aggregate. The function is created
+        -- either way; what the check is for is the arithmetic, and there
+        -- is nothing to check it against there.
+        RAISE NOTICE
+          'get_post_rating: no listings in this database, so the aggregate '
+          'is not checked here. The function is created regardless.';
+        RETURN;
+    END IF;
+
     INSERT INTO public.reviews (id, profile_id, reviewed_rating, post_id, feedback, notes)
-    VALUES (-900001, gen_random_uuid(), 5, -900001, '-', '-'),
-           (-900002, gen_random_uuid(), 1, -900001, '-', '-');
+    VALUES (-900001, v_profile, 5, v_post, '-', '-'),
+           (-900002, v_profile, 1, v_post, '-', '-');
 
     SELECT avg_rating, total_reviews INTO v_mean, v_total
-      FROM public.get_post_rating(-900001);
+      FROM public.get_post_rating(v_post);
 
     IF v_total <> 2 THEN
         RAISE EXCEPTION 'get_post_rating: expected 2 rated reviews, got %', v_total;

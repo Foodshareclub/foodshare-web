@@ -52,6 +52,8 @@ BEGIN;
 
 DROP POLICY IF EXISTS "Enable read access for all users" ON public.views;
 
+DROP POLICY IF EXISTS "Users can read own view history" ON public.views;
+
 CREATE POLICY "Users can read own view history"
     ON public.views
     FOR SELECT
@@ -62,15 +64,32 @@ CREATE POLICY "Users can read own view history"
 
 DROP POLICY IF EXISTS "Enable read access for all users" ON public.telegram_user_activity;
 
-CREATE POLICY "Users can read own telegram activity"
+-- Admin-only, and not because the table is sensitive -- because the
+-- table cannot say whose row is whose. Its user_id is the Telegram
+-- account's numeric id, not a Supabase profile uuid: the bot writes and
+-- reads it with the service role, keyed by the Telegram id it already
+-- has. There is no column that holds the profile, so a policy of the
+-- form "profile_id = auth.uid()" cannot be written -- there is no
+-- profile_id -- and a policy of the form "user_id = auth.uid()" would
+-- compare a bigint Telegram id to a uuid and match nothing.
+--
+-- The read the bot does goes through the service role, which is not
+-- subject to this policy, so the bot keeps working; and the rows are
+-- the same behavioural profile of every Telegram user the migration
+-- above was closing.
+DROP POLICY IF EXISTS "Admins can read telegram activity" ON public.telegram_user_activity;
+
+CREATE POLICY "Admins can read telegram activity"
     ON public.telegram_user_activity
     FOR SELECT
     TO authenticated
-    USING (profile_id = (SELECT auth.uid()));
+    USING (public.is_admin());
 
 -- ── 3. forum history: moderation surface, admin-only ───────────────────────
 
 DROP POLICY IF EXISTS "Anyone can view post history" ON public.forum_post_history;
+
+DROP POLICY IF EXISTS "Admins can read forum post history" ON public.forum_post_history;
 
 CREATE POLICY "Admins can read forum post history"
     ON public.forum_post_history
@@ -79,6 +98,8 @@ CREATE POLICY "Admins can read forum post history"
     USING (public.is_admin());
 
 DROP POLICY IF EXISTS "Anyone can view comment history" ON public.forum_comment_history;
+
+DROP POLICY IF EXISTS "Admins can read forum comment history" ON public.forum_comment_history;
 
 CREATE POLICY "Admins can read forum comment history"
     ON public.forum_comment_history
@@ -94,6 +115,8 @@ CREATE POLICY "Admins can read forum comment history"
 -- standing between it and any logged-in member is this policy.
 DROP POLICY IF EXISTS "Analytics readable by authenticated users" ON public.translation_analytics;
 
+DROP POLICY IF EXISTS "Admins can read translation analytics" ON public.translation_analytics;
+
 CREATE POLICY "Admins can read translation analytics"
     ON public.translation_analytics
     FOR SELECT
@@ -102,8 +125,24 @@ CREATE POLICY "Admins can read translation analytics"
 
 -- ── 5. log_audit_event: bind to the caller ─────────────────────────────────
 
-ALTER FUNCTION public.log_audit_event(uuid, text, text, text, jsonb)
-    RENAME TO log_audit_event_internal;
+-- Renamed only when the name it would take is free. A deployment that
+-- failed part-way through this file leaves the function already renamed
+-- and the wrapper already created beside it, and renaming it a second
+-- time is an error that stops the migration before the fix is in place.
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON n.oid = p.pronamespace
+        WHERE n.nspname = 'public' AND p.proname = 'log_audit_event'
+    ) AND NOT EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON n.oid = p.pronamespace
+        WHERE n.nspname = 'public' AND p.proname = 'log_audit_event_internal'
+    ) THEN
+        EXECUTE 'ALTER FUNCTION public.log_audit_event(uuid, text, text, text, jsonb) RENAME TO log_audit_event_internal';
+    END IF;
+END $$;
 REVOKE ALL ON FUNCTION public.log_audit_event_internal(uuid, text, text, text, jsonb) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.log_audit_event_internal(uuid, text, text, text, jsonb) TO service_role;
 
@@ -146,6 +185,15 @@ BEGIN
 END
 $$;
 
+-- The wrapper is granted to the roles that may call it, and revoked from
+-- the ones that may not. The revoke is not redundant with the one on the
+-- internal twin: a function created by CREATE OR REPLACE FUNCTION keeps
+-- the privileges it already had, and the baseline's blanket grant of
+-- ALL on every function to anon left EXECUTE on this name behind. The
+-- grant below would then have widened it rather than narrowed it, and
+-- anon -- which the migration's own check at the end of this file
+-- looks for -- would still be able to write audit entries.
+REVOKE ALL ON FUNCTION public.log_audit_event(uuid, text, text, text, jsonb) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.log_audit_event(uuid, text, text, text, jsonb) TO authenticated, service_role;
 
 COMMENT ON FUNCTION public.log_audit_event(uuid, text, text, text, jsonb) IS
@@ -155,8 +203,22 @@ COMMENT ON FUNCTION public.log_audit_event(uuid, text, text, text, jsonb) IS
 
 -- ── 6. get_user_post_activity_summary: bind to the caller ───────────────────
 
-ALTER FUNCTION public.get_user_post_activity_summary(uuid, integer)
-    RENAME TO get_user_post_activity_summary_internal;
+-- Renamed only when the name it would take is free, for the same
+-- reason as log_audit_event above.
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON n.oid = p.pronamespace
+        WHERE n.nspname = 'public' AND p.proname = 'get_user_post_activity_summary'
+    ) AND NOT EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON n.oid = p.pronamespace
+        WHERE n.nspname = 'public' AND p.proname = 'get_user_post_activity_summary_internal'
+    ) THEN
+        EXECUTE 'ALTER FUNCTION public.get_user_post_activity_summary(uuid, integer) RENAME TO get_user_post_activity_summary_internal';
+    END IF;
+END $$;
 REVOKE ALL ON FUNCTION public.get_user_post_activity_summary_internal(uuid, integer) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_user_post_activity_summary_internal(uuid, integer) TO service_role;
 
@@ -199,6 +261,10 @@ BEGIN
 END
 $$;
 
+-- Revoked from PUBLIC and anon for the same reason as log_audit_event
+-- above: the function kept the privileges it already had, and the
+-- blanket grant of ALL to anon left EXECUTE on this name behind.
+REVOKE ALL ON FUNCTION public.get_user_post_activity_summary(uuid, integer) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_user_post_activity_summary(uuid, integer) TO authenticated, service_role;
 
 COMMENT ON FUNCTION public.get_user_post_activity_summary(uuid, integer) IS

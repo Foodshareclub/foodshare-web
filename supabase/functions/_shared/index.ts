@@ -113,6 +113,7 @@ export * from "./transformers.ts";
 export * from "./aggregation.ts";
 export * from "./traced-fetch.ts";
 export * from "./toggle.ts";
+export * from "./placeholder-config.ts";
 export * from "./aws-signer.ts";
 export * from "./embeddings.ts";
 export * from "./upstash-vector.ts";

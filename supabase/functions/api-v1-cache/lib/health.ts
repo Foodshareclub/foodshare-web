@@ -4,6 +4,7 @@
 
 import { type HandlerContext, ok } from "../../_shared/api-handler.ts";
 import { logger } from "../../_shared/logger.ts";
+import { isConfigured, notConfiguredReason } from "../../_shared/placeholder-config.ts";
 import {
   type CheckResult,
   circuitBreaker,
@@ -329,11 +330,17 @@ async function checkUpstashServices(supabase: any): Promise<{
       response: Response,
     ) => { ok: boolean; message: string },
   ): Promise<ServiceCheckResult & { skipped?: boolean }> => {
-    if (!url || !token) {
+    if (!isConfigured(url, token)) {
+      // A service whose value is the template's placeholder is not
+      // configured. The estate's environment files are copied from the
+      // templates, so they carry the example values, and the check used
+      // to try to reach "your-instance.upstash.io" and report the
+      // failure as a broken service -- which is a red health check for
+      // an integration this estate does not have.
       return {
         service,
         status: "ok",
-        message: "Not configured (skipped)",
+        message: notConfiguredReason(url, token),
         skipped: true,
       };
     }
@@ -481,9 +488,25 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
   if (
     urlResult.error || tokenResult.error || !urlResult.data || !tokenResult.data
   ) {
+    // There is no Redis to report on. The Vault's copies of these secrets
+    // cannot always be read -- the database was reinitialised at one
+    // point -- and the values the environment carries are the templates'
+    // placeholders. "Unhealthy" is a claim about the estate's health that
+    // is not true, so this says what is actually the case.
     return ok({
-      status: "unhealthy",
-      error: "Failed to retrieve Redis credentials",
+      status: "not_configured",
+      error: "Redis is not configured for this estate",
+      reason: "the credentials could not be read",
+      version: CONFIG.version,
+      timestamp: new Date().toISOString(),
+    }, ctx);
+  }
+
+  if (!isConfigured(urlResult.data, tokenResult.data)) {
+    return ok({
+      status: "not_configured",
+      error: "Redis is not configured for this estate",
+      reason: notConfiguredReason(urlResult.data, tokenResult.data),
       version: CONFIG.version,
       timestamp: new Date().toISOString(),
     }, ctx);

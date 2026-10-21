@@ -140,6 +140,40 @@ COMMENT ON TABLE audit.vault_access_log IS
   'get_user_vault_access_summary() and get_vault_failure_count(). Revoked from '
   'client roles. A privileged role can still tamper, which is the documented '
   'limit of an in-database audit log.';
+
+-- A table that already exists is not brought to this shape by CREATE TABLE
+-- IF NOT EXISTS: the statement is a no-op, and the columns this migration
+-- adds to the older shape, and the NOT NULLs it relaxes, are exactly the
+-- difference between the two writers working and neither working. A
+-- database created before the audit table was ever created by a migration
+-- has the older shape -- user_id and access_granted NOT NULL, no
+-- access_result, no additional_info -- and it is brought to this shape
+-- here, explicitly.
+--
+-- The columns are added before the constraint and the backfill, because both
+-- read them, and the NOT NULLs are dropped because the edge-function writer
+-- inserts user_id = null and sets access_result rather than access_granted.
+ALTER TABLE audit.vault_access_log ADD COLUMN IF NOT EXISTS access_result   TEXT;
+ALTER TABLE audit.vault_access_log ADD COLUMN IF NOT EXISTS additional_info JSONB;
+ALTER TABLE audit.vault_access_log ALTER COLUMN user_id        DROP NOT NULL;
+ALTER TABLE audit.vault_access_log ALTER COLUMN access_granted DROP NOT NULL;
+ALTER TABLE audit.vault_access_log ALTER COLUMN access_method  DROP NOT NULL;
+
+-- The constraint is added only when it is missing: a table this migration
+-- created already has it, and adding it twice is an error.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'vault_access_log_one_outcome'
+      AND conrelid = 'audit.vault_access_log'::regclass
+  ) THEN
+    ALTER TABLE audit.vault_access_log
+      ADD CONSTRAINT vault_access_log_one_outcome
+      CHECK (access_granted IS NOT NULL OR access_result IS NOT NULL);
+  END IF;
+END $$;
+
 COMMENT ON COLUMN audit.vault_access_log.access_result IS
   'Outcome vocabulary used by edge-function writers that bypass '
   'get_secret_audited(). Backfilled into access_granted on insert.';

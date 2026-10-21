@@ -49,6 +49,11 @@ export async function createProduct(
   //   * `p_images` is required by the rules ("at least one image is
   //     required") and has no default, so calling without it would have
   //     failed every listing for the wrong reason.
+  //
+  // The coordinates are passed for the same reason: the function checks
+  // them ("Location coordinates are required") and treats a listing
+  // without them as invalid, so calling with six of its eight arguments
+  // rejected every listing before it was ever created.
   const { data: validation, error: validationError } = await supabase.rpc(
     "validate_listing",
     {
@@ -56,6 +61,8 @@ export async function createProduct(
       p_description: sanitizedDescription || "",
       p_images: body.images ?? null,
       p_post_type: body.postType ?? "food",
+      p_latitude: body.latitude ?? null,
+      p_longitude: body.longitude ?? null,
       p_pickup_address: sanitizedPickupAddress ?? null,
       p_pickup_time: sanitizedPickupTime ?? null,
     },

@@ -281,33 +281,6 @@ const UNAPPLIED: Record<string, string> = {
     "reads `post_likes` and `post_bookmarks`, neither of which any migration " +
     "creates. These are the tables `api-v1-engagement` reads, so the entire " +
     "engagement feature depends on relations the repository does not describe.",
-
-  "20260812200000_grant_public_privileges.sql":
-    "names something that does not exist — it grants EXECUTE on " +
-    "`get_secret_audited(text, text, text)` and the function's real signature " +
-    "is `(text, uuid, jsonb)`. The grant is an error, not a no-op, and it is " +
-    "on line 8 of 14, so the three `ALTER DEFAULT PRIVILEGES` statements that " +
-    "follow — the ones giving service_role its table, function and sequence " +
-    "access — never run.",
-
-  "20260927000000_job_worker_role_and_claims.sql":
-    "names something that does not exist — it grants SELECT on " +
-    "`public.forum_posts`, and no migration creates that table. The file is " +
-    "classified non-transactional (three `CREATE INDEX CONCURRENTLY`), so the " +
-    "grants before line 166 commit and the rest of the file is skipped: the " +
-    "sequence grant and the entire `job_worker` RLS policy section. The Rust " +
-    "worker reads `forum_posts` in `fs-db/src/translation.rs:85`, so the " +
-    "translation backfill depends on a table the grants for it break on.",
-
-  "20261008000000_post_rating_aggregate.sql":
-    "needs data — seeds `reviews` rows whose `post_id` must reference a post, " +
-    "and the oracle's database has none. The function it creates is fine; only " +
-    "the fixture rows fail.",
-
-  "20261011000000_close_remaining_read_holes.sql":
-    "names something that does not exist — alters or indexes a `profile_id` " +
-    "column that is not on the relation it names. Not yet triaged; recorded " +
-    "here so the set cannot grow silently while it is.",
 };
 
 Deno.test("oracle: the migrations that do not apply are exactly the ones pinned", () => {

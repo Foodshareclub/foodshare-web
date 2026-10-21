@@ -84,9 +84,7 @@ Deno.test("service auth: a credential-less database request does not authenticat
 });
 
 Deno.test("service auth: the anonymous key is not a service credential", async () => {
-  const result = await withEnv(() =>
-    authenticate(request({ apikey: "anon-key" }), "service")
-  );
+  const result = await withEnv(() => authenticate(request({ apikey: "anon-key" }), "service"));
   assertEquals(result.authenticated, false);
   assertEquals(result.error, "Invalid service credentials");
 });

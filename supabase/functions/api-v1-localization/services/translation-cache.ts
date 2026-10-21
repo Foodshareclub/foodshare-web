@@ -31,6 +31,7 @@
  */
 
 import { logger } from "../../_shared/logger.ts";
+import { isConfigured, notConfiguredReason } from "../../_shared/placeholder-config.ts";
 
 const CACHE_TTL = 86400; // 24 hours
 const CACHE_PREFIX = "trans";
@@ -170,8 +171,15 @@ async function initRedis(): Promise<RedisClient | null> {
     Deno.env.get("UPSTASH_REDIS_REST_TOKEN") ||
     Deno.env.get("UPSTASH_REDIS_TOKEN");
 
-  if (!redisUrl || !redisToken) {
-    logger.info("Translation cache: Redis not configured, using database only");
+  if (!redisUrl || !redisToken || !isConfigured(redisUrl, redisToken)) {
+    // The templates' example values are not a configuration. A client
+    // built on "your-instance.upstash.io" fails every read, and every
+    // failure is retried with a backoff, so every translation lookup
+    // paid for three doomed requests before falling back to the
+    // database.
+    logger.info("Translation cache: Redis not configured, using database only", {
+      reason: notConfiguredReason(redisUrl, redisToken),
+    });
     return null;
   }
 
