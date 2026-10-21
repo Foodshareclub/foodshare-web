@@ -51,6 +51,7 @@ report_host() {
 # copies the same files -- so what runs on the host is what is in the
 # repository.
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+web_unit_installed=0
 install_units() {
   local unit installed=0
   mkdir -p "$UNIT_DIR"
@@ -58,6 +59,9 @@ install_units() {
     if [ ! -f "$UNIT_DIR/$unit" ] && [ -f "$ROOT/$unit" ]; then
       install -m 644 "$ROOT/$unit" "$UNIT_DIR/$unit"
       installed=1
+      # Only the web unit matters below: it is the one that reads the
+      # environment file.
+      if [ "$unit" = "foodshare-web.container" ]; then web_unit_installed=1; fi
     fi
   done
   if [ "$installed" = 1 ]; then systemctl --user daemon-reload; fi
@@ -205,6 +209,33 @@ if [ ! -f "$UNIT_DIR/foodshare-web.container" ]; then
   echo "The Quadlet unit could not be installed at $UNIT_DIR/foodshare-web.container" >&2
   report_host
   exit 1
+fi
+
+# The unit on the host has to read the environment file this deployment
+# writes.
+#
+# Two generations of the unit exist in this repository: the one this
+# deployment installs, which reads the file from /etc, and a newer one
+# that reads it from the operator's home. Only one of them is on a host at
+# a time, and a unit is installed only when there is none -- so a host
+# that already carries the other one keeps it.
+#
+# The service then starts with no configuration at all, and the health
+# check says so in terms of the database, which is not where the fault
+# is. The unit says where the configuration is, so the unit is what is
+# asked.
+#
+# The unit the deployment installed itself is not asked: it is this
+# repository's own unit, and the deployment knows what it reads.
+unit_environment_file=$(grep -E "^EnvironmentFile=" "$UNIT_DIR/foodshare-web.container" 2>/dev/null | head -1 | cut -d= -f2- || true)
+if [ "$web_unit_installed" = 0 ] && [ -n "$unit_environment_file" ] && [ -n "${HOME:-}" ]; then
+  unit_environment_file="${unit_environment_file//%h/$HOME}"
+  if [ "$unit_environment_file" != "$ENV_FILE" ]; then
+    echo "The unit installed on this host reads its environment from $unit_environment_file," >&2
+    echo "and this deployment writes $ENV_FILE. The host is running a different" >&2
+    echo "generation of the unit, and the service would start with no configuration." >&2
+    exit 1
+  fi
 fi
 
 rollback() {

@@ -42,9 +42,17 @@ async function deploy(options: Record<string, string> = {}, check = false) {
     // installs it from the repository, so the test has to be able to ask
     // for a host without one.
     if (options.MOCK_NO_UNIT !== "1") {
+      // The unit on the host reads the environment file the deployment
+      // writes. A host can carry a different generation of the unit, one
+      // that reads its environment from somewhere else, and the
+      // deployment has to notice: the service would start with no
+      // configuration at all.
+      const unitEnvironment = options.MOCK_UNIT_ENV
+        ? `EnvironmentFile=${options.MOCK_UNIT_ENV}\n`
+        : `EnvironmentFile=${environmentFile}\n`;
       await Bun.write(
         join(unitDirectory, "foodshare-web.container"),
-        "[Container]\nImage=ghcr.io/foodshareclub/foodshare-web:latest\n",
+        `[Container]\nImage=ghcr.io/foodshareclub/foodshare-web:latest\n${unitEnvironment}`,
       );
     }
     await Bun.write(
@@ -86,6 +94,7 @@ fi
         PATH: `${directory}:${process.env.PATH}`,
         MOCK_DIRECTORY: directory,
         MOCK_ENV_FILE: environmentFile,
+        HOME: process.env.HOME ?? "/home/tester",
         DEPLOY_SHA: sha,
         DEPLOY_IMAGE: image,
         GITHUB_TOKEN: "registry-test-secret",
@@ -134,6 +143,26 @@ test("a service that is stopped is started by the deployment", async () => {
   expect(result.code).toBe(0);
   expect(result.commands).toContain("systemctl --user restart foodshare-web");
   expect(result.dropin.trim()).toBe(`Image=${image}`);
+});
+test("a host running a different generation of the unit stops the deployment", async () => {
+  // The unit on the host reads its environment from somewhere else, so
+  // the service would start with no configuration at all. The health
+  // check would say so in terms of the database, which is not where the
+  // fault is.
+  const result = await deploy({ MOCK_UNIT_ENV: "/somewhere/else/web.env" });
+  expect(result.code).not.toBe(0);
+  expect(result.error).toContain("different");
+  expect(result.dropin).toBe("");
+});
+test("a host running a different generation of the unit stops the deployment", async () => {
+  // The unit on the host reads its environment from somewhere else, so
+  // the service would start with no configuration at all. The health
+  // check would say so in terms of the database, which is not where the
+  // fault is.
+  const result = await deploy({ MOCK_UNIT_ENV: "/somewhere/else/web.env" });
+  expect(result.code).not.toBe(0);
+  expect(result.error).toContain("different");
+  expect(result.dropin).toBe("");
 });
 test("a host that has never run the app is installed and deployed", async () => {
   // The deployment installs the unit and writes the environment file, so
