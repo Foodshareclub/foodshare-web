@@ -233,12 +233,35 @@ export async function checkDistributedRateLimit(
       };
     }
 
-    return {
-      allowed: data.allowed,
-      remaining: data.remaining,
-      resetAt: data.reset_at,
-      retryAfterMs: data.retry_after_ms,
-    };
+    // The shape check above proves `data` is an object; it says nothing
+    // about what is inside it. `check_rate_limit` is a union of overload
+    // shapes, so its fields arrive as untyped JSON: a verdict that is
+    // missing a field would carry `undefined` into a `number`, and a
+    // verdict whose `allowed` is missing would be falsy -- a blocked
+    // request let through. Read the four fields and check them.
+    const allowed = data.allowed;
+    const remaining = data.remaining;
+    const resetAt = data.reset_at;
+    const retryAfterMs = data.retry_after_ms;
+
+    if (
+      typeof allowed !== "boolean" ||
+      typeof remaining !== "number" ||
+      typeof resetAt !== "number" ||
+      typeof retryAfterMs !== "number"
+    ) {
+      logger.error("Distributed rate limit check returned an unusable verdict; failing open", {
+        key: fullKey,
+      });
+      return {
+        allowed: true,
+        remaining: config.limit,
+        resetAt: Date.now() + config.windowMs,
+        retryAfterMs: 0,
+      };
+    }
+
+    return { allowed, remaining, resetAt, retryAfterMs };
   } catch (error) {
     logger.error(
       "Rate limit error",

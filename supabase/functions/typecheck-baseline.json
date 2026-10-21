@@ -2,6 +2,438 @@
   "_comment": "Known type errors in supabase/functions, produced by `deno check` over every function entry point. `__tests__/typecheck-baseline.test.ts` fails if an error appears that is not here, and fails if one here no longer occurs, so this file can only shrink.",
   "errors": [
     {
+      "file": "__tests__/column-audit.test.ts",
+      "code": "TS2307",
+      "message": "Cannot find module 'file:///Users/organic/dev/work/foodshare/foodshare-web/supabase/oracle/read.ts'.",
+      "count": 1
+    },
+    {
+      "file": "__tests__/column-audit.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'c' implicitly has an 'any' type. const known = new Set(rel.value.columns.map((c) => c.name));",
+      "count": 1
+    },
+    {
+      "file": "__tests__/column-audit.test.ts",
+      "code": "TS7031",
+      "message": "Binding element 'r' implicitly has an 'any' type. const absent = reasons.filter(([r]) => r.startsWith(\"no-such-relation\"));",
+      "count": 1
+    },
+    {
+      "file": "__tests__/column-audit.test.ts",
+      "code": "TS7031",
+      "message": "Binding element 'r' implicitly has an 'any' type. const opaque = reasons.filter(([r]) => r.startsWith(\"opaque write\"));",
+      "count": 1
+    },
+    {
+      "file": "__tests__/doc-drift.test.ts",
+      "code": "TS2307",
+      "message": "Cannot find module 'file:///Users/organic/dev/work/foodshare/foodshare-web/supabase/oracle/apply.ts'.",
+      "count": 1
+    },
+    {
+      "file": "__tests__/doc-drift.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'f' implicitly has an 'any' type. s.functions.filter((f) => f.args === \"\").length,",
+      "count": 1
+    },
+    {
+      "file": "__tests__/doc-drift.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'f' implicitly has an 'any' type. s.functions.filter((f) => f.params === null).length,",
+      "count": 1
+    },
+    {
+      "file": "__tests__/doc-drift.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'j' implicitly has an 'any' type. const CRON_TARGETS = s.cronJobs.filter((j) => /functions\\/v1\\//.test(j.command)).length;",
+      "count": 1
+    },
+    {
+      "file": "__tests__/doc-drift.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. (r) => !r.reachableByAnon && !r.reachableByAuthenticated,",
+      "count": 1
+    },
+    {
+      "file": "__tests__/doc-drift.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. (r) => (r.reachableByAnon || r.reachableByAuthenticated) && !r.rlsEnabled,",
+      "count": 1
+    },
+    {
+      "file": "__tests__/doc-drift.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const TABLES = s.relations.filter((r) => r.kind === \"table\");",
+      "count": 1
+    },
+    {
+      "file": "__tests__/doc-drift.test.ts",
+      "code": "TS7031",
+      "message": "Binding element 'r' implicitly has an 'any' type. return coverage.reasons().filter(([r]) => r.startsWith(\"no-such-relation\")).length;",
+      "count": 1
+    },
+    {
+      "file": "__tests__/generated-types.test.ts",
+      "code": "TS2307",
+      "message": "Cannot find module 'file:///Users/organic/dev/work/foodshare/foodshare-web/supabase/oracle/catalog.ts'.",
+      "count": 1
+    },
+    {
+      "file": "__tests__/generated-types.test.ts",
+      "code": "TS2307",
+      "message": "Cannot find module 'file:///Users/organic/dev/work/foodshare/foodshare-web/supabase/oracle/types.ts'.",
+      "count": 1
+    },
+    {
+      "file": "__tests__/generated-types.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'q' implicitly has an 'any' type. quotedKeys.map((q) => ` - ${q}`).join(\"\\n\"),",
+      "count": 1
+    },
+    {
+      "file": "__tests__/generated-types.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'u' implicitly has an 'any' type. .filter((u) => !ALLOWED.has(u.type))",
+      "count": 1
+    },
+    {
+      "file": "__tests__/generated-types.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'u' implicitly has an 'any' type. .map((u) => `${u.type} (${u.columns.length}: ${u.columns.slice(0, 3).join(\", \")})`);",
+      "count": 1
+    },
+    {
+      "file": "__tests__/generated-types.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'u' implicitly has an 'any' type. const geography = unmapped.find((u) => u.type === \"extensions.geography\");",
+      "count": 1
+    },
+    {
+      "file": "__tests__/generated-types.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'u' implicitly has an 'any' type. unexpected.map((u) => ` - ${u}`).join(\"\\n\"),",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS2307",
+      "message": "Cannot find module 'file:///Users/organic/dev/work/foodshare/foodshare-web/supabase/oracle/substitute.ts'.",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'col' implicitly has an 'any' type. const embedding = posts?.columns.find((col) => col.name === \"embedding\");",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'f' implicitly has an 'any' type. actual.filter((f) => !pinned.includes(f)).map((f) => ` + ${f}`).join(",
+      "count": 2
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'f' implicitly has an 'any' type. const audited = c.functions.find((f) => f.name === \"get_secret_audited\");",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'f' implicitly has an 'any' type. const delta = c.functions.find((f) => f.name === \"get_delta_sync\");",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'f' implicitly has an 'any' type. const lost = c.functions.filter((f) => f.params === null && f.argTypes.length > 0);",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'f' implicitly has an 'any' type. const readable = c.functions.filter((f) => f.params !== null).length;",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'f' implicitly has an 'any' type. const unreadableWithTypes = withTypes.filter((f) => f.params === null);",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'f' implicitly has an 'any' type. const withTypes = c.functions.filter((f) => f.argTypes.length > 0);",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'f' implicitly has an 'any' type. lost.map((f) => ` - ${f.name} (${f.rendered})`).join(\"\\n\"),",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'f' implicitly has an 'any' type. lost.map((f) => `${f.schema}.${f.name}: (${f.rendered})`),",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'id' implicitly has an 'any' type. const missing = affecting.filter((id) => !recorded.includes(id));",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'id' implicitly has an 'any' type. const unknown = recorded.filter((id) => !known.has(id));",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'p' implicitly has an 'any' type. .filter((p) => !/^OUT\\s/i.test(p))",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'p' implicitly has an 'any' type. .find((p) => /hnsw/.test(p));",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'p' implicitly has an 'any' type. .map((p) => p.replace(/\\s+DEFAULT\\s+.*$/i, \"\"))",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'p' implicitly has an 'any' type. .map((p) => p.replace(/^(INOUT|IN|VARIADIC)\\s+/i, \"\"))",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'p' implicitly has an 'any' type. .map((p) => p.trim().replace(/\\s+/g, \" \"))",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'p' implicitly has an 'any' type. delta?.params?.map((p) => `${p.name}:${p.type}${p.hasDefault ? \"?\" : \"\"}`),",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. .filter((r) => !r.reachableByAnon && !r.reachableByAuthenticated)",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. .map((r) => `${r.schema}.${r.name}`)",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. .map((r) => r.kind === \"line\" ? r.pattern : r.pattern)",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. \"would rewrite it a second time:\\n\" + again.map((r) => ` - ${r}`).join(\"\\n\"),",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const affecting = loadRules().filter((r) => r.affectsCatalog).map((r) => r.id);",
+      "count": 2
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const capturing = rules.filter((r) =>",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const known = new Set(loadRules().map((r) => r.id));",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const marker = c.relations.find((r) => r.name === \"vector_type_substituted\");",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const notForced = reachable.filter((r) => !r.rlsForced).length;",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const off = reachable.filter((r) => !r.rlsEnabled).map((r) => r.name);",
+      "count": 2
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const posts = c.relations.find((r) => r.name === \"posts\" && r.kind === \"table\");",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const reachable = tables.filter((r) => r.reachableByAnon || r.reachableByAuthenticated);",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const suspects = c.relations.filter((r) => r.columns.length === 0);",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const tables = c.relations.filter((r) => r.kind === \"table\");",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. suspects.map((r) => `${r.kind} ${r.name}`),",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. tables: c.relations.filter((r) => r.kind === \"table\").length,",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 's' implicitly has an 'any' type. const recorded = c.substitutions.map((s) => s.id);",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 't' implicitly has an 'any' type. off.map((t) => ` - ${t}`).join(\"\\n\"),",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'u' implicitly has an 'any' type. const actual = catalog.unapplied.map((u) => u.file).sort();",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'u' implicitly has an 'any' type. const entry = catalog.unapplied.find((u) => u.file === file);",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'x' implicitly has an 'any' type. const f = c.functions.find((x) => x.name === \"get_secret_audited\");",
+      "count": 1
+    },
+    {
+      "file": "__tests__/oracle.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'x' implicitly has an 'any' type. suspects.map((x) => ` - ${x}`).join(\"\\n\"),",
+      "count": 1
+    },
+    {
+      "file": "__tests__/rls-audit.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const exempt = TABLES.filter((r) => !r.reachableByAnon && !r.reachableByAuthenticated).map((r) =>",
+      "count": 2
+    },
+    {
+      "file": "__tests__/rls-audit.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const missing = REACHABLE.filter((r) => !r.rlsEnabled).map((r) => r.name)",
+      "count": 2
+    },
+    {
+      "file": "__tests__/rls-audit.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const REACHABLE = TABLES.filter((r) => r.reachableByAnon || r.reachableByAuthenticated);",
+      "count": 1
+    },
+    {
+      "file": "__tests__/rls-audit.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const TABLES = s.relations.filter((r) => r.kind === \"table\");",
+      "count": 1
+    },
+    {
+      "file": "__tests__/rls-audit.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. policy.roles.some((r) => CLIENT_ROLES.has(r) || r === \"public\");",
+      "count": 1
+    },
+    {
+      "file": "__tests__/rls-audit.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 't' implicitly has an 'any' type. const notForced = TABLES.filter((t) => !t.rlsForced).map((t) => t.name);",
+      "count": 2
+    },
+    {
+      "file": "__tests__/rls-audit.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 't' implicitly has an 'any' type. missing.map((t) => ` - ${t}`).join(\"\\n\"),",
+      "count": 1
+    },
+    {
+      "file": "__tests__/rls-audit.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 't' implicitly has an 'any' type. TABLES.find((t) => t.name === \"audit_logs\")?.rlsEnabled,",
+      "count": 1
+    },
+    {
+      "file": "__tests__/rls-audit.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 't' implicitly has an 'any' type. TABLES.some((t) => t.name === name),",
+      "count": 1
+    },
+    {
+      "file": "__tests__/rpc-signatures.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'e' implicitly has an 'any' type. const names = named ? fn.args.split(\", \").map((e) => e.trim().split(/\\s+/)[0] ?? \"\") : [];",
+      "count": 1
+    },
+    {
+      "file": "__tests__/rpc-signatures.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'p' implicitly has an 'any' type. const inArgs = parts.filter((p) => !/^OUT\\s/i.test(p.trim()));",
+      "count": 1
+    },
+    {
+      "file": "__tests__/type-audit.test.ts",
+      "code": "TS7006",
+      "message": "Parameter 'r' implicitly has an 'any' type. const tables = s.relations.filter((r) => r.kind === \"table\").length;",
+      "count": 1
+    },
+    {
       "file": "_shared/bot/rate-limiter.ts",
       "code": "TS2339",
       "message": "Property 'request_count' does not exist on type 'SelectQueryError<\"Referencing missing column `window_start`\">'. if (existing.request_count >= maxRequests) {",
@@ -28,19 +460,19 @@
     {
       "file": "_shared/bot/rate-limiter.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(tableName)",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(tableName)",
       "count": 3
     },
     {
       "file": "_shared/bot/rate-limiter.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(tableName).insert({",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(tableName).insert({",
       "count": 1
     },
     {
       "file": "_shared/bot/rate-limiter.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(tableName).upsert({",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(tableName).upsert({",
       "count": 1
     },
     {
@@ -64,19 +496,19 @@
     {
       "file": "_shared/bot/user-state.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(tableName)",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(tableName)",
       "count": 2
     },
     {
       "file": "_shared/bot/user-state.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(tableName).delete().eq(idColumn, id);",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(tableName).delete().eq(idColumn, id);",
       "count": 1
     },
     {
       "file": "_shared/bot/user-state.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(tableName).upsert({",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(tableName).upsert({",
       "count": 1
     },
     {
@@ -88,13 +520,13 @@
     {
       "file": "_shared/metrics.ts",
       "code": "TS2345",
-      "message": "Argument of type '\"record_function_call\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 549 more ... | \"verify_phone_for_sms\"'. await supabase.rpc(\"record_function_call\", {",
+      "message": "Argument of type '\"record_function_call\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 558 more ... | \"verify_phone_for_sms\"'. await supabase.rpc(\"record_function_call\", {",
       "count": 1
     },
     {
       "file": "_shared/metrics.ts",
       "code": "TS2345",
-      "message": "Argument of type '\"update_circuit_status\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 549 more ... | \"verify_phone_for_sms\"'. await supabase.rpc(\"update_circuit_status\", {",
+      "message": "Argument of type '\"update_circuit_status\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 558 more ... | \"verify_phone_for_sms\"'. await supabase.rpc(\"update_circuit_status\", {",
       "count": 1
     },
     {
@@ -112,37 +544,13 @@
     {
       "file": "_shared/metrics.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"metrics.health_checks\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"metrics.health_checks\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(\"metrics.health_checks\").insert({",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"metrics.health_checks\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"metrics.health_checks\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(\"metrics.health_checks\").insert({",
       "count": 1
     },
     {
       "file": "_shared/metrics.ts",
       "code": "TS2769",
       "message": "No overload matches this call. Overload 1 of 2, '(values: { address_line_1?: string | undefined; address_line_2?: string | undefined; address_line_3?: string | undefined; city?: string | undefined; country?: string | undefined; country_id?: number | undefined; ... 14 more ...; updated_at?: string | undefined; } | ... 204 more ... | { ...; }, options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error. Object literal may only specify known properties, and 'service' does not exist in type '{ address_line_1?: string | undefined; address_line_2?: string | undefined; address_line_3?: string | undefined; city?: string | undefined; country?: string | undefined; country_id?: number | undefined; ... 14 more ...; updated_at?: string | undefined; } | ... 204 more ... | { ...; }'. Overload 2 of 2, '(values: ({ address_line_1?: string | undefined; address_line_2?: string | undefined; address_line_3?: string | undefined; city?: string | undefined; country?: string | undefined; country_id?: number | undefined; ... 14 more ...; updated_at?: string | undefined; } | ... 204 more ... | { ...; })[], options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error. Object literal may only specify known properties, and 'service' does not exist in type '({ address_line_1?: string | undefined; address_line_2?: string | undefined; address_line_3?: string | undefined; city?: string | undefined; country?: string | undefined; country_id?: number | undefined; ... 14 more ...; updated_at?: string | undefined; } | ... 204 more ... | { ...; })[]'. service,",
-      "count": 1
-    },
-    {
-      "file": "_shared/rate-limiter.ts",
-      "code": "TS2322",
-      "message": "Type 'Json | undefined' is not assignable to type 'boolean'. Type 'undefined' is not assignable to type 'boolean'. allowed: data.allowed,",
-      "count": 1
-    },
-    {
-      "file": "_shared/rate-limiter.ts",
-      "code": "TS2322",
-      "message": "Type 'Json | undefined' is not assignable to type 'number'. Type 'undefined' is not assignable to type 'number'. remaining: data.remaining,",
-      "count": 1
-    },
-    {
-      "file": "_shared/rate-limiter.ts",
-      "code": "TS2322",
-      "message": "Type 'Json | undefined' is not assignable to type 'number'. Type 'undefined' is not assignable to type 'number'. resetAt: data.reset_at,",
-      "count": 1
-    },
-    {
-      "file": "_shared/rate-limiter.ts",
-      "code": "TS2322",
-      "message": "Type 'Json | undefined' is not assignable to type 'number'. Type 'undefined' is not assignable to type 'number'. retryAfterMs: data.retry_after_ms,",
       "count": 1
     },
     {
@@ -202,25 +610,25 @@
     {
       "file": "api-v1-geocoding/lib/handlers.ts",
       "code": "TS2345",
-      "message": "Argument of type '\"calculate_user_matches\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 549 more ... | \"verify_phone_for_sms\"'. \"calculate_user_matches\",",
+      "message": "Argument of type '\"calculate_user_matches\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 558 more ... | \"verify_phone_for_sms\"'. \"calculate_user_matches\",",
       "count": 1
     },
     {
       "file": "api-v1-geocoding/lib/handlers.ts",
       "code": "TS2345",
-      "message": "Argument of type '\"detect_map_hotspots\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 549 more ... | \"verify_phone_for_sms\"'. const { data, error } = await supabase.rpc(\"detect_map_hotspots\", {",
+      "message": "Argument of type '\"detect_map_hotspots\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 558 more ... | \"verify_phone_for_sms\"'. const { data, error } = await supabase.rpc(\"detect_map_hotspots\", {",
       "count": 1
     },
     {
       "file": "api-v1-geocoding/lib/handlers.ts",
       "code": "TS2345",
-      "message": "Argument of type '\"detect_map_hotspots\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 549 more ... | \"verify_phone_for_sms\"'. const { data: hotspots } = await supabase.rpc(\"detect_map_hotspots\", {",
+      "message": "Argument of type '\"detect_map_hotspots\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 558 more ... | \"verify_phone_for_sms\"'. const { data: hotspots } = await supabase.rpc(\"detect_map_hotspots\", {",
       "count": 1
     },
     {
       "file": "api-v1-geocoding/lib/handlers.ts",
       "code": "TS2345",
-      "message": "Argument of type '\"update_network_profile\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 549 more ... | \"verify_phone_for_sms\"'. const { data, error } = await supabase.rpc(\"update_network_profile\", {",
+      "message": "Argument of type '\"update_network_profile\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 558 more ... | \"verify_phone_for_sms\"'. const { data, error } = await supabase.rpc(\"update_network_profile\", {",
       "count": 1
     },
     {
@@ -238,19 +646,19 @@
     {
       "file": "api-v1-geocoding/lib/handlers.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"map_interaction_events\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"map_interaction_events\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. const { error } = await supabase.from(\"map_interaction_events\").insert(event);",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"map_interaction_events\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"map_interaction_events\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. const { error } = await supabase.from(\"map_interaction_events\").insert(event);",
       "count": 1
     },
     {
       "file": "api-v1-geocoding/lib/handlers.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"user_map_preferences\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"user_map_preferences\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(\"user_map_preferences\")",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"user_map_preferences\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"user_map_preferences\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(\"user_map_preferences\")",
       "count": 2
     },
     {
       "file": "api-v1-geocoding/lib/handlers.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"user_network_profiles\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"user_network_profiles\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(\"user_network_profiles\")",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"user_network_profiles\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"user_network_profiles\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(\"user_network_profiles\")",
       "count": 2
     },
     {
@@ -286,19 +694,19 @@
     {
       "file": "api-v1-localization/handlers/generate-infoplist-strings.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"infoplist_translation_cache\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"infoplist_translation_cache\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(CACHE_TABLE)",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"infoplist_translation_cache\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"infoplist_translation_cache\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(CACHE_TABLE)",
       "count": 1
     },
     {
       "file": "api-v1-localization/handlers/generate-infoplist-strings.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"infoplist_translation_cache\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"infoplist_translation_cache\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(CACHE_TABLE).upsert({",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"infoplist_translation_cache\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"infoplist_translation_cache\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. await supabase.from(CACHE_TABLE).upsert({",
       "count": 1
     },
     {
       "file": "api-v1-localization/handlers/get-translations.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(tableName)",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type 'string' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(tableName)",
       "count": 1
     },
     {
@@ -346,13 +754,13 @@
     {
       "file": "api-v1-metrics/lib/queries.ts",
       "code": "TS2345",
-      "message": "Argument of type '\"get_request_count\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 549 more ... | \"verify_phone_for_sms\"'. \"get_request_count\",",
+      "message": "Argument of type '\"get_request_count\"' is not assignable to parameter of type '\"acknowledge_alert\" | \"add_bookmark_to_collection\" | \"add_post_to_series\" | \"add_to_moderation_queue\" | \"add_to_suppression_list\" | \"address_in_view\" | \"aggregate_daily_author_analytics\" | ... 558 more ... | \"verify_phone_for_sms\"'. \"get_request_count\",",
       "count": 1
     },
     {
       "file": "api-v1-metrics/lib/queries.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"api_requests\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"api_requests\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(\"api_requests\")",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"api_requests\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"api_requests\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(\"api_requests\")",
       "count": 1
     },
     {
@@ -490,7 +898,7 @@
     {
       "file": "telegram-bot-foodshare/services/impact.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"messages\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"messages\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(\"messages\")",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"messages\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"messages\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(\"messages\")",
       "count": 1
     },
     {
@@ -538,7 +946,7 @@
     {
       "file": "whatsapp-bot-foodshare/services/impact.ts",
       "code": "TS2769",
-      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"messages\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"roles\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"messages\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(\"messages\")",
+      "message": "No overload matches this call. Overload 1 of 2, '(relation: \"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"messages\"' is not assignable to parameter of type '\"posts\" | \"forum\" | \"challenges\" | \"comments\" | \"address\" | \"admin_audit_log\" | \"analytics_daily_stats\" | \"analytics_post_activity\" | \"analytics_staging_favorites\" | \"analytics_staging_listings\" | ... 195 more ... | \"whatsapp_user_states\"'. Overload 2 of 2, '(relation: \"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"): PostgrestQueryBuilder<...>', gave the following error. Argument of type '\"messages\"' is not assignable to parameter of type '\"analytics_full_favorites\" | \"analytics_full_listings\" | \"analytics_full_reviews\" | \"analytics_full_rooms\" | \"analytics_full_users\" | \"compression_efficiency\" | \"compression_stats\" | ... 7 more ... | \"vector_type_substituted\"'. .from(\"messages\")",
       "count": 1
     },
     {

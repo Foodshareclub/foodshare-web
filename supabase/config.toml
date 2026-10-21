@@ -62,6 +62,10 @@ verify_jwt = false
 [functions.api-v1-products]
 verify_jwt = false
 
+[functions.api-v1-revenuecat]
+# User GET validates auth; webhook POST validates a dedicated shared secret.
+verify_jwt = false
+
 [functions.api-v1-profile]
 verify_jwt = false
 
