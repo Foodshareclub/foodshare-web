@@ -38,10 +38,15 @@ async function deploy(options: Record<string, string> = {}, check = false) {
     // ask for a host without one.
     if (options.MOCK_NO_ENV !== "1") await Bun.write(environmentFile, oldEnvironment);
     await mkdir(join(unitDirectory, "foodshare-web.container.d"), { recursive: true });
-    await Bun.write(
-      join(unitDirectory, "foodshare-web.container"),
-      "[Container]\nImage=ghcr.io/foodshareclub/foodshare-web:latest\n",
-    );
+    // A host that was reprovisioned has no unit either. The deployment
+    // installs it from the repository, so the test has to be able to ask
+    // for a host without one.
+    if (options.MOCK_NO_UNIT !== "1") {
+      await Bun.write(
+        join(unitDirectory, "foodshare-web.container"),
+        "[Container]\nImage=ghcr.io/foodshareclub/foodshare-web:latest\n",
+      );
+    }
     await Bun.write(
       join(directory, "podman"),
       `#!/bin/bash
@@ -122,14 +127,21 @@ test("a service that is stopped is started by the deployment", async () => {
   expect(result.commands).toContain("systemctl --user restart foodshare-web");
   expect(result.dropin.trim()).toBe(`Image=${image}`);
 });
-test("a host that has never run the app stops the deployment", async () => {
-  // There is no previous image to roll back to, and the unit has to be
-  // installed before the app can be started at all.
-  const result = await deploy({ MOCK_MISSING: "1" });
+test("a host that has never run the app is installed and deployed", async () => {
+  // The deployment installs the unit and writes the environment file, so
+  // a host that was reprovisioned -- no container, no unit, no
+  // environment file -- is brought back by the pipeline rather than by a
+  // person over SSH.
+  const result = await deploy({ MOCK_MISSING: "1", MOCK_NO_UNIT: "1", MOCK_NO_ENV: "1" });
+  expect(result.code).toBe(0);
+  expect(result.commands).toContain("systemctl --user restart foodshare-web");
+  expect(result.dropin.trim()).toBe(`Image=${image}`);
+  expect(result.environment).toContain('NEXT_PUBLIC_SUPABASE_URL="https://new.example"');
+});
+test("a host that had no image has no pinned image after a rollback", async () => {
+  const result = await deploy({ MOCK_MISSING: "1", MOCK_HEALTH_FAIL: "1" });
   expect(result.code).not.toBe(0);
-  expect(result.error).toContain("does not exist on this host");
   expect(result.dropin).toBe("");
-  expect(result.environment).toBe(oldEnvironment);
 });
 test("a host with no environment file is given one", async () => {
   // The deployment writes the file, so requiring it to be there first was

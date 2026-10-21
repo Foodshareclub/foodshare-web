@@ -40,27 +40,44 @@ report_host() {
   if [ -f "$ENV_FILE" ]; then echo "  present" >&2; else echo "  missing" >&2; fi
 }
 
-# The container has to exist on this host, and it does not have to be running.
+# The Quadlet units have to be on the host, and a host that was
+# reprovisioned has none of them. The installation is the only thing that
+# puts them there, and the estate does not install over SSH by hand.
 #
-# It used to have to be running, which made the deployment unable to fix the
-# one state it exists to fix: a service that is down. A stopped container
-# still knows the image it was running, and that image is what the rollback
-# restores, so nothing is lost by letting the deployment start it. The
-# deployment starts it either way -- `systemctl --user restart` on a stopped
-# unit starts it -- and the health check below is what decides whether the
-# new image is good.
+# So the deployment installs them, from the repository it has just checked
+# out. The units in the repository are the source of truth -- the install
+# script copies the same files -- so what runs on the host is what is in
+# the repository.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+install_units() {
+  local unit installed=0
+  mkdir -p "$UNIT_DIR"
+  for unit in foodshare-web.container foodshare-web-network.network foodshare-cloudflared-web.container; do
+    if [ ! -f "$UNIT_DIR/$unit" ] && [ -f "$ROOT/$unit" ]; then
+      install -m 644 "$ROOT/$unit" "$UNIT_DIR/$unit"
+      installed=1
+    fi
+  done
+  if [ "$installed" = 1 ]; then systemctl --user daemon-reload; fi
+}
+install_units
+
+# The container does not have to exist. It used to have to be running,
+# which made the deployment unable to fix the one state it exists to fix: a
+# service that is down. A stopped container still knows the image it was
+# running, and that image is what the rollback restores, so nothing is
+# lost by letting the deployment start it. The deployment starts it either
+# way -- `systemctl --user restart` on a stopped unit starts it -- and the
+# health check below is what decides whether the new image is good.
 #
-# A container that does not exist at all is a different thing: the host has
-# never run the app, so there is no previous image to roll back to and the
-# unit has to be installed first.
+# A host that has never run the app is the same problem one step further
+# on: there is no previous image to roll back to, and the unit has to be
+# installed first. The installation is above, so the deployment can carry
+# on, and the rollback puts the host back the way it was -- no pinned
+# image, and the unit's own tag.
 previous_image=$(podman container inspect --format '{{.Image}}' foodshare-web 2>/dev/null || true)
-if [ -z "$previous_image" ]; then
-  echo "The Podman web container does not exist on this host; install and start the unit first (scripts/quadlet-install.sh)" >&2
-  report_host
-  exit 1
-fi
 if [ ! -f "$UNIT_DIR/foodshare-web.container" ]; then
-  echo "The Quadlet unit is not installed at $UNIT_DIR/foodshare-web.container; run scripts/quadlet-install.sh first" >&2
+  echo "The Quadlet unit could not be installed at $UNIT_DIR/foodshare-web.container" >&2
   report_host
   exit 1
 fi
@@ -116,8 +133,16 @@ fi
 
 umask 077
 snapshot=$(mktemp -d)
-registry_auth=$(mktemp)
-trap 'rm -rf "$snapshot" "$registry_auth"' EXIT
+# The registry credentials file is a path inside the snapshot directory,
+# and it does not exist yet. podman reads the file it is given before it
+# writes to it, and a file that is there but empty is not valid JSON, so
+# podman refuses to log in:
+#
+#     Error: get credentials: reading JSON file "...": unexpected end of JSON input
+#
+# A path that is not there yet is what podman expects.
+registry_auth="$snapshot/registry-auth.json"
+trap 'rm -rf "$snapshot"' EXIT
 if [ "$had_env" = 1 ]; then cp "$ENV_FILE" "$snapshot/env"; fi
 printf '%s' "$GITHUB_TOKEN" | REGISTRY_AUTH_FILE="$registry_auth" podman login ghcr.io --username "$GITHUB_ACTOR" --password-stdin >/dev/null
 REGISTRY_AUTH_FILE="$registry_auth" podman pull "$DEPLOY_IMAGE"
@@ -189,8 +214,14 @@ rollback() {
     rm -f "$ENV_FILE" 2>/dev/null || sudo -n rm -f "$ENV_FILE"
   fi
   # The image that was running, by id. The unit's `:latest` tag may have
-  # moved since it was pulled, so the tag is not what was running.
-  printf 'Image=%s\n' "$previous_image" > "$DROPIN_FILE"
+  # moved since it was pulled, so the tag is not what was running. A host
+  # that had never run the app had no image at all, so it goes back to the
+  # image its own unit names.
+  if [ -n "$previous_image" ]; then
+    printf 'Image=%s\n' "$previous_image" > "$DROPIN_FILE"
+  else
+    rm -f "$DROPIN_FILE"
+  fi
   systemctl --user daemon-reload
   systemctl --user restart foodshare-web
 }
@@ -198,6 +229,10 @@ mkdir -p "$DROPIN_DIR"
 printf 'Image=%s\n' "$DEPLOY_IMAGE" > "$DROPIN_FILE"
 chmod 600 "$DROPIN_FILE"
 systemctl --user daemon-reload
+# The unit has to start when the machine does. A unit that is not enabled
+# leaves the site dark after a reboot, which is how it stayed dark for
+# three weeks.
+systemctl --user enable foodshare-web >/dev/null 2>&1 || true
 if ! systemctl --user restart foodshare-web; then
   rollback
   exit 1
