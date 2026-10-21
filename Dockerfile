@@ -124,6 +124,18 @@ ENV NEXT_PUBLIC_APP_VERSION=$NEXT_PUBLIC_APP_VERSION
 ENV NEXT_PUBLIC_GIT_COMMIT_SHA=$NEXT_PUBLIC_GIT_COMMIT_SHA
 ENV NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
+# The build-time type check is done by `tsrs` here, not by `next build`.
+# `next build` type-checks with the project's own TypeScript, and this project
+# pins TypeScript 7.1.0-beta, which ships as a per-platform binary. The image
+# is built for linux/arm64, where the lockfile has no resolution for that
+# binary, so the check would fail with "Unable to resolve
+# @typescript/typescript-linux-arm64" and the image would never be built.
+#
+# `tsrs` has a linux/arm64 binary, so the image runs it directly, and CI
+# checks the same commit twice before the image is built — `type-check` and
+# `type-check:tsc`, both of which gate the `build` job.
+ENV SKIP_BUILD_TYPECHECK=true
+
 # The Sentry auth token is a credential, and an `ARG` value is recorded in the
 # layer's metadata — so it survives in the image history, visible to anyone who
 # can pull a builder layer, and is exposed to every process in this stage. It is
@@ -141,6 +153,10 @@ ENV NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 # populated; until then the ARG is still passed, and the ARG is what makes the
 # upload work — which is the trade this comment exists to make visible rather
 # than to hide.
+#
+# The type check runs before the build, with `tsrs`, for the reason
+# `SKIP_BUILD_TYPECHECK` above sets out.
+RUN bun run type-check
 RUN bun run build
 
 # ---- Stage 3: Production runner ----

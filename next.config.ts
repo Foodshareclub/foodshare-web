@@ -42,8 +42,23 @@ const nextConfig: NextConfig = {
   },
 
   // TypeScript is checked in CI (`bun run type-check`); fail builds on type errors.
+  //
+  // The image build turns the build-time check off and runs `bun run type-check`
+  // itself, because the check `next build` performs needs the native TypeScript
+  // compiler, and this project pins TypeScript 7.1.0-beta — a compiler that
+  // ships as a per-platform binary. The image is built for linux/arm64, and the
+  // lockfile has no resolution for the linux/arm64 variant of that binary: npm
+  // published it after the lockfile was written, and Bun does not add a
+  // platform variant to a lockfile that already has the package. So the check
+  // fails in the image with "Unable to resolve
+  // @typescript/typescript-linux-arm64" and the image is never built.
+  //
+  // `tsrs`, the checker this repository uses, does have a linux/arm64 binary
+  // and is what the image runs instead. CI checks the same commit twice before
+  // the image is built — `type-check` and `type-check:tsc`, both of which gate
+  // the `build` job — so nothing is checked less often than it was.
   typescript: {
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: process.env.SKIP_BUILD_TYPECHECK === "true",
   },
 
   // HTML-limited bots that cannot execute JavaScript
