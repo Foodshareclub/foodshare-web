@@ -83,7 +83,10 @@ case "$1 $2" in
   "secret inspect") [ "\${MOCK_SECRET_EXISTS:-0}" = 1 ] ;;
   "secret create") cat >/dev/null ;;
   "exec foodshare-web")
-    if [ "\${MOCK_INTERRUPT:-0}" = 1 ]; then sleep 60; fi
+    if [ "\${MOCK_INTERRUPT:-0}" = 1 ]; then
+      touch "$MOCK_DIRECTORY/health-probe-started"
+      /bin/sleep 2
+    fi
     [ "\${MOCK_HEALTH_FAIL:-0}" != 1 ] ;;
   "exec -i") cat >/dev/null; [ "\${MOCK_API_FAIL:-0}" != 1 ] ;;
   *) exit 2 ;;
@@ -132,12 +135,12 @@ fi
     // check has not answered, and that is the state the host is left in
     // unless the deployment puts it back.
     if (options.MOCK_INTERRUPT === "1") {
-      const dropinPath = join(unitDirectory, "foodshare-web.container.d", "50-image.conf");
-      for (let attempt = 0; attempt < 100; attempt++) {
-        const pinned = await Bun.file(dropinPath)
-          .text()
-          .catch(() => "");
-        if (pinned.includes(image)) break;
+      // Wait until the health probe has actually started, so the
+      // interruption lands in the middle of the deployment and not after
+      // it. The mock's own `sleep` exits at once, so the wait is the
+      // system one, by its full path.
+      for (let attempt = 0; attempt < 200; attempt++) {
+        if (await Bun.file(join(directory, "health-probe-started")).exists()) break;
         await Bun.sleep(50);
       }
       child.kill("SIGTERM");
