@@ -46,6 +46,7 @@ printf 'podman %s\\n' "$*" >> "$MOCK_DIRECTORY/commands"
 if [ "\${1:-}" = --config ]; then shift 2; fi
 case "$1 $2" in
   "container inspect")
+    if [ "\${MOCK_MISSING:-0}" = 1 ]; then exit 1; fi
     if [[ "$*" == *State.Running* ]]; then echo "\${MOCK_RUNNING:-true}"; else echo sha256:previous; fi ;;
   "login ghcr.io") cat >/dev/null ;;
   "pull "*) [ "\${MOCK_PULL_FAIL:-0}" != 1 ] ;;
@@ -109,9 +110,21 @@ test("production preflight only inspects the running service and the unit", asyn
   expect(result.commands).not.toContain("login");
   expect(result.commands).not.toContain("pull");
 });
-test("a service that is not running stops the deployment", async () => {
+test("a service that is stopped is started by the deployment", async () => {
+  // A stopped service is the state the deployment exists to fix, so it must
+  // not be the state that stops the deployment. The container still knows
+  // the image it was running, which is what the rollback restores.
   const result = await deploy({ MOCK_RUNNING: "false" });
+  expect(result.code).toBe(0);
+  expect(result.commands).toContain("systemctl --user restart foodshare-web");
+  expect(result.dropin.trim()).toBe(`Image=${image}`);
+});
+test("a host that has never run the app stops the deployment", async () => {
+  // There is no previous image to roll back to, and the unit has to be
+  // installed before the app can be started at all.
+  const result = await deploy({ MOCK_MISSING: "1" });
   expect(result.code).not.toBe(0);
+  expect(result.error).toContain("does not exist on this host");
   expect(result.dropin).toBe("");
   expect(result.environment).toBe(oldEnvironment);
 });

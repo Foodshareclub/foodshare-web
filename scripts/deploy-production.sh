@@ -25,8 +25,22 @@ UNIT_DIR="${FOODSHARE_WEB_UNIT_DIR:-$HOME/.config/containers/systemd}"
 DROPIN_DIR="$UNIT_DIR/foodshare-web.container.d"
 DROPIN_FILE="$DROPIN_DIR/50-image.conf"
 
-if [ "$(podman container inspect --format '{{.State.Running}}' foodshare-web 2>/dev/null || true)" != true ]; then
-  echo "The existing Podman web service must be running before deployment" >&2
+# The container has to exist on this host, and it does not have to be running.
+#
+# It used to have to be running, which made the deployment unable to fix the
+# one state it exists to fix: a service that is down. A stopped container
+# still knows the image it was running, and that image is what the rollback
+# restores, so nothing is lost by letting the deployment start it. The
+# deployment starts it either way -- `systemctl --user restart` on a stopped
+# unit starts it -- and the health check below is what decides whether the
+# new image is good.
+#
+# A container that does not exist at all is a different thing: the host has
+# never run the app, so there is no previous image to roll back to and the
+# unit has to be installed first.
+previous_image=$(podman container inspect --format '{{.Image}}' foodshare-web 2>/dev/null || true)
+if [ -z "$previous_image" ]; then
+  echo "The Podman web container does not exist on this host; install and start the unit first (scripts/quadlet-install.sh)" >&2
   exit 1
 fi
 if [ ! -f "$UNIT_DIR/foodshare-web.container" ]; then
@@ -78,7 +92,6 @@ snapshot=$(mktemp -d)
 registry_auth=$(mktemp)
 trap 'rm -rf "$snapshot" "$registry_auth"' EXIT
 cp "$ENV_FILE" "$snapshot/env"
-previous_image=$(podman container inspect --format '{{.Image}}' foodshare-web)
 printf '%s' "$GITHUB_TOKEN" | REGISTRY_AUTH_FILE="$registry_auth" podman login ghcr.io --username "$GITHUB_ACTOR" --password-stdin >/dev/null
 REGISTRY_AUTH_FILE="$registry_auth" podman pull "$DEPLOY_IMAGE"
 revision=$(podman image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$DEPLOY_IMAGE")
