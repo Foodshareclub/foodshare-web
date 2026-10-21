@@ -1,3 +1,4 @@
+// Built by wasm-pack 0.13.1. Do not edit: this file is generated.
 /* @ts-self-types="./foodshare_compression.d.ts" */
 
 /**
