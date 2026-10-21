@@ -80,6 +80,8 @@ case "$1 $2" in
   "login ghcr.io") cat >/dev/null ;;
   "pull "*) [ "\${MOCK_PULL_FAIL:-0}" != 1 ] ;;
   "image inspect") echo "\${MOCK_REVISION:-$DEPLOY_SHA}" ;;
+  "secret inspect") [ "\${MOCK_SECRET_EXISTS:-0}" = 1 ] ;;
+  "secret create") cat >/dev/null ;;
   "exec foodshare-web") [ "\${MOCK_HEALTH_FAIL:-0}" != 1 ] ;;
   "exec -i") cat >/dev/null; [ "\${MOCK_API_FAIL:-0}" != 1 ] ;;
   *) exit 2 ;;
@@ -175,12 +177,33 @@ test("a host running the newer generation is not given the older one's units", a
   // The two generations name their tunnel unit differently, so installing
   // the wrong one puts a second tunnel on a host that already has one:
   // two connectors, one token, and the second one is started by nothing.
-  const result = await deploy({ MOCK_UNIT_GENERATION: "systemd" });
+  const result = await deploy({
+    MOCK_UNIT_GENERATION: "systemd",
+    CLOUDFLARE_TUNNEL_TOKEN: "tunnel-token",
+  });
   expect(result.code).toBe(0);
   expect(result.units).toContain("foodshare.network");
   expect(result.units).toContain("foodshare-cloudflared.container");
   expect(result.units).not.toContain("foodshare-cloudflared-web.container");
   expect(result.units).not.toContain("foodshare-web-network.network");
+});
+test("a host whose tunnel reads a secret is given one", async () => {
+  // The tunnel on a host that runs the newer unit reads its token from a
+  // podman secret, and the secret is not there unless somebody makes it.
+  const result = await deploy({ MOCK_UNIT_GENERATION: "systemd", CLOUDFLARE_TUNNEL_TOKEN: "tunnel-token" });
+  expect(result.code).toBe(0);
+  expect(result.commands).toContain("secret create cf_tunnel_token");
+});
+test("a secret that is already there is left alone", async () => {
+  // Replacing a secret that a running container has mounted is a way to
+  // break the tunnel that is working.
+  const result = await deploy({
+    MOCK_UNIT_GENERATION: "systemd",
+    MOCK_SECRET_EXISTS: "1",
+    CLOUDFLARE_TUNNEL_TOKEN: "tunnel-token",
+  });
+  expect(result.code).toBe(0);
+  expect(result.commands).not.toContain("secret create");
 });
 test("a host that has never run the app is installed and deployed", async () => {
   // The deployment installs the unit and writes the environment file, so

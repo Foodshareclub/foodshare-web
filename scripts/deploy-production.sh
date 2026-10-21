@@ -83,10 +83,12 @@ report_host() {
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 unit_source_dir="$ROOT"
 unit_names="foodshare-web.container foodshare-cloudflared-web.container foodshare-web-network.network"
+tunnel_unit_name="foodshare-cloudflared-web.container"
 if [ -f "$UNIT_DIR/foodshare-web.container" ]; then
   if cmp -s "$UNIT_DIR/foodshare-web.container" "$ROOT/systemd/foodshare-web.container"; then
     unit_source_dir="$ROOT/systemd"
     unit_names="foodshare-web.container foodshare-cloudflared.container foodshare.network"
+    tunnel_unit_name="foodshare-cloudflared.container"
   fi
 fi
 
@@ -237,9 +239,43 @@ write_env_file() {
 
 write_env_file "$snapshot/env.staged"
 
+
 # The environment file is in place, so the units can be installed and the
 # generator can build them.
 install_units
+
+# The tunnel's token is a podman secret on a host that runs the tunnel unit
+# that reads one, and a line in the environment file on a host that runs
+# the other. The environment file is written either way -- it is where the
+# older unit looks -- but on a host that reads a secret, the secret is what
+# the tunnel actually reads, and it is not there unless somebody made it.
+#
+# So the secret is made when the host's tunnel unit wants one and there is
+# not one.
+#
+# An existing secret is never replaced. A secret is a file that a running
+# container has mounted, and replacing it underneath that container is a
+# way to break the tunnel that is working.
+tunnel_needs_secret=0
+if [ -f "$UNIT_DIR/$tunnel_unit_name" ] && grep -qE "^Secret=cf_tunnel_token" "$UNIT_DIR/$tunnel_unit_name"; then
+  if ! podman secret inspect cf_tunnel_token >/dev/null 2>&1; then
+    tunnel_needs_secret=1
+  fi
+fi
+if [ "$tunnel_needs_secret" = 1 ]; then
+  if [ -z "${CLOUDFLARE_TUNNEL_TOKEN:-}" ]; then
+    echo "The tunnel on this host reads its token from a secret, and there is no" >&2
+    echo "secret, and no token was given to make one with." >&2
+    exit 1
+  fi
+  tunnel_token_file="$snapshot/tunnel.token"
+  printf '%s' "$CLOUDFLARE_TUNNEL_TOKEN" > "$tunnel_token_file"
+  chmod 600 "$tunnel_token_file"
+  podman secret create cf_tunnel_token "$tunnel_token_file"
+  rm -f "$tunnel_token_file"
+  echo "Created the podman secret the tunnel on this host reads."
+fi
+
 if [ ! -f "$UNIT_DIR/foodshare-web.container" ]; then
   echo "The Quadlet unit could not be installed at $UNIT_DIR/foodshare-web.container" >&2
   report_host
