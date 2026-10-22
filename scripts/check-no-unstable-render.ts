@@ -41,8 +41,8 @@
  * The build must exist: `bun run build` first.
  */
 
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync } from "bun:fs";
+import { join } from "bun:path";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const PORT = Number(process.env.CHECK_PORT ?? 3199);
