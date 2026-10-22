@@ -10,9 +10,14 @@ creeps back in, and it scans the CI workflows as well as the source tree.
 **Type checking is `tsrs`, not `tsc`.** `tsrs` is the Rust port of the
 TypeScript 7 compiler, from the Oxc project; it checks this tree in about
 half a second against a few minutes for TypeScript 5. `bun run type-check`
-runs it, and `bun run type-check:tsc` runs `tsc` on TypeScript 7.1 as a
-strict parity gate — both run in CI, so a difference between the two fails
-the build rather than hiding in a comment.
+runs it, and it runs in CI on every push. There is no second opinion
+here: a bug in the checker would be a bug in the gate, and the gate is
+what stands between a change and production.
+
+The `typescript` package is still a dependency, and it is not a checker
+here: Next.js refuses to build a project that has a `tsconfig.json` without
+it, and it will try to install it with npm, which this toolchain does not
+have. It is there so the build can run; `tsrs` is what checks.
 
 TypeScript 7 has no JavaScript compiler API, so the guard scripts that read
 the *shape* of the source — `scripts/lib/ts-ast.ts` and the four that use it
@@ -48,7 +53,6 @@ All deployments are **fully automated** via GitHub Actions in full scale. **Neve
 | `bun run dev`               | Dev server (Turbopack, port 3000)                               |
 | `bun run build`             | Production build                                                |
 | `bun run type-check`        | TypeScript checking (`tsrs`, the Rust port of `tsc`)            |
-| `bun run type-check:tsc`    | Same check via `tsc` on TypeScript 7.1 (strict parity gate)    |
 | `bun run check:no-node`     | Fail if Node.js creeps back into the toolchain                 |
 | `bun run lint:fix`          | oxlint (primary) + biome format; runs both                      |
 | `bun run test:ci`           | Run all tests with bun:test                                     |

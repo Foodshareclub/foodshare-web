@@ -76,7 +76,6 @@ jobs:
           - "lint:oxlint"
           - "lint:biome"
           - type-check
-          - "type-check:tsc"
           - "check:no-docker"
           - "check:no-node"
           - test
@@ -187,6 +186,11 @@ jobs:
         run: bun run build
         env:
           SKIP_ENV_VALIDATION: "true"
+          # The type check is `tsrs`, and it ran already, in the validate
+          # job that gates this one. The build does not type-check a
+          # second time with a second compiler: there is no second
+          # compiler here.
+          SKIP_BUILD_TYPECHECK: "true"
           NEXT_TELEMETRY_DISABLED: "1"
           NEXT_PUBLIC_SUPABASE_URL: https://api.${{ secrets.SITE_DOMAIN }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}

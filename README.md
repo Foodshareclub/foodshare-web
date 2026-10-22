@@ -102,7 +102,6 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 | `bun run start`             | Start production server                 |
 | `bun run lint:fix`          | Fix oxlint and biome formatting issues  |
 | `bun run type-check`        | TypeScript type checking (`bun check`)  |
-| `bun run type-check:tsc`    | TypeScript type checking (`tsc`)        |
 | `bun run test:ci`           | Run all tests with bun:test (CI)        |
 | `bun run e2e`               | Run the Playwright end-to-end suite     |
 | `bun run test:build`        | Run type-check + lint + build           |

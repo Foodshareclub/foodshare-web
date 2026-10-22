@@ -132,8 +132,8 @@ ENV NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 # @typescript/typescript-linux-arm64" and the image would never be built.
 #
 # `tsrs` has a linux/arm64 binary, so the image runs it directly, and CI
-# checks the same commit twice before the image is built — `type-check` and
-# `type-check:tsc`, both of which gate the `build` job.
+# checks the same commit before the image is built — `type-check`, which
+# gates the `build` job.
 ENV SKIP_BUILD_TYPECHECK=true
 
 # The Sentry auth token is a credential, and an `ARG` value is recorded in the

@@ -59,7 +59,6 @@
     "translations:check": "bun scripts/check-translations.ts",
     "translations:sync": "bun scripts/sync-translations.ts",
     "type-check": "bun run tsrs --noEmit",
-    "type-check:tsc": "bun run tsc --noEmit",
     "verify:quadlet": "bash scripts/verify-quadlet.sh",
     "verify:sentry": "bun scripts/verify-sentry.ts"
   },
