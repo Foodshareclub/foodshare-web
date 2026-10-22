@@ -30,11 +30,26 @@ version the repository pinned — and `bun run biome` runs it on Bun, where
 honours that shebang.
 
 **Type checking is `tsrs`, not `tsc`.** `tsrs` is the Rust port of the
-TypeScript 7 compiler, from the Oxc project; it checks this tree in about
-half a second against a few minutes for TypeScript 5. `bun run type-check`
-runs it, and it runs in CI on every push. There is no second opinion
-here: a bug in the checker would be a bug in the gate, and the gate is
-what stands between a change and production.
+TypeScript 7 compiler, from the Oxc project, incubated with Cloudflare
+and VoidZero. `bun run type-check` runs it, and it runs in CI on every
+push. There is no second opinion here: a bug in the checker would be a
+bug in the gate, and the gate is what stands between a change and
+production.
+
+The speed is not the reason on this tree, and a figure from elsewhere is
+not this tree's figure. Measured here, over the 1,222 TypeScript files
+in `src/`, `tsrs` takes about 0.3 seconds and TypeScript 7.1 beta takes
+about 0.4 — close to each other, because TypeScript 7.1 already carries
+optimisations that were upstreamed from `tsrs`. Cloudflare's comparison,
+at the same worker count, has `tsrs` up to 8x faster than TypeScript 7.0
+and using about 70% less memory. Those are the numbers worth reading: a
+figure taken with a different configuration, or against TypeScript 5, is
+not a comparison.
+
+`tsrs` is a faithful port rather than a fork, so the TypeScript team
+stays in control of the language. It differs from upstream in small ways
+today — the order diagnostics are printed in is one — and upstream is
+reducing those differences towards a stable release.
 
 The `typescript` package is still a dependency, and it is not a checker
 here: Next.js refuses to build a project that has a `tsconfig.json` without
