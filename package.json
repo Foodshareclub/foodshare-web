@@ -20,6 +20,7 @@
     "check:no-docker": "bun scripts/check-no-docker.ts",
     "check:no-node": "bun scripts/check-no-node.ts",
     "check:bun-modules": "bun scripts/check-bun-modules.ts",
+    "check:json": "bun scripts/check-json.ts",
     "check:tsconfig-shape": "bun scripts/check-tsconfig-shape.ts",
     "check:yaml": "bun scripts/check-yaml.ts",
     "build:check": "bun run build && bun scripts/check-bundle-size.ts",
