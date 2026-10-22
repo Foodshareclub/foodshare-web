@@ -7,7 +7,7 @@
  * 3. Verification code submission -> updates profile to verified, sends admin alert & welcome menu
  */
 
-import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import {
   handleEmailInput,
   handleVerificationCode,

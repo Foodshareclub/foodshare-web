@@ -5,8 +5,8 @@
  * Verifies correct rate limit enforcement, window calculations, and bypass logic.
  */
 
-import { assert, assertEquals, assertExists } from "https://deno.land/std@0.208.0/assert/mod.ts";
-import { beforeEach, describe, it } from "https://deno.land/std@0.208.0/testing/bdd.ts";
+import { assert, assertEquals, assertExists } from "@std/assert";
+import { beforeEach, describe, it } from "@std/testing/bdd";
 
 // Rate limit configuration (mirrors _shared/rate-limit-config.ts)
 interface RateLimitConfig {

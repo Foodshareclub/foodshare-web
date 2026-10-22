@@ -4,7 +4,7 @@
  * Tests webhook signature verification for WhatsApp and Telegram bots.
  */
 
-import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import { timingSafeEqual } from "../../_shared/utils.ts";
 
 // ============================================================================

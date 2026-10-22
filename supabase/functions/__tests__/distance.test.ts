@@ -9,7 +9,7 @@
  * - API response transformation
  */
 
-import { assertAlmostEquals, assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertAlmostEquals, assertEquals } from "@std/assert";
 
 import {
   bearingToCardinal,

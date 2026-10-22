@@ -4,11 +4,11 @@
  * Provides mocking and helper functions for testing Supabase Edge Functions.
  */
 
-import { assertEquals, assertExists } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals, assertExists } from "@std/assert";
 
 // Re-export assertions for convenience
 export { assertEquals, assertExists };
-export { assertRejects, assertThrows } from "https://deno.land/std@0.208.0/assert/mod.ts";
+export { assertRejects, assertThrows } from "@std/assert";
 
 // ============================================================================
 // Types

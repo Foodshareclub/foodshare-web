@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { bodyLimit } from "npm:hono@^4/body-limit";
+import { bodyLimit } from "hono/body-limit";
 import { z } from "zod";
 import { reconcile, type ReconciliationPorts } from "./reconcile.ts";
 

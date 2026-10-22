@@ -5,7 +5,7 @@
  * - handleVerifySend, handleVerifyConfirm, handleVerifyResend
  */
 
-import { assertEquals, assertExists } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals, assertExists } from "@std/assert";
 
 // We test the handler logic by importing the handlers directly.
 // Since they depend on Supabase client and email service, we mock those.

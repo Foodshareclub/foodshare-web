@@ -2,7 +2,7 @@
  * Web Push Provider (VAPID)
  */
 
-import webpush from "npm:web-push@3.6.7";
+import webpush from "web-push";
 import { CircuitBreakerError, withCircuitBreaker } from "../../../_shared/circuit-breaker.ts";
 import type { DeviceToken, PushPayload, SendResult } from "./types.ts";
 import { generateDeepLink } from "./types.ts";

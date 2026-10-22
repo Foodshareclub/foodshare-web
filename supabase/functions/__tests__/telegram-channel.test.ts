@@ -6,7 +6,7 @@
  * - telegram-bot-foodshare/handlers/auth.ts (handleDeepLinkToken, handleUnlinkCommand)
  */
 
-import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import { TelegramChannelAdapter } from "../api-v1-notifications/lib/channels/telegram.ts";
 import { handleDeepLinkToken } from "../telegram-bot-foodshare/handlers/auth.ts";
 

@@ -5,7 +5,7 @@
  * Tests all priority chains and edge cases.
  */
 
-import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import {
   extractDisplayName,
   formatGreeting,

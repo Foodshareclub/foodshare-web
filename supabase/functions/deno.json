@@ -13,11 +13,17 @@
   "imports": {
     "hono": "npm:hono@^4",
     "hono/": "npm:hono@^4/",
+    "hono/body-limit": "npm:hono@^4/body-limit",
     "jose": "npm:jose@5.2.2",
     "zod": "npm:zod@3.22.4",
     "@sentry/deno": "npm:@sentry/deno@^8",
     "@supabase/supabase-js": "npm:@supabase/supabase-js@2.43.4",
     "standardwebhooks": "npm:standardwebhooks@^1.0.0",
+    "exifreader": "npm:exifreader@4.23.3",
+    "web-push": "npm:web-push@3.6.7",
+    "@huggingface/inference": "npm:@huggingface/inference@2.6.4",
+    "@std/assert": "jsr:@std/assert@1",
+    "@std/testing/bdd": "jsr:@std/testing@1/bdd",
     "@shared/": "./_shared/",
     "@shared": "./_shared/index.ts"
   },
@@ -29,7 +35,7 @@
     // so while a known set of type errors exists it fails before running a
     // single assertion — which makes CI permanently red, and a permanently red
     // check is one nobody reads. The checking is not disabled, it is moved:
-    // `__tests__/typecheck-baseline.test.ts` runs `deno check` over all 414
+    // `__tests__/typecheck-baseline.test.ts` runs `tsrs` over all the
     // TypeScript files itself and fails on any error outside
     // `typecheck-baseline.json`, and fails again on any baseline entry that has
     // stopped occurring. Both halves are stricter than what is being given up
@@ -38,7 +44,15 @@
     // If you are here because types seem unchecked: they are checked, on every
     // run, and the current debt is printed by that test.
     "test": "DENO_JOBS=1 deno test --allow-all --no-check",
-    "check": "deno check",
+    // The one type checker this repository uses. It reads this directory's
+    // tsconfig, so the import map's aliases and the Deno surface the
+    // estate declares in `types/` are the ones it checks against.
+    "check": "cd ../.. && bun run tsrs -p supabase/functions/tsconfig.json --noEmit",
+    // The runtime's own check: the estate's `types/deno.d.ts` declares the
+    // Deno API the estate uses, and this is the platform's own definition
+    // of it. It is not a second gate -- the budget is the gate -- but it
+    // is the ground truth the declaration is written against.
+    "check:deno": "deno check",
     "lint": "deno lint",
     "lint:oxlint": "oxlint",
     "lint:biome": "biome check .",

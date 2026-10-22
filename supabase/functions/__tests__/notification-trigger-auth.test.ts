@@ -16,7 +16,7 @@
  *     either, because the Host it arrives with is not one the bypass knows.
  */
 
-import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import { authenticate } from "../api-v1-notifications/lib/auth.ts";
 
 const INTERNAL_SECRET = "internal-secret-for-tests";

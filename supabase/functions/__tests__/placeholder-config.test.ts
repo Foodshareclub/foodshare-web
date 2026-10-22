@@ -13,7 +13,7 @@
  * that was never there as a broken service.
  */
 
-import { assert, assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assert, assertEquals } from "@std/assert";
 import {
   isConfigured,
   isMissingValue,

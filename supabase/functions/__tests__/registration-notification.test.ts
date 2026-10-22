@@ -4,7 +4,7 @@
  * Tests for handleTriggerNewUser in api-v1-notifications/lib/handlers/triggers.ts
  */
 
-import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import {
   handleTriggerNewUser,
   handleTriggerUserVerified,

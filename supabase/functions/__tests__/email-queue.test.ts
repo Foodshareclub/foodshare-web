@@ -14,7 +14,7 @@
  * on an address that will never accept mail. Both directions are pinned.
  */
 
-import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import { getErrorCode, isHardBounce } from "../api-v1-email/lib/queue.ts";
 
 // =============================================================================

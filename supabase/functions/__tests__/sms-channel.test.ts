@@ -4,7 +4,7 @@
  * Tests for api-v1-notifications/lib/channels/sms.ts
  */
 
-import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import { SmsChannelAdapter } from "../api-v1-notifications/lib/channels/sms.ts";
 
 // =============================================================================

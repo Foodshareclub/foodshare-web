@@ -4,7 +4,7 @@
  * Comprehensive tests for the cross-platform subscription webhook handler.
  */
 
-import { assertEquals, assertStringIncludes } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 
 import {
   getEventSeverity,

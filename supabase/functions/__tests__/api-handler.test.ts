@@ -4,7 +4,7 @@
  * Comprehensive test suite for the unified API handler
  */
 
-import { assertEquals, assertExists } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals, assertExists } from "@std/assert";
 import { createAPIHandler, created, ok, paginated } from "../_shared/api-handler.ts";
 import { z } from "zod";
 

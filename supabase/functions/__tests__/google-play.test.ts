@@ -8,7 +8,7 @@
  * - verifyGoogleJWT: expired, invalid signature, valid JWT
  */
 
-import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import {
   _clearJwksCache,
   base64UrlDecode,

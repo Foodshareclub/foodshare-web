@@ -2,7 +2,7 @@ import {
   assertEquals,
   assertRejects,
   assertThrows,
-} from "https://deno.land/std@0.208.0/assert/mod.ts";
+} from "@std/assert";
 import { BillingAuthenticationError, createRevenueCatApp } from "../api-v1-revenuecat/app.ts";
 import {
   productionAccess,

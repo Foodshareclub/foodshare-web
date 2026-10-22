@@ -11,8 +11,17 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "paths": {
+      "@shared/*": ["./_shared/*"],
+      "@shared": ["./_shared/index.ts"]
+    }
   },
-  "include": ["./**/*.ts"],
+  "include": [
+    "./**/*.ts",
+    "../../types/deno.d.ts",
+    "../../types/std-assert.d.ts",
+    "../../types/std-testing-bdd.d.ts"
+  ],
   "exclude": ["node_modules"]
 }

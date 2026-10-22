@@ -2,7 +2,7 @@
  * Circuit Breaker Tests
  */
 
-import { assertEquals, assertRejects } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals, assertRejects } from "@std/assert";
 import {
   CircuitBreakerError,
   getCircuitStatus,

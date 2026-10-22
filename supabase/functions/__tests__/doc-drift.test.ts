@@ -52,7 +52,7 @@
  * to make being wrong expensive, not to make being wrong impossible.
  */
 
-import { assert, assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assert, assertEquals } from "@std/assert";
 
 import { migrationFiles, type Mode, modeFor } from "../../oracle/apply.ts";
 import { assertCatalogIsCurrent, Coverage, schema } from "../../oracle/read.ts";

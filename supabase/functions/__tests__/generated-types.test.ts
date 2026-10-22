@@ -15,7 +15,7 @@
  * and when a new relation the code uses is not in the type.
  */
 
-import { assert, assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assert, assertEquals } from "@std/assert";
 
 import type { Catalog } from "../../oracle/catalog.ts";
 import { assertCatalogIsCurrent, schema } from "../../oracle/read.ts";

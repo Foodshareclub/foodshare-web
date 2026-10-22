@@ -44,9 +44,7 @@ export async function runHfInference(
     };
   }
 
-  const { HfInference } = await import(
-    "https://esm.sh/@huggingface/inference@2.6.4"
-  );
+  const { HfInference } = await import("@huggingface/inference");
   const hf = new HfInference(hfToken);
   let result: unknown;
   let contentType = "application/json";

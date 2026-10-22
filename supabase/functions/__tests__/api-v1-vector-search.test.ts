@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals, assertRejects } from "@std/assert";
 import type { HandlerContext } from "../_shared/api-handler.ts";
 import { createContext } from "../_shared/context.ts";
 import { handleGet, handlePost, normalizeDimensions } from "../api-v1-vector-search/index.ts";

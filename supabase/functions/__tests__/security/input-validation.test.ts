@@ -4,7 +4,7 @@
  * Tests for numeric input safety, email validation, and boundary conditions.
  */
 
-import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 
 import {
   parseFloatSafe,

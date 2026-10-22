@@ -5,7 +5,7 @@
  * Tests schema validation, room operations, and message handling.
  */
 
-import { assertEquals, assertExists } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals, assertExists } from "@std/assert";
 import { z } from "zod";
 
 // =============================================================================

@@ -39,7 +39,7 @@
  * instead, which is the only way to notice it moving.
  */
 
-import { assert, assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assert, assertEquals } from "@std/assert";
 
 import {
   type DiagnosticCount,
@@ -65,7 +65,7 @@ const key = (d: { file: string; code: string; message: string }) =>
   `${d.file}|${d.code}|${d.message}`;
 
 Deno.test("typecheck: the baseline is the schema this repository is written against", async () => {
-  // Guards the premise rather than the data. If `deno check` stops finding
+  // Guards the premise rather than the data. If the type checker stops finding
   // entry points, `current` is empty, the comparison below passes, and this
   // suite reports a clean bill of health for a checker that checked nothing.
   const points = entryPoints();
@@ -104,7 +104,7 @@ Deno.test("typecheck: the baseline is the schema this repository is written agai
 
   assert(
     totalErrors(current) > 0,
-    "deno check reported no type errors at all. The generated Database type is " +
+    "the type checker reported no type errors at all. The generated Database type is " +
       "passed to createClient, so that means the type is not reaching the " +
       "client — check the two factories, not the error list.",
   );
@@ -159,7 +159,7 @@ Deno.test("typecheck: no baseline entry has stopped occurring", () => {
   assertEquals(
     stale,
     [],
-    "These entries are in the baseline but deno check no longer reports them.\n\n" +
+    "These entries are in the baseline but the type checker no longer reports them.\n\n" +
       "Something was fixed, or an edit moved a diagnostic. Either way the " +
       "baseline is now padded: it would tolerate a regression of any of these.\n" +
       "Update it with:\n" +

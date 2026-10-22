@@ -3,7 +3,7 @@
  * @module api-v1-images/services/exif
  */
 
-import ExifReader from "npm:exifreader@4.23.3";
+import ExifReader from "exifreader";
 import type { EXIFData } from "../types/index.ts";
 import { logger } from "../../_shared/logger.ts";
 
