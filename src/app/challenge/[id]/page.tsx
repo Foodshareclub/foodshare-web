@@ -37,6 +37,13 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
     description: challenge.challenge_description || "Join this challenge on FoodShare",
     image: challenge.challenge_image || undefined,
     url: `${siteConfig.url}/challenge/${challengeId}`,
+    // The challenge's own dates. There is no fallback to the clock here: a
+    // prerender refuses a clock read in a render path, and the refusal
+    // aborts the render, so the visitor would get an error page instead of
+    // the challenge. The table has no end date, so the event's span is
+    // the window between the challenge being created and last updated.
+    startDate: challenge.challenge_created_at,
+    endDate: challenge.challenge_updated_at,
   });
 
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([

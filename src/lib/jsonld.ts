@@ -362,6 +362,13 @@ export function generateLocalBusinessJsonLd() {
 
 /**
  * Event structured data for challenges
+ *
+ * The dates are the challenge's own, and they are required. There is no
+ * fallback to the clock: a prerender refuses a clock read in a render
+ * path, and the refusal aborts the whole render, so the visitor gets an
+ * error page instead of the challenge. The challenge's own dates are a
+ * better answer anyway -- they are when the event happened, rather than
+ * whenever the page was rendered.
  */
 export function generateEventJsonLd({
   name,
@@ -375,8 +382,8 @@ export function generateEventJsonLd({
   name: string;
   description: string;
   image?: string;
-  startDate?: string;
-  endDate?: string;
+  startDate: string;
+  endDate: string;
   url: string;
   location?: string;
 }) {
@@ -387,8 +394,8 @@ export function generateEventJsonLd({
     description: description.slice(0, 300),
     image: image || siteConfig.ogImage,
     url,
-    startDate: startDate || new Date().toISOString(),
-    endDate: endDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    startDate,
+    endDate,
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
     location: {
@@ -499,7 +506,7 @@ export function generateRecipeJsonLd({
   category?: string;
   cuisine?: string;
   nutrition?: { calories?: string };
-  datePublished?: string;
+  datePublished: string;
 }) {
   return {
     "@context": "https://schema.org",
@@ -513,7 +520,7 @@ export function generateRecipeJsonLd({
       name: authorName || "FoodShare Community",
       ...(authorUrl && { url: authorUrl }),
     },
-    datePublished: datePublished || new Date().toISOString(),
+    datePublished,
     prepTime: prepTime || "PT5M",
     recipeCategory: category || "Shared Food",
     recipeCuisine: cuisine || "Various",
