@@ -32,13 +32,9 @@ const DECLARATIONS = join(ROOT, "types", "bun-modules.d.ts");
 /** The mappings the guard offers: `node:` builtin to `bun:` spelling. */
 function mappedModules(): Map<string, string> {
   const source = readFileSync(GUARD, "utf8");
-  const table = source.match(
-    /const BUN_MODULE_FOR[^=]*=\s*\{([^}]*)\}/,
-  )?.[1];
+  const table = source.match(/const BUN_MODULE_FOR[^=]*=\s*\{([^}]*)\}/)?.[1];
   if (!table) {
-    console.error(
-      "❌ the guard has no BUN_MODULE_FOR table, so there is nothing to compare",
-    );
+    console.error("❌ the guard has no BUN_MODULE_FOR table, so there is nothing to compare");
     process.exit(1);
   }
 
@@ -101,9 +97,7 @@ if (!hasWildcard()) {
 // type check rejects.
 for (const [node, bun] of mappings) {
   if (!declared.has(bun)) {
-    problems.push(
-      `the guard maps ${node} to ${bun}, but ${bun} is not declared in types/bun-modules.d.ts`,
-    );
+    problems.push(`the guard maps ${node} to ${bun}, but ${bun} is not declared in types/bun-modules.d.ts`);
   }
 }
 
@@ -117,16 +111,11 @@ const modules = [...new Set(mappings.values())];
 const program = modules.map((module) => `await import(${JSON.stringify(module)});`).join("\n");
 
 const resolved = Bun.spawn(["bun", "-e", program], { stdout: "pipe", stderr: "pipe" });
-const [, stderr] = await Promise.all([
-  new Response(resolved.stdout).text(),
-  new Response(resolved.stderr).text(),
-]);
+const [, stderr] = await Promise.all([new Response(resolved.stdout).text(), new Response(resolved.stderr).text()]);
 await resolved.exited;
 
 if (resolved.exitCode !== 0) {
-  problems.push(
-    `Bun cannot resolve every spelling the guard offers: ${stderr.trim()}`,
-  );
+  problems.push(`Bun cannot resolve every spelling the guard offers: ${stderr.trim()}`);
 }
 
 if (problems.length > 0) {
@@ -143,6 +132,5 @@ if (problems.length > 0) {
 }
 
 console.log(
-  `✅ the guard and the type declarations agree (${mappings.size} mapping(s), ` +
-    `${declared.size} declaration(s))`,
+  `✅ the guard and the type declarations agree (${mappings.size} mapping(s), ` + `${declared.size} declaration(s))`,
 );
