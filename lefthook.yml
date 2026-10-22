@@ -106,10 +106,10 @@ pre-commit:
       priority: 2
       run: |
         if [ -f tsconfig.json ]; then
-          # `bun check` is Bun's own TypeScript checker: same diagnostics as
-          # `tsc`, ~300x faster. The strict `tsc` pass still runs in CI
-          # (`bun run type-check:tsc`) and inside `next build`.
-          bun check
+          # The same checker the CI runs: `tsrs`, the Rust port of the
+          # TypeScript 7 compiler. One checker, and it is the one that
+          # gates the build.
+          bun run type-check
         fi
 
     backend-type-check:

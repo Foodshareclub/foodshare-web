@@ -54,9 +54,9 @@ const nextConfig: NextConfig = {
   // @typescript/typescript-linux-arm64" and the image is never built.
   //
   // `tsrs`, the checker this repository uses, does have a linux/arm64 binary
-  // and is what the image runs instead. CI checks the same commit twice before
-  // the image is built — `type-check` and `type-check:tsc`, both of which gate
-  // the `build` job — so nothing is checked less often than it was.
+  // and is what the image runs instead. CI checks the same commit before the
+  // image is built — `type-check`, which gates the `build` job — so the
+  // image is never built from a commit nothing has checked.
   typescript: {
     ignoreBuildErrors: process.env.SKIP_BUILD_TYPECHECK === "true",
   },
