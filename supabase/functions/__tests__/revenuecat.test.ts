@@ -1,8 +1,4 @@
-import {
-  assertEquals,
-  assertRejects,
-  assertThrows,
-} from "@std/assert";
+import { assertEquals, assertRejects, assertThrows } from "@std/assert";
 import { BillingAuthenticationError, createRevenueCatApp } from "../api-v1-revenuecat/app.ts";
 import {
   productionAccess,

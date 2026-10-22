@@ -17,8 +17,8 @@ let supabaseClient: SupabaseClient<Database> | null = null;
  * The `Database` generic is generated from `supabase/oracle/catalog.json` by
  * `supabase/oracle/types.ts`, which applies `supabase/migrations/` to a real
  * PostgreSQL 17 and dumps the result. So every `from()`, `select()`, `rpc()`,
- * filter, order and write made through this client is checked by `tsc` on every
- * keystroke rather than by a regex in CI once a day.
+ * filter, order and write made through this client is checked by the type
+ * checker on every keystroke rather than by a regex in CI once a day.
  *
  * What it costs: 24 relations the code queries do not exist in the schema, and
  * the compiler now rejects all of them. `__tests__/generated-types.test.ts`

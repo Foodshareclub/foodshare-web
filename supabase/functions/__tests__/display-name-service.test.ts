@@ -5,11 +5,7 @@
  * metrics, and admin overrides.
  */
 
-import {
-  assertEquals,
-  assertExists,
-  assertRejects,
-} from "@std/assert";
+import { assertEquals, assertExists, assertRejects } from "@std/assert";
 import {
   BatchSizeExceededError,
   DisplayNameService,

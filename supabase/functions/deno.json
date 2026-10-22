@@ -48,11 +48,6 @@
     // tsconfig, so the import map's aliases and the Deno surface the
     // estate declares in `types/` are the ones it checks against.
     "check": "cd ../.. && bun run tsrs -p supabase/functions/tsconfig.json --noEmit",
-    // The runtime's own check: the estate's `types/deno.d.ts` declares the
-    // Deno API the estate uses, and this is the platform's own definition
-    // of it. It is not a second gate -- the budget is the gate -- but it
-    // is the ground truth the declaration is written against.
-    "check:deno": "deno check",
     "lint": "deno lint",
     "lint:oxlint": "oxlint",
     "lint:biome": "biome check .",

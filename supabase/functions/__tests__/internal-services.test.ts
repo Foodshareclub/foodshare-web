@@ -15,12 +15,7 @@
  * @module
  */
 
-import {
-  assert,
-  assertEquals,
-  assertRejects,
-  assertStringIncludes,
-} from "@std/assert";
+import { assert, assertEquals, assertRejects, assertStringIncludes } from "@std/assert";
 
 import {
   fetchTrustAnchors,

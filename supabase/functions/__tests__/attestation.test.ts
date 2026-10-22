@@ -19,11 +19,7 @@
  * @module
  */
 
-import {
-  assertEquals,
-  assertFalse,
-  assertStringIncludes,
-} from "@std/assert";
+import { assertEquals, assertFalse, assertStringIncludes } from "@std/assert";
 
 import { verifyDeviceCheck } from "../api-v1-attestation/lib/device-check.ts";
 import { verifySafetyNet } from "../api-v1-attestation/lib/android.ts";
