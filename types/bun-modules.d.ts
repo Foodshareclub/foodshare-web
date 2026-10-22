@@ -275,3 +275,47 @@ declare module "bun:crypto" {
   export type Hash = import("node:crypto").Hash;
   export type Hmac = import("node:crypto").Hmac;
 }
+
+/**
+ * Bun's URL module. Mirrors `node:url`.
+ *
+ * The guard in `scripts/check-no-node.ts` maps `node:url` to this
+ * spelling, so a file that follows the guard has to be able to resolve
+ * it.
+ */
+declare module "bun:url" {
+  export const URL: typeof import("node:url").URL;
+  export const URLSearchParams: typeof import("node:url").URLSearchParams;
+  export const domainToASCII: typeof import("node:url").domainToASCII;
+  export const domainToUnicode: typeof import("node:url").domainToUnicode;
+  export const fileURLToPath: typeof import("node:url").fileURLToPath;
+  export const pathToFileURL: typeof import("node:url").pathToFileURL;
+  export const format: typeof import("node:url").format;
+  export const parse: typeof import("node:url").parse;
+  export const resolve: typeof import("node:url").resolve;
+  export const resolveObject: typeof import("node:url").resolveObject;
+  export const urlToHttpOptions: typeof import("node:url").urlToHttpOptions;
+  export type UrlObject = import("node:url").UrlObject;
+  export type Url = import("node:url").Url;
+  export type URLPatternInput = import("node:url").URLPatternInput;
+  export type URLPatternInit = import("node:url").URLPatternInit;
+}
+
+/**
+ * Every other `bun:` spelling.
+ *
+ * The guard in `scripts/check-no-node.ts` rewrites a Node builtin to its
+ * `bun:` spelling, and its table is an exception list rather than the
+ * rule: anything outside the table becomes `bun:<name>` as well. So the
+ * declarations have to cover the general case, or the guard's advice
+ * fails the type check for every builtin that is not in the table --
+ * `bun:zlib`, `bun:http`, `bun:stream`, and the rest.
+ *
+ * This declaration is the general case. It gives the module the type
+ * `any`, which is what an undeclared import would have failed the build
+ * over; the precise declarations above win over it, so a module that is
+ * declared properly keeps its real types. TypeScript prefers an exact
+ * module match over a pattern match, and `bun:path` still rejects
+ * `join(1, 2)`.
+ */
+declare module "bun:*";

@@ -78,6 +78,7 @@ jobs:
           - type-check
           - "check:no-docker"
           - "check:no-node"
+          - "check:bun-modules"
           - test
           # The same suite in a random order. A test that passes only
           # because of what ran before it is a test that will fail on
