@@ -2,9 +2,9 @@
  * Ambient declarations for Bun's `bun:`-prefixed builtin modules.
  *
  * `@types/bun` declares `bun:test`, `bun:ffi`, `bun:jsc`, `bun:sqlite` and
- * `bun:bundle` — but not the filesystem, path, os and crypto modules, even
- * though Bun implements every one of them. Without these declarations an
- * import of `bun:path` fails the type-check with
+ * `bun:bundle` — but not the filesystem, path, os, util, crypto and DNS
+ * modules, even though Bun implements every one of them. Without these
+ * declarations an import of `bun:path` fails the type-check with
  *
  *     error TS2307: Cannot find module 'bun:path' or its corresponding type
  *                  declarations.
@@ -180,12 +180,6 @@ declare module "bun:fs/promises" {
 }
 
 /**
- * Bun's operating-system module. Mirrors `node:os`.
- *
- * Bun implements this module itself; `@types/bun` declares no ambient module
- * for it, so the import fails to type-check without this declaration.
- */
-/**
  * Bun's util module. Mirrors `node:util`.
  *
  * Bun implements this module itself; `@types/bun` declares no ambient module
@@ -199,6 +193,34 @@ declare module "bun:util" {
   export const types: typeof import("node:util").types;
 }
 
+/**
+ * Bun's promise-based DNS module. Mirrors `node:dns/promises`.
+ *
+ * The guard in `scripts/check-no-node.ts` maps `node:dns/promises` to this
+ * spelling, so a file that follows the guard has to be able to resolve it.
+ */
+declare module "bun:dns/promises" {
+  export const lookup: typeof import("node:dns/promises").lookup;
+  export const resolve: typeof import("node:dns/promises").resolve;
+  export const resolve4: typeof import("node:dns/promises").resolve4;
+  export const resolve6: typeof import("node:dns/promises").resolve6;
+  export const resolveAny: typeof import("node:dns/promises").resolveAny;
+  export const resolveCname: typeof import("node:dns/promises").resolveCname;
+  export const resolveMx: typeof import("node:dns/promises").resolveMx;
+  export const resolveNaptr: typeof import("node:dns/promises").resolveNaptr;
+  export const resolveNs: typeof import("node:dns/promises").resolveNs;
+  export const resolveSrv: typeof import("node:dns/promises").resolveSrv;
+  export const resolveTxt: typeof import("node:dns/promises").resolveTxt;
+  export const reverse: typeof import("node:dns/promises").reverse;
+  export const setServers: typeof import("node:dns/promises").setServers;
+}
+
+/**
+ * Bun's operating-system module. Mirrors `node:os`.
+ *
+ * Bun implements this module itself; `@types/bun` declares no ambient module
+ * for it, so the import fails to type-check without this declaration.
+ */
 declare module "bun:os" {
   export const arch: typeof import("node:os").arch;
   export const cpus: typeof import("node:os").cpus;
