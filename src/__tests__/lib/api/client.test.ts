@@ -12,7 +12,13 @@ mock.module("@/lib/supabase/server", () => ({ createClient }));
 
 const { apiCall, apiGet, apiPost } = await import("@/lib/api/client");
 const originalFetch = globalThis.fetch;
-const fetchMock = mock<typeof fetch>();
+// Bun's `fetch` is a function with a `preconnect` method on it, and the global
+// is typed as the whole thing, so a mock that stands in for it needs one. The
+// method is a no-op here: the tests are about what the client sends.
+const fetchMock = Object.assign(
+  mock<(input: string | URL | Request, init?: BunFetchRequestInit) => Promise<Response>>(),
+  { preconnect: () => {} },
+);
 
 beforeEach(() => {
   accessToken = "test-user-token";
@@ -41,7 +47,7 @@ describe("Edge Function transport", () => {
     const headers = new Headers(init?.headers);
     expect(headers.get("Authorization")).toBe("Bearer test-user-token");
     expect(headers.get("apikey")).toBe(
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || null,
     );
     expect(init?.body).toBeUndefined();
   });

@@ -15,7 +15,7 @@
  */
 import { describe, expect, it } from "bun:test";
 
-import { PASSWORD_RULES, type PasswordRuleId, scorePassword } from "@/lib/password-strength";
+import { PASSWORD_RULES, type PasswordRuleId, type PasswordScore, scorePassword } from "@/lib/password-strength";
 
 const met = (password: string): PasswordRuleId[] =>
   PASSWORD_RULES.filter((rule) => scorePassword(password).met[rule.id]).map((rule) => rule.id);
@@ -49,7 +49,10 @@ describe("password strength — the score is the number of rules met", () => {
     ];
     for (const password of samples) {
       const result = scorePassword(password);
-      expect(result.score, `"${password}"`).toBe(PASSWORD_RULES.filter((rule) => result.met[rule.id]).length);
+      // The score is the number of rules met, which is what the module
+      // promises; the type says the count is a score.
+      const met = PASSWORD_RULES.filter((rule) => result.met[rule.id]).length as PasswordScore;
+      expect(result.score, `"${password}"`).toBe(met);
       expect(result.score, `"${password}"`).toBeGreaterThanOrEqual(0);
       expect(result.score, `"${password}"`).toBeLessThanOrEqual(4);
     }

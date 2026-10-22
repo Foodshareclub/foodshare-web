@@ -24,7 +24,7 @@ const mockState = {
     success: true,
     data: { messageId: "notif-1" },
     error: undefined as string | undefined,
-  },
+  } as { success: boolean; data?: { messageId: string }; error?: string },
   capturedRequest: null as Record<string, unknown> | null,
 };
 

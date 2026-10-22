@@ -14,10 +14,17 @@ process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= "test-anon-key";
 
 // Make expect globally available then load jest-dom matchers
 // (preload files don't auto-inject `expect` as a global like .test.ts files)
-if (typeof globalThis.expect === "undefined") {
-  (globalThis as Record<string, unknown>).expect = expect;
+const globals = globalThis as Record<string, unknown>;
+if (typeof globals.expect === "undefined") {
+  globals.expect = expect;
 }
-await import("@testing-library/jest-dom").catch(() => {});
+// jest-dom's types are a global declaration file rather than a module, so a
+// literal import of it does not type-check — the import is for its side
+// effect, which is to register the matchers on `expect`. The specifier is
+// held in a variable so the checker leaves it alone; the runtime resolves
+// it the same way.
+const JEST_DOM = "@testing-library/jest-dom";
+await import(JEST_DOM).catch(() => {});
 
 // =============================================================================
 // Module Mocks (bun:test mock.module)

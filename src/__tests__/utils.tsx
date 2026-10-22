@@ -4,6 +4,7 @@
  * Shared utilities for testing React components and hooks
  */
 
+import { jest } from "bun:test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type RenderOptions, render } from "@testing-library/react";
 import * as fc from "fast-check";

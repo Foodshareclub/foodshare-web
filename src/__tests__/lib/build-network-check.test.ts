@@ -103,8 +103,8 @@ afterAll(() => {
 
 async function withServer(
   status: number,
-  body: (env: Record<string, string>) => Promise<{ code: number; out: string }>,
-): Promise<{ code: number; out: string }> {
+  body: (env: Record<string, string>) => Promise<{ code: number | null; out: string }>,
+): Promise<{ code: number | null; out: string }> {
   const server = Bun.serve({
     port: 0,
     hostname: "127.0.0.1",
@@ -119,7 +119,9 @@ async function withServer(
   });
 }
 
-async function runScript(env: Record<string, string>): Promise<{ code: number; out: string }> {
+// The exit code is null when the process was killed by a signal rather than
+// exiting, which is a real outcome and not a missing value.
+async function runScript(env: Record<string, string>): Promise<{ code: number | null; out: string }> {
   const child = Bun.spawn([process.execPath, "scripts/check-build-network.ts"], {
     cwd: join(import.meta.dir, "..", "..", ".."),
     env: { ...process.env, ...env },

@@ -33,3 +33,9 @@ if (failed > 0) {
 }
 
 console.log(`✅ ${files.length} YAML file(s) parsed`);
+
+// A module, so that the top-level `await` above is allowed and so that this
+// file's declarations stay out of the global scope: the other scripts in
+// this directory declare names of their own, and two files sharing a global
+// scope is a collision waiting to happen.
+export {};

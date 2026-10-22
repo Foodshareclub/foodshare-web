@@ -19,7 +19,7 @@ const mockState = {
     is_active?: boolean;
     onboarding_completed?: boolean;
   } | null,
-  userRoles: [] as Array<{ roles: { name: string } }>,
+  userRoles: [] as Array<{ roles: { name: string } }> | null,
   listing: null as { id: number; post_name: string; profile_id: string } | null,
   roleData: null as { id: string } | null,
   usersData: [] as Array<{

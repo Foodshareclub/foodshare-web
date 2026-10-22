@@ -2,6 +2,8 @@
  * Campaign API Tests
  * Basic tests to verify API function structure and exports
  */
+import { describe, expect, it } from "bun:test";
+
 import { campaignAPI } from "../campaignAPI";
 import { segmentBuilderAPI } from "../segmentBuilderAPI";
 

@@ -435,7 +435,14 @@ function spliceMember(raw: string, name: string, value: unknown): string {
  * Dotted keys are nested by `nest()` above, so a batch can be written flat and
  * still land in the shape `t()` resolves.
  */
-export async function install(ns: Namespace, dir = DIR): Promise<void> {
+/**
+ * Install a batch into every catalogue.
+ *
+ * The batch is keyed by namespace and then by key — `Namespace` is the
+ * key-to-locale shape, so a batch of batches is a namespace deeper than the
+ * one `validate` takes.
+ */
+export async function install(ns: Record<string, Namespace>, dir = DIR): Promise<void> {
   for (const locale of LOCALES) {
     const path = join(dir, `${locale}.json`);
     const raw = await Bun.file(path).text();

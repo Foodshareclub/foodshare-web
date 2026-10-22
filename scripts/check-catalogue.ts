@@ -119,7 +119,7 @@ const BASELINE = flag("baseline", join(import.meta.dir, "check-catalogue-baselin
 //
 // Each sequence is dropped whole. Emitting `[31m` without the escape is not
 // "no colour", it is mojibake in every log that does not strip it.
-const paint = (code: string) => (process.env.NO_COLOR ? "" : `\x1b[${code}m`);
+const paint = (code: number) => (process.env.NO_COLOR ? "" : `\x1b[${code}m`);
 const RED = paint(31);
 const GREEN = paint(32);
 const YELLOW = paint(33);
@@ -130,6 +130,16 @@ const RESET = paint(0);
 type Catalog = Record<string, unknown>;
 type Row = Record<string, string>;
 type Namespace = Record<string, Row>;
+
+/**
+ * A catalogue namespace as it is written in the JSON: a key maps either to a
+ * translation or to a nested namespace.
+ *
+ * `Namespace` above is the other thing — the batch this guard compares, where
+ * a key maps to a locale and a locale to a translation — and the two were
+ * sharing a name, which is what let `flatten` be handed the wrong one.
+ */
+type CatalogueTree = { [key: string]: string | CatalogueTree };
 
 /**
  * Every catalogue, read once.
@@ -193,7 +203,7 @@ const ROOT_NAMESPACE = "(root)";
  * one. One level of nesting exists today; the depth is not the point, walking
  * to the bottom is.
  */
-const flatten = (source: Namespace, prefix = ""): Record<string, string> => {
+const flatten = (source: CatalogueTree, prefix = ""): Record<string, string> => {
   const out: Record<string, string> = {};
   for (const [key, value] of Object.entries(source)) {
     const path = prefix ? `${prefix}.${key}` : key;
@@ -234,7 +244,7 @@ const namespaces = [
   ...Object.keys(reference).filter((name) => {
     const source = reference[name];
     if (!source || typeof source !== "object" || Array.isArray(source)) return false;
-    const keys = Object.keys(flatten(source as Namespace));
+    const keys = Object.keys(flatten(source as CatalogueTree));
     return LOCALES.some(
       (locale) =>
         locale !== defaultLocale &&
@@ -264,7 +274,7 @@ for (const name of namespaces) {
     name === ROOT_NAMESPACE
       ? rootBatch
       : Object.fromEntries(
-          Object.entries(flatten(reference[name] as Namespace)).map(([key, source]) => {
+          Object.entries(flatten(reference[name] as CatalogueTree)).map(([key, source]) => {
             const row: Row = { en: source };
             for (const locale of LOCALES) {
               if (locale === defaultLocale) continue;
@@ -346,7 +356,7 @@ if (process.argv.includes("--report")) {
   process.exit(0);
 }
 
-const baseline: Record<string, Record<string, number>> = (await Bun.file(BASELINE).exists())
+const baseline: Record<string, Record<string, number>> | null = (await Bun.file(BASELINE).exists())
   ? ((await Bun.file(BASELINE).json()) as Record<string, Record<string, number>>)
   : null;
 

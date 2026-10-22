@@ -205,7 +205,7 @@ const referenceSet = new Set(referenceKeys);
  * counted as dynamic and skipped, because a static check that guesses would
  * report phantom failures and get switched off.
  */
-function scanForMissingKeys(): { missing: string[]; dynamic: number; files: number } {
+function scanForMissingKeys(): { missing: [string, string][]; dynamic: number; files: number } {
   const missing = new Map<string, string>();
   let dynamic = 0;
   const files = listSourceFiles(SRC_DIR);

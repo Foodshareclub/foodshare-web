@@ -3,6 +3,8 @@
  * Tests for Zustand chat store
  */
 
+import { beforeEach, describe, expect, it, jest } from "bun:test";
+
 import type { CustomRoomType, RoomParticipantsType, RoomType } from "@/api/chatAPI";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { act } from "@testing-library/react";

@@ -63,7 +63,7 @@ const ROOT = process.env.NAMESPACE_KEYS_ROOT ?? join(import.meta.dir, "..");
 const SRC = join(ROOT, "src");
 const CATALOGUE = join(ROOT, "messages", "en.json");
 
-const paint = (code: string) => (process.env.NO_COLOR ? "" : `\x1b[${code}m`);
+const paint = (code: number) => (process.env.NO_COLOR ? "" : `\x1b[${code}m`);
 const RED = paint(31);
 const GREEN = paint(32);
 const YELLOW = paint(33);

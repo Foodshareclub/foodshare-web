@@ -141,7 +141,7 @@ describe("useAuthStore", () => {
     it("should clear error when setting auth", () => {
       // First set an error
       act(() => {
-        useAuthStore.getState().setError("Some error");
+        useAuthStore.getState().setError("invalidCredentials");
       });
 
       // Then set auth
@@ -199,17 +199,17 @@ describe("useAuthStore", () => {
     it("should set error and clear loading", () => {
       act(() => {
         useAuthStore.getState().setLoading(true);
-        useAuthStore.getState().setError("Authentication failed");
+        useAuthStore.getState().setError("invalidCredentials");
       });
 
       const state = useAuthStore.getState();
-      expect(state.error).toBe("Authentication failed");
+      expect(state.error).toBe("invalidCredentials");
       expect(state.isLoading).toBe(false);
     });
 
     it("should allow null error", () => {
       act(() => {
-        useAuthStore.getState().setError("Some error");
+        useAuthStore.getState().setError("invalidCredentials");
         useAuthStore.getState().setError(null);
       });
 
@@ -220,7 +220,7 @@ describe("useAuthStore", () => {
   describe("clearError", () => {
     it("should clear error state", () => {
       act(() => {
-        useAuthStore.getState().setError("Some error");
+        useAuthStore.getState().setError("invalidCredentials");
         useAuthStore.getState().clearError();
       });
 
@@ -279,7 +279,7 @@ describe("useAuthStore", () => {
         useAuthStore.getState().setAuth(mockUser, mockSession);
         useAuthStore.getState().setAdmin(true, ["admin"]);
         useAuthStore.getState().setLoading(true);
-        useAuthStore.getState().setError("Some error");
+        useAuthStore.getState().setError("invalidCredentials");
       });
 
       // Reset

@@ -3,7 +3,9 @@
  * Run with: bun scripts/setup-welcome-automation.ts
  */
 
-import { quickSetupWelcomeAutomation } from "../src/app/actions/automations";
+// The barrel re-exports the actions a page needs; this one is not among
+// them, so the module that has it is imported directly.
+import { quickSetupWelcomeAutomation } from "../src/app/actions/automations/setup-welcome-flow";
 
 async function main() {
   console.log("🚀 Setting up Welcome Automation with Tester Recruitment...\n");

@@ -276,7 +276,8 @@ test("a host that had no environment file has none again after a rollback", asyn
   expect(result.environment).toBe("");
 });
 test("a registry failure or wrong revision leaves the running image and settings intact", async () => {
-  for (const configuration of [{ MOCK_PULL_FAIL: "1" }, { MOCK_REVISION: "wrong-commit" }]) {
+  const configurations: Record<string, string>[] = [{ MOCK_PULL_FAIL: "1" }, { MOCK_REVISION: "wrong-commit" }];
+  for (const configuration of configurations) {
     const result = await deploy(configuration);
     expect(result.code).not.toBe(0);
     expect(result.dropin).toBe("");
@@ -301,7 +302,8 @@ test("the tunnel token is written under both names the units read", async () => 
   expect(result.environment).toContain('TUNNEL_TOKEN="tunnel-token"');
 });
 test("failed health checks restore the exact previous image and settings", async () => {
-  for (const configuration of [{ MOCK_HEALTH_FAIL: "1" }, { MOCK_API_FAIL: "1" }]) {
+  const configurations: Record<string, string>[] = [{ MOCK_HEALTH_FAIL: "1" }, { MOCK_API_FAIL: "1" }];
+  for (const configuration of configurations) {
     const result = await deploy(configuration);
     expect(result.code).not.toBe(0);
     // The image that was running, by id — the `:latest` tag may have moved

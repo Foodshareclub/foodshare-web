@@ -73,6 +73,11 @@ async function testMailerSend() {
         text: `MailerSend Integration Test\n\nThis is a test email sent from the FoodShare application.\n\nTest Details:\n- Email Type: Newsletter (MailerSend prioritized)\n- Timestamp: ${new Date().toISOString()}\n\nIf you're seeing this email, the email system is working correctly!`,
       },
       options: {
+        // The same sender the rest of the app sends from.
+        from: {
+          email: process.env.EMAIL_FROM || "contact@foodshare.club",
+          name: process.env.EMAIL_FROM_NAME || "FoodShare",
+        },
         to: {
           email: process.env.TEST_EMAIL!,
           name: "Test User",

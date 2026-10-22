@@ -254,6 +254,10 @@ async function main(): Promise<void> {
 
   const explanation = explain(verdict, url, target);
   if (explanation) fail(explanation);
+
+  // `explain` has an arm for every kind but the reachable one, and that is
+  // the only kind that carries a status, so the check below cannot fail.
+  if (verdict.kind !== "reachable") fail([`The endpoint was diagnosed as ${verdict.kind}.`]);
   console.log(`${GREEN}✓ ${url} reachable (HTTP ${verdict.status})${RESET} — the build can prerender real data`);
 }
 if (import.meta.main) await main();

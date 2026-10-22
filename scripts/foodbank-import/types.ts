@@ -30,7 +30,11 @@ export interface RawFoodbankData {
 // Processed record ready for database insert
 export interface FoodbankImportRecord {
   post_name: string;
-  post_type: "food_bank" | "fridge";
+  // The spelling the app stores: `categoryMapping.ts` maps the user-facing
+  // `/foodbanks` to the database value `foodbank`, alongside `thing` and
+  // `fridge`. Writing `food_bank` here would put a value in the column that
+  // the app has no mapping for.
+  post_type: "foodbank" | "fridge";
   post_description: string;
   post_address: string;
   post_stripped_address: string;

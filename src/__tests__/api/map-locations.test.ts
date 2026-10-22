@@ -14,16 +14,24 @@ import { beforeEach, describe, expect, it, mock } from "bun:test";
 const mockState = {
   locations: [] as Array<Record<string, unknown>>,
   error: null as Error | null,
-  lastArgs: null as Array<unknown> | null,
+  lastArgs: null as [bounds: unknown, productType?: string, limit?: number] | null,
 };
 
 mock.module("@/lib/data/maps", () => ({
-  getNearbyLocations: mock((...args: unknown[]) => {
-    mockState.lastArgs = args;
-    if (mockState.error) return Promise.reject(mockState.error);
-    return Promise.resolve(mockState.locations);
-  }),
+  getNearbyLocations: mock(
+    (_bounds: { north: number; south: number; east: number; west: number }, productType?: string, limit = 500) => {
+      mockState.lastArgs = [_bounds, productType, limit];
+      if (mockState.error) return Promise.reject(mockState.error);
+      return Promise.resolve(mockState.locations);
+    },
+  ),
 }));
+
+// The route calls the data layer, which is what writes the arguments. Reading
+// them through a function keeps the checker from narrowing the property to the
+// value it was last assigned: the reset before a call is exactly the case
+// where that is not what the call found.
+const lastArgs = (): [bounds: unknown, productType?: string, limit?: number] | null => mockState.lastArgs;
 
 import { GET } from "@/app/api/map/locations/route";
 
@@ -82,31 +90,31 @@ describe("GET /api/map/locations", () => {
 
   it("maps a plural URL slug to the singular post_type", async () => {
     await GET(req(`${VALID}&type=things`));
-    expect(mockState.lastArgs?.[1]).toBe("thing");
+    expect(lastArgs()?.[1]).toBe("thing");
 
     await GET(req(`${VALID}&type=organisations`));
-    expect(mockState.lastArgs?.[1]).toBe("business");
+    expect(lastArgs()?.[1]).toBe("business");
 
     await GET(req(`${VALID}&type=fridges`));
-    expect(mockState.lastArgs?.[1]).toBe("fridge");
+    expect(lastArgs()?.[1]).toBe("fridge");
   });
 
   it("passes no type filter when none is given", async () => {
     await GET(req(VALID));
-    expect(mockState.lastArgs?.[1]).toBeUndefined();
+    expect(lastArgs()?.[1]).toBeUndefined();
   });
 
   it("clamps the requested limit", async () => {
     await GET(req(`${VALID}&limit=99999999`));
-    expect(mockState.lastArgs?.[2]).toBe(1000);
+    expect(lastArgs()?.[2]).toBe(1000);
 
     mockState.lastArgs = null;
     await GET(req(`${VALID}&limit=250`));
-    expect(mockState.lastArgs?.[2]).toBe(250);
+    expect(lastArgs()?.[2]).toBe(250);
 
     mockState.lastArgs = null;
     await GET(req(`${VALID}&limit=-5`));
-    expect(mockState.lastArgs?.[2]).toBe(500);
+    expect(lastArgs()?.[2]).toBe(500);
   });
 
   it("returns 502 rather than an empty list when the data layer fails", async () => {

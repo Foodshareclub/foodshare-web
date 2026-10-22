@@ -65,10 +65,6 @@
   "exclude": [
     "node_modules",
     "supabase/**",
-    "scripts/**",
-    "src/**/*.test.ts",
-    "src/**/*.test.tsx",
-    "src/__tests__/**",
     // Scratch space for throwaway Playwright specs. It is gitignored, and a
     // half-written spec in it used to break `next build` outright: the
     // type-check covers every `*.ts` in the tree, and nothing excluded it.

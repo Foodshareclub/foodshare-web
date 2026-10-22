@@ -2,6 +2,8 @@
  * Pretty Logger Tests
  */
 
+import { beforeEach, describe, expect, it, jest } from "bun:test";
+
 import { pretty } from "../pretty";
 import { COLORS, EMOJI, getStatusStyle, getTimingStyle } from "../styles";
 
@@ -12,29 +14,29 @@ describe("Pretty Logger", () => {
 
   describe("log levels", () => {
     it("should log info messages", () => {
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+      const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
       pretty.info("Test info message");
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
 
     it("should log success messages", () => {
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+      const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
       pretty.success("Test success message");
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
 
     it("should log warning messages", () => {
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+      const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
       pretty.warn("Test warning message");
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
 
     it("should log error messages", () => {
-      const consoleSpy = jest.spyOn(console, "group").mockImplementation();
-      const consoleEndSpy = jest.spyOn(console, "groupEnd").mockImplementation();
+      const consoleSpy = jest.spyOn(console, "group").mockImplementation(() => {});
+      const consoleEndSpy = jest.spyOn(console, "groupEnd").mockImplementation(() => {});
       pretty.error("Test error message", new Error("Test"));
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
@@ -44,21 +46,21 @@ describe("Pretty Logger", () => {
 
   describe("specialized logs", () => {
     it("should log API requests", () => {
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+      const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
       pretty.api("GET", "/api/products", 200, 45, 1024);
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
 
     it("should log database queries", () => {
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+      const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
       pretty.db("SELECT", "posts", 12, 50);
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
 
     it("should log performance measurements", () => {
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+      const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
       pretty.perf("render", 45);
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
@@ -67,15 +69,15 @@ describe("Pretty Logger", () => {
 
   describe("context handling", () => {
     it("should include component context", () => {
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+      const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
       pretty.info("Test message", { component: "TestComponent" });
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
 
     it("should handle data parameter", () => {
-      const consoleSpy = jest.spyOn(console, "groupCollapsed").mockImplementation();
-      const consoleEndSpy = jest.spyOn(console, "groupEnd").mockImplementation();
+      const consoleSpy = jest.spyOn(console, "groupCollapsed").mockImplementation(() => {});
+      const consoleEndSpy = jest.spyOn(console, "groupEnd").mockImplementation(() => {});
       pretty.info("Test message", { component: "Test" }, { foo: "bar" });
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();

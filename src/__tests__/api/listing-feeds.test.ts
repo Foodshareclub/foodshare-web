@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 
+import type { NearbyPostsOptions } from "@/lib/data/nearby-posts";
+import type { PaginationOptions } from "@/lib/data/products";
+
 /**
  * The two listing-feed routes.
  *
@@ -21,12 +24,12 @@ const mockState = {
   page: { data: [] as unknown[], hasMore: false, nextCursor: null as number | null },
   nearbyError: null as Error | null,
   pageError: null as Error | null,
-  nearbyArgs: null as Record<string, unknown> | null,
-  pageArgs: null as Record<string, unknown> | null,
+  nearbyArgs: null as NearbyPostsOptions | null,
+  pageArgs: null as PaginationOptions | null,
 };
 
 mock.module("@/lib/data/nearby-posts", () => ({
-  getNearbyPosts: mock((args: Record<string, unknown>) => {
+  getNearbyPosts: mock((args: NearbyPostsOptions) => {
     mockState.nearbyArgs = args;
     if (mockState.nearbyError) return Promise.reject(mockState.nearbyError);
     return Promise.resolve(mockState.nearby);
@@ -34,13 +37,20 @@ mock.module("@/lib/data/nearby-posts", () => ({
 }));
 
 mock.module("@/lib/data/products", () => ({
-  getProductsPaginated: mock((_type: string, options: Record<string, unknown>) => {
+  getProductsPaginated: mock((_type: string, options: PaginationOptions) => {
     mockState.pageArgs = options;
     if (mockState.pageError) return Promise.reject(mockState.pageError);
     // Echo the inputs so the test can assert what was threaded through.
     return Promise.resolve({ ...mockState.page, searchTerm: options.searchTerm ?? null });
   }),
 }));
+
+// The routes call the data layer, which is what writes the arguments. Reading
+// them through a function keeps the checker from narrowing the property to the
+// value it was last assigned: the reset before a call is exactly the case
+// where that is not what the call found.
+const nearbyArgs = (): NearbyPostsOptions | null => mockState.nearbyArgs;
+const pageArgs = (): PaginationOptions | null => mockState.pageArgs;
 
 import { GET as nearbyGET } from "@/app/api/listings/nearby/route";
 import { GET as pageGET } from "@/app/api/listings/route";
@@ -71,7 +81,7 @@ describe("GET /api/listings/nearby", () => {
     // 500km asked for, 50km ceiling applied. The client needs the clamped
     // value to keep its own radius state honest.
     expect(body.radius).toBe(50000);
-    expect(mockState.nearbyArgs?.radiusMeters).toBe(50000);
+    expect(nearbyArgs()?.radiusMeters).toBe(50000);
   });
 
   it("clamps a radius below the floor", async () => {
@@ -94,7 +104,7 @@ describe("GET /api/listings/nearby", () => {
     expect(typeof cursor).toBe("string");
 
     await nearbyGET(url("/api/listings/nearby", `lat=51.5&lng=-0.1&cursor=${cursor}`));
-    expect(mockState.nearbyArgs?.cursor).toEqual({ distance: 120, id: 7 });
+    expect(nearbyArgs()?.cursor).toEqual({ distance: 120, id: 7 });
   });
 
   it("ignores a hand-edited cursor instead of querying with it", async () => {
@@ -102,11 +112,11 @@ describe("GET /api/listings/nearby", () => {
     // keyset predicate would produce a query no row satisfies.
     const negative = Buffer.from(JSON.stringify({ d: -5, i: 3 }), "utf8").toString("base64url");
     await nearbyGET(url("/api/listings/nearby", `lat=51.5&lng=-0.1&cursor=${negative}`));
-    expect(mockState.nearbyArgs?.cursor).toBeNull();
+    expect(nearbyArgs()?.cursor).toBeNull();
 
     mockState.nearbyArgs = null;
     await nearbyGET(url("/api/listings/nearby", "lat=51.5&lng=-0.1&cursor=not-a-cursor"));
-    expect(mockState.nearbyArgs?.cursor).toBeNull();
+    expect(nearbyArgs()?.cursor).toBeNull();
   });
 
   it("reports a data-layer failure without emptying the page", async () => {
@@ -143,7 +153,7 @@ describe("GET /api/listings", () => {
       const response = await pageGET(url("/api/listings", `cursor=${cursor}`));
 
       expect(response.status).toBe(200);
-      expect(mockState.pageArgs?.cursor).toBeNull();
+      expect(pageArgs()?.cursor).toBeNull();
     }
   });
 
@@ -155,7 +165,7 @@ describe("GET /api/listings", () => {
     ] as const) {
       mockState.pageArgs = null;
       await pageGET(url("/api/listings", `cursor=${encodeURIComponent(raw)}`));
-      expect(mockState.pageArgs?.cursor).toBe(expected);
+      expect(pageArgs()?.cursor).toBe(expected);
     }
   });
 

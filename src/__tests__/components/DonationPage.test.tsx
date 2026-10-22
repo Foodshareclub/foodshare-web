@@ -1,6 +1,8 @@
 import { describe, expect, it, mock } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import type { Locale } from "@/i18n/config";
+
 /**
  * The `/donation` hero, rendered in each locale.
  *
@@ -51,7 +53,7 @@ mock.module("next/image", () => {
 const { default: DonationPage } = await import("@/app/donation/page");
 
 // next-intl's server helpers read the request locale from this store.
-const localeState = { current: "en" };
+const localeState: { current: Locale } = { current: "en" };
 
 /**
  * A minimal `getTranslations`, resolved from the *real* merged catalogue.
@@ -93,7 +95,7 @@ mock.module("next-intl/server", () => ({
   },
 }));
 
-async function renderIn(locale: string): Promise<string> {
+async function renderIn(locale: Locale): Promise<string> {
   localeState.current = locale;
   // generateMetadata resolves through the same translator; asserting on it is
   // the Phase 16 lesson — the <title> is the part a search engine reads.
@@ -109,13 +111,13 @@ describe("/donation renders the locale, not English", () => {
     ["ar", "كل فنجان قهوة ينقذ وجبة"],
     ["ru", "Каждая чашка кофе спасает приём пищи"],
     ["zh", "每一杯咖啡都能换来一顿饭"],
-  ])("%s renders its own hero headline", async (locale, expected) => {
+  ] as [Locale, string][])("%s renders its own hero headline", async (locale, expected) => {
     const html = await renderIn(locale);
     expect(html).toContain(expected);
   });
 
   it("no locale renders the English headline unless it is English", async () => {
-    for (const locale of ["de", "ja", "ar", "ru", "zh", "fr", "es", "th", "hi"]) {
+    for (const locale of ["de", "ja", "ar", "ru", "zh", "fr", "es", "th", "hi"] as Locale[]) {
       const html = await renderIn(locale);
       expect({ locale, leaked: html.includes("Every Coffee Saves a Meal") }).toEqual({
         locale,
@@ -125,7 +127,7 @@ describe("/donation renders the locale, not English", () => {
   });
 
   it("the trust badge is the registration number in every locale", async () => {
-    for (const locale of ["en", "de", "ja", "ar", "ru"]) {
+    for (const locale of ["en", "de", "ja", "ar", "ru"] as Locale[]) {
       const html = await renderIn(locale);
       expect(html).toContain("14023669");
       // The claim that was replaced. Not a style preference: a UK company

@@ -14,11 +14,8 @@ import { join } from "bun:path";
  */
 import { describe, expect, it } from "bun:test";
 
+import { findRegressions, leavesOf, measure, share } from "../../../scripts/check-locale-coverage";
 import { LOCALES } from "../../../scripts/lib/catalogue-batch";
-
-const { findRegressions, leavesOf, measure, share } = await import(
-  join(import.meta.dir, "..", "..", "..", "scripts", "check-locale-coverage.ts")
-);
 
 const MESSAGES = join(import.meta.dir, "..", "..", "..", "messages");
 

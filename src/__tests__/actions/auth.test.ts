@@ -5,21 +5,16 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import type { Session } from "@supabase/supabase-js";
+
+import type { AuthUserProfile } from "@/types/auth.types";
 
 // Isolated local mock state to prevent race conditions with other test files
 const mockState = {
   user: null as { id: string; email: string } | null,
-  session: null as { access_token: string; user: { id: string } } | null,
-  profile: null as {
-    id: string;
-    first_name: string;
-    second_name: string;
-    avatar_url?: string | null;
-    email: string;
-    is_active?: boolean;
-    onboarding_completed?: boolean;
-  } | null,
-  userRoles: [] as Array<{ roles: { name: string } }>,
+  session: null as Session | null,
+  profile: null as AuthUserProfile | null,
+  userRoles: [] as Array<{ roles: { name: string } }> | null,
   listing: null as { id: number; post_name: string; profile_id: string } | null,
   authError: null as { message: string } | null,
   dbError: null as { message: string; code?: string } | null,
@@ -207,10 +202,12 @@ describe("Auth Server Actions", () => {
   describe("getSession", () => {
     it("should return session when authenticated", async () => {
       mockState.user = { id: "user-123", email: "test@example.com" };
+      // The mock returns the two fields the action reads; the session the
+      // action returns is the whole thing, and the test compares the two.
       mockState.session = {
         access_token: "test-token",
         user: { id: "user-123" },
-      };
+      } as Session;
 
       const result = await getSession();
 
@@ -239,6 +236,7 @@ describe("Auth Server Actions", () => {
         second_name: "User",
         avatar_url: null,
         email: "test@example.com",
+        search_radius_km: null,
       };
 
       const result = await getUser();
@@ -252,6 +250,7 @@ describe("Auth Server Actions", () => {
           second_name: "User",
           avatar_url: null,
           email: "test@example.com",
+          search_radius_km: null,
         },
       });
     });
@@ -314,7 +313,7 @@ describe("Auth Server Actions", () => {
   describe("signInWithPassword", () => {
     it("should return success on valid credentials", async () => {
       mockState.user = { id: "user-123", email: "test@example.com" };
-      mockState.session = { access_token: "token", user: { id: "user-123" } };
+      mockState.session = { access_token: "token", user: { id: "user-123" } } as Session;
 
       const formData = new FormData();
       formData.append("email", "test@example.com");

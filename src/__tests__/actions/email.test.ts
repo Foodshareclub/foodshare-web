@@ -11,6 +11,7 @@ const mockState = {
   user: null as { id: string; email: string } | null,
   userRoles: null as Array<{ roles: { name: string } }> | null,
   authError: null as { message: string } | null,
+  dbError: null as { message: string } | null,
   emailSendResult: {
     success: true,
     messageId: "msg-123",

@@ -87,7 +87,7 @@ const ATTRIBUTES = new Set([
   "alt",
 ]);
 
-const paint = (code: string) => (process.env.NO_COLOR ? "" : `\x1b[${code}m`);
+const paint = (code: number) => (process.env.NO_COLOR ? "" : `\x1b[${code}m`);
 const RED = paint(31);
 const GREEN = paint(32);
 const YELLOW = paint(33);

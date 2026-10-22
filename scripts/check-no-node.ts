@@ -682,3 +682,9 @@ if (violations.length > 0) {
 }
 
 console.log(`✅ No Node.js usage in the toolchain (${files.length} file(s) scanned)`);
+
+// A module, so that the top-level `await` above is allowed and so that this
+// file's declarations stay out of the global scope: the other scripts in
+// this directory declare names of their own, and two files sharing a global
+// scope is a collision waiting to happen.
+export {};

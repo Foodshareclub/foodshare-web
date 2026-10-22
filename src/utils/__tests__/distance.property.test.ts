@@ -7,6 +7,8 @@
  * **Validates: Requirements 2.4**
  */
 
+import { describe, it } from "bun:test";
+
 import * as fc from "fast-check";
 import { getDistanceFromLatLonInKm } from "../getDistanceFromLatLonInKm";
 

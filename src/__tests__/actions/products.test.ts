@@ -9,6 +9,8 @@
 
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 
+import type { InitialProductStateType, LocationType } from "@/types/product.types";
+
 // Shared mock state - must be outside mock.module for it to be accessible
 const mockState = {
   products: [] as unknown[],
@@ -133,10 +135,12 @@ describe("Products Data Functions", () => {
 
   describe("getProducts", () => {
     it("should return products filtered by type", async () => {
+      // The mock returns only the columns this test reads; the data function
+      // declares the whole row.
       const mockProducts = [
         { id: 1, post_name: "Apples", post_type: "food", is_active: true },
         { id: 2, post_name: "Oranges", post_type: "food", is_active: true },
-      ];
+      ] as InitialProductStateType[];
       mockState.products = mockProducts;
 
       const result = await getProducts("food");
@@ -168,7 +172,7 @@ describe("Products Data Functions", () => {
       const mockProducts = [
         { id: 1, post_name: "Apples", post_type: "food", is_active: true },
         { id: 2, post_name: "Bread", post_type: "food", is_active: true },
-      ];
+      ] as InitialProductStateType[];
       mockState.products = mockProducts;
 
       const result = await getAllProducts();
@@ -221,8 +225,8 @@ describe("Products Data Functions", () => {
         id: 1,
         post_name: "Fresh Apples",
         post_type: "food",
-        reviews: [{ id: 1, rating: 5, comment: "Great!" }],
-      };
+        reviews: [{ id: 1, profile_id: "user-1", post_id: 1, forum_id: 1, challenge_id: 1, feedback: "Great!" }],
+      } as InitialProductStateType;
       mockState.product = mockProduct;
 
       const result = await getProductById(1);
@@ -253,14 +257,23 @@ describe("Products Data Functions", () => {
   describe("getProductLocations", () => {
     it("should return locations for map display", async () => {
       const mockLocations = [
-        { id: 1, location_json: { lat: 50.0, lng: 14.0 }, post_name: "Apples" },
-        { id: 2, location_json: { lat: 50.1, lng: 14.1 }, post_name: "Bread" },
-      ];
+        { id: 1, location_json: { type: "Point", coordinates: [14.0, 50.0] }, post_name: "Apples" },
+        { id: 2, location_json: { type: "Point", coordinates: [14.1, 50.1] }, post_name: "Bread" },
+      ] as LocationType[];
       mockState.products = mockLocations;
 
       const result = await getProductLocations("food");
 
-      expect(result).toEqual(mockLocations);
+      // The listing comes through, with its location moved: the exact
+      // coordinates are the user's, not the map's, so the coordinates in the
+      // result are not the ones the database held. The approximation itself
+      // is the subject of `src/__tests__/lib/data/products.test.ts`.
+      expect(result.map((location) => location.id)).toEqual([1, 2]);
+      expect(result.map((location) => location.post_name)).toEqual(["Apples", "Bread"]);
+      for (const location of result) {
+        expect(location.location_json?.type).toBe("Point");
+        expect(location.location_json?.coordinates).toHaveLength(2);
+      }
     });
 
     it("should return empty array when no locations found", async () => {
@@ -287,7 +300,7 @@ describe("Products Data Functions", () => {
       const mockProducts = [
         { id: 1, post_name: "My Apples", profile_id: "user-123" },
         { id: 2, post_name: "My Bread", profile_id: "user-123" },
-      ];
+      ] as InitialProductStateType[];
       mockState.products = mockProducts;
 
       const result = await getUserProducts("user-123");

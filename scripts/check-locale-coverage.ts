@@ -85,7 +85,7 @@ const BASELINE = flag("baseline", join(import.meta.dir, "check-locale-coverage-b
 //
 // Each sequence is dropped whole. Emitting `[31m` without the escape is not
 // "no colour", it is mojibake in every log that does not strip it.
-const paint = (code: string) => (process.env.NO_COLOR ? "" : `\x1b[${code}m`);
+const paint = (code: number) => (process.env.NO_COLOR ? "" : `\x1b[${code}m`);
 const RED = paint(31);
 const GREEN = paint(32);
 const YELLOW = paint(33);

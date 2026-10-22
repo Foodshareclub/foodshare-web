@@ -5,23 +5,28 @@ const requests: URL[] = [];
 let responseRows: Array<{ id: number; post_name: string }> = [];
 let nearbyRows: Array<{ id: number; post_name: string; distance_meters: number }> = [];
 const rpcRequests: Array<Record<string, number | string | null>> = [];
+// Bun's `fetch` is a function with a `preconnect` method on it, and the
+// client's `global.fetch` is typed as the whole thing. The method is a no-op
+// here: the tests are about what the client asks for.
+const fetchStub = Object.assign(
+  async (input: string | URL | Request, init?: BunFetchRequestInit) => {
+    requests.push(new URL(String(input)));
+    if (String(input).includes("/rpc/")) {
+      const params = JSON.parse(String(init?.body));
+      rpcRequests.push(params);
+      return Response.json(
+        nearbyRows
+          .filter((row) => params.cursor_distance === null || row.distance_meters > params.cursor_distance)
+          .slice(0, params.page_limit),
+      );
+    }
+    return Response.json(responseRows);
+  },
+  { preconnect: () => {} },
+);
 const client = createClient("https://database.example.test", "public-anon-key", {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-  global: {
-    fetch: async (input, init) => {
-      requests.push(new URL(String(input)));
-      if (String(input).includes("/rpc/")) {
-        const params = JSON.parse(String(init?.body));
-        rpcRequests.push(params);
-        return Response.json(
-          nearbyRows
-            .filter((row) => params.cursor_distance === null || row.distance_meters > params.cursor_distance)
-            .slice(0, params.page_limit),
-        );
-      }
-      return Response.json(responseRows);
-    },
-  },
+  global: { fetch: fetchStub },
 });
 
 mock.module("@/lib/supabase/server", () => ({

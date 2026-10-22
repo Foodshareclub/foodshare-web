@@ -56,12 +56,12 @@ describe(`${NAMESPACE} namespace is complete in every locale`, () => {
     expect(keys.length).toBeGreaterThan(20);
   });
 
-  it.each(locales)("%s has every key", (locale) => {
+  it.each([...locales])("%s has every key", (locale) => {
     const missing = keys.filter((key) => !(key in read(locale)[NAMESPACE]));
     expect({ locale, missing }).toEqual({ locale, missing: [] });
   });
 
-  it.each(locales)("%s adds no key the reference does not have", (locale) => {
+  it.each([...locales])("%s adds no key the reference does not have", (locale) => {
     // An extra key is dead weight that the per-locale budget then charges for,
     // and it is invisible in a locale whose other keys happen to be right.
     const extra = Object.keys(read(locale)[NAMESPACE] ?? {}).filter((key) => !(key in english));
@@ -70,7 +70,7 @@ describe(`${NAMESPACE} namespace is complete in every locale`, () => {
 });
 
 describe(`${NAMESPACE} identifiers survive translation`, () => {
-  it.each(locales)("%s keeps the company registration number intact", (locale) => {
+  it.each([...locales])("%s keeps the company registration number intact", (locale) => {
     // The trust indicator this replaced asked to be believed. A registration
     // number can be checked, which is why it is there — and transliterating it
     // into Cyrillic or Devanagari would make it unfindable, which is the
@@ -80,7 +80,7 @@ describe(`${NAMESPACE} identifiers survive translation`, () => {
     expect(value).toContain("14023669");
   });
 
-  it.each(locales)("%s names the payment provider the button links to", (locale) => {
+  it.each([...locales])("%s names the payment provider the button links to", (locale) => {
     // "Ko-fi" is a trademark and is not translated in any locale, English
     // included. A locale that dropped it is pointing the reader somewhere else.
     //

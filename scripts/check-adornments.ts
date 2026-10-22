@@ -88,7 +88,10 @@ function classNameAttributeOf(node: ts.Node): ts.JsxAttribute | undefined {
   if (!opening) return undefined;
   return ts
     .jsxAttributes(opening)
-    .find((property): property is ts.JsxAttribute => ts.isJsxAttribute(property) && property.name.text === "className");
+    .find(
+      (property): property is ts.JsxAttribute =>
+        ts.isJsxAttribute(property) && ts.isIdentifier(property.name) && property.name.text === "className",
+    );
 }
 
 /** The className strings of an element: the attribute, and anything in `cn(…)`. */
