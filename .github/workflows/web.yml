@@ -210,6 +210,24 @@ jobs:
           NEXT_PUBLIC_OAUTH_APPLE_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_APPLE_ENABLED }}
           NEXT_PUBLIC_OAUTH_GITHUB_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED }}
 
+      # No page refuses an unstable value.
+      #
+      # A prerender refuses `new Date()` and `Date.now()`, and the refusal
+      # aborts the whole render: the visitor gets an error page instead of
+      # the page. It happens in the error path -- a page that catches a
+      # failed fetch and logs it reads the clock on the way, and the log
+      # line that reports the failure is what breaks the page -- so it
+      # appears exactly when the backend is down and the page most needs
+      # to degrade.
+      #
+      # The check renders every page with the database unreachable, which
+      # is what makes those error paths run, and fails if the server
+      # refused a value. It needs the build above, and it is a check
+      # rather than a build assertion because the refusal happens at
+      # request time: the build prerenders the shell and succeeds.
+      - name: No page refuses an unstable value
+        run: bun run check:no-clock-read
+
       # `patches/` travels with the artifact: `patchedDependencies` is applied
       # during `bun install`, so the e2e job needs the patch file to rebuild
       # node_modules with the same patched Playwright.

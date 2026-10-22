@@ -17,6 +17,7 @@
     "check:i18n-attributes": "bun scripts/check-i18n-attributes.ts",
     "check:namespace-keys": "bun scripts/check-namespace-keys.ts",
     "check:locale-coverage": "bun scripts/check-locale-coverage.ts",
+    "check:no-clock-read": "bun scripts/check-no-unstable-render.ts",
     "check:no-docker": "bun scripts/check-no-docker.ts",
     "check:no-node": "bun scripts/check-no-node.ts",
     "check:bun-modules": "bun scripts/check-bun-modules.ts",

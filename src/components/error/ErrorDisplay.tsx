@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AlertCircle, Home, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useSyncExternalStore } from "react";
 
 /**
  * Error Display Variant Configuration
@@ -51,6 +51,27 @@ interface ErrorDisplayProps {
  * <ErrorDisplay error={error} reset={reset} variant="admin" />
  * ```
  */
+/**
+ * The instant the error was seen.
+ *
+ * Read on the client, and only there: the framework refuses a clock read
+ * in a component's render body during a prerender, because the value
+ * would be baked into the page rather than recomputed on each visit.
+ */
+function readInstant(): string {
+  return new Date().toISOString();
+}
+
+/** The value the server renders: nothing, so the two renders agree. */
+function serverSnapshot(): null {
+  return null;
+}
+
+/** Nothing to subscribe to: the instant does not change. */
+function subscribeToNothing(): () => void {
+  return () => {};
+}
+
 export function ErrorDisplay({
   error,
   reset,
@@ -65,6 +86,22 @@ export function ErrorDisplay({
   badge,
   primaryButtonClass,
 }: ErrorDisplayProps) {
+  // The time the error was seen, read on the client.
+  //
+  // A client component is prerendered too, and the framework refuses a
+  // clock read in the render body there as well: the value would be
+  // evaluated during the prerender and baked into the page, instead of
+  // being recomputed on each visit. The read therefore happens on the
+  // client, and the server renders nothing.
+  //
+  // `useSyncExternalStore` is the primitive for a value that differs
+  // between the server and the browser, and this repository already uses
+  // it for two others -- the hydration flag in `RichTextViewer` and the
+  // viewport in `useMediaQuery`. The server's snapshot is `null`, so the
+  // two renders agree, and the browser's snapshot is the instant the
+  // error was seen.
+  const occurredAt = useSyncExternalStore(subscribeToNothing, readInstant, serverSnapshot);
+
   // Log error on mount
   useEffect(() => {
     const prefix = variant === "admin" ? "[Admin Error]" : "[Error]";
@@ -72,7 +109,7 @@ export function ErrorDisplay({
       message: error.message,
       digest: error.digest,
       stack: error.stack,
-      timestamp: new Date().toISOString(),
+      timestamp: readInstant(),
     });
   }, [error, variant]);
 
@@ -246,7 +283,7 @@ export function ErrorDisplay({
                       </p>
                       {variant === "admin" && (
                         <p className="text-xs text-red-600 dark:text-red-500 mt-1">
-                          <span className="font-semibold">Timestamp:</span> {new Date().toISOString()}
+                          <span className="font-semibold">Timestamp:</span> {occurredAt}
                         </p>
                       )}
                     </div>
@@ -322,7 +359,7 @@ export function ErrorDisplay({
                 </p>
               </div>
               <div className="mt-4 text-center">
-                <p className="text-sm text-muted-foreground">Error occurred at: {new Date().toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Error occurred at: {occurredAt}</p>
               </div>
             </>
           )}

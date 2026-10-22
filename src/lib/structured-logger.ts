@@ -143,6 +143,32 @@ function redactSensitive(obj: unknown, seen = new WeakSet()): unknown {
 // ============================================================================
 
 /**
+ * The wall clock, in a form a prerender can survive.
+ *
+ * Next.js extends `Date` during a prerender: `new Date()` and `Date.now()`
+ * are refused, because a value that changes between renders cannot be
+ * baked into a prerendered page. The framework's own guidance for a
+ * measurement is `performance.timeOrigin` and `performance.now()`, which
+ * are not refused.
+ *
+ * That matters here because a log line is written from inside a render --
+ * most often from the catch block of a data fetch, which is exactly the
+ * path a page takes when the database is down. The log line that reports
+ * the outage was the thing that broke the page: the render aborted with
+ * "Next.js encountered the unstable value `new Date()` while prerendering",
+ * and the visitor got a five-hundred-kilobyte error page instead of the
+ * degraded page the catch block was written to produce.
+ *
+ * `performance.timeOrigin` is the wall-clock time the process started, and
+ * `performance.now()` is the milliseconds since. Their sum is the current
+ * time to the millisecond, and neither of them is a clock read the
+ * framework refuses.
+ */
+function now(): Date {
+  return new Date(performance.timeOrigin + performance.now());
+}
+
+/**
  * Format log entry for output
  */
 function formatLogEntry(entry: LogEntry): string {
@@ -208,7 +234,7 @@ class Logger {
     }
 
     const entry: LogEntry = {
-      timestamp: new Date().toISOString(),
+      timestamp: now().toISOString(),
       level,
       message,
       context: { ...this.context, ...context },
