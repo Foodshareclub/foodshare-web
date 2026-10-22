@@ -4,7 +4,18 @@ node_modules
 .github
 .env*
 !.env.production.example
-scripts/
+# `scripts/` is not excluded any more, and the reason is worth writing down.
+#
+# The image's builder stage runs the type check over the whole tree, and the
+# tree is what the build context carries. With `scripts/` excluded, the
+# checker in the image could not see the scripts the unit tests import, and
+# reported them as missing modules -- errors that existed only inside the
+# image, on a tree that checks clean everywhere else.
+#
+# The scripts never reach the shipped image: the runner stage copies
+# `.next/standalone`, `.next/static`, `public` and `messages`, and nothing
+# else. Excluding them from the context kept a megabyte out of a builder
+# layer, and cost the image the ability to check the tree it was built from.
 coverage/
 playwright-report/
 test-results/

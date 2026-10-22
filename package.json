@@ -58,7 +58,7 @@
     "test:watch": "bun test --isolate --watch src/",
     "translations:check": "bun scripts/check-translations.ts",
     "translations:sync": "bun scripts/sync-translations.ts",
-    "type-check": "bun run tsrs --noEmit",
+    "type-check": "bun run next typegen && bun run tsrs --noEmit",
     "verify:quadlet": "bash scripts/verify-quadlet.sh",
     "verify:sentry": "bun scripts/verify-sentry.ts"
   },

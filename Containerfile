@@ -125,14 +125,19 @@ ENV NEXT_PUBLIC_GIT_COMMIT_SHA=$NEXT_PUBLIC_GIT_COMMIT_SHA
 ENV NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
 # The build-time type check is done by `tsrs` here, not by `next build`.
-# `next build` type-checks with the project's own TypeScript, and this project
-# pins TypeScript 7.1.0-beta, which ships as a per-platform binary. The image
-# is built for linux/arm64, where the lockfile has no resolution for that
-# binary, so the check would fail with "Unable to resolve
-# @typescript/typescript-linux-arm64" and the image would never be built.
 #
-# `tsrs` has a linux/arm64 binary, so the image runs it directly, and CI
-# checks the same commit before the image is built — `type-check`, which
+# `next build` type-checks with the project's own TypeScript, and this project
+# has exactly one type checker: `tsrs`. Two checkers disagreeing about one
+# tree is worse than one checker, and the estate's rule is that there is one.
+#
+# `tsrs` has a linux/arm64 binary, so the image runs it directly. The check
+# covers the same tree every other check covers: `type-check` generates
+# Next's route types first, the way a developer's tree has them, and the
+# build context carries the whole tree. An earlier version of this image
+# checked neither, and reported twenty-one errors that existed only inside
+# the image.
+#
+# CI checks the same commit before the image is built — `type-check`, which
 # gates the `build` job.
 ENV SKIP_BUILD_TYPECHECK=true
 
