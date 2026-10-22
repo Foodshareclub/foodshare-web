@@ -10,9 +10,11 @@ creeps back in, and it scans the CI workflows as well as the source tree.
 **Type checking is `tsrs`, not `tsc`.** `tsrs` is the Rust port of the
 TypeScript 7 compiler, from the Oxc project, incubated with Cloudflare
 and VoidZero. `bun run type-check` runs it, and it runs in CI on every
-push. There is no second opinion here: a bug in the checker would be a
-bug in the gate, and the gate is what stands between a change and
-production.
+push. It is the only type checker in the estate, and it has been since
+the beginning: a `tsc` parity script sat beside it here and in the
+other repositories, and it was a second opinion that nothing read rather
+than a gate. A bug in the checker is therefore a bug in the gate, and
+the gate is what stands between a change and production.
 
 The speed is not the reason on this tree, and a figure from elsewhere is
 not this tree's figure. Measured here, over the 1,222 TypeScript files
