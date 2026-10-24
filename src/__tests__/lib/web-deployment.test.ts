@@ -1,4 +1,4 @@
-import { chmod, mkdir, mkdtemp, readdir, rm } from "bun:fs/promises";
+import { chmod, mkdir, mkdtemp, readdir, rm, stat } from "bun:fs/promises";
 import { tmpdir } from "bun:os";
 import { dirname, join, resolve } from "bun:path";
 import { expect, test } from "bun:test";
@@ -51,6 +51,9 @@ async function deploy(options: Record<string, string> = {}, check = false) {
     // ask for a host without one.
     if (options.MOCK_NO_ENV !== "1") await Bun.write(unitEnvironmentFile, oldEnvironment);
     await mkdir(join(unitDirectory, "foodshare-web.container.d"), { recursive: true });
+    if (options.MOCK_PREVIOUS_PIN) {
+      await Bun.write(join(unitDirectory, "foodshare-web.container.d", "50-image.conf"), options.MOCK_PREVIOUS_PIN);
+    }
     // A host that was reprovisioned has no unit either. The deployment
     // installs it from the repository, so the test has to be able to ask
     // for a host without one.
@@ -79,9 +82,17 @@ case "$1 $2" in
     if [ "\${MOCK_MISSING:-0}" = 1 ] && [ ! -f "$MOCK_DIRECTORY/app-started" ]; then exit 1; fi
     if [[ "$*" == *org.opencontainers.image.revision* ]]; then echo "\${MOCK_RUNNING_REVISION:-$DEPLOY_SHA}";
     elif [[ "$*" == *State.Running* ]]; then echo "\${MOCK_RUNNING:-true}"; else echo sha256:previous; fi ;;
-  "login ghcr.io") cat >/dev/null ;;
+  "login ghcr.io") cat >/dev/null; printf '{"fixture":"registry-test-secret"}' > "$REGISTRY_AUTH_FILE" ;;
   "pull "*) [ "\${MOCK_PULL_FAIL:-0}" != 1 ] ;;
   "image inspect") echo "\${MOCK_REVISION:-$DEPLOY_SHA}" ;;
+  "run "*)
+    cat >/dev/null
+    if [ "\${MOCK_INTERRUPT_PREFLIGHT:-0}" = 1 ]; then
+      touch "$MOCK_DIRECTORY/dependency-probe-started"
+      /bin/sleep 2
+    fi
+    [ "\${MOCK_PREFLIGHT_FAIL:-0}" != 1 ] ;;
+  "rm "*) exit 0 ;;
   "secret inspect") [ "\${MOCK_SECRET_EXISTS:-0}" = 1 ] ;;
   "secret create") cat >/dev/null ;;
   "exec foodshare-web")
@@ -99,8 +110,17 @@ esac
       join(directory, "systemctl"),
       `#!/bin/bash
 printf 'systemctl %s\\n' "$*" >> "$MOCK_DIRECTORY/commands"
+if [ "$2" = restart ] && [ "$3" = foodshare-web ] && [ "\${MOCK_ROLLBACK_FAIL:-0}" = 1 ] && [ -f "$MOCK_DIRECTORY/app-started" ]; then exit 1; fi
+if [ "$2" = restart ] && [ "$3" = foodshare-web ] && [ "\${MOCK_START_FAIL:-0}" = 1 ] && [ ! -f "$MOCK_DIRECTORY/app-started" ]; then
+  touch "$MOCK_DIRECTORY/app-started"
+  exit 1
+fi
 if [ "$2" = restart ] && [ "$3" = foodshare-web ]; then touch "$MOCK_DIRECTORY/app-started"; fi
 if [ "\$1" = "--user" ] && [ "\$2" = "daemon-reload" ]; then
+  if [ "\${MOCK_DAEMON_FAIL:-0}" = 1 ] && [ ! -f "$MOCK_DIRECTORY/reload-failed" ]; then
+    touch "$MOCK_DIRECTORY/reload-failed"
+    exit 1
+  fi
   if [ -f "\${MOCK_ENV_FILE:-/nonexistent}" ]; then
     printf 'env-file: present\\n' >> "$MOCK_DIRECTORY/commands"
   else
@@ -110,13 +130,18 @@ fi
 `,
     );
     await Bun.write(join(directory, "sleep"), "#!/bin/sh\nexit 0\n");
-    for (const name of ["podman", "systemctl", "sleep"]) await chmod(join(directory, name), 0o700);
+    await Bun.write(
+      join(directory, "mktemp"),
+      '#!/bin/sh\nexec /usr/bin/mktemp -d "$MOCK_DIRECTORY/recovery.XXXXXXXX"\n',
+    );
+    for (const name of ["podman", "systemctl", "sleep", "mktemp"]) await chmod(join(directory, name), 0o700);
     const child = Bun.spawn(["bash", script, ...(check ? ["--check"] : [])], {
       cwd: directory,
       env: {
         PATH: `${directory}:${process.env.PATH}`,
         MOCK_DIRECTORY: directory,
         MOCK_ENV_FILE: environmentFile,
+        TMPDIR: directory,
         HOME: process.env.HOME ?? "/home/tester",
         DEPLOY_SHA: sha,
         DEPLOY_IMAGE: image,
@@ -139,13 +164,14 @@ fi
     // push, or the runner goes away. The image is pinned and the health
     // check has not answered, and that is the state the host is left in
     // unless the deployment puts it back.
-    if (options.MOCK_INTERRUPT === "1") {
+    if (options.MOCK_INTERRUPT === "1" || options.MOCK_INTERRUPT_PREFLIGHT === "1") {
       // Wait until the health probe has actually started, so the
       // interruption lands in the middle of the deployment and not after
       // it. The mock's own `sleep` exits at once, so the wait is the
       // system one, by its full path.
       for (let attempt = 0; attempt < 200; attempt++) {
-        if (await Bun.file(join(directory, "health-probe-started")).exists()) break;
+        const marker = options.MOCK_INTERRUPT_PREFLIGHT === "1" ? "dependency-probe-started" : "health-probe-started";
+        if (await Bun.file(join(directory, marker)).exists()) break;
         await Bun.sleep(50);
       }
       child.kill("SIGTERM");
@@ -157,6 +183,8 @@ fi
     ]);
     const commandFile = Bun.file(join(directory, "commands"));
     const dropinFile = Bun.file(join(unitDirectory, "foodshare-web.container.d", "50-image.conf"));
+    const recoveryDirectory = error.match(/restricted recovery files retained at (.+)/)?.[1]?.trim();
+    if (recoveryDirectory) expect(recoveryDirectory.startsWith(`${directory}/`)).toBe(true);
     return {
       code,
       output,
@@ -165,6 +193,11 @@ fi
       dropin: (await dropinFile.exists()) ? await dropinFile.text() : "",
       environment: (await Bun.file(unitEnvironmentFile).exists()) ? await Bun.file(unitEnvironmentFile).text() : "",
       units: (await readdir(unitDirectory).catch(() => [])).sort().join(" "),
+      recoveryEnvironment: recoveryDirectory ? await Bun.file(join(recoveryDirectory, "env")).text() : "",
+      recoverySnapshotMode: recoveryDirectory ? (await stat(recoveryDirectory)).mode & 0o777 : null,
+      registryCredentialsRetained: recoveryDirectory
+        ? await Bun.file(join(recoveryDirectory, "registry-auth.json")).exists()
+        : false,
     };
   } finally {
     await rm(directory, { recursive: true, force: true });
@@ -373,4 +406,59 @@ test("failed health checks restore the exact previous image and settings", async
     expect(result.dropin.trim()).toBe("[Container]\nImage=sha256:previous");
     expect(result.environment).toBe(oldEnvironment);
   }
+});
+
+test("unit generation failure after replacing settings restores the old environment", async () => {
+  const result = await deploy({ MOCK_DAEMON_FAIL: "1" });
+  expect(result.code).not.toBe(0);
+  expect(result.environment).toBe(oldEnvironment);
+  expect(result.dropin).toBe("");
+});
+
+test("a failed app restart attempts rollback once", async () => {
+  const result = await deploy({ MOCK_START_FAIL: "1" });
+  expect(result.code).not.toBe(0);
+  expect(result.environment).toBe(oldEnvironment);
+  expect(result.commands.split("\n").filter((line) => line === "systemctl --user restart foodshare-web")).toHaveLength(
+    2,
+  );
+});
+
+test("a missing old container preserves its previous immutable pin on rollback", async () => {
+  const previous = `[Container]\nImage=ghcr.io/foodshareclub/foodshare-web@sha256:${"c".repeat(64)}\n`;
+  const result = await deploy({ MOCK_MISSING: "1", MOCK_HEALTH_FAIL: "1", MOCK_PREVIOUS_PIN: previous });
+  expect(result.code).not.toBe(0);
+  expect(result.dropin).toBe(previous);
+  expect(result.environment).toBe(oldEnvironment);
+});
+
+test("incomplete rollback preserves recovery settings and removes registry credentials", async () => {
+  const result = await deploy({ MOCK_HEALTH_FAIL: "1", MOCK_ROLLBACK_FAIL: "1" });
+  expect(result.code).not.toBe(0);
+  expect(result.recoveryEnvironment).toBe(oldEnvironment);
+  expect(result.recoverySnapshotMode).toBe(0o700);
+  expect(result.registryCredentialsRetained).toBe(false);
+  expect(result.commands.split("\n").filter((line) => line === "systemctl --user restart foodshare-web")).toHaveLength(
+    2,
+  );
+});
+
+test("a failing upstream dependency leaves the working app and settings untouched", async () => {
+  const result = await deploy({ MOCK_PREFLIGHT_FAIL: "1" });
+  expect(result.code).not.toBe(0);
+  expect(result.environment).toBe(oldEnvironment);
+  expect(result.dropin).toBe("");
+  expect(result.commands).not.toContain("systemctl --user restart");
+  expect(result.commands).not.toContain("systemctl --user daemon-reload");
+  expect(result.commands).toContain("podman rm -f foodshare-web-preflight-");
+  expect(result.commands).toMatch(/--name foodshare-web-preflight-\d+ --pull=never/);
+  expect(result.commands).toContain("--read-only --cap-drop=ALL");
+});
+
+test("an interrupted dependency probe is removed without changing the app", async () => {
+  const result = await deploy({ MOCK_INTERRUPT_PREFLIGHT: "1" });
+  expect(result.code).not.toBe(0);
+  expect(result.environment).toBe(oldEnvironment);
+  expect(result.commands).toContain("podman rm -f foodshare-web-preflight-");
+  expect(result.commands).not.toContain("systemctl --user restart");
 });

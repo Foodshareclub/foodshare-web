@@ -130,8 +130,8 @@ previous_image=$(podman container inspect --format '{{.Image}}' foodshare-web 2>
 # was not is removed again.
 had_env=0
 if [ -f "$ENV_FILE" ]; then had_env=1; fi
-verify_listing_api() {
-  podman exec -i foodshare-web bun run - <<'JS'
+listing_api_source() {
+  cat <<'JS'
 const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 if (!base || !key) throw new Error('Public API configuration is missing');
@@ -151,6 +151,9 @@ if (listings.length) {
   if (detail.id !== listings[0].id) throw new Error('Invalid listing detail');
 }
 JS
+}
+verify_listing_api() {
+  listing_api_source | podman exec -i foodshare-web bun run -
 }
 if [ "${1:-}" = --check ]; then
   podman exec foodshare-web curl --fail --silent --max-time 15 http://localhost:3000/api/health >/dev/null
@@ -177,8 +180,21 @@ snapshot=$(mktemp -d)
 #
 # A path that is not there yet is what podman expects.
 registry_auth="$snapshot/registry-auth.json"
-trap 'rm -rf "$snapshot"' EXIT
+preflight_container=""
+cleanup_preflight() {
+  if [ -n "$preflight_container" ]; then
+    podman rm -f "$preflight_container" >/dev/null 2>&1 || true
+  fi
+  rm -rf "$snapshot"
+}
+trap cleanup_preflight EXIT
+trap 'exit 143' TERM INT
 if [ "$had_env" = 1 ]; then cp "$ENV_FILE" "$snapshot/env"; fi
+had_dropin=0
+if [ -f "$DROPIN_FILE" ]; then
+  cp "$DROPIN_FILE" "$snapshot/image.conf"
+  had_dropin=1
+fi
 printf '%s' "$GITHUB_TOKEN" | REGISTRY_AUTH_FILE="$registry_auth" podman login ghcr.io --username "$GITHUB_ACTOR" --password-stdin >/dev/null
 REGISTRY_AUTH_FILE="$registry_auth" podman pull "$DEPLOY_IMAGE"
 revision=$(podman image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$DEPLOY_IMAGE")
@@ -220,6 +236,15 @@ lines += [key + '=' + value for key, value in values.items()]
 target.write_text('\n'.join(lines) + '\n')
 target.chmod(0o600)
 PY
+# Check the candidate's public backend configuration before changing the app.
+# An upstream failure should leave the working web service untouched.
+awk '/^(NEXT_PUBLIC_SUPABASE_URL|NEXT_PUBLIC_SUPABASE_ANON_KEY)=/' "$snapshot/env.staged" > "$snapshot/api.env"
+preflight_container="foodshare-web-preflight-$$"
+listing_api_source | podman run --rm -i --name "$preflight_container" --pull=never \
+  --read-only --cap-drop=ALL --security-opt=no-new-privileges --pids-limit=64 --memory=256m \
+  --env-file "$snapshot/api.env" --entrypoint bun "$DEPLOY_IMAGE" run -
+preflight_container=""
+
 # The environment file is written the way the install script writes it: the
 # directory is made if it is not there, and the file is owned by the user
 # the service runs as, so the next deployment can rewrite it.
@@ -239,6 +264,66 @@ write_env_file() {
     sudo -n install -m 600 -o "$(id -un)" "$source" "$ENV_FILE"
 }
 
+restart_tunnel() {
+  # BindsTo=foodshare-web.service stops the connector when the app restarts.
+  # Starting the app again does not start that dependent service in reverse.
+  if [ -f "$UNIT_DIR/$tunnel_unit_name" ]; then
+    systemctl --user restart "${tunnel_unit_name%.container}"
+  fi
+}
+
+rollback() {
+  rollback_attempted=1
+  local failed=0
+  echo "Deployment failed; restoring this host's previous configuration" >&2
+  if [ "$had_env" = 1 ]; then
+    write_env_file "$snapshot/env" || failed=1
+  else
+    rm -f "$ENV_FILE" 2>/dev/null || sudo -n rm -f "$ENV_FILE" || failed=1
+  fi
+  if [ "$image_pinned" = 1 ]; then
+    if [ -n "$previous_image" ]; then
+      printf '[Container]\nImage=%s\n' "$previous_image" > "$DROPIN_FILE" || failed=1
+    elif [ "$had_dropin" = 1 ]; then
+      cp "$snapshot/image.conf" "$DROPIN_FILE" || failed=1
+    else
+      rm -f "$DROPIN_FILE" || failed=1
+    fi
+    systemctl --user daemon-reload || failed=1
+  fi
+  if [ "$restart_attempted" = 1 ]; then
+    systemctl --user restart foodshare-web || failed=1
+    restart_tunnel || failed=1
+  fi
+  return "$failed"
+}
+
+configuration_changed=0
+image_pinned=0
+restart_attempted=0
+deployment_finished=0
+rollback_attempted=0
+on_exit() {
+  local status=$?
+  trap - EXIT TERM INT
+  # Registry access is no longer needed, even if recovery itself is interrupted.
+  rm -f "$registry_auth" "$snapshot/tunnel.token"
+  if [ "$deployment_finished" = 0 ] && [ "$configuration_changed" = 1 ] && [ "$rollback_attempted" = 0 ]; then
+    if [ "$status" = 0 ]; then status=1; fi
+    if ! rollback; then
+      echo "Recovery was incomplete; restricted recovery files retained at $snapshot" >&2
+      exit "$status"
+    fi
+  fi
+  rm -rf "$snapshot"
+  exit "$status"
+}
+trap on_exit EXIT
+trap 'exit 143' TERM INT
+
+# Arm recovery before the first attempted configuration replacement. An
+# interrupted write may have changed the file even when the command fails.
+configuration_changed=1
 write_env_file "$snapshot/env.staged"
 
 
@@ -287,36 +372,6 @@ fi
 # The unit on the host has been read above, and the environment file this
 # deployment writes is the one that unit reads.
 
-restart_tunnel() {
-  # BindsTo=foodshare-web.service stops the connector when the app restarts.
-  # Starting the app again does not start that dependent service in reverse.
-  if [ -f "$UNIT_DIR/$tunnel_unit_name" ]; then
-    systemctl --user restart "${tunnel_unit_name%.container}"
-  fi
-}
-
-rollback() {
-  echo "Web health failed; restoring this host's previous image and application settings" >&2
-  # The host is put back the way it was. A host that had an environment
-  # file gets the file it had; a host that had none gets none again.
-  if [ "$had_env" = 1 ]; then
-    write_env_file "$snapshot/env"
-  else
-    rm -f "$ENV_FILE" 2>/dev/null || sudo -n rm -f "$ENV_FILE"
-  fi
-  # The image that was running, by id. The unit's `:latest` tag may have
-  # moved since it was pulled, so the tag is not what was running. A host
-  # that had never run the app had no image at all, so it goes back to the
-  # image its own unit names.
-  if [ -n "$previous_image" ]; then
-    printf '[Container]\nImage=%s\n' "$previous_image" > "$DROPIN_FILE"
-  else
-    rm -f "$DROPIN_FILE"
-  fi
-  systemctl --user daemon-reload
-  systemctl --user restart foodshare-web
-  restart_tunnel
-}
 # Why the unit is not there, when it is not.
 #
 # "Unit foodshare-web.service not found" is a symptom: the unit is
@@ -339,57 +394,27 @@ report_unit() {
 }
 
 mkdir -p "$DROPIN_DIR"
+image_pinned=1
 printf '[Container]\nImage=%s\n' "$DEPLOY_IMAGE" > "$DROPIN_FILE"
 chmod 600 "$DROPIN_FILE"
 systemctl --user daemon-reload
-
-# A deployment can be interrupted. A newer push cancels the run, and the
-# runner can go away -- and either way the host is left holding the new
-# image with no answer about whether it is good. The rollback only ran
-# when the health check failed, which is the one way out that was
-# handled.
-#
-# So the rollback runs on the way out, whatever the way out is. The
-# deployment is finished when the health check has passed and not before,
-# and anything else -- a signal, a failed command, a killed runner --
-# leaves the host the way it was.
-deployment_finished=0
-on_exit() {
-  local status=$?
-  if [ "$deployment_finished" = 0 ] && [ "$image_pinned" = 1 ]; then
-    echo "The deployment was interrupted; putting the host back the way it was" >&2
-    rollback || true
-  fi
-  rm -rf "$snapshot"
-  return $status
-}
-# The host holds the new image from the moment the drop-in names it, so
-# that is the moment the rollback becomes necessary. Not when the unit is
-# restarted: an interruption between the two would leave the host with
-# the new image and no answer about it.
-image_pinned=1
-trap on_exit EXIT
-# A signal is an exit like any other: the trap above runs on the way out.
-trap 'exit 143' TERM INT
 
 # The unit has to start when the machine does. A unit that is not enabled
 # leaves the site dark after a reboot, which is how it stayed dark for
 # three weeks.
 systemctl --user enable foodshare-web >/dev/null 2>&1 || true
+restart_attempted=1
 if ! systemctl --user restart foodshare-web; then
   report_unit
-  rollback
   exit 1
 fi
 running_revision=$(podman container inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' foodshare-web 2>/dev/null || true)
 if [ "$running_revision" != "$DEPLOY_SHA" ]; then
   echo "The running container does not match the validated commit; rolling back" >&2
-  rollback
   exit 1
 fi
 if ! restart_tunnel; then
   echo "The public tunnel failed to restart; restoring the previous deployment" >&2
-  rollback
   exit 1
 fi
 for attempt in $(seq 1 24); do
@@ -402,5 +427,4 @@ for attempt in $(seq 1 24); do
   fi
   sleep 5
 done
-rollback
 exit 1
