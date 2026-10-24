@@ -286,6 +286,14 @@ fi
 # The unit on the host has been read above, and the environment file this
 # deployment writes is the one that unit reads.
 
+restart_tunnel() {
+  # BindsTo=foodshare-web.service stops the connector when the app restarts.
+  # Starting the app again does not start that dependent service in reverse.
+  if [ -f "$UNIT_DIR/$tunnel_unit_name" ]; then
+    systemctl --user restart "${tunnel_unit_name%.container}"
+  fi
+}
+
 rollback() {
   echo "Web health failed; restoring this host's previous image and application settings" >&2
   # The host is put back the way it was. A host that had an environment
@@ -306,6 +314,7 @@ rollback() {
   fi
   systemctl --user daemon-reload
   systemctl --user restart foodshare-web
+  restart_tunnel
 }
 # Why the unit is not there, when it is not.
 #
@@ -350,6 +359,7 @@ on_exit() {
     echo "The deployment was interrupted; putting the host back the way it was" >&2
     rollback || true
   fi
+  rm -rf "$snapshot"
   return $status
 }
 # The host holds the new image from the moment the drop-in names it, so
@@ -367,6 +377,11 @@ trap 'exit 143' TERM INT
 systemctl --user enable foodshare-web >/dev/null 2>&1 || true
 if ! systemctl --user restart foodshare-web; then
   report_unit
+  rollback
+  exit 1
+fi
+if ! restart_tunnel; then
+  echo "The public tunnel failed to restart; restoring the previous deployment" >&2
   rollback
   exit 1
 fi

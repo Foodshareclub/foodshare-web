@@ -227,6 +227,30 @@ test("a secret that is already there is left alone", async () => {
   expect(result.code).toBe(0);
   expect(result.commands).not.toContain("secret create");
 });
+
+test("a newer-generation deployment restarts the bound public connector after the app", async () => {
+  const result = await deploy({ MOCK_UNIT_GENERATION: "systemd", CLOUDFLARE_TUNNEL_TOKEN: "tunnel-token" });
+  expect(result.code).toBe(0);
+  const commands = result.commands.split("\n");
+  const app = commands.indexOf("systemctl --user restart foodshare-web");
+  const tunnel = commands.indexOf("systemctl --user restart foodshare-cloudflared");
+  expect(app).toBeGreaterThanOrEqual(0);
+  expect(tunnel).toBeGreaterThan(app);
+});
+
+test("rollback also restores the connector stopped by the failed app restart", async () => {
+  const result = await deploy({
+    MOCK_UNIT_GENERATION: "systemd",
+    MOCK_HEALTH_FAIL: "1",
+    CLOUDFLARE_TUNNEL_TOKEN: "tunnel-token",
+  });
+  expect(result.code).not.toBe(0);
+  const commands = result.commands.split("\n");
+  const appRestarts = commands.filter((line) => line === "systemctl --user restart foodshare-web").length;
+  const tunnelRestarts = commands.filter((line) => line === "systemctl --user restart foodshare-cloudflared").length;
+  expect(appRestarts).toBeGreaterThanOrEqual(2);
+  expect(tunnelRestarts).toBe(appRestarts);
+});
 test("an interrupted deployment puts the host back the way it was", async () => {
   // A newer push cancels the run and the runner can go away. Either way
   // the host is left holding the new image with no answer about whether
