@@ -81,6 +81,10 @@ describe("buildContentSecurityPolicy", () => {
       const connect = parse(buildContentSecurityPolicy())["connect-src"];
       expect(connect).toContain("https://api.foodshare.club");
       expect(connect).toContain("wss://api.foodshare.club");
+      const images = parse(buildContentSecurityPolicy())["img-src"];
+      expect(images).toContain("https://api.foodshare.club");
+      expect(images).toContain("https://*.supabase.co");
+      expect(images).not.toContain("wss://api.foodshare.club");
     } finally {
       if (previous === undefined) process.env.NEXT_PUBLIC_SUPABASE_URL = undefined;
       else process.env.NEXT_PUBLIC_SUPABASE_URL = previous;

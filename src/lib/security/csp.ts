@@ -151,7 +151,14 @@ export function buildContentSecurityPolicy(options: CspOptions = {}): string {
     // 370 style={{...}} usages across 102 tsx files; nonce support for inline
     // style attributes is not shipped in any browser, so this is unavoidable.
     ["style-src", ["'self'", "'unsafe-inline'"]],
-    ["img-src", [...IMG_SRC, ...extraImageSources]],
+    [
+      "img-src",
+      [
+        ...IMG_SRC,
+        ...supabaseOrigins(process.env.NEXT_PUBLIC_SUPABASE_URL).filter((origin) => /^https?:\/\//.test(origin)),
+        ...extraImageSources,
+      ],
+    ],
     ["font-src", ["'self'"]],
     ["media-src", ["'self'"]],
     // Sentry browser reporting uses a same-origin tunnel, so no sentry.io here.
