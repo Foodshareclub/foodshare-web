@@ -65,9 +65,17 @@ export default defineConfig({
         launchOptions: {
           args: [
             "--enable-unsafe-webgpu",
-            "--enable-features=Vulkan,UseSkiaRenderer",
-            "--use-vulkan=swiftshader",
-            "--enable-webgpu-developer-features",
+            // Match vgpu's documented Linux software WebGPU preset. Selecting
+            // Vulkan alone can expose an adapter whose canvas device is lost.
+            ...(process.platform === "linux"
+              ? [
+                  "--enable-features=Vulkan",
+                  "--use-angle=vulkan",
+                  "--use-vulkan=swiftshader",
+                  "--use-webgpu-adapter=swiftshader",
+                  "--disable-vulkan-surface",
+                ]
+              : []),
           ],
         },
       },
