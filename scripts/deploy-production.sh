@@ -82,7 +82,7 @@ report_host() {
 # started by nothing and understood by no one.
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 unit_source_dir="$ROOT"
-unit_names="foodshare-web.container foodshare-cloudflared-web.container foodshare-web-network.network"
+unit_names="foodshare-web.container foodshare-cloudflared-web.container foodshare-web.network"
 tunnel_unit_name="foodshare-cloudflared-web.container"
 if [ -f "$UNIT_DIR/foodshare-web.container" ]; then
   if cmp -s "$UNIT_DIR/foodshare-web.container" "$ROOT/systemd/foodshare-web.container"; then

@@ -21,12 +21,6 @@ PublishPort=127.0.0.1:3000:3000
 Network=foodshare-web.network
 EnvironmentFile=/etc/foodshare/foodshare-web.env
 User=nextjs
-Memory=1G
-# The floor the service is guaranteed, and the ceiling it may not pass. The
-# ceiling was `deploy.resources.limits.memory` before; the floor was
-# `deploy.resources.reservations.memory`, and it is the one that keeps the
-# service alive under pressure rather than the one that kills it.
-MemoryMin=256M
 PidsLimit=100
 ReadOnly=true
 Tmpfs=/tmp
@@ -57,6 +51,9 @@ HealthStartPeriod=60s
 Label=autoheal=true
 
 [Service]
+# systemd cgroup memory controls belong to the service, not the container.
+MemoryMax=1G
+MemoryMin=256M
 Restart=always
 TimeoutStartSec=120
 

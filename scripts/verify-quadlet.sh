@@ -9,7 +9,7 @@ pass() { echo "  ✓ $1"; }
 fail_msg() { echo "  ✗ $1"; fail=$((fail + 1)); }
 
 echo "Quadlet verification"
-for unit in foodshare-web.container foodshare-cloudflared-web.container foodshare-web-network.network; do
+for unit in foodshare-web.container foodshare-cloudflared-web.container foodshare-web.network; do
   [ -f "$ROOT/$unit" ] && pass "$unit exists" || { fail_msg "$unit missing"; continue; }
 done
 
@@ -23,6 +23,18 @@ done
 for key in "^\[Unit\]" "^\[Container\]" "^\[Service\]" "^\[Install\]" "^Image=" "^ContainerName=foodshare-web" "^PublishPort=127\.0\.0\.1:3000:3000" "^HealthCmd=" "^EnvironmentFile=" "WantedBy=default.target"; do
   grep -Eq "$key" "$ROOT/foodshare-web.container" && pass "web unit: $key" || fail_msg "web unit missing: $key"
 done
+
+# Every Quadlet network reference must resolve to its source asset.
+for unit in "$ROOT"/*.container; do
+  while IFS= read -r network; do
+    [ -f "$ROOT/$network" ] && pass "$(basename "$unit"): $network resolves" || fail_msg "$unit references missing $network"
+  done < <(sed -n 's/^Network=\(.*\.network\)$/\1/p' "$unit")
+done
+if awk '/^\[/{container=($0=="[Container]")} container && /^Memory(Min|Max)?=/{bad=1} END{exit !bad}' "$ROOT/foodshare-web.container"; then
+  fail_msg "memory controls must be in [Service]"
+else
+  pass "memory controls use systemd service directives"
+fi
 
 # Cloudflared unit must carry a valid tunnel Exec and none of the old corruption
 grep -Eq "^Exec=tunnel .* run" "$ROOT/foodshare-cloudflared-web.container" && pass "cloudflared Exec intact" || fail_msg "cloudflared Exec broken"

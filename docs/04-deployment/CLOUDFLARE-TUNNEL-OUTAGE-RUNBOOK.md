@@ -79,7 +79,7 @@ provider. The chain is:
 foodshare-web (Next.js :3000)  →  foodshare-web.network  →  Caddy  →  cloudflared  →  Cloudflare  →  foodshare.club
 ```
 
-Quadlets in this repo: `foodshare-web.container`, `foodshare-web-network.network`,
+Quadlets in this repo: `foodshare-web.container`, `foodshare-web.network`,
 `foodshare-cloudflared-web.container`, with `Caddyfile` proxying to `foodshare-web:3000`.
 
 Cloudflare returned **530 Origin DNS error** because the tunnel was not connected. Two
@@ -145,7 +145,7 @@ M=podman-machine-default            # whatever `podman machine list` actually sh
 D=/var/home/core/.config/containers/systemd
 
 podman machine ssh "$M" -- mkdir -p "$D"
-for f in foodshare-web.container foodshare-web-network.network foodshare-cloudflared-web.container; do
+for f in foodshare-web.container foodshare-web.network foodshare-cloudflared-web.container; do
   podman machine cp "./$f" "$M:$D/$f"
 done
 podman machine ssh "$M" -- systemctl --user daemon-reload

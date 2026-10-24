@@ -207,7 +207,7 @@ test("a host running the newer generation is not given the older one's units", a
   expect(result.units).toContain("foodshare.network");
   expect(result.units).toContain("foodshare-cloudflared.container");
   expect(result.units).not.toContain("foodshare-cloudflared-web.container");
-  expect(result.units).not.toContain("foodshare-web-network.network");
+  expect(result.units).not.toContain("foodshare-web.network");
 });
 test("a host whose tunnel reads a secret is given one", async () => {
   // The tunnel on a host that runs the newer unit reads its token from a

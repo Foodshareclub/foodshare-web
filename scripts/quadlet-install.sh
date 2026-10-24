@@ -7,7 +7,7 @@ ENV_SRC="${1:-$ROOT/.env.production}"
 UNIT_DIR="${HOME}/.config/containers/systemd"
 
 mkdir -p "$UNIT_DIR" /etc/foodshare 2>/dev/null || sudo mkdir -p /etc/foodshare || true
-cp "$ROOT/foodshare-web.container" "$ROOT/foodshare-cloudflared-web.container" "$ROOT/foodshare-web-network.network" "$UNIT_DIR/"
+cp "$ROOT/foodshare-web.container" "$ROOT/foodshare-cloudflared-web.container" "$ROOT/foodshare-web.network" "$UNIT_DIR/"
 
 if [ -f "$ENV_SRC" ]; then
   # The env file holds the application's secrets, so it is not readable by
