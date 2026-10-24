@@ -63,6 +63,9 @@ jobs:
         run: |
           diff -r supabase/migrations .compat/backend/supabase/migrations
 
+      - name: The external monitor matches the backend source
+        run: cmp scripts/external-monitor.sh .compat/backend/scripts/external-monitor.sh
+
   # Combined validation job - runs lint, oxlint, biome, type-check, test in parallel
   validate:
     name: Validate (${{ matrix.job }})

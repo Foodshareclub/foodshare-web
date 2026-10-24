@@ -99,6 +99,50 @@ for entry in "${ENDPOINTS[@]}"; do
   fi
 done
 
+# A process health route can be green while public product reads are broken.
+# Exercise the same anonymous feed -> owner-detail path as the web preflight.
+check_listing_flow() {
+  if ! command -v jq >/dev/null 2>&1; then
+    echo "FAIL  listing journey: jq is unavailable"
+    return 1
+  fi
+  local base feed listing_id detail
+  base="${NEXT_PUBLIC_SUPABASE_URL:-${SUPABASE_URL:-https://api.${SITE_DOMAIN:-foodshare.club}}}"
+  base="${base%/}/functions/v1/api-v1-products"
+  feed=$(curl -fsS --max-time 20 --max-filesize 1048576 \
+    -H "apikey: ${ANON_KEY}" "$base?postType=food&limit=1" 2>/dev/null) || {
+    echo "FAIL  listing journey: feed request failed"
+    return 1
+  }
+  listing_id=$(printf '%s' "$feed" | jq -er '
+    select(.success == true and (.data | type) == "array" and (.data | length) > 0)
+    | .data[0].id
+    | select(type == "number" or type == "string")
+    | tostring | select(test("^[A-Za-z0-9_-]+$"))
+  ' 2>/dev/null) || {
+    echo "FAIL  listing journey: feed did not provide a valid listing"
+    return 1
+  }
+  detail=$(curl -fsS --max-time 20 --max-filesize 1048576 \
+    -H "apikey: ${ANON_KEY}" "$base?id=$listing_id&include=owner" 2>/dev/null) || {
+    echo "FAIL  listing journey: owner detail request failed"
+    return 1
+  }
+  printf '%s' "$detail" | jq -e --arg id "$listing_id" \
+    '.success == true and (.data | type) == "object" and (.data.id | tostring) == $id' \
+    >/dev/null 2>&1 || {
+    echo "FAIL  listing journey: detail did not match the feed"
+    return 1
+  }
+  echo "ok    listing journey: feed and owner detail agree"
+}
+
+if [ -z "${ANON_KEY:-}" ]; then
+  unchecked=$((unchecked + 1))
+elif ! check_listing_flow; then
+  failures+=("anonymous listing journey failed")
+fi
+
 if [ "$unchecked" -gt 0 ]; then
   echo "FAIL  $unchecked endpoint(s) could not be checked: the anon key is not set"
   failures+=("$unchecked endpoint(s) could not be checked: the anon key is not set")
