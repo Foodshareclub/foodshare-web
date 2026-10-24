@@ -190,13 +190,11 @@ fi
 # Preserve existing host configuration and update only the supplied application
 # settings. Values never appear in command arguments or deployment logs.
 #
-# The values are written quoted, the way they were before. What is not the
-# way they were before is the `$$`: Compose expands `$` in a value, and the
-# old script doubled it so Compose would hand the container a single one.
-# A systemd environment file does not expand `$` at all, so doubling it here
-# would put two literal dollars in the value instead of one.
+# Quadlet's [Container] EnvironmentFile becomes podman --env-file. It is
+# not systemd's [Service] EnvironmentFile or Compose dotenv: quotes are
+# literal characters. Write raw single-line values, including literal dollars.
 python3 - "$ENV_FILE" "$snapshot/env.staged" <<'PY'
-import json, os, pathlib, sys
+import os, pathlib, sys
 source, target = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
 keys = '''NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY
 UPSTASH_REDIS_REST_URL UPSTASH_REDIS_REST_TOKEN
@@ -215,7 +213,10 @@ if 'CLOUDFLARE_TUNNEL_TOKEN' in values:
 lines = source.read_text().splitlines() if source.exists() else []
 lines = [line for line in lines
          if line.split('=', 1)[0] not in values and not line.startswith('NODE_TLS_REJECT_UNAUTHORIZED=')]
-lines += [key + '=' + json.dumps(value) for key, value in values.items()]
+for key, value in values.items():
+    if any(character in value for character in ('\n', '\r', '\0')):
+        raise ValueError('Deployment setting must be a single line: ' + key)
+lines += [key + '=' + value for key, value in values.items()]
 target.write_text('\n'.join(lines) + '\n')
 target.chmod(0o600)
 PY
@@ -308,7 +309,7 @@ rollback() {
   # that had never run the app had no image at all, so it goes back to the
   # image its own unit names.
   if [ -n "$previous_image" ]; then
-    printf 'Image=%s\n' "$previous_image" > "$DROPIN_FILE"
+    printf '[Container]\nImage=%s\n' "$previous_image" > "$DROPIN_FILE"
   else
     rm -f "$DROPIN_FILE"
   fi
@@ -338,7 +339,7 @@ report_unit() {
 }
 
 mkdir -p "$DROPIN_DIR"
-printf 'Image=%s\n' "$DEPLOY_IMAGE" > "$DROPIN_FILE"
+printf '[Container]\nImage=%s\n' "$DEPLOY_IMAGE" > "$DROPIN_FILE"
 chmod 600 "$DROPIN_FILE"
 systemctl --user daemon-reload
 
@@ -377,6 +378,12 @@ trap 'exit 143' TERM INT
 systemctl --user enable foodshare-web >/dev/null 2>&1 || true
 if ! systemctl --user restart foodshare-web; then
   report_unit
+  rollback
+  exit 1
+fi
+running_revision=$(podman container inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' foodshare-web 2>/dev/null || true)
+if [ "$running_revision" != "$DEPLOY_SHA" ]; then
+  echo "The running container does not match the validated commit; rolling back" >&2
   rollback
   exit 1
 fi

@@ -7,10 +7,8 @@
  * 4. Redis (Upstash) connectivity when configured
  *
  * The probes themselves live in `@/lib/health/estate-probe`, because the
- * one that was wrong is the one that has to be pinned down: the route
- * asked PostgREST for "/rest/v1/?select=1", and "1" is not a column, so
- * the database was reported as down while it was serving data -- and the
- * estate answered 503 to everybody.
+ * database probe should follow the product-data path rather than treating
+ * the PostgREST root's OpenAPI response as proof that the listing view works.
  */
 
 import {

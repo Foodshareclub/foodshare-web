@@ -2,6 +2,7 @@ import { chmod, mkdir, mkdtemp, readdir, rm } from "bun:fs/promises";
 import { tmpdir } from "bun:os";
 import { dirname, join, resolve } from "bun:path";
 import { expect, test } from "bun:test";
+import { Redis } from "@upstash/redis";
 
 const repoRoot = resolve(import.meta.dir, "../../..");
 const sha = "a".repeat(40);
@@ -75,8 +76,9 @@ printf 'podman %s\\n' "$*" >> "$MOCK_DIRECTORY/commands"
 if [ "\${1:-}" = --config ]; then shift 2; fi
 case "$1 $2" in
   "container inspect")
-    if [ "\${MOCK_MISSING:-0}" = 1 ]; then exit 1; fi
-    if [[ "$*" == *State.Running* ]]; then echo "\${MOCK_RUNNING:-true}"; else echo sha256:previous; fi ;;
+    if [ "\${MOCK_MISSING:-0}" = 1 ] && [ ! -f "$MOCK_DIRECTORY/app-started" ]; then exit 1; fi
+    if [[ "$*" == *org.opencontainers.image.revision* ]]; then echo "\${MOCK_RUNNING_REVISION:-$DEPLOY_SHA}";
+    elif [[ "$*" == *State.Running* ]]; then echo "\${MOCK_RUNNING:-true}"; else echo sha256:previous; fi ;;
   "login ghcr.io") cat >/dev/null ;;
   "pull "*) [ "\${MOCK_PULL_FAIL:-0}" != 1 ] ;;
   "image inspect") echo "\${MOCK_REVISION:-$DEPLOY_SHA}" ;;
@@ -97,6 +99,7 @@ esac
       join(directory, "systemctl"),
       `#!/bin/bash
 printf 'systemctl %s\\n' "$*" >> "$MOCK_DIRECTORY/commands"
+if [ "$2" = restart ] && [ "$3" = foodshare-web ]; then touch "$MOCK_DIRECTORY/app-started"; fi
 if [ "\$1" = "--user" ] && [ "\$2" = "daemon-reload" ]; then
   if [ -f "\${MOCK_ENV_FILE:-/nonexistent}" ]; then
     printf 'env-file: present\\n' >> "$MOCK_DIRECTORY/commands"
@@ -183,7 +186,7 @@ test("a service that is stopped is started by the deployment", async () => {
   const result = await deploy({ MOCK_RUNNING: "false" });
   expect(result.code).toBe(0);
   expect(result.commands).toContain("systemctl --user restart foodshare-web");
-  expect(result.dropin.trim()).toBe(`Image=${image}`);
+  expect(result.dropin.trim()).toBe(`[Container]\nImage=${image}`);
 });
 test("the environment file is written where the unit on the host reads it", async () => {
   // Two generations of the unit exist: one that reads the environment
@@ -192,7 +195,7 @@ test("the environment file is written where the unit on the host reads it", asyn
   // otherwise the service starts with no configuration at all.
   const result = await deploy({ MOCK_UNIT_ENV: "/somewhere/else/web.env" });
   expect(result.code).toBe(0);
-  expect(result.environment).toContain('NEXT_PUBLIC_SUPABASE_URL="https://new.example"');
+  expect(result.environment).toContain("NEXT_PUBLIC_SUPABASE_URL=https://new.example");
   expect(result.commands).toContain("systemctl --user restart foodshare-web");
 });
 test("a host running the newer generation is not given the older one's units", async () => {
@@ -257,7 +260,7 @@ test("an interrupted deployment puts the host back the way it was", async () => 
   // it is good, unless the deployment puts it back on the way out.
   const result = await deploy({ MOCK_INTERRUPT: "1" });
   expect(result.code).not.toBe(0);
-  expect(result.dropin.trim()).toBe("Image=sha256:previous");
+  expect(result.dropin.trim()).toBe("[Container]\nImage=sha256:previous");
   expect(result.environment).toBe(oldEnvironment);
 });
 test("a host that has never run the app is installed and deployed", async () => {
@@ -268,8 +271,8 @@ test("a host that has never run the app is installed and deployed", async () => 
   const result = await deploy({ MOCK_MISSING: "1", MOCK_NO_UNIT: "1", MOCK_NO_ENV: "1" });
   expect(result.code).toBe(0);
   expect(result.commands).toContain("systemctl --user restart foodshare-web");
-  expect(result.dropin.trim()).toBe(`Image=${image}`);
-  expect(result.environment).toContain('NEXT_PUBLIC_SUPABASE_URL="https://new.example"');
+  expect(result.dropin.trim()).toBe(`[Container]\nImage=${image}`);
+  expect(result.environment).toContain("NEXT_PUBLIC_SUPABASE_URL=https://new.example");
 });
 test("the environment file is written before the units are generated", async () => {
   // Quadlet refuses to generate a unit whose EnvironmentFile is not
@@ -293,7 +296,7 @@ test("a host with no environment file is given one", async () => {
   // the second way a deployment could not bring a host back.
   const result = await deploy({ MOCK_NO_ENV: "1" });
   expect(result.code).toBe(0);
-  expect(result.environment).toContain('NEXT_PUBLIC_SUPABASE_URL="https://new.example"');
+  expect(result.environment).toContain("NEXT_PUBLIC_SUPABASE_URL=https://new.example");
   expect(result.environment).not.toContain("EXISTING_SETTING");
 });
 test("a host that had no environment file has none again after a rollback", async () => {
@@ -314,25 +317,51 @@ test("deploys the immutable validated image by pinning it in the unit's drop-in"
   const result = await deploy();
   expect(result.code).toBe(0);
   expect(result.commands).toContain(`pull ${image}`);
-  expect(result.dropin.trim()).toBe(`Image=${image}`);
+  expect(result.dropin.trim()).toBe(`[Container]\nImage=${image}`);
   expect(result.commands).toContain("systemctl --user restart foodshare-web");
   expect(result.environment).toContain("EXISTING_SETTING=preserved");
-  expect(result.environment).toContain('NEXT_PUBLIC_SUPABASE_URL="https://new.example"');
+  expect(result.environment).toContain("NEXT_PUBLIC_SUPABASE_URL=https://new.example");
   expect(result.environment).not.toContain("NODE_TLS_REJECT_UNAUTHORIZED");
   expect(result.commands + result.output + result.error).not.toContain("registry-test-secret");
 });
 test("the tunnel token is written under both names the units read", async () => {
   const result = await deploy({ CLOUDFLARE_TUNNEL_TOKEN: "tunnel-token" });
   expect(result.code).toBe(0);
-  expect(result.environment).toContain('CLOUDFLARE_TUNNEL_TOKEN="tunnel-token"');
-  expect(result.environment).toContain('TUNNEL_TOKEN="tunnel-token"');
+  expect(result.environment).toContain("CLOUDFLARE_TUNNEL_TOKEN=tunnel-token");
+  expect(result.environment).toContain("TUNNEL_TOKEN=tunnel-token");
 });
 test("deploys the Redis credentials required by the production rate limiter without logging them", async () => {
   const result = await deploy();
   expect(result.code).toBe(0);
-  expect(result.environment).toContain('UPSTASH_REDIS_REST_URL="https://redis.example"');
-  expect(result.environment).toContain('UPSTASH_REDIS_REST_TOKEN="redis-test-$token"');
+  expect(result.environment).toContain("UPSTASH_REDIS_REST_URL=https://redis.example");
+  expect(result.environment).toContain("UPSTASH_REDIS_REST_TOKEN=redis-test-$token");
   expect(result.commands + result.output + result.error).not.toContain("redis-test-$token");
+  // Podman --env-file treats quotes as literal data. Feed the resulting
+  // values to the same SDK that otherwise throws during middleware loading.
+  const values = Object.fromEntries(
+    result.environment
+      .split("\n")
+      .filter((line) => line.includes("="))
+      .map((line) => [line.slice(0, line.indexOf("=")), line.slice(line.indexOf("=") + 1)]),
+  );
+  expect(values.UPSTASH_REDIS_REST_TOKEN).toBe("redis-test-$token");
+  expect(() => new Redis({ url: values.UPSTASH_REDIS_REST_URL, token: values.UPSTASH_REDIS_REST_TOKEN })).not.toThrow();
+});
+
+test("multiline environment values fail before replacing settings or restarting the service", async () => {
+  const result = await deploy({ UPSTASH_REDIS_REST_TOKEN: "first-line\nINJECTED_SETTING=true" });
+  expect(result.code).not.toBe(0);
+  expect(result.environment).toBe(oldEnvironment);
+  expect(result.commands).not.toContain("systemctl --user restart");
+  expect(result.output + result.error).not.toContain("INJECTED_SETTING=true");
+});
+
+test("a correct fetched image cannot pass while the running container still serves an older commit", async () => {
+  const result = await deploy({ MOCK_RUNNING_REVISION: "c".repeat(40) });
+  expect(result.code).not.toBe(0);
+  expect(result.environment).toBe(oldEnvironment);
+  expect(result.dropin.trim()).toBe("[Container]\nImage=sha256:previous");
+  expect(result.error).toContain("running container does not match the validated commit");
 });
 test("failed health checks restore the exact previous image and settings", async () => {
   const configurations: Record<string, string>[] = [{ MOCK_HEALTH_FAIL: "1" }, { MOCK_API_FAIL: "1" }];
@@ -341,7 +370,7 @@ test("failed health checks restore the exact previous image and settings", async
     expect(result.code).not.toBe(0);
     // The image that was running, by id — the `:latest` tag may have moved
     // since it was pulled, so the tag is not what was running.
-    expect(result.dropin.trim()).toBe("Image=sha256:previous");
+    expect(result.dropin.trim()).toBe("[Container]\nImage=sha256:previous");
     expect(result.environment).toBe(oldEnvironment);
   }
 });

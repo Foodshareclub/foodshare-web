@@ -6,14 +6,8 @@
  * reported as down while it was serving data, and the site answered 503
  * and showed its maintenance banner to everybody.
  *
- * The database probe is the one that was wrong. It asked PostgREST for
- * "/rest/v1/?select=1", and "1" is not a column: PostgREST cannot parse
- * the select and answers 400, so the route reported the database as
- * down. The same key read the same data through the same service
- * everywhere else, and the deployment's own smoke test asked PostgREST
- * for "/rest/v1/" and got 200.
- *
- * So the probe asks for one row of one view, with a column that exists.
+ * The PostgREST root can return its OpenAPI document without checking the
+ * product view. Probe one row of that view with a known column instead.
  * The view is the one the product feed reads, so a failure of it is a
  * failure of the estate rather than of the probe.
  */
