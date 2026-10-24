@@ -1,4 +1,13 @@
+import { AsyncLocalStorage } from "bun:async_hooks";
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
+
+// Next installs this global when starting its server. Config tests also load
+// server instrumentation, so provide the same runtime primitive before imports.
+Object.defineProperty(globalThis, "AsyncLocalStorage", {
+  value: AsyncLocalStorage,
+  configurable: true,
+  writable: true,
+});
 
 // Bun's own `Response` and `fetch`, captured before happy-dom replaces them.
 //
