@@ -1,5 +1,7 @@
 import { getAdminClient } from "./supabase.ts";
 import { logger } from "./logger.ts";
+import { readVaultEntries } from "./vault-loader.ts";
+import { VAULT_PRELOAD_NAMES } from "./vault-secret-names.ts";
 
 /**
  * Secret interface from vault.secrets
@@ -16,8 +18,15 @@ export interface VaultSecret {
 }
 
 const cache = new Map<string, string>();
-let lastFetch = 0;
+const cacheExpiresAt = new Map<string, number>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+let preloadInFlight: Promise<void> | null = null;
+const secretReadsInFlight = new Map<string, Promise<string | undefined>>();
+
+function cacheSecret(name: string, value: string): void {
+  cache.set(name, value);
+  cacheExpiresAt.set(name, Date.now() + CACHE_TTL);
+}
 
 /**
  * Fetch a secret from the Supabase Vault.
@@ -25,25 +34,30 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
  */
 export async function getSecret(name: string): Promise<string | undefined> {
   // Check cache first
-  if (cache.has(name) && (Date.now() - lastFetch < CACHE_TTL)) {
+  if (cache.has(name) && Date.now() < (cacheExpiresAt.get(name) ?? 0)) {
     return cache.get(name);
   }
 
+  let pending = secretReadsInFlight.get(name);
+  if (!pending) {
+    pending = fetchSecret(name).finally(() => secretReadsInFlight.delete(name));
+    secretReadsInFlight.set(name, pending);
+  }
+  return await pending;
+}
+
+async function fetchSecret(name: string): Promise<string | undefined> {
   try {
     const supabase = getAdminClient();
-    const { data, error } = await supabase
-      .schema("vault")
-      .from("decrypted_secrets")
-      .select("decrypted_secret")
-      .eq("name", name)
-      .single();
+    const { data: secret, error } = await supabase.rpc("get_vault_secret", { secret_name: name })
+      .abortSignal(AbortSignal.timeout(5_000));
 
     if (error) {
       if (error.code === "PGRST116") {
         // Not found in Vault, fall back to environment variable
         const envVal = Deno.env.get(name);
         if (envVal) {
-          cache.set(name, envVal);
+          cacheSecret(name, envVal);
           return envVal;
         }
         return undefined;
@@ -51,9 +65,9 @@ export async function getSecret(name: string): Promise<string | undefined> {
       throw error;
     }
 
-    if (data?.decrypted_secret) {
-      cache.set(name, data.decrypted_secret);
-      return data.decrypted_secret;
+    if (secret) {
+      cacheSecret(name, secret);
+      return secret;
     }
   } catch (err) {
     logger.error("Failed to fetch secret from Vault", { name, error: err });
@@ -80,22 +94,37 @@ export function getSecretSync(name: string): string | undefined {
  * Useful at startup to avoid multiple queries.
  */
 export async function loadAllSecrets(): Promise<void> {
+  if (!preloadInFlight) {
+    preloadInFlight = preloadSecrets().finally(() => {
+      preloadInFlight = null;
+    });
+  }
+  await preloadInFlight;
+}
+
+async function preloadSecrets(): Promise<void> {
   try {
     const supabase = getAdminClient();
-    const { data, error } = await supabase
-      .schema("vault")
-      .from("decrypted_secrets")
-      .select("name,decrypted_secret");
-
-    if (error) throw error;
+    const signal = AbortSignal.timeout(5_000);
+    // Vault is intentionally not an exposed PostgREST schema. Use the existing
+    // service-role-only RPC and isolate decryption failures per requested name.
+    const { entries: data, unreadable } = await readVaultEntries(
+      VAULT_PRELOAD_NAMES,
+      (name) => supabase.rpc("get_vault_secret", { secret_name: name }).abortSignal(signal),
+    );
+    if (unreadable) {
+      logger.warn(
+        "Some Vault entries are unreadable; using environment fallback for those entries",
+        { count: unreadable },
+      );
+    }
 
     if (data) {
       for (const item of data) {
         if (item.name && item.decrypted_secret) {
-          cache.set(item.name, item.decrypted_secret);
+          cacheSecret(item.name, item.decrypted_secret);
         }
       }
-      lastFetch = Date.now();
       logger.info("Vault secrets loaded into cache", { count: data.length });
     }
   } catch (err) {

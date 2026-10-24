@@ -165,6 +165,11 @@ jobs:
           path: .compat/tools
           token: ${{ secrets.CROSS_REPO_TOKEN }}
 
+      - name: Setup Bun for compatibility checks
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.3"
+
       - name: Run compat checks
         env:
           GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}

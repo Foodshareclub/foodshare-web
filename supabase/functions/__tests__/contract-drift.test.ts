@@ -55,6 +55,35 @@ assertCatalogIsCurrent(s);
 const FUNCTIONS_DIR = new URL("../", import.meta.url);
 const CONFIG_TOML = new URL("../../config.toml", import.meta.url);
 
+Deno.test("contract: localization handlers are included in the deployment module graph", async () => {
+  const entrypoint = new URL("api-v1-localization/index.ts", FUNCTIONS_DIR);
+  const result = await new Deno.Command(Deno.execPath(), {
+    args: [
+      "info",
+      "--json",
+      "--config",
+      new URL("deno.json", FUNCTIONS_DIR).pathname,
+      entrypoint.href,
+    ],
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
+  assertEquals(result.code, 0, new TextDecoder().decode(result.stderr));
+  const graph = JSON.parse(new TextDecoder().decode(result.stdout));
+  const modules = new Set(graph.modules.map((module: { specifier: string }) => module.specifier));
+  const handlersDir = new URL("./handlers/", entrypoint);
+  let handlers = 0;
+  for (const file of Deno.readDirSync(handlersDir)) {
+    if (!file.isFile || !file.name.endsWith(".ts")) continue;
+    handlers++;
+    assert(
+      modules.has(new URL(file.name, handlersDir).href),
+      `${file.name} missing from module graph`,
+    );
+  }
+  assert(handlers > 0, "No localization handlers found; module graph check would be empty");
+});
+
 // =============================================================================
 // The function registry
 // =============================================================================

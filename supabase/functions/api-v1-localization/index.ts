@@ -28,7 +28,9 @@ import { AppError } from "../_shared/errors.ts";
 
 // Lazy-load handlers to reduce cold start time (~300-500ms savings)
 // Only the handler for the requested route is loaded per request
-const lazyImport = <T>(path: string) => () => import(path).then((m) => m.default as T);
+// Literal imports keep lazy handlers in the deployed Edge Runtime module graph.
+const lazyImport = (load: () => Promise<{ default: HandlerFn }>) => () =>
+  load().then((m) => m.default);
 
 const SERVICE = "api-v1-localization";
 
@@ -54,33 +56,27 @@ type HandlerFn = (
 
 // Lazy handler maps — each handler is loaded only when its route is first accessed
 const postHandlerLoaders: Record<string, () => Promise<HandlerFn>> = {
-  "translate-content": lazyImport<HandlerFn>("./handlers/translate-content.ts"),
-  "prewarm": lazyImport<HandlerFn>("./handlers/prewarm.ts"),
-  "translate-batch": lazyImport<HandlerFn>("./handlers/translate-batch.ts"),
-  "ui-batch-translate": lazyImport<HandlerFn>(
-    "./handlers/ui-batch-translate.ts",
+  "translate-content": lazyImport(() => import("./handlers/translate-content.ts")),
+  "prewarm": lazyImport(() => import("./handlers/prewarm.ts")),
+  "translate-batch": lazyImport(() => import("./handlers/translate-batch.ts")),
+  "ui-batch-translate": lazyImport(() => import("./handlers/ui-batch-translate.ts")),
+  "update": lazyImport(() => import("./handlers/update.ts")),
+  "get-translations": lazyImport(() => import("./handlers/get-translations.ts")),
+  "backfill-posts": lazyImport(() => import("./handlers/backfill-posts.ts")),
+  "backfill-challenges": lazyImport(() => import("./handlers/backfill-challenges.ts")),
+  "backfill-forum-posts": lazyImport(() => import("./handlers/backfill-forum-posts.ts")),
+  "process-queue": lazyImport(() => import("./handlers/process-queue.ts")),
+  "generate-infoplist-strings": lazyImport(() =>
+    import("./handlers/generate-infoplist-strings.ts")
   ),
-  "update": lazyImport<HandlerFn>("./handlers/update.ts"),
-  "get-translations": lazyImport<HandlerFn>("./handlers/get-translations.ts"),
-  "backfill-posts": lazyImport<HandlerFn>("./handlers/backfill-posts.ts"),
-  "backfill-challenges": lazyImport<HandlerFn>(
-    "./handlers/backfill-challenges.ts",
-  ),
-  "backfill-forum-posts": lazyImport<HandlerFn>(
-    "./handlers/backfill-forum-posts.ts",
-  ),
-  "process-queue": lazyImport<HandlerFn>("./handlers/process-queue.ts"),
-  "generate-infoplist-strings": lazyImport<HandlerFn>(
-    "./handlers/generate-infoplist-strings.ts",
-  ),
-  "sync-to-redis": lazyImport<HandlerFn>("./handlers/sync-to-redis.ts"),
+  "sync-to-redis": lazyImport(() => import("./handlers/sync-to-redis.ts")),
 };
 
 // Lazy handler maps for GET routes
 const getHandlerLoaders: Record<string, () => Promise<HandlerFn>> = {
-  "translations": lazyImport<HandlerFn>("./handlers/translations.ts"),
-  "audit": lazyImport<HandlerFn>("./handlers/audit.ts"),
-  "health": lazyImport<HandlerFn>("./handlers/health.ts"),
+  "translations": lazyImport(() => import("./handlers/translations.ts")),
+  "audit": lazyImport(() => import("./handlers/audit.ts")),
+  "health": lazyImport(() => import("./handlers/health.ts")),
 };
 
 // Cache resolved handlers to avoid re-importing on subsequent requests
@@ -112,7 +108,7 @@ async function routeRequest(ctx: HandlerContext): Promise<Response> {
   // GET / — Simple UI string bundles (fast, compressed)
   if (method === "GET" && (subPath === "" || subPath === "/")) {
     const handler = await resolveHandler(
-      { "ui-strings": lazyImport<HandlerFn>("./handlers/ui-strings.ts") },
+      { "ui-strings": lazyImport(() => import("./handlers/ui-strings.ts")) },
       "ui-strings",
     );
     if (handler) return handler(ctx.request, ctx.corsHeaders);

@@ -1,31 +1,49 @@
 import { logger } from "../_shared/logger.ts";
 import { getAdminClient } from "../_shared/supabase.ts";
+import { readVaultEntries } from "../_shared/vault-loader.ts";
+import { VAULT_PRELOAD_NAMES } from "../_shared/vault-secret-names.ts";
 
 logger.info("main function started");
 
 let cachedVaultSecrets: [string, string][] = [];
 let vaultSecretsLastFetched = 0;
 const VAULT_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let vaultSecretsInFlight: Promise<[string, string][]> | null = null;
 
 async function getCachedVaultSecrets(): Promise<[string, string][]> {
   if (
-    Date.now() - vaultSecretsLastFetched < VAULT_CACHE_TTL_MS &&
-    cachedVaultSecrets.length > 0
+    vaultSecretsLastFetched > 0 && Date.now() - vaultSecretsLastFetched < VAULT_CACHE_TTL_MS
   ) {
     return cachedVaultSecrets;
   }
 
+  if (!vaultSecretsInFlight) {
+    vaultSecretsInFlight = refreshVaultSecrets().finally(() => {
+      vaultSecretsInFlight = null;
+    });
+  }
+  return await vaultSecretsInFlight;
+}
+
+async function refreshVaultSecrets(): Promise<[string, string][]> {
   try {
     const supabase = getAdminClient();
-    // `vault.decrypted_secrets` is the view that decrypts; `vault.secrets`
-    // stores the ciphertext, so reading `secret` from it hands every worker
-    // an encrypted blob that no amount of comparing will ever match.
-    const { data: secrets, error } = await supabase
-      .schema("vault")
-      .from("decrypted_secrets")
-      .select("name,decrypted_secret");
+    // Bound the entire refresh, including queued reads, so an unavailable
+    // Vault cannot indefinitely block all requests waiting for startup.
+    const signal = AbortSignal.timeout(5_000);
+    // Vault is private; the service-role RPC isolates corrupt rows without
+    // exposing the schema or preventing other readable secrets from loading.
+    const { entries: secrets, unreadable } = await readVaultEntries(
+      VAULT_PRELOAD_NAMES,
+      (name) => supabase.rpc("get_vault_secret", { secret_name: name }).abortSignal(signal),
+    );
+    if (unreadable) {
+      logger.warn("Main router could not read some Vault entries; using environment fallback", {
+        count: unreadable,
+      });
+    }
 
-    if (!error && secrets) {
+    if (secrets) {
       const newSecrets: [string, string][] = [];
       for (const s of secrets) {
         const name = (s as { name?: string | null }).name;
@@ -63,6 +81,52 @@ Deno.serve(async (req: Request) => {
     // @ts-ignore: EdgeRuntime is available in Supabase Edge Functions environment
     const metric = await EdgeRuntime.getRuntimeMetrics();
     return Response.json(metric);
+  }
+
+  // Prometheus scrapes this path. Do not dispatch it to a nonexistent
+  // "metrics" function, or return the JSON-only internal metrics response.
+  if (pathname === "/metrics") {
+    // @ts-ignore: EdgeRuntime is available in Supabase Edge Functions environment
+    const metric = await EdgeRuntime.getRuntimeMetrics();
+    const values: [string, string, unknown, string][] = [
+      [
+        "active_user_workers",
+        "gauge",
+        metric.activeUserWorkersCount,
+        "Currently active user workers.",
+      ],
+      [
+        "retired_user_workers_total",
+        "counter",
+        metric.retiredUserWorkersCount,
+        "Retired user workers.",
+      ],
+      [
+        "received_requests_total",
+        "counter",
+        metric.receivedRequestsCount,
+        "Received runtime requests.",
+      ],
+      [
+        "handled_requests_total",
+        "counter",
+        metric.handledRequestsCount,
+        "Handled runtime requests.",
+      ],
+      [
+        "main_worker_heap_used_bytes",
+        "gauge",
+        metric.mainWorkerHeapStats?.usedHeapSize,
+        "Main worker used heap in bytes.",
+      ],
+    ];
+    const body = values.filter(([, , value]) => typeof value === "number" && Number.isFinite(value))
+      .map(([name, type, value, help]) =>
+        `# HELP supabase_edge_runtime_${name} ${help}\n# TYPE supabase_edge_runtime_${name} ${type}\nsupabase_edge_runtime_${name} ${value}\n`
+      ).join("");
+    return new Response(body, {
+      headers: { "Content-Type": "text/plain; version=0.0.4; charset=utf-8" },
+    });
   }
 
   const pathParts = pathname.split("/");
@@ -111,18 +175,20 @@ Deno.serve(async (req: Request) => {
     } catch (e) {
       logger.error("Worker fetch failed", { error: e, serviceName, pathname, attempts });
       // @ts-ignore: WorkerAlreadyRetired is specific to Deno Deploy / Supabase Edge Functions
+      // A failed fetch can occur after the worker performed a write. Only
+      // replay safe methods; writes need endpoint-specific idempotency.
       if (
-        typeof Deno !== "undefined" && (e as any)?.name === "WorkerAlreadyRetired" && attempts < 2
+        ["GET", "HEAD", "OPTIONS"].includes(req.method) &&
+        (e as { name?: string })?.name === "WorkerAlreadyRetired" && attempts < 2
       ) {
         return await callWorker(attempts + 1);
       }
-      const errorMessage = e instanceof Error ? e.message : String(e);
       return new Response(
         JSON.stringify({
           success: false,
           error: {
             code: "WORKER_EXECUTION_FAILED",
-            message: errorMessage,
+            message: "Unable to execute Edge Function",
             service: serviceName,
           },
         }),

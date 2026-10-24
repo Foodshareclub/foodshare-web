@@ -238,13 +238,13 @@ export async function getProduct(
   // Keep the API aliases while selecting the canonical database columns.
   const profileFields =
     "id, display_name:nickname, first_name, second_name, avatar_url, created_at:created_time" +
-    (includeOwner ? ", bio" : "");
+    (includeOwner ? ", bio:about_me" : "");
 
   const { data, error } = await supabase
     .from("posts_with_location")
     .select(`
       *,
-      profile:profiles!posts_profile_id_fkey(${profileFields}),
+      profile:profiles_public!posts_profile_id_fkey(${profileFields}),
       category:categories(id, name, icon:icon_url)
     `)
     .eq("id", productId)
