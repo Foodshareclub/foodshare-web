@@ -556,7 +556,7 @@ jobs:
     # addresses would take the queue out of the path; that is a change to
     # a production host's firewall, and it is a decision for a person.
     runs-on: [self-hosted, Linux]
-    needs: build-and-publish
+    needs: [build-and-publish, e2e]
     strategy:
       # The two hosts are separate serving nodes. One of them being
       # unreachable must not cancel the deployment to the other: a host
@@ -603,6 +603,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SITE_DOMAIN: ${{ secrets.SITE_DOMAIN }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
           CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
           NEXT_PUBLIC_APP_URL: https://${{ secrets.SITE_DOMAIN }}
           NEXT_PUBLIC_SITE_URL: https://${{ secrets.SITE_DOMAIN }}
@@ -628,6 +630,7 @@ jobs:
             for name in DEPLOY_SHA DEPLOY_IMAGE GITHUB_ACTOR GITHUB_TOKEN GITHUB_REPO \
                         NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY \
                         SUPABASE_SERVICE_ROLE_KEY SITE_DOMAIN CLOUDFLARE_TUNNEL_TOKEN \
+                        UPSTASH_REDIS_REST_URL UPSTASH_REDIS_REST_TOKEN \
                         NEXT_PUBLIC_APP_URL NEXT_PUBLIC_SITE_URL NEXT_PUBLIC_SENTRY_DSN \
                         SENTRY_ORG SENTRY_PROJECT SENTRY_RELEASE NEXT_PUBLIC_SENTRY_RELEASE \
                         NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED \

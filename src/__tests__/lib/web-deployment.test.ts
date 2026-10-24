@@ -120,6 +120,8 @@ fi
         GITHUB_TOKEN: "registry-test-secret",
         GITHUB_ACTOR: "test-user",
         NEXT_PUBLIC_SUPABASE_URL: "https://new.example",
+        UPSTASH_REDIS_REST_URL: "https://redis.example",
+        UPSTASH_REDIS_REST_TOKEN: "redis-test-$token",
         // Only when the unit does not say where the file is: an override
         // takes the decision away from the unit, and the unit is what
         // decides.
@@ -300,6 +302,13 @@ test("the tunnel token is written under both names the units read", async () => 
   expect(result.code).toBe(0);
   expect(result.environment).toContain('CLOUDFLARE_TUNNEL_TOKEN="tunnel-token"');
   expect(result.environment).toContain('TUNNEL_TOKEN="tunnel-token"');
+});
+test("deploys the Redis credentials required by the production rate limiter without logging them", async () => {
+  const result = await deploy();
+  expect(result.code).toBe(0);
+  expect(result.environment).toContain('UPSTASH_REDIS_REST_URL="https://redis.example"');
+  expect(result.environment).toContain('UPSTASH_REDIS_REST_TOKEN="redis-test-$token"');
+  expect(result.commands + result.output + result.error).not.toContain("redis-test-$token");
 });
 test("failed health checks restore the exact previous image and settings", async () => {
   const configurations: Record<string, string>[] = [{ MOCK_HEALTH_FAIL: "1" }, { MOCK_API_FAIL: "1" }];
