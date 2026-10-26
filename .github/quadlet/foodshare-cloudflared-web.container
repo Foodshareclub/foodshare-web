@@ -9,7 +9,7 @@ Wants=network-online.target
 Requires=foodshare-web-network.service
 
 [Container]
-Image=docker.io/cloudflare/cloudflared:latest
+Image=docker.io/cloudflare/cloudflared:2026.10.3
 ContainerName=foodshare-cloudflared-web
 Network=foodshare-web.network
 EnvironmentFile=/etc/foodshare/foodshare-web.env

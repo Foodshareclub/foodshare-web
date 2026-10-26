@@ -27,7 +27,7 @@ BindsTo=foodshare-web.service
 # Pinned by tag on purpose: the official cloudflared image, updated
 # deliberately via CI. No AutoUpdate=registry here by design — keep the
 # tunnel version deterministic.
-Image=cloudflare/cloudflared:latest
+Image=docker.io/cloudflare/cloudflared:2026.10.3
 ContainerName=foodshare-cloudflared
 Network=foodshare.network
 EnvironmentFile=/home/organic/.config/foodshare/cloudflared.env
