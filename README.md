@@ -287,3 +287,13 @@ To access the self-hosted web VPS:
 ```bash
 autossh -M 0 -o ServerAliveInterval=600 -o ServerAliveCountMax=600 -o ConnectTimeout=10 -o ConnectionAttempts=60 -i ~/.ssh/foodshare_id_ed25519 organic@${VPS_HOST:-frontendvps.foodshare.club}
 ```
+
+### TypeScript tooling
+
+Use TSRS for project type checks and Bun for execution and formatting.
+The direct `typescript` package remains a Next.js compatibility dependency:
+Next.js route-type generation and framework setup resolve `typescript/package.json`
+and its compiler CLI. Removing it triggers dependency installation or a setup
+failure; TSRS is not a drop-in replacement for that package-resolution contract.
+DOMPurify supplies its own types; do not restore the deprecated
+`@types/dompurify` stub. Oxlint and Biome are retired.
