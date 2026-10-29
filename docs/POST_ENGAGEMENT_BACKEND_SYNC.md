@@ -1,7 +1,7 @@
 # Post engagement backend contract sync
 
 Canonical backend source:
-[`4d4d053794d87b71bfe330ddf8beacba2a4c863c`](https://github.com/Foodshareclub/foodshare-backend/commit/4d4d053794d87b71bfe330ddf8beacba2a4c863c).
+[`f5a35b770129d1e7791d30435885b92d15f4f349`](https://github.com/Foodshareclub/foodshare-backend/commit/f5a35b770129d1e7791d30435885b92d15f4f349).
 
 The tracked web vendor copy now contains that revision's like/bookmark handlers,
 shared atomic mutation helper, shared barrel, generated backend database types,
@@ -25,3 +25,7 @@ The mobile clients retain their existing shared Swift DTOs and API path. The
 backend change takes effect only after its main deployment pipeline passes and
 the migration/functions are deployed. A web source push or passing type check is
 not evidence of backend deployment, browser behavior, app parity, or publication.
+
+The follow-up sync includes the Edge Function formatting correction and the
+latest shared helper. The backend integration suite additionally exercises
+same-post counter updates from two different accounts (nine steps total).

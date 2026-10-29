@@ -71,7 +71,9 @@ export async function toggleBookmark(ctx: HandlerContext<ToggleBody>): Promise<R
 /**
  * Toggle favorite (atomic operation)
  */
-export async function toggleFavorite(ctx: HandlerContext<ToggleBody, QueryParams>): Promise<Response> {
+export async function toggleFavorite(
+  ctx: HandlerContext<ToggleBody, QueryParams>,
+): Promise<Response> {
   const { supabase, userId, body, query } = ctx;
 
   if (!userId) {
@@ -107,7 +109,10 @@ export async function toggleFavorite(ctx: HandlerContext<ToggleBody, QueryParams
     // Add favorite (upsert)
     const { error } = await supabase
       .from("favorites")
-      .upsert({ user_id: userId, post_id: body.postId }, { onConflict: "user_id,post_id", ignoreDuplicates: true });
+      .upsert(
+        { user_id: userId, post_id: body.postId },
+        { onConflict: "user_id,post_id", ignoreDuplicates: true },
+      );
 
     if (error) {
       logger.error("Add favorite failed", {
@@ -122,7 +127,11 @@ export async function toggleFavorite(ctx: HandlerContext<ToggleBody, QueryParams
     action = "added";
   } else {
     // Remove favorite
-    const { error } = await supabase.from("favorites").delete().eq("user_id", userId).eq("post_id", body.postId);
+    const { error } = await supabase
+      .from("favorites")
+      .delete()
+      .eq("user_id", userId)
+      .eq("post_id", body.postId);
 
     if (error) {
       logger.error("Remove favorite failed", {
@@ -138,7 +147,11 @@ export async function toggleFavorite(ctx: HandlerContext<ToggleBody, QueryParams
   }
 
   // Get updated like count
-  const { data: post } = await supabase.from("posts").select("post_like_counter").eq("id", body.postId).single();
+  const { data: post } = await supabase
+    .from("posts")
+    .select("post_like_counter")
+    .eq("id", body.postId)
+    .single();
 
   logger.info("Favorite operation completed", {
     mode,

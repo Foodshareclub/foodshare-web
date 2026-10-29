@@ -10,7 +10,9 @@ export async function getEngagement(ctx: HandlerContext<unknown, QueryParams>): 
   const batch = query.postIds !== undefined;
   if (!batch && query.postId === undefined) throw new ValidationError("postId or postIds required");
   const ids = batch ? query.postIds!.split(",") : [query.postId!];
-  if (ids.length < 1 || ids.length > 100) throw new ValidationError("Invalid postIds (1-100 required)");
+  if (ids.length < 1 || ids.length > 100) {
+    throw new ValidationError("Invalid postIds (1-100 required)");
+  }
   const postIds = [...new Set(ids.map(postEngagementId))];
   const { data, error } = await supabase.rpc("get_batch_engagement", {
     p_post_ids: postIds,
@@ -38,7 +40,11 @@ export async function getEngagement(ctx: HandlerContext<unknown, QueryParams>): 
     ) {
       throw new DatabaseError("Invalid engagement response");
     }
-    result[id] = { isLiked: entry.isLiked, isBookmarked: entry.isBookmarked, likeCount: entry.likeCount };
+    result[id] = {
+      isLiked: entry.isLiked,
+      isBookmarked: entry.isBookmarked,
+      likeCount: entry.likeCount,
+    };
   }
   // These values change on writes across workers. Do not serve a process-local
   // cached value immediately after another worker has committed a toggle.
@@ -50,7 +56,9 @@ export async function getEngagement(ctx: HandlerContext<unknown, QueryParams>): 
 /**
  * Get user's bookmarked posts
  */
-export async function getUserBookmarks(ctx: HandlerContext<unknown, QueryParams>): Promise<Response> {
+export async function getUserBookmarks(
+  ctx: HandlerContext<unknown, QueryParams>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
 
   if (!userId) {

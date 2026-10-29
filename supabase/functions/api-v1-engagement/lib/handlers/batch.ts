@@ -11,7 +11,9 @@ import { logger } from "../../../_shared/logger.ts";
 import { postEngagementId, togglePostEngagement } from "../../../_shared/post-engagement.ts";
 import type { BatchOperationsBody, QueryParams } from "../schemas.ts";
 
-export async function handleBatchOperations(ctx: HandlerContext<BatchOperationsBody, QueryParams>): Promise<Response> {
+export async function handleBatchOperations(
+  ctx: HandlerContext<BatchOperationsBody, QueryParams>,
+): Promise<Response> {
   const { operations } = ctx.body;
   const { userId, supabase } = ctx;
 
@@ -50,7 +52,12 @@ export async function handleBatchOperations(ctx: HandlerContext<BatchOperationsB
             break;
           }
           case "toggle_bookmark": {
-            const bookmarkResult = await togglePostEngagement(supabase, "bookmark", entityId, userId);
+            const bookmarkResult = await togglePostEngagement(
+              supabase,
+              "bookmark",
+              entityId,
+              userId,
+            );
             data = { isBookmarked: bookmarkResult.active };
             break;
           }

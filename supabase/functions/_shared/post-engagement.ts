@@ -3,7 +3,10 @@ import { DatabaseError, ValidationError } from "./errors.ts";
 import { logger } from "./logger.ts";
 
 export function postEngagementId(value: unknown): number {
-  const candidate = typeof value === "string" && /^[1-9]\d*$/.test(value.trim()) ? Number(value.trim()) : value;
+  let candidate = value;
+  if (typeof value === "string" && /^[1-9]\d*$/.test(value.trim())) {
+    candidate = Number(value.trim());
+  }
   if (typeof candidate !== "number" || !Number.isSafeInteger(candidate) || candidate < 1) {
     throw new ValidationError("A positive post ID is required");
   }
@@ -32,7 +35,12 @@ export async function togglePostEngagement(
     logger.error("Post engagement mutation failed", { kind, code: error.code });
     throw new DatabaseError("Unable to update engagement");
   }
-  if (!data || typeof data.active !== "boolean" || !Number.isSafeInteger(data.likeCount) || data.likeCount < 0) {
+  if (
+    !data ||
+    typeof data.active !== "boolean" ||
+    !Number.isSafeInteger(data.likeCount) ||
+    data.likeCount < 0
+  ) {
     throw new DatabaseError("Invalid engagement mutation response");
   }
   return { active: data.active, likeCount: data.likeCount };
