@@ -10,6 +10,10 @@ helper is removed. Public RPC signatures in `src/types/database.types.ts` were
 copied from the backend's generated definitions; other public client types remain
 in their existing shape.
 
+The vendor report also exposed an older missing room-identity migration. It is
+now copied from the same canonical revision. All 87 tracked migration files and
+the external-monitor wrapper match that backend revision byte-for-byte.
+
 The canonical native database and integration commands run from
 `foodshare-backend`. This repository excludes local oracle metadata under
 `supabase/oracle`; existing ignored files there were preserved. Backend-only
