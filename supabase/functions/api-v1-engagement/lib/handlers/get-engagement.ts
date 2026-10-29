@@ -1,203 +1,85 @@
-/**
- * Engagement Read Handlers (GET)
- *
- * Single/batch engagement status + user bookmarks.
- * Extracted from `api-v1-engagement/index.ts` — no logic changes.
- */
-
+/** Fresh engagement reads share the same consolidated-table RPC as batch clients. */
 import { type HandlerContext, ok } from "../../../_shared/api-handler.ts";
-import { ValidationError } from "../../../_shared/errors.ts";
+import { DatabaseError, ValidationError } from "../../../_shared/errors.ts";
+import { postEngagementId } from "../../../_shared/post-engagement.ts";
 import { logger } from "../../../_shared/logger.ts";
-import { cache, CACHE_KEYS, CACHE_TTLS } from "../../../_shared/cache.ts";
 import type { QueryParams } from "../schemas.ts";
 
-/**
- * Get engagement status for a post or batch of posts
- */
-export async function getEngagement(
-  ctx: HandlerContext<unknown, QueryParams>,
-): Promise<Response> {
+export async function getEngagement(ctx: HandlerContext<unknown, QueryParams>): Promise<Response> {
   const { supabase, userId, query } = ctx;
-
-  // Batch request
-  if (query.postIds) {
-    const postIds = query.postIds.split(",").map((id) => parseInt(id.trim()))
-      .filter((id) => !isNaN(id));
-
-    if (postIds.length === 0 || postIds.length > 100) {
-      throw new ValidationError("Invalid postIds (1-100 required)");
-    }
-
-    // Check cache first
-    const cacheKey = CACHE_KEYS.engagement(postIds, userId);
-    const cached = cache.get<
-      Record<
-        number,
-        { isLiked: boolean; isBookmarked: boolean; likeCount: number }
-      >
-    >(cacheKey);
-    if (cached) {
-      return ok(cached, ctx);
-    }
-
-    // Single RPC call replaces 3 separate queries
-    const { data: rpcResult, error: rpcError } = await supabase.rpc(
-      "get_batch_engagement",
-      {
-        p_post_ids: postIds,
-        p_user_id: userId || null,
-      },
-    );
-
-    if (!rpcError && rpcResult) {
-      // RPC returns JSONB with string keys — normalize to number keys
-      const result: Record<
-        number,
-        { isLiked: boolean; isBookmarked: boolean; likeCount: number }
-      > = {};
-      for (const postId of postIds) {
-        const entry = rpcResult[String(postId)];
-        result[postId] = entry ||
-          { isLiked: false, isBookmarked: false, likeCount: 0 };
-      }
-      cache.set(cacheKey, result, CACHE_TTLS.engagement);
-      return ok(result, ctx);
-    }
-
-    // Fallback to individual queries if RPC fails
-    logger.warn("Batch engagement RPC failed, falling back", {
-      error: rpcError?.message,
-    });
-
-    const { data: likes } = await supabase
-      .from("post_likes")
-      .select("post_id")
-      .in("post_id", postIds);
-
-    const likeCountMap: Record<number, number> = {};
-    for (const like of likes || []) {
-      likeCountMap[like.post_id] = (likeCountMap[like.post_id] || 0) + 1;
-    }
-
-    let userLikes: number[] = [];
-    let userBookmarks: number[] = [];
-
-    if (userId) {
-      const [likesResult, bookmarksResult] = await Promise.all([
-        supabase
-          .from("post_likes")
-          .select("post_id")
-          .eq("profile_id", userId)
-          .in("post_id", postIds),
-        supabase
-          // `bookmarks`, not `post_bookmarks`: there is no post_bookmarks
-          // relation. The table carries both post and forum bookmarks and
-          // defaults forum rows to post_id = 0, so a `post_id IN (...)`
-          // filter cannot pick them up.
-          .from("bookmarks")
-          .select("post_id")
-          .eq("profile_id", userId)
-          .in("post_id", postIds),
-      ]);
-
-      userLikes = (likesResult.data || []).map((l) => l.post_id);
-      userBookmarks = (bookmarksResult.data || []).map((b) => b.post_id);
-    }
-
-    const result: Record<
-      number,
-      { isLiked: boolean; isBookmarked: boolean; likeCount: number }
-    > = {};
-    for (const postId of postIds) {
-      result[postId] = {
-        isLiked: userLikes.includes(postId),
-        isBookmarked: userBookmarks.includes(postId),
-        likeCount: likeCountMap[postId] || 0,
-      };
-    }
-
-    cache.set(cacheKey, result, CACHE_TTLS.engagement);
-    return ok(result, ctx);
+  const batch = query.postIds !== undefined;
+  if (!batch && query.postId === undefined) throw new ValidationError("postId or postIds required");
+  const ids = batch ? query.postIds!.split(",") : [query.postId!];
+  if (ids.length < 1 || ids.length > 100) throw new ValidationError("Invalid postIds (1-100 required)");
+  const postIds = [...new Set(ids.map(postEngagementId))];
+  const { data, error } = await supabase.rpc("get_batch_engagement", {
+    p_post_ids: postIds,
+    p_user_id: userId ?? null,
+  });
+  if (error) {
+    logger.error("Post engagement read failed", { code: error.code });
+    throw new DatabaseError("Unable to load engagement");
   }
-
-  // Single post request
-  if (query.postId) {
-    const postId = parseInt(query.postId);
-    if (isNaN(postId)) {
-      throw new ValidationError("Invalid postId");
-    }
-
-    const { count: likeCount } = await supabase
-      .from("post_likes")
-      .select("id", { count: "exact", head: true })
-      .eq("post_id", postId);
-
-    let isLiked = false;
-    let isBookmarked = false;
-
-    if (userId) {
-      const [likeResult, bookmarkResult] = await Promise.all([
-        supabase
-          .from("post_likes")
-          .select("id")
-          .eq("post_id", postId)
-          .eq("profile_id", userId)
-          .single(),
-        supabase
-          // `bookmarks`, not `post_bookmarks`: there is no post_bookmarks
-          // relation. The table carries both post and forum bookmarks and
-          // defaults forum rows to post_id = 0, so a `post_id IN (...)`
-          // filter cannot pick them up.
-          .from("bookmarks")
-          .select("id")
-          .eq("post_id", postId)
-          .eq("profile_id", userId)
-          .single(),
-      ]);
-
-      isLiked = !!likeResult.data;
-      isBookmarked = !!bookmarkResult.data;
-    }
-
-    return ok({
-      postId,
-      isLiked,
-      isBookmarked,
-      likeCount: likeCount || 0,
-    }, ctx);
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new DatabaseError("Invalid engagement response");
   }
-
-  throw new ValidationError("postId or postIds required");
+  const result: Record<number, { isLiked: boolean; isBookmarked: boolean; likeCount: number }> = {};
+  for (const id of postIds) {
+    const entry = data[String(id)];
+    if (
+      !entry ||
+      typeof entry !== "object" ||
+      Array.isArray(entry) ||
+      typeof entry.isLiked !== "boolean" ||
+      typeof entry.isBookmarked !== "boolean" ||
+      typeof entry.likeCount !== "number" ||
+      !Number.isSafeInteger(entry.likeCount) ||
+      entry.likeCount < 0
+    ) {
+      throw new DatabaseError("Invalid engagement response");
+    }
+    result[id] = { isLiked: entry.isLiked, isBookmarked: entry.isBookmarked, likeCount: entry.likeCount };
+  }
+  // These values change on writes across workers. Do not serve a process-local
+  // cached value immediately after another worker has committed a toggle.
+  const response = ok(batch ? result : { postId: postIds[0], ...result[postIds[0]] }, ctx);
+  response.headers.set("Cache-Control", "private, no-store");
+  return response;
 }
 
 /**
  * Get user's bookmarked posts
  */
-export async function getUserBookmarks(
-  ctx: HandlerContext<unknown, QueryParams>,
-): Promise<Response> {
+export async function getUserBookmarks(ctx: HandlerContext<unknown, QueryParams>): Promise<Response> {
   const { supabase, userId, query } = ctx;
 
   if (!userId) {
     throw new ValidationError("Authentication required");
   }
 
-  const limit = Math.min(parseInt(query.limit || "50"), 100);
+  const limit = Math.min(postEngagementId(query.limit ?? 50), 100);
 
   const { data, error } = await supabase
     .from("bookmarks")
     .select("post_id,created_at")
     .eq("profile_id", userId)
+    .gt("post_id", 0)
+    .eq("forum_id", 0)
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {
     logger.error("Failed to get bookmarks", new Error(error.message));
-    throw error;
+    throw new DatabaseError("Unable to load bookmarks");
   }
 
-  return ok({
-    postIds: (data || []).map((b) => b.post_id),
-    count: data?.length || 0,
-  }, ctx);
+  const response = ok(
+    {
+      postIds: (data || []).map((b) => b.post_id),
+      count: data?.length || 0,
+    },
+    ctx,
+  );
+  response.headers.set("Cache-Control", "private, no-store");
+  return response;
 }

@@ -10472,6 +10472,13 @@ export type Database = {
       };
         Returns: Json;
       },
+      get_batch_engagement: {
+        Args: {
+        p_post_ids: Array<number> | null;
+        p_user_id?: string | null;
+      };
+        Returns: Json;
+      },
       get_batch_engagement_status: {
         Args: {
         p_post_ids: Array<number> | null;
@@ -12793,6 +12800,14 @@ export type Database = {
         Args: {
         p_post_id: number | null;
         p_user_id: string | null;
+      };
+        Returns: Json;
+      },
+      toggle_post_engagement: {
+        Args: {
+        p_post_id: number | null;
+        p_user_id: string | null;
+        p_kind: string | null;
       };
         Returns: Json;
       },

@@ -397,6 +397,22 @@ export interface Database {
       };
     };
     Functions: {
+      /** Synced from the canonical post-engagement migration. */
+      get_batch_engagement: {
+        Args: {
+          p_post_ids: Array<number> | null;
+          p_user_id?: string | null;
+        };
+        Returns: Json;
+      };
+      toggle_post_engagement: {
+        Args: {
+          p_post_id: number | null;
+          p_user_id: string | null;
+          p_kind: string | null;
+        };
+        Returns: Json;
+      };
       create_telegram_link_token: {
         Args: { p_ttl_minutes?: number };
         Returns: Json;
