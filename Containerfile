@@ -1,15 +1,9 @@
 # ---- Stage 1: Install dependencies ----
-# The canary channel, pinned by digest so the image is reproducible even
-# though the `canary` tag itself moves with every upstream build.
+# Stable Bun 1.4.4, pinned by multi-architecture digest for reproducible images.
 #
-# The pin names the arm64 manifest on purpose. The image is built for
-# linux/arm64 only -- the publishing job runs on an ARM64 runner and asks
-# for that one platform -- and a tag resolves to a manifest list while a
-# digest resolves to exactly one manifest. The amd64 manifest of this tag
-# was pinned first, and the build died at the first `RUN` with "exec format
-# error": the amd64 `/bin/sh` cannot execute on an ARM64 kernel. The digest
-# and the target platform have to agree.
-FROM oven/bun:canary@sha256:d3a0f00e2cd5329c7985fccf52138a6ba375a951186c5a7b10f092ed5dfccdb6 AS deps
+# The digest pins the multi-architecture index. The build's explicit target
+# platform selects its matching manifest, including ARM64 for production.
+FROM oven/bun:1.4.4@sha256:1d22548f177f4ff38e0c15baa3c2c46c6c2060ba2d1bc573bb4720b407548f1d AS deps
 WORKDIR /app
 
 # `patches/` is copied because `package.json` names a patched dependency:
@@ -27,7 +21,7 @@ COPY patches ./patches
 RUN bun install --frozen-lockfile
 
 # ---- Stage 2: Build the application ----
-FROM oven/bun:canary@sha256:d3a0f00e2cd5329c7985fccf52138a6ba375a951186c5a7b10f092ed5dfccdb6 AS builder
+FROM oven/bun:1.4.4@sha256:1d22548f177f4ff38e0c15baa3c2c46c6c2060ba2d1bc573bb4720b407548f1d AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -164,7 +158,7 @@ RUN bun run type-check
 RUN bun run build
 
 # ---- Stage 3: Production runner ----
-FROM oven/bun:canary-slim@sha256:54434615955a39b590abe1bc8be2f5a4ee1c5f2b9af655c26b6eebcbd047e66a AS runner
+FROM oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 AS runner
 WORKDIR /app
 
 # Install curl for healthchecks, dumb-init for proper process signal handling, and ca-certificates for HTTPS

@@ -46,7 +46,7 @@ A modern food sharing platform that connects people to reduce food waste by enab
 
 ## Prerequisites
 
-- Bun >=1.4 (primary runtime, package manager and type checker; CI pins 1.4.3)
+- Bun 1.4.4 (primary runtime and package manager; pinned across local tooling, CI and images)
 - Supabase CLI (for local development)
 - Git
 

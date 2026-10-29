@@ -26,7 +26,7 @@ jobs:
           token: ${{ secrets.CROSS_REPO_TOKEN }}
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.4.3"
+          bun-version: "1.4.4"
 
       # The backend's own token cannot read the tunnel's routes: it is
       # refused by the account's tunnel API with "not authorized", and the

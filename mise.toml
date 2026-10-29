@@ -1,33 +1,4 @@
-# Toolchain pinned for this repository.
-#
-# Bun is the only runtime: package manager, script runner, TypeScript
-# executor, type checker, test runner and the Next.js server runtime.
-# `bun scripts/check-no-node.ts` fails the build if Node creeps back in.
-#
-# The *exact* build is pinned in three places, and all three have to
-# name the same one:
-#
-#   mise.toml                 ->  "npm:bun" = "<version>"
-#   package.json              ->  "packageManager": "bun@<version>"
-#   .github/workflows/*.yml   ->  BUN_VERSION: "<version>"
-#
-# The *channel* is pinned in three places, and all three have to name the
-# same one:
-#
-#   mise.toml                 ->  "npm:bun" = "canary"
-#   package.json              ->  "packageManager": "bun@canary"
-#   .github/workflows/*.yml   ->  BUN_VERSION: "canary"
-#
-# The canary is published twice, and the two are not the same build. npm
-# carries the newest canary that was published there; the GitHub releases
-# carry a rolling `canary` tag that moves with every build. `mise` reads
-# the first and `oven-sh/setup-bun` reads the second, so a checkout and a
-# CI run can be a version apart.
-#
-# The channel cannot be named exactly and installed from both. Naming one
-# exact canary build pins CI to a tag that does not exist — the action has
-# no npm fallback — and every job fails at the setup step.
-#
-# Keep all three in step when the channel is changed.
+# Bun stable 1.4.4 is pinned across local tooling, manifests and CI.
+# Use mise's native Bun backend; no npm bootstrap is required.
 [tools]
-"npm:bun" = "canary"
+bun = "1.4.4"

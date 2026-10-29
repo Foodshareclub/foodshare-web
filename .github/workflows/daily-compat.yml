@@ -20,15 +20,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # The canary channel. `bun` is pinned to an exact canary build so a CI run
-  # and a local run execute the same binary.
-  #
-  # The pin is the channel rather than a build. `oven-sh/setup-bun` fetches
-  # Bun from the GitHub releases, and the canary is published there as a
-  # rolling release that moves; naming one exact canary build pins CI to a
-  # tag that does not exist, because the action has no npm fallback, and
-  # every job fails at the setup step.
-  BUN_VERSION: "canary"
+  # Keep the stable Bun version aligned with package.json and mise.toml.
+  BUN_VERSION: "1.4.4"
   # Third-party GitHub Actions are JavaScript and run on the runner's own Node
   # runtime. That is the platform's requirement, not this project's toolchain —
   # everything below runs on Bun.
@@ -168,7 +161,7 @@ jobs:
       - name: Setup Bun for compatibility checks
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.4.3"
+          bun-version: "1.4.4"
 
       - name: Run compat checks
         env:
