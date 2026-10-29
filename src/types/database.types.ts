@@ -405,6 +405,15 @@ export interface Database {
         };
         Returns: Json;
       };
+      set_post_engagement: {
+        Args: {
+          p_post_id: number | null;
+          p_user_id: string | null;
+          p_kind: string | null;
+          p_active: boolean | null;
+        };
+        Returns: Json;
+      };
       toggle_post_engagement: {
         Args: {
           p_post_id: number | null;
