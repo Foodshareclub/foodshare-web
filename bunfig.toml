@@ -59,3 +59,7 @@ preload = ["./src/__tests__/happydom.ts", "./src/__tests__/setup.ts"]
 # runs it on Node. Use `bunx --bun <tool>`, or invoke the local package
 # directly with `bun node_modules/<pkg>/bin/…`.
 bun = true
+
+[fmt]
+printWidth = 120
+ignorePatterns = ["**/*.yml", "**/*.yaml", "**/*.md", "**/*.toml", "**/*.lock", "node_modules/**", "supabase/**", "tools/**", "artifacts/**", "public/**", "src/wasm/**", ".build/**", ".next/**", "coverage/**"]

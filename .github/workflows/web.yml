@@ -59,7 +59,7 @@ jobs:
       - name: The external monitor matches the backend source
         run: cmp scripts/external-monitor.sh .compat/backend/scripts/external-monitor.sh
 
-  # Combined validation job - runs lint, oxlint, biome, type-check, test in parallel
+  # Combined validation job - runs TSRS, Bun formatting, domain checks and tests in parallel
   validate:
     name: Validate (${{ matrix.job }})
     runs-on: ubuntu-24.04
@@ -69,9 +69,7 @@ jobs:
       matrix:
         job:
           - lint
-          - "lint:oxlint"
-          - "lint:biome"
-          - type-check
+          - "format:check"
           - "check:no-docker"
           - "check:no-node"
           - "check:bun-modules"
@@ -113,7 +111,7 @@ jobs:
       - name: Run ${{ matrix.job }}
         run: bun run ${{ matrix.job == 'test' && 'test:ci' || matrix.job }}
         env:
-          BIOME_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
+          FORMAT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
 
       - name: Upload coverage
         if: matrix.job == 'test'

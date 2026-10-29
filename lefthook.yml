@@ -173,39 +173,12 @@ pre-commit:
         bun scripts/check-json.ts > /dev/null || exit 1
 
     # -------------------------------------------------------------------------
-    # 3. LINTING & FORMATTING (Priority 3 - Mandated Toolchain: Oxlint, Biome)
+    # 3. LINTING & FORMATTING (Priority 3 - TSRS and Bun)
     # -------------------------------------------------------------------------
-    web-oxlint:
+    bun-format:
       priority: 3
-      glob: "*.{ts,tsx,js,jsx}"
-      run: |
-        if [ -f package.json ]; then
-          FILES=""
-          for f in {staged_files}; do
-            case "$f" in supabase/*) continue ;; esac
-            FILES="$FILES $f"
-          done
-          if [ -n "$FILES" ]; then bun run oxlint --fix $FILES; fi
-        fi
-      stage_fixed: true
-
-    web-biome:
-      priority: 3
-      glob: "*.{ts,tsx,js,jsx,json}"
-      # vendored backend code must stay byte-identical to foodshare-backend:
-      # biome ignore configs don't apply to explicitly-passed paths,
-      # so filter supabase/* here.
-      run: |
-        if [ -f package.json ]; then
-          FILES=""
-          for f in {staged_files}; do
-            case "$f" in supabase/*) continue ;; esac
-            FILES="$FILES $f"
-          done
-          [ -n "$FILES" ] && bun run biome check --write $FILES 2>/dev/null || true
-          true
-        fi
-      stage_fixed: true
+      glob: "*.{ts,tsx,js,jsx,json,css}"
+      run: bun fmt --no-script --staged
 
     backend-format:
       priority: 3
@@ -285,20 +258,11 @@ pre-push:
           bun check
         fi
 
-    web-oxlint-full:
+    bun-format-check:
       priority: 1
       run: |
-        if [ -f package.json ] && [ -d src ]; then
-          echo "⚡ Verifying Oxlint zero-warning baseline before push..."
-          bun run oxlint src/
-        fi
-
-    web-biome-full:
-      priority: 1
-      run: |
-        if [ -f package.json ] && [ -d src ]; then
-          echo "🎨 Verifying Biome linting and formatting before push..."
-          bun run biome check src/
+        if [ -f scripts/check-changed-format.ts ]; then
+          FORMAT_BASE_REF=HEAD~1 FORMAT_COMMITTED_ONLY=true bun run format:check
         fi
 
     # This was `bun run translations:sync || true`, which despite the name was

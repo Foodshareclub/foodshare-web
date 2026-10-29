@@ -1,7 +1,7 @@
 name: Daily Compatibility & E2E
 
 # Nightly gate for the web layer:
-# 1. Quality matrix (oxlint / biome / tsrs / bun unit tests)
+# 1. Quality matrix (TSRS / Bun formatting / Bun unit tests)
 # 2. Build + Playwright E2E (4 shards)
 # 3. Vendored supabase/ drift check against foodshare-backend main
 # 4. Production health probes + cross-repo CI status
@@ -40,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        job: [lint, "lint:oxlint", "lint:biome", type-check, test]
+        job: [lint, "format:check", test]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap tools (idempotent)

@@ -1,10 +1,10 @@
 # Workspace Rules (`foodshare-web`)
 
-- **Core Toolchain Mandate (Bun, Turbopack, Oxlint, Biome, Hono):**
+- **Core Toolchain Mandate (Bun, Turbopack, TSRS, Hono):**
+  - **TSRS:** Use the pinned TSRS compiler for TypeScript static checks.
+  - **Formatting:** Use Bun 1.4.4 native `bun fmt`; removed lint/format packages must not be reintroduced.
   - **Bun:** For all package management and script execution tasks, ALWAYS use `bun` instead of `npm`, `npx`, `yarn`, or `pnpm`.
   - **Turbopack:** Always use the Next.js Turbopack compiler (`bun next dev --turbopack` & `bun next build --turbopack`).
-  - **Oxlint:** Enforce Rust-based fast linting (`oxlint` / `bunx oxlint`) across JS/TS/JSON code.
-  - **Biome:** Enforce Rust-based fast formatting & linting (`biome` / `bunx biome check`).
   - **Hono:** Use Hono web/edge framework for ultra-fast REST API routing in Next.js App Router (`src/app/api/[[...route]]/route.ts`).
 
 - **Web Frontend Stack:**

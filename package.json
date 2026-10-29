@@ -42,14 +42,11 @@
     "e2e:ui": "bun run playwright test --ui",
     "email:dev": "bun run email dev -p 3001 --dir src/emails",
     "email:export": "bun run email export --outDir src/emails/templates/exported",
-    "format:biome": "bun run biome format --write .",
     "gpu:check": "bun scripts/check-gpu-backgrounds.ts",
     "gpu:doctor": "bun run vgpu doctor",
     "import:foodbanks": "bun run scripts/foodbank-import/index.ts",
-    "lint": "bun run --parallel lint:oxlint check:rtl",
-    "lint:biome": "bun scripts/check-changed-format.ts",
-    "lint:fix": "bun run oxlint --fix && bun run biome check --write .",
-    "lint:oxlint": "bun run oxlint",
+    "lint": "bun run type-check && bun run check:rtl",
+    "lint:fix": "bun run format",
     "quadlet:install": "bash scripts/quadlet-install.sh",
     "sweep:rtl": "bun scripts/sweep-rtl.ts",
     "sync:types": "../foodshare-backend/scripts/sync-types.sh",
@@ -63,7 +60,9 @@
     "translations:sync": "bun scripts/sync-translations.ts",
     "type-check": "bun run next typegen && bun run tsrs --noEmit",
     "verify:quadlet": "bash scripts/verify-quadlet.sh",
-    "verify:sentry": "bun scripts/verify-sentry.ts"
+    "verify:sentry": "bun scripts/verify-sentry.ts",
+    "format": "bun fmt --no-script",
+    "format:check": "bun scripts/check-changed-format.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "3.0.41",
@@ -160,7 +159,6 @@
     "ws": "8.21.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
     "@happy-dom/global-registrator": "21.0.4",
     "@playwright/test": "1.62.1",
     "@tailwindcss/postcss": "4.3.3",
@@ -177,7 +175,6 @@
     "babel-plugin-react-compiler": "1.0.0",
     "fast-check": "4.9.0",
     "jsdom": "27.4.0",
-    "oxlint": "1.80.0",
     "postcss": "8.5.26",
     "tailwindcss": "4.3.3",
     "tsrs": "0.18.0-ts7.1.0-dev.20260929",
