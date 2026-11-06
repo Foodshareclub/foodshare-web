@@ -440,7 +440,4 @@ const sentryWebpackPluginOptions = {
  */
 
 // Chain: nextIntl -> sentry
-export default withSentryConfig(
-  withNextIntl(nextConfig),
-  sentryWebpackPluginOptions,
-);
+export default withSentryConfig(withNextIntl(nextConfig), sentryWebpackPluginOptions);
