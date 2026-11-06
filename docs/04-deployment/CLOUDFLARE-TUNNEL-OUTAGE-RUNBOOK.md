@@ -164,6 +164,32 @@ podman machine ssh <name> -- systemctl --user status foodshare-cloudflared-web
 > `Unit … not found` even though `podman quadlet list` shows it. That is the expected symptom
 > of step 1 being incomplete, not a separate fault.
 
+### Step 3.5 — apply pending Supabase migrations (must precede step 4)
+
+The outage and the migration queue overlap: the privacy and lockdown
+migrations land _behind_ the last deploy. Re-exposing `api.` before they are
+applied puts the pre-lockdown grants back in front of the internet, so apply
+the full pending batch from `foodshare-backend` `main` before step 4:
+
+- All migrations in `supabase/migrations/` that the production DB has not
+  applied (diff against the migration table first; apply in filename order).
+- In particular the post-location privacy batch: the `security_invoker` view
+  creation **strictly before** its column-level `REVOKE`/`GRANT` pair
+  (table-level `REVOKE SELECT ON posts FROM anon` is not possible while the
+  view is `security_invoker` — it would break anon browse).
+- The privilege-lockdown batch (function revokes, service-role gating,
+  webhook verification).
+
+Verify from a host that can reach the stack (inside the podman machine, or
+`api.` once step 4 is done) **before step 4 re-exposes the public records**:
+
+```bash
+# anon raw-table location probe -> must be 401/403, never rows with location
+curl -s -H "apikey: <anon>" 'https://api.foodshare.club/rest/v1/posts?select=location,post_address&limit=1'
+
+# anon browse view -> must be 200 (proves the revoke did not kill public browse)
+```
+
 ### Step 4 — fix the `api.` and `ai.` records in Cloudflare
 
 These must be **proxied** and routed to the tunnel, or pointed at the real origin. Never leave
@@ -185,6 +211,11 @@ non-TLS response on port 443.
 - **Site URL:** `https://foodshare.club`
 - **Redirect URLs:** include `https://foodshare.club/auth/callback`
 - Remove the stale `ai.foodshare.club` entry
+- **GoTrue email webhook:** `GOTRUE_HOOK_SEND_EMAIL_SECRETS` must exist in
+  **both** the auth container's environment and `.env.functions`, or every
+  auth mail (signup, recovery, magic link) fails silently — a "restored"
+  origin with dead auth mail reads like a second outage. Verify by sending
+  one test recovery link and confirming delivery.
 
 Until this is corrected, every magic link lands on the wrong host regardless of how healthy the
 tunnel is.
@@ -197,6 +228,11 @@ curl -sS -o /dev/null -w "%{http_code}\n" https://foodshare.club
 
 # API host — must complete a TLS handshake
 openssl s_client -connect api.foodshare.club:443 -brief </dev/null
+
+# F1 privacy — anon raw-table location probe must be 401/403 (re-confirms
+# the step 3.5 gate live; rows with location data mean the revoke did not
+# land: stop, fix the migration batch, do not finish re-exposure)
+curl -s -H "apikey: <anon>" 'https://api.foodshare.club/rest/v1/posts?select=location,post_address&limit=1'
 
 # No stale magic-link host
 dig +short ai.foodshare.club
