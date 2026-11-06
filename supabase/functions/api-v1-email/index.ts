@@ -117,6 +117,7 @@ Deno.serve(createAPIHandler({
   version: VERSION,
   requireAuth: false, // Auth handled per-route (service/cron for queue ops, JWT for send)
   csrf: false, // Service-to-service + cron + mobile clients
+  captureRawBody: true, // GoTrue signs the exact bytes of /webhook
   rateLimit: {
     limit: 30,
     windowMs: 60000,

@@ -4,6 +4,7 @@
 
 import { type HandlerContext, ok } from "../../_shared/api-handler.ts";
 import { logger } from "../../_shared/logger.ts";
+import { getSupabaseClient } from "../../_shared/supabase.ts";
 import { isConfigured, notConfiguredReason } from "../../_shared/placeholder-config.ts";
 import {
   type CheckResult,
@@ -438,7 +439,12 @@ async function checkUpstashServices(supabase: any): Promise<{
 // =============================================================================
 
 export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
-  const { supabase, request } = ctx;
+  const { request } = ctx;
+  // Secrets are read with the service client: this route is unauthenticated,
+  // and the privilege-lockdown migration revoked `get_secret_audited` from
+  // client roles. Reading it with the caller's client would fail after the
+  // migration lands and blind the probe.
+  const secretsClient = getSupabaseClient();
   const url = new URL(request.url || "http://localhost");
   const checkType = url.searchParams.get("check") || "ping";
 
@@ -462,7 +468,7 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
 
   // All Upstash services check
   if (checkType === "services") {
-    const servicesHealth = await checkUpstashServices(supabase);
+    const servicesHealth = await checkUpstashServices(secretsClient);
     logger.info("Upstash services check completed", servicesHealth.summary);
     return ok({
       ...servicesHealth,
@@ -473,12 +479,12 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
 
   // Detailed Redis health check
   const [urlResult, tokenResult] = await Promise.all([
-    supabase.rpc("get_secret_audited", {
+    secretsClient.rpc("get_secret_audited", {
       secret_name: "UPSTASH_REDIS_URL",
       requesting_user_id: "health-check",
       request_metadata: requestMetadata,
     }),
-    supabase.rpc("get_secret_audited", {
+    secretsClient.rpc("get_secret_audited", {
       secret_name: "UPSTASH_REDIS_TOKEN",
       requesting_user_id: "health-check",
       request_metadata: requestMetadata,

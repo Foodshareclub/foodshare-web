@@ -339,12 +339,12 @@ const KNOWN_MISSING = [
   // the dashboard reported every user as having no unread anything. The
   // engagement API's batch read failed the same way.
   //
-  // Neither is repaired here. Not one of those relations can be fixed by a
+  // The engagement RPC is now repaired by 20261029070000_repair_post_engagement.sql.
+  // The unread-count RPC remains unresolved. Not one of those relations can be fixed by a
   // rename -- the functions were written against a schema that never existed --
   // and the intent has to be re-derived from what `rooms` and
   // `room_participants` actually are. That is a decision, not a patch.
   "get_user_unread_counts",
-  "get_batch_engagement",
 
   // ── the rest: called, never defined ──
   "calculate_user_matches",

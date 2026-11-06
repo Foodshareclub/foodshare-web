@@ -277,10 +277,11 @@ const UNAPPLIED: Record<string, string> = {
     "the same absent relation.",
 
   "20260215120002_batch_engagement.sql":
-    "names something that does not exist — the batch engagement aggregate " +
-    "reads `post_likes` and `post_bookmarks`, neither of which any migration " +
-    "creates. These are the tables `api-v1-engagement` reads, so the entire " +
-    "engagement feature depends on relations the repository does not describe.",
+    "names something that does not exist — the historical batch aggregate " +
+    "reads retired post_likes and post_bookmarks relations, so that file " +
+    "cannot apply. The forward repair in 20261029070000 defines the active " +
+    "RPC against likes and bookmarks; this pin preserves the original " +
+    "replay finding until the historical chain is repaired.",
 };
 
 Deno.test("oracle: the migrations that do not apply are exactly the ones pinned", () => {

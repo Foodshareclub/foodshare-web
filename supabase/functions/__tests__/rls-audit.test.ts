@@ -317,3 +317,32 @@ Deno.test("rls audit: every table only the backend writes is in the set", () => 
         : ""),
   );
 });
+
+Deno.test("internal analytics exports are service-only while public profiles remain readable", () => {
+  for (
+    const name of [
+      "analytics_full_users",
+      "analytics_full_rooms",
+      "analytics_full_listings",
+      "analytics_full_reviews",
+      "analytics_full_favorites",
+    ]
+  ) {
+    const relation = s.relation(name);
+    assert(relation.ok, `${name} must exist`);
+    assertEquals(relation.value.kind, "view");
+    assertEquals(relation.value.reachableByAnon, false, `${name}: anonymous access`);
+    assertEquals(relation.value.reachableByAuthenticated, false, `${name}: client access`);
+    assert(
+      s.catalog.grants.some((grant) =>
+        grant.object === name && grant.grantee === "service_role" &&
+        grant.privileges.includes("SELECT")
+      ),
+      `${name}: backend access must remain`,
+    );
+  }
+  const profiles = s.relation("profiles_public");
+  assert(profiles.ok);
+  assert(profiles.value.reachableByAnon);
+  assert(profiles.value.reachableByAuthenticated);
+});

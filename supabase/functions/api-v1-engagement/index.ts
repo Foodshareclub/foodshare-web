@@ -9,6 +9,8 @@
  * - GET    /api-v1-engagement?postIds=1,2,3         - Batch get engagement
  * - POST   /api-v1-engagement?action=like           - Toggle like
  * - POST   /api-v1-engagement?action=bookmark       - Toggle bookmark
+ * - POST   /api-v1-engagement?action=set_like       - Set explicit like state
+ * - POST   /api-v1-engagement?action=set_bookmark   - Set explicit bookmark state
  * - POST   /api-v1-engagement?action=favorite       - Toggle favorite (atomic)
  * - POST   /api-v1-engagement?action=share          - Record share
  * - POST   /api-v1-engagement/batch                 - Batch operations

@@ -49,8 +49,6 @@
     // estate declares in `types/` are the ones it checks against.
     "check": "cd ../.. && bun run tsrs -p supabase/functions/tsconfig.json --noEmit",
     "lint": "deno lint",
-    "lint:oxlint": "oxlint",
-    "lint:biome": "biome check .",
     "fmt": "deno fmt"
   },
   "lint": {

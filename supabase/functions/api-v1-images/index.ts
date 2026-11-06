@@ -28,7 +28,8 @@
  */
 
 import { createAPIHandler, type HandlerContext, ok } from "../_shared/api-handler.ts";
-import { AppError } from "../_shared/errors.ts";
+import { AppError, AuthenticationError } from "../_shared/errors.ts";
+import { requireServiceAuth } from "../_shared/service-auth.ts";
 import { parseRoute } from "../_shared/routing.ts";
 import { isR2Configured } from "../_shared/r2-storage.ts";
 
@@ -71,18 +72,24 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
   );
 
   switch (route.resource) {
-    case "upload":
-      return await handleUpload(ctx);
-    case "batch":
-      return await handleBatchUpload(ctx);
-    case "proxy":
-      return await handleProxy(ctx);
-    case "upload-from-url":
-      return await handleUploadFromUrl(ctx);
     case "cleanup":
-      return await handleCleanup(ctx);
     case "recompress":
-      return await handleRecompress(ctx);
+      // These delete or rewrite stored objects. They are never user routes.
+      requireServiceAuth(ctx.request);
+      return route.resource === "cleanup" ? await handleCleanup(ctx) : await handleRecompress(ctx);
+
+    case "upload":
+    case "batch":
+    case "proxy":
+    case "upload-from-url":
+      if (!ctx.userId) {
+        throw new AuthenticationError("Authentication required to upload images");
+      }
+      if (route.resource === "upload") return await handleUpload(ctx);
+      if (route.resource === "batch") return await handleBatchUpload(ctx);
+      if (route.resource === "proxy") return await handleProxy(ctx);
+      return await handleUploadFromUrl(ctx);
+
     default:
       throw new AppError("Not found", "NOT_FOUND", 404);
   }
@@ -97,6 +104,9 @@ Deno.serve(createAPIHandler({
   version: VERSION,
   requireAuth: false,
   csrf: false,
+  // Multipart bodies are images: 10MB per file, 25MB per batch. The default
+  // 1MB cap rejected every real upload before the handler saw it.
+  maxBodySize: 30 * 1024 * 1024,
   rateLimit: {
     limit: 30,
     windowMs: 60_000,

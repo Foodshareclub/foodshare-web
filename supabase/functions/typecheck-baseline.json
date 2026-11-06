@@ -496,7 +496,7 @@
     {
       "file": "whatsapp-bot-foodshare/handlers/interactive.ts",
       "code": "TS2339",
-      "message": "Property 'address' does not exist on type '{ available_hours: string | null; canonical_slug: string | null; category_id: number | null; condition: string | null; created_at: string | null; expires_at: string | null; fridge_id: string | null; ... 27 more ...; version: number | null; }'.",
+      "message": "Property 'address' does not exist on type '{ available_hours: string | null; canonical_slug: string | null; category_id: number | null; condition: string | null; coordinates_approximate: boolean | null; created_at: string | null; ... 29 more ...; version: number | null; }'.",
       "count": 1
     },
     {
@@ -508,7 +508,7 @@
     {
       "file": "whatsapp-bot-foodshare/handlers/messages.ts",
       "code": "TS2339",
-      "message": "Property 'address' does not exist on type '{ available_hours: string | null; canonical_slug: string | null; category_id: number | null; condition: string | null; created_at: string | null; expires_at: string | null; fridge_id: string | null; ... 27 more ...; version: number | null; }'.",
+      "message": "Property 'address' does not exist on type '{ available_hours: string | null; canonical_slug: string | null; category_id: number | null; condition: string | null; coordinates_approximate: boolean | null; created_at: string | null; ... 29 more ...; version: number | null; }'.",
       "count": 1
     },
     {

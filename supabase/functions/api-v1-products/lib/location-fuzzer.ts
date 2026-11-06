@@ -20,9 +20,23 @@ export function fuzzProductCoordinates(
   product: Record<string, unknown>,
   requestingUserId: string | null,
 ): Record<string, unknown> {
+  // Rows from `posts_with_location` are fuzzed by the view itself and carry
+  // `coordinates_approximate: true`. Fuzzing them again would compound the
+  // offset and, worse, make the API's guarantee depend on which relation a
+  // handler happened to read.
+  const viewAlreadyFuzzed = product.coordinates_approximate === true;
+
   // Owner sees exact coordinates
   if (requestingUserId && product.profile_id === requestingUserId) {
-    return { ...product, coordinates_approximate: false };
+    return {
+      ...product,
+      coordinates_approximate: viewAlreadyFuzzed,
+    };
+  }
+
+  if (viewAlreadyFuzzed) {
+    // `post_address` is already the stripped address and `location` is NULL.
+    return { ...product };
   }
 
   // The public response must not reveal the exact pickup address or alternate

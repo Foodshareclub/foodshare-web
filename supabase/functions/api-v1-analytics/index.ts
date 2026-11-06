@@ -25,7 +25,7 @@ const { handleGetStatus, handleSync } = createRouteHandlers(healthCheck);
 Deno.serve(createAPIHandler({
   service: "api-v1-analytics",
   version: CONFIG.version,
-  requireAuth: false, // Cron + internal; auth handled at config.toml level
+  requireAuth: false, // Public health; service credentials enforced in status/sync handlers
   csrf: false, // Service-to-service / cron function
   rateLimit: {
     limit: 10,

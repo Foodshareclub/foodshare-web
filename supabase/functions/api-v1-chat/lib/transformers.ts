@@ -16,20 +16,20 @@ export function transformRoom(data: Record<string, unknown>) {
     id: data.room_id || data.id,
     name: data.room_name || data.name,
     roomType: data.room_type,
-    lastMessage: data.last_message_content
+    lastMessage: (data.last_message_content ?? data.lastMessage)
       ? {
-        content: data.last_message_content,
-        senderId: data.last_message_sender_id,
+        content: data.last_message_content ?? data.lastMessage,
+        senderId: data.last_message_sender_id ?? data.lastMessageSentBy,
         senderName: data.last_message_sender_name,
-        sentAt: data.last_message_at,
+        sentAt: data.last_message_at ?? data.lastMessageTime,
       }
       : null,
-    unreadCount: data.unread_count || 0,
+    unreadCount: data.unread_count ?? (data.hasUnread ? 1 : 0),
     isMuted: data.is_muted || false,
     isPinned: data.is_pinned || false,
     participants: data.participant_count || data.participants || 0,
     avatarUrl: data.avatar_url,
-    updatedAt: data.last_message_at || data.updated_at,
+    updatedAt: data.last_message_at ?? data.lastMessageTime ?? data.updated_at,
   };
 }
 

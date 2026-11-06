@@ -13,7 +13,12 @@ import {
   ok,
   paginated,
 } from "../../_shared/api-handler.ts";
-import { AuthorizationError, NotFoundError, ValidationError } from "../../_shared/errors.ts";
+import {
+  AuthorizationError,
+  NotFoundError,
+  ServerError,
+  ValidationError,
+} from "../../_shared/errors.ts";
 import { logger } from "../../_shared/logger.ts";
 import { transformMessage, transformRoom, transformRoomDetail } from "./transformers.ts";
 
@@ -93,9 +98,16 @@ export async function listRooms(
     throw error;
   }
 
-  const rooms = data || [];
-  const hasMore = rooms.length > limit;
-  const resultRooms = hasMore ? rooms.slice(0, -1) : rooms;
+  // get_user_rooms returns a JSON envelope, not a set of database rows.
+  // Validate it so an RPC failure cannot become a successful empty inbox.
+  const result = z.object({
+    success: z.literal(true),
+    rooms: z.array(z.record(z.unknown())),
+    totalCount: z.number().int().nonnegative(),
+  }).safeParse(data);
+  if (!result.success) throw new ServerError("Invalid room-list response");
+  // The deployed RPC can return every matching room despite p_limit.
+  const resultRooms = result.data.rooms.slice(0, limit);
 
   return paginated(
     resultRooms.map(transformRoom),
@@ -103,7 +115,7 @@ export async function listRooms(
     {
       offset: 0,
       limit,
-      total: resultRooms.length,
+      total: result.data.totalCount,
     },
   );
 }

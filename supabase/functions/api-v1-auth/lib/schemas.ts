@@ -11,14 +11,15 @@ import { z } from "zod";
 // Rate Schemas
 // =============================================================================
 
+// The caller identifies the account, never the network. The IP is derived from
+// the request by `getClientIp`; a body field that claimed one was believed, and
+// the blocklist counted the value the attacker chose.
 export const rateCheckSchema = z.object({
   email: z.string().email(),
-  ipAddress: z.string().ip().optional(),
 });
 
 export const rateRecordSchema = z.object({
   email: z.string().email(),
-  ipAddress: z.string().ip().optional(),
   userAgent: z.string().optional(),
   appPlatform: z.enum(["ios", "android", "web"]).optional(),
   appVersion: z.string().optional(),

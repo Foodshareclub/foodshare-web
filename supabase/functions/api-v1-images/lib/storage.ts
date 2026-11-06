@@ -18,54 +18,75 @@ export const ALLOWED_BUCKETS = [
   "posts",
 ];
 
-// Rate limiting: 100 uploads per user per day
-const RATE_LIMIT_KEY = "image_upload_count";
-const RATE_LIMIT_MAX = 100;
-const RATE_LIMIT_WINDOW = 86400; // 24 hours
+/**
+ * Buckets a normal account may write to. `assets` holds shared templates and
+ * other deployment-owned files; a client upload must never be able to replace
+ * `templates/confirmation.html` and change what an auth email links to.
+ */
+export const CLIENT_WRITABLE_BUCKETS = ALLOWED_BUCKETS.filter(
+  (bucket) => bucket !== "assets",
+);
 
+export function isClientWritableBucket(bucket: string): boolean {
+  return CLIENT_WRITABLE_BUCKETS.includes(bucket);
+}
+
+/**
+ * Put every client object under the caller's own prefix.
+ *
+ * `customPath` used to be passed through to storage, so one account could
+ * overwrite another account's image (or a shared template) by naming its path.
+ * The prefix is the object-level ownership boundary that storage policies and
+ * the public URL both rely on.
+ */
+export function scopedUploadPath(
+  userId: string,
+  customPath: string | null | undefined,
+  format: string,
+): string {
+  const randomName = `${crypto.randomUUID()}.${format}`;
+  if (!customPath) return `${userId}/${randomName}`;
+
+  const normalized = customPath.trim().replace(/^\/+/, "");
+  const safe = normalized.length > 0 &&
+    normalized.length <= 200 &&
+    !normalized.includes("..") &&
+    !normalized.includes("\\") &&
+    /^[A-Za-z0-9._/-]+$/.test(normalized);
+
+  if (!safe) return `${userId}/${randomName}`;
+
+  // Force the extension to the detected format, so a path ending in `.html`
+  // is still stored as an image and served with an image content type.
+  const withoutExtension = normalized.replace(/\.[^./]+$/, "");
+  if (withoutExtension.startsWith(`${userId}/`)) {
+    return `${withoutExtension}.${format}`;
+  }
+  return `${userId}/${withoutExtension}.${format}`;
+}
+
+// Rate limiting: 100 uploads per user per day.
+//
+// The read-modify-write version on `user_rate_limits` let N concurrent uploads
+// all read the same count and each write count+1, so a burst could exceed the
+// limit by the number of concurrent requests. The RPC performs the increment
+// under a row lock and returns the post-increment decision.
 // deno-lint-ignore no-explicit-any
 export async function checkRateLimit(
   userId: string,
   supabase: SupabaseClient<any, any, any>,
 ): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("user_rate_limits")
-    .select("count,reset_at")
-    .eq("user_id", userId)
-    .eq("key", RATE_LIMIT_KEY)
-    .single();
+  const { data, error } = await supabase.rpc("consume_image_upload_quota", {
+    p_user_id: userId,
+  });
 
-  if (error || !data) {
-    await supabase.from("user_rate_limits").insert({
-      user_id: userId,
-      key: RATE_LIMIT_KEY,
-      count: 1,
-      reset_at: new Date(Date.now() + RATE_LIMIT_WINDOW * 1000).toISOString(),
-    });
-    return true;
-  }
-
-  if (new Date(data.reset_at) < new Date()) {
-    await supabase.from("user_rate_limits")
-      .update({
-        count: 1,
-        reset_at: new Date(Date.now() + RATE_LIMIT_WINDOW * 1000).toISOString(),
-      })
-      .eq("user_id", userId)
-      .eq("key", RATE_LIMIT_KEY);
-    return true;
-  }
-
-  if (data.count >= RATE_LIMIT_MAX) {
+  if (error) {
+    // Fail closed: an unavailable limiter must not become an unlimited one.
+    logger.error("Image upload quota check failed", new Error(error.message));
     return false;
   }
 
-  await supabase.from("user_rate_limits")
-    .update({ count: data.count + 1 })
-    .eq("user_id", userId)
-    .eq("key", RATE_LIMIT_KEY);
-
-  return true;
+  return data === true;
 }
 
 export async function uploadWithFallback(

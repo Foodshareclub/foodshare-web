@@ -50,15 +50,12 @@ export async function parseRequestBody(
         limit,
       );
     }
-    const formData = await request.formData();
-    // Cap entries to prevent abuse (max 50 fields/files)
-    let count = 0;
-    const obj: Record<string, unknown> = {};
-    formData.forEach((value, key) => {
-      if (count++ >= 50) return;
-      obj[key] = value;
-    });
-    return obj;
+    // Return the FormData itself, not a flattened object. Flattening lost
+    // repeated file fields, and — more importantly — the caller then had to
+    // call `request.formData()` a second time to read the upload, which throws
+    // because the stream is already consumed. The body is still size-guarded
+    // above by Content-Length and the stream is read exactly once.
+    return await request.formData();
   }
 
   return {};

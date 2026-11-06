@@ -3,13 +3,23 @@
  */
 
 import { type HandlerContext, ok } from "../../_shared/api-handler.ts";
-import { PayloadTooLargeError, RateLimitError, ValidationError } from "../../_shared/errors.ts";
+import {
+  AuthenticationError,
+  PayloadTooLargeError,
+  RateLimitError,
+  ValidationError,
+} from "../../_shared/errors.ts";
 import { logger } from "../../_shared/logger.ts";
 import { extractEXIF, getImageDimensions } from "../services/exif.ts";
 import { compressImage, generateThumbnail } from "../../_shared/compression/index.ts";
 import { analyzeImage } from "../services/ai.ts";
 import { detectFormat, logUploadMetrics } from "../../_shared/image-utils.ts";
-import { ALLOWED_BUCKETS, checkRateLimit, uploadWithFallback } from "./storage.ts";
+import {
+  checkRateLimit,
+  isClientWritableBucket,
+  scopedUploadPath,
+  uploadWithFallback,
+} from "./storage.ts";
 import type { BatchUploadResponse, ImageUploadResponse } from "../types/index.ts";
 
 /**
@@ -19,7 +29,7 @@ import type { BatchUploadResponse, ImageUploadResponse } from "../types/index.ts
 export async function handleUpload(ctx: HandlerContext): Promise<Response> {
   const startTime = Date.now();
 
-  const formData = await ctx.request.formData();
+  const formData = ctx.body instanceof FormData ? ctx.body : await ctx.request.formData();
   const file = formData.get("file") as File | null;
   const bucket = (formData.get("bucket") as string) || "food-images";
   const customPath = formData.get("path") as string | null;
@@ -31,8 +41,12 @@ export async function handleUpload(ctx: HandlerContext): Promise<Response> {
     throw new ValidationError("No file provided");
   }
 
-  if (!ALLOWED_BUCKETS.includes(bucket)) {
+  if (!isClientWritableBucket(bucket)) {
     throw new ValidationError(`Invalid bucket: ${bucket}`);
+  }
+
+  if (file.type && !file.type.startsWith("image/")) {
+    throw new ValidationError("Only image uploads are accepted");
   }
 
   if (file.size > 10 * 1024 * 1024) {
@@ -43,12 +57,13 @@ export async function handleUpload(ctx: HandlerContext): Promise<Response> {
   }
 
   const { supabase, userId } = ctx;
+  if (!userId) {
+    throw new AuthenticationError("Authentication required to upload images");
+  }
 
-  if (userId) {
-    const allowed = await checkRateLimit(userId, supabase);
-    if (!allowed) {
-      throw new RateLimitError("Maximum 100 uploads per day");
-    }
+  const allowed = await checkRateLimit(userId, supabase);
+  if (!allowed) {
+    throw new RateLimitError("Maximum 100 uploads per day");
   }
 
   const imageData = new Uint8Array(await file.arrayBuffer());
@@ -64,8 +79,7 @@ export async function handleUpload(ctx: HandlerContext): Promise<Response> {
   }
 
   const format = detectFormat(compressed.buffer);
-  const filename = `${crypto.randomUUID()}.${format}`;
-  const path = customPath || filename;
+  const path = scopedUploadPath(userId, customPath, format);
 
   const { publicUrl, storage } = await uploadWithFallback(
     supabase,
@@ -78,10 +92,7 @@ export async function handleUpload(ctx: HandlerContext): Promise<Response> {
   let thumbnailUrl: string | undefined;
   let thumbnailPath: string | undefined;
   if (thumbnailBuffer) {
-    const thumbFilename = `${crypto.randomUUID()}_thumb.jpg`;
-    const thumbPath = customPath
-      ? `${customPath.replace(/\.[^.]+$/, "")}_thumb.jpg`
-      : thumbFilename;
+    const thumbPath = `${path.replace(/\.[^./]+$/, "")}_thumb.jpg`;
 
     try {
       const thumbResult = await uploadWithFallback(
@@ -161,7 +172,7 @@ export async function handleBatchUpload(
 ): Promise<Response> {
   const startTime = Date.now();
 
-  const formData = await ctx.request.formData();
+  const formData = ctx.body instanceof FormData ? ctx.body : await ctx.request.formData();
   const bucket = (formData.get("bucket") as string) || "food-images";
 
   const files: File[] = [];
@@ -172,6 +183,15 @@ export async function handleBatchUpload(
   }
 
   const MAX_BATCH_SIZE = 20;
+  const MAX_BATCH_BYTES = 25 * 1024 * 1024;
+
+  if (!ctx.userId) {
+    throw new AuthenticationError("Authentication required to upload images");
+  }
+
+  if (!isClientWritableBucket(bucket)) {
+    throw new ValidationError(`Invalid bucket: ${bucket}`);
+  }
 
   if (files.length === 0) {
     throw new ValidationError("No files provided");
@@ -183,6 +203,13 @@ export async function handleBatchUpload(
     );
   }
 
+  if (files.reduce((sum, file) => sum + file.size, 0) > MAX_BATCH_BYTES) {
+    throw new PayloadTooLargeError(
+      "Batch too large (max 25MB total)",
+      MAX_BATCH_BYTES,
+    );
+  }
+
   const results: ImageUploadResponse[] = [];
   let succeeded = 0;
   let failed = 0;
@@ -190,19 +217,20 @@ export async function handleBatchUpload(
 
   for (const file of files) {
     try {
+      const singleForm = new FormData();
+      singleForm.append("file", file);
+      singleForm.append("bucket", bucket);
+
       const mockReq = new Request(ctx.request.url, {
         method: "POST",
         headers: ctx.request.headers,
-        body: (() => {
-          const fd = new FormData();
-          fd.append("file", file);
-          fd.append("bucket", bucket);
-          return fd;
-        })(),
+        body: singleForm,
       });
 
-      // Create a sub-context for each file upload
-      const subCtx: HandlerContext = { ...ctx, request: mockReq };
+      // The body must be replaced too: `handleUpload` reads `ctx.body` (the
+      // parsed FormData) and a spread of the batch context would hand it the
+      // whole batch on every iteration.
+      const subCtx: HandlerContext = { ...ctx, request: mockReq, body: singleForm };
       const result = await handleUpload(subCtx);
       const data = await result.clone().json() as ImageUploadResponse;
 

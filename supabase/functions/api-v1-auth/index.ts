@@ -8,7 +8,7 @@
  * - GET  /            Health check
  * - GET  /health      Health check
  * - POST /rate/check  Check lockout before login
- * - POST /rate/record Record login attempt
+ * - POST /rate/record Record login attempt [service auth only]
  * - POST /verify/send      Generate code + send email
  * - POST /verify/confirm   Validate code, mark verified
  * - POST /verify/resend    Rate-limited resend (3/hr)
@@ -31,6 +31,8 @@ import {
   verifySendSchema,
 } from "./lib/schemas.ts";
 import { handleRateCheck, handleRateRecord } from "./lib/rate.ts";
+import { requireServiceAuth } from "../_shared/service-auth.ts";
+import { getClientIp } from "../_shared/request-ip.ts";
 import { handleVerifyConfirm, handleVerifyResend, handleVerifySend } from "./lib/verify.ts";
 import { handleAppleSignIn } from "./lib/apple.ts";
 import type { AuthContext } from "./lib/types.ts";
@@ -65,10 +67,10 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
   const url = new URL(ctx.request.url);
   const route = parseRoute(url, ctx.request.method, SERVICE);
 
-  // Extract client IP
-  const clientIp = ctx.request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    ctx.request.headers.get("x-real-ip") ||
-    null;
+  // Extract client IP from the connection, not from the request body. The
+  // helper prefers proxy-set headers and takes the nearest hop of
+  // X-Forwarded-For rather than the caller-supplied first entry.
+  const clientIp = getClientIp(ctx.request);
 
   // Parse body
   const body = ctx.body;
@@ -102,6 +104,10 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
       }
 
       if (route.subPath === "record") {
+        // Recording an attempt changes lockout state for an arbitrary email.
+        // A client cannot prove a login failed, so only a trusted service may
+        // report one. Without this, 20 anonymous posts lock any account out.
+        requireServiceAuth(ctx.request);
         const parsed = rateRecordSchema.parse(body);
         return await handleRateRecord(parsed, ctx.request, authCtx);
       }

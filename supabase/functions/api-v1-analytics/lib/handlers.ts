@@ -7,6 +7,7 @@
 import { type HandlerContext, ok } from "../../_shared/api-handler.ts";
 import type { createHealthHandler } from "../../_shared/health-handler.ts";
 import { logger } from "../../_shared/logger.ts";
+import { requireServiceAuth } from "../../_shared/service-auth.ts";
 import { CONFIG } from "./config.ts";
 import { ensureSchema, getMotherDuckToken } from "./motherduck.ts";
 import { getSyncStatus, updateSyncMetadata } from "./sync-metadata.ts";
@@ -24,6 +25,8 @@ export function createRouteHandlers(
     if (path.endsWith("/health")) {
       return healthCheck(ctx);
     }
+
+    requireServiceAuth(ctx.request);
 
     // GET / — return sync status, or trigger incremental sync for cron
     const isCron = ctx.headers.get("x-supabase-cron") === "true" ||
@@ -47,6 +50,7 @@ export function createRouteHandlers(
   }
 
   async function handleSync(ctx: HandlerContext<SyncRequest>): Promise<Response> {
+    requireServiceAuth(ctx.request);
     const startTime = performance.now();
     const mode = ctx.body.mode || "incremental";
 

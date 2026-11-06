@@ -45,3 +45,32 @@ export async function togglePostEngagement(
   }
   return { active: data.active, likeCount: data.likeCount };
 }
+
+/** Explicit state, not a toggle: a lost-response retry cannot undo a like. */
+export async function setPostEngagement(
+  // deno-lint-ignore no-explicit-any
+  supabase: SupabaseClient<any, any, any>,
+  kind: "like" | "bookmark",
+  postId: unknown,
+  userId: string,
+  active: boolean,
+): Promise<PostEngagementState & { changed: boolean }> {
+  if (typeof active !== "boolean") throw new ValidationError("A boolean active state is required");
+  const { data, error } = await supabase.rpc("set_post_engagement", {
+    p_post_id: postEngagementId(postId),
+    p_user_id: userId,
+    p_kind: kind,
+    p_active: active,
+  });
+  if (error) {
+    logger.error("Post engagement state update failed", { kind, code: error.code });
+    throw new DatabaseError("Unable to update engagement");
+  }
+  if (
+    !data || data.active !== active || typeof data.changed !== "boolean" ||
+    !Number.isSafeInteger(data.likeCount) || data.likeCount < 0
+  ) {
+    throw new DatabaseError("Invalid engagement mutation response");
+  }
+  return { active: data.active, likeCount: data.likeCount, changed: data.changed };
+}

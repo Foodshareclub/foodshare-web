@@ -34,11 +34,13 @@ Deno.serve(createAPIHandler({
   routes: {
     GET: {
       handler: handleGetRequest,
+      requireAuth: false, // health probes only; no cache data is returned
     },
     POST: {
       schema: cacheOperationSchema,
       handler: handleCacheOperation,
       idempotent: true,
+      requireAuth: true, // every operation reads or writes user/app cache data
     },
   },
 }));

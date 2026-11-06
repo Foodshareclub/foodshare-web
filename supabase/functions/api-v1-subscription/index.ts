@@ -21,6 +21,7 @@ import { createHealthHandler } from "../_shared/health-handler.ts";
 import { getSupabaseClient } from "../_shared/supabase.ts";
 import { AppError, ForbiddenError, ValidationError } from "../_shared/errors.ts";
 import { logger } from "../_shared/logger.ts";
+import { verifyServiceAuth as verifyCronAuth } from "../_shared/service-auth.ts";
 import { sendDLQAlert, sendTelegramAlert } from "../_shared/telegram-alerts.ts";
 import { getWebhookHealthData, getWebhookMetricsData, handleWebhook } from "./webhook.ts";
 
@@ -68,30 +69,6 @@ type SyncSubscriptionBody = z.infer<typeof syncSubscriptionSchema>;
 // =============================================================================
 
 const getServiceRoleClient = getSupabaseClient;
-
-// =============================================================================
-// Cron Auth
-// =============================================================================
-
-function verifyCronAuth(request: Request): boolean {
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-  const authHeader = request.headers.get("X-Cron-Secret");
-  if (authHeader && cronSecret && authHeader === cronSecret) return true;
-
-  const bearerToken = request.headers.get("Authorization")?.replace(
-    "Bearer ",
-    "",
-  );
-  if (bearerToken && cronSecret && bearerToken === cronSecret) return true;
-  if (bearerToken === serviceRoleKey) return true;
-
-  // Supabase cron header
-  if (request.headers.get("x-supabase-cron") === "true") return true;
-
-  return false;
-}
 
 // =============================================================================
 // Sync Handlers (from sync-subscription)

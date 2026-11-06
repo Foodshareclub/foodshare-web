@@ -7,6 +7,7 @@
 
 import { type HandlerContext, ok } from "../../_shared/api-handler.ts";
 import { logger } from "../../_shared/logger.ts";
+import { getSupabaseClient } from "../../_shared/supabase.ts";
 import {
   AuthenticationError as AuthError,
   ServerError,
@@ -67,6 +68,12 @@ export async function handleCacheOperation(
     }, ctx);
   }
 
+  // Defense in depth: the route also sets `requireAuth`, but a missing user
+  // here would otherwise fall through to the shared `app:`/`global:` scope.
+  if (!userId) {
+    throw new AuthError("Authentication required");
+  }
+
   // Check circuit breaker
   if (isCircuitBreakerOpen()) {
     return new Response(
@@ -124,15 +131,19 @@ export async function handleCacheOperation(
     request_id: ctx.request.headers.get("x-request-id") || "unknown",
   };
 
+  // Secrets are read with the service client, not the caller's. The audit
+  // record still names the user, but a normal account never needs, and must
+  // never have, a grant that lets it call `get_secret_audited` directly.
+  const secretsClient = getSupabaseClient();
   const [urlResult, tokenResult] = await Promise.all([
-    supabase.rpc("get_secret_audited", {
+    secretsClient.rpc("get_secret_audited", {
       secret_name: "UPSTASH_REDIS_URL",
-      requesting_user_id: userId || "anonymous",
+      requesting_user_id: userId,
       request_metadata: requestMetadata,
     }),
-    supabase.rpc("get_secret_audited", {
+    secretsClient.rpc("get_secret_audited", {
       secret_name: "UPSTASH_REDIS_TOKEN",
-      requesting_user_id: userId || "anonymous",
+      requesting_user_id: userId,
       request_metadata: requestMetadata,
     }),
   ]);

@@ -110,7 +110,9 @@ export async function handleRateCheck(
 ): Promise<Response> {
   const { supabase, corsHeaders, clientIp } = ctx;
   const email = body.email.toLowerCase().trim();
-  const ip = body.ipAddress || clientIp;
+  // Never `body.ipAddress`: the request's network identity is derived from the
+  // connection, not from a field the caller controls.
+  const ip = clientIp;
 
   const { data, error } = await supabase.rpc("check_lockout_status", {
     p_email: email,
@@ -174,7 +176,7 @@ export async function handleRateRecord(
 ): Promise<Response> {
   const { supabase, corsHeaders, clientIp, requestId } = ctx;
   const email = body.email.toLowerCase().trim();
-  const ip = body.ipAddress || clientIp;
+  const ip = clientIp;
 
   const { data, error } = await supabase.rpc("record_login_attempt", {
     p_email: email,

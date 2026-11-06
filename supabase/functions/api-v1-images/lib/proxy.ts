@@ -3,19 +3,42 @@
  */
 
 import { type HandlerContext, ok } from "../../_shared/api-handler.ts";
-import { PayloadTooLargeError, ValidationError } from "../../_shared/errors.ts";
+import {
+  AuthenticationError,
+  PayloadTooLargeError,
+  RateLimitError,
+  ValidationError,
+} from "../../_shared/errors.ts";
 import { compressImage } from "../../_shared/compression/index.ts";
 import { validateImageUrl } from "../../_shared/url-validation.ts";
 import { detectFormat, downloadImage, logUploadMetrics } from "../../_shared/image-utils.ts";
-import { uploadWithFallback } from "./storage.ts";
+import {
+  checkRateLimit,
+  isClientWritableBucket,
+  scopedUploadPath,
+  uploadWithFallback,
+} from "./storage.ts";
 
 /**
  * Proxy an external image — download, compress, and re-upload.
  */
 export async function handleProxy(ctx: HandlerContext): Promise<Response> {
-  const body = await ctx.request.json();
+  // The factory already parsed the body; `ctx.request.json()` would throw
+  // "Body already used" on every call.
+  const body = (ctx.body ?? {}) as { url?: string; bucket?: string };
   const imageUrl = body.url;
-  const bucket = body.bucket || "assets";
+  const bucket = body.bucket || "food-images";
+
+  const { userId, supabase } = ctx;
+  if (!userId) {
+    throw new AuthenticationError("Authentication required to proxy images");
+  }
+  if (!isClientWritableBucket(bucket)) {
+    throw new ValidationError(`Invalid bucket: ${bucket}`);
+  }
+  if (!(await checkRateLimit(userId, supabase))) {
+    throw new RateLimitError("Maximum 100 uploads per day");
+  }
 
   if (!imageUrl) {
     throw new ValidationError("Missing 'url' field");
@@ -109,11 +132,28 @@ export async function handleUploadFromUrl(
 ): Promise<Response> {
   const startTime = Date.now();
 
-  const body = await ctx.request.json();
+  const body = (ctx.body ?? {}) as {
+    imageUrl?: string;
+    url?: string;
+    bucket?: string;
+    path?: string;
+    challengeId?: string;
+  };
   const imageUrl = body.imageUrl || body.url;
   const bucket = body.bucket || "challenges";
   const customPath = body.path;
   const challengeId = body.challengeId;
+
+  const { userId, supabase } = ctx;
+  if (!userId) {
+    throw new AuthenticationError("Authentication required to upload images");
+  }
+  if (!isClientWritableBucket(bucket)) {
+    throw new ValidationError(`Invalid bucket: ${bucket}`);
+  }
+  if (!(await checkRateLimit(userId, supabase))) {
+    throw new RateLimitError("Maximum 100 uploads per day");
+  }
 
   if (!imageUrl) {
     throw new ValidationError("Missing imageUrl");
@@ -151,8 +191,6 @@ export async function handleUploadFromUrl(
     throw new ValidationError(`Invalid URL format: ${e.message}`);
   }
 
-  const { supabase } = ctx;
-
   const imageData = await downloadImage(imageUrl);
 
   if (imageData.length > 10 * 1024 * 1024) {
@@ -165,7 +203,7 @@ export async function handleUploadFromUrl(
   const originalSize = imageData.length;
   const compressed = await compressImage(imageData, 800);
   const format = detectFormat(compressed.buffer);
-  const filename = customPath || `${crypto.randomUUID()}.${format}`;
+  const filename = scopedUploadPath(userId, customPath, format);
 
   const { publicUrl, storage } = await uploadWithFallback(
     supabase,

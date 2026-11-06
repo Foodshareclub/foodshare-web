@@ -55,6 +55,12 @@ export interface HandlerContext<
   supabase: SupabaseClient<any, any, any>;
   /** Parsed and validated request body */
   body: TBody;
+  /**
+   * Exact request body text, when the route opted in with `captureRawBody`.
+   * Signature verification must run over the bytes that were signed, not over
+   * a re-serialized object.
+   */
+  rawBody?: string;
   /** URL query parameters */
   query: TQuery;
   /** URL path parameters (from route matching) */
@@ -130,4 +136,6 @@ export interface APIHandlerConfig {
   csrf?: CsrfOptions | boolean;
   /** Maximum request body size in bytes (default: 1MB) */
   maxBodySize?: number;
+  /** Capture the exact body text for signed webhooks (default: false) */
+  captureRawBody?: boolean;
 }

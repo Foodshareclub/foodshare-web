@@ -39,6 +39,30 @@ Deno.test("missing scalar coordinates cannot expose an exact alternate point or 
   assertEquals(result.longitude, null);
 });
 
+Deno.test("a row already fuzzed by the view is not fuzzed again", () => {
+  const viewRow = {
+    id: 42,
+    profile_id: "owner",
+    latitude: 38.001,
+    longitude: -121.001,
+    post_address: "Sacramento",
+    post_stripped_address: "Sacramento",
+    location: null,
+    location_json: { type: "Point", coordinates: [-121.001, 38.001] },
+    coordinates_approximate: true,
+  };
+
+  const guest = fuzzProductCoordinates(viewRow, "another-member");
+  assertEquals(guest, viewRow);
+
+  // The owner still cannot recover the exact point from the view; the detail
+  // handler calls get_post_exact_location. The marker stays true so that path
+  // knows the difference.
+  const owner = fuzzProductCoordinates(viewRow, "owner");
+  assertEquals(owner.latitude, viewRow.latitude);
+  assertEquals(owner.coordinates_approximate, true);
+});
+
 Deno.test("authenticated owner keeps exact pickup data without mutating the cached product", () => {
   const result = fuzzProductCoordinates(product, "owner");
   assertEquals(result.post_address, product.post_address);

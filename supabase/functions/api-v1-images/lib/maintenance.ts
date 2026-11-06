@@ -3,22 +3,26 @@
  */
 
 import { type HandlerContext, ok } from "../../_shared/api-handler.ts";
-import { AuthenticationError } from "../../_shared/errors.ts";
+import { requireServiceAuth } from "../../_shared/service-auth.ts";
 import { cleanupOrphanImages } from "../services/cleanup.ts";
 import { recompressOldImages } from "../services/recompression.ts";
 
 /**
- * Cleanup orphan images. Protected by cron secret.
+ * Cleanup orphan images. Service/cron only.
+ *
+ * The old check only ran when `CRON_SECRET` was set, so a deployment that had
+ * not configured it exposed deletion to anyone. `requireServiceAuth` fails
+ * closed. The body is already parsed by the handler factory; reading
+ * `request.json()` a second time throws `Body already used`.
  */
 export async function handleCleanup(ctx: HandlerContext): Promise<Response> {
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  const authHeader = ctx.headers.get("authorization");
+  requireServiceAuth(ctx.request);
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    throw new AuthenticationError("Unauthorized");
-  }
-
-  const body = await ctx.request.json().catch(() => ({}));
+  const body = (ctx.body ?? {}) as {
+    gracePeriodHours?: number;
+    batchSize?: number;
+    dryRun?: boolean;
+  };
 
   const stats = await cleanupOrphanImages(ctx.supabase, {
     gracePeriodHours: body.gracePeriodHours,
@@ -33,14 +37,12 @@ export async function handleCleanup(ctx: HandlerContext): Promise<Response> {
  * Recompress old images. Protected by cron secret.
  */
 export async function handleRecompress(ctx: HandlerContext): Promise<Response> {
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  const authHeader = ctx.headers.get("authorization");
+  requireServiceAuth(ctx.request);
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    throw new AuthenticationError("Unauthorized");
-  }
-
-  const body = await ctx.request.json().catch(() => ({}));
+  const body = (ctx.body ?? {}) as {
+    batchSize?: number;
+    cutoffDate?: string;
+  };
 
   const results = await recompressOldImages(ctx.supabase, {
     batchSize: body.batchSize,

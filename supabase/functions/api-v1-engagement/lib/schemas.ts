@@ -11,6 +11,11 @@ export const toggleEngagementSchema = z.object({
   postId: positiveIntSchema,
 });
 
+export const setEngagementSchema = z.object({
+  postId: positiveIntSchema,
+  active: z.boolean(),
+});
+
 export const shareSchema = z.object({
   postId: positiveIntSchema,
   method: z.enum(["link", "social", "email", "other"]).default("link"),
@@ -36,7 +41,7 @@ export const batchOperationsSchema = z.object({
 export const querySchema = z.object({
   postId: z.string().optional(),
   postIds: z.string().optional(), // Comma-separated for batch
-  action: z.enum(["like", "bookmark", "favorite", "share", "bookmarks"])
+  action: z.enum(["like", "bookmark", "set_like", "set_bookmark", "favorite", "share", "bookmarks"])
     .optional(),
   mode: z.enum(["toggle", "add", "remove"]).optional(), // For favorite action
   limit: z.string().optional(),

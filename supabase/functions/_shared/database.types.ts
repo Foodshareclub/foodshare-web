@@ -9246,6 +9246,7 @@ export type Database = {
         canonical_slug: string | null;
         category_id: number | null;
         condition: string | null;
+        coordinates_approximate: boolean | null;
         created_at: string | null;
         expires_at: string | null;
         fridge_id: string | null;
@@ -9283,6 +9284,7 @@ export type Database = {
         canonical_slug?: string;
         category_id?: number;
         condition?: string;
+        coordinates_approximate?: boolean;
         created_at?: string;
         expires_at?: string;
         fridge_id?: string;
@@ -9320,6 +9322,7 @@ export type Database = {
         canonical_slug?: string | null;
         category_id?: number | null;
         condition?: string | null;
+        coordinates_approximate?: boolean | null;
         created_at?: string | null;
         expires_at?: string | null;
         fridge_id?: string | null;
@@ -10065,6 +10068,12 @@ export type Database = {
       };
         Returns: Json;
       },
+      consume_image_upload_quota: {
+        Args: {
+        p_user_id: string | null;
+      };
+        Returns: boolean;
+      },
       count_new_profiles_within_radius: {
         Args: {
         lat: number | null;
@@ -10379,6 +10388,12 @@ export type Database = {
         Args: {
         p_action_type: string | null;
         p_consume?: boolean | null;
+      };
+        Returns: Array<Record<string, unknown>>;
+      },
+      fuzzed_post_point: {
+        Args: {
+        p_post_id: number | null;
       };
         Returns: Array<Record<string, unknown>>;
       },
@@ -11063,6 +11078,12 @@ export type Database = {
       },
       get_post_engagement_totals: {
         Args: Record<never, never>;
+        Returns: Array<Record<string, unknown>>;
+      },
+      get_post_exact_location: {
+        Args: {
+        p_post_id: number | null;
+      };
         Returns: Array<Record<string, unknown>>;
       },
       get_post_rating: {
@@ -12609,6 +12630,15 @@ export type Database = {
         p_other_user_name: string | null;
       };
         Returns: boolean;
+      },
+      set_post_engagement: {
+        Args: {
+        p_post_id: number | null;
+        p_user_id: string | null;
+        p_kind: string | null;
+        p_active: boolean | null;
+      };
+        Returns: Json;
       },
       set_post_slug: {
         Args: Record<never, never>;

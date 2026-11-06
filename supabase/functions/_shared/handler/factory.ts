@@ -167,7 +167,14 @@ export function createAPIHandler(config: APIHandlerConfig) {
 
       // Parse and validate body for mutation methods
       let body: unknown = {};
+      let rawBody: string | undefined;
       if (["POST", "PUT", "PATCH"].includes(method)) {
+        if (config.captureRawBody) {
+          // Read a clone first so the signature is checked against the exact
+          // bytes sent. Re-serializing `body` would change whitespace and key
+          // order and make every valid signature fail.
+          rawBody = await request.clone().text();
+        }
         body = await parseRequestBody(request, maxBodySize);
 
         if (routeConfig.schema) {
@@ -203,6 +210,7 @@ export function createAPIHandler(config: APIHandlerConfig) {
         userId,
         supabase,
         body,
+        rawBody,
         query: validatedQuery,
         params,
         headers: request.headers,

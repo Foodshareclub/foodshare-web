@@ -5,7 +5,10 @@
  */
 
 import { getSupabaseClient } from "../../_shared/supabase.ts";
-import { ForbiddenError } from "../../_shared/errors.ts";
+
+// Re-exported so existing call sites keep one import. The implementation lives
+// in `_shared` because api-v1-auth needs the same, stricter contract.
+export { requireServiceAuth, verifyServiceAuth } from "../../_shared/service-auth.ts";
 
 // =============================================================================
 // Configuration
@@ -62,35 +65,6 @@ export interface ProcessResult {
 
 export function getServiceRoleClient() {
   return getSupabaseClient();
-}
-
-// =============================================================================
-// Cron/Service Auth
-// =============================================================================
-
-export function verifyServiceAuth(request: Request): boolean {
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-  const authHeader = request.headers.get("X-Cron-Secret");
-  if (authHeader && cronSecret && authHeader === cronSecret) return true;
-
-  const bearerToken = request.headers.get("Authorization")?.replace(
-    "Bearer ",
-    "",
-  );
-  if (bearerToken && cronSecret && bearerToken === cronSecret) return true;
-  if (bearerToken === serviceRoleKey) return true;
-
-  if (request.headers.get("x-supabase-cron") === "true") return true;
-
-  return false;
-}
-
-export function requireServiceAuth(request: Request): void {
-  if (!verifyServiceAuth(request)) {
-    throw new ForbiddenError("Service or cron authentication required");
-  }
 }
 
 // =============================================================================

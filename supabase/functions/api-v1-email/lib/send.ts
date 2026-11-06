@@ -19,6 +19,7 @@ import {
 } from "../../_shared/email/index.ts";
 import { getSupabaseClient } from "../../_shared/supabase.ts";
 import { escapeHtml, requireServiceAuth, VERSION } from "./utils.ts";
+import { verifyGoTrueEmailWebhook } from "./webhook-auth.ts";
 import type {
   goTrueEmailHookSchema,
   sendInvitationSchema,
@@ -336,6 +337,10 @@ export function handleHealth(ctx: HandlerContext): Promise<Response> {
 export async function handleGoTrueWebhook(
   ctx: HandlerContext<z.infer<typeof goTrueEmailHookSchema>>,
 ): Promise<Response> {
+  // Authenticate before reading any field. `/webhook` sends mail, so an
+  // unsigned request is an open relay, not just a validation failure.
+  verifyGoTrueEmailWebhook(ctx.request, ctx.rawBody);
+
   const { user, email_data } = ctx.body;
 
   logger.info("Received GoTrue email webhook", {

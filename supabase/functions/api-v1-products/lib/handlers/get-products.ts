@@ -264,6 +264,31 @@ export async function getProduct(
     userId,
   );
 
+  // The view returns the approximate point to everyone. The owner's edit path
+  // needs the exact pickup point and address; the RPC returns them only when
+  // the caller owns the post.
+  if (userId && data.profile_id === userId && Number.isFinite(Number(productId))) {
+    const { data: exactRows, error: exactError } = await supabase.rpc(
+      "get_post_exact_location",
+      { p_post_id: Number(productId) },
+    );
+
+    if (exactError) {
+      logger.warn("Failed to read exact listing location", {
+        error: exactError.message,
+      });
+    } else {
+      const exact = Array.isArray(exactRows) ? exactRows[0] : exactRows;
+      if (exact) {
+        result.latitude = exact.latitude;
+        result.longitude = exact.longitude;
+        result.location_json = exact.location_json;
+        result.post_address = exact.post_address;
+        result.coordinates_approximate = false;
+      }
+    }
+  }
+
   if (includeRelated && data.latitude && data.longitude) {
     const { data: related } = await supabase
       .from("posts_with_location")

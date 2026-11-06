@@ -2,7 +2,11 @@ import { assertEquals, assertRejects, assertThrows } from "./test-utils.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { HandlerContext } from "../_shared/api-handler.ts";
 import { DatabaseError, ValidationError } from "../_shared/errors.ts";
-import { postEngagementId, togglePostEngagement } from "../_shared/post-engagement.ts";
+import {
+  postEngagementId,
+  setPostEngagement,
+  togglePostEngagement,
+} from "../_shared/post-engagement.ts";
 import { getEngagement } from "../api-v1-engagement/lib/handlers/get-engagement.ts";
 
 Deno.test("post engagement rejects partial, nonpositive and unsafe identifiers", () => {
@@ -80,4 +84,42 @@ Deno.test("post engagement personalized reads forbid shared HTTP caching", async
   const response = await getEngagement(ctx);
   assertEquals(response.headers.get("Cache-Control"), "private, no-store");
   assertEquals((await response.json()).data.likeCount, 1);
+});
+
+Deno.test("desired engagement state is explicit and malformed writes fail closed", async () => {
+  let calls = 0;
+  const db = {
+    rpc: (name: string, args: Record<string, unknown>) => {
+      calls++;
+      assertEquals(name, "set_post_engagement");
+      assertEquals(args, { p_post_id: 12, p_user_id: "test-user", p_kind: "like", p_active: true });
+      return Promise.resolve({ data: { active: true, likeCount: 2, changed: false }, error: null });
+    },
+  } as unknown as SupabaseClient;
+  assertEquals(await setPostEngagement(db, "like", 12, "test-user", true), {
+    active: true,
+    likeCount: 2,
+    changed: false,
+  });
+  await assertRejects(
+    () => setPostEngagement(db, "like", "12oops", "test-user", true),
+    ValidationError,
+  );
+  assertEquals(calls, 1);
+  for (
+    const data of [null, { active: false, likeCount: 1, changed: true }, {
+      active: true,
+      likeCount: 1,
+    }, { active: true, likeCount: -1, changed: true }]
+  ) {
+    const bad = { rpc: () => Promise.resolve({ data, error: null }) } as unknown as SupabaseClient;
+    await assertRejects(() => setPostEngagement(bad, "like", 12, "test-user", true), DatabaseError);
+  }
+  const failed = {
+    rpc: () => Promise.resolve({ data: null, error: { code: "42883" } }),
+  } as unknown as SupabaseClient;
+  await assertRejects(
+    () => setPostEngagement(failed, "like", 12, "test-user", true),
+    DatabaseError,
+  );
 });
