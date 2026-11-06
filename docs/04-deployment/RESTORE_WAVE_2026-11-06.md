@@ -58,7 +58,7 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
      this); authenticated raw exact → 200 flagged (phase 2 removes it).
    - F4 gate probe (doubles as the F4 deploy confirmation):
      `curl -s -o /dev/null -w '%{http_code}'
-     'https://api.foodshare.club/functions/v1/api-v1-cache?check=services'`
+'https://api.foodshare.club/functions/v1/api-v1-cache?check=services'`
      — **401** = gate live, E1 configured, anonymous correctly refused
      (pass, @verifier runs the anonymous leg); **200** = pre-F4 function
      still being served — the wave's edge-function deploy did not land,
@@ -97,8 +97,12 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
 - **Functions mirror re-sync** (web ← backend) — resolves the 3-file F4 drift;
   `vendored` job red→green is the closure signal.
 - Dependabot: 1 moderate ≤48h of restoration; 3 low next maintenance cycle.
-- Rotation list (operator): Brevo (history copies), Upstash ×2, AWS/Twilio
-  (history), backend F2 historical values, workspace `keys/` actions.
+- Rotation queue (operator, **authoritative list in the backend action doc
+  @ `a3b8e5f7`** — 5 history-only values, live HEAD clean): Brevo key →
+  Upstash VECTOR + SEARCH tokens (or confirm project 15379 retired) →
+  Twilio token → AWS key deactivate (**ID-only exposure — lowest priority**)
+  → Firebase retirement note for the PII item. Plus backend F2 historical
+  values and workspace `keys/` actions per the security review.
 - App branch hygiene: none remaining (T2 closed — `feat/bun-tsrs-migration`
   deleted local + remote, full ancestor of main).
 
