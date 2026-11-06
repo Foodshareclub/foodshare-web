@@ -22,6 +22,8 @@
 -- Phase 2 (later wave, gated on re-pointed app builds) applies the
 -- same shape to the authenticated role and lands the app/web re-points
 -- (mapping: docs/F1_POSTS_READER_MAPPING_2026-11-06.md).
+BEGIN;
+
 REVOKE SELECT ON public.posts FROM anon;
 GRANT SELECT (
   admin_notes,
@@ -71,3 +73,7 @@ GRANT SELECT (
   version,
   website
 ) ON public.posts TO anon;
+
+COMMIT;
+
+NOTIFY pgrst, 'reload schema';
