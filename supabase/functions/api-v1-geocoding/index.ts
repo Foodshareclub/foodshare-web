@@ -1,7 +1,7 @@
 /**
  * Unified Geocoding API v1
  *
- * Enterprise-grade geocoding API consolidating ALL geocoding operations:
+ * Consolidated geocoding operations:
  * - Profile/Address: Geocode user addresses and update coordinates
  * - Posts: Geocode post addresses and update locations
  * - Queue: Batch processing with queue management
@@ -19,7 +19,7 @@
  * - GET    /signup-location     - Signup location health sub-check
  *
  * @module api-v1-geocoding
- * @version 1.2.0
+ * @version 1.3.0
  */
 
 import { createAPIHandler } from "../_shared/api-handler.ts";

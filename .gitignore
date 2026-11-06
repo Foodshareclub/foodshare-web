@@ -45,6 +45,9 @@ tools/target/
 # Local scratch space for one-off e2e spec experiments
 e2e/__tmp/
 
+# Local scratch workspace (run logs, retired tool configs)
+/artifacts/
+
 # Supabase local config (keep migrations/functions tracked)
 /supabase/*
 !/supabase/config.toml

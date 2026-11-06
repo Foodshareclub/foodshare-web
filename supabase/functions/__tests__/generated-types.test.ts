@@ -228,7 +228,6 @@ Deno.test("generated types: coverage of the relations the code queries", () => {
       "public.forum_comments",
       "public.forum_likes",
       "public.listing_requests",
-      "public.map_interaction_events",
       "public.messages",
       "public.products",
       "public.room_activities",
@@ -236,8 +235,6 @@ Deno.test("generated types: coverage of the relations the code queries", () => {
       "public.user_events",
       "public.user_experiments",
       "public.user_impact",
-      "public.user_map_preferences",
-      "public.user_network_profiles",
     ],
     "The code queries these relations and the schema does not have them. With " +
       "`Database` passed to `createClient` the compiler rejects each of them, " +

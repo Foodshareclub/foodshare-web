@@ -52,18 +52,6 @@
     {
       "file": "_shared/metrics.ts",
       "code": "TS2345",
-      "message": "Argument of type '\"record_function_call\"' is not assignable to parameter of type '\"…\"'.",
-      "count": 1
-    },
-    {
-      "file": "_shared/metrics.ts",
-      "code": "TS2345",
-      "message": "Argument of type '\"update_circuit_status\"' is not assignable to parameter of type '\"…\"'.",
-      "count": 1
-    },
-    {
-      "file": "_shared/metrics.ts",
-      "code": "TS2345",
       "message": "Argument of type 'unknown' is not assignable to parameter of type 'string'.",
       "count": 2
     },
@@ -98,6 +86,12 @@
       "count": 1
     },
     {
+      "file": "api-v1-geocoding/lib/geocoding.ts",
+      "code": "TS2304",
+      "message": "Cannot find name 'getSupabaseClient'.",
+      "count": 1
+    },
+    {
       "file": "api-v1-geocoding/lib/handlers.ts",
       "code": "TS18047",
       "message": "'item.max_retries' is possibly 'null'.",
@@ -117,63 +111,9 @@
     },
     {
       "file": "api-v1-geocoding/lib/handlers.ts",
-      "code": "TS2339",
-      "message": "Property 'length' does not exist on type '{}'.",
-      "count": 1
-    },
-    {
-      "file": "api-v1-geocoding/lib/handlers.ts",
-      "code": "TS2339",
-      "message": "Property 'map' does not exist on type '{}'.",
-      "count": 1
-    },
-    {
-      "file": "api-v1-geocoding/lib/handlers.ts",
-      "code": "TS2345",
-      "message": "Argument of type '\"calculate_user_matches\"' is not assignable to parameter of type '\"…\"'.",
-      "count": 1
-    },
-    {
-      "file": "api-v1-geocoding/lib/handlers.ts",
-      "code": "TS2345",
-      "message": "Argument of type '\"detect_map_hotspots\"' is not assignable to parameter of type '\"…\"'.",
-      "count": 2
-    },
-    {
-      "file": "api-v1-geocoding/lib/handlers.ts",
-      "code": "TS2345",
-      "message": "Argument of type '\"update_network_profile\"' is not assignable to parameter of type '\"…\"'.",
-      "count": 1
-    },
-    {
-      "file": "api-v1-geocoding/lib/handlers.ts",
-      "code": "TS2352",
-      "message": "Conversion of type '{ address_line_1: string; address_line_2: string; address_line_3: string; city: string; country: string | null; country_id: number; county: string; created_at: string; generated_full_address: string; ... 11 more ...; updated_at: string | null; } | ... 204 more ... | ...' to type '{ preferred_tile_quality: string; enable_retina: boolean; enable_vector_tiles: boolean; max_concurrent_tiles: number; avg_bandwidth_mbps: number; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first. Type '{ expires_at: string; phone_number: string; state: Json; updated_at: string | null; }' is missing the following properties from type '{ preferred_tile_quality: string; enable_retina: boolean; enable_vector_tiles: boolean; max_concurrent_tiles: number; avg_bandwidth_mbps: number; }': preferred_tile_quality, enable_retina, enable_vector_tiles, max_concurrent_tiles, avg_bandwidth_mbps",
-      "count": 1
-    },
-    {
-      "file": "api-v1-geocoding/lib/handlers.ts",
       "code": "TS2352",
       "message": "Conversion of type 'Record<string, unknown>' to type 'QueueItem' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first. Type 'Record<string, unknown>' is missing the following properties from type 'QueueItem': id, post_id, post_address, retry_count",
       "count": 1
-    },
-    {
-      "file": "api-v1-geocoding/lib/handlers.ts",
-      "code": "TS2769",
-      "message": "No overload matches this call. The last overload gave the following error. Argument of type '\"map_interaction_events\"' is not assignable to parameter of type '\"…\"'.",
-      "count": 1
-    },
-    {
-      "file": "api-v1-geocoding/lib/handlers.ts",
-      "code": "TS2769",
-      "message": "No overload matches this call. The last overload gave the following error. Argument of type '\"user_map_preferences\"' is not assignable to parameter of type '\"…\"'.",
-      "count": 2
-    },
-    {
-      "file": "api-v1-geocoding/lib/handlers.ts",
-      "code": "TS2769",
-      "message": "No overload matches this call. The last overload gave the following error. Argument of type '\"user_network_profiles\"' is not assignable to parameter of type '\"…\"'.",
-      "count": 2
     },
     {
       "file": "api-v1-images/lib/upload.ts",

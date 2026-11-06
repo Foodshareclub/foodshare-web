@@ -3,6 +3,10 @@
  */
 
 import { type HandlerContext, ok } from "../../_shared/api-handler.ts";
+import { AppError } from "../../_shared/errors.ts";
+import { buildErrorResponse } from "../../_shared/response-adapter.ts";
+import { requireInternalToken } from "../../_shared/internal-auth.ts";
+import { getClientIp } from "../../_shared/request-ip.ts";
 import { logger } from "../../_shared/logger.ts";
 import { getSupabaseClient } from "../../_shared/supabase.ts";
 import { isConfigured, notConfiguredReason } from "../../_shared/placeholder-config.ts";
@@ -448,9 +452,27 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
   const url = new URL(request.url || "http://localhost");
   const checkType = url.searchParams.get("check") || "ping";
 
-  // Get Redis credentials
+  // `ping` stays public — external monitors probe it. The diagnostic checks
+  // read Vault secrets and return operational detail (service inventory,
+  // live counters), so they require the internal service token: fail-closed
+  // and constant-time, same posture as the job-worker's internal endpoint.
+  if (checkType !== "ping") {
+    const auth = await requireInternalToken(request);
+    if (!auth.ok) {
+      return buildErrorResponse(
+        new AppError(auth.message, auth.code, auth.status),
+        ctx.corsHeaders,
+        { version: CONFIG.version },
+      );
+    }
+  }
+
+  // Get Redis credentials. The IP is derived via the edge-aware helper, not
+  // the raw X-Forwarded-For header: this route is unauthenticated, and
+  // `get_secret_audited` records this metadata, so a spoofable header would
+  // let an anonymous caller forge or bury secret-access audit entries.
   const requestMetadata = {
-    ip_address: request.headers.get("x-forwarded-for") || "unknown",
+    ip_address: getClientIp(request) ?? "unknown",
     user_agent: request.headers.get("user-agent") || "unknown",
     request_id: request.headers.get("x-request-id") || "unknown",
   };

@@ -1,4 +1,4 @@
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { CONFIGURED_IMAGE_PATTERNS } from "./src/lib/image";
@@ -394,7 +394,9 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: buildContentSecurityPolicy({ isDev: process.env.NODE_ENV !== "production" }),
+            value: buildContentSecurityPolicy({
+              isDev: process.env.NODE_ENV !== "production",
+            }),
           },
         ],
       },
@@ -438,4 +440,7 @@ const sentryWebpackPluginOptions = {
  */
 
 // Chain: nextIntl -> sentry
-export default withSentryConfig(withNextIntl(nextConfig), sentryWebpackPluginOptions);
+export default withSentryConfig(
+  withNextIntl(nextConfig),
+  sentryWebpackPluginOptions,
+);

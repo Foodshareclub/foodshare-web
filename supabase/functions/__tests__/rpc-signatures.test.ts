@@ -347,22 +347,17 @@ const KNOWN_MISSING = [
   "get_user_unread_counts",
 
   // ── the rest: called, never defined ──
-  "calculate_user_matches",
   "check_idempotency_key",
   "check_lockout_status",
   "create_chat_room_safe",
-  "detect_map_hotspots",
   "find_orphan_images",
   "get_nearby_products",
   "get_request_count",
   "get_web_vitals_summary",
   "increment_poll_option_votes",
   "notify_nearby_users_bulk",
-  "record_function_call",
   "record_login_attempt",
   "toggle_post_favorite_atomic",
-  "update_circuit_status",
-  "update_network_profile",
 ];
 
 // =============================================================================

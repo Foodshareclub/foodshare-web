@@ -258,16 +258,46 @@ export type Database = {
       },
       api_requests: {
         Row: {
-        at: string | null;
+        app_platform: string | null;
+        app_version: string | null;
+        cache_hit: boolean;
+        created_at: string;
+        endpoint: string;
+        error_type: string | null;
         id: number;
+        method: string;
+        request_size_bytes: number | null;
+        response_size_bytes: number | null;
+        response_time_ms: number;
+        status_code: number | null;
         };
         Insert: {
-        at?: string;
+        app_platform?: string;
+        app_version?: string;
+        cache_hit?: boolean;
+        created_at?: string;
+        endpoint: string;
+        error_type?: string;
         id?: number;
+        method: string;
+        request_size_bytes?: number;
+        response_size_bytes?: number;
+        response_time_ms: number;
+        status_code?: number;
         };
         Update: {
-        at?: string | null;
+        app_platform?: string | null;
+        app_version?: string | null;
+        cache_hit?: boolean;
+        created_at?: string;
+        endpoint?: string;
+        error_type?: string | null;
         id?: number;
+        method?: string;
+        request_size_bytes?: number | null;
+        response_size_bytes?: number | null;
+        response_time_ms?: number;
+        status_code?: number | null;
         };
         Relationships: [];
       },
@@ -288,16 +318,31 @@ export type Database = {
       },
       health_checks: {
         Row: {
-        at: string | null;
+        created_at: string;
+        details: Json;
+        error_message: string | null;
         id: number;
+        response_time_ms: number;
+        service: string;
+        status: string;
         };
         Insert: {
-        at?: string;
+        created_at?: string;
+        details?: Json;
+        error_message?: string;
         id?: number;
+        response_time_ms: number;
+        service: string;
+        status: string;
         };
         Update: {
-        at?: string | null;
+        created_at?: string;
+        details?: Json;
+        error_message?: string | null;
         id?: number;
+        response_time_ms?: number;
+        service?: string;
+        status?: string;
         };
         Relationships: [];
       }

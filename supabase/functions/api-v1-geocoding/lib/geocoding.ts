@@ -3,27 +3,24 @@
  *
  * Contains:
  * - Configuration constants
- * - Type definitions (signup location, map services, match users, queue, schemas)
+ * - Type definitions (signup location, queue, schemas)
  * - Signup location: circuit breaker, IP validation, geolocation service, webhook verification
  * - Queue processing logic
- * - Map tile URL generation
  * - Response helpers
  *
  * @module api-v1-geocoding/lib/geocoding
  */
 
 import { z } from "../../_shared/schemas/common.ts";
-import { latitudeSchema, longitudeSchema } from "../../_shared/schemas/geo.ts";
 import { Webhook } from "standardwebhooks";
 import { logger } from "../../_shared/logger.ts";
 import { type Coordinates, geocodeAddress } from "../../_shared/geocoding.ts";
-import { getSupabaseClient } from "../../_shared/supabase.ts";
 
 // =============================================================================
 // Configuration
 // =============================================================================
 
-export const VERSION = "1.2.0";
+export const VERSION = "1.3.0";
 export const SERVICE = "api-v1-geocoding";
 
 export const CONFIG = {
@@ -338,71 +335,6 @@ export function verifySignupWebhook(
 }
 
 // =============================================================================
-// Map Services Types
-// =============================================================================
-
-export interface MapPreferencesRow {
-  user_id: string;
-  platform: string;
-  device_id: string | null;
-  last_center_lat: number;
-  last_center_lng: number;
-  last_zoom_level: number;
-  map_style: string;
-  search_radius_km: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface MapInteractionEvent {
-  user_id: string;
-  center_lat: number;
-  center_lng: number;
-  zoom_level: number;
-  platform: string;
-  device_id: string | null;
-  session_id: string | null;
-  time_of_day: number;
-  day_of_week: number;
-  duration_seconds: number;
-  interaction_type: string;
-}
-
-export interface MapHotspot {
-  hotspot_center: { coordinates: [number, number] };
-  interaction_count: number;
-  avg_zoom: number;
-  primary_time_of_day: number;
-  confidence_score: number;
-}
-
-// =============================================================================
-// Map Services: Auth Helper
-// =============================================================================
-
-export async function getAuthenticatedUser(
-  req: Request,
-  requestId: string,
-): Promise<{ id: string } | null> {
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    logger.warn("Map route: missing or invalid auth header", { requestId });
-    return null;
-  }
-
-  const token = authHeader.replace("Bearer ", "");
-  const supabase = getSupabaseClient();
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-
-  if (error || !user) {
-    logger.warn("Map route: auth failed", { requestId, error: error?.message });
-    return null;
-  }
-
-  return { id: user.id };
-}
-
-// =============================================================================
 // Response Helpers
 // =============================================================================
 
@@ -428,60 +360,6 @@ export function errorResponse(
     corsHeaders,
     status,
   );
-}
-
-// =============================================================================
-// Map Services: Tile URL Generation
-// =============================================================================
-
-export function generateTileUrls(
-  center: { lat: number; lng: number },
-  zoom: number,
-  radius = 1,
-): string[] {
-  const urls: string[] = [];
-  const z = Math.floor(zoom);
-  const x = Math.floor(((center.lng + 180) / 360) * Math.pow(2, z));
-  const latRad = center.lat * Math.PI / 180;
-  const y = Math.floor(
-    (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 *
-      Math.pow(2, z),
-  );
-
-  for (let dx = -radius; dx <= radius; dx++) {
-    for (let dy = -radius; dy <= radius; dy++) {
-      urls.push(`https://tile.openstreetmap.org/${z}/${x + dx}/${y + dy}.png`);
-    }
-  }
-
-  return urls;
-}
-
-// =============================================================================
-// Match Users: Schema & Types
-// =============================================================================
-
-export const matchUsersSchema = z.object({
-  latitude: latitudeSchema,
-  longitude: longitudeSchema,
-  dietaryPreferences: z.array(z.string()).default([]),
-  radiusKm: z.number().min(1).max(1000).default(10),
-  limit: z.number().int().min(1).max(50).default(20),
-});
-
-export interface UserMatch {
-  userId: string;
-  username: string;
-  avatarUrl: string | null;
-  distanceKm: number;
-  compatibilityScore: number;
-  distanceScore: number;
-  activityScore: number;
-  ratingScore: number;
-  prefsScore: number;
-  sharedItemsCount: number;
-  ratingAverage: number;
-  commonPreferences: string[];
 }
 
 // =============================================================================
