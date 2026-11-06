@@ -1,10 +1,12 @@
 # Restore Wave 2026-11-06 — tunnel + F1 + lockdown + F4, one pass
 
-Status: **all code artifacts authored and verified (SHAs below). What remains is
-execution: the operator runs `CLOUDFLARE-TUNNEL-OUTAGE-RUNBOOK.md` steps 1–5 with
-the wave insertions below.** No user input blocks the restore itself — Q3 gates
-only M2/phase 2 (post-restore), and the PAT has operator-side fallbacks (see
-§Open items).
+Status: **all code artifacts authored, verified, and signed off. M1 closed at
+backend `5719f997` (web mirror `019c22a2`). M2 retracted, end state A confirmed
+(§Design decisions). What remains is execution: the operator runs
+`CLOUDFLARE-TUNNEL-OUTAGE-RUNBOOK.md` steps 1–5 with the wave insertions below —
+run it, or hand over estate-runner access and the team coordinates the run.**
+The Q3 product sign-off and the PAT are both optional and non-blocking
+(§Open items).
 
 ## Prerequisites
 
@@ -25,18 +27,17 @@ only M2/phase 2 (post-restore), and the PAT has operator-side fallbacks (see
    - M0: the 5 pending migrations already on backend main (engagement state,
      internal-analytics restriction, function privilege lockdown,
      post-location privacy, image upload quota).
-   - M1: `20261106000000_f1_posts_anon_column_grants.sql` — `REVOKE SELECT ON
-public.posts FROM anon` **then, same migration**, `GRANT SELECT (46
-columns = 49 Row − {location, location_json, post_address}) TO anon`.
-     Do **not** split into separate applies: the `posts_with_location` view is
-     `security_invoker`, so anon needs the column grants for the view to keep
-     working (a bare revoke breaks public browse at re-exposure).
-   - **Transaction note:** M1 has no explicit `BEGIN/COMMIT`. Confirm the
-     applier executes the file atomically, or wrap the two statements in an
-     explicit transaction. With the origin dark the risk window is zero either
-     way, but the record should state which.
-   - M2 (owner-scoped view): **not in this wave** — see §Open items (gated on
-     Q3 + phase-2 end-state decision).
+   - M1: `20261106000000_f1_posts_anon_column_grants.sql` @ backend
+     `5719f997` (web mirror `019c22a2`) — `BEGIN;` → `REVOKE SELECT ON
+public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
+{location, location_json, post_address}) TO anon` → `COMMIT;` →
+     `NOTIFY pgrst, 'reload schema';`, matching the tree's privilege-migration
+     convention. **Signed off by security.** Do not split the apply: the
+     `posts_with_location` view is `security_invoker`, so anon needs the column
+     grants for the view to keep working (a bare revoke breaks public browse at
+     re-exposure).
+   - M2 (owner-scoped view): **retracted** — not in this wave and not in phase
+     2 as specced. See §Design decisions.
 3. **Wave insertion B — deploy the new web build + edge functions**
    (C1 web `55dc4c9d`; F4 edge functions) **before** re-exposure, with env
    coupling set first:
@@ -62,15 +63,15 @@ columns = 49 Row − {location, location_json, post_address}) TO anon`.
 
 ## Verified artifact record (as of this doc)
 
-| Artifact                               | Repo @ SHA                                                   | Verified by                                                                                                         |
-| -------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| M0 (5 pending migrations)              | backend, in main, mirror byte-identical on web               | verifier (diff -rq)                                                                                                 |
-| M1 anon REVOKE+GRANT                   | backend `aec49efd`                                           | verifier — column math recomputed: 49 Row − 46 GRANT = exactly the trio, no phantoms                                |
-| C1 (8 web sites) + Brevo HEAD deletion | web `55dc4c9d`                                               | verifier — 8 sites line-by-line, 85/85 tests, type-check exit 0; Brevo absence confirmed via anonymous public clone |
-| F4 internal gate                       | backend `d1c3c28e` + `a84487c2`                              | security — 8/8 new tests; strict check still exactly the 111 pre-existing budgeted errors                           |
-| F1 mapping (109 = 31/72/6)             | backend `ab406777`                                           | verifier — counts reconciled, four-path client inventory                                                            |
-| Type-debt bug + follow-ups             | backend `d1e069e7`                                           | verifier — 111/30 reproduced                                                                                        |
-| Mirror state                           | functions: exactly 3-file F4 drift (expected); migrations: 0 | verifier — `vendored` job red **by design** until the wave re-sync                                                  |
+| Artifact                               | Repo @ SHA                                                      | Verified by                                                                                                                                                    |
+| -------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M0 (5 pending migrations)              | backend, in main, mirror byte-identical on web                  | verifier (diff -rq)                                                                                                                                            |
+| M1 anon REVOKE+GRANT                   | backend `5719f997` (web mirror `019c22a2`; original `aec49efd`) | verifier — column math recomputed: 49 Row − 46 GRANT = exactly the trio, no phantoms; security — signed off (convention edit: `BEGIN/COMMIT` + `NOTIFY pgrst`) |
+| C1 (8 web sites) + Brevo HEAD deletion | web `55dc4c9d`                                                  | verifier — 8 sites line-by-line, 85/85 tests, type-check exit 0; Brevo absence confirmed via anonymous public clone                                            |
+| F4 internal gate                       | backend `d1c3c28e` + `a84487c2`                                 | security — 8/8 new tests; strict check still exactly the 111 pre-existing budgeted errors                                                                      |
+| F1 mapping (109 = 31/72/6)             | backend `ab406777`                                              | verifier — counts reconciled, four-path client inventory                                                                                                       |
+| Type-debt bug + follow-ups             | backend `d1e069e7`                                              | verifier — 111/30 reproduced                                                                                                                                   |
+| Mirror state                           | functions: exactly 3-file F4 drift (expected); migrations: 0    | verifier — `vendored` job red **by design** until the wave re-sync                                                                                             |
 
 ## Post-wave (explicitly not in this wave)
 
@@ -88,13 +89,32 @@ columns = 49 Row − {location, location_json, post_address}) TO anon`.
 - App branch hygiene: none remaining (T2 closed — `feat/bun-tsrs-migration`
   deleted local + remote, full ancestor of main).
 
+## Design decisions (settled 2026-11-06)
+
+- **M2 (owner-scoped view): retracted.** Post-phase-2, with `posts_select_policy`'s
+  owner branch intact (no wave migration touches it) and phase 2 specced as
+  REVOKE + 46-column GRANT, an owner keeps: own-inactive rows' safe columns via
+  the raw table (RLS owner branch) + exact via `get_post_exact_location`
+  (owner-gated, no `is_active` filter). The view adds zero capability in the
+  specified end state.
+- **End state A (column-GRANT shape) confirmed; end state B (full REVOKE +
+  view-only client access) not pursued.** Reasons (security): B converts the
+  estate's best failure property — loud 403s on a new safe column — into silent
+  absence; B adds a third drift surface to a mirror model being actively shrunk;
+  the exposure pattern found in this review was over-grants, not RLS bypasses.
+  If B is wanted later, the owner view + policy change land together in their
+  own wave.
+- **Q3 dissolves as a build gate.** Owners listing their own inactive rows is
+  already true after C1's user-scoped client swap (web) and becomes so for the
+  app via the phase-2 GRANT + `get_post_exact_location`. What remains is a
+  product _sign-off_ on that behavior, not a code decision.
+
 ## Open items
 
-- **Q3 (product/user):** may owners list their own inactive listings after
-  F1? Gates M2 and shapes phase 2. Non-blocking for the restore.
-- **Phase-2 end state (design, @security):** column-GRANT shape (as specced)
-  vs eventual full REVOKE with view-only client access. M2 is only required
-  by the latter — see the wave discussion of 2026-11-06.
-- **PAT (user, optional for the restore):** E2E blob reports, Dependabot
-  enumeration. Runner status has the operator-side fallback above.
-- **M1 sign-off (@security):** requested by @hermes before runbook insertion.
+- **Execute the restore** — runbook steps 1–5 with the wave insertions above.
+  Binary: the operator runs it, or hands over estate-runner access and the
+  team coordinates.
+- **Q3 product sign-off** (user, at leisure, non-blocking) — confirm the
+  behavior: owners see their own inactive rows.
+- **PAT** (user, at leisure, non-blocking) — E2E blob reports, Dependabot
+  enumeration. Runner status has the operator-side fallback in §Prerequisites.
