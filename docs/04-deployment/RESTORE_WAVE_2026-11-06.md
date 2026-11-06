@@ -56,6 +56,19 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
    - F1 triple: anon raw exact columns → 401/403; anon `posts_with_location`
      → 200 (its grants are untouched by M1 — the GRANT half buys exactly
      this); authenticated raw exact → 200 flagged (phase 2 removes it).
+   - F4 gate probe (doubles as the F4 deploy confirmation):
+     `curl -s -o /dev/null -w '%{http_code}'
+     'https://api.foodshare.club/functions/v1/api-v1-cache?check=services'`
+     — **401** = gate live, E1 configured, anonymous correctly refused
+     (pass, @verifier runs the anonymous leg); **200** = pre-F4 function
+     still being served — the wave's edge-function deploy did not land,
+     stop and fix it before finishing; **503** = F4 deployed but E1
+     missing — set `INTERNAL_SERVICE_SECRET` and restart the function
+     (dead-but-loud; nothing else in the estate probes this endpoint —
+     both vendored external-monitor copies checked, 0 references).
+     Operator runs the with-token leg: same URL with
+     `Authorization: Bearer $INTER...RET` → expect 200
+     (the secret does not ride through the team thread).
    - Auth-mail smoke: one real magic-link end-to-end (E2 coupling — a
      "restored" origin with silent auth-mail failure looks like a second
      outage).
