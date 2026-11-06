@@ -5,6 +5,7 @@
  * Uses unstable_cache for server-side caching with tag-based invalidation.
  */
 
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 // ============================================================================
@@ -76,10 +77,14 @@ function extractFirst<T>(data: T[] | T | null | undefined): T | null {
 
 /**
  * Get dashboard statistics
- * Note: Cannot use unstable_cache with createClient() as it uses cookies()
+ * F1 (2026-11-06) decision 2: service-role client for true all-row
+ * counts. The session client was RLS-scoped to the admin's own JWT, so
+ * totalProducts undercounted and pendingProducts was literally "the
+ * admin's own inactive posts". Responses carry counts only — no row
+ * data (and no location columns) reaches the browser.
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);

@@ -33,7 +33,7 @@
  */
 
 import { PAGINATION } from "@/lib/constants";
-import { createCachedClient } from "@/lib/supabase/server";
+import { createCachedClient, createClient } from "@/lib/supabase/server";
 import type { InitialProductStateType, LocationType } from "@/types/product.types";
 import { approximateGeoJSON, parsePostGISPoint } from "@/utils/postgis";
 import { cacheLife, cacheTag } from "next/cache";
@@ -356,9 +356,13 @@ export async function getAllProductLocations(): Promise<LocationType[]> {
  */
 const OWN_LISTINGS_LIMIT = 200;
 
-/** Columns the listing-management views render. `posts` has no `location_json`. */
+/**
+ * Columns the listing-management views render. `posts` has no
+ * `location_json`. F1: `post_address` is not list-level anymore —
+ * the exact address is fetched per-row via `get_post_exact_location`.
+ */
 const OWN_LISTING_COLUMNS =
-  "id,post_name,post_description,post_type,post_address,post_stripped_address,images," +
+  "id,post_name,post_description,post_type,post_stripped_address,images," +
   "is_active,is_arranged,post_views,post_like_counter,created_at,profile_id,version," +
   "available_hours,condition,category_id,fridge_id";
 
@@ -372,11 +376,20 @@ const OWN_LISTING_COLUMNS =
  * and the only route back was Supabase Studio. The base table is correct
  * because `posts_select_policy` allows the owner their own rows
  * regardless of `is_active` — the view silently threw that away.
+ *
+ * F1 (2026-11-06): reads through the **user-scoped** client (the
+ * requesting user's session), not the always-anon cached client — the
+ * anon client has no `auth.uid()`, so the owner branch of
+ * `posts_select_policy` was dead and the "including deactivated"
+ * contract above was unmet. Also drops `post_address` from the select:
+ * after F1's anon column REVOKE the exact address is no longer a
+ * list-level field; the owner's exact location is fetched per-row via
+ * the `get_post_exact_location` RPC where a screen needs it.
  */
 export async function getUserProducts(userId: string): Promise<InitialProductStateType[]> {
   if (!userId) return [];
 
-  const supabase = createCachedClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("posts")

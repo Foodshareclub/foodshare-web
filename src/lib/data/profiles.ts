@@ -185,8 +185,8 @@ export async function getUserStats(userId: string): Promise<ProfileStats> {
   // looking at `error`, so a bad column name surfaced as a confident "0 reviews"
   // rather than a failure.
   const [postsResult, activePostsResult, reviewsResult] = await Promise.all([
-    supabase.from("posts").select("*", { count: "exact", head: true }).eq("profile_id", userId),
-    supabase.from("posts").select("*", { count: "exact", head: true }).eq("profile_id", userId).eq("is_active", true),
+    supabase.from("posts").select("id", { count: "exact", head: true }).eq("profile_id", userId),
+    supabase.from("posts").select("id", { count: "exact", head: true }).eq("profile_id", userId).eq("is_active", true),
     supabase.from("reviews").select("reviewed_rating").eq("profile_id", userId),
   ]);
 

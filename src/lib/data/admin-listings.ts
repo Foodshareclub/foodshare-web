@@ -256,10 +256,10 @@ export async function getListingStats(): Promise<ListingStats> {
 
   const [{ count: total }, { count: active }, { count: inactive }, { count: arranged }, { data: categoryData }] =
     await Promise.all([
-      supabase.from("posts").select("*", { count: "exact", head: true }),
-      supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", true),
-      supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", false),
-      supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_arranged", true),
+      supabase.from("posts").select("id", { count: "exact", head: true }),
+      supabase.from("posts").select("id", { count: "exact", head: true }).eq("is_active", true),
+      supabase.from("posts").select("id", { count: "exact", head: true }).eq("is_active", false),
+      supabase.from("posts").select("id", { count: "exact", head: true }).eq("is_arranged", true),
       supabase.from("posts").select("post_type"),
     ]);
 

@@ -53,21 +53,21 @@ RESEND_API_KEY=*****************
 
 ### 3. Brevo API Key
 
-**Status:** ✅ You provided this earlier
+**Status:** Credentials removed from the repo (2026-11-06, public exposure).
+
 **Purpose:** Primary provider for app notifications (300 emails/day)
 
-Your credentials:
-
-```env
-BREVO_API_KEY=*****************
-```
+The Brevo API key and SMTP credentials are no longer committed to this
+(repo was public). They live in the operator's secret store and in the
+`.env.functions` / auth deployment environment. Retrieve from the
+operator before configuring a new environment.
 
 SMTP details (for reference):
 
 ```env
 BREVO_SMTP_HOST=smtp-relay.brevo.com
 BREVO_SMTP_PORT=587
-BREVO_SMTP_USER=9cca92001@smtp-brevo.com
+BREVO_SMTP_USER=<see operator's secret store>
 ```
 
 ---
