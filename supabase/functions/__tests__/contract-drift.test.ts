@@ -900,44 +900,21 @@ Deno.test("contract: no policy survives that applies only to BYPASSRLS roles", (
   );
 });
 
-Deno.test("contract: no view in the catalog has no live code reference", () => {
-  // A view dies the same way an orphan trigger function does: the code that
-  // read it gets rewritten — against the base table, or a newer view — and
-  // the view stays in the catalog, a surface that reads like data exists.
-  // The baseline estate carried several of them, and two are materialized
-  // views created WITH NO DATA and never populated: a live reader of either
-  // would crash with "has not been populated", so both are unread by
-  // definition, not merely unused.
-  //
-  // Liveness is the view's name in code that runs against the database:
-  //   - edge functions (generated types excluded: they are output, not calls)
-  //   - the Rust worker (services/crates; test fixtures excluded)
-  //   - operational scripts (scripts/: .ts, .sh, .sql)
-  //   - post-baseline migrations (a migration that reads the view keeps it)
-  //   - volumes/ (kong.yml, db init SQL)
-  //   - the cron job commands in the catalog
-  //   - the sibling checkouts, when this workspace has them: a view read
-  //     only from the web app or the Swift client has no reference in this
-  //     repository, and in a bare CI checkout the siblings do not exist —
-  //     the backend corpus is the authority there, and every view the
-  //     estate reads from outside it would fail until pinned.
-  // The baseline dump, the catalog and the audit fixtures are definitions of
-  // the estate, not call sites; scanning them would mark every view live.
-  //
-  // A view read only from a checkout this repository cannot see belongs in
-  // KNOWN_EXTERNAL_ONLY_VIEWS with the reason. The pin is reverse-checked:
-  // a pin whose name is no longer a view, or a view the code now reaches,
-  // fails — an exception that outlived its reason would rot silently.
-  //
-  // Corpus-owned: six live views (the five `analytics_full_*` views and
-  // `vector_type_substituted`) are referenced only by backend-owned
-  // corpora — `scripts/test-internal-analytics-views.ts`, the
-  // `20261029124718` restriction migration, `scripts/oracle-mutations.ts` —
-  // none of which a vendored checkout carries. Running the liveness scan
-  // there would flag live views as dead; the vendored checkout inherits the
-  // invariant by the byte-match gate instead, exactly like the other
-  // contracts in this file. See `ownsCorpus`.
-  if (!ownsCorpus()) return;
+/**
+ * The code that runs against the database, as a liveness predicate.
+ *
+ * A name is referenced when it appears in any of: the edge functions
+ * (generated types excluded — they are the catalog's output, and every
+ * name appears in them by construction), the Rust worker's crates, the
+ * operational scripts, `volumes/`, the post-baseline migrations, the cron
+ * job commands in the catalog, or the sibling checkouts when this
+ * workspace has them (a bare CI checkout has none; the backend corpus is
+ * the authority there). The backend-owned corpora are scanned only when
+ * this checkout owns them — a vendored checkout inherits the invariants
+ * they carry by the byte-match gate. The baseline dump and the catalog
+ * are definitions of the estate, not call sites.
+ */
+function codeCorpus(): (name: string) => boolean {
   const REPO_ROOT = new URL("../../../", import.meta.url);
 
   const files: URL[] = [];
@@ -947,8 +924,6 @@ Deno.test("contract: no view in the catalog has no live code reference", () => {
     }
   };
 
-  // The generated types are the catalog's output: every view name appears in
-  // them by construction, so reading them would mark every view live.
   const FUNCTIONS = new URL("../", import.meta.url);
   const GENERATIVE = new Set(["_shared/database.types.ts"]);
   for (const rel of walkFiles(FUNCTIONS, [".ts"])) {
@@ -988,7 +963,49 @@ Deno.test("contract: no view in the catalog has no live code reference", () => {
     }
   });
   const cron = s.catalog.cronJobs.map((j) => j.command).join("\n");
-  const referenced = (name: string) => cron.includes(name) || texts.some((t) => t.includes(name));
+  return (name: string) =>
+    cron.includes(name) || texts.some((t) => t.includes(name));
+}
+
+Deno.test("contract: no view in the catalog has no live code reference", () => {
+  // A view dies the same way an orphan trigger function does: the code that
+  // read it gets rewritten — against the base table, or a newer view — and
+  // the view stays in the catalog, a surface that reads like data exists.
+  // The baseline estate carried several of them, and two are materialized
+  // views created WITH NO DATA and never populated: a live reader of either
+  // would crash with "has not been populated", so both are unread by
+  // definition, not merely unused.
+  //
+  // Liveness is the view's name in code that runs against the database:
+  //   - edge functions (generated types excluded: they are output, not calls)
+  //   - the Rust worker (services/crates; test fixtures excluded)
+  //   - operational scripts (scripts/: .ts, .sh, .sql)
+  //   - post-baseline migrations (a migration that reads the view keeps it)
+  //   - volumes/ (kong.yml, db init SQL)
+  //   - the cron job commands in the catalog
+  //   - the sibling checkouts, when this workspace has them: a view read
+  //     only from the web app or the Swift client has no reference in this
+  //     repository, and in a bare CI checkout the siblings do not exist —
+  //     the backend corpus is the authority there, and every view the
+  //     estate reads from outside it would fail until pinned.
+  // The baseline dump, the catalog and the audit fixtures are definitions of
+  // the estate, not call sites; scanning them would mark every view live.
+  //
+  // A view read only from a checkout this repository cannot see belongs in
+  // KNOWN_EXTERNAL_ONLY_VIEWS with the reason. The pin is reverse-checked:
+  // a pin whose name is no longer a view, or a view the code now reaches,
+  // fails — an exception that outlived its reason would rot silently.
+  //
+  // Corpus-owned: six live views (the five `analytics_full_*` views and
+  // `vector_type_substituted`) are referenced only by backend-owned
+  // corpora — `scripts/test-internal-analytics-views.ts`, the
+  // `20261029124718` restriction migration, `scripts/oracle-mutations.ts` —
+  // none of which a vendored checkout carries. Running the liveness scan
+  // there would flag live views as dead; the vendored checkout inherits the
+  // invariant by the byte-match gate instead, exactly like the other
+  // contracts in this file. See `ownsCorpus`.
+  if (!ownsCorpus()) return;
+  const referenced = codeCorpus();
 
   const views = s.catalog.relations.filter(
     (r) => r.kind === "view" || r.kind === "matview",
@@ -1032,6 +1049,98 @@ Deno.test("contract: no view in the catalog has no live code reference", () => {
       "them may never have been populated at all. Either the view is dead " +
       "and should be dropped, or it is read somewhere this audit cannot " +
       "see — in which case pin it in KNOWN_EXTERNAL_ONLY_VIEWS with the " +
+      "reason.\n" + unpinned.join("\n"),
+  );
+});
+
+Deno.test("contract: no unreferenced column in the catalog has no live code reference", () => {
+  // A column dies in two layers at once. The structural layer: `pg_depend`
+  // carries no entry for it — no index, foreign key, view, policy, function
+  // or trigger reads it — so the catalog's `structurallyReferenced` flag is
+  // false and PostgreSQL would not refuse the drop. The code layer: no edge
+  // function, no worker query, no operational script, no post-baseline
+  // migration, no cron job, and no client — web, or the cross-platform app
+  // whose single Swift codebase builds both iOS and Android — names it. A
+  // column in both layers is storage and surface nothing uses: it bloats
+  // every row, and in the generated types it reads like data the product
+  // carries.
+  //
+  // Platform tables are out of scope on purpose: `storage.objects` and its
+  // siblings are owned by the storage service, which writes from its own
+  // image and whose writers no repository can see. The audit is scoped to
+  // `public` and `audit`, the schemas this estate owns and its code names.
+  //
+  // Corpus-owned, for the same reason the view audit is: the code scan
+  // needs the backend corpora a vendored checkout does not carry. The
+  // vendored checkout inherits the invariant by the byte-match gate.
+  //
+  // A column that is dead but deliberately kept — reserved for a decision
+  // already made — belongs in KNOWN_DEAD_COLUMNS with the reason, and the
+  // pin is reverse-checked like the view pin's: a pin whose column is gone,
+  // or now referenced, or structurally referenced, fails.
+  if (!ownsCorpus()) return;
+  const referenced = codeCorpus();
+
+  const APP_SCHEMAS = new Set(["public", "audit"]);
+  const columns: Array<{
+    key: string;
+    structurallyReferenced: boolean;
+  }> = [];
+  for (const rel of s.catalog.relations) {
+    if (!APP_SCHEMAS.has(rel.schema)) continue;
+    if (rel.kind !== "table" && rel.kind !== "partitioned") continue;
+    for (const col of rel.columns) {
+      columns.push({
+        key: `${rel.schema}.${rel.name}.${col.name}`,
+        structurallyReferenced: col.structurallyReferenced,
+      });
+    }
+  }
+  assert(
+    columns.length > 1000,
+    "the catalog's column walk came back nearly empty; the relation or " +
+      "column walk stopped and the check below is now a no-op",
+  );
+
+  const dead = columns
+    .filter((c) => !c.structurallyReferenced && !referenced(c.key.split(".").pop()!))
+    .map((c) => c.key)
+    .sort();
+
+  // Pin: dead columns kept on purpose, with the reason.
+  const KNOWN_DEAD_COLUMNS: Record<string, string> = {};
+
+  const unpinned = dead.filter((key) => !(key in KNOWN_DEAD_COLUMNS));
+  const stalePins = Object.keys(KNOWN_DEAD_COLUMNS)
+    .filter((key) => {
+      const col = columns.find((c) => c.key === key);
+      return (
+        !col ||
+        col.structurallyReferenced ||
+        referenced(key.split(".").pop()!)
+      );
+    })
+    .sort();
+
+  assertEquals(
+    stalePins,
+    [],
+    "These pinned columns are no longer the exception the pin claims for " +
+      "them: the column is gone, or it is now referenced by the database " +
+      "or the code and the pin hides a column that was brought back to " +
+      "life.\n" + stalePins.join("\n"),
+  );
+  assertEquals(
+    unpinned,
+    [],
+    "These columns are read by nothing in the database and named by " +
+      "nothing in the code: no index, foreign key, view, policy, function " +
+      "or trigger references them, and no edge function, worker query, " +
+      "script, post-baseline migration, cron job or client names them. " +
+      "They are storage and surface nothing uses, and they read in the " +
+      "generated types like data the product carries. Either the column " +
+      "is dead and should be dropped, or it is read somewhere this audit " +
+      "cannot see — in which case pin it in KNOWN_DEAD_COLUMNS with the " +
       "reason.\n" + unpinned.join("\n"),
   );
 });

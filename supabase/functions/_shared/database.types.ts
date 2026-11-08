@@ -19,28 +19,16 @@ export type Database = {
       logged_actions: {
         Row: {
         action: string | null;
-        changed_fields: Array<Json> | null;
-        event_time: string | null;
-        row_data: Json | null;
-        schema_name: string | null;
         table_name: string | null;
         user_id: string | null;
         };
         Insert: {
         action?: string;
-        changed_fields?: Array<Json>;
-        event_time?: string;
-        row_data?: Json;
-        schema_name?: string;
         table_name?: string;
         user_id?: string;
         };
         Update: {
         action?: string | null;
-        changed_fields?: Array<Json> | null;
-        event_time?: string | null;
-        row_data?: Json | null;
-        schema_name?: string | null;
         table_name?: string | null;
         user_id?: string | null;
         };
@@ -363,16 +351,13 @@ export type Database = {
         county: string;
         created_at: string;
         generated_full_address: string;
-        last_processed_id: number | null;
         lat: number;
         location: unknown;
-        location_status: Database["public"]["Enums"]["location_status"] | null;
         long: number;
         postal_code: string;
         profile_id: string;
         radius_meters: number;
         state_province: string;
-        test_delete: Json | null;
         transportation: string;
         updated_at: string | null;
         };
@@ -386,16 +371,13 @@ export type Database = {
         county?: string;
         created_at?: string;
         generated_full_address?: string;
-        last_processed_id?: number;
         lat?: number;
         location?: unknown;
-        location_status?: Database["public"]["Enums"]["location_status"];
         long?: number;
         postal_code?: string;
         profile_id: string;
         radius_meters?: number;
         state_province?: string;
-        test_delete?: Json;
         transportation?: string;
         updated_at?: string;
         };
@@ -409,16 +391,13 @@ export type Database = {
         county?: string;
         created_at?: string;
         generated_full_address?: string;
-        last_processed_id?: number | null;
         lat?: number;
         location?: unknown;
-        location_status?: Database["public"]["Enums"]["location_status"] | null;
         long?: number;
         postal_code?: string;
         profile_id?: string;
         radius_meters?: number;
         state_province?: string;
-        test_delete?: Json | null;
         transportation?: string;
         updated_at?: string | null;
         };
@@ -628,7 +607,6 @@ export type Database = {
         id: string;
         post_id: number | null;
         rating: number | null;
-        review_type: string | null;
         reviewer_id: string | null;
         synced_to_motherduck: boolean | null;
         updated_at: string | null;
@@ -638,7 +616,6 @@ export type Database = {
         id: string;
         post_id?: number;
         rating?: number;
-        review_type?: string;
         reviewer_id?: string;
         synced_to_motherduck?: boolean;
         updated_at?: string;
@@ -648,7 +625,6 @@ export type Database = {
         id?: string;
         post_id?: number | null;
         rating?: number | null;
-        review_type?: string | null;
         reviewer_id?: string | null;
         synced_to_motherduck?: boolean | null;
         updated_at?: string | null;
@@ -831,27 +807,15 @@ export type Database = {
       },
       app_version_requirements: {
         Row: {
-        force_update_message: string | null;
-        min_version: string;
         platform: string;
-        recommended_version: string;
-        soft_update_message: string | null;
         updated_at: string;
         };
         Insert: {
-        force_update_message?: string;
-        min_version: string;
         platform: string;
-        recommended_version: string;
-        soft_update_message?: string;
         updated_at?: string;
         };
         Update: {
-        force_update_message?: string | null;
-        min_version?: string;
         platform?: string;
-        recommended_version?: string;
-        soft_update_message?: string | null;
         updated_at?: string;
         };
         Relationships: [];
@@ -1042,15 +1006,12 @@ export type Database = {
       campaign_recipients: {
         Row: {
         campaign_id: string;
-        click_count: number | null;
         clicked_at: string | null;
-        clicked_links: Json | null;
         created_at: string | null;
         delivered_at: string | null;
         email: string;
         error_message: string | null;
         id: string;
-        open_count: number | null;
         opened_at: string | null;
         profile_id: string | null;
         provider: string | null;
@@ -1062,15 +1023,12 @@ export type Database = {
         };
         Insert: {
         campaign_id: string;
-        click_count?: number;
         clicked_at?: string;
-        clicked_links?: Json;
         created_at?: string;
         delivered_at?: string;
         email: string;
         error_message?: string;
         id?: string;
-        open_count?: number;
         opened_at?: string;
         profile_id?: string;
         provider?: string;
@@ -1082,15 +1040,12 @@ export type Database = {
         };
         Update: {
         campaign_id?: string;
-        click_count?: number | null;
         clicked_at?: string | null;
-        clicked_links?: Json | null;
         created_at?: string | null;
         delivered_at?: string | null;
         email?: string;
         error_message?: string | null;
         id?: string;
-        open_count?: number | null;
         opened_at?: string | null;
         profile_id?: string | null;
         provider?: string | null;
@@ -1250,7 +1205,6 @@ export type Database = {
         deleted_at: string | null;
         depth: number | null;
         firebase_id: string | null;
-        firebase_metadata: Json | null;
         forum_id: number | null;
         id: number;
         is_best_answer: boolean | null;
@@ -1271,7 +1225,6 @@ export type Database = {
         deleted_at?: string;
         depth?: number;
         firebase_id?: string;
-        firebase_metadata?: Json;
         forum_id?: number;
         id: number;
         is_best_answer?: boolean;
@@ -1292,7 +1245,6 @@ export type Database = {
         deleted_at?: string | null;
         depth?: number | null;
         firebase_id?: string | null;
-        firebase_metadata?: Json | null;
         forum_id?: number | null;
         id?: number;
         is_best_answer?: boolean | null;
@@ -1319,7 +1271,6 @@ export type Database = {
         created_at: string | null;
         created_date: string | null;
         description: string | null;
-        firebase_metadata: Json | null;
         full_address: string | null;
         has_pantry: boolean | null;
         host_company: string | null;
@@ -1358,7 +1309,6 @@ export type Database = {
         created_at?: string;
         created_date?: string;
         description?: string;
-        firebase_metadata?: Json;
         full_address?: string;
         has_pantry?: boolean;
         host_company?: string;
@@ -1397,7 +1347,6 @@ export type Database = {
         created_at?: string | null;
         created_date?: string | null;
         description?: string | null;
-        firebase_metadata?: Json | null;
         full_address?: string | null;
         has_pantry?: boolean | null;
         host_company?: string | null;
@@ -1432,36 +1381,29 @@ export type Database = {
       compressed_images: {
         Row: {
         bucket_id: string;
-        compressed_at: string | null;
         compressed_size: number;
         id: number;
         object_path: string;
         original_size: number;
-        savings_percent: number | null;
         };
         Insert: {
         bucket_id: string;
-        compressed_at?: string;
         compressed_size: number;
         id?: number;
         object_path: string;
         original_size: number;
-        savings_percent?: number;
         };
         Update: {
         bucket_id?: string;
-        compressed_at?: string | null;
         compressed_size?: number;
         id?: number;
         object_path?: string;
         original_size?: number;
-        savings_percent?: number | null;
         };
         Relationships: [];
       },
       content_translations: {
         Row: {
-        character_count: number | null;
         content_id: string;
         content_type: string;
         created_at: string | null;
@@ -1469,7 +1411,6 @@ export type Database = {
         field_name: string;
         hit_count: number | null;
         id: string;
-        last_hit_at: string | null;
         quality_score: number | null;
         source_locale: string;
         source_text: string;
@@ -1478,7 +1419,6 @@ export type Database = {
         translation_service: string | null;
         };
         Insert: {
-        character_count?: number;
         content_id: string;
         content_type: string;
         created_at?: string;
@@ -1486,7 +1426,6 @@ export type Database = {
         field_name: string;
         hit_count?: number;
         id?: string;
-        last_hit_at?: string;
         quality_score?: number;
         source_locale: string;
         source_text: string;
@@ -1495,7 +1434,6 @@ export type Database = {
         translation_service?: string;
         };
         Update: {
-        character_count?: number | null;
         content_id?: string;
         content_type?: string;
         created_at?: string | null;
@@ -1503,7 +1441,6 @@ export type Database = {
         field_name?: string;
         hit_count?: number | null;
         id?: string;
-        last_hit_at?: string | null;
         quality_score?: number | null;
         source_locale?: string;
         source_text?: string;
@@ -1633,7 +1570,6 @@ export type Database = {
         archived_reason: string | null;
         churn_risk_score: number | null;
         created_at: string | null;
-        custom_fields: Json | null;
         customer_type: string | null;
         engagement_score: number | null;
         first_interaction_at: string | null;
@@ -1641,7 +1577,6 @@ export type Database = {
         is_archived: boolean | null;
         last_interaction_at: string | null;
         lifecycle_stage: string | null;
-        lifetime_value: number | null;
         ltv_score: number | null;
         notes: string | null;
         preferred_contact_method: string | null;
@@ -1657,7 +1592,6 @@ export type Database = {
         archived_reason?: string;
         churn_risk_score?: number;
         created_at?: string;
-        custom_fields?: Json;
         customer_type?: string;
         engagement_score?: number;
         first_interaction_at?: string;
@@ -1665,7 +1599,6 @@ export type Database = {
         is_archived?: boolean;
         last_interaction_at?: string;
         lifecycle_stage?: string;
-        lifetime_value?: number;
         ltv_score?: number;
         notes?: string;
         preferred_contact_method?: string;
@@ -1681,7 +1614,6 @@ export type Database = {
         archived_reason?: string | null;
         churn_risk_score?: number | null;
         created_at?: string | null;
-        custom_fields?: Json | null;
         customer_type?: string | null;
         engagement_score?: number | null;
         first_interaction_at?: string | null;
@@ -1689,7 +1621,6 @@ export type Database = {
         is_archived?: boolean | null;
         last_interaction_at?: string | null;
         lifecycle_stage?: string | null;
-        lifetime_value?: number | null;
         ltv_score?: number | null;
         notes?: string | null;
         preferred_contact_method?: string | null;
@@ -1704,48 +1635,39 @@ export type Database = {
       },
       daily_stats: {
         Row: {
-        active_cities: Json | null;
         active_users: number;
         completed_shares: number;
         computed_at: string;
         date: string;
-        expired_listings: number;
         messages_sent: number;
         new_listings: number;
         new_users: number;
         notifications_sent: number;
         returning_users: number;
-        searches_performed: number;
         top_categories: Json | null;
         };
         Insert: {
-        active_cities?: Json;
         active_users?: number;
         completed_shares?: number;
         computed_at?: string;
         date: string;
-        expired_listings?: number;
         messages_sent?: number;
         new_listings?: number;
         new_users?: number;
         notifications_sent?: number;
         returning_users?: number;
-        searches_performed?: number;
         top_categories?: Json;
         };
         Update: {
-        active_cities?: Json | null;
         active_users?: number;
         completed_shares?: number;
         computed_at?: string;
         date?: string;
-        expired_listings?: number;
         messages_sent?: number;
         new_listings?: number;
         new_users?: number;
         notifications_sent?: number;
         returning_users?: number;
-        searches_performed?: number;
         top_categories?: Json | null;
         };
         Relationships: [];
@@ -1885,45 +1807,33 @@ export type Database = {
         content_type: string;
         created_at: string | null;
         expires_at: string | null;
-        hit_count: number | null;
         id: string;
-        last_hit_at: string | null;
         quality_score: number | null;
-        source_locale: string;
         source_text: string;
         target_locale: string;
         translated_text: string;
-        translation_source: string | null;
         };
         Insert: {
         content_hash: string;
         content_type?: string;
         created_at?: string;
         expires_at?: string;
-        hit_count?: number;
         id?: string;
-        last_hit_at?: string;
         quality_score?: number;
-        source_locale?: string;
         source_text: string;
         target_locale: string;
         translated_text: string;
-        translation_source?: string;
         };
         Update: {
         content_hash?: string;
         content_type?: string;
         created_at?: string | null;
         expires_at?: string | null;
-        hit_count?: number | null;
         id?: string;
-        last_hit_at?: string | null;
         quality_score?: number | null;
-        source_locale?: string;
         source_text?: string;
         target_locale?: string;
         translated_text?: string;
-        translation_source?: string | null;
         };
         Relationships: [];
       },
@@ -2088,7 +1998,6 @@ export type Database = {
       },
       email_bounce_events: {
         Row: {
-        bounce_category: string | null;
         bounce_type: string | null;
         created_at: string | null;
         email: string;
@@ -2097,10 +2006,8 @@ export type Database = {
         message_id: string | null;
         processed_at: string | null;
         provider: string;
-        raw_payload: Json | null;
         };
         Insert: {
-        bounce_category?: string;
         bounce_type?: string;
         created_at?: string;
         email: string;
@@ -2109,10 +2016,8 @@ export type Database = {
         message_id?: string;
         processed_at?: string;
         provider: string;
-        raw_payload?: Json;
         };
         Update: {
-        bounce_category?: string | null;
         bounce_type?: string | null;
         created_at?: string | null;
         email?: string;
@@ -2121,7 +2026,6 @@ export type Database = {
         message_id?: string | null;
         processed_at?: string | null;
         provider?: string;
-        raw_payload?: Json | null;
         };
         Relationships: [];
       },
@@ -2167,18 +2071,14 @@ export type Database = {
         email_type: string;
         failed_providers: Array<string> | null;
         failure_reason: string;
-        first_attempt_at: string | null;
         id: string;
         last_attempt_at: string | null;
         last_error: string | null;
         metadata: Json | null;
-        moved_to_dlq_at: string | null;
-        original_queue_id: string | null;
         recipient_email: string;
         recipient_id: string | null;
         template_data: Json;
         template_name: string;
-        total_attempts: number;
         updated_at: string | null;
         };
         Insert: {
@@ -2186,18 +2086,14 @@ export type Database = {
         email_type: string;
         failed_providers?: Array<string>;
         failure_reason: string;
-        first_attempt_at?: string;
         id?: string;
         last_attempt_at?: string;
         last_error?: string;
         metadata?: Json;
-        moved_to_dlq_at?: string;
-        original_queue_id?: string;
         recipient_email: string;
         recipient_id?: string;
         template_data?: Json;
         template_name: string;
-        total_attempts?: number;
         updated_at?: string;
         };
         Update: {
@@ -2205,18 +2101,14 @@ export type Database = {
         email_type?: string;
         failed_providers?: Array<string> | null;
         failure_reason?: string;
-        first_attempt_at?: string | null;
         id?: string;
         last_attempt_at?: string | null;
         last_error?: string | null;
         metadata?: Json | null;
-        moved_to_dlq_at?: string | null;
-        original_queue_id?: string | null;
         recipient_email?: string;
         recipient_id?: string | null;
         template_data?: Json;
         template_name?: string;
-        total_attempts?: number;
         updated_at?: string | null;
         };
         Relationships: [];
@@ -2412,7 +2304,6 @@ export type Database = {
         health_score: number;
         id: string;
         provider: string;
-        snapshot_at: string | null;
         success_rate: number;
         successful_requests: number;
         total_requests: number;
@@ -2424,7 +2315,6 @@ export type Database = {
         health_score: number;
         id?: string;
         provider: string;
-        snapshot_at?: string;
         success_rate: number;
         successful_requests: number;
         total_requests: number;
@@ -2436,7 +2326,6 @@ export type Database = {
         health_score?: number;
         id?: string;
         provider?: string;
-        snapshot_at?: string | null;
         success_rate?: number;
         successful_requests?: number;
         total_requests?: number;
@@ -2745,43 +2634,34 @@ export type Database = {
       },
       email_suppression_list: {
         Row: {
-        bounce_subtype: string | null;
         bounce_type: string | null;
         created_at: string | null;
         email: string;
         expires_at: string | null;
         id: string;
         metadata: Json | null;
-        original_message_id: string | null;
         provider: string | null;
         reason: string;
-        suppressed_at: string | null;
         };
         Insert: {
-        bounce_subtype?: string;
         bounce_type?: string;
         created_at?: string;
         email: string;
         expires_at?: string;
         id?: string;
         metadata?: Json;
-        original_message_id?: string;
         provider?: string;
         reason: string;
-        suppressed_at?: string;
         };
         Update: {
-        bounce_subtype?: string | null;
         bounce_type?: string | null;
         created_at?: string | null;
         email?: string;
         expires_at?: string | null;
         id?: string;
         metadata?: Json | null;
-        original_message_id?: string | null;
         provider?: string | null;
         reason?: string;
-        suppressed_at?: string | null;
         };
         Relationships: [];
       },
@@ -2814,7 +2694,6 @@ export type Database = {
       },
       email_template_versions: {
         Row: {
-        change_reason: string | null;
         changed_at: string | null;
         changed_by: string | null;
         html_content: string;
@@ -2826,7 +2705,6 @@ export type Database = {
         version: number;
         };
         Insert: {
-        change_reason?: string;
         changed_at?: string;
         changed_by?: string;
         html_content: string;
@@ -2838,7 +2716,6 @@ export type Database = {
         version: number;
         };
         Update: {
-        change_reason?: string | null;
         changed_at?: string | null;
         changed_by?: string | null;
         html_content?: string;
@@ -2907,19 +2784,16 @@ export type Database = {
       },
       experiment_assignments: {
         Row: {
-        assigned_at: string;
         experiment_key: string;
         user_id: string;
         variant_id: string;
         };
         Insert: {
-        assigned_at?: string;
         experiment_key: string;
         user_id: string;
         variant_id: string;
         };
         Update: {
-        assigned_at?: string;
         experiment_key?: string;
         user_id?: string;
         variant_id?: string;
@@ -2931,61 +2805,43 @@ export type Database = {
         created_at: string;
         description: string | null;
         end_date: string | null;
-        hypothesis: string | null;
         id: string;
         key: string;
         name: string;
-        primary_metric: string | null;
         results: Json | null;
         sample_percentage: number | null;
-        secondary_metrics: Array<string> | null;
         start_date: string | null;
         status: string;
-        target_platforms: Array<string> | null;
         updated_at: string;
-        user_segments: Array<string> | null;
         variants: Json;
-        winner_variant: string | null;
         };
         Insert: {
         created_at?: string;
         description?: string;
         end_date?: string;
-        hypothesis?: string;
         id?: string;
         key: string;
         name: string;
-        primary_metric?: string;
         results?: Json;
         sample_percentage?: number;
-        secondary_metrics?: Array<string>;
         start_date?: string;
         status?: string;
-        target_platforms?: Array<string>;
         updated_at?: string;
-        user_segments?: Array<string>;
         variants?: Json;
-        winner_variant?: string;
         };
         Update: {
         created_at?: string;
         description?: string | null;
         end_date?: string | null;
-        hypothesis?: string | null;
         id?: string;
         key?: string;
         name?: string;
-        primary_metric?: string | null;
         results?: Json | null;
         sample_percentage?: number | null;
-        secondary_metrics?: Array<string> | null;
         start_date?: string | null;
         status?: string;
-        target_platforms?: Array<string> | null;
         updated_at?: string;
-        user_segments?: Array<string> | null;
         variants?: Json;
-        winner_variant?: string | null;
         };
         Relationships: [];
       },
@@ -3025,7 +2881,6 @@ export type Database = {
         created_at: string;
         created_by: string | null;
         description: string | null;
-        disabled_at: string | null;
         display_name: string;
         enabled: boolean;
         enabled_at: string | null;
@@ -3033,9 +2888,7 @@ export type Database = {
         flag_key: string;
         id: string;
         metadata: Json;
-        min_app_version: Json | null;
         rollout_percentage: number;
-        target_platforms: Array<string> | null;
         target_segments: Array<string> | null;
         updated_at: string;
         };
@@ -3044,7 +2897,6 @@ export type Database = {
         created_at?: string;
         created_by?: string;
         description?: string;
-        disabled_at?: string;
         display_name: string;
         enabled?: boolean;
         enabled_at?: string;
@@ -3052,9 +2904,7 @@ export type Database = {
         flag_key: string;
         id?: string;
         metadata?: Json;
-        min_app_version?: Json;
         rollout_percentage?: number;
-        target_platforms?: Array<string>;
         target_segments?: Array<string>;
         updated_at?: string;
         };
@@ -3063,7 +2913,6 @@ export type Database = {
         created_at?: string;
         created_by?: string | null;
         description?: string | null;
-        disabled_at?: string | null;
         display_name?: string;
         enabled?: boolean;
         enabled_at?: string | null;
@@ -3071,9 +2920,7 @@ export type Database = {
         flag_key?: string;
         id?: string;
         metadata?: Json;
-        min_app_version?: Json | null;
         rollout_percentage?: number;
-        target_platforms?: Array<string> | null;
         target_segments?: Array<string> | null;
         updated_at?: string;
         };
@@ -3163,7 +3010,6 @@ export type Database = {
         rich_content: Json | null;
         search_vector: string | null;
         series_id: string | null;
-        series_order: number | null;
         slug: string | null;
         views_count: number | null;
         };
@@ -3196,7 +3042,6 @@ export type Database = {
         rich_content?: Json;
         search_vector?: string;
         series_id?: string;
-        series_order?: number;
         slug?: string;
         views_count?: number;
         };
@@ -3229,7 +3074,6 @@ export type Database = {
         rich_content?: Json | null;
         search_vector?: string | null;
         series_id?: string | null;
-        series_order?: number | null;
         slug?: string | null;
         views_count?: number | null;
         };
@@ -3337,19 +3181,16 @@ export type Database = {
       forum_announcement_dismissals: {
         Row: {
         announcement_id: string;
-        dismissed_at: string | null;
         id: string;
         profile_id: string;
         };
         Insert: {
         announcement_id: string;
-        dismissed_at?: string;
         id?: string;
         profile_id: string;
         };
         Update: {
         announcement_id?: string;
-        dismissed_at?: string | null;
         id?: string;
         profile_id?: string;
         };
@@ -3359,20 +3200,15 @@ export type Database = {
         Row: {
         announcement_type: string | null;
         background_color: string | null;
-        clicks_count: number | null;
         content: string;
         created_at: string | null;
         created_by: string;
         cta_style: string | null;
-        cta_text: string | null;
-        cta_url: string | null;
-        dismissals_count: number | null;
         display_location: string | null;
         ends_at: string | null;
         icon_name: string | null;
         id: string;
         is_active: boolean | null;
-        is_dismissible: boolean | null;
         is_pinned: boolean | null;
         is_published: boolean | null;
         priority: number | null;
@@ -3380,9 +3216,7 @@ export type Database = {
         starts_at: string | null;
         target_category_id: number | null;
         target_segment: Json | null;
-        target_trust_levels: Array<number> | null;
         target_type: string | null;
-        text_color: string | null;
         title: string;
         updated_at: string | null;
         updated_by: string | null;
@@ -3391,20 +3225,15 @@ export type Database = {
         Insert: {
         announcement_type?: string;
         background_color?: string;
-        clicks_count?: number;
         content: string;
         created_at?: string;
         created_by: string;
         cta_style?: string;
-        cta_text?: string;
-        cta_url?: string;
-        dismissals_count?: number;
         display_location?: string;
         ends_at?: string;
         icon_name?: string;
         id?: string;
         is_active?: boolean;
-        is_dismissible?: boolean;
         is_pinned?: boolean;
         is_published?: boolean;
         priority?: number;
@@ -3412,9 +3241,7 @@ export type Database = {
         starts_at?: string;
         target_category_id?: number;
         target_segment?: Json;
-        target_trust_levels?: Array<number>;
         target_type?: string;
-        text_color?: string;
         title: string;
         updated_at?: string;
         updated_by?: string;
@@ -3423,20 +3250,15 @@ export type Database = {
         Update: {
         announcement_type?: string | null;
         background_color?: string | null;
-        clicks_count?: number | null;
         content?: string;
         created_at?: string | null;
         created_by?: string;
         cta_style?: string | null;
-        cta_text?: string | null;
-        cta_url?: string | null;
-        dismissals_count?: number | null;
         display_location?: string | null;
         ends_at?: string | null;
         icon_name?: string | null;
         id?: string;
         is_active?: boolean | null;
-        is_dismissible?: boolean | null;
         is_pinned?: boolean | null;
         is_published?: boolean | null;
         priority?: number | null;
@@ -3444,9 +3266,7 @@ export type Database = {
         starts_at?: string | null;
         target_category_id?: number | null;
         target_segment?: Json | null;
-        target_trust_levels?: Array<number> | null;
         target_type?: string | null;
-        text_color?: string | null;
         title?: string;
         updated_at?: string | null;
         updated_by?: string | null;
@@ -3460,14 +3280,9 @@ export type Database = {
         date: string;
         engagement_rate: number | null;
         id: string;
-        new_posts_count: number | null;
         profile_id: string;
         top_post_id: number | null;
-        total_comments: number | null;
-        total_followers_gained: number | null;
-        total_followers_lost: number | null;
         total_likes: number | null;
-        total_reactions: number | null;
         total_views: number | null;
         };
         Insert: {
@@ -3475,14 +3290,9 @@ export type Database = {
         date?: string;
         engagement_rate?: number;
         id?: string;
-        new_posts_count?: number;
         profile_id: string;
         top_post_id?: number;
-        total_comments?: number;
-        total_followers_gained?: number;
-        total_followers_lost?: number;
         total_likes?: number;
-        total_reactions?: number;
         total_views?: number;
         };
         Update: {
@@ -3490,14 +3300,9 @@ export type Database = {
         date?: string;
         engagement_rate?: number | null;
         id?: string;
-        new_posts_count?: number | null;
         profile_id?: string;
         top_post_id?: number | null;
-        total_comments?: number | null;
-        total_followers_gained?: number | null;
-        total_followers_lost?: number | null;
         total_likes?: number | null;
-        total_reactions?: number | null;
         total_views?: number | null;
         };
         Relationships: [];
@@ -3546,13 +3351,11 @@ export type Database = {
       },
       forum_bookmark_collections: {
         Row: {
-        bookmarks_count: number | null;
         color: string | null;
         created_at: string | null;
         description: string | null;
         icon_name: string | null;
         id: string;
-        is_default: boolean | null;
         is_private: boolean | null;
         name: string;
         profile_id: string;
@@ -3560,13 +3363,11 @@ export type Database = {
         updated_at: string | null;
         };
         Insert: {
-        bookmarks_count?: number;
         color?: string;
         created_at?: string;
         description?: string;
         icon_name?: string;
         id?: string;
-        is_default?: boolean;
         is_private?: boolean;
         name: string;
         profile_id: string;
@@ -3574,13 +3375,11 @@ export type Database = {
         updated_at?: string;
         };
         Update: {
-        bookmarks_count?: number | null;
         color?: string | null;
         created_at?: string | null;
         description?: string | null;
         icon_name?: string | null;
         id?: string;
-        is_default?: boolean | null;
         is_private?: boolean | null;
         name?: string;
         profile_id?: string;
@@ -3635,26 +3434,20 @@ export type Database = {
         Row: {
         comment_id: number;
         created_at: string | null;
-        edit_reason: string | null;
         editor_id: string;
         id: string;
-        previous_content: string | null;
         };
         Insert: {
         comment_id: number;
         created_at?: string;
-        edit_reason?: string;
         editor_id: string;
         id?: string;
-        previous_content?: string;
         };
         Update: {
         comment_id?: number;
         created_at?: string | null;
-        edit_reason?: string | null;
         editor_id?: string;
         id?: string;
-        previous_content?: string | null;
         };
         Relationships: [];
       },
@@ -3691,12 +3484,6 @@ export type Database = {
         id: string;
         is_active: boolean | null;
         started_at: string | null;
-        variant_a: string;
-        variant_a_clicks: number | null;
-        variant_a_views: number | null;
-        variant_b: string;
-        variant_b_clicks: number | null;
-        variant_b_views: number | null;
         winning_variant: string | null;
         };
         Insert: {
@@ -3707,12 +3494,6 @@ export type Database = {
         id?: string;
         is_active?: boolean;
         started_at?: string;
-        variant_a: string;
-        variant_a_clicks?: number;
-        variant_a_views?: number;
-        variant_b: string;
-        variant_b_clicks?: number;
-        variant_b_views?: number;
         winning_variant?: string;
         };
         Update: {
@@ -3723,12 +3504,6 @@ export type Database = {
         id?: string;
         is_active?: boolean | null;
         started_at?: string | null;
-        variant_a?: string;
-        variant_a_clicks?: number | null;
-        variant_a_views?: number | null;
-        variant_b?: string;
-        variant_b_clicks?: number | null;
-        variant_b_views?: number | null;
         winning_variant?: string | null;
         };
         Relationships: [];
@@ -3740,8 +3515,6 @@ export type Database = {
         is_muted: boolean | null;
         joined_at: string | null;
         last_read_at: string | null;
-        left_at: string | null;
-        muted_until: string | null;
         nickname: string | null;
         profile_id: string;
         role: string | null;
@@ -3752,8 +3525,6 @@ export type Database = {
         is_muted?: boolean;
         joined_at?: string;
         last_read_at?: string;
-        left_at?: string;
-        muted_until?: string;
         nickname?: string;
         profile_id: string;
         role?: string;
@@ -3764,8 +3535,6 @@ export type Database = {
         is_muted?: boolean | null;
         joined_at?: string | null;
         last_read_at?: string | null;
-        left_at?: string | null;
-        muted_until?: string | null;
         nickname?: string | null;
         profile_id?: string;
         role?: string | null;
@@ -3778,9 +3547,7 @@ export type Database = {
         created_by: string | null;
         id: string;
         is_archived: boolean | null;
-        is_group: boolean | null;
         last_message_at: string | null;
-        last_message_preview: string | null;
         metadata: Json | null;
         title: string | null;
         updated_at: string | null;
@@ -3790,9 +3557,7 @@ export type Database = {
         created_by?: string;
         id?: string;
         is_archived?: boolean;
-        is_group?: boolean;
         last_message_at?: string;
-        last_message_preview?: string;
         metadata?: Json;
         title?: string;
         updated_at?: string;
@@ -3802,9 +3567,7 @@ export type Database = {
         created_by?: string | null;
         id?: string;
         is_archived?: boolean | null;
-        is_group?: boolean | null;
         last_message_at?: string | null;
-        last_message_preview?: string | null;
         metadata?: Json | null;
         title?: string | null;
         updated_at?: string | null;
@@ -3858,54 +3621,27 @@ export type Database = {
       },
       forum_feed_preferences: {
         Row: {
-        compact_view: boolean | null;
         created_at: string | null;
         feed_sort: string | null;
-        hide_read_items: boolean | null;
         id: string;
         profile_id: string;
-        show_badges: boolean | null;
-        show_bookmarks: boolean | null;
-        show_comments: boolean | null;
-        show_follows: boolean | null;
-        show_likes: boolean | null;
-        show_polls: boolean | null;
         show_posts: boolean | null;
-        show_reactions: boolean | null;
         updated_at: string | null;
         };
         Insert: {
-        compact_view?: boolean;
         created_at?: string;
         feed_sort?: string;
-        hide_read_items?: boolean;
         id?: string;
         profile_id: string;
-        show_badges?: boolean;
-        show_bookmarks?: boolean;
-        show_comments?: boolean;
-        show_follows?: boolean;
-        show_likes?: boolean;
-        show_polls?: boolean;
         show_posts?: boolean;
-        show_reactions?: boolean;
         updated_at?: string;
         };
         Update: {
-        compact_view?: boolean | null;
         created_at?: string | null;
         feed_sort?: string | null;
-        hide_read_items?: boolean | null;
         id?: string;
         profile_id?: string;
-        show_badges?: boolean | null;
-        show_bookmarks?: boolean | null;
-        show_comments?: boolean | null;
-        show_follows?: boolean | null;
-        show_likes?: boolean | null;
-        show_polls?: boolean | null;
         show_posts?: boolean | null;
-        show_reactions?: boolean | null;
         updated_at?: string | null;
         };
         Relationships: [];
@@ -4009,9 +3745,7 @@ export type Database = {
         conversation_id: string;
         created_at: string | null;
         deleted_at: string | null;
-        edited_at: string | null;
         id: string;
-        is_deleted: boolean | null;
         is_edited: boolean | null;
         message_type: string | null;
         metadata: Json | null;
@@ -4024,9 +3758,7 @@ export type Database = {
         conversation_id: string;
         created_at?: string;
         deleted_at?: string;
-        edited_at?: string;
         id?: string;
-        is_deleted?: boolean;
         is_edited?: boolean;
         message_type?: string;
         metadata?: Json;
@@ -4039,9 +3771,7 @@ export type Database = {
         conversation_id?: string;
         created_at?: string | null;
         deleted_at?: string | null;
-        edited_at?: string | null;
         id?: string;
-        is_deleted?: boolean | null;
         is_edited?: boolean | null;
         message_type?: string | null;
         metadata?: Json | null;
@@ -4055,7 +3785,6 @@ export type Database = {
         Row: {
         created_at: string | null;
         id: string;
-        is_internal: boolean | null;
         moderator_id: string;
         note: string;
         queue_id: string;
@@ -4063,7 +3792,6 @@ export type Database = {
         Insert: {
         created_at?: string;
         id?: string;
-        is_internal?: boolean;
         moderator_id: string;
         note: string;
         queue_id: string;
@@ -4071,7 +3799,6 @@ export type Database = {
         Update: {
         created_at?: string | null;
         id?: string;
-        is_internal?: boolean | null;
         moderator_id?: string;
         note?: string;
         queue_id?: string;
@@ -4080,13 +3807,10 @@ export type Database = {
       },
       forum_moderation_queue: {
         Row: {
-        assigned_at: string | null;
         assigned_to: string | null;
         comment_id: number | null;
-        content_snapshot: Json | null;
         content_type: string;
         created_at: string | null;
-        flag_details: Json | null;
         flag_reason: string | null;
         flag_score: number | null;
         forum_id: number | null;
@@ -4105,13 +3829,10 @@ export type Database = {
         updated_at: string | null;
         };
         Insert: {
-        assigned_at?: string;
         assigned_to?: string;
         comment_id?: number;
-        content_snapshot?: Json;
         content_type: string;
         created_at?: string;
-        flag_details?: Json;
         flag_reason?: string;
         flag_score?: number;
         forum_id?: number;
@@ -4130,13 +3851,10 @@ export type Database = {
         updated_at?: string;
         };
         Update: {
-        assigned_at?: string | null;
         assigned_to?: string | null;
         comment_id?: number | null;
-        content_snapshot?: Json | null;
         content_type?: string;
         created_at?: string | null;
-        flag_details?: Json | null;
         flag_reason?: string | null;
         flag_score?: number | null;
         forum_id?: number | null;
@@ -4158,37 +3876,19 @@ export type Database = {
       },
       forum_moderation_stats: {
         Row: {
-        avg_response_time_minutes: number | null;
-        bans_issued: number | null;
         date: string;
         id: string;
-        items_approved: number | null;
-        items_removed: number | null;
-        items_reviewed: number | null;
         moderator_id: string;
-        warnings_issued: number | null;
         };
         Insert: {
-        avg_response_time_minutes?: number;
-        bans_issued?: number;
         date?: string;
         id?: string;
-        items_approved?: number;
-        items_removed?: number;
-        items_reviewed?: number;
         moderator_id: string;
-        warnings_issued?: number;
         };
         Update: {
-        avg_response_time_minutes?: number | null;
-        bans_issued?: number | null;
         date?: string;
         id?: string;
-        items_approved?: number | null;
-        items_removed?: number | null;
-        items_reviewed?: number | null;
         moderator_id?: string;
-        warnings_issued?: number | null;
         };
         Relationships: [];
       },
@@ -4359,78 +4059,48 @@ export type Database = {
       },
       forum_popular_searches: {
         Row: {
-        first_searched_at: string | null;
         id: number;
-        last_searched_at: string | null;
         query: string;
-        search_count: number | null;
         };
         Insert: {
-        first_searched_at?: string;
         id?: number;
-        last_searched_at?: string;
         query: string;
-        search_count?: number;
         };
         Update: {
-        first_searched_at?: string | null;
         id?: number;
-        last_searched_at?: string | null;
         query?: string;
-        search_count?: number | null;
         };
         Relationships: [];
       },
       forum_post_analytics: {
         Row: {
-        avg_read_time_seconds: number | null;
-        bookmarks_count: number | null;
-        bounce_rate: number | null;
         comments_count: number | null;
         created_at: string | null;
         date: string;
-        device_breakdown: Json | null;
         forum_id: number;
         id: string;
         likes_count: number | null;
         reactions_count: number | null;
-        referrer_sources: Json | null;
-        shares_count: number | null;
-        unique_visitors: number | null;
         views_count: number | null;
         };
         Insert: {
-        avg_read_time_seconds?: number;
-        bookmarks_count?: number;
-        bounce_rate?: number;
         comments_count?: number;
         created_at?: string;
         date?: string;
-        device_breakdown?: Json;
         forum_id: number;
         id?: string;
         likes_count?: number;
         reactions_count?: number;
-        referrer_sources?: Json;
-        shares_count?: number;
-        unique_visitors?: number;
         views_count?: number;
         };
         Update: {
-        avg_read_time_seconds?: number | null;
-        bookmarks_count?: number | null;
-        bounce_rate?: number | null;
         comments_count?: number | null;
         created_at?: string | null;
         date?: string;
-        device_breakdown?: Json | null;
         forum_id?: number;
         id?: string;
         likes_count?: number | null;
         reactions_count?: number | null;
-        referrer_sources?: Json | null;
-        shares_count?: number | null;
-        unique_visitors?: number | null;
         views_count?: number | null;
         };
         Relationships: [];
@@ -4438,33 +4108,21 @@ export type Database = {
       forum_post_history: {
         Row: {
         created_at: string | null;
-        edit_reason: string | null;
         editor_id: string;
         forum_id: number;
         id: string;
-        previous_description: string | null;
-        previous_image: string | null;
-        previous_title: string | null;
         };
         Insert: {
         created_at?: string;
-        edit_reason?: string;
         editor_id: string;
         forum_id: number;
         id?: string;
-        previous_description?: string;
-        previous_image?: string;
-        previous_title?: string;
         };
         Update: {
         created_at?: string | null;
-        edit_reason?: string | null;
         editor_id?: string;
         forum_id?: number;
         id?: string;
-        previous_description?: string | null;
-        previous_image?: string | null;
-        previous_title?: string | null;
         };
         Relationships: [];
       },
@@ -4531,35 +4189,26 @@ export type Database = {
       forum_rate_limit_config: {
         Row: {
         action_type: string;
-        cooldown_seconds: number | null;
         created_at: string | null;
         description: string | null;
         id: number;
         is_active: boolean | null;
-        max_actions: number;
-        trust_level_multipliers: Json | null;
         window_seconds: number;
         };
         Insert: {
         action_type: string;
-        cooldown_seconds?: number;
         created_at?: string;
         description?: string;
         id?: number;
         is_active?: boolean;
-        max_actions: number;
-        trust_level_multipliers?: Json;
         window_seconds: number;
         };
         Update: {
         action_type?: string;
-        cooldown_seconds?: number | null;
         created_at?: string | null;
         description?: string | null;
         id?: number;
         is_active?: boolean | null;
-        max_actions?: number;
-        trust_level_multipliers?: Json | null;
         window_seconds?: number;
         };
         Relationships: [];
@@ -4573,7 +4222,6 @@ export type Database = {
         metadata: Json | null;
         profile_id: string;
         updated_at: string | null;
-        window_end: string | null;
         window_start: string | null;
         };
         Insert: {
@@ -4584,7 +4232,6 @@ export type Database = {
         metadata?: Json;
         profile_id: string;
         updated_at?: string;
-        window_end?: string;
         window_start?: string;
         };
         Update: {
@@ -4595,7 +4242,6 @@ export type Database = {
         metadata?: Json | null;
         profile_id?: string;
         updated_at?: string | null;
-        window_end?: string | null;
         window_start?: string | null;
         };
         Relationships: [];
@@ -4650,37 +4296,28 @@ export type Database = {
         created_at: string | null;
         forum_id: number;
         id: string;
-        is_fully_read: boolean | null;
         last_read_at: string | null;
         last_read_comment_id: number | null;
         profile_id: string;
         read_count: number | null;
-        scroll_position: number | null;
-        time_spent_seconds: number | null;
         };
         Insert: {
         created_at?: string;
         forum_id: number;
         id?: string;
-        is_fully_read?: boolean;
         last_read_at?: string;
         last_read_comment_id?: number;
         profile_id: string;
         read_count?: number;
-        scroll_position?: number;
-        time_spent_seconds?: number;
         };
         Update: {
         created_at?: string | null;
         forum_id?: number;
         id?: string;
-        is_fully_read?: boolean | null;
         last_read_at?: string | null;
         last_read_comment_id?: number | null;
         profile_id?: string;
         read_count?: number | null;
-        scroll_position?: number | null;
-        time_spent_seconds?: number | null;
         };
         Relationships: [];
       },
@@ -4688,70 +4325,43 @@ export type Database = {
         Row: {
         category_id: number | null;
         created_at: string | null;
-        custom_cron: string | null;
-        description_template: string | null;
         end_date: string | null;
         id: string;
         is_active: boolean | null;
-        last_published_at: string | null;
-        max_occurrences: number | null;
-        next_scheduled_at: string | null;
         post_type: string | null;
         profile_id: string;
-        recurrence_day: number | null;
-        recurrence_time: string;
         recurrence_type: string;
         tags: Array<number> | null;
-        template_variables: Json | null;
         timezone: string | null;
         title_template: string;
-        total_published: number | null;
         updated_at: string | null;
         };
         Insert: {
         category_id?: number;
         created_at?: string;
-        custom_cron?: string;
-        description_template?: string;
         end_date?: string;
         id?: string;
         is_active?: boolean;
-        last_published_at?: string;
-        max_occurrences?: number;
-        next_scheduled_at?: string;
         post_type?: string;
         profile_id: string;
-        recurrence_day?: number;
-        recurrence_time: string;
         recurrence_type: string;
         tags?: Array<number>;
-        template_variables?: Json;
         timezone?: string;
         title_template: string;
-        total_published?: number;
         updated_at?: string;
         };
         Update: {
         category_id?: number | null;
         created_at?: string | null;
-        custom_cron?: string | null;
-        description_template?: string | null;
         end_date?: string | null;
         id?: string;
         is_active?: boolean | null;
-        last_published_at?: string | null;
-        max_occurrences?: number | null;
-        next_scheduled_at?: string | null;
         post_type?: string | null;
         profile_id?: string;
-        recurrence_day?: number | null;
-        recurrence_time?: string;
         recurrence_type?: string;
         tags?: Array<number> | null;
-        template_variables?: Json | null;
         timezone?: string | null;
         title_template?: string;
-        total_published?: number | null;
         updated_at?: string | null;
         };
         Relationships: [];
@@ -4812,7 +4422,6 @@ export type Database = {
         description: string;
         id: number;
         is_active: boolean | null;
-        is_positive: boolean | null;
         points: number;
         };
         Insert: {
@@ -4822,7 +4431,6 @@ export type Database = {
         description: string;
         id?: number;
         is_active?: boolean;
-        is_positive?: boolean;
         points: number;
         };
         Update: {
@@ -4832,14 +4440,12 @@ export type Database = {
         description?: string;
         id?: number;
         is_active?: boolean | null;
-        is_positive?: boolean | null;
         points?: number;
         };
         Relationships: [];
       },
       forum_reputation_history: {
         Row: {
-        action_key: string;
         created_at: string | null;
         description: string | null;
         id: string;
@@ -4851,7 +4457,6 @@ export type Database = {
         source_profile_id: string | null;
         };
         Insert: {
-        action_key: string;
         created_at?: string;
         description?: string;
         id?: string;
@@ -4863,7 +4468,6 @@ export type Database = {
         source_profile_id?: string;
         };
         Update: {
-        action_key?: string;
         created_at?: string | null;
         description?: string | null;
         id?: string;
@@ -4882,8 +4486,6 @@ export type Database = {
         created_at: string | null;
         icon_name: string | null;
         level: number;
-        min_points: number;
-        perks: Json | null;
         title: string;
         };
         Insert: {
@@ -4891,8 +4493,6 @@ export type Database = {
         created_at?: string;
         icon_name?: string;
         level: number;
-        min_points: number;
-        perks?: Json;
         title: string;
         };
         Update: {
@@ -4900,8 +4500,6 @@ export type Database = {
         created_at?: string | null;
         icon_name?: string | null;
         level?: number;
-        min_points?: number;
-        perks?: Json | null;
         title?: string;
         };
         Relationships: [];
@@ -4911,9 +4509,7 @@ export type Database = {
         created_at: string | null;
         filters: Json | null;
         id: string;
-        last_notified_at: string | null;
         name: string;
-        notify_on_new: boolean | null;
         profile_id: string;
         query: string;
         results_count: number | null;
@@ -4923,9 +4519,7 @@ export type Database = {
         created_at?: string;
         filters?: Json;
         id?: string;
-        last_notified_at?: string;
         name: string;
-        notify_on_new?: boolean;
         profile_id: string;
         query: string;
         results_count?: number;
@@ -4935,9 +4529,7 @@ export type Database = {
         created_at?: string | null;
         filters?: Json | null;
         id?: string;
-        last_notified_at?: string | null;
         name?: string;
-        notify_on_new?: boolean | null;
         profile_id?: string;
         query?: string;
         results_count?: number | null;
@@ -4953,16 +4545,13 @@ export type Database = {
         failure_reason: string | null;
         id: string;
         image_url: string | null;
-        notify_followers: boolean | null;
         poll_data: Json | null;
         post_type: string | null;
         profile_id: string;
-        published_at: string | null;
         published_forum_id: number | null;
         rich_content: Json | null;
         scheduled_for: string;
         series_id: string | null;
-        series_order: number | null;
         status: string | null;
         tags: Array<number> | null;
         timezone: string | null;
@@ -4976,16 +4565,13 @@ export type Database = {
         failure_reason?: string;
         id?: string;
         image_url?: string;
-        notify_followers?: boolean;
         poll_data?: Json;
         post_type?: string;
         profile_id: string;
-        published_at?: string;
         published_forum_id?: number;
         rich_content?: Json;
         scheduled_for: string;
         series_id?: string;
-        series_order?: number;
         status?: string;
         tags?: Array<number>;
         timezone?: string;
@@ -4999,16 +4585,13 @@ export type Database = {
         failure_reason?: string | null;
         id?: string;
         image_url?: string | null;
-        notify_followers?: boolean | null;
         poll_data?: Json | null;
         post_type?: string | null;
         profile_id?: string;
-        published_at?: string | null;
         published_forum_id?: number | null;
         rich_content?: Json | null;
         scheduled_for?: string;
         series_id?: string | null;
-        series_order?: number | null;
         status?: string | null;
         tags?: Array<number> | null;
         timezone?: string | null;
@@ -5051,13 +4634,11 @@ export type Database = {
         created_at: string | null;
         description: string | null;
         difficulty_level: string | null;
-        estimated_read_time: number | null;
         id: string;
         is_complete: boolean | null;
         is_published: boolean | null;
         posts_count: number | null;
         profile_id: string;
-        published_at: string | null;
         slug: string;
         title: string;
         total_likes: number | null;
@@ -5070,13 +4651,11 @@ export type Database = {
         created_at?: string;
         description?: string;
         difficulty_level?: string;
-        estimated_read_time?: number;
         id?: string;
         is_complete?: boolean;
         is_published?: boolean;
         posts_count?: number;
         profile_id: string;
-        published_at?: string;
         slug: string;
         title: string;
         total_likes?: number;
@@ -5089,13 +4668,11 @@ export type Database = {
         created_at?: string | null;
         description?: string | null;
         difficulty_level?: string | null;
-        estimated_read_time?: number | null;
         id?: string;
         is_complete?: boolean | null;
         is_published?: boolean | null;
         posts_count?: number | null;
         profile_id?: string;
-        published_at?: string | null;
         slug?: string;
         title?: string;
         total_likes?: number | null;
@@ -5106,32 +4683,23 @@ export type Database = {
       },
       forum_series_posts: {
         Row: {
-        chapter_description: string | null;
-        chapter_title: string | null;
         created_at: string | null;
         forum_id: number;
         id: string;
-        is_free_preview: boolean | null;
         series_id: string;
         sort_order: number;
         };
         Insert: {
-        chapter_description?: string;
-        chapter_title?: string;
         created_at?: string;
         forum_id: number;
         id?: string;
-        is_free_preview?: boolean;
         series_id: string;
         sort_order?: number;
         };
         Update: {
-        chapter_description?: string | null;
-        chapter_title?: string | null;
         created_at?: string | null;
         forum_id?: number;
         id?: string;
-        is_free_preview?: boolean | null;
         series_id?: string;
         sort_order?: number;
         };
@@ -5395,21 +4963,18 @@ export type Database = {
         follower_id: string;
         following_id: string;
         id: string;
-        notify_on_new_post: boolean | null;
         };
         Insert: {
         created_at?: string;
         follower_id: string;
         following_id: string;
         id?: string;
-        notify_on_new_post?: boolean;
         };
         Update: {
         created_at?: string | null;
         follower_id?: string;
         following_id?: string;
         id?: string;
-        notify_on_new_post?: boolean | null;
         };
         Relationships: [];
       },
@@ -5418,55 +4983,25 @@ export type Database = {
         created_at: string | null;
         current_streak: number | null;
         id: string;
-        last_activity_date: string | null;
-        level_title: string | null;
         longest_streak: number | null;
-        month_start_date: string | null;
-        negative_points: number | null;
-        points_this_month: number | null;
-        points_this_week: number | null;
-        positive_points: number | null;
         profile_id: string;
-        reputation_level: number | null;
-        total_points: number | null;
         updated_at: string | null;
-        week_start_date: string | null;
         };
         Insert: {
         created_at?: string;
         current_streak?: number;
         id?: string;
-        last_activity_date?: string;
-        level_title?: string;
         longest_streak?: number;
-        month_start_date?: string;
-        negative_points?: number;
-        points_this_month?: number;
-        points_this_week?: number;
-        positive_points?: number;
         profile_id: string;
-        reputation_level?: number;
-        total_points?: number;
         updated_at?: string;
-        week_start_date?: string;
         };
         Update: {
         created_at?: string | null;
         current_streak?: number | null;
         id?: string;
-        last_activity_date?: string | null;
-        level_title?: string | null;
         longest_streak?: number | null;
-        month_start_date?: string | null;
-        negative_points?: number | null;
-        points_this_month?: number | null;
-        points_this_week?: number | null;
-        positive_points?: number | null;
         profile_id?: string;
-        reputation_level?: number | null;
-        total_points?: number | null;
         updated_at?: string | null;
-        week_start_date?: string | null;
         };
         Relationships: [];
       },
@@ -5554,9 +5089,7 @@ export type Database = {
       forum_user_warnings: {
         Row: {
         acknowledged_at: string | null;
-        ban_lifted_at: string | null;
         ban_lifted_by: string | null;
-        ban_until: string | null;
         created_at: string | null;
         details: Json | null;
         expires_at: string | null;
@@ -5570,9 +5103,7 @@ export type Database = {
         };
         Insert: {
         acknowledged_at?: string;
-        ban_lifted_at?: string;
         ban_lifted_by?: string;
-        ban_until?: string;
         created_at?: string;
         details?: Json;
         expires_at?: string;
@@ -5586,9 +5117,7 @@ export type Database = {
         };
         Update: {
         acknowledged_at?: string | null;
-        ban_lifted_at?: string | null;
         ban_lifted_by?: string | null;
-        ban_until?: string | null;
         created_at?: string | null;
         details?: Json | null;
         expires_at?: string | null;
@@ -5676,25 +5205,16 @@ export type Database = {
       },
       handlers: {
         Row: {
-        handler_name: string | null;
-        handlers_description: string | null;
-        icon_image: string | null;
         id: number;
         profile_id: string;
         qr_code: string | null;
         };
         Insert: {
-        handler_name?: string;
-        handlers_description?: string;
-        icon_image?: string;
         id: number;
         profile_id: string;
         qr_code?: string;
         };
         Update: {
-        handler_name?: string | null;
-        handlers_description?: string | null;
-        icon_image?: string | null;
         id?: number;
         profile_id?: string;
         qr_code?: string | null;
@@ -5756,70 +5276,43 @@ export type Database = {
         Row: {
         bucket: string;
         completed_at: string | null;
-        compressed_format: string | null;
-        compressed_height: number | null;
-        compressed_path: string | null;
         compressed_size: number | null;
-        compressed_width: number | null;
         compression_method: string | null;
         created_at: string | null;
         error_message: string | null;
         id: string;
-        original_format: string | null;
-        original_height: number | null;
         original_path: string;
         original_size: number;
-        original_width: number | null;
         processing_time_ms: number | null;
-        quality_setting: number | null;
         saved_bytes: number | null;
-        saved_percent: number | null;
         status: string | null;
         };
         Insert: {
         bucket: string;
         completed_at?: string;
-        compressed_format?: string;
-        compressed_height?: number;
-        compressed_path?: string;
         compressed_size?: number;
-        compressed_width?: number;
         compression_method?: string;
         created_at?: string;
         error_message?: string;
         id?: string;
-        original_format?: string;
-        original_height?: number;
         original_path: string;
         original_size: number;
-        original_width?: number;
         processing_time_ms?: number;
-        quality_setting?: number;
         saved_bytes?: number;
-        saved_percent?: number;
         status?: string;
         };
         Update: {
         bucket?: string;
         completed_at?: string | null;
-        compressed_format?: string | null;
-        compressed_height?: number | null;
-        compressed_path?: string | null;
         compressed_size?: number | null;
-        compressed_width?: number | null;
         compression_method?: string | null;
         created_at?: string | null;
         error_message?: string | null;
         id?: string;
-        original_format?: string | null;
-        original_height?: number | null;
         original_path?: string;
         original_size?: number;
-        original_width?: number | null;
         processing_time_ms?: number | null;
-        quality_setting?: number | null;
         saved_bytes?: number | null;
-        saved_percent?: number | null;
         status?: string | null;
         };
         Relationships: [];
@@ -5928,25 +5421,16 @@ export type Database = {
       },
       languages: {
         Row: {
-        country_flag: Json | null;
-        flag_url: string | null;
-        flagCode: string | null;
         id: number;
         language: string | null;
         languageCode: string | null;
         };
         Insert: {
-        country_flag?: Json;
-        flag_url?: string;
-        flagCode?: string;
         id: number;
         language?: string;
         languageCode?: string;
         };
         Update: {
-        country_flag?: Json | null;
-        flag_url?: string | null;
-        flagCode?: string | null;
         id?: number;
         language?: string | null;
         languageCode?: string | null;
@@ -5955,15 +5439,12 @@ export type Database = {
       },
       legal: {
         Row: {
-        covid19: string | null;
         id: number;
         };
         Insert: {
-        covid19?: string;
         id: number;
         };
         Update: {
-        covid19?: string | null;
         id?: number;
         };
         Relationships: [];
@@ -5972,7 +5453,6 @@ export type Database = {
         Row: {
         content: string;
         created_at: string;
-        effective_date: string;
         id: string;
         locale: string;
         title: string;
@@ -5983,7 +5463,6 @@ export type Database = {
         Insert: {
         content: string;
         created_at?: string;
-        effective_date?: string;
         id?: string;
         locale: string;
         title: string;
@@ -5994,7 +5473,6 @@ export type Database = {
         Update: {
         content?: string;
         created_at?: string;
-        effective_date?: string;
         id?: string;
         locale?: string;
         title?: string;
@@ -6126,45 +5604,36 @@ export type Database = {
       },
       mfa_rate_limits: {
         Row: {
-        attempt_count: number | null;
         id: string;
         ip_address: string | null;
-        is_locked_out: boolean | null;
         last_attempt_at: string | null;
         limit_type: string;
         locked_until: string | null;
         max_attempts: number | null;
         metadata: Json | null;
         profile_id: string | null;
-        window_duration: string | null;
         window_start: string;
         };
         Insert: {
-        attempt_count?: number;
         id?: string;
         ip_address?: string;
-        is_locked_out?: boolean;
         last_attempt_at?: string;
         limit_type: string;
         locked_until?: string;
         max_attempts?: number;
         metadata?: Json;
         profile_id?: string;
-        window_duration?: string;
         window_start?: string;
         };
         Update: {
-        attempt_count?: number | null;
         id?: string;
         ip_address?: string | null;
-        is_locked_out?: boolean | null;
         last_attempt_at?: string | null;
         limit_type?: string;
         locked_until?: string | null;
         max_attempts?: number | null;
         metadata?: Json | null;
         profile_id?: string | null;
-        window_duration?: string | null;
         window_start?: string;
         };
         Relationships: [];
@@ -6173,7 +5642,6 @@ export type Database = {
         Row: {
         created_at: string;
         current_aal: string;
-        device_fingerprint: string | null;
         expires_at: string;
         id: string;
         ip_address: string | null;
@@ -6188,7 +5656,6 @@ export type Database = {
         Insert: {
         created_at?: string;
         current_aal: string;
-        device_fingerprint?: string;
         expires_at?: string;
         id?: string;
         ip_address?: string;
@@ -6203,7 +5670,6 @@ export type Database = {
         Update: {
         created_at?: string;
         current_aal?: string;
-        device_fingerprint?: string | null;
         expires_at?: string;
         id?: string;
         ip_address?: string | null;
@@ -6219,13 +5685,10 @@ export type Database = {
       },
       mfa_verification_attempts: {
         Row: {
-        attempts_count: number | null;
-        code_hash: string;
         created_at: string;
         expires_at: string;
         id: string;
         ip_address: string | null;
-        is_expired: boolean | null;
         is_verified: boolean | null;
         max_attempts: number | null;
         profile_id: string;
@@ -6234,13 +5697,10 @@ export type Database = {
         verified_at: string | null;
         };
         Insert: {
-        attempts_count?: number;
-        code_hash: string;
         created_at?: string;
         expires_at?: string;
         id?: string;
         ip_address?: string;
-        is_expired?: boolean;
         is_verified?: boolean;
         max_attempts?: number;
         profile_id: string;
@@ -6249,13 +5709,10 @@ export type Database = {
         verified_at?: string;
         };
         Update: {
-        attempts_count?: number | null;
-        code_hash?: string;
         created_at?: string;
         expires_at?: string;
         id?: string;
         ip_address?: string | null;
-        is_expired?: boolean | null;
         is_verified?: boolean | null;
         max_attempts?: number | null;
         profile_id?: string;
@@ -6319,19 +5776,16 @@ export type Database = {
         plain_text_content: string | null;
         preview_text: string | null;
         scheduled_at: string | null;
-        segment_criteria: Json | null;
         segment_id: string | null;
         sent_at: string | null;
         status: string;
         subject: string;
         total_bounced: number | null;
         total_clicked: number | null;
-        total_complained: number | null;
         total_delivered: number | null;
         total_opened: number | null;
         total_recipients: number | null;
         total_sent: number | null;
-        total_unsubscribed: number | null;
         updated_at: string | null;
         };
         Insert: {
@@ -6345,19 +5799,16 @@ export type Database = {
         plain_text_content?: string;
         preview_text?: string;
         scheduled_at?: string;
-        segment_criteria?: Json;
         segment_id?: string;
         sent_at?: string;
         status?: string;
         subject: string;
         total_bounced?: number;
         total_clicked?: number;
-        total_complained?: number;
         total_delivered?: number;
         total_opened?: number;
         total_recipients?: number;
         total_sent?: number;
-        total_unsubscribed?: number;
         updated_at?: string;
         };
         Update: {
@@ -6371,19 +5822,16 @@ export type Database = {
         plain_text_content?: string | null;
         preview_text?: string | null;
         scheduled_at?: string | null;
-        segment_criteria?: Json | null;
         segment_id?: string | null;
         sent_at?: string | null;
         status?: string;
         subject?: string;
         total_bounced?: number | null;
         total_clicked?: number | null;
-        total_complained?: number | null;
         total_delivered?: number | null;
         total_opened?: number | null;
         total_recipients?: number | null;
         total_sent?: number | null;
-        total_unsubscribed?: number | null;
         updated_at?: string | null;
         };
         Relationships: [];
@@ -6568,38 +6016,24 @@ export type Database = {
       notification_priority_config: {
         Row: {
         base_priority: number;
-        bypass_consolidation: boolean;
         bypass_quiet_hours: boolean;
-        consolidation_window_minutes: number | null;
-        max_per_hour: number | null;
         notification_type: string;
-        ttl_seconds: number | null;
         };
         Insert: {
         base_priority?: number;
-        bypass_consolidation?: boolean;
         bypass_quiet_hours?: boolean;
-        consolidation_window_minutes?: number;
-        max_per_hour?: number;
         notification_type: string;
-        ttl_seconds?: number;
         };
         Update: {
         base_priority?: number;
-        bypass_consolidation?: boolean;
         bypass_quiet_hours?: boolean;
-        consolidation_window_minutes?: number | null;
-        max_per_hour?: number | null;
         notification_type?: string;
-        ttl_seconds?: number | null;
         };
         Relationships: [];
       },
       notification_queue: {
         Row: {
         body: string | null;
-        consolidated_count: number | null;
-        consolidated_ids: Array<string> | null;
         consolidation_key: string | null;
         created_at: string;
         error_message: string | null;
@@ -6615,8 +6049,6 @@ export type Database = {
         };
         Insert: {
         body?: string;
-        consolidated_count?: number;
-        consolidated_ids?: Array<string>;
         consolidation_key?: string;
         created_at?: string;
         error_message?: string;
@@ -6632,8 +6064,6 @@ export type Database = {
         };
         Update: {
         body?: string | null;
-        consolidated_count?: number | null;
-        consolidated_ids?: Array<string> | null;
         consolidation_key?: string | null;
         created_at?: string;
         error_message?: string | null;
@@ -6759,61 +6189,37 @@ export type Database = {
         batch_index: number | null;
         error: string | null;
         id: number;
-        initial_page_name: string | null;
-        notification_image_url: string | null;
         notification_sound: string | null;
-        notification_text: string | null;
-        notification_title: string | null;
         num_batches: number | null;
         num_sent: number | null;
-        parameter_data: string | null;
         profile_id: string | null;
         status: string | null;
         sync_version: number | null;
-        target_audience: string | null;
         timestamp: Json | null;
-        user_refs: string | null;
-        users_ff: string | null;
         };
         Insert: {
         batch_index?: number;
         error?: string;
         id: number;
-        initial_page_name?: string;
-        notification_image_url?: string;
         notification_sound?: string;
-        notification_text?: string;
-        notification_title?: string;
         num_batches?: number;
         num_sent?: number;
-        parameter_data?: string;
         profile_id?: string;
         status?: string;
         sync_version?: number;
-        target_audience?: string;
         timestamp?: Json;
-        user_refs?: string;
-        users_ff?: string;
         };
         Update: {
         batch_index?: number | null;
         error?: string | null;
         id?: number;
-        initial_page_name?: string | null;
-        notification_image_url?: string | null;
         notification_sound?: string | null;
-        notification_text?: string | null;
-        notification_title?: string | null;
         num_batches?: number | null;
         num_sent?: number | null;
-        parameter_data?: string | null;
         profile_id?: string | null;
         status?: string | null;
         sync_version?: number | null;
-        target_audience?: string | null;
         timestamp?: Json | null;
-        user_refs?: string | null;
-        users_ff?: string | null;
         };
         Relationships: [];
       },
@@ -6867,7 +6273,6 @@ export type Database = {
       },
       orphaned_storage_cleanup: {
         Row: {
-        bucket_id: string;
         created_at: string | null;
         deleted_at: string | null;
         id: number;
@@ -6875,7 +6280,6 @@ export type Database = {
         size_bytes: number | null;
         };
         Insert: {
-        bucket_id: string;
         created_at?: string;
         deleted_at?: string;
         id?: number;
@@ -6883,7 +6287,6 @@ export type Database = {
         size_bytes?: number;
         };
         Update: {
-        bucket_id?: string;
         created_at?: string | null;
         deleted_at?: string | null;
         id?: number;
@@ -6895,42 +6298,36 @@ export type Database = {
       pending_operations: {
         Row: {
         client_timestamp: string;
-        conflict_resolution: Json | null;
         created_at: string;
         error_message: string | null;
         id: string;
         operation_type: string;
         payload: Json;
         record_id: string | null;
-        server_timestamp: string;
         status: string;
         table_name: string;
         user_id: string;
         };
         Insert: {
         client_timestamp: string;
-        conflict_resolution?: Json;
         created_at?: string;
         error_message?: string;
         id?: string;
         operation_type: string;
         payload: Json;
         record_id?: string;
-        server_timestamp?: string;
         status?: string;
         table_name: string;
         user_id: string;
         };
         Update: {
         client_timestamp?: string;
-        conflict_resolution?: Json | null;
         created_at?: string;
         error_message?: string | null;
         id?: string;
         operation_type?: string;
         payload?: Json;
         record_id?: string | null;
-        server_timestamp?: string;
         status?: string;
         table_name?: string;
         user_id?: string;
@@ -7127,7 +6524,6 @@ export type Database = {
         post_id: number;
         session_id: string | null;
         viewer_id: string | null;
-        viewer_ip_hash: string | null;
         };
         Insert: {
         created_at?: string;
@@ -7135,7 +6531,6 @@ export type Database = {
         post_id: number;
         session_id?: string;
         viewer_id?: string;
-        viewer_ip_hash?: string;
         };
         Update: {
         created_at?: string;
@@ -7143,7 +6538,6 @@ export type Database = {
         post_id?: number;
         session_id?: string | null;
         viewer_id?: string | null;
-        viewer_ip_hash?: string | null;
         };
         Relationships: [];
       },
@@ -7305,35 +6699,21 @@ export type Database = {
       },
       posts_image_backup: {
         Row: {
-        backed_up_at: string | null;
         id: number;
-        image_url_1: string | null;
-        image_url_2: string | null;
-        image_url_3: string | null;
         };
         Insert: {
-        backed_up_at?: string;
         id: number;
-        image_url_1?: string;
-        image_url_2?: string;
-        image_url_3?: string;
         };
         Update: {
-        backed_up_at?: string | null;
         id?: number;
-        image_url_1?: string | null;
-        image_url_2?: string | null;
-        image_url_3?: string | null;
         };
         Relationships: [];
       },
       precomputed_feed_cells: {
         Row: {
-        access_count: number;
         cell_id: string;
         center_lat: number;
         center_lng: number;
-        computation_time_ms: number | null;
         computed_at: string;
         expires_at: string;
         feed_data: Json;
@@ -7343,11 +6723,9 @@ export type Database = {
         version: number;
         };
         Insert: {
-        access_count?: number;
         cell_id: string;
         center_lat: number;
         center_lng: number;
-        computation_time_ms?: number;
         computed_at?: string;
         expires_at?: string;
         feed_data: Json;
@@ -7357,11 +6735,9 @@ export type Database = {
         version?: number;
         };
         Update: {
-        access_count?: number;
         cell_id?: string;
         center_lat?: number;
         center_lng?: number;
-        computation_time_ms?: number | null;
         computed_at?: string;
         expires_at?: string;
         feed_data?: Json;
@@ -7450,7 +6826,6 @@ export type Database = {
       profiles: {
         Row: {
         about_me: string;
-        available_days: Json | null;
         avatar_url: string;
         ban_reason: string | null;
         bio: string | null;
@@ -7478,10 +6853,8 @@ export type Database = {
         phone_number: string | null;
         preferred_contact_method: string | null;
         preferred_locale: string | null;
-        preferred_pickup_time: Json | null;
         profile_visibility: string | null;
         search_radius_km: number | null;
-        search_radius_mi: number | null;
         second_name: string;
         synced_to_motherduck: boolean | null;
         telegram_id: number | null;
@@ -7498,7 +6871,6 @@ export type Database = {
         };
         Insert: {
         about_me?: string;
-        available_days?: Json;
         avatar_url?: string;
         ban_reason?: string;
         bio?: string;
@@ -7526,10 +6898,8 @@ export type Database = {
         phone_number?: string;
         preferred_contact_method?: string;
         preferred_locale?: string;
-        preferred_pickup_time?: Json;
         profile_visibility?: string;
         search_radius_km?: number;
-        search_radius_mi?: number;
         second_name?: string;
         synced_to_motherduck?: boolean;
         telegram_id?: number;
@@ -7546,7 +6916,6 @@ export type Database = {
         };
         Update: {
         about_me?: string;
-        available_days?: Json | null;
         avatar_url?: string;
         ban_reason?: string | null;
         bio?: string | null;
@@ -7574,10 +6943,8 @@ export type Database = {
         phone_number?: string | null;
         preferred_contact_method?: string | null;
         preferred_locale?: string | null;
-        preferred_pickup_time?: Json | null;
         profile_visibility?: string | null;
         search_radius_km?: number | null;
-        search_radius_mi?: number | null;
         second_name?: string;
         synced_to_motherduck?: boolean | null;
         telegram_id?: number | null;
@@ -7888,102 +7255,69 @@ export type Database = {
       telegram_user_activity: {
         Row: {
         active_days: Array<string> | null;
-        active_hours: Json | null;
         average_message_length: number | null;
         emoji_usage: Json | null;
         first_message_date: string | null;
         first_name: string | null;
-        forward_count: number | null;
-        hashtag_count: number | null;
         id: number;
         interactions: Json | null;
         last_message_date: string | null;
         last_name: string | null;
-        link_count: number | null;
         media_count: number | null;
-        mention_count: number | null;
         message_count: number | null;
-        messages_per_day: Json | null;
-        messages_per_month: Json | null;
-        messages_per_week: Json | null;
         most_active_hour: number | null;
         most_used_words: Json | null;
         new_users: number | null;
         reply_count: number | null;
-        sentiment_score: number | null;
-        sticker_count: number | null;
         topics: Json | null;
         total_characters: number | null;
         total_messages: number | null;
         user_id: number;
         username: string | null;
-        voice_message_count: number | null;
         };
         Insert: {
         active_days?: Array<string>;
-        active_hours?: Json;
         average_message_length?: number;
         emoji_usage?: Json;
         first_message_date?: string;
         first_name?: string;
-        forward_count?: number;
-        hashtag_count?: number;
         id?: number;
         interactions?: Json;
         last_message_date?: string;
         last_name?: string;
-        link_count?: number;
         media_count?: number;
-        mention_count?: number;
         message_count?: number;
-        messages_per_day?: Json;
-        messages_per_month?: Json;
-        messages_per_week?: Json;
         most_active_hour?: number;
         most_used_words?: Json;
         new_users?: number;
         reply_count?: number;
-        sentiment_score?: number;
-        sticker_count?: number;
         topics?: Json;
         total_characters?: number;
         total_messages?: number;
         user_id: number;
         username?: string;
-        voice_message_count?: number;
         };
         Update: {
         active_days?: Array<string> | null;
-        active_hours?: Json | null;
         average_message_length?: number | null;
         emoji_usage?: Json | null;
         first_message_date?: string | null;
         first_name?: string | null;
-        forward_count?: number | null;
-        hashtag_count?: number | null;
         id?: number;
         interactions?: Json | null;
         last_message_date?: string | null;
         last_name?: string | null;
-        link_count?: number | null;
         media_count?: number | null;
-        mention_count?: number | null;
         message_count?: number | null;
-        messages_per_day?: Json | null;
-        messages_per_month?: Json | null;
-        messages_per_week?: Json | null;
         most_active_hour?: number | null;
         most_used_words?: Json | null;
         new_users?: number | null;
         reply_count?: number | null;
-        sentiment_score?: number | null;
-        sticker_count?: number | null;
         topics?: Json | null;
         total_characters?: number | null;
         total_messages?: number | null;
         user_id?: number;
         username?: string | null;
-        voice_message_count?: number | null;
         };
         Relationships: [];
       },
@@ -8091,7 +7425,6 @@ export type Database = {
       },
       translation_cache: {
         Row: {
-        compressed_data: string | null;
         compressed_size: number | null;
         created_at: string | null;
         etag: string;
@@ -8099,10 +7432,8 @@ export type Database = {
         id: string;
         locale: string;
         platform: string;
-        uncompressed_size: number | null;
         };
         Insert: {
-        compressed_data?: string;
         compressed_size?: number;
         created_at?: string;
         etag: string;
@@ -8110,10 +7441,8 @@ export type Database = {
         id?: string;
         locale: string;
         platform: string;
-        uncompressed_size?: number;
         };
         Update: {
-        compressed_data?: string | null;
         compressed_size?: number | null;
         created_at?: string | null;
         etag?: string;
@@ -8121,7 +7450,6 @@ export type Database = {
         id?: string;
         locale?: string;
         platform?: string;
-        uncompressed_size?: number | null;
         };
         Relationships: [];
       },
@@ -8193,57 +7521,21 @@ export type Database = {
       },
       translation_platform_config: {
         Row: {
-        background_sync_enabled: boolean | null;
-        cache_ttl_seconds: number | null;
-        compression_enabled: boolean | null;
         created_at: string | null;
-        custom_headers: Json | null;
         id: string;
-        max_batch_size: number | null;
         platform: string;
-        prefetch_enabled: boolean | null;
-        rate_limit_requests: number | null;
-        rate_limit_window_seconds: number | null;
-        realtime_enabled: boolean | null;
-        streaming_enabled: boolean | null;
-        supports_delta_updates: boolean | null;
-        supports_offline_mode: boolean | null;
         updated_at: string | null;
         };
         Insert: {
-        background_sync_enabled?: boolean;
-        cache_ttl_seconds?: number;
-        compression_enabled?: boolean;
         created_at?: string;
-        custom_headers?: Json;
         id?: string;
-        max_batch_size?: number;
         platform: string;
-        prefetch_enabled?: boolean;
-        rate_limit_requests?: number;
-        rate_limit_window_seconds?: number;
-        realtime_enabled?: boolean;
-        streaming_enabled?: boolean;
-        supports_delta_updates?: boolean;
-        supports_offline_mode?: boolean;
         updated_at?: string;
         };
         Update: {
-        background_sync_enabled?: boolean | null;
-        cache_ttl_seconds?: number | null;
-        compression_enabled?: boolean | null;
         created_at?: string | null;
-        custom_headers?: Json | null;
         id?: string;
-        max_batch_size?: number | null;
         platform?: string;
-        prefetch_enabled?: boolean | null;
-        rate_limit_requests?: number | null;
-        rate_limit_window_seconds?: number | null;
-        realtime_enabled?: boolean | null;
-        streaming_enabled?: boolean | null;
-        supports_delta_updates?: boolean | null;
-        supports_offline_mode?: boolean | null;
         updated_at?: string | null;
         };
         Relationships: [];
@@ -8293,7 +7585,6 @@ export type Database = {
       translation_service_usage: {
         Row: {
         chars_used: number | null;
-        free_limit: number;
         id: number;
         month_year: string;
         service_name: string;
@@ -8301,7 +7592,6 @@ export type Database = {
         };
         Insert: {
         chars_used?: number;
-        free_limit: number;
         id?: number;
         month_year: string;
         service_name: string;
@@ -8309,7 +7599,6 @@ export type Database = {
         };
         Update: {
         chars_used?: number | null;
-        free_limit?: number;
         id?: number;
         month_year?: string;
         service_name?: string;
@@ -8323,9 +7612,7 @@ export type Database = {
         device_id: string | null;
         id: string;
         last_synced_at: string | null;
-        last_synced_version: string | null;
         locale: string;
-        pending_changes: Json | null;
         sync_status: string | null;
         updated_at: string | null;
         user_id: string | null;
@@ -8335,9 +7622,7 @@ export type Database = {
         device_id?: string;
         id?: string;
         last_synced_at?: string;
-        last_synced_version?: string;
         locale: string;
-        pending_changes?: Json;
         sync_status?: string;
         updated_at?: string;
         user_id?: string;
@@ -8347,9 +7632,7 @@ export type Database = {
         device_id?: string | null;
         id?: string;
         last_synced_at?: string | null;
-        last_synced_version?: string | null;
         locale?: string;
-        pending_changes?: Json | null;
         sync_status?: string | null;
         updated_at?: string | null;
         user_id?: string | null;
@@ -8395,7 +7678,6 @@ export type Database = {
         created_at: string | null;
         id: string;
         locale: string;
-        previous_version: string | null;
         version: string;
         };
         Insert: {
@@ -8403,7 +7685,6 @@ export type Database = {
         created_at?: string;
         id?: string;
         locale: string;
-        previous_version?: string;
         version: string;
         };
         Update: {
@@ -8411,7 +7692,6 @@ export type Database = {
         created_at?: string | null;
         id?: string;
         locale?: string;
-        previous_version?: string | null;
         version?: string;
         };
         Relationships: [];
@@ -8478,46 +7758,28 @@ export type Database = {
       },
       user_activity_summary: {
         Row: {
-        categories_viewed: Json;
-        first_activity_at: string | null;
         last_activity_at: string | null;
         listings_saved: number;
         listings_viewed: number;
-        locations_searched: Json;
         messages_initiated: number;
-        peak_activity_hours: Json;
-        search_count: number;
-        search_terms: Array<string>;
         shares_completed: number;
         updated_at: string;
         user_id: string;
         };
         Insert: {
-        categories_viewed?: Json;
-        first_activity_at?: string;
         last_activity_at?: string;
         listings_saved?: number;
         listings_viewed?: number;
-        locations_searched?: Json;
         messages_initiated?: number;
-        peak_activity_hours?: Json;
-        search_count?: number;
-        search_terms?: Array<string>;
         shares_completed?: number;
         updated_at?: string;
         user_id: string;
         };
         Update: {
-        categories_viewed?: Json;
-        first_activity_at?: string | null;
         last_activity_at?: string | null;
         listings_saved?: number;
         listings_viewed?: number;
-        locations_searched?: Json;
         messages_initiated?: number;
-        peak_activity_hours?: Json;
-        search_count?: number;
-        search_terms?: Array<string>;
         shares_completed?: number;
         updated_at?: string;
         user_id?: string;
@@ -8705,12 +7967,9 @@ export type Database = {
         created_at: string | null;
         data: Json | null;
         email_sent: boolean | null;
-        email_sent_at: string | null;
         id: string;
         is_read: boolean | null;
         post_id: number | null;
-        push_sent: boolean | null;
-        push_sent_at: string | null;
         read_at: string | null;
         recipient_id: string;
         review_id: number | null;
@@ -8725,12 +7984,9 @@ export type Database = {
         created_at?: string;
         data?: Json;
         email_sent?: boolean;
-        email_sent_at?: string;
         id?: string;
         is_read?: boolean;
         post_id?: number;
-        push_sent?: boolean;
-        push_sent_at?: string;
         read_at?: string;
         recipient_id: string;
         review_id?: number;
@@ -8745,12 +8001,9 @@ export type Database = {
         created_at?: string | null;
         data?: Json | null;
         email_sent?: boolean | null;
-        email_sent_at?: string | null;
         id?: string;
         is_read?: boolean | null;
         post_id?: number | null;
-        push_sent?: boolean | null;
-        push_sent_at?: string | null;
         read_at?: string | null;
         recipient_id?: string;
         review_id?: number | null;
