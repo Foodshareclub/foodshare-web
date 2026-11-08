@@ -47,7 +47,7 @@
 import { assert, assertEquals } from "@std/assert";
 
 import { assertCatalogIsCurrent, schema } from "../../oracle/read.ts";
-import { walkTypeScript } from "./lib/scan.ts";
+import { walkFiles, walkTypeScript } from "./lib/scan.ts";
 import { ownsCorpus } from "./lib/ownership.ts";
 
 const s = schema();
@@ -897,5 +897,141 @@ Deno.test("contract: no policy survives that applies only to BYPASSRLS roles", (
       "named roles should keep working through explicit, evaluated access " +
       "(write the policy for the role that is actually subject to RLS), or " +
       "the policy is dead and should be dropped.\n" + dead.join("\n"),
+  );
+});
+
+Deno.test("contract: no view in the catalog has no live code reference", () => {
+  // A view dies the same way an orphan trigger function does: the code that
+  // read it gets rewritten — against the base table, or a newer view — and
+  // the view stays in the catalog, a surface that reads like data exists.
+  // The baseline estate carried several of them, and two are materialized
+  // views created WITH NO DATA and never populated: a live reader of either
+  // would crash with "has not been populated", so both are unread by
+  // definition, not merely unused.
+  //
+  // Liveness is the view's name in code that runs against the database:
+  //   - edge functions (generated types excluded: they are output, not calls)
+  //   - the Rust worker (services/crates; test fixtures excluded)
+  //   - operational scripts (scripts/: .ts, .sh, .sql)
+  //   - post-baseline migrations (a migration that reads the view keeps it)
+  //   - volumes/ (kong.yml, db init SQL)
+  //   - the cron job commands in the catalog
+  //   - the sibling checkouts, when this workspace has them: a view read
+  //     only from the web app or the Swift client has no reference in this
+  //     repository, and in a bare CI checkout the siblings do not exist —
+  //     the backend corpus is the authority there, and every view the
+  //     estate reads from outside it would fail until pinned.
+  // The baseline dump, the catalog and the audit fixtures are definitions of
+  // the estate, not call sites; scanning them would mark every view live.
+  //
+  // A view read only from a checkout this repository cannot see belongs in
+  // KNOWN_EXTERNAL_ONLY_VIEWS with the reason. The pin is reverse-checked:
+  // a pin whose name is no longer a view, or a view the code now reaches,
+  // fails — an exception that outlived its reason would rot silently.
+  //
+  // Corpus-owned: six live views (the five `analytics_full_*` views and
+  // `vector_type_substituted`) are referenced only by backend-owned
+  // corpora — `scripts/test-internal-analytics-views.ts`, the
+  // `20261029124718` restriction migration, `scripts/oracle-mutations.ts` —
+  // none of which a vendored checkout carries. Running the liveness scan
+  // there would flag live views as dead; the vendored checkout inherits the
+  // invariant by the byte-match gate instead, exactly like the other
+  // contracts in this file. See `ownsCorpus`.
+  if (!ownsCorpus()) return;
+  const REPO_ROOT = new URL("../../../", import.meta.url);
+
+  const files: URL[] = [];
+  const add = (dir: URL, extensions: string[]) => {
+    for (const rel of walkFiles(dir, extensions)) {
+      files.push(new URL(rel, dir));
+    }
+  };
+
+  // The generated types are the catalog's output: every view name appears in
+  // them by construction, so reading them would mark every view live.
+  const FUNCTIONS = new URL("../", import.meta.url);
+  const GENERATIVE = new Set(["_shared/database.types.ts"]);
+  for (const rel of walkFiles(FUNCTIONS, [".ts"])) {
+    if (!GENERATIVE.has(rel)) {
+      files.push(new URL(rel, FUNCTIONS));
+    }
+  }
+  if (ownsCorpus()) {
+    add(new URL("services/crates/", REPO_ROOT), [".rs"]);
+    add(new URL("scripts/", REPO_ROOT), [".ts", ".sh", ".sql"]);
+    add(new URL("volumes/", REPO_ROOT), [".yml", ".sql"]);
+    const MIGRATIONS = new URL("supabase/migrations/", REPO_ROOT);
+    for (const rel of walkFiles(MIGRATIONS, [".sql"])) {
+      if (rel.startsWith("20260128195318")) continue; // the baseline dump
+      files.push(new URL(rel, MIGRATIONS));
+    }
+  }
+  const SIBLINGS: Array<[string, string[]]> = [
+    ["../foodshare-web/src/", [".ts", ".tsx"]],
+    ["../foodshare-app/Sources/", [".swift"]],
+  ];
+  for (const [rel, extensions] of SIBLINGS) {
+    try {
+      if (Deno.statSync(new URL(rel, REPO_ROOT)).isDirectory) {
+        add(new URL(rel, REPO_ROOT), extensions);
+      }
+    } catch {
+      // a bare checkout has no sibling; the backend corpus is the authority
+    }
+  }
+
+  const texts = files.map((f) => {
+    try {
+      return Deno.readTextFileSync(f);
+    } catch {
+      return "";
+    }
+  });
+  const cron = s.catalog.cronJobs.map((j) => j.command).join("\n");
+  const referenced = (name: string) => cron.includes(name) || texts.some((t) => t.includes(name));
+
+  const views = s.catalog.relations.filter(
+    (r) => r.kind === "view" || r.kind === "matview",
+  );
+  assert(
+    views.length > 0,
+    "no views in the catalog; the relation walk stopped and the check " +
+      "below is now a no-op",
+  );
+
+  // Pin: views read only from checkouts this repository does not carry.
+  const KNOWN_EXTERNAL_ONLY_VIEWS: Record<string, string> = {};
+
+  const dead = views
+    .filter((v) => !referenced(v.name))
+    .map((v) => `${v.schema}.${v.name}`)
+    .sort();
+  const unpinned = dead.filter((name) => !(name in KNOWN_EXTERNAL_ONLY_VIEWS));
+  const stalePins = Object.keys(KNOWN_EXTERNAL_ONLY_VIEWS)
+    .filter(
+      (name) =>
+        !views.some((v) => `${v.schema}.${v.name}` === name) ||
+        referenced(name),
+    )
+    .sort();
+
+  assertEquals(
+    stalePins,
+    [],
+    "These pinned views are no longer the exception the pin claims for " +
+      "them: the view is gone, or the code now references it and the pin " +
+      "hides a view that was brought back to life.\n" + stalePins.join("\n"),
+  );
+  assertEquals(
+    unpinned,
+    [],
+    "These views have no reference in the code that runs against the " +
+      "database — no edge function, no worker query, no script, no " +
+      "post-baseline migration, no cron job, no sibling checkout. They are " +
+      "surfaces that read like data exists, and a materialized view among " +
+      "them may never have been populated at all. Either the view is dead " +
+      "and should be dropped, or it is read somewhere this audit cannot " +
+      "see — in which case pin it in KNOWN_EXTERNAL_ONLY_VIEWS with the " +
+      "reason.\n" + unpinned.join("\n"),
   );
 });

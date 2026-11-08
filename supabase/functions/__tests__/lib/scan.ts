@@ -13,22 +13,25 @@
 
 const FUNCTIONS_DIR = new URL("../../", import.meta.url);
 
-/** Directories that are not edge function source. */
+/** Directories that are not production source. */
 const SKIP = new Set(["node_modules", "__tests__", "vendor", ".git"]);
 
 /** The functions directory, for tests that want to pass somewhere else. */
 export { FUNCTIONS_DIR };
 
 /**
- * Every `.ts` file under the functions, as repo-relative paths.
+ * Every file under `dir` whose name ends with one of `extensions`, as
+ * directory-relative paths.
  *
- * Sorted, because an audit that reports findings in directory order produces a
- * different diff when the filesystem does. `__tests__` is skipped: a test
- * fixture's `.from("...")` is not a call site, and including them would let a
- * test assert something about a relation that no code actually uses.
+ * Sorted, because an audit that reports findings in directory order produces
+ * a different diff when the filesystem does. `SKIP` keeps the walk out of
+ * dependency trees and test fixtures — a fixture's reference to a relation is
+ * not a call site, and including it would let a test assert something about a
+ * relation that no production code touches.
  */
-export function walkTypeScript(
-  dir: URL = FUNCTIONS_DIR,
+export function walkFiles(
+  dir: URL,
+  extensions: string[],
   prefix = "",
 ): string[] {
   const out: string[] = [];
@@ -36,14 +39,31 @@ export function walkTypeScript(
     if (entry.isDirectory) {
       if (SKIP.has(entry.name)) continue;
       out.push(
-        ...walkTypeScript(
+        ...walkFiles(
           new URL(`${entry.name}/`, dir),
+          extensions,
           `${prefix}${entry.name}/`,
         ),
       );
-    } else if (entry.isFile && entry.name.endsWith(".ts")) {
+    } else if (
+      entry.isFile && extensions.some((ext) => entry.name.endsWith(ext))
+    ) {
       out.push(`${prefix}${entry.name}`);
     }
   }
   return out.sort();
+}
+
+/**
+ * Every `.ts` file under the functions, as repo-relative paths.
+ *
+ * `__tests__` is skipped: a test fixture's `.from("...")` is not a call site,
+ * and including them would let a test assert something about a relation that
+ * no code actually uses.
+ */
+export function walkTypeScript(
+  dir: URL = FUNCTIONS_DIR,
+  prefix = "",
+): string[] {
+  return walkFiles(dir, [".ts"], prefix);
 }
