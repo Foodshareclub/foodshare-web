@@ -648,3 +648,188 @@ Deno.test("contract: every trigger function is attached to a trigger", () => {
     );
   }
 });
+
+// =============================================================================
+// Index redundancy
+// =============================================================================
+
+/** `pg_get_indexdef`, normalized for comparison. */
+function norm(t: string): string {
+  return t.replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+interface ParsedIndex {
+  name: string;
+  unique: boolean;
+  primary: boolean;
+  am: string;
+  /** Key columns, in order, with their options (`col DESC`) intact. */
+  keys: string[];
+  include: string[] | null;
+  predicate: string | null;
+}
+
+/**
+ * Parse a `pg_get_indexdef` string. The shape is fixed by PostgreSQL:
+ * `CREATE [UNIQUE] INDEX name ON [ONLY] table USING am (keys) [INCLUDE
+ * (cols)] [WHERE predicate]`. Expressions in the key list keep their
+ * rendering, which is exactly what makes two indexes on the same expression
+ * comparable as equal.
+ */
+function parseIndex(name: string, def: string): ParsedIndex | null {
+  const header = /^CREATE (UNIQUE )?INDEX \S+ ON (ONLY )?\S+ USING (\w+)\s/.exec(def);
+  if (!header) return null;
+  const rest = def.slice(header[0].length);
+  let depth = 0;
+  let end = -1;
+  for (let i = 0; i < rest.length; i++) {
+    if (rest[i] === "(") depth++;
+    else if (rest[i] === ")") {
+      depth--;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+  }
+  if (end < 0) return null;
+  const keys = rest.slice(1, end).split(",").map(norm);
+  let tail = rest.slice(end + 1);
+  let include: string[] | null = null;
+  const incl = /\bINCLUDE\s*\(([^)]*)\)/i.exec(tail);
+  if (incl) {
+    include = incl[1].split(",").map(norm);
+    tail = tail.slice(0, incl.index) + tail.slice(incl.index + incl[0].length);
+  }
+  const where = /\bWHERE\b([\s\S]*)$/.exec(tail);
+  return {
+    name,
+    unique: header[1] !== undefined,
+    primary: false,
+    am: header[3].toLowerCase(),
+    keys,
+    include,
+    predicate: where ? norm(where[1]) : null,
+  };
+}
+
+/**
+ * The redundant set, computed the way the catalog reader can: from the
+ * `definition` strings, because the catalog carries no column-level index
+ * structure of its own.
+ *
+ * Two rules, both structural — a redundant index is dead weight on every
+ * write to its table whether or not the planner ever chose it:
+ *
+ *  1. Exact duplicate: same table, access method, key list (order and
+ *     options included) and predicate. The non-unique member is droppable;
+ *     a unique member enforces something the plain one does not, and a
+ *     plain member next to a unique one covers nothing the unique lacks.
+ *     Two unique members would each enforce what the other does not lose —
+ *     that pair is a judgment, not a mechanical drop, and is reported as
+ *     such.
+ *
+ *  2. Left-prefix: `a`'s key list is a strict prefix of `b`'s, same access
+ *     method, neither predicate, and `a` carries no INCLUDE columns. Every
+ *     scan `a` can serve, `b` serves — `b`'s extra key columns extend the
+ *     left prefix, they do not shorten it — while `a`'s INCLUDE columns, if
+ *     any, would not be covered by `b`, so they keep `a` alive. `a` must be
+ *     plain: dropping a unique index would drop an enforcement, and a
+ *     predicate changes the index's population entirely.
+ *
+ * Primary keys never drop: the key is the table's identity, and the
+ * catalog marks them rather than trusting the definition's wording.
+ */
+function redundantIndexes(): { drop: string; reason: string }[] {
+  const byTable = new Map<string, ParsedIndex[]>();
+  for (const ix of s.catalog.indexes) {
+    const parsed = parseIndex(ix.name, ix.definition);
+    if (!parsed) continue;
+    parsed.primary = ix.primary;
+    const list = byTable.get(ix.table) ?? [];
+    list.push(parsed);
+    byTable.set(ix.table, list);
+  }
+  const reasons = new Map<string, string[]>();
+  const note = (name: string, reason: string) => {
+    const list = reasons.get(name) ?? [];
+    if (!list.includes(reason)) list.push(reason);
+    reasons.set(name, list);
+  };
+  for (const [table, indexes] of byTable) {
+    const secondary = indexes.filter((i) => !i.primary);
+    for (let a = 0; a < secondary.length; a++) {
+      for (let b = a + 1; b < secondary.length; b++) {
+        const x = secondary[a];
+        const y = secondary[b];
+        if (x.am !== y.am) continue;
+        const sameKeys = x.keys.length === y.keys.length && x.keys.every((k, i) => k === y.keys[i]);
+        const samePred = (x.predicate ?? "") === (y.predicate ?? "");
+        if (sameKeys) {
+          if (!samePred) continue;
+          if (x.unique && y.unique) {
+            note(x.name, `${table}: unique index equal to ${y.name} — a judgment, not a drop`);
+            continue;
+          }
+          const plain = x.unique ? y : x;
+          const keeper = x.unique ? x : y;
+          note(
+            plain.name,
+            `${table}: duplicate of ${keeper.name} (same keys ${x.keys.join(", ")})`,
+          );
+        } else {
+          // Strict prefix, either order: the shorter key list is the one a
+          // covering index could replace.
+          const [shorter, longer] = x.keys.length <= y.keys.length ? [x, y] : [y, x];
+          if (
+            shorter.keys.length < longer.keys.length &&
+            shorter.keys.every((k, i) => longer.keys[i] === k) &&
+            shorter.predicate === null &&
+            longer.predicate === null &&
+            shorter.include === null &&
+            !shorter.unique
+          ) {
+            note(
+              shorter.name,
+              `${table}: left prefix of ${longer.name} (${shorter.keys.join(", ")} ⊂ ${
+                longer.keys.join(", ")
+              })`,
+            );
+          }
+        }
+      }
+    }
+  }
+  return [...reasons.entries()].map(([drop, rs]) => ({ drop, reason: rs.join("; ") }));
+}
+
+Deno.test("contract: no redundant indexes survive in the catalog", () => {
+  // Every redundant index is paid for on every INSERT, UPDATE and DELETE of
+  // its table: the write path maintains it and the planner — which sees the
+  // covering index — rarely chooses it. The estate accumulated these the way
+  // it accumulates everything: a constraint arrives with its own index, the
+  // plain lookup index is written beside it (or the other way around), and
+  // neither migration is the one that removes the other's leftover.
+  //
+  // The floors keep the check from being silently empty: a catalog whose
+  // index walk stopped would have nothing to compare, and the comparison
+  // above would pass on an empty set.
+  assert(
+    s.catalog.indexes.length >= 500,
+    `only ${s.catalog.indexes.length} indexes in the catalog; the index walk ` +
+      "stopped and the redundancy check below is now a no-op",
+  );
+
+  const redundant = redundantIndexes().sort((a, b) => a.drop.localeCompare(b.drop));
+
+  assertEquals(
+    redundant,
+    [],
+    "These indexes are dead weight: each one is maintained on every write to " +
+      "its table while a surviving index (named in the reason) covers the " +
+      "same scans. `20261108230000_drop_redundant_indexes.sql` dropped the " +
+      "set measured against this corpus; a new entry here means a migration " +
+      "added a constraint and a lookup index at once and kept both.\n" +
+      redundant.map((r) => `  - ${r.drop}: ${r.reason}`).join("\n"),
+  );
+});
