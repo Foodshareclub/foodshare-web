@@ -1,5 +1,9 @@
 import type { ForumComment, ForumPost } from "@/api/forumAPI";
-import { ForumCategoryBadge, ForumTagBadge, RealtimeComments } from "@/components/forum";
+import {
+  ForumCategoryBadge,
+  ForumTagBadge,
+  RealtimeComments,
+} from "@/components/forum";
 import { RichTextViewer } from "@/components/forum/RichTextViewer";
 import { BackButton } from "@/components/navigation/BackButton";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,14 +25,23 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
   // Phase 7: skip live Supabase reads during stubbed CI builds.
   // NOTE (Cache Components): must return >= 1 result; the placeholder slug
   // renders notFound() without network (see getForumPost guard below).
-  if (process.env.SKIP_ENV_VALIDATION === "true" || process.env.NEXT_PHASE === "phase-production-build") {
+  if (
+    process.env.SKIP_ENV_VALIDATION === "true" ||
+    process.env.NEXT_PHASE === "phase-production-build"
+  ) {
     return [{ slug: "__stub__" }];
   }
   try {
     const supabase = createCachedClient();
-    const { data } = await supabase.from("forum").select("slug").order("views", { ascending: false }).limit(50);
+    const { data } = await supabase
+      .from("forum")
+      .select("slug")
+      .order("views_count", { ascending: false })
+      .limit(50);
 
-    const results = ((data ?? []) as ForumSlugRow[]).filter((p) => p.slug).map((p) => ({ slug: p.slug as string }));
+    const results = ((data ?? []) as ForumSlugRow[])
+      .filter((p) => p.slug)
+      .map((p) => ({ slug: p.slug as string }));
 
     // When using Cache Components, must return at least one result.
     // __stub__ renders notFound() without network (see guard above).
@@ -44,37 +57,41 @@ type PageProps = {
 };
 
 // Wrapped with cache() to deduplicate calls between generateMetadata and page component
-const getForumPost = cache(async (slugOrId: string): Promise<ForumPost | null> => {
-  // Build-stub sentinel (see generateStaticParams): short-circuit before any
-  // cookies()/network access so hermetic builds stay offline.
-  if (slugOrId === "__stub__") return null;
+const getForumPost = cache(
+  async (slugOrId: string): Promise<ForumPost | null> => {
+    // Build-stub sentinel (see generateStaticParams): short-circuit before any
+    // cookies()/network access so hermetic builds stay offline.
+    if (slugOrId === "__stub__") return null;
 
-  const supabase = await createClient();
+    const supabase = await createClient();
 
-  // Check if it's a numeric ID
-  const isNumericId = /^\d+$/.test(slugOrId);
+    // Check if it's a numeric ID
+    const isNumericId = /^\d+$/.test(slugOrId);
 
-  const query = supabase.from("forum").select(`
+    const query = supabase.from("forum").select(`
       *,
-      profiles!forum_profile_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url),
+      profiles:profiles_public!forum_profile_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url),
       forum_categories!forum_category_id_fkey (*),
       forum_post_tags (forum_tags (*))
     `);
 
-  const { data, error } = isNumericId
-    ? await query.eq("id", Number.parseInt(slugOrId, 10)).single()
-    : await query.eq("slug", slugOrId).single();
+    const { data, error } = isNumericId
+      ? await query.eq("id", Number.parseInt(slugOrId, 10)).single()
+      : await query.eq("slug", slugOrId).single();
 
-  if (error || !data) return null;
-  return data as ForumPost;
-});
+    if (error || !data) return null;
+    return data as ForumPost;
+  },
+);
 
 async function getInitialComments(forumId: number): Promise<ForumComment[]> {
   const supabase = await createClient();
 
   const { data } = await supabase
     .from("comments")
-    .select("*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)")
+    .select(
+      "*, profiles:profiles_public!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)",
+    )
     .eq("forum_id", forumId)
     .is("parent_id", null)
     .order("is_pinned", { ascending: false })
@@ -115,7 +132,8 @@ export async function generateMetadata({ params }: PageProps) {
     : "Join the discussion on FoodShare Forum";
   const pageUrl = `${siteConfig.url}/forum/${post.slug || post.id}`;
   const imageUrl = post.forum_post_image || siteConfig.ogImage;
-  const authorName = post.profiles?.nickname || post.profiles?.first_name || "FoodShare Member";
+  const authorName =
+    post.profiles?.nickname || post.profiles?.first_name || "FoodShare Member";
 
   return {
     title: `${title} | FoodShare Forum`,
@@ -182,8 +200,13 @@ export default async function ForumPostPage({ params }: PageProps) {
     image: post.forum_post_image || undefined,
     datePublished: post.forum_post_created_at,
     dateModified: post.forum_post_updated_at || undefined,
-    authorName: post.profiles?.nickname || post.profiles?.first_name || "FoodShare Member",
-    authorUrl: post.profiles?.id ? `${siteConfig.url}/profile/${post.profiles.id}` : undefined,
+    authorName:
+      post.profiles?.nickname ||
+      post.profiles?.first_name ||
+      "FoodShare Member",
+    authorUrl: post.profiles?.id
+      ? `${siteConfig.url}/profile/${post.profiles.id}`
+      : undefined,
   });
 
   return (
@@ -200,7 +223,9 @@ export default async function ForumPostPage({ params }: PageProps) {
         <article className="mb-8">
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            {post.forum_categories && <ForumCategoryBadge category={post.forum_categories} />}
+            {post.forum_categories && (
+              <ForumCategoryBadge category={post.forum_categories} />
+            )}
             {post.is_pinned && (
               <span className="bg-amber-500/90 text-white px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5">
                 <Pin className="w-3 h-3" />
@@ -243,11 +268,17 @@ export default async function ForumPostPage({ params }: PageProps) {
               )}
               {/* eslint-enable @next/next/no-img-element */}
               <div>
-                <p className="font-semibold">{post.profiles?.nickname || post.profiles?.first_name || "Anonymous"}</p>
+                <p className="font-semibold">
+                  {post.profiles?.nickname ||
+                    post.profiles?.first_name ||
+                    "Anonymous"}
+                </p>
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   {formatDate(post.forum_post_created_at, { format: "long" })}
-                  {post.is_edited && <span className="italic ms-2">(edited)</span>}
+                  {post.is_edited && (
+                    <span className="italic ms-2">(edited)</span>
+                  )}
                 </p>
               </div>
             </div>
@@ -280,7 +311,8 @@ export default async function ForumPostPage({ params }: PageProps) {
           <div className="prose prose-lg dark:prose-invert max-w-none mb-6">
             {post.rich_content &&
             typeof post.rich_content === "object" &&
-            Object.keys(post.rich_content as Record<string, unknown>).length > 0 ? (
+            Object.keys(post.rich_content as Record<string, unknown>).length >
+              0 ? (
               <RichTextViewer content={post.rich_content} />
             ) : post.forum_post_description ? (
               <RichTextViewer content={post.forum_post_description} />
@@ -291,7 +323,10 @@ export default async function ForumPostPage({ params }: PageProps) {
           {post.forum_post_tags && post.forum_post_tags.length > 0 && (
             <div className="flex flex-wrap gap-2 pt-4 border-t border-border">
               {post.forum_post_tags.map((tagRelation) => (
-                <ForumTagBadge key={tagRelation.forum_tags.id} tag={tagRelation.forum_tags} />
+                <ForumTagBadge
+                  key={tagRelation.forum_tags.id}
+                  tag={tagRelation.forum_tags}
+                />
               ))}
             </div>
           )}
@@ -300,7 +335,11 @@ export default async function ForumPostPage({ params }: PageProps) {
         {/* Comments Section */}
         <section className="pt-8 border-t border-border">
           <Suspense fallback={<CommentsSkeleton />}>
-            <RealtimeComments forumId={post.id} postAuthorId={post.profile_id} initialComments={initialComments} />
+            <RealtimeComments
+              forumId={post.id}
+              postAuthorId={post.profile_id}
+              initialComments={initialComments}
+            />
           </Suspense>
         </section>
       </div>

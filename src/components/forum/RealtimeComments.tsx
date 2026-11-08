@@ -17,7 +17,11 @@ type RealtimeCommentsProps = {
   initialComments?: ForumComment[];
 };
 
-export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }: RealtimeCommentsProps) {
+export function RealtimeComments({
+  forumId,
+  postAuthorId,
+  initialComments = [],
+}: RealtimeCommentsProps) {
   const { user } = useAuth();
   const [comments, setComments] = useState<ForumComment[]>(initialComments);
   const [loading, setLoading] = useState(!initialComments.length);
@@ -35,7 +39,9 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
       const supabase = createClient();
       const { data } = await supabase
         .from("comments")
-        .select("*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)")
+        .select(
+          "*, profiles:profiles_public!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)",
+        )
         .eq("forum_id", forumId)
         .is("parent_id", null)
         .order("is_pinned", { ascending: false })
@@ -57,12 +63,19 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
       .channel(`forum-comments-${forumId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "comments", filter: `forum_id=eq.${forumId}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "comments",
+          filter: `forum_id=eq.${forumId}`,
+        },
         async (payload) => {
           // Fetch the full comment with profile
           const { data } = await supabase
             .from("comments")
-            .select("*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)")
+            .select(
+              "*, profiles:profiles_public!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)",
+            )
             .eq("id", payload.new.id)
             .single();
 
@@ -72,7 +85,10 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
               // It's a reply
               setReplies((prev) => ({
                 ...prev,
-                [newComment.parent_id!]: [...(prev[newComment.parent_id!] || []), newComment],
+                [newComment.parent_id!]: [
+                  ...(prev[newComment.parent_id!] || []),
+                  newComment,
+                ],
               }));
             } else {
               // Top-level comment
@@ -83,11 +99,18 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
       )
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "comments", filter: `forum_id=eq.${forumId}` },
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "comments",
+          filter: `forum_id=eq.${forumId}`,
+        },
         async (payload) => {
           const { data } = await supabase
             .from("comments")
-            .select("*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)")
+            .select(
+              "*, profiles:profiles_public!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)",
+            )
             .eq("id", payload.new.id)
             .single();
 
@@ -96,24 +119,36 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
             if (updated.parent_id) {
               setReplies((prev) => ({
                 ...prev,
-                [updated.parent_id!]: prev[updated.parent_id!]?.map((c) => (c.id === updated.id ? updated : c)) || [],
+                [updated.parent_id!]:
+                  prev[updated.parent_id!]?.map((c) =>
+                    c.id === updated.id ? updated : c,
+                  ) || [],
               }));
             } else {
-              setComments((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+              setComments((prev) =>
+                prev.map((c) => (c.id === updated.id ? updated : c)),
+              );
             }
           }
         },
       )
       .on(
         "postgres_changes",
-        { event: "DELETE", schema: "public", table: "comments", filter: `forum_id=eq.${forumId}` },
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "comments",
+          filter: `forum_id=eq.${forumId}`,
+        },
         (payload) => {
           const deletedId = payload.old.id;
           setComments((prev) => prev.filter((c) => c.id !== deletedId));
           setReplies((prev) => {
             const newReplies = { ...prev };
             Object.keys(newReplies).forEach((key) => {
-              newReplies[Number(key)] = newReplies[Number(key)].filter((c) => c.id !== deletedId);
+              newReplies[Number(key)] = newReplies[Number(key)].filter(
+                (c) => c.id !== deletedId,
+              );
             });
             return newReplies;
           });
@@ -153,7 +188,9 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
     const supabase = createClient();
     const { data } = await supabase
       .from("comments")
-      .select("*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)")
+      .select(
+        "*, profiles:profiles_public!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)",
+      )
       .eq("parent_id", commentId)
       .order("comment_created_at", { ascending: true });
 
@@ -191,7 +228,11 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
           {replyingTo && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>Replying to comment</span>
-              <Button variant="ghost" size="sm" onClick={() => setReplyingTo(null)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setReplyingTo(null)}
+              >
                 Cancel
               </Button>
             </div>
@@ -206,7 +247,10 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
             minHeight="100px"
           />
           <div className="flex justify-end">
-            <Button onClick={handleSubmit} disabled={submitting || !commentContent.trim()}>
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting || !commentContent.trim()}
+            >
               <Send className="me-2 h-4 w-4" />
               {submitting ? "Posting..." : "Post Comment"}
             </Button>
@@ -214,7 +258,9 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
         </div>
       ) : (
         <div className="text-center py-6 bg-muted/30 rounded-lg">
-          <p className="text-muted-foreground">Sign in to join the discussion</p>
+          <p className="text-muted-foreground">
+            Sign in to join the discussion
+          </p>
         </div>
       )}
 
@@ -234,7 +280,9 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
                 comment={comment}
                 isPostAuthor={comment.user_id === postAuthorId}
                 onReply={(id) => setReplyingTo(id)}
-                onDelete={user?.id === comment.user_id ? handleDelete : undefined}
+                onDelete={
+                  user?.id === comment.user_id ? handleDelete : undefined
+                }
                 onLoadReplies={handleLoadReplies}
                 replies={replies[comment.id] || []}
                 showReplies={!!replies[comment.id]?.length}
