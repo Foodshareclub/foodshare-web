@@ -1,18 +1,26 @@
 /**
  * Webhook Security
  *
- * Provides secure webhook signature verification for multiple providers:
- * - Meta (WhatsApp, Instagram, Facebook)
- * - Stripe
- * - GitHub
- * - Generic HMAC verification
+ * Secure webhook signature verification for the live providers:
+ * - Meta (WhatsApp, Instagram, Facebook) — `verifyMetaWebhook`
+ * - Generic HMAC — `verifyHmacSignature` (used by the Tailscale webhook)
  *
  * Uses constant-time comparison to prevent timing attacks.
  *
- * @module webhook-security
+ * The Stripe/GitHub/Twilio verifiers, the base64 HMAC variant, the
+ * middleware factory and the Meta challenge handler that used to live
+ * here had no call sites anywhere in the estate and were removed. Edge
+ * functions deploy from this repo, so dead here means dead in production
+ * too.
+ *
+ * Note for the next liveness audit: the Telegram bot imports
+ * `verifyTelegramWebhook` under the alias `verifyTelegramSignature`
+ * (telegram-bot-foodshare/index.ts), so a plain name grep for the call
+ * sites undercounts it. The type-check baseline
+ * (`typecheck-baseline.test.ts`) is the authority on this module's
+ * surface.
  */
 
-import { logger } from "./logger.ts";
 import { timingSafeEqual } from "./utils.ts";
 
 // =============================================================================
@@ -52,48 +60,6 @@ export const WebhookProviders = {
     signatureHeader: "X-Hub-Signature-256",
     signaturePrefix: "sha256=",
     algorithm: "SHA-256",
-  } as WebhookProviderConfig,
-
-  /**
-   * Stripe
-   * Uses Stripe-Signature header with t=timestamp,v1=signature format
-   */
-  stripe: {
-    signatureHeader: "Stripe-Signature",
-    signaturePrefix: "v1=",
-    algorithm: "SHA-256",
-    timestampHeader: "t",
-    maxAgeSeconds: 300, // 5 minutes
-  } as WebhookProviderConfig,
-
-  /**
-   * GitHub
-   * Uses X-Hub-Signature-256 header with sha256= prefix
-   */
-  github: {
-    signatureHeader: "X-Hub-Signature-256",
-    signaturePrefix: "sha256=",
-    algorithm: "SHA-256",
-  } as WebhookProviderConfig,
-
-  /**
-   * Generic SHA-256 HMAC
-   * Uses X-Signature header with sha256= prefix
-   */
-  generic: {
-    signatureHeader: "X-Signature",
-    signaturePrefix: "sha256=",
-    algorithm: "SHA-256",
-  } as WebhookProviderConfig,
-
-  /**
-   * Twilio
-   * Uses X-Twilio-Signature header with no prefix (base64 encoded)
-   */
-  twilio: {
-    signatureHeader: "X-Twilio-Signature",
-    signaturePrefix: "",
-    algorithm: "SHA-1",
   } as WebhookProviderConfig,
 
   /**
@@ -137,33 +103,6 @@ export async function computeHmac(
   // Convert to hex
   const hashArray = Array.from(new Uint8Array(signatureBuffer));
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-/**
- * Compute HMAC and return as base64 (for providers like Twilio)
- */
-export async function computeHmacBase64(
-  payload: string,
-  secret: string,
-  algorithm: HashAlgorithm = "SHA-256",
-): Promise<string> {
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: algorithm },
-    false,
-    ["sign"],
-  );
-
-  const signatureBuffer = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    encoder.encode(payload),
-  );
-
-  // Convert to base64
-  return btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
 }
 
 /**
@@ -219,104 +158,6 @@ export async function verifyMetaWebhook(
 }
 
 /**
- * Verify Stripe webhook signature with timestamp validation
- *
- * @example
- * ```typescript
- * const result = await verifyStripeWebhook(rawBody, req.headers, endpointSecret);
- * if (!result.valid) {
- *   return new Response(result.error, { status: 401 });
- * }
- * ```
- */
-export async function verifyStripeWebhook(
-  payload: string,
-  headers: Headers,
-  secret: string,
-): Promise<WebhookVerificationResult> {
-  const signatureHeader = headers.get(WebhookProviders.stripe.signatureHeader);
-
-  if (!signatureHeader) {
-    return { valid: false, error: "Missing Stripe-Signature header" };
-  }
-
-  // Parse Stripe signature header: t=timestamp,v1=signature
-  const parts = signatureHeader.split(",");
-  const timestamp = parts.find((p) => p.startsWith("t="))?.slice(2);
-  const signature = parts.find((p) => p.startsWith("v1="))?.slice(3);
-
-  if (!timestamp || !signature) {
-    return { valid: false, error: "Invalid Stripe-Signature format" };
-  }
-
-  // Check timestamp for replay protection
-  const timestampSeconds = parseInt(timestamp, 10);
-  const now = Math.floor(Date.now() / 1000);
-  const maxAge = WebhookProviders.stripe.maxAgeSeconds || 300;
-
-  if (Math.abs(now - timestampSeconds) > maxAge) {
-    return { valid: false, error: "Webhook timestamp too old" };
-  }
-
-  // Compute expected signature
-  // Stripe uses: timestamp + "." + payload
-  const signedPayload = `${timestamp}.${payload}`;
-  const computedHash = await computeHmac(
-    signedPayload,
-    secret,
-    WebhookProviders.stripe.algorithm,
-  );
-
-  if (!constantTimeCompare(computedHash, signature)) {
-    return { valid: false, error: "Signature mismatch" };
-  }
-
-  return { valid: true };
-}
-
-/**
- * Verify GitHub webhook signature
- *
- * @example
- * ```typescript
- * const result = await verifyGitHubWebhook(rawBody, req.headers, webhookSecret);
- * if (!result.valid) {
- *   return new Response(result.error, { status: 401 });
- * }
- * ```
- */
-export async function verifyGitHubWebhook(
-  payload: string,
-  headers: Headers,
-  secret: string,
-): Promise<WebhookVerificationResult> {
-  const signature = headers.get(WebhookProviders.github.signatureHeader);
-
-  if (!signature) {
-    return { valid: false, error: "Missing X-Hub-Signature-256 header" };
-  }
-
-  if (!signature.startsWith(WebhookProviders.github.signaturePrefix)) {
-    return { valid: false, error: "Invalid signature format" };
-  }
-
-  const providedHash = signature.slice(
-    WebhookProviders.github.signaturePrefix.length,
-  );
-  const computedHash = await computeHmac(
-    payload,
-    secret,
-    WebhookProviders.github.algorithm,
-  );
-
-  if (!constantTimeCompare(computedHash, providedHash)) {
-    return { valid: false, error: "Signature mismatch" };
-  }
-
-  return { valid: true };
-}
-
-/**
  * Verify Telegram webhook secret token
  * Telegram uses a simple token comparison (not HMAC)
  *
@@ -357,7 +198,7 @@ export function verifyTelegramWebhook(
  *
  * @example
  * ```typescript
- * const result = await verifyHmacSignature(payload, signature, secret, {
+ * const result = await verifyHmacSignature(rawBody, signature, secret, {
  *   algorithm: "SHA-256",
  *   prefix: "sha256=",
  * });
@@ -370,7 +211,6 @@ export async function verifyHmacSignature(
   options?: {
     algorithm?: HashAlgorithm;
     prefix?: string;
-    base64?: boolean;
   },
 ): Promise<WebhookVerificationResult> {
   if (!signature) {
@@ -379,7 +219,6 @@ export async function verifyHmacSignature(
 
   const algorithm = options?.algorithm || "SHA-256";
   const prefix = options?.prefix || "";
-  const isBase64 = options?.base64 || false;
 
   // Remove prefix if present
   let providedHash = signature;
@@ -387,112 +226,11 @@ export async function verifyHmacSignature(
     providedHash = signature.slice(prefix.length);
   }
 
-  // Compute expected hash
-  const computedHash = isBase64
-    ? await computeHmacBase64(payload, secret, algorithm)
-    : await computeHmac(payload, secret, algorithm);
+  const computedHash = await computeHmac(payload, secret, algorithm);
 
   if (!constantTimeCompare(computedHash, providedHash)) {
     return { valid: false, error: "Signature mismatch" };
   }
 
   return { valid: true };
-}
-
-// =============================================================================
-// Webhook Verification Middleware Helper
-// =============================================================================
-
-/**
- * Create a webhook verification middleware for a specific provider
- *
- * @example
- * ```typescript
- * const verifyMeta = createWebhookVerifier("meta", () => Deno.env.get("WHATSAPP_APP_SECRET")!);
- *
- * Deno.serve(async (req) => {
- *   const rawBody = await req.text();
- *   const result = await verifyMeta(rawBody, req.headers);
- *   if (!result.valid) {
- *     return new Response("Unauthorized", { status: 401 });
- *   }
- *   // Process webhook...
- * });
- * ```
- */
-export function createWebhookVerifier(
-  provider: keyof typeof WebhookProviders,
-  getSecret: () => string,
-): (payload: string, headers: Headers) => Promise<WebhookVerificationResult> {
-  const config = WebhookProviders[provider];
-
-  return async (payload: string, headers: Headers) => {
-    const secret = getSecret();
-    if (!secret) {
-      logger.warn(`Webhook secret not configured for ${provider}`);
-      // Fail open in development, fail closed in production
-      const isDev = Deno.env.get("ENVIRONMENT") === "development";
-      return isDev ? { valid: true } : { valid: false, error: "Webhook secret not configured" };
-    }
-
-    switch (provider) {
-      case "meta":
-        return verifyMetaWebhook(payload, headers, secret);
-      case "stripe":
-        return verifyStripeWebhook(payload, headers, secret);
-      case "github":
-        return verifyGitHubWebhook(payload, headers, secret);
-      case "telegram":
-        // Telegram uses simple token comparison, not HMAC
-        return verifyTelegramWebhook(headers, secret);
-      default: {
-        // Generic HMAC verification
-        const signature = headers.get(config.signatureHeader);
-        return verifyHmacSignature(payload, signature, secret, {
-          algorithm: config.algorithm,
-          prefix: config.signaturePrefix,
-        });
-      }
-    }
-  };
-}
-
-// =============================================================================
-// Webhook Challenge Response (Meta verification)
-// =============================================================================
-
-/**
- * Handle Meta webhook verification challenge (GET request)
- *
- * @example
- * ```typescript
- * if (req.method === "GET") {
- *   return handleMetaWebhookChallenge(req, verifyToken);
- * }
- * ```
- */
-export function handleMetaWebhookChallenge(
-  request: Request,
-  verifyToken: string,
-): Response | null {
-  const url = new URL(request.url);
-  const mode = url.searchParams.get("hub.mode");
-  const token = url.searchParams.get("hub.verify_token");
-  const challenge = url.searchParams.get("hub.challenge");
-
-  if (mode === "subscribe" && token === verifyToken && challenge) {
-    logger.info("Webhook verification challenge passed");
-    return new Response(challenge, {
-      status: 200,
-      headers: { "Content-Type": "text/plain" },
-    });
-  }
-
-  logger.warn("Webhook verification challenge failed", {
-    mode,
-    tokenMatch: token === verifyToken,
-    hasChallenge: !!challenge,
-  });
-
-  return new Response("Verification failed", { status: 403 });
 }

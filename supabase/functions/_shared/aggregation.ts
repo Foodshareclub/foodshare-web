@@ -95,6 +95,16 @@ export async function aggregateStats(supabase: SupabaseClient, userId: string) {
   // and the average rating was always null — a profile page reporting that
   // the user had shared nothing and been reviewed by nobody, however much
   // they had actually done.
+  //
+  // The rating query had a second, quieter bug: `reviews.profile_id` is the
+  // REVIEWER (the insert is RLS-checked to auth.uid()). Filtering
+  // `reviews.profile_id = userId` therefore averaged the ratings the user
+  // GAVE to other people and displayed that as the user's own rating — the
+  // reputation number on the profile was its mirror image. A profile rating
+  // is what the user RECEIVED: the reviews over the user's posts (the same
+  // surface the client's fetchReviews(forUserId:) queries via
+  // posts.profile_id). Null ratings are excluded from both mean and count:
+  // `reviewed_rating` is nullable and a null in a mean is a null rating.
   const [shared, received, active, ratings] = await Promise.all([
     supabase.from("posts").select("id", { count: "exact", head: true }).eq(
       "profile_id",
@@ -117,12 +127,35 @@ export async function aggregateStats(supabase: SupabaseClient, userId: string) {
       "is_active",
       true,
     ),
-    supabase.from("reviews").select("reviewed_rating").eq("profile_id", userId),
+    supabase.from("posts").select("reviews(reviewed_rating)").eq("profile_id", userId),
   ]);
 
-  const avgRating = ratings.data?.length
-    ? ratings.data.reduce((sum, r) => sum + r.reviewed_rating, 0) /
-      ratings.data.length
+  // `listing_requests` is a known-absent relation (pinned in the column
+  // audit); its count is null both when a user has nothing and when the
+  // query failed. The failure is no longer indistinguishable from zero.
+  if (received.error) {
+    logger.warn("Unread-count fallback query failed", {
+      relation: "listing_requests",
+      userId,
+      error: received.error.message,
+    });
+  }
+  if (ratings.error) {
+    logger.warn("User rating query failed", {
+      relation: "posts.reviews",
+      userId,
+      error: ratings.error.message,
+    });
+  }
+
+  const receivedRatings = ((ratings.data ?? []) as {
+    reviews?: { reviewed_rating: number | null }[];
+  }[])
+    .flatMap((post) => (post.reviews ?? []).map((r) => r.reviewed_rating))
+    .filter((r): r is number => typeof r === "number");
+
+  const avgRating = receivedRatings.length
+    ? receivedRatings.reduce((sum, r) => sum + r, 0) / receivedRatings.length
     : null;
 
   return {
@@ -130,7 +163,7 @@ export async function aggregateStats(supabase: SupabaseClient, userId: string) {
     itemsReceived: received.count || 0,
     activeListings: active.count || 0,
     rating: avgRating,
-    ratingCount: ratings.data?.length || 0,
+    ratingCount: receivedRatings.length,
   };
 }
 

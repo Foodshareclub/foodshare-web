@@ -7,9 +7,8 @@
  * and every valid signature fails. When the raw bytes were not captured,
  * verification refuses rather than guessing at a byte form.
  *
- * Secret handling follows the house rule (cf. `_shared/webhook-security.ts`
- * `createWebhookVerifier`): fail open only in development, fail closed
- * everywhere else.
+ * Secret handling follows the house rule for webhook endpoints in this
+ * repo: fail open only in development, fail closed everywhere else.
  */
 import { isDevelopment } from "../../_shared/utils.ts";
 import { verifyHmacSignature } from "../../_shared/webhook-security.ts";

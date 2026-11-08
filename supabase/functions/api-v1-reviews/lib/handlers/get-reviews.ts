@@ -55,6 +55,9 @@ export async function getReviews(
     .limit(limit + 1);
 
   if (effectiveUserId) {
+    // profile_id = reviewer: this endpoint serves "reviews the user WROTE".
+    // Reviews the user RECEIVED are a different surface (the client queries
+    // them via posts.profile_id); do not "symmetrize" this filter.
     dbQuery = dbQuery.eq("profile_id", effectiveUserId);
   }
 

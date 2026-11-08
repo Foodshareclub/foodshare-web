@@ -1,8 +1,16 @@
 /**
  * Shared Caching Utilities
  *
- * In-memory cache with TTL support for edge functions
- * Reduces database queries by 70-90%
+ * In-memory cache with TTL support for edge functions. The edge runtime
+ * isolates per function, so this is a per-isolate best-effort cache.
+ *
+ * The dead half of this module that used to sit here — the per-profile
+ * "getCached*" helpers, the bulk invalidators, the sync cache-through and
+ * the cache keys/TTLs only they used — had no call sites anywhere in the
+ * estate and was removed. (The `engagement` key builder also had a
+ * standing defect: `postIds.sort()` mutated its argument and sorted
+ * lexicographically, so the same ID set produced different keys. If an
+ * engagement cache is ever needed, rebuild that key canonical.)
  */
 
 interface CacheEntry<T> {
@@ -40,7 +48,7 @@ class EdgeCache {
   }
 
   set<T>(key: string, data: T, ttlMs: number = 300000): void {
-    // Evict oldest entries if cache is full (LRU-style via Map insertion order)
+    // Evict oldest entries if the cache is full (Map insertion order)
     while (this.cache.size >= MAX_CACHE_SIZE) {
       const firstKey = this.cache.keys().next().value;
       if (firstKey) {
@@ -107,29 +115,18 @@ export const CACHE_KEYS = {
   profile: (userId: string) => `profile:${userId}`,
   /** User profile by email */
   profileByEmail: (email: string) => `profile:email:${email}`,
-  /** User's address */
-  address: (userId: string) => `address:${userId}`,
-  /** User's listings */
-  userListings: (userId: string) => `listings:user:${userId}`,
   /** Single listing */
   listing: (listingId: string | number) => `listing:${listingId}`,
-  /** Category list */
-  categories: () => "categories:all",
+  /** User's listings */
+  userListings: (userId: string) => `listings:user:${userId}`,
   /** Feature flags */
   featureFlags: () => "feature_flags:all",
   /** User feature flags */
   userFeatureFlags: (userId: string) => `feature_flags:user:${userId}`,
-  /** User stats */
-  userStats: (userId: string) => `stats:user:${userId}`,
-  /** Leaderboard */
-  leaderboard: (type: string) => `leaderboard:${type}`,
   /** Display name by user ID */
   displayName: (userId: string) => `display_name:${userId}`,
   /** Display name admin override by user ID */
   displayNameOverride: (userId: string) => `display_name:override:${userId}`,
-  /** Batch engagement by post IDs + user */
-  engagement: (postIds: number[], userId: string | null) =>
-    `engagement:${postIds.sort().join(",")}:${userId || "anon"}`,
   /** Reviews for a user */
   reviews: (userId: string, limit: number) => `reviews:${userId}:${limit}`,
 } as const;
@@ -138,34 +135,14 @@ export const CACHE_KEYS = {
  * Predefined TTLs in milliseconds
  */
 export const CACHE_TTLS = {
-  /** 5 minutes - for frequently changing data */
-  short: 5 * 60 * 1000,
-  /** 15 minutes - for moderately changing data */
+  /** 15 minutes - the cacheThrough default */
   medium: 15 * 60 * 1000,
-  /** 1 hour - for relatively stable data */
-  long: 60 * 60 * 1000,
-  /** 24 hours - for rarely changing data */
-  day: 24 * 60 * 60 * 1000,
-
-  // Specific TTLs
-  /** Profile data - 5 minutes */
-  profile: 5 * 60 * 1000,
-  /** Address data - 15 minutes */
-  address: 15 * 60 * 1000,
-  /** Categories - 1 hour */
+  /** Categories - 1 hour (also the forum category TTL) */
   categories: 60 * 60 * 1000,
   /** Feature flags - 5 minutes */
   featureFlags: 5 * 60 * 1000,
-  /** User stats - 10 minutes */
-  userStats: 10 * 60 * 1000,
-  /** Leaderboard - 15 minutes */
-  leaderboard: 15 * 60 * 1000,
-  /** Listings - 5 minutes */
-  listing: 5 * 60 * 1000,
   /** Display name - 10 minutes */
   displayName: 10 * 60 * 1000,
-  /** Engagement data - 60 seconds (changes frequently) */
-  engagement: 60 * 1000,
   /** Reviews - 5 minutes */
   reviews: 5 * 60 * 1000,
 } as const;
@@ -203,7 +180,7 @@ export interface CacheThroughOptions {
  * const profile = await cacheThrough(
  *   CACHE_KEYS.profile(userId),
  *   () => fetchProfileFromDb(userId),
- *   { ttl: CACHE_TTLS.profile }
+ *   { ttl: CACHE_TTLS.medium }
  * );
  */
 export async function cacheThrough<T>(
@@ -233,50 +210,9 @@ export async function cacheThrough<T>(
   return data;
 }
 
-/**
- * Sync version of cache-through for synchronous fetchers
- */
-export function cacheThroughSync<T>(
-  key: string,
-  fetcher: () => T,
-  options: CacheThroughOptions = {},
-): T {
-  const { ttl = CACHE_TTLS.medium, forceRefresh = false, cacheKey } = options;
-  const effectiveKey = cacheKey || key;
-
-  // Check cache first (unless force refresh)
-  if (!forceRefresh) {
-    const cached = cache.get<T>(effectiveKey);
-    if (cached !== null) {
-      return cached;
-    }
-  }
-
-  // Fetch fresh data
-  const data = fetcher();
-
-  // Store in cache (only if data is not null/undefined)
-  if (data !== null && data !== undefined) {
-    cache.set(effectiveKey, data, ttl);
-  }
-
-  return data;
-}
-
 // =============================================================================
 // Cache Invalidation Helpers
 // =============================================================================
-
-/**
- * Invalidate all cache entries for a user
- */
-export function invalidateUserCache(userId: string): void {
-  cache.delete(CACHE_KEYS.profile(userId));
-  cache.delete(CACHE_KEYS.address(userId));
-  cache.delete(CACHE_KEYS.userListings(userId));
-  cache.delete(CACHE_KEYS.userFeatureFlags(userId));
-  cache.delete(CACHE_KEYS.userStats(userId));
-}
 
 /**
  * Invalidate a listing and related caches
@@ -299,60 +235,4 @@ export function invalidateProfileCache(userId: string, email?: string): void {
   if (email) {
     cache.delete(CACHE_KEYS.profileByEmail(email));
   }
-}
-
-/**
- * Invalidate global caches (e.g., after admin changes)
- */
-export function invalidateGlobalCaches(): void {
-  cache.delete(CACHE_KEYS.categories());
-  cache.delete(CACHE_KEYS.featureFlags());
-  cache.delete(CACHE_KEYS.leaderboard("weekly"));
-  cache.delete(CACHE_KEYS.leaderboard("monthly"));
-  cache.delete(CACHE_KEYS.leaderboard("alltime"));
-}
-
-// =============================================================================
-// Profile-Specific Cache Helpers
-// =============================================================================
-
-/**
- * Get profile from cache or fetch
- */
-export async function getCachedProfile<T>(
-  userId: string,
-  fetcher: () => Promise<T>,
-): Promise<T> {
-  return cacheThrough(
-    CACHE_KEYS.profile(userId),
-    fetcher,
-    { ttl: CACHE_TTLS.profile },
-  );
-}
-
-/**
- * Get address from cache or fetch
- */
-export async function getCachedAddress<T>(
-  userId: string,
-  fetcher: () => Promise<T>,
-): Promise<T> {
-  return cacheThrough(
-    CACHE_KEYS.address(userId),
-    fetcher,
-    { ttl: CACHE_TTLS.address },
-  );
-}
-
-/**
- * Get categories from cache or fetch
- */
-export async function getCachedCategories<T>(
-  fetcher: () => Promise<T>,
-): Promise<T> {
-  return cacheThrough(
-    CACHE_KEYS.categories(),
-    fetcher,
-    { ttl: CACHE_TTLS.categories },
-  );
 }

@@ -80,9 +80,12 @@ export async function submitReview(
   // The comment the old block carried — "ideally handled by database trigger" —
   // described a trigger that was never written.
 
-  // Invalidate review cache for the reviewee
-  cache.delete(CACHE_KEYS.reviews(body.revieweeId, 20));
-  cache.delete(CACHE_KEYS.reviews(body.revieweeId, 50));
+  // Invalidate the reviewer's review-list cache. This endpoint serves
+  // "reviews I wrote" (profile_id = reviewer), so a new review changes the
+  // REVIEWER's list — invalidating the reviewee's key (the old code) dropped
+  // a cache that did not change and left the changed one stale.
+  cache.delete(CACHE_KEYS.reviews(userId, 20));
+  cache.delete(CACHE_KEYS.reviews(userId, 50));
 
   logger.info("Review submitted", {
     reviewId: data.id,
