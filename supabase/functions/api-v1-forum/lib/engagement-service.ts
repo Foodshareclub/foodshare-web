@@ -22,17 +22,23 @@ export class EngagementService {
       .maybeSingle();
 
     if (existing) {
-      await this.supabase
+      const { error } = await this.supabase
         .from("likes")
         .delete()
         .eq("id", existing.id);
 
+      // A write that reports success while failing is how the toggles in
+      // this file have broken before; every other method here throws.
+      if (error) throw error;
+
       logger.info("Like removed", { forumId });
       return { liked: false };
     } else {
-      await this.supabase
+      const { error } = await this.supabase
         .from("likes")
         .insert({ forum_id: forumId, profile_id: this.userId });
+
+      if (error) throw error;
 
       logger.info("Like added", { forumId });
       return { liked: true };
@@ -48,17 +54,21 @@ export class EngagementService {
       .maybeSingle();
 
     if (existing) {
-      await this.supabase
+      const { error } = await this.supabase
         .from("bookmarks")
         .delete()
         .eq("id", existing.id);
 
+      if (error) throw error;
+
       logger.info("Bookmark removed", { forumId });
       return { bookmarked: false };
     } else {
-      await this.supabase
+      const { error } = await this.supabase
         .from("bookmarks")
         .insert({ forum_id: forumId, profile_id: this.userId });
+
+      if (error) throw error;
 
       logger.info("Bookmark added", { forumId });
       return { bookmarked: true };
@@ -93,30 +103,36 @@ export class EngagementService {
 
     if (existing) {
       if (existing.reaction_type_id === reactionTypeId) {
-        await this.supabase
+        const { error } = await this.supabase
           .from("forum_reactions")
           .delete()
           .eq("id", existing.id);
 
+        if (error) throw error;
+
         logger.info("Reaction removed", { forumId, reactionType });
         return { reacted: false, reactionType: null };
       } else {
-        await this.supabase
+        const { error } = await this.supabase
           .from("forum_reactions")
           .update({ reaction_type_id: reactionTypeId })
           .eq("id", existing.id);
+
+        if (error) throw error;
 
         logger.info("Reaction updated", { forumId, reactionType });
         return { reacted: true, reactionType };
       }
     } else {
-      await this.supabase
+      const { error } = await this.supabase
         .from("forum_reactions")
         .insert({
           forum_id: forumId,
           profile_id: this.userId,
           reaction_type_id: reactionTypeId,
         });
+
+      if (error) throw error;
 
       logger.info("Reaction added", { forumId, reactionType });
       return { reacted: true, reactionType };
@@ -132,17 +148,21 @@ export class EngagementService {
       .maybeSingle();
 
     if (existing) {
-      await this.supabase
+      const { error } = await this.supabase
         .from("forum_subscriptions")
         .delete()
         .eq("id", existing.id);
 
+      if (error) throw error;
+
       logger.info("Subscription removed", { forumId });
       return { subscribed: false };
     } else {
-      await this.supabase
+      const { error } = await this.supabase
         .from("forum_subscriptions")
         .insert({ forum_id: forumId, profile_id: this.userId });
+
+      if (error) throw error;
 
       logger.info("Subscription added", { forumId });
       return { subscribed: true };

@@ -354,7 +354,6 @@ const KNOWN_MISSING = [
   "get_nearby_products",
   "get_request_count",
   "get_web_vitals_summary",
-  "increment_poll_option_votes",
   "notify_nearby_users_bulk",
   "record_login_attempt",
   "toggle_post_favorite_atomic",

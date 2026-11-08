@@ -283,32 +283,30 @@ export async function votePoll(ctx: HandlerContext): Promise<Response> {
     throw new ValidationError("Authentication required");
   }
 
-  // Insert vote (unique constraint will prevent duplicates)
-  const { data, error } = await supabase
-    .from("forum_poll_votes")
-    .insert({
-      poll_id: body.pollId,
-      option_id: body.optionId,
-      profile_id: userId,
-    })
-    .select("id,poll_id,option_id,created_at")
-    .single();
+  // `cast_poll_vote` (SECURITY DEFINER, created in the baseline) is the
+  // schema's atomic vote path: it enforces `ends_at`, removes the previous
+  // vote on single-choice polls, upserts `forum_poll_votes`, and updates
+  // `votes_count` and `total_votes`. The mobile client already calls it
+  // directly. The old code inserted the vote row itself, then swallowed a
+  // call to `increment_poll_option_votes` — a function that was never
+  // created and no trigger backs — so vote counts never moved, polls
+  // stayed votable after they ended, and single-choice polls accepted a
+  // second vote.
+  const { data, error } = await supabase.rpc("cast_poll_vote", {
+    p_poll_id: body.pollId,
+    p_option_ids: [body.optionId],
+  });
 
   if (error) {
-    if (error.code === "23505") {
-      throw new ValidationError("You have already voted on this poll");
+    const message = error.message;
+    if (message === "Poll has ended") {
+      throw new ValidationError("This poll has ended");
     }
-    logger.error("Vote failed", new Error(error.message));
-    throw new ValidationError(`Failed to vote: ${error.message}`);
-  }
-
-  // Increment vote count on the option (non-critical -- triggers may handle this)
-  try {
-    await supabase.rpc("increment_poll_option_votes", {
-      p_option_id: body.optionId,
-    });
-  } catch {
-    // Ignore -- vote count triggers may handle this
+    if (message === "Invalid option for this poll") {
+      throw new ValidationError("That option does not belong to this poll");
+    }
+    logger.error("Vote failed", new Error(message));
+    throw new ValidationError(`Failed to vote: ${message}`);
   }
 
   logger.info("Poll vote recorded", { pollId: body.pollId, userId });
