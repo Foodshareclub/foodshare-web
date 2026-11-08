@@ -10,7 +10,7 @@ import type { createHealthHandler } from "../../../_shared/health-handler.ts";
 import { getEngagement, getUserBookmarks } from "./get-engagement.ts";
 import { setEngagement } from "./set.ts";
 import { recordShare } from "./share.ts";
-import { toggleBookmark, toggleFavorite, toggleLike } from "./toggle.ts";
+import { toggleBookmark, toggleLike } from "./toggle.ts";
 import { handleBatchOperations } from "./batch.ts";
 import type { BatchOperationsBody, QueryParams, ShareBody, ToggleBody } from "../schemas.ts";
 
@@ -57,13 +57,11 @@ export function createRouteHandlers(
         return toggleLike(ctx as HandlerContext<ToggleBody, QueryParams>);
       case "bookmark":
         return toggleBookmark(ctx as HandlerContext<ToggleBody, QueryParams>);
-      case "favorite":
-        return toggleFavorite(ctx as HandlerContext<ToggleBody, QueryParams>);
       case "share":
         return recordShare(ctx as HandlerContext<ShareBody, QueryParams>);
       default:
         throw new ValidationError(
-          "action query param required (like, bookmark, set_like, set_bookmark, favorite, share)",
+          "action query param required (like, bookmark, set_like, set_bookmark, share)",
         );
     }
   }

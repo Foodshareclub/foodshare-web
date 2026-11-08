@@ -8,7 +8,7 @@
 import { type HandlerContext, ok } from "../../../_shared/api-handler.ts";
 import { ServerError, ValidationError } from "../../../_shared/errors.ts";
 import { logger } from "../../../_shared/logger.ts";
-import { postEngagementId, togglePostEngagement } from "../../../_shared/post-engagement.ts";
+import { togglePostEngagement } from "../../../_shared/post-engagement.ts";
 import type { BatchOperationsBody, QueryParams } from "../schemas.ts";
 
 export async function handleBatchOperations(
@@ -34,18 +34,6 @@ export async function handleBatchOperations(
         const entityId = operation.entityId;
 
         switch (operation.type) {
-          case "toggle_favorite": {
-            const { data: result, error } = await supabase.rpc("toggle_post_favorite_atomic", {
-              p_user_id: userId,
-              p_post_id: postEngagementId(entityId),
-            });
-            if (error) throw new ServerError(error.message);
-            data = {
-              isFavorited: result.is_favorited,
-              likeCount: result.like_count,
-            };
-            break;
-          }
           case "toggle_like": {
             const likeResult = await togglePostEngagement(supabase, "like", entityId, userId);
             data = { isLiked: likeResult.active };

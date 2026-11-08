@@ -356,7 +356,6 @@ const KNOWN_MISSING = [
   "get_web_vitals_summary",
   "notify_nearby_users_bulk",
   "record_login_attempt",
-  "toggle_post_favorite_atomic",
 ];
 
 // =============================================================================

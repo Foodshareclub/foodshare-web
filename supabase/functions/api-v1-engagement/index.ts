@@ -1,7 +1,7 @@
 /**
  * Engagement API v1
  *
- * REST API for post engagement operations (likes, bookmarks, favorites, shares).
+ * REST API for post engagement operations (likes, bookmarks, shares).
  * Supports Web, iOS, and Android clients with consistent interface.
  *
  * Endpoints:
@@ -11,7 +11,6 @@
  * - POST   /api-v1-engagement?action=bookmark       - Toggle bookmark
  * - POST   /api-v1-engagement?action=set_like       - Set explicit like state
  * - POST   /api-v1-engagement?action=set_bookmark   - Set explicit bookmark state
- * - POST   /api-v1-engagement?action=favorite       - Toggle favorite (atomic)
  * - POST   /api-v1-engagement?action=share          - Record share
  * - POST   /api-v1-engagement/batch                 - Batch operations
  * - GET    /api-v1-engagement?action=bookmarks      - Get user's bookmarks

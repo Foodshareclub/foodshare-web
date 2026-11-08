@@ -24,7 +24,6 @@ export const shareSchema = z.object({
 export const batchOperationSchema = z.object({
   correlationId: uuidSchema,
   type: z.enum([
-    "toggle_favorite",
     "toggle_like",
     "toggle_bookmark",
     "mark_read",
@@ -41,9 +40,8 @@ export const batchOperationsSchema = z.object({
 export const querySchema = z.object({
   postId: z.string().optional(),
   postIds: z.string().optional(), // Comma-separated for batch
-  action: z.enum(["like", "bookmark", "set_like", "set_bookmark", "favorite", "share", "bookmarks"])
+  action: z.enum(["like", "bookmark", "set_like", "set_bookmark", "share", "bookmarks"])
     .optional(),
-  mode: z.enum(["toggle", "add", "remove"]).optional(), // For favorite action
   limit: z.string().optional(),
 });
 
