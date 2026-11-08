@@ -235,9 +235,21 @@ async function handleCheckSubscription(ctx: HandlerContext): Promise<Response> {
     );
   }
 
-  const { data: isPremium } = await supabase.rpc("billing.is_user_premium", {
-    p_user_id: userId,
-  });
+  const { data: isPremium, error: premiumError } = await supabase.rpc(
+    "billing.is_user_premium",
+    { p_user_id: userId },
+  );
+
+  // Fails closed: on error the user is treated as non-premium — a
+  // missing DB answer must never grant entitlement. The subscription
+  // row above already surfaced its own error; this one is the flag.
+  if (premiumError) {
+    logger.error(
+      "Failed to check premium status; reporting non-premium",
+      new Error(premiumError.message),
+      { userId },
+    );
+  }
 
   return ok({
     is_premium: isPremium ?? false,

@@ -483,7 +483,7 @@ function validateEventFields(event: SubscriptionEvent): ValidationResult {
 // State Transition Validation
 // =============================================================================
 
-async function validateStatusTransition(
+export async function validateStatusTransition(
   supabase: ReturnType<typeof getServiceRoleClient>,
   originalTransactionId: string,
   platform: string,
@@ -491,7 +491,7 @@ async function validateStatusTransition(
   eventType: string,
 ): Promise<{ valid: boolean; currentStatus: string }> {
   return await withCircuitBreaker("subscription-db", async () => {
-    const { data: currentStatus } = await supabase.rpc(
+    const { data: currentStatus, error: statusError } = await supabase.rpc(
       "billing_get_current_status",
       {
         p_original_transaction_id: originalTransactionId,
@@ -499,11 +499,22 @@ async function validateStatusTransition(
       },
     );
 
+    // The literal "unknown" is the database's own answer for "no prior
+    // record" (first-ever subscription) and passes. An RPC error is not
+    // that answer: throwing lets the caller's catch log it instead of
+    // reporting { valid: true, currentStatus: null } — checked-and-fine
+    // when the database actually said nothing.
+    if (statusError) {
+      throw new Error(
+        `Failed to read current subscription status: ${statusError.message}`,
+      );
+    }
+
     if (currentStatus === "unknown") {
       return { valid: true, currentStatus };
     }
 
-    const { data: isValid } = await supabase.rpc(
+    const { data: isValid, error: validateError } = await supabase.rpc(
       "billing_validate_status_transition",
       {
         p_current_status: currentStatus,
@@ -511,6 +522,12 @@ async function validateStatusTransition(
         p_event_type: eventType,
       },
     );
+
+    if (validateError) {
+      throw new Error(
+        `Failed to validate status transition: ${validateError.message}`,
+      );
+    }
 
     return { valid: isValid ?? true, currentStatus };
   });

@@ -731,8 +731,13 @@ class LLMTranslationService {
           percent: used / limit,
         };
       }
-    } catch {
-      // Return empty info on error
+    } catch (err) {
+      // Return empty info on error — but say so: silently reporting
+      // zeroed quotas looks like fresh budget when the database
+      // answered nothing.
+      sharedLogger.warn("Failed to load translation quota info", {
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
 
     return quotaInfo;
