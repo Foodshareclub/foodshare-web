@@ -10,7 +10,6 @@ import type { UserState } from "../types/index.ts";
 
 const stateService = createBotUserStateService<UserState>({
   tableName: "whatsapp_user_states",
-  idColumn: "phone_number",
 });
 
 export function getUserState(phoneNumber: string): Promise<UserState | null> {

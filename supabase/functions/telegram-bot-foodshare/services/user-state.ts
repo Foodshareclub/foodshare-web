@@ -10,7 +10,6 @@ import type { UserState } from "../types/index.ts";
 
 const stateService = createBotUserStateService<UserState>({
   tableName: "telegram_user_states",
-  idColumn: "user_id",
 });
 
 export function getUserState(userId: number): Promise<UserState | null> {

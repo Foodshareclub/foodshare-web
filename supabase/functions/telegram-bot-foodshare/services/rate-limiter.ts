@@ -9,7 +9,6 @@ import { type BotRateLimitResult, createBotRateLimiter } from "../../_shared/bot
 
 const rateLimiter = createBotRateLimiter({
   tableName: "telegram_rate_limits",
-  idColumn: "user_id",
 });
 
 export type RateLimitResult = BotRateLimitResult;

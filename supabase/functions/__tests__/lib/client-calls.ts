@@ -335,7 +335,6 @@ export function selectedEmbeds(
 const FILTER_RE =
   /([A-Za-z_$][\w$]*|)\s*\.\s*(?:eq|neq|gt|gte|lt|lte|like|ilike|is|not|match|fts|textSearch|contains|overlaps)\(\s*["'`]([a-z_][a-z0-9_]*)["'`](?:\s*,\s*([^)]*?))?\s*\)?/g;
 const ORDER_RE = /([A-Za-z_$][\w$]*|)\s*\.\s*order\(\s*["'`]([a-z_][a-z0-9_]*)["'`]/g;
-const WRITE_RE = /\.(?:insert|upsert|update)\(\s*/g;
 
 /**
  * Blank out comments, keeping every offset and every newline.
@@ -604,7 +603,11 @@ export function scanCallSites(dir: URL = FUNCTIONS_DIR): CallSite[] {
         .filter((x) => mine(x[1]))
         .map((x) => x[2]);
 
-      const writeM = WRITE_RE.exec(statement);
+      // Non-global on purpose: a shared `/g` regex carries `lastIndex` across
+      // `.exec()` calls, so the second site in a file could silently skip its
+      // write payload while the first kept it — a scanner that stops looking
+      // half-way, which is the exact failure this file exists to remove.
+      const writeM = /\.(?:insert|upsert|update)\(\s*/.exec(statement);
       let writes: string[] = [];
       let writeValues: { key: string; value: string }[] = [];
       let writesOpaque = false;

@@ -228,7 +228,6 @@ Deno.test("generated types: coverage of the relations the code queries", () => {
       "public.products",
       "public.room_activities",
       "public.room_members",
-      "public.user_events",
       "public.user_experiments",
       "public.user_impact",
     ],

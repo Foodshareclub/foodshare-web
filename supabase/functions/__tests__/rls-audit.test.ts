@@ -105,6 +105,16 @@ const SERVICE_OWNED = [
   // every write to it — the localization handler, the backfill jobs and the Rust
   // worker's translation queue — goes through the service role or a role that
   // bypasses RLS. Nothing a user can do writes a translation directly.
+  //
+  // The four bot tables are the same story per bot: the Telegram and WhatsApp
+  // bots persist their rate-limit windows and conversation state through the
+  // service-role singleton in `_shared/supabase.ts`; a user token never writes
+  // them, and the anon key must not read another user's state machine either,
+  // which is what their RLS policies enforce.
+  "telegram_rate_limits",
+  "telegram_user_states",
+  "whatsapp_rate_limits",
+  "whatsapp_user_states",
   "geocoding_cache",
   "group_message_deletions",
   "post_activity_logs",

@@ -2,42 +2,6 @@
   "_comment": "Known type errors in supabase/functions, produced by `tsrs` over every TypeScript file. `__tests__/typecheck-baseline.test.ts` fails if an error appears that is not here, and fails if one here no longer occurs, so this file can only shrink.",
   "errors": [
     {
-      "file": "_shared/bot/rate-limiter.ts",
-      "code": "TS2339",
-      "message": "Property 'request_count' does not exist on type 'SelectQueryError<\"Referencing missing column `window_start`\">'.",
-      "count": 3
-    },
-    {
-      "file": "_shared/bot/rate-limiter.ts",
-      "code": "TS2339",
-      "message": "Property 'window_start' does not exist on type 'SelectQueryError<\"Referencing missing column `window_start`\">'.",
-      "count": 1
-    },
-    {
-      "file": "_shared/bot/rate-limiter.ts",
-      "code": "TS2769",
-      "message": "No overload matches this call. The last overload gave the following error. Argument of type 'string' is not assignable to parameter of type '\"…\"'.",
-      "count": 5
-    },
-    {
-      "file": "_shared/bot/user-state.ts",
-      "code": "TS2339",
-      "message": "Property 'expires_at' does not exist on type 'SelectQueryError<\"Referencing missing column `expires_at`\">'.",
-      "count": 2
-    },
-    {
-      "file": "_shared/bot/user-state.ts",
-      "code": "TS2339",
-      "message": "Property 'state' does not exist on type 'SelectQueryError<\"Referencing missing column `expires_at`\">'.",
-      "count": 1
-    },
-    {
-      "file": "_shared/bot/user-state.ts",
-      "code": "TS2769",
-      "message": "No overload matches this call. The last overload gave the following error. Argument of type 'string' is not assignable to parameter of type '\"…\"'.",
-      "count": 4
-    },
-    {
       "file": "api-v1-metrics/lib/queries.ts",
       "code": "TS2345",
       "message": "Argument of type '\"get_request_count\"' is not assignable to parameter of type '\"…\"'.",

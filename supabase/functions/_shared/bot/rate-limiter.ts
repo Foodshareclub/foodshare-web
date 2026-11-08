@@ -8,10 +8,13 @@
  * ```ts
  * const rateLimiter = createBotRateLimiter({
  *   tableName: "telegram_rate_limits",
- *   idColumn: "user_id",
  * });
  * const result = await rateLimiter.checkDistributed(userId);
  * ```
+ *
+ * `tableName` is a closed set (`BotRateLimitTable`); the identifier column is
+ * derived from it. Both bots' tables exist in the catalog, so every query
+ * here is checked against the real schema.
  */
 
 import { logger } from "../logger.ts";
@@ -21,6 +24,17 @@ import { getSupabaseClient } from "../supabase.ts";
 // Types
 // =============================================================================
 
+/**
+ * The complete set of tables this limiter manages, and the identifier column
+ * each one uses. A closed set on purpose: every query in this file names a
+ * literal table and column the compiler checks against the real schema, so a
+ * new bot is one more literal here plus a branch — not a string the type
+ * system cannot see, which is how a wrong column name ships to production.
+ */
+export type BotRateLimitTable =
+  | "telegram_rate_limits"
+  | "whatsapp_rate_limits";
+
 export interface BotRateLimitResult {
   allowed: boolean;
   remaining: number;
@@ -29,10 +43,8 @@ export interface BotRateLimitResult {
 }
 
 export interface BotRateLimiterConfig {
-  /** Database table name (e.g., "telegram_rate_limits") */
-  tableName: string;
-  /** Column name for the identifier (e.g., "user_id" or "phone_number") */
-  idColumn: string;
+  /** Which of the known limiter tables to use: see BotRateLimitTable. */
+  tableName: BotRateLimitTable;
   /** Default max requests per window */
   maxRequests?: number;
   /** Default window in milliseconds */
@@ -50,10 +62,13 @@ const MAX_IN_MEMORY_ENTRIES = 5_000;
 export function createBotRateLimiter(config: BotRateLimiterConfig) {
   const {
     tableName,
-    idColumn,
     maxRequests: defaultMax = DEFAULT_MAX_REQUESTS,
     windowMs: defaultWindow = DEFAULT_WINDOW_MS,
   } = config;
+
+  // Closed set: `BotRateLimitTable` is a union of two literals, so each
+  // query below is a literal the compiler checks against the schema.
+  const isTelegram = tableName === "telegram_rate_limits";
 
   // In-memory fallback store (bounded)
   const inMemoryLimits = new Map<string, { count: number; resetAt: number }>();
@@ -71,23 +86,41 @@ export function createBotRateLimiter(config: BotRateLimiterConfig) {
     const windowStart = new Date(now.getTime() - windowMs);
 
     try {
-      const { data: existing } = await supabase
-        .from(tableName)
-        .select("request_count,window_start")
-        .eq(idColumn, id)
-        .single();
+      const { data: existing } = isTelegram
+        ? await supabase
+          .from("telegram_rate_limits")
+          .select("request_count,window_start")
+          .eq("user_id", id)
+          .single()
+        : await supabase
+          .from("whatsapp_rate_limits")
+          .select("request_count,window_start")
+          .eq("phone_number", String(id))
+          .single();
 
       if (existing) {
-        const existingWindowStart = new Date(existing.window_start);
+        // `window_start` is nullable in the DDL despite its default; `?? 0`
+        // keeps the old runtime behaviour (null → epoch → expired window).
+        const existingWindowStart = new Date(existing.window_start ?? 0);
 
         // Window expired — reset
         if (existingWindowStart < windowStart) {
-          await supabase.from(tableName).upsert({
-            [idColumn]: id,
+          const reset = {
             request_count: 1,
             window_start: now.toISOString(),
             updated_at: now.toISOString(),
-          });
+          };
+          if (isTelegram) {
+            await supabase.from("telegram_rate_limits").upsert({
+              user_id: Number(id),
+              ...reset,
+            });
+          } else {
+            await supabase.from("whatsapp_rate_limits").upsert({
+              phone_number: String(id),
+              ...reset,
+            });
+          }
 
           return {
             allowed: true,
@@ -96,8 +129,9 @@ export function createBotRateLimiter(config: BotRateLimiterConfig) {
           };
         }
 
-        // Window active — check limit
-        if (existing.request_count >= maxRequests) {
+        // Window active — check limit (`request_count` is nullable in the
+        // DDL; the default makes NULL unreachable, `?? 0` is the boundary)
+        if ((existing.request_count ?? 0) >= maxRequests) {
           const resetAt = new Date(existingWindowStart.getTime() + windowMs);
           const retryAfterSeconds = Math.ceil(
             (resetAt.getTime() - now.getTime()) / 1000,
@@ -112,28 +146,48 @@ export function createBotRateLimiter(config: BotRateLimiterConfig) {
         }
 
         // Increment
-        await supabase
-          .from(tableName)
-          .update({
-            request_count: existing.request_count + 1,
-            updated_at: now.toISOString(),
-          })
-          .eq(idColumn, id);
+        if (isTelegram) {
+          await supabase
+            .from("telegram_rate_limits")
+            .update({
+              request_count: (existing.request_count ?? 0) + 1,
+              updated_at: now.toISOString(),
+            })
+            .eq("user_id", id);
+        } else {
+          await supabase
+            .from("whatsapp_rate_limits")
+            .update({
+              request_count: (existing.request_count ?? 0) + 1,
+              updated_at: now.toISOString(),
+            })
+            .eq("phone_number", String(id));
+        }
 
         return {
           allowed: true,
-          remaining: maxRequests - existing.request_count - 1,
+          remaining: maxRequests - (existing.request_count ?? 0) - 1,
           resetAt: new Date(existingWindowStart.getTime() + windowMs),
         };
       }
 
       // No existing record — create new
-      await supabase.from(tableName).insert({
-        [idColumn]: id,
+      const fresh = {
         request_count: 1,
         window_start: now.toISOString(),
         updated_at: now.toISOString(),
-      });
+      };
+      if (isTelegram) {
+        await supabase.from("telegram_rate_limits").insert({
+          user_id: Number(id),
+          ...fresh,
+        });
+      } else {
+        await supabase.from("whatsapp_rate_limits").insert({
+          phone_number: String(id),
+          ...fresh,
+        });
+      }
 
       return {
         allowed: true,
@@ -203,11 +257,17 @@ export function createBotRateLimiter(config: BotRateLimiterConfig) {
     const cutoff = new Date(Date.now() - maxAgeMs);
 
     try {
-      const { data, error } = await supabase
-        .from(tableName)
-        .delete()
-        .lt("updated_at", cutoff.toISOString())
-        .select(idColumn);
+      const { data, error } = isTelegram
+        ? await supabase
+          .from("telegram_rate_limits")
+          .delete()
+          .lt("updated_at", cutoff.toISOString())
+          .select("user_id")
+        : await supabase
+          .from("whatsapp_rate_limits")
+          .delete()
+          .lt("updated_at", cutoff.toISOString())
+          .select("phone_number");
 
       if (error) {
         logger.error("Error cleaning up rate limits", {

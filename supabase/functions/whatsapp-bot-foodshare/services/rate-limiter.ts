@@ -9,7 +9,6 @@ import { type BotRateLimitResult, createBotRateLimiter } from "../../_shared/bot
 
 const rateLimiter = createBotRateLimiter({
   tableName: "whatsapp_rate_limits",
-  idColumn: "phone_number",
 });
 
 export type RateLimitResult = BotRateLimitResult;
