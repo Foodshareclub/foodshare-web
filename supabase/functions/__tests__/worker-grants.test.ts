@@ -52,6 +52,8 @@ const WORKER_ROLES = ["job_worker", "job_worker_app"];
 interface References {
   relations: Map<string, string[]>;
   functions: Map<string, string[]>;
+  /** (relation, operation) pairs the SQL performs, per file. */
+  operations: Map<string, Set<string>>;
   /** Every file that was read, so "read nothing" is visible. */
   filesRead: string[];
 }
@@ -135,6 +137,46 @@ function relationsIn(sql: string): string[] {
   return [...out];
 }
 
+/**
+ * (operation, relation) pairs the SQL performs.
+ *
+ * The name-level check above cannot tell a table the worker only reads from
+ * one it deletes from: `device_tokens` was SELECT-granted and SELECT-policed,
+ * which satisfied both checks, while the token cleanup the digest job
+ * performs is a `DELETE`. A statement is planned before any row is
+ * considered, so the missing DELETE grant fails with `permission denied`
+ * even when zero tokens match — verified against a real cluster, where the
+ * name-level audit reported green the whole time.
+ *
+ * The operation is in the source, not the catalog, so it is read out of the
+ * SQL here, with the same two exclusions as `relationsIn` (CTEs and function
+ * calls) because both have produced a confident wrong answer before.
+ */
+const OP_BY_KEYWORD: Record<string, string> = {
+  FROM: "SELECT",
+  JOIN: "SELECT",
+  INTO: "INSERT",
+  UPDATE: "UPDATE",
+  "DELETE FROM": "DELETE",
+};
+
+function operationsIn(sql: string): [string, string][] {
+  const ctes = cteNames(sql);
+  const out: [string, string][] = [];
+  for (
+    const m of sql.matchAll(
+      /\b(FROM|JOIN|INTO|UPDATE|DELETE\s+FROM)\s+(public\.[a-z_][a-z0-9_]*)/gi,
+    )
+  ) {
+    const tail = sql.slice(m.index + m[0].length);
+    if (/^\s*\(/.test(tail)) continue;
+    const name = m[2].slice("public.".length);
+    if (ctes.has(name)) continue;
+    out.push([name, OP_BY_KEYWORD[m[1].toUpperCase()] ?? m[1].toUpperCase()]);
+  }
+  return out;
+}
+
 /** Schema-qualified functions called anywhere in the SQL. */
 function functionsIn(sql: string): string[] {
   const ctes = cteNames(sql);
@@ -178,6 +220,7 @@ function unescapeSql(src: string): string {
 function scan(): References {
   const relations = new Map<string, string[]>();
   const functions = new Map<string, string[]>();
+  const operations = new Map<string, Set<string>>();
   const filesRead: string[] = [];
 
   for (
@@ -195,9 +238,12 @@ function scan(): References {
     for (const name of functionsIn(src)) {
       functions.set(name, [...(functions.get(name) ?? []), entry.name]);
     }
+    for (const [table, op] of operationsIn(src)) {
+      operations.set(table, new Set([...(operations.get(table) ?? []), op]));
+    }
   }
 
-  return { relations, functions, filesRead };
+  return { relations, functions, operations, filesRead };
 }
 
 const refs = scan();
@@ -273,6 +319,17 @@ Deno.test("worker grants: the scan is not silently empty", () => {
     "no SECURITY INVOKER table function the worker calls was found; either the " +
       "catalog stopped recording securityDefiner or the worker stopped calling " +
       "one, and the INVOKER table-grant test below is a no-op either way",
+  );
+  const writeOps = new Set<string>();
+  for (const ops of refs.operations.values()) {
+    for (const op of ops) if (op !== "SELECT") writeOps.add(op);
+  }
+  assert(
+    ["INSERT", "UPDATE", "DELETE"].every((op) => writeOps.has(op)),
+    `write operations found in the worker's SQL: ${[...writeOps].sort().join(", ") || "none"}. ` +
+      "INSERT, UPDATE and DELETE are all there today — a missing one means the " +
+      "scan stopped matching or a job lost its write-back, and the " +
+      "operation-closure test below has quietly shrunk with it",
   );
   // And the catalog has to have the roles at all, or `granted` is empty and
   // every check below passes vacuously.
@@ -524,6 +581,68 @@ Deno.test("worker grants: every RLS-enabled relation the worker touches has a jo
       "or a plan-time permission error, and the job never knows the difference — " +
       "the superuser integration suite sees the row either way.\n" +
       uncovered.map((u) => `  - ${u}`).join("\n"),
+  );
+});
+
+Deno.test("worker grants: every operation the worker's SQL performs is granted and permitted by policy", () => {
+  // The checks above ask whether the role holds *some* privilege on a table
+  // and whether *some* job_worker policy exists. A SELECT grant plus a
+  // SELECT policy satisfies both while saying nothing about the operations
+  // the SQL actually performs, and that is exactly how `device_tokens`
+  // passed every check with a broken delete: SELECT-granted, SELECT-policed,
+  // and `delete_device_tokens` (the digest job's cleanup of tokens a push
+  // provider reported as permanently invalid) is a `DELETE`. The statement
+  // is planned before any row is considered, so the missing DELETE grant
+  // fails with `permission denied` even when zero tokens match — seen on a
+  // real cluster, where this file reported green the whole time.
+  //
+  // The two failure shapes are the read half's two shapes, one level down:
+  //
+  // * no grant for the operation: `permission denied for table …`, the job
+  //   errors on its first write-back;
+  // * grant without a policy permitting the operation: RLS filters every
+  //   row, the statement is a success that affects zero rows, and the
+  //   invalid token is reported by the provider on the next pass, forever,
+  //   while the job reports success.
+  //
+  // Both are invisible to the superuser integration suite, which is the
+  // class of gap 20261108140000 and its audit extension exist to remove.
+  const gaps: string[] = [];
+  for (const [table, ops] of [...refs.operations].sort()) {
+    const rel = s.relation(table);
+    if (!rel.ok) continue; // a missing relation is reported by the grant tests
+    const held = granted.get(table) ?? [];
+    const policies = s.policies(table);
+    for (const op of [...ops].sort()) {
+      if (!held.includes(op)) {
+        gaps.push(
+          `${table} — the SQL performs ${op}, but job_worker holds no ${op} ` +
+            `grant (holds: ${held.join(", ") || "nothing"})`,
+        );
+        continue;
+      }
+      if (!rel.value.rlsEnabled) continue;
+      const permits = policies.some(
+        (p) => p.roles.includes("job_worker") && (p.command === "ALL" || p.command === op),
+      );
+      if (!permits) {
+        gaps.push(
+          `${table} — granted ${op}, but no job_worker policy permits it ` +
+            `(policies: ${
+              policies.map((p) => `${p.name}:${p.command}`).join(", ") || "none"
+            }); the statement will succeed and affect zero rows`,
+        );
+      }
+    }
+  }
+  assertEquals(
+    gaps,
+    [],
+    "The worker's SQL performs an operation job_worker is not granted, or a " +
+      "policy does not permit. The first shape errors on the first write-back; " +
+      "the second is a success that never touches a row, and only the provider " +
+      "reports it, one duplicate at a time.\n" +
+      gaps.map((g) => `  - ${g}`).join("\n"),
   );
 });
 

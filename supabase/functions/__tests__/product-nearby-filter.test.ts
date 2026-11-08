@@ -69,14 +69,18 @@ Deno.test({
         nearbyClient(
           // A real PostgREST error is an Error with a .code; the mock
           // matches that shape so `throw error` rejects with an Error.
-          { data: null, error: Object.assign(new Error("PGRST202: function does not exist"), { code: "PGRST202" }) },
+          {
+            data: null,
+            error: Object.assign(new Error("PGRST202: function does not exist"), {
+              code: "PGRST202",
+            }),
+          },
           record,
         ),
         USER_ID,
       );
       await assertRejects(
-        () =>
-          service.getProducts({ ...geo, limit: 10, offset: 0 }),
+        () => service.getProducts({ ...geo, limit: 10, offset: 0 }),
         Error,
         "PGRST202",
       );

@@ -20,22 +20,14 @@
  *    exception.
  */
 
-import {
-  assert,
-  assertEquals,
-  assertRejects,
-} from "@std/assert";
+import { assertEquals, assertRejects } from "@std/assert";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { ValidationError } from "../_shared/errors.ts";
 import type { HandlerContext } from "../_shared/api-handler.ts";
 import { EngagementService } from "../api-v1-forum/lib/engagement-service.ts";
 import { votePoll } from "../api-v1-forum/lib/reactions.ts";
-import {
-  createMockRequest,
-  createMockSupabaseClient,
-  setupTestEnv,
-} from "./test-utils.ts";
+import { createMockRequest, createMockSupabaseClient, setupTestEnv } from "./test-utils.ts";
 
 const POLL_ID = "11111111-1111-4111-8111-111111111111";
 const OPTION_ID = "22222222-2222-4222-8222-222222222222";
@@ -204,8 +196,7 @@ Deno.test({
     // Contract pins: the success paths keep their shapes.
 
     await t.step("toggleLike adds a like when none exists", async () => {
-      const client = createMockSupabaseClient() as unknown as
-        SupabaseClient<any, any, any>;
+      const client = createMockSupabaseClient() as unknown as SupabaseClient<any, any, any>;
       const service = new EngagementService(client, USER_ID);
       assertEquals(await service.toggleLike(42), { liked: true });
     });
@@ -219,8 +210,7 @@ Deno.test({
     });
 
     await t.step("toggleBookmark reports the bookmarked state", async () => {
-      const client = createMockSupabaseClient() as unknown as
-        SupabaseClient<any, any, any>;
+      const client = createMockSupabaseClient() as unknown as SupabaseClient<any, any, any>;
       const service = new EngagementService(client, USER_ID);
       assertEquals(await service.toggleBookmark(42), { bookmarked: true });
     });
