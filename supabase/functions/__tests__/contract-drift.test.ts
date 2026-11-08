@@ -833,3 +833,69 @@ Deno.test("contract: no redundant indexes survive in the catalog", () => {
       redundant.map((r) => `  - ${r.drop}: ${r.reason}`).join("\n"),
   );
 });
+
+// =============================================================================
+// Policies that no role is ever evaluated against
+// =============================================================================
+
+Deno.test("contract: no policy survives that applies only to BYPASSRLS roles", () => {
+  // A row-level-security policy is evaluated when — and only when — the
+  // calling role is subject to RLS. A role with BYPASSRLS never is: every
+  // query it runs skips the policy machinery entirely and sees every row,
+  // whether or not a policy would have allowed it. So a policy whose TO
+  // list names only BYPASSRLS roles is evaluated against nobody in
+  // existence: it grants nothing (the named roles already see everything)
+  // and it denies nothing (no other role can reach it). It is a rule the
+  // database never applies.
+  //
+  // The estate's own platform makes this concrete: `platform.sql` creates
+  // `service_role NOLOGIN NOINHERIT BYPASSRLS`, and
+  // `20260927010000_enable_rls_on_internal_tables.sql` records the design —
+  // internal tables get RLS, `service_role` keeps BYPASSRLS, and the
+  // worker gets explicit per-table policies instead. The 57 policies in
+  // the current corpus are the residue of the era before that split, when
+  // access was the blunt instrument the 20260927 migration describes.
+  // `20261108240000_drop_dead_service_role_policies.sql` removes them; a
+  // new one here means a migration re-created access the way the old
+  // access worked.
+  //
+  // The `PUBLIC` pseudo-group is not a role: a policy written `TO PUBLIC`
+  // (or with no TO clause) applies to every role, bypassing ones included,
+  // so it is live by definition and is excluded before the subset test.
+  const bypass = new Set(
+    s.roles.filter((r) => r.bypassRls).map((r) => r.name.toLowerCase()),
+  );
+  assert(
+    bypass.size > 0,
+    "no BYPASSRLS roles in the catalog; the rule below would be vacuous " +
+      "and every policy would look live",
+  );
+  assert(
+    s.catalog.policies.length >= 350,
+    `only ${s.catalog.policies.length} policies in the catalog; the policy ` +
+      "walk stopped and the check below is now a no-op",
+  );
+
+  const dead = s.catalog.policies
+    .filter((p) => {
+      const roles = p.roles.map((r) => r.toLowerCase());
+      return (
+        roles.length > 0 &&
+        !roles.includes("public") &&
+        roles.every((r) => bypass.has(r))
+      );
+    })
+    .map((p) => `  - ${p.table} :: ${p.name} (${p.command}, TO ${p.roles.join(", ")})`)
+    .sort();
+
+  assertEquals(
+    dead,
+    [],
+    "These policies name only BYPASSRLS roles, which PostgreSQL never " +
+      "evaluates RLS against: the policy is a rule the database never " +
+      "applies, and it reads as access that does not exist. Either the " +
+      "named roles should keep working through explicit, evaluated access " +
+      "(write the policy for the role that is actually subject to RLS), or " +
+      "the policy is dead and should be dropped.\n" + dead.join("\n"),
+  );
+});
