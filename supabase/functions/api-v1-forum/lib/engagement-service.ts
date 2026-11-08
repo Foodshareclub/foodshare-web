@@ -15,7 +15,7 @@ export class EngagementService {
 
   async toggleLike(forumId: number) {
     const { data: existing } = await this.supabase
-      .from("forum_likes")
+      .from("likes")
       .select("id")
       .eq("forum_id", forumId)
       .eq("profile_id", this.userId)
@@ -23,7 +23,7 @@ export class EngagementService {
 
     if (existing) {
       await this.supabase
-        .from("forum_likes")
+        .from("likes")
         .delete()
         .eq("id", existing.id);
 
@@ -31,7 +31,7 @@ export class EngagementService {
       return { liked: false };
     } else {
       await this.supabase
-        .from("forum_likes")
+        .from("likes")
         .insert({ forum_id: forumId, profile_id: this.userId });
 
       logger.info("Like added", { forumId });
@@ -41,7 +41,7 @@ export class EngagementService {
 
   async toggleBookmark(forumId: number) {
     const { data: existing } = await this.supabase
-      .from("forum_bookmarks")
+      .from("bookmarks")
       .select("id")
       .eq("forum_id", forumId)
       .eq("profile_id", this.userId)
@@ -49,7 +49,7 @@ export class EngagementService {
 
     if (existing) {
       await this.supabase
-        .from("forum_bookmarks")
+        .from("bookmarks")
         .delete()
         .eq("id", existing.id);
 
@@ -57,7 +57,7 @@ export class EngagementService {
       return { bookmarked: false };
     } else {
       await this.supabase
-        .from("forum_bookmarks")
+        .from("bookmarks")
         .insert({ forum_id: forumId, profile_id: this.userId });
 
       logger.info("Bookmark added", { forumId });
@@ -151,13 +151,17 @@ export class EngagementService {
 
   async getBookmarks(limit: number, offset: number) {
     const { data, error } = await this.supabase
-      .from("forum_bookmarks")
+      .from("bookmarks")
       .select(`
         forum_id,
         created_at,
         forum:forum(*)
       `)
       .eq("profile_id", this.userId)
+      // The unified bookmarks table also holds listing bookmarks (post_id);
+      // forum bookmarks are the rows with a forum_id, same convention as the
+      // get_forum_feed_data / get_forum_post_detail RPCs.
+      .gte("forum_id", 1)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 

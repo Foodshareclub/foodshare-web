@@ -17,11 +17,7 @@ type RealtimeCommentsProps = {
   initialComments?: ForumComment[];
 };
 
-export function RealtimeComments({
-  forumId,
-  postAuthorId,
-  initialComments = [],
-}: RealtimeCommentsProps) {
+export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }: RealtimeCommentsProps) {
   const { user } = useAuth();
   const [comments, setComments] = useState<ForumComment[]>(initialComments);
   const [loading, setLoading] = useState(!initialComments.length);
@@ -85,10 +81,7 @@ export function RealtimeComments({
               // It's a reply
               setReplies((prev) => ({
                 ...prev,
-                [newComment.parent_id!]: [
-                  ...(prev[newComment.parent_id!] || []),
-                  newComment,
-                ],
+                [newComment.parent_id!]: [...(prev[newComment.parent_id!] || []), newComment],
               }));
             } else {
               // Top-level comment
@@ -119,15 +112,10 @@ export function RealtimeComments({
             if (updated.parent_id) {
               setReplies((prev) => ({
                 ...prev,
-                [updated.parent_id!]:
-                  prev[updated.parent_id!]?.map((c) =>
-                    c.id === updated.id ? updated : c,
-                  ) || [],
+                [updated.parent_id!]: prev[updated.parent_id!]?.map((c) => (c.id === updated.id ? updated : c)) || [],
               }));
             } else {
-              setComments((prev) =>
-                prev.map((c) => (c.id === updated.id ? updated : c)),
-              );
+              setComments((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
             }
           }
         },
@@ -146,9 +134,7 @@ export function RealtimeComments({
           setReplies((prev) => {
             const newReplies = { ...prev };
             Object.keys(newReplies).forEach((key) => {
-              newReplies[Number(key)] = newReplies[Number(key)].filter(
-                (c) => c.id !== deletedId,
-              );
+              newReplies[Number(key)] = newReplies[Number(key)].filter((c) => c.id !== deletedId);
             });
             return newReplies;
           });
@@ -228,11 +214,7 @@ export function RealtimeComments({
           {replyingTo && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>Replying to comment</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setReplyingTo(null)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setReplyingTo(null)}>
                 Cancel
               </Button>
             </div>
@@ -247,10 +229,7 @@ export function RealtimeComments({
             minHeight="100px"
           />
           <div className="flex justify-end">
-            <Button
-              onClick={handleSubmit}
-              disabled={submitting || !commentContent.trim()}
-            >
+            <Button onClick={handleSubmit} disabled={submitting || !commentContent.trim()}>
               <Send className="me-2 h-4 w-4" />
               {submitting ? "Posting..." : "Post Comment"}
             </Button>
@@ -258,9 +237,7 @@ export function RealtimeComments({
         </div>
       ) : (
         <div className="text-center py-6 bg-muted/30 rounded-lg">
-          <p className="text-muted-foreground">
-            Sign in to join the discussion
-          </p>
+          <p className="text-muted-foreground">Sign in to join the discussion</p>
         </div>
       )}
 
@@ -280,9 +257,7 @@ export function RealtimeComments({
                 comment={comment}
                 isPostAuthor={comment.user_id === postAuthorId}
                 onReply={(id) => setReplyingTo(id)}
-                onDelete={
-                  user?.id === comment.user_id ? handleDelete : undefined
-                }
+                onDelete={user?.id === comment.user_id ? handleDelete : undefined}
                 onLoadReplies={handleLoadReplies}
                 replies={replies[comment.id] || []}
                 showReplies={!!replies[comment.id]?.length}

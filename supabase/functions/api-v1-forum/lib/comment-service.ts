@@ -24,15 +24,18 @@ export class CommentService {
   ) {}
 
   async createComment(input: CreateCommentInput) {
+    // The unified `comments` table: `user_id`/`comment`/`parent_id` are the
+    // real columns (there is no `forum_comments`, `profile_id`,
+    // `forum_comment_content` or `parent_comment_id`).
     const insertData = {
       forum_id: input.forumId,
-      profile_id: this.userId,
-      forum_comment_content: input.content,
-      parent_comment_id: input.parentId || null,
+      user_id: this.userId,
+      comment: input.content,
+      parent_id: input.parentId || null,
     };
 
     const { data, error } = await this.supabase
-      .from("forum_comments")
+      .from("comments")
       .insert(insertData)
       .select("*")
       .single();
@@ -50,9 +53,9 @@ export class CommentService {
     await this.verifyOwnership(commentId);
 
     const { data, error } = await this.supabase
-      .from("forum_comments")
+      .from("comments")
       .update({
-        forum_comment_content: input.content,
+        comment: input.content,
         is_edited: true,
         updated_at: new Date().toISOString(),
       })
@@ -70,7 +73,7 @@ export class CommentService {
     await this.verifyOwnership(commentId);
 
     const { error } = await this.supabase
-      .from("forum_comments")
+      .from("comments")
       .update({ deleted_at: new Date().toISOString() })
       .eq("id", commentId);
 
@@ -96,7 +99,7 @@ export class CommentService {
     }
 
     const { error } = await this.supabase
-      .from("forum_comments")
+      .from("comments")
       .update({ is_best_answer: true })
       .eq("id", commentId);
 
@@ -107,13 +110,13 @@ export class CommentService {
 
   private async verifyOwnership(commentId: number) {
     const { data, error } = await this.supabase
-      .from("forum_comments")
-      .select("profile_id")
+      .from("comments")
+      .select("user_id")
       .eq("id", commentId)
       .is("deleted_at", null)
       .single();
 
     if (error || !data) throw new Error("Comment not found");
-    if (data.profile_id !== this.userId) throw new Error("Unauthorized");
+    if (data.user_id !== this.userId) throw new Error("Unauthorized");
   }
 }

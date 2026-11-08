@@ -127,8 +127,6 @@ const ABSENT_RELATIONS: Record<string, string[]> = {
   "api-v1-email/lib/send.ts": ["users"],
   "api-v1-engagement/lib/handlers/batch.ts": ["room_members"],
   "api-v1-engagement/lib/handlers/toggle.ts": ["favorites"],
-  "api-v1-forum/lib/comment-service.ts": ["forum_comments"],
-  "api-v1-forum/lib/engagement-service.ts": ["forum_bookmarks", "forum_likes"],
   "api-v1-localization/handlers/translations.ts": ["user_experiments"],
   "api-v1-metrics/lib/queries.ts": ["api_requests"],
   "api-v1-products/lib/handlers/get-products.ts": ["favorites"],

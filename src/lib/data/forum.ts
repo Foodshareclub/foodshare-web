@@ -68,25 +68,14 @@ export interface ForumPageData {
 /**
  * Calculate user score based on activity
  */
-export function calculateScore(
-  posts: number,
-  likes: number,
-  comments: number,
-): number {
-  return (
-    posts * SCORE_WEIGHTS.POST +
-    likes * SCORE_WEIGHTS.LIKE +
-    comments * SCORE_WEIGHTS.COMMENT
-  );
+export function calculateScore(posts: number, likes: number, comments: number): number {
+  return posts * SCORE_WEIGHTS.POST + likes * SCORE_WEIGHTS.LIKE + comments * SCORE_WEIGHTS.COMMENT;
 }
 
 /**
  * Compute leaderboard from posts
  */
-export function computeLeaderboard(
-  posts: ForumPost[],
-  limit = FORUM_LIMITS.LEADERBOARD,
-): LeaderboardUser[] {
+export function computeLeaderboard(posts: ForumPost[], limit = FORUM_LIMITS.LEADERBOARD): LeaderboardUser[] {
   const userMap = new Map<string, LeaderboardUser>();
 
   for (const post of posts) {
@@ -100,11 +89,7 @@ export function computeLeaderboard(
       existing.postCount += 1;
       existing.likesReceived += likes;
       existing.commentsCount += comments;
-      existing.score = calculateScore(
-        existing.postCount,
-        existing.likesReceived,
-        existing.commentsCount,
-      );
+      existing.score = calculateScore(existing.postCount, existing.likesReceived, existing.commentsCount);
     } else {
       userMap.set(post.profile_id, {
         id: post.profiles.id,
@@ -128,10 +113,7 @@ export function computeLeaderboard(
 /**
  * Get trending posts by engagement score
  */
-export function getTrendingPosts(
-  posts: ForumPost[],
-  limit = FORUM_LIMITS.TRENDING,
-): ForumPost[] {
+export function getTrendingPosts(posts: ForumPost[], limit = FORUM_LIMITS.TRENDING): ForumPost[] {
   return [...posts]
     .sort((a, b) => {
       const scoreA = (a.views_count || 0) + (a.forum_likes_counter || 0) * 3;
@@ -144,27 +126,17 @@ export function getTrendingPosts(
 /**
  * Get recent activity posts
  */
-export function getRecentActivityPosts(
-  posts: ForumPost[],
-  limit = FORUM_LIMITS.RECENT_ACTIVITY,
-): ForumPost[] {
+export function getRecentActivityPosts(posts: ForumPost[], limit = FORUM_LIMITS.RECENT_ACTIVITY): ForumPost[] {
   return [...posts]
-    .sort(
-      (a, b) =>
-        new Date(b.forum_post_created_at).getTime() -
-        new Date(a.forum_post_created_at).getTime(),
-    )
+    .sort((a, b) => new Date(b.forum_post_created_at).getTime() - new Date(a.forum_post_created_at).getTime())
     .slice(0, limit);
 }
 
 /**
  * Calculate forum stats from posts (for derived stats only)
  */
-export function calculateStatsFromPosts(
-  posts: ForumPost[],
-): Pick<ForumStats, "activeUsers"> {
-  const activeUsers = new Set(posts.map((p) => p.profile_id).filter(Boolean))
-    .size;
+export function calculateStatsFromPosts(posts: ForumPost[]): Pick<ForumStats, "activeUsers"> {
+  const activeUsers = new Set(posts.map((p) => p.profile_id).filter(Boolean)).size;
   return { activeUsers };
 }
 
@@ -177,28 +149,19 @@ export async function getForumStats(): Promise<ForumStats> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [postsResult, commentsResult, postsTodayResult, activeUsersResult] =
-    await Promise.all([
-      supabase
-        .from("forum")
-        .select("id", { count: "exact", head: true })
-        .eq("forum_published", true),
-      supabase
-        .from("comments")
-        .select("id", { count: "exact", head: true })
-        .not("forum_id", "is", null),
-      supabase
-        .from("forum")
-        .select("id", { count: "exact", head: true })
-        .eq("forum_published", true)
-        .gte("forum_post_created_at", today.toISOString()),
-      supabase.from("forum").select("profile_id").eq("forum_published", true),
-    ]);
+  const [postsResult, commentsResult, postsTodayResult, activeUsersResult] = await Promise.all([
+    supabase.from("forum").select("id", { count: "exact", head: true }).eq("forum_published", true),
+    supabase.from("comments").select("id", { count: "exact", head: true }).not("forum_id", "is", null),
+    supabase
+      .from("forum")
+      .select("id", { count: "exact", head: true })
+      .eq("forum_published", true)
+      .gte("forum_post_created_at", today.toISOString()),
+    supabase.from("forum").select("profile_id").eq("forum_published", true),
+  ]);
 
   const uniqueUsers = new Set(
-    activeUsersResult.data
-      ?.map((p: Pick<ForumPost, "profile_id">) => p.profile_id)
-      .filter(Boolean),
+    activeUsersResult.data?.map((p: Pick<ForumPost, "profile_id">) => p.profile_id).filter(Boolean),
   );
 
   return {
@@ -294,9 +257,7 @@ export async function getForumCategories(): Promise<ForumCategory[]> {
 /**
  * Get popular forum tags
  */
-export async function getForumTags(
-  limit = FORUM_LIMITS.POPULAR_TAGS,
-): Promise<ForumTag[]> {
+export async function getForumTags(limit = FORUM_LIMITS.POPULAR_TAGS): Promise<ForumTag[]> {
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
@@ -316,10 +277,7 @@ export async function getForumTags(
 /**
  * Get all forum page data in parallel
  */
-export async function getForumPageData(options?: {
-  categoryId?: number;
-  sortBy?: SortOption;
-}): Promise<ForumPageData> {
+export async function getForumPageData(options?: { categoryId?: number; sortBy?: SortOption }): Promise<ForumPageData> {
   const [posts, categories, tags, stats] = await Promise.all([
     getForumPosts(options),
     getForumCategories(),
