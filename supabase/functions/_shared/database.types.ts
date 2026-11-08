@@ -9884,14 +9884,6 @@ export type Database = {
       };
         Returns: number;
       },
-      call_update_locations: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
-      call_update_post_coordinates: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
       cancel_arrangement: {
         Args: {
         p_post_id: number | null;
@@ -9923,10 +9915,6 @@ export type Database = {
         p_version: string | null;
       };
         Returns: Json;
-      },
-      check_for_duplicate_like: {
-        Args: Record<never, never>;
-        Returns: unknown;
       },
       check_mfa_rate_limit: {
         Args: {
@@ -10219,10 +10207,6 @@ export type Database = {
         Args: Record<never, never>;
         Returns: unknown;
       },
-      create_default_bookmark_collection: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
       create_default_email_preferences: {
         Args: Record<never, never>;
         Returns: unknown;
@@ -10512,12 +10496,6 @@ export type Database = {
         address: string | null;
       };
         Returns: Array<Record<string, unknown>>;
-      },
-      geocode_and_update_location: {
-        Args: Record<never, never> | {
-        post_id: number | null;
-      };
-        Returns: unknown | undefined;
       },
       get_active_announcements: {
         Args: {
@@ -11602,18 +11580,6 @@ export type Database = {
         Args: Record<never, never>;
         Returns: unknown;
       },
-      handle_new_user_notifications: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
-      handle_new_user_to_address: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
-      handle_post_delete: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
       has_any_role: {
         Args: {
         user_id: string | null;
@@ -11739,10 +11705,6 @@ export type Database = {
         p_user_id: string | null;
       };
         Returns: undefined;
-      },
-      insert_creator_into_room: {
-        Args: Record<never, never>;
-        Returns: unknown;
       },
       invoke_image_compression: {
         Args: Record<never, never>;
@@ -11899,10 +11861,6 @@ export type Database = {
         p_related_room_id?: string | null;
       };
         Returns: string;
-      },
-      manage_post_like_counter: {
-        Args: Record<never, never>;
-        Returns: unknown;
       },
       mark_all_notifications_read: {
         Args: {
@@ -12156,14 +12114,6 @@ export type Database = {
         Args: Record<never, never>;
         Returns: unknown;
       },
-      on_post_user_unliked: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
-      post_views_trigger_func: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
       postgres_fdw_disconnect: {
         Args: {
         arg1: string | null;
@@ -12211,14 +12161,6 @@ export type Database = {
         radius_meters?: number | null;
       };
         Returns: Array<Record<string, unknown>>;
-      },
-      prevent_duplicate_rooms_insert: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
-      prevent_duplicate_rooms_insert_function: {
-        Args: Record<never, never>;
-        Returns: unknown;
       },
       preview_automation_queue: {
         Args: {
@@ -12820,10 +12762,6 @@ export type Database = {
         Args: Record<never, never>;
         Returns: undefined;
       },
-      sync_locale_to_redis: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
       sync_provider_health: {
         Args: {
         p_provider: string | null;
@@ -13009,10 +12947,6 @@ export type Database = {
         Args: Record<never, never>;
         Returns: unknown;
       },
-      trg_award_post_reputation: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
       trg_record_badge_activity: {
         Args: Record<never, never>;
         Returns: unknown;
@@ -13022,10 +12956,6 @@ export type Database = {
         Returns: unknown;
       },
       trg_record_follow_activity: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
-      trg_record_post_activity: {
         Args: Record<never, never>;
         Returns: unknown;
       },
@@ -13051,19 +12981,7 @@ export type Database = {
         Args: Record<never, never>;
         Returns: unknown;
       },
-      trigger_post_translation: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
       trigger_recalculate_trust_level: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
-      trigger_signup_automation: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
-      trigger_sync_post_like_counter: {
         Args: Record<never, never>;
         Returns: unknown;
       },
@@ -13076,14 +12994,6 @@ export type Database = {
         Returns: unknown;
       },
       trigger_translate_post: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
-      trigger_update_coordinates: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
-      trigger_update_user_rating: {
         Args: Record<never, never>;
         Returns: unknown;
       },
@@ -13107,14 +13017,6 @@ export type Database = {
         Args: Record<never, never>;
         Returns: unknown;
       },
-      update_avatar_url_on_storage_upload: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
-      update_bookmark_collection_count: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
       update_category_posts_count: {
         Args: Record<never, never>;
         Returns: unknown;
@@ -13129,10 +13031,6 @@ export type Database = {
         p_next_retry_time?: string | null;
       };
         Returns: undefined;
-      },
-      update_comment_likes_count: {
-        Args: Record<never, never>;
-        Returns: unknown;
       },
       update_comment_reactions_count: {
         Args: Record<never, never>;
@@ -13212,17 +13110,9 @@ export type Database = {
         Args: Record<never, never>;
         Returns: unknown;
       },
-      update_generated_full_address: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
       update_last_seen: {
         Args: Record<never, never>;
         Returns: undefined;
-      },
-      update_lat_lon: {
-        Args: Record<never, never>;
-        Returns: unknown;
       },
       update_listing_transactional: {
         Args: {
@@ -13293,10 +13183,6 @@ export type Database = {
         Args: Record<never, never>;
         Returns: unknown;
       },
-      update_post_views: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
       update_report_counts: {
         Args: Record<never, never>;
         Returns: unknown;
@@ -13318,10 +13204,6 @@ export type Database = {
         p_sent_by: string | null;
       };
         Returns: undefined;
-      },
-      update_room_on_new_message: {
-        Args: Record<never, never>;
-        Returns: unknown;
       },
       update_scheduled_post: {
         Args: {
@@ -13384,10 +13266,6 @@ export type Database = {
         Returns: Json;
       },
       update_user_stats_on_comment: {
-        Args: Record<never, never>;
-        Returns: unknown;
-      },
-      update_user_stats_on_post: {
         Args: Record<never, never>;
         Returns: unknown;
       },

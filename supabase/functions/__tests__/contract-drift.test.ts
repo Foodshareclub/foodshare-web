@@ -567,3 +567,84 @@ Deno.test("contract: no two scheduled jobs do the same work", () => {
       sameWork.map((w) => `  - ${w}`).join("\n"),
   );
 });
+
+/**
+ * A trigger-returning function no trigger fires. Pinned, not disabled: a
+ * non-empty set fails the build, and a pin here needs a written reason the
+ * way a dead cron target does, plus the reverse check below so a pin whose
+ * reason has gone away cannot stay silent.
+ *
+ * `20261108220000_drop_orphan_trigger_functions.sql` emptied this set: thirty
+ * trigger functions survived the rewrites that replaced them, and the
+ * migration drops each one. The set is expected to stay empty; anything that
+ * re-enters it is either a rewrite that forgot its cleanup or a function
+ * parked ahead of a trigger nobody has written yet, and neither may land
+ * quietly.
+ */
+const KNOWN_ORPHAN_TRIGGER_FUNCTIONS: Record<string, string> = {};
+
+Deno.test("contract: every trigger function is attached to a trigger", () => {
+  // A function that returns `trigger` is not callable code as far as the
+  // database is concerned: PostgreSQL invokes it only through a trigger row.
+  // But it is still a function — it has a signature in `pg_proc`, it may
+  // hold EXECUTE grants, and an RPC call to it executes its body whether or
+  // not a trigger would have. The only reason an unattached trigger function
+  // is harmless is if it is dormant by design — and nothing in the schema
+  // records that intent, so the distinction is invisible by construction.
+  //
+  // This is how the estate got here: a generation of migrations rewrote
+  // trigger behavior in place — a new function plus `DROP TRIGGER` /
+  // `ADD TRIGGER` — and the old functions were left behind. Rewrites that
+  // replace a trigger are the norm in this corpus, and a rewrite that keeps
+  // its own function but drops its predecessor's is the exception, so a
+  // leftover is the expected residue, not an anomaly to excuse.
+  //
+  // The two floors keep the check from being silently empty in the other
+  // direction: a catalog whose trigger walk stopped would make every
+  // function look attached, and one whose function walk stopped would have
+  // nothing left to check.
+  assert(
+    s.triggers.length >= 100,
+    `only ${s.triggers.length} triggers in the catalog; the trigger walk ` +
+      "stopped and every orphan check below is now a no-op",
+  );
+  const triggerFunctions = s.functions.filter((f) => f.returns === "trigger");
+  assert(
+    triggerFunctions.length >= 75,
+    `only ${triggerFunctions.length} trigger-returning functions in the ` +
+      "catalog; the function walk stopped and the orphan check below is a no-op",
+  );
+
+  const attached = new Set(s.triggers.map((t) => t.function));
+  const orphans = triggerFunctions
+    .filter(
+      (f) =>
+        !attached.has(`${f.schema}.${f.name}`) &&
+        !KNOWN_ORPHAN_TRIGGER_FUNCTIONS[`${f.schema}.${f.name}`],
+    )
+    .map((f) => `  - ${f.schema}.${f.name}(${f.args})`)
+    .sort();
+
+  assertEquals(
+    orphans,
+    [],
+    "These functions return `trigger` but no trigger fires them. Their bodies " +
+      "still run when an RPC call reaches them, and nothing in the schema " +
+      "records whether one is dormant by design or dead debris a rewrite left " +
+      "behind. Drop the dead ones, or pin each survivor in " +
+      "KNOWN_ORPHAN_TRIGGER_FUNCTIONS with a written reason.\n" +
+      orphans.join("\n"),
+  );
+
+  // A pin whose reason has gone away is a stale claim, not an exception.
+  for (const [fn, reason] of Object.entries(KNOWN_ORPHAN_TRIGGER_FUNCTIONS)) {
+    const stillOrphan = triggerFunctions.some(
+      (f) => `${f.schema}.${f.name}` === fn && !attached.has(fn),
+    );
+    assert(
+      stillOrphan,
+      `KNOWN_ORPHAN_TRIGGER_FUNCTIONS pins "${fn}" ("${reason}"), but it is ` +
+        "no longer an orphan — remove the pin",
+    );
+  }
+});

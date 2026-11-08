@@ -195,6 +195,7 @@ const ACTUAL: Record<string, number> = {
   "policies in the catalog": s.catalog.policies.length,
   "indexes in the catalog": s.catalog.indexes.length,
   "enums in the catalog": s.enums.length,
+  "triggers in the catalog": s.triggers.length,
   "scheduled jobs in the catalog": s.cronJobs.length,
   "scheduled jobs that post to `/functions/v1/`": CRON_TARGETS,
   "migrations that do not apply": s.unapplied.length,
