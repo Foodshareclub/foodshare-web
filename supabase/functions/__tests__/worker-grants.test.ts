@@ -216,6 +216,35 @@ function grantedObjects(): Map<string, string[]> {
 
 const granted = grantedObjects();
 
+/**
+ * Tables the worker reaches only *inside* a function it calls.
+ *
+ * `SELECT * FROM public.preview_automation_queue($1)` names a function, not a
+ * table, so the scan above never sees `email_automation_queue` — the relation
+ * the function's body reads. That only matters for `SECURITY INVOKER` bodies:
+ * a `SECURITY DEFINER` function runs its own queries as its owner, so the
+ * caller's grants never apply inside it. The catalog records both facts per
+ * function (`securityDefiner`, `returnsSet`, `returns`), so the set is derived
+ * rather than declared — a new invoker table function shows up here without
+ * anyone remembering to list it.
+ */
+function invokerTableReads(): Map<string, string[]> {
+  const out = new Map<string, string[]>();
+  for (const name of refs.functions.keys()) {
+    for (const f of s.overloads(name)) {
+      if (f.securityDefiner) continue;
+      if (!f.returnsSet) continue;
+      const m = /^public\.([a-z_][a-z0-9_]*)$/.exec(f.returns);
+      if (!m) continue;
+      if (!s.relation(m[1]).ok) continue;
+      out.set(m[1], [...(out.get(m[1]) ?? []), name]);
+    }
+  }
+  return out;
+}
+
+const invokerReads = invokerTableReads();
+
 // =============================================================================
 // Coverage
 // =============================================================================
@@ -238,6 +267,12 @@ Deno.test("worker grants: the scan is not silently empty", () => {
     refs.functions.size >= 5,
     `only ${refs.functions.size} functions found; the automation queue alone is ` +
       "four",
+  );
+  assert(
+    invokerReads.size >= 1,
+    "no SECURITY INVOKER table function the worker calls was found; either the " +
+      "catalog stopped recording securityDefiner or the worker stopped calling " +
+      "one, and the INVOKER table-grant test below is a no-op either way",
   );
   // And the catalog has to have the roles at all, or `granted` is empty and
   // every check below passes vacuously.
@@ -333,28 +368,31 @@ Deno.test("worker grants: every function the worker's SQL calls is granted to it
 const DYNAMIC_RELATIONS: Record<string, string> = {
   posts: "Source::Posts and Source::PostDescriptions",
   challenges: "Source::ChallengeTitles and Source::ChallengeDescriptions",
-  forum_posts: "Source::ForumPostTitles and Source::ForumPostContents",
+  forum: "Source::ForumPostTitles and Source::ForumPostContents",
 };
 
 /**
  * A dynamic relation the worker reaches and the catalog cannot serve.
  *
- * `forum_posts` is in no migration, so no grant for it can be written —
- * `20260927000000` tries, and that statement is the one that makes the whole
- * file fail. The fix is not a grant; it is deciding where forum posts live.
- * Listed so the gap is visible in the test output rather than absent from it,
- * and so removing the row fails the suite and prompts the decision.
+ * This used to hold `forum_posts`: no migration created the relation, so no
+ * grant for it could be written, and the entry existed so the gap was visible
+ * in the test output rather than absent from it. The decision recorded in
+ * that entry was made: the worker's forum source is the real `forum` table
+ * (the `Source::table()` arm moved there), and `20261108140000` grants it.
+ * The list is now empty on purpose — the shape stays, so a new unresolvable
+ * relation gets listed here instead of being silently dropped.
  */
-const KNOWN_UNREACHABLE: Record<string, string> = {
-  forum_posts: "no migration creates it; 20260927000000 grants on it and that statement " +
-    "is what makes the file fail. Not a grant to add — a relation to decide.",
-};
+const KNOWN_UNREACHABLE: Record<string, string> = {};
 
 Deno.test("worker grants: nothing is granted to the worker that its SQL never names", () => {
   const unused: string[] = [];
   for (const name of [...granted.keys()].sort()) {
     if (refs.relations.has(name) || refs.functions.has(name)) continue;
     if (name in DYNAMIC_RELATIONS) continue;
+    // Read inside a SECURITY INVOKER function the worker calls: the grant is
+    // justified by a table the scan cannot see, and the INVOKER test below
+    // checks that justification against the catalog rather than trusting it.
+    if (invokerReads.has(name)) continue;
     unused.push(name);
   }
   assertEquals(
@@ -421,9 +459,97 @@ Deno.test("worker grants: every function the role is granted on actually exists"
     dangling,
     [],
     "The worker holds EXECUTE on functions that do not exist. A grant naming a " +
-      "missing function is an error when written and a lie once written, and " +
-      "it is indistinguishable from a working grant by name alone.\n" +
+      "missing function is an error when written and a lie once written, and it " +
+      "is indistinguishable from a working grant by name alone.\n" +
       dangling.map((d) => `  - ${d}`).join("\n"),
+  );
+});
+
+// =============================================================================
+// The RLS half
+// =============================================================================
+//
+// The checks above answer "does the role hold the privilege?"; these answer
+// "does the privilege mean anything at query time?" RLS is enabled on the
+// worker's tables, and RLS is the second gate a grant has to get through.
+
+Deno.test("worker grants: every RLS-enabled relation the worker touches has a job_worker policy", () => {
+  // A grant is only half the surface. With RLS on and no `job_worker` policy,
+  // the only policies in force for the worker's bare connection are the
+  // `PUBLIC` ones, and they resolve one of two ways, neither of which is the
+  // row the worker needs:
+  //
+  // * the qual is keyed on `auth.uid()`, which is NULL on a direct
+  //   connection — the query succeeds and returns zero rows. The digest
+  //   batch join finds no profiles and the job reports success while doing
+  //   nothing, forever;
+  // * the qual reads `public.user_roles` or calls `is_admin()`, which
+  //   `job_worker` has no privilege on — the planner fails the whole
+  //   statement before a row is considered, and the job errors on its first
+  //   query.
+  //
+  // Neither shape is visible to the grant audit above (the grant is present)
+  // or to the superuser integration suite (RLS does not apply to a
+  // superuser). The estate's design — `20260927000000`: one explicit
+  // `job_worker` policy per table, `USING (true)` — is what makes the worker's
+  // rows visible, and it also constant-folds the `PUBLIC` admin quals out of
+  // the plan, which is what removes the second shape rather than papering
+  // over it. This asserts the design holds for every table the worker
+  // touches, not just the four the first migration covered.
+  const needed = new Set<string>([
+    ...refs.relations.keys(),
+    ...Object.keys(DYNAMIC_RELATIONS),
+    ...invokerReads.keys(),
+  ]);
+  const uncovered: string[] = [];
+  for (const name of [...needed].sort()) {
+    const rel = s.relation(name);
+    if (!rel.ok) continue; // a missing relation is reported by the grant tests
+    if (!rel.value.rlsEnabled) continue;
+    const policies = s.policies(name);
+    const hasWorkerPolicy = policies.some((p) => p.roles.includes("job_worker"));
+    if (!hasWorkerPolicy) {
+      uncovered.push(
+        `${name} — RLS enabled, policies: ${
+          policies.length ? policies.map((p) => p.name).join(", ") : "none"
+        }`,
+      );
+    }
+  }
+  assertEquals(
+    uncovered,
+    [],
+    "The worker touches RLS-enabled relations with no job_worker policy. " +
+      "With only the PUBLIC policies in force the worker sees either zero rows " +
+      "or a plan-time permission error, and the job never knows the difference — " +
+      "the superuser integration suite sees the row either way.\n" +
+      uncovered.map((u) => `  - ${u}`).join("\n"),
+  );
+});
+
+Deno.test("worker grants: tables read inside SECURITY INVOKER functions the worker calls are granted", () => {
+  // `EXECUTE` on a function does not reach the tables the function reads: a
+  // `SECURITY INVOKER` body runs its queries as the caller, so the read needs
+  // its own grant on top of the `EXECUTE`. `20261013000000` granted the five
+  // automation functions to `job_worker` — including
+  // `preview_automation_queue` — and stopped there. The preview's `SELECT`
+  // runs as `job_worker` on `email_automation_queue`, which no migration
+  // granted, so the shadow preview (`docs/rust-migration.md` § 6 step 2, the
+  // comparison that gates the cutover) fails with `permission denied` on its
+  // first run. The grant scan above cannot see the gap: the crate names the
+  // function, not the table behind it.
+  const missing: string[] = [];
+  for (const [table, callers] of [...invokerReads].sort()) {
+    if (granted.has(table)) continue;
+    missing.push(`${table} — read by ${callers.join(", ")}() as its caller`);
+  }
+  assertEquals(
+    missing,
+    [],
+    "A SECURITY INVOKER function the worker calls reads a table job_worker " +
+      "has no grant on. EXECUTE covers the call, not the read behind it, so " +
+      "the function succeeds into permission denied on its first query.\n" +
+      missing.map((m) => `  - ${m}`).join("\n"),
   );
 });
 

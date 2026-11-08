@@ -13555,22 +13555,22 @@ export type Database = {
     Views: {
       decrypted_secrets: {
         Row: {
+        decrypted_secret: string | null;
         description: string | null;
         id: string | null;
         name: string | null;
-        secret: string | null;
         };
         Insert: {
+        decrypted_secret?: string;
         description?: string;
         id?: string;
         name?: string;
-        secret?: string;
         };
         Update: {
+        decrypted_secret?: string | null;
         description?: string | null;
         id?: string | null;
         name?: string | null;
-        secret?: string | null;
         };
         Relationships: [];
       }
