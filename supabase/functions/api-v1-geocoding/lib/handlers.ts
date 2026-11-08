@@ -318,13 +318,19 @@ async function handlePostBatch(
     }, corsHeaders);
   }
 
+  // The queue RPC is not in the local catalog, so its rows arrive untyped.
+  // This is the single trust boundary for the batch: `processQueueItem`
+  // validates the address and the DB rejects bad ids before anything
+  // external happens.
+  const items = queueItems as unknown as QueueItem[];
+
   const results: ProcessResult[] = [];
   let successful = 0;
   let failed = 0;
 
-  for (const item of queueItems) {
+  for (const item of items) {
     try {
-      const result = await processQueueItem(supabase, item as QueueItem);
+      const result = await processQueueItem(supabase, item);
       results.push(result);
       if (result.success) successful++;
       else failed++;
@@ -428,8 +434,14 @@ async function handlePostStats(
     if (item.status === "pending") stats.pending++;
     else if (item.status === "processing") stats.processing++;
     else if (item.status === "failed") {
-      if (item.retry_count < item.max_retries) stats.failed_retryable++;
-      else stats.failed_permanent++;
+      // Both columns are nullable in the generated row type: a failed row
+      // with no retry accounting yet is retryable, one that reached its
+      // ceiling (or has no ceiling on record) is permanent.
+      if ((item.retry_count ?? 0) < (item.max_retries ?? 0)) {
+        stats.failed_retryable++;
+      } else {
+        stats.failed_permanent++;
+      }
     } else if (item.status === "completed" && item.completed_at) {
       if (new Date(item.completed_at) >= today) stats.completed_today++;
     }

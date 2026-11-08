@@ -15,7 +15,8 @@
  */
 
 import { assertEquals } from "@std/assert";
-import { getErrorCode, isHardBounce } from "../api-v1-email/lib/queue.ts";
+import { buildEmailContent, getErrorCode, isHardBounce } from "../api-v1-email/lib/queue.ts";
+import { getServiceRoleClient, type QueuedEmail } from "../api-v1-email/lib/utils.ts";
 
 // =============================================================================
 // Hard bounce classification
@@ -132,4 +133,82 @@ Deno.test("email queue: the code is a status when one is present, even with keyw
   // reported as 429 should group with other 429s, not with keyword matches.
   assertEquals(getErrorCode("429 rate limit"), "429");
   assertEquals(getErrorCode("rate limit 429 exceeded"), "429");
+});
+
+// =============================================================================
+// Content building
+// =============================================================================
+
+function campaignClient(
+  row: {
+    subject: string;
+    html_content: string | null;
+    plain_text_content: string | null;
+  } | null,
+): ReturnType<typeof getServiceRoleClient> {
+  // Only the `newsletter_campaigns` fetch is exercised; the builder chain is
+  // opaque beyond the terminal `.single()`.
+  const builder = {
+    select(_cols: string) {
+      return builder;
+    },
+    eq(_col: string, _val: unknown) {
+      return builder;
+    },
+    single: async () =>
+      row === null
+        ? { data: null, error: { message: "PGRST116: no rows" } }
+        : { data: row, error: null },
+  };
+  return {
+    from(_table: string) {
+      return builder;
+    },
+  } as unknown as ReturnType<typeof getServiceRoleClient>;
+}
+
+function newsletterEmail(
+  overrides: Partial<QueuedEmail> = {},
+): QueuedEmail {
+  return {
+    id: "q1",
+    user_id: "u1",
+    user_email: "user@example.com",
+    email_type: "newsletter",
+    campaign_id: "c1",
+    template_slug: null,
+    user_first_name: null,
+    retry_count: 0,
+    metadata: {},
+    ...overrides,
+  };
+}
+
+Deno.test("email queue: a campaign without HTML has no buildable content", async () => {
+  // `html_content` is nullable in the schema. Returning `null` releases the
+  // row for retry — the same contract as a missing template — instead of
+  // throwing in the personalizer (which the send loop would record as a
+  // permanent failure and burn the retry budget on).
+  const client = campaignClient({
+    subject: "Newsletter",
+    html_content: null,
+    plain_text_content: "plain only",
+  });
+  const result = await buildEmailContent(client, newsletterEmail());
+  assertEquals(result, null);
+});
+
+Deno.test("email queue: a campaign with HTML is built and personalized", async () => {
+  const client = campaignClient({
+    subject: "Newsletter",
+    html_content: "<p>Hi {{name}}</p>",
+    plain_text_content: null,
+  });
+  const result = await buildEmailContent(
+    client,
+    newsletterEmail({ user_first_name: "Ada" }),
+  );
+  assertEquals(result?.subject, "Newsletter");
+  assertEquals(result?.html, "<p>Hi Ada</p>");
+  assertEquals(result?.text, undefined);
 });

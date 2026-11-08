@@ -95,7 +95,11 @@ async function processEmailQueue(
     return { processed: 0, sent: 0, failed: 0, skipped: 0, durationMs: 0 };
   }
 
-  const emails = pendingEmails as QueuedEmail[];
+  // The claim RPC is not in the local catalog, so its rows arrive untyped.
+  // This cast is the single trust boundary: everything downstream is
+  // checked against `QueuedEmail` (sendEmailWithProvider re-validates the
+  // recipient before any provider call).
+  const emails = pendingEmails as unknown as QueuedEmail[];
   let sent = 0;
   let failed = 0;
   let skipped = 0;
@@ -245,7 +249,7 @@ async function processEmailQueue(
 // Email Content Building (preserved from api-v1-email-queue)
 // =============================================================================
 
-async function buildEmailContent(
+export async function buildEmailContent(
   supabase: ReturnType<typeof getServiceRoleClient>,
   email: QueuedEmail,
 ): Promise<
@@ -265,20 +269,31 @@ async function buildEmailContent(
   // failure. The Rust port in `fs-db` selects the right column; this Deno
   // copy never got the fix.
   if (email.email_type === "newsletter" && email.campaign_id) {
-    const { data: campaign, error } = await supabase
+    const { data: campaign, error: campaignError } = await supabase
       .from("newsletter_campaigns")
-      .select("subject,html_content,plain_text_content")
+      .select("id, subject, html_content, plain_text_content")
       .eq("id", email.campaign_id)
       .single();
 
-    if (error || !campaign) {
-      logger.error(
-        "Failed to fetch campaign",
-        new Error(error?.message || "Campaign not found"),
-        {
-          campaignId: email.campaign_id,
-        },
-      );
+    if (campaignError || !campaign) {
+      // A campaign row missing for the same reason a template can be: it may
+      // be created after this flow has enrolled the user, or it was deleted.
+      // The log is the signal.
+      logger.warn("Campaign not found; releasing for retry", {
+        campaignId: email.campaign_id,
+        error: campaignError?.message,
+      });
+      return null;
+    }
+
+    if (!campaign.html_content) {
+      // `html_content` is nullable in the schema and the provider needs HTML.
+      // Release for retry (the same contract as a missing campaign) instead
+      // of throwing in the personalizer — which the send loop would record
+      // as a failure and burn the whole retry budget on.
+      logger.warn("Campaign has no HTML content; releasing for retry", {
+        campaignId: email.campaign_id,
+      });
       return null;
     }
 
@@ -324,7 +339,7 @@ async function buildEmailContent(
       return {
         subject: template.subject,
         html: personalizedHtml,
-        text: template.text_content,
+        text: template.text_content ?? undefined,
       };
     }
   }
