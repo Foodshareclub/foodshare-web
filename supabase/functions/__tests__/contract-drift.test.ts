@@ -48,6 +48,7 @@ import { assert, assertEquals } from "@std/assert";
 
 import { assertCatalogIsCurrent, schema } from "../../oracle/read.ts";
 import { walkTypeScript } from "./lib/scan.ts";
+import { ownsCorpus } from "./lib/ownership.ts";
 
 const s = schema();
 assertCatalogIsCurrent(s);
@@ -189,6 +190,12 @@ Deno.test("contract: the function table in CLAUDE.md is the real one", () => {
   // Held against `config.toml` rather than against the filesystem, so the doc
   // and the thing the runtime reads are the same thing. `main` is expected: it
   // is the router and has no config entry.
+  //
+  // The table is a contract of the repo that owns the function registry; a
+  // vendored checkout points at `foodshare-backend/CLAUDE.md` instead of
+  // carrying a second copy. See `ownsCorpus`.
+  if (!ownsCorpus()) return;
+
   const CLAUDE_MD = new URL("../../../CLAUDE.md", import.meta.url);
   const table = Deno.readTextFileSync(CLAUDE_MD).split("## Functions (")[1]
     ?.split("## Key Patterns")[0] ?? "";

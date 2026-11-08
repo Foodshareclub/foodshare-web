@@ -36,6 +36,7 @@ import {
   splitTopLevel as splitTopLevelForTest,
 } from "../../oracle/catalog.ts";
 import { applySubstitutions, isFixedPoint, loadRules } from "../../oracle/substitute.ts";
+import { ownsCorpus } from "./lib/ownership.ts";
 
 const MIGRATIONS_DIR = new URL("../../migrations/", import.meta.url);
 const DEPLOY_SH = new URL("../../../scripts/deploy.sh", import.meta.url);
@@ -672,6 +673,7 @@ Deno.test("oracle: the transaction classification is not constant", () => {
 });
 
 Deno.test("oracle: deploy.sh still classifies migrations the way the oracle does", () => {
+  if (!ownsCorpus()) return; // the deploy script lives in the owning repo
   // `modeFor` re-implements the rule in `scripts/deploy.sh` because that rule
   // is two greps inside a deploy function and not importable. The cost of the
   // duplication is that the two can drift, and the symptom would be a file

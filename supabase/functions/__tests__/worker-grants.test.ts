@@ -35,6 +35,7 @@
 import { assert, assertEquals } from "@std/assert";
 
 import { assertCatalogIsCurrent, schema } from "../../oracle/read.ts";
+import { ownsCorpus } from "./lib/ownership.ts";
 
 const s = schema();
 assertCatalogIsCurrent(s);
@@ -246,7 +247,12 @@ function scan(): References {
   return { relations, functions, operations, filesRead };
 }
 
-const refs = scan();
+// The worker's source is a backend-owned contract; a vendored checkout has no
+// `services/` (see ownsCorpus), so the scan is skipped and the tests below
+// return before touching its results.
+const refs: References = ownsCorpus()
+  ? scan()
+  : { relations: new Map(), functions: new Map(), operations: new Map(), filesRead: [] };
 
 /** Every object `job_worker` or `job_worker_app` holds, by name. */
 function grantedObjects(): Map<string, string[]> {
@@ -296,6 +302,7 @@ const invokerReads = invokerTableReads();
 // =============================================================================
 
 Deno.test("worker grants: the scan is not silently empty", () => {
+  if (!ownsCorpus()) return;
   // Every way this audit can be vacuous: no files, no relations, no functions.
   // A check that examines nothing and finds nothing is the failure this whole
   // exercise exists to remove, and it is silent by construction.
@@ -348,6 +355,7 @@ Deno.test("worker grants: the scan is not silently empty", () => {
 // =============================================================================
 
 Deno.test("worker grants: every relation the worker's SQL names is granted to it", () => {
+  if (!ownsCorpus()) return;
   const missing: string[] = [];
   for (const [name, files] of [...refs.relations].sort()) {
     if (granted.has(name)) continue;
@@ -368,6 +376,7 @@ Deno.test("worker grants: every relation the worker's SQL names is granted to it
 });
 
 Deno.test("worker grants: every function the worker's SQL calls is granted to it", () => {
+  if (!ownsCorpus()) return;
   // This is the check that matters, and the one no amount of running the crate
   // against a test database can make: a superuser is exempt from privilege
   // checks, so a suite running as one sees a missing grant as a query that
@@ -442,6 +451,7 @@ const DYNAMIC_RELATIONS: Record<string, string> = {
 const KNOWN_UNREACHABLE: Record<string, string> = {};
 
 Deno.test("worker grants: nothing is granted to the worker that its SQL never names", () => {
+  if (!ownsCorpus()) return;
   const unused: string[] = [];
   for (const name of [...granted.keys()].sort()) {
     if (refs.relations.has(name) || refs.functions.has(name)) continue;
@@ -464,6 +474,7 @@ Deno.test("worker grants: nothing is granted to the worker that its SQL never na
 });
 
 Deno.test("worker grants: every relation the worker reaches by name has a grant", () => {
+  if (!ownsCorpus()) return;
   // Including the three that only appear as a `match` arm. `forum_posts` is
   // reported and listed: no migration creates the relation, so the grant in
   // 20260927000000 is the statement that makes that file fail, and no amount of
@@ -498,6 +509,7 @@ Deno.test("worker grants: every relation the worker reaches by name has a grant"
 });
 
 Deno.test("worker grants: every function the role is granted on actually exists", () => {
+  if (!ownsCorpus()) return;
   // The mirror of the call-side check, and the one that catches a rename.
   //
   // `granted` is keyed by name, so a function dropped from the schema while its
@@ -531,6 +543,7 @@ Deno.test("worker grants: every function the role is granted on actually exists"
 // worker's tables, and RLS is the second gate a grant has to get through.
 
 Deno.test("worker grants: every RLS-enabled relation the worker touches has a job_worker policy", () => {
+  if (!ownsCorpus()) return;
   // A grant is only half the surface. With RLS on and no `job_worker` policy,
   // the only policies in force for the worker's bare connection are the
   // `PUBLIC` ones, and they resolve one of two ways, neither of which is the

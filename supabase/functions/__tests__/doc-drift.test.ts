@@ -56,6 +56,7 @@ import { assert, assertEquals } from "@std/assert";
 
 import { migrationFiles, type Mode, modeFor } from "../../oracle/apply.ts";
 import { assertCatalogIsCurrent, Coverage, schema } from "../../oracle/read.ts";
+import { ownsCorpus } from "./lib/ownership.ts";
 import { scanCallSites, tableTargets } from "./lib/client-calls.ts";
 import { entryPoints } from "./lib/typecheck.ts";
 
@@ -67,7 +68,10 @@ const s = schema();
 // =============================================================================
 
 const ORACLE_DOC = new URL("../../../docs/oracle.md", import.meta.url);
-const doc = Deno.readTextFileSync(ORACLE_DOC);
+// The document is a backend-owned contract; a vendored checkout carries no
+// copy of it (see ownsCorpus), so the read is skipped and the tests below
+// return before touching it.
+const doc = ownsCorpus() ? Deno.readTextFileSync(ORACLE_DOC) : "";
 
 /**
  * The live-figures table, as `[label, value]` pairs.
@@ -98,6 +102,7 @@ function liveFigures(): [string, number][] {
 const MIN_FIGURES = 8;
 
 Deno.test("doc: the live-figures table is read, not silently empty", () => {
+  if (!ownsCorpus()) return; // the document lives in the owning repo
   const figures = liveFigures();
   assert(
     figures.length >= MIN_FIGURES,
@@ -220,6 +225,7 @@ const ACTUAL: Record<string, number> = {
 // =============================================================================
 
 Deno.test("doc: every live figure in docs/oracle.md is the number it is about", () => {
+  if (!ownsCorpus()) return;
   assertCatalogIsCurrent(s);
 
   const figures = liveFigures();
@@ -261,6 +267,7 @@ Deno.test("doc: every live figure in docs/oracle.md is the number it is about", 
 });
 
 Deno.test("doc: the measured numbers are themselves plausible", () => {
+  if (!ownsCorpus()) return;
   // The table above is only worth checking if the thing it measures is the
   // thing the document claims. A reader who finds a number wrong needs to be
   // able to tell which side is wrong, and the first instinct on a mismatch
