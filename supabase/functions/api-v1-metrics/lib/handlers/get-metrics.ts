@@ -72,6 +72,14 @@ export async function handleGetMetrics(
     getRequestCount(supabase, 1440),
   ]);
 
+  if (webVitalsResult.error) {
+    // The web-vitals summary is one leg of the admin dashboard. A failed
+    // read must not masquerade as "no vitals recorded": log it so an
+    // empty panel is diagnosable, and report the rest of the metrics.
+    logger.warn("Web vitals summary unavailable", {
+      error: webVitalsResult.error.message,
+    });
+  }
   const webVitals: WebVitalsSummary[] = webVitalsResult.data || [];
 
   // JSON format

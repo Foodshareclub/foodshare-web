@@ -629,6 +629,7 @@ export async function handleTriggerNewListing(
     );
 
     if (rpcError) {
+      logger.error("Bulk nearby notification fallback failed", new Error(rpcError.message));
       return { success: false, error: "Failed to send notifications" };
     }
 

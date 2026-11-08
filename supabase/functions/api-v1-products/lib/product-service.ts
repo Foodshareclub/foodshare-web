@@ -189,7 +189,7 @@ export class ProductService {
 
     // Geographic filtering
     if (params.lat && params.lng && params.radius) {
-      const { data: nearbyIds } = await this.supabase.rpc(
+      const { data: nearbyIds, error: nearbyError } = await this.supabase.rpc(
         "get_nearby_products",
         {
           p_lat: params.lat,
@@ -197,6 +197,17 @@ export class ProductService {
           p_radius_km: params.radius,
         },
       );
+
+      // A failed nearby search must fail the request, not be dropped:
+      // swallowing the error would answer a "near me" query with a global
+      // list that the client has no way to recognise as unfiltered.
+      if (nearbyError) {
+        logger.error(
+          "Nearby product search failed",
+          new Error(nearbyError.message),
+        );
+        throw nearbyError;
+      }
 
       if (nearbyIds && nearbyIds.length > 0) {
         query = query.in("id", nearbyIds);
