@@ -38,48 +38,9 @@
 export { apiCall, apiGet, apiPost, apiPut, apiDelete } from "./client";
 export type { APICallOptions } from "./client";
 
-// Enterprise client (recommended)
-export {
-  EnterpriseClient,
-  enterpriseClient,
-  apiGet as enterpriseGet,
-  apiPost as enterprisePost,
-  apiPut as enterprisePut,
-  apiPatch as enterprisePatch,
-  apiDelete as enterpriseDelete,
-  ErrorCodes,
-} from "./enterprise-client";
-export type {
-  EnterpriseClientConfig,
-  RequestOptions,
-  RequestInterceptor,
-  ResponseInterceptor,
-  ErrorCode,
-} from "./enterprise-client";
-
-// Circuit breaker
-export {
-  CircuitBreaker,
-  CircuitOpenError,
-  getCircuitBreaker,
-  getAllCircuitBreakerMetrics,
-  resetAllCircuitBreakers,
-} from "./circuit-breaker";
-export type { CircuitState, CircuitBreakerConfig, CircuitBreakerMetrics } from "./circuit-breaker";
-
 // Retry utilities
-export {
-  withRetry,
-  createRetryWrapper,
-  calculateBackoffDelay,
-  isRetryableError,
-  RetryPresets,
-} from "./retry";
+export { withRetry, createRetryWrapper, calculateBackoffDelay, isRetryableError, RetryPresets } from "./retry";
 export type { RetryConfig } from "./retry";
-
-// Offline queue
-export { OfflineQueue, getOfflineQueue, enqueueOffline, useOfflineQueue } from "./offline-queue";
-export type { QueuedOperation, OperationType, OfflineQueueConfig } from "./offline-queue";
 
 // Types
 export type {
@@ -94,12 +55,7 @@ export type {
 } from "./types";
 
 // Product API
-export {
-  createProductAPI,
-  updateProductAPI,
-  deleteProductAPI,
-  fromProductResponse,
-} from "./products";
+export { createProductAPI, updateProductAPI, deleteProductAPI, fromProductResponse } from "./products";
 export type { WebCreateProductInput, WebUpdateProductInput } from "./products";
 
 // Chat API
@@ -143,12 +99,7 @@ export type {
 } from "./profile";
 
 // Reviews API
-export {
-  getReviewsForUserAPI,
-  getReviewsForPostAPI,
-  submitReviewAPI,
-  formDataToReviewInput,
-} from "./reviews";
+export { getReviewsForUserAPI, getReviewsForPostAPI, submitReviewAPI, formDataToReviewInput } from "./reviews";
 export type { SubmitReviewRequest, ReviewResponse, ReviewsListResponse } from "./reviews";
 
 // Engagement API
@@ -197,12 +148,7 @@ export {
   unbanUserAPI,
   fromAdminUserResponse,
 } from "./admin-users";
-export type {
-  AdminUser,
-  ListUsersRequest,
-  ListUsersResponse,
-  UserActionResponse,
-} from "./admin-users";
+export type { AdminUser, ListUsersRequest, ListUsersResponse, UserActionResponse } from "./admin-users";
 
 // Admin Email API
 export {
@@ -224,75 +170,6 @@ export type {
   ProviderActionResponse,
   SuppressionActionResponse,
 } from "./admin-email";
-
-// BFF Client (Backend-For-Frontend)
-export {
-  getHomeScreenData,
-  getFeedData,
-  getListingDetail,
-  getMessagesData,
-  getChatScreenData,
-  getProfileData,
-  getNotificationsData,
-  getUnreadCounts,
-  getChallengesData,
-  getChallengeDetail,
-  getForumPostDetail,
-  getForumFeedData,
-  getSearchData,
-  invalidateCache,
-  invalidateCacheMatching,
-  clearCache,
-  bffQueryKeys,
-  bffQueryKeysExtended,
-} from "./bff-client";
-export type {
-  HomeScreenData,
-  ListingSummary,
-  FeedScreenData,
-  FeedListing,
-  ListingDetailData,
-  ListingDetail,
-  RelatedListing,
-  MessagesScreenData,
-  Conversation,
-  ChatScreenData,
-  ChatRoom,
-  ChatMessage,
-  ProfileScreenData,
-  ProfileInfo,
-  ProfileListing,
-  ProfileReview,
-  ProfileStats,
-  NotificationsScreenData,
-  NotificationItem,
-  UnreadCountsData,
-  ChallengesScreenData,
-  Challenge,
-  UserChallenge,
-  LeaderboardEntry,
-  ChallengeStats,
-  ChallengeDetailData,
-  ChallengeDetail,
-  Participant,
-  RelatedChallenge,
-  ForumPostDetailData,
-  ForumPost,
-  ForumComment,
-  RelatedPost,
-  ForumFeedScreenData,
-  ForumPostSummary,
-  ForumCategoryItem,
-  FeaturedForumPost,
-  ForumUserStats,
-  SearchScreenData,
-  SearchListing,
-  SearchUser,
-  SearchForumPost,
-  TrendingSearch,
-  RecentSearch,
-  SearchPagination,
-} from "./bff-client";
 
 export function ok<T>(data: T, init?: ResponseInit) {
   return new Response(JSON.stringify({ success: true, data }), {

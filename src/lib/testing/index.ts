@@ -12,11 +12,7 @@
  */
 
 // Mock Factories
-export {
-  mockSuccess,
-  mockError,
-  mockFactories,
-} from "./mock-factories";
+export { mockSuccess, mockError, mockFactories } from "./mock-factories";
 export type {
   MockResponseOptions,
   MockSuccessResponse,
@@ -62,18 +58,10 @@ export {
   chatContracts,
   profileContracts,
 } from "./contract-testing";
-export type {
-  ContractDefinition,
-  ContractTestResult,
-  ContractTestSuite,
-} from "./contract-testing";
+export type { ContractDefinition, ContractTestResult, ContractTestSuite } from "./contract-testing";
 
 // Enterprise Test Utilities
 export {
-  // Circuit Breaker
-  createTestCircuitBreaker,
-  forceCircuitState,
-  waitForCircuitState,
   createFailingThenSucceedingFn,
   // Retry
   testRetryConfig,

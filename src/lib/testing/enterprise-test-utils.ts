@@ -2,7 +2,6 @@
  * Enterprise Module Test Utilities
  *
  * Specialized test utilities for testing the enterprise client modules:
- * - Circuit breaker
  * - Retry logic
  * - Offline queue
  * - Caching
@@ -11,64 +10,11 @@
  * @module lib/testing/enterprise-test-utils
  */
 
-import { CircuitBreaker, type CircuitState } from "../api/circuit-breaker";
 import type { RetryConfig } from "../api/retry";
 
 // =============================================================================
-// Circuit Breaker Testing
+// Failure Simulation
 // =============================================================================
-
-/**
- * Create a circuit breaker with test-friendly defaults
- */
-export function createTestCircuitBreaker(
-  overrides: Partial<{
-    failureThreshold: number;
-    resetTimeoutMs: number;
-    halfOpenRequests: number;
-  }> = {},
-): CircuitBreaker {
-  return new CircuitBreaker({
-    name: "test-breaker",
-    failureThreshold: overrides.failureThreshold ?? 2,
-    resetTimeoutMs: overrides.resetTimeoutMs ?? 100,
-    halfOpenRequests: overrides.halfOpenRequests ?? 1,
-  });
-}
-
-/**
- * Force circuit breaker to a specific state (for testing)
- */
-export function forceCircuitState(breaker: CircuitBreaker, state: CircuitState): void {
-  if (state === "OPEN") {
-    // Trigger enough failures to open the circuit (use default threshold of 5)
-    for (let i = 0; i < 6; i++) {
-      breaker.execute(() => Promise.reject(new Error("forced failure"))).catch(() => {});
-    }
-  }
-  // Note: HALF_OPEN and CLOSED states require waiting for timeout or using forceState
-}
-
-/**
- * Wait for circuit breaker to transition to a state
- */
-export async function waitForCircuitState(
-  breaker: CircuitBreaker,
-  targetState: CircuitState,
-  timeoutMs = 5000,
-): Promise<void> {
-  const startTime = Date.now();
-
-  while (Date.now() - startTime < timeoutMs) {
-    const metrics = breaker.getMetrics();
-    if (metrics.state === targetState) {
-      return;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-
-  throw new Error(`Circuit breaker did not reach state ${targetState} within ${timeoutMs}ms`);
-}
 
 /**
  * Create a function that fails N times then succeeds

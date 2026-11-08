@@ -15,6 +15,3 @@ export * from "./useActiveChallenges";
 
 // Admin - email CRM dashboard
 export * from "./useEmailCRM";
-
-// Products - infinite scroll, pagination
-export * from "./useProducts";

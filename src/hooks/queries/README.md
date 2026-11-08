@@ -1,64 +1,18 @@
-# ⚠️ DEPRECATED - TanStack Query Hooks
+# Query Hooks (`src/hooks/queries/`)
 
-These hooks are **deprecated** and should not be used in new code.
+Client-side TanStack Query hooks. Most data fetching in this app runs through
+Server Components + Server Actions; these hooks exist only where client-side
+state is required (realtime updates, infinite scroll on a client component,
+map viewport prefetching).
 
-## Migration Guide
+| Hook file                    | Used by                                                                    |
+| ---------------------------- | -------------------------------------------------------------------------- |
+| `useChallenges.ts`           | Challenge deck swiping (`app/challenge/ChallengesClient.tsx`)              |
+| `useChallengeLeaderboard.ts` | Leaderboard board + user modal (`components/challenges/`)                  |
+| `useLeaderboardRealtime.ts`  | Realtime leaderboard updates (`ChallengeLeaderboard.tsx`)                  |
+| `useActiveChallenges.ts`     | Active challenges widget (`components/challenges/ActiveChallenges/`)       |
+| `useEmailCRM.ts`             | Admin email CRM dashboard (`app/admin/email/`)                             |
+| `useViewportLocations.ts`    | Map viewport prefetching (`components/leaflet/ViewportLocationLoader.tsx`) |
 
-The codebase has been refactored to use **Server Components** and **Server Actions** instead of TanStack Query.
-
-### New Architecture
-
-| Old Pattern                  | New Pattern                              |
-| ---------------------------- | ---------------------------------------- |
-| `useQuery` for data fetching | Server Component + `lib/data/*` function |
-| `useMutation` for mutations  | Server Action in `app/actions/*`         |
-| `QueryClientProvider`        | Not needed                               |
-
-### Examples
-
-**Before (TanStack Query):**
-
-```typescript
-"use client";
-import { useProducts } from "@/hooks/queries/useProductQueries";
-
-function ProductList() {
-  const { data: products, isLoading } = useProducts();
-  // ...
-}
-```
-
-**After (Server Component):**
-
-```typescript
-// Server Component - no 'use client'
-import { getProducts } from "@/lib/data/products";
-
-async function ProductList() {
-  const products = await getProducts();
-  // ...
-}
-```
-
-### Files to Use Instead
-
-- **Data fetching**: `src/lib/data/*.ts`
-- **Mutations**: `src/app/actions/*.ts`
-- **Auth**: `src/hooks/useAuth.ts` (uses Server Actions internally)
-- **UI State**: Zustand stores in `src/store/zustand/`
-
-### Migration Progress
-
-| Hook                | Status                                         |
-| ------------------- | ---------------------------------------------- |
-| `useAdminQueries`   | ✅ Removed - Use `@/app/actions/admin.ts`      |
-| `useProductQueries` | ⏳ Deprecated - Use `@/lib/data/products.ts`   |
-| `useProfileQueries` | ⏳ Deprecated - Use `@/lib/data/profiles.ts`   |
-| `useChatQueries`    | ✅ Kept - Required for Supabase realtime       |
-| `useEmailCRM`       | ✅ Kept - Admin dashboard real-time monitoring |
-| `useForumQueries`   | ⏳ Deprecated - Use `@/lib/data/forum.ts`      |
-| `useAuthQueries`    | ⏳ Deprecated - Use `@/hooks/useAuth.ts`       |
-
-### Timeline
-
-Remaining hooks will be removed in a future release. Please migrate to the new patterns.
+The public barrel is `src/hooks/queries/index.ts`; components import from the
+individual hook files.

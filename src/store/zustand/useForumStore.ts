@@ -123,5 +123,3 @@ export const selectForumOffset = (state: ForumState) => state.offset;
 
 export const useForumFilters = () => useForumStore(selectForumFilters);
 export const useForumOffset = () => useForumStore(selectForumOffset);
-
-// Note: Forum notifications migrated to React Query — see useForumNotifications.ts
