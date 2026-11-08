@@ -373,6 +373,45 @@ const KNOWN_DEAD_TARGETS: Record<string, string> = {
     "are not monitored here — not a schedule change.",
 };
 
+Deno.test("contract: a job name is one live job", () => {
+  // pg_cron does not make `jobname` unique: `cron.schedule` inserts a new row
+  // whatever already carries the name, so a name held by two rows fires on
+  // its own tick each. No query in the estate joins `cron.job` to the work
+  // the job should be doing, so a doubled schedule is a success that does
+  // the work twice and reports nothing — the same silence as the dead target
+  // above, one level removed: a 404 is invisible, and so is a job that runs
+  // twice.
+  //
+  // This is how the estate got here: the baseline migration snapshots 40
+  // jobs, and `20260209000001_cron_jobs_selfhosted.sql` re-schedules all 37
+  // of the self-hosted era on top of them, so for as long as both have been
+  // applied every one of those 37 has been running twice per tick. Four of
+  // the 37 even carry a different command in the old copy (vault-secret URLs
+  // replaced by kong URLs in the self-hosted rewrite), which means the old
+  // copy has been firing a stale call alongside the live one.
+  // `20261108180000_deduplicate_cron_jobs.sql` keeps the newest row per
+  // duplicated name and unschedules the rest by jobid.
+  const counts = new Map<string, number>();
+  for (const job of s.cronJobs) {
+    counts.set(job.jobName, (counts.get(job.jobName) ?? 0) + 1);
+  }
+  const duplicated = [...counts.entries()]
+    .filter(([, n]) => n > 1)
+    .map(([name, n]) => `  - ${name} (x${n})`)
+    .sort();
+
+  assertEquals(
+    duplicated,
+    [],
+    "These job names are held by more than one row in cron.job, so the work " +
+      "runs once per row per tick. Keep the newest copy of each duplicated " +
+      "name and unschedule the rest by jobid — by id, never by name, because " +
+      "a name is not unique in pg_cron (the same mistake the self-hosted " +
+      "migration made, recorded in 20261014000000).\n" +
+      duplicated.join("\n"),
+  );
+});
+
 Deno.test("contract: every scheduled job posts to a function that exists", () => {
   const targets = cronTargets();
   assert(
