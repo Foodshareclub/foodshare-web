@@ -120,7 +120,7 @@ export async function downloadAndUploadTelegramFile(
       formData.append("extractEXIF", "false");
       formData.append("enableAI", "false");
 
-      let uploadError = null;
+      let uploadError: unknown = null;
       for (let uploadAttempt = 1; uploadAttempt <= 2; uploadAttempt++) {
         try {
           const uploadResponse = await fetch(

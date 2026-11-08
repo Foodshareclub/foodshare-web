@@ -28,19 +28,13 @@ export async function getUserImpactStats(userId: number): Promise<ImpactStats> {
   }
 
   // Run all remaining queries in parallel for better performance
-  const [sharedResult, claimedResult, activityResult] = await Promise.all([
+  const [sharedResult, activityResult] = await Promise.all([
     // Get shared food count
     supabase
       .from("posts")
       .select("*", { count: "exact", head: true })
       .eq("profile_id", profile.id)
       .eq("post_type", "food"),
-
-    // Get claimed food count (from messages/interactions)
-    supabase
-      .from("messages")
-      .select("*", { count: "exact", head: true })
-      .eq("sender_id", profile.id),
 
     // Get activity stats
     supabase.from("telegram_user_activity").select("active_days").eq(
@@ -50,7 +44,11 @@ export async function getUserImpactStats(userId: number): Promise<ImpactStats> {
   ]);
 
   const sharedCount = sharedResult.count || 0;
-  const claimedCount = claimedResult.count || 0;
+  // There is no claims table in the schema (verified in production: the
+  // legacy `messages` read was PGRST205 on every run, so this count was
+  // silently 0 and the claim badges could never be earned). It stays 0
+  // until claim tracking exists; the badge tiers are wired for it.
+  const claimedCount = 0;
 
   // Estimate impact (average food item = 0.5kg, CO2 = 2.5kg per kg food)
   const kgSaved = sharedCount * 0.5;
@@ -69,7 +67,7 @@ export async function getUserImpactStats(userId: number): Promise<ImpactStats> {
 }
 
 export function getBadges(stats: ImpactStats): string {
-  const badges = [];
+  const badges: string[] = [];
 
   if (stats.foodsShared >= 50) badges.push("🏆 Super Sharer");
   else if (stats.foodsShared >= 20) badges.push("⭐ Active Sharer");

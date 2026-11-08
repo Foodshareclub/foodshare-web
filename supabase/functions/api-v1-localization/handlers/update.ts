@@ -25,6 +25,7 @@
  */
 
 import { getSupabaseClient } from "../../_shared/supabase.ts";
+import type { Json } from "../../_shared/database.types.ts";
 
 const VERSION = "2.0.0";
 
@@ -136,7 +137,9 @@ export default async function updateHandler(
     const { error: updateError } = await supabase
       .from("translations")
       .update({
-        messages: mergedMessages,
+        // `deepMerge` returns `Record<string, unknown>`; the column is
+        // jsonb. The cast is the boundary to the catalog's Json type.
+        messages: mergedMessages as Json,
         version: newVersion,
         updated_at: new Date().toISOString(),
       })

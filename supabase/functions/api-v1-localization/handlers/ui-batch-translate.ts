@@ -25,6 +25,7 @@
  */
 
 import { getSupabaseClient } from "../../_shared/supabase.ts";
+import type { Json } from "../../_shared/database.types.ts";
 import { logger } from "../../_shared/logger.ts";
 import { llmTranslationService } from "../services/llm-translation.ts";
 
@@ -368,7 +369,9 @@ export default async function uiBatchTranslateHandler(
       const { error: updateError } = await supabase
         .from("translations")
         .update({
-          messages: mergedMessages,
+          // `deepMerge` returns `Record<string, unknown>`; the column is
+          // jsonb. The cast is the boundary to the catalog's Json type.
+          messages: mergedMessages as Json,
           version,
           updated_at: new Date().toISOString(),
         })

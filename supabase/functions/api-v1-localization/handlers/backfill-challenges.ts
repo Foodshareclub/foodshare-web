@@ -190,7 +190,13 @@ export default async function backfillChallengesHandler(
       if (rpcError) {
         error = new Error(rpcError.message);
       } else {
-        challenges = data;
+        // The RPC is not in the local catalog; the row shape is set by the
+        // SQL function and matches the declared element type.
+        challenges = data as unknown as Array<{
+          id: number;
+          challenge_title: string;
+          challenge_description: string | null;
+        }>;
         count = challenges?.length || 0;
       }
       logger.info("Fetching untranslated challenges", { limit, offset });
@@ -287,7 +293,7 @@ export default async function backfillChallengesHandler(
 
     // Trigger batch translation for each challenge (fire-and-forget)
     const translationPromises = challenges.map(async (challenge) => {
-      const fields = [];
+      const fields: { name: string; text: string }[] = [];
 
       if (
         challenge.challenge_title && challenge.challenge_title.trim().length > 0

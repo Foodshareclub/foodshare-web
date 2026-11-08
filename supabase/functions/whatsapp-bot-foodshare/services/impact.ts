@@ -33,23 +33,21 @@ export async function getUserImpactStats(
   }
 
   // Run queries in parallel
-  const [sharedResult, claimedResult] = await Promise.all([
+  const [sharedResult] = await Promise.all([
     // Get shared food count
     supabase
       .from("posts")
       .select("*", { count: "exact", head: true })
       .eq("profile_id", profile.id)
       .eq("post_type", "food"),
-
-    // Get claimed food count
-    supabase
-      .from("messages")
-      .select("*", { count: "exact", head: true })
-      .eq("sender_id", profile.id),
   ]);
 
   const sharedCount = sharedResult.count || 0;
-  const claimedCount = claimedResult.count || 0;
+  // There is no claims table in the schema (verified in production: the
+  // legacy `messages` read was PGRST205 on every run, so this count was
+  // silently 0 and the claim badges could never be earned). It stays 0
+  // until claim tracking exists; the badge tiers are wired for it.
+  const claimedCount = 0;
 
   // Estimate impact (average food item = 0.5kg, CO2 = 2.5kg per kg food)
   const kgSaved = sharedCount * 0.5;

@@ -13,6 +13,9 @@ import * as emoji from "../lib/emojis.ts";
 import * as msg from "../lib/messages.ts";
 import type { TelegramMessage, TelegramUser } from "../types/index.ts";
 import { safeExecute } from "../utils/errors.ts";
+import type { Database } from "../../_shared/database.types.ts";
+
+type PostsInsert = Database["public"]["Tables"]["posts"]["Insert"];
 import {
   handleFindCommand,
   handleHelpCommand,
@@ -376,7 +379,7 @@ export async function handleTextMessage(
         post_type: "food",
         is_active: true,
         images: imageUrls,
-      })
+      } as PostsInsert)
       .select()
       .single();
 
@@ -554,7 +557,7 @@ export async function handleLocationMessage(
         post_type: "food",
         is_active: true,
         images: imageUrls,
-      })
+      } as PostsInsert)
       .select()
       .single();
 

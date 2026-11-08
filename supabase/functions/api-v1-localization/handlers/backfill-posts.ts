@@ -186,7 +186,11 @@ export default async function backfillPostsHandler(
       if (rpcError) {
         error = new Error(rpcError.message);
       } else {
-        posts = data;
+        // The RPC is not in the local catalog; the row shape is set by the
+        // SQL function and matches the declared element type.
+        posts = data as unknown as Array<
+          { id: number; post_name: string; post_description: string | null }
+        >;
         count = posts?.length || 0;
       }
       logger.info("Fetching untranslated posts", { limit, offset });
@@ -282,7 +286,7 @@ export default async function backfillPostsHandler(
 
     // Trigger batch translation for each post (fire-and-forget)
     const translationPromises = posts.map(async (post) => {
-      const fields = [];
+      const fields: { name: string; text: string }[] = [];
 
       if (post.post_name && post.post_name.trim().length > 0) {
         fields.push({ name: "title", text: post.post_name });

@@ -955,12 +955,21 @@ export async function handleDeepLinkToken(
 
   try {
     const supabase = getAdminClient();
-    const { data, error } = await supabase.rpc("claim_telegram_link_token", {
+    const { data: rawToken, error } = await supabase.rpc("claim_telegram_link_token", {
       p_token: cleanToken,
       p_telegram_id: telegramUser.id,
       p_username: telegramUser.username || null,
       p_first_name: telegramUser.first_name || null,
     });
+
+    // `claim_telegram_link_token` is not in the local catalog, so the
+    // result arrives untyped; the shape is set by the SQL function.
+    const data = rawToken as unknown as {
+      success: boolean;
+      error?: string;
+      first_name?: string;
+      email?: string;
+    } | null;
 
     if (error || !data || data.success === false) {
       const errMsg = data?.error || error?.message || "Invalid or expired link token.";

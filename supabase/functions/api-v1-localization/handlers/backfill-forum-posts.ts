@@ -190,7 +190,13 @@ export default async function backfillForumPostsHandler(
       if (rpcError) {
         error = new Error(rpcError.message);
       } else {
-        forumPosts = data;
+        // The RPC is not in the local catalog; the row shape is set by the
+        // SQL function and matches the declared element type.
+        forumPosts = data as unknown as Array<{
+          id: number;
+          forum_post_name: string;
+          forum_post_description: string | null;
+        }>;
         count = forumPosts?.length || 0;
       }
       logger.info("Fetching untranslated forum posts", { limit, offset });
@@ -218,7 +224,15 @@ export default async function backfillForumPostsHandler(
       }
 
       const result = await query;
-      forumPosts = result.data;
+      // The `.not("forum_post_name", "is", null)` filter above guarantees
+      // non-null names; the typed client cannot narrow that.
+      forumPosts = result.data as
+        | Array<{
+          id: number;
+          forum_post_name: string;
+          forum_post_description: string | null;
+        }>
+        | null;
       count = result.count;
       if (result.error) {
         error = new Error(result.error.message);
@@ -288,7 +302,7 @@ export default async function backfillForumPostsHandler(
 
     // Trigger batch translation for each forum post (fire-and-forget)
     const translationPromises = forumPosts.map(async (forumPost) => {
-      const fields = [];
+      const fields: { name: string; text: string }[] = [];
 
       if (
         forumPost.forum_post_name && forumPost.forum_post_name.trim().length > 0

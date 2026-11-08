@@ -230,8 +230,8 @@ async function handleFind(phoneNumber: string): Promise<void> {
   for (const post of posts.slice(0, 3)) {
     const card = getFoodCardMessage({
       name: post.post_name || "Food",
-      description: post.post_description,
-      address: post.address,
+      description: post.post_description ?? undefined,
+      address: post.post_address ?? undefined,
     });
 
     await sendTextMessage(phoneNumber, card);

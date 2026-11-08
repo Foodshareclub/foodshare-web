@@ -5905,6 +5905,27 @@ export type Database = {
         };
         Relationships: [];
       },
+      infoplist_translation_cache: {
+        Row: {
+        content_hash: string;
+        locale: string;
+        translations: Json;
+        updated_at: string;
+        };
+        Insert: {
+        content_hash: string;
+        locale: string;
+        translations: Json;
+        updated_at?: string;
+        };
+        Update: {
+        content_hash?: string;
+        locale?: string;
+        translations?: Json;
+        updated_at?: string;
+        };
+        Relationships: [];
+      },
       languages: {
         Row: {
         country_flag: Json | null;

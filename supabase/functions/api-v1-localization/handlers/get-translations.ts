@@ -60,11 +60,11 @@ const CONTENT_FIELD_MAPPINGS: Record<string, Record<string, string>> = {
 };
 
 // Table names for different content types
-const CONTENT_TABLES: Record<string, string> = {
+const CONTENT_TABLES = {
   post: "posts",
   challenge: "challenges",
   forum_post: "forum",
-};
+} as const;
 
 /**
  * Create SHA-256 hash of text (for DB lookup)

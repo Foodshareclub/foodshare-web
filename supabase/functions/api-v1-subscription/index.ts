@@ -272,12 +272,18 @@ async function processDLQ(
   supabase: ReturnType<typeof getServiceRoleClient>,
 ): Promise<{ processed: number; expired: number; pending: number }> {
   try {
-    const { data, error } = await supabase.rpc("billing_process_dlq");
+    const { data: rawDlq, error } = await supabase.rpc("billing_process_dlq");
 
     if (error) {
       logger.error("Failed to process DLQ", new Error(error.message));
       return { processed: 0, expired: 0, pending: 0 };
     }
+
+    // `billing_process_dlq` is not in the local catalog, so the result
+    // arrives untyped; the shape is set by the SQL function.
+    const data = rawDlq as unknown as
+      | { processed: number; expired: number }
+      | null;
 
     const { count } = await supabase
       .schema("billing")
@@ -370,11 +376,17 @@ async function cleanupOldEvents(
       return { deleted: 0 };
     }
 
+    // The catalog types this return as `Json`; the shape is set by the
+    // SQL function (jsonb with the two deletion counters).
+    const counts = data as unknown as
+      | { deleted_events: number; deleted_dlq: number }
+      | null;
+
     const result = {
-      deleted: (data?.deleted_events || 0) + (data?.deleted_dlq || 0),
+      deleted: (counts?.deleted_events || 0) + (counts?.deleted_dlq || 0),
     };
 
-    logger.info("Old events cleaned up", data);
+    logger.info("Old events cleaned up", counts ?? undefined);
     return result;
   } catch (error) {
     logger.error(

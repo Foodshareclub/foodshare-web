@@ -524,7 +524,10 @@ export class EmailService {
         version: data.version,
       });
 
-      return data as EmailTemplate;
+      // The row type and the local view type overlap only partially
+      // (the row carries every column; the view carries the ones the
+      // sender uses). The cast is the boundary between them.
+      return data as unknown as EmailTemplate;
     } catch (error) {
       logger.error(
         "Failed to fetch template from database",

@@ -5,6 +5,9 @@
 import { logger } from "../../_shared/logger.ts";
 import type { Profile } from "../types/index.ts";
 import { getSupabaseClient } from "../../_shared/supabase.ts";
+import type { Database } from "../../_shared/database.types.ts";
+
+type ProfilesUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
 /**
  * Database error types for proper error handling
@@ -158,7 +161,15 @@ export async function createProfile(data: {
   const { data: profile, error } = await supabase
     .from("profiles")
     .insert({
-      ...data,
+      id: data.id,
+      whatsapp_phone: data.whatsapp_phone,
+      first_name: data.first_name,
+      // The profiles table declares nickname WITHOUT NULL; the local
+      // parameter allows null, so map it to absence.
+      nickname: data.nickname ?? undefined,
+      email: data.email,
+      verification_code: data.verification_code,
+      verification_code_expires_at: data.verification_code_expires_at,
       email_verified: false,
     })
     .select()
@@ -183,10 +194,14 @@ export async function updateProfile(
 ): Promise<boolean> {
   const supabase = getSupabaseClient();
 
-  const { error } = await supabase.from("profiles").update(updates).eq(
-    "id",
-    profileId,
-  );
+  // `Partial<Profile>` is wider than the catalog Update type (it allows
+  // null on NOT NULL columns like first_name). Callers in this service
+  // pass table columns only; the cast is the boundary where the local
+  // view meets the catalog row type.
+  const { error } = await supabase
+    .from("profiles")
+    .update(updates as ProfilesUpdate)
+    .eq("id", profileId);
 
   if (error) {
     logDatabaseError("updateProfile", error, { profileId });

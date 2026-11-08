@@ -168,8 +168,12 @@ export default async function translateContentHandler(
     }
 
     if (dbResult?.[0]?.cache_hit) {
-      const translatedText = dbResult[0].translated_text;
-      const quality = dbResult[0].quality_score || 0.95;
+      const row = dbResult[0] as {
+        translated_text: string;
+        quality_score?: number;
+      };
+      const translatedText = row.translated_text;
+      const quality = row.quality_score || 0.95;
 
       // Promote to memory cache
       updateMemoryCache(cacheKey, translatedText, quality);

@@ -13,6 +13,7 @@ import { logger } from "../../_shared/logger.ts";
 import { extractEXIF, getImageDimensions } from "../services/exif.ts";
 import { compressImage, generateThumbnail } from "../../_shared/compression/index.ts";
 import { analyzeImage } from "../services/ai.ts";
+import type { AIData } from "../types/index.ts";
 import { detectFormat, logUploadMetrics } from "../../_shared/image-utils.ts";
 import {
   checkRateLimit,
@@ -112,7 +113,7 @@ export async function handleUpload(ctx: HandlerContext): Promise<Response> {
     }
   }
 
-  let ai = null;
+  let ai: AIData | null = null;
   if (enableAI) {
     try {
       ai = await analyzeImage(publicUrl);

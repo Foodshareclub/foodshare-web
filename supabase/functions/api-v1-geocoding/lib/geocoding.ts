@@ -15,6 +15,9 @@ import { z } from "../../_shared/schemas/common.ts";
 import { Webhook } from "standardwebhooks";
 import { logger } from "../../_shared/logger.ts";
 import { type Coordinates, geocodeAddress } from "../../_shared/geocoding.ts";
+// Type-only: `processQueueItem` annotates its client parameter with the
+// shared service-role client's return type.
+import { type getSupabaseClient } from "../../_shared/supabase.ts";
 
 // =============================================================================
 // Configuration

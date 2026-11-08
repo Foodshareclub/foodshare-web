@@ -220,7 +220,6 @@ Deno.test("generated types: coverage of the relations the code queries", () => {
       "billing.subscription_events_dlq",
       "billing.subscription_health",
       "billing.subscription_metrics",
-      "public.api_requests",
       "public.chat_messages",
       "public.chat_rooms",
       "public.favorites",

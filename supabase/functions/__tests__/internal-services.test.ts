@@ -133,7 +133,10 @@ Deno.test("verifyAppleJws: a 401 is a rejection, not an outage", async () => {
   );
   assert(isRejection(error));
   assert(!isUnavailable(error));
-  assertEquals(error.code, "verification_failed");
+  assertEquals(
+    (error as VerificationRejectedError).code,
+    "verification_failed",
+  );
   assertStringIncludes(error.message, "trust anchor");
 });
 
@@ -190,7 +193,10 @@ Deno.test("verifyAppleJws: a 400 is a rejection (our request is malformed)", asy
     VerificationRejectedError,
   );
   assert(isRejection(error));
-  assertEquals(error.code, "malformed_request");
+  assertEquals(
+    (error as VerificationRejectedError).code,
+    "malformed_request",
+  );
 });
 
 Deno.test("verifyAppleJws: a non-JSON body surfaces verbatim", async () => {

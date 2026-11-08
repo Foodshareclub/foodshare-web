@@ -344,7 +344,8 @@ export async function handleFindCommand(
     }
 
     if (food.location) {
-      const coords = await extractCoordinates(food.location);
+      // `location` is the address text the geocoder accepts.
+      const coords = await extractCoordinates(food.location as string);
       if (coords) {
         // SECURITY: Apply 200m approximation for privacy
         const approxCoords = approximateLocation(
@@ -398,7 +399,7 @@ export async function handleNearbyCommand(
   // PostgREST rejected the call with "function does not exist". The error
   // was swallowed by the branch below, which reported "no food found" — so
   // this search never returned anything and never said why.
-  const { data: nearbyFoods, error } = await supabase.rpc(
+  const { data: rawNearby, error } = await supabase.rpc(
     "find_nearby_posts_geography",
     {
       user_location: profile.location,
@@ -406,6 +407,20 @@ export async function handleNearbyCommand(
       p_post_type: "food",
     },
   );
+
+  // The RPC returns SETOF record, so its rows arrive untyped. The shape
+  // mirrors posts plus the computed distance; `location` is the address
+  // string extractCoordinates geocodes.
+  const nearbyFoods = rawNearby as unknown as
+    | Array<{
+      id: number;
+      post_name: string;
+      post_description: string | null;
+      images: string[] | null;
+      location: string;
+      distance_km: number | null;
+    }>
+    | null;
 
   // An error is not an empty result. The single branch that handled both
   // told the user "no food found" when the query had failed, which is a

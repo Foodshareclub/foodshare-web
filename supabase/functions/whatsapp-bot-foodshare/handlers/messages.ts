@@ -8,6 +8,9 @@ import type { WhatsAppMessage } from "../types/index.ts";
 import { getUserState, setUserState } from "../services/user-state.ts";
 import { getProfileByWhatsAppPhone, updateProfile } from "../services/profile.ts";
 import { getSupabaseClient } from "../../_shared/supabase.ts";
+import type { Database } from "../../_shared/database.types.ts";
+
+type PostsInsert = Database["public"]["Tables"]["posts"]["Insert"];
 import { extractCoordinates, geocodeAddress } from "../services/geocoding.ts";
 import {
   getMediaUrl,
@@ -327,13 +330,13 @@ async function createFoodPost(
 
   const supabase = getSupabaseClient();
 
-  const postData: Record<string, unknown> = {
+  const postData = {
     profile_id: profile.id,
     post_type: "food",
     post_name: (data.description as string)?.substring(0, 100) || "Food",
     post_description: data.description,
     is_active: true,
-  };
+  } as PostsInsert;
 
   if (data.latitude && data.longitude) {
     const lat = Number(data.latitude);
@@ -404,8 +407,8 @@ async function handleNearby(
   for (const post of posts) {
     const card = getFoodCardMessage({
       name: post.post_name || "Food",
-      description: post.post_description,
-      address: post.address,
+      description: post.post_description ?? undefined,
+      address: post.post_address ?? undefined,
     });
 
     await sendTextMessage(phoneNumber, card);

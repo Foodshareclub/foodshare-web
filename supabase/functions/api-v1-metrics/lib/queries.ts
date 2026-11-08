@@ -19,7 +19,11 @@ export async function getErrorRate(
       p_minutes: minutes,
     });
     if (error) return 0;
-    return data || 0;
+    // The RPC returns a single row, not a scalar: reading the rate out of
+    // it keeps this consistent with `_shared/metrics.ts`, which reads the
+    // same row's `error_rate` field.
+    const row = data?.[0] as { error_rate: number } | undefined;
+    return row?.error_rate || 0;
   } catch {
     return 0;
   }
@@ -56,6 +60,7 @@ export async function getRequestCount(
     const since = new Date(Date.now() - minutes * 60 * 1000).toISOString();
 
     const { count, error } = await supabase
+      .schema("metrics")
       .from("api_requests")
       .select("id", { count: "exact", head: true })
       .gte("created_at", since);
@@ -69,7 +74,8 @@ export async function getRequestCount(
       );
 
       if (rpcError) return 0;
-      return data || 0;
+      // The RPC is not in the local catalog; it returns an integer count.
+      return (data as unknown as number | null) || 0;
     }
 
     return count || 0;

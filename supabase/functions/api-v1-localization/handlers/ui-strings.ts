@@ -277,7 +277,7 @@ export default async function uiStringsHandler(
 
       const responseData: TranslationResponse = {
         locale: fallbackTranslation.locale,
-        messages: fallbackTranslation.messages,
+        messages: fallbackTranslation.messages as Record<string, string>,
         version: fallbackTranslation.version,
         platform,
         cached: false,
@@ -314,7 +314,7 @@ export default async function uiStringsHandler(
 
     const responseData: TranslationResponse = {
       locale: translation.locale,
-      messages: translation.messages,
+      messages: translation.messages as Record<string, string>,
       version: translation.version,
       platform,
       cached: false,

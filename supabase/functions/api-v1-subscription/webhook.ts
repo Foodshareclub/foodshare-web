@@ -16,6 +16,7 @@
  */
 
 import { getSupabaseClient } from "../_shared/supabase.ts";
+import type { Json } from "../_shared/database.types.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { logger } from "../_shared/logger.ts";
 import { AppError } from "../_shared/errors.ts";
@@ -569,7 +570,7 @@ async function processWebhookAtomically(
               eventType: event.eventType,
               subscription: sub,
               environment: event.environment,
-            },
+            } as unknown as Json,
             p_signed_date: event.eventTime.toISOString(),
             p_user_id: userId,
             p_product_id: sub.productId,
@@ -590,11 +591,20 @@ async function processWebhookAtomically(
           throw new Error(`Atomic processing failed: ${error.message}`);
         }
 
+        // The catalog types this return as `Json`; the shape is set by the
+        // SQL function.
+        const outcome = data as unknown as {
+          success: boolean;
+          already_processed: boolean;
+          event_id: string | null;
+          subscription_id: string | null;
+        } | null;
+
         return {
-          success: data?.success ?? false,
-          alreadyProcessed: data?.already_processed ?? false,
-          eventId: data?.event_id || null,
-          subscriptionId: data?.subscription_id || null,
+          success: outcome?.success ?? false,
+          alreadyProcessed: outcome?.already_processed ?? false,
+          eventId: outcome?.event_id || null,
+          subscriptionId: outcome?.subscription_id || null,
         };
       }, { platform: event.platform, eventType: event.eventType });
     }, "processWebhookAtomically");

@@ -37,13 +37,14 @@ export async function getMetricsSummary(minutes: number = 5): Promise<
       return null;
     }
 
-    const errorData = errorRateResult.data?.[0] ||
-      { total_requests: 0, error_rate: 0 };
+    const errorData = (errorRateResult.data?.[0] as
+      | { total_requests: number; error_rate: number }
+      | undefined) || { total_requests: 0, error_rate: 0 };
 
     return {
-      errorRate: parseFloat(errorData.error_rate) || 0,
+      errorRate: Number(errorData.error_rate) || 0,
       p95Latency: p95Result.data || 0,
-      totalRequests: parseInt(errorData.total_requests) || 0,
+      totalRequests: Number(errorData.total_requests) || 0,
     };
   } catch (error) {
     logger.error("Failed to get metrics summary:", { error });
@@ -64,13 +65,16 @@ export async function recordHealthCheck(
   try {
     const supabase = getSupabaseClient();
 
-    await supabase.from("metrics.health_checks").insert({
-      service,
-      status,
-      response_time_ms: responseTimeMs,
-      details: details || {},
-      error_message: errorMessage,
-    });
+    await supabase
+      .schema("metrics")
+      .from("health_checks")
+      .insert({
+        service,
+        status,
+        response_time_ms: responseTimeMs,
+        details: details || {},
+        error_message: errorMessage,
+      });
   } catch (error) {
     logger.error("Failed to record health check:", { error });
   }
