@@ -14,7 +14,7 @@
 
 import { createAPIHandler, type HandlerContext } from "../_shared/api-handler.ts";
 import { logger } from "../_shared/logger.ts";
-import { verifyHmacSignature } from "../_shared/webhook-security.ts";
+import { verifyTailscaleWebhook } from "./lib/webhook-verification.ts";
 
 const VERSION = "1.0.0";
 const SERVICE = "api-v1-tailscale-webhook";
@@ -33,9 +33,10 @@ const VPS_HOST: string | undefined = Deno.env.get("VPS_HOST") || "api.foodshare.
 async function handlePost(ctx: HandlerContext): Promise<Response> {
   const url = new URL(ctx.request.url);
 
-  // Parse body from context
+  // Parse body from context. Event parsing uses the exact captured bytes;
+  // signature verification (below) does too.
+  const rawBody = ctx.rawBody ?? "";
   const body = ctx.body;
-  const rawBody = typeof body === "string" ? body : (body ? JSON.stringify(body) : "");
 
   // Log the incoming webhook event
   logger.info("Tailscale webhook received", {
@@ -46,29 +47,27 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
     bodyType: url.searchParams.get("type") || "unknown",
   });
 
-  // Verify webhook signature if secret is configured
-  if (TAILSCALE_WEBHOOK_SECRET) {
-    const signature = ctx.request.headers.get("X-Tailscale-Signature") || "";
-    const valid = await verifyHmacSignature(
-      rawBody,
-      signature,
-      TAILSCALE_WEBHOOK_SECRET,
-    );
+  // Verify the signature over the exact captured bytes. A missing secret
+  // fails closed outside development (see webhook-verification.ts).
+  const verification = await verifyTailscaleWebhook({
+    rawBody: ctx.rawBody,
+    signature: ctx.request.headers.get("X-Tailscale-Signature"),
+    secret: TAILSCALE_WEBHOOK_SECRET,
+  });
 
-    if (!valid.valid) {
-      logger.warn("Tailscale webhook signature verification failed", {
-        error: valid.error,
-        service: SERVICE,
-      });
-      // Return 200 to prevent retry storms - Tailscale delivers at-least-once
-      return new Response(
-        JSON.stringify({ ok: false, error: "Invalid signature" }),
-        {
-          status: 200,
-          headers: { ...ctx.corsHeaders, "Content-Type": "application/json" },
-        },
-      );
-    }
+  if (!verification.valid) {
+    logger.warn("Tailscale webhook rejected", {
+      error: verification.error,
+      service: SERVICE,
+    });
+    // Return 200 to prevent retry storms - Tailscale delivers at-least-once
+    return new Response(
+      JSON.stringify({ ok: false, error: verification.error ?? "Invalid signature" }),
+      {
+        status: 200,
+        headers: { ...ctx.corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   }
 
   // Parse the event type from the body
@@ -225,6 +224,9 @@ Deno.serve(createAPIHandler({
   version: VERSION,
   requireAuth: false,
   csrf: false,
+  // Signature verification must run over the exact bytes on the wire;
+  // the parsed body re-serializes with different whitespace/key order.
+  captureRawBody: true,
   rateLimit: {
     limit: 100,
     windowMs: 60_000,
