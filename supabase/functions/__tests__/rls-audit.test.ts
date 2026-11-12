@@ -111,13 +111,22 @@ const SERVICE_OWNED = [
   // service-role singleton in `_shared/supabase.ts`; a user token never writes
   // them, and the anon key must not read another user's state machine either,
   // which is what their RLS policies enforce.
+  //
+  // `post_activity_logs` is deliberately NOT in this list: it is a hybrid
+  // table. The backend writers (api-v1-email, api-v1-engagement) use the
+  // service-role client, but user clients write their own rows directly —
+  // web `src/app/actions/post-activity.ts` inserts activity records and the
+  // app (ShareService, InvitationService) records share/invite activity with
+  // the user token. Its INSERT policy is owner-scoped (CHECK
+  // actor_id = auth.uid()), so a user can only log their own activity; there
+  // is no cross-tenant write path, and a service-role-only policy would break
+  // a live client feature.
   "telegram_rate_limits",
   "telegram_user_states",
   "whatsapp_rate_limits",
   "whatsapp_user_states",
   "geocoding_cache",
   "group_message_deletions",
-  "post_activity_logs",
   "translation_backfill_jobs",
   "translation_usage_analytics",
   "translations",
@@ -236,9 +245,15 @@ Deno.test("rls audit: no service-owned table accepts a client write", () => {
       // backend table is a different question and a much weaker one.
       if (policy.command === "SELECT") continue;
       // A policy with no `TO` clause applies to PUBLIC, which includes anon,
-      // whatever the policy is called.
+      // whatever the policy is called. Role names come from the catalog as
+      // PostgreSQL reports them (uppercase, e.g. "PUBLIC"), so the
+      // comparison is case-insensitive — a literal lowercase match here
+      // silently skipped every policy (F-012).
       const reaches = policy.roles.length === 0 ||
-        policy.roles.some((r) => CLIENT_ROLES.has(r) || r === "public");
+        policy.roles.some((r) => {
+          const role = r.toLowerCase();
+          return CLIENT_ROLES.has(role) || role === "public";
+        });
       if (!reaches) continue;
       holes.push(
         `${table.name}.${policy.name} [${policy.command} → ` +
@@ -286,6 +301,18 @@ Deno.test("rls audit: every table only the backend writes is in the set", () => 
   // A table with an unresolvable writer is left out and counted. An unresolved
   // call site is not evidence in either direction, and treating it as evidence
   // would make this test inherit the resolver's coverage.
+  // Tables written by user-scoped clients OUTSIDE the backend corpus. The
+  // call-site scan above only sees the edge functions, so for these the
+  // absence of a user write here is a coverage gap, not evidence. Provenance
+  // is the estate, cited per entry:
+  const userWrittenOutsideCorpus = new Set([
+    // web `src/app/actions/post-activity.ts` inserts activity records and the
+    // app (ShareService, InvitationService) records share/invite activity
+    // with the user token; the service-role writers seen in the corpus are
+    // alongside that, not instead of it.
+    "post_activity_logs",
+  ]);
+
   const serviceOwned = new Set(SERVICE_OWNED);
   const writers = new Map<string, Set<"user" | "service">>();
   const indeterminate = new Set<string>();
@@ -307,7 +334,10 @@ Deno.test("rls audit: every table only the backend writes is in the set", () => 
   const unlisted = [...writers.entries()]
     .filter(([, set]) => set.size === 1 && set.has("service"))
     .map(([name]) => name)
-    .filter((name) => !serviceOwned.has(name) && s.relation(name).ok)
+    .filter(
+      (name) => !serviceOwned.has(name) &&
+        !userWrittenOutsideCorpus.has(name) && s.relation(name).ok,
+    )
     .sort();
 
   const alsoUnknown = unlisted.filter((n) => indeterminate.has(n));

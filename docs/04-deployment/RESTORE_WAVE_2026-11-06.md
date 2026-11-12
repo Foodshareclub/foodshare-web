@@ -1,7 +1,8 @@
 # Restore Wave 2026-11-06 — tunnel + F1 + lockdown + F4, one pass
 
 Status: **all code artifacts authored, verified, and signed off. M1 closed at
-backend `5719f997` (web mirror `019c22a2`). M2 retracted, end state A confirmed
+backend `5719f997` (web mirror `019c22a2`); M-RLS closed at backend
+`20471db7` (web mirror in the same push). M2 retracted, end state A confirmed
 (§Design decisions). What remains is execution: the operator runs
 `CLOUDFLARE-TUNNEL-OUTAGE-RUNBOOK.md` steps 1–5 with the wave insertions below —
 run it, or hand over estate-runner access and the team coordinates the run.**
@@ -109,6 +110,19 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
      `posts_with_location` view is `security_invoker`, so anon needs the column
      grants for the view to keep working (a bare revoke breaks public browse at
      re-exposure).
+   - M-RLS: `20261112000000_rls_privilege_fixes.sql` @ backend `20471db7`
+     (web mirror pushed with this doc) — closes F-013 (waste_logs policies
+     keyed on the user-writable `household_id` JWT claim → the
+     households-join pattern of the `household_waste_logs` sibling + the safe
+     profile branch), F-010 (telegram_user_states → service-role-only) and
+     F-011 (rate_limits → service-role-only; no owner column exists), plus
+     class completion: the remaining 13 TO-less (=> PUBLIC) policies on
+     service-owned tables narrowed to an explicit role, predicates verbatim
+     from the catalog. Same `BEGIN/COMMIT/NOTIFY pgrst` convention, **same
+     batch as M1**: the re-exposed surface must not carry the vulnerable
+     policies. `catalog.json` regenerated via the PG17 oracle for this file;
+     the companion `rls-audit.test.ts` case fix (F-012) is what makes the
+     estate's own RLS audit see all of it — 27/27 green.
    - M2 (owner-scoped view): **retracted** — not in this wave and not in phase
      2 as specced. See §Design decisions.
 3. **Wave insertion B — deploy the new web build + edge functions**
@@ -153,6 +167,7 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
 | -------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | M0 (5 pending migrations)              | backend, in main, mirror byte-identical on web                  | verifier (diff -rq)                                                                                                                                            |
 | M1 anon REVOKE+GRANT                   | backend `5719f997` (web mirror `019c22a2`; original `aec49efd`) | verifier — column math recomputed: 49 Row − 46 GRANT = exactly the trio, no phantoms; security — signed off (convention edit: `BEGIN/COMMIT` + `NOTIFY pgrst`) |
+| M-RLS privilege fixes (F-013/F-010/F-011 + F-012 + 13-policy class) | backend `20471db7` (web mirror in the same push) | security — fix shapes specified per finding; hermes — predicates copied verbatim from the PG17-oracle catalog, 27/27 rls-audit + oracle tests green |
 | C1 (8 web sites) + Brevo HEAD deletion | web `55dc4c9d`                                                  | verifier — 8 sites line-by-line, 85/85 tests, type-check exit 0; Brevo absence confirmed via anonymous public clone                                            |
 | F4 internal gate                       | backend `d1c3c28e` + `a84487c2`                                 | security — 8/8 new tests; strict check still exactly the 111 pre-existing budgeted errors                                                                      |
 | F1 mapping (109 = 31/72/6)             | backend `ab406777`                                              | verifier — counts reconciled, four-path client inventory                                                                                                       |
