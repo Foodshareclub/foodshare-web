@@ -32,6 +32,13 @@ state and artifact set are unchanged.
 - The production default domain (`<ref>.supabase.co`) **resolves and serves a
   live PostgREST** — correcting the earlier "dark-by-NXDOMAIN" premise in the
   thread. It is _not_ dark; it is key-gated.
+- **The production project is quota-restricted** — probed 2026-11-12 on the
+  default domain: `GET /auth/v1/authorize?provider=google` (the one auth
+  endpoint that skips the apikey gate) returns **402
+  `exceed_db_size_quota`**. GoTrue rides the same project host, so while the
+  restriction is live it cannot mint sessions at all: **clear the DB-size quota
+  violation before re-exposure** (runbook step 3.6) or the restored site 402s
+  on every auth call.
 
 **Consequence — the leak invariant is sharper than "M1 before re-exposure":**
 with no valid anon key in circulation (bundle key proven invalid on the live
@@ -45,8 +52,11 @@ tunnel is not the leak path — a valid key is.
 **Re-sequenced continuation (from the current partial state):** 0. Operator: confirm in the Supabase dashboard whether the JWT signing secret
 was rotated (the bundle-key mismatch implies it — or the project config
 changed; the runbook actions are identical either way) and pull the
-**current valid anon + service_role keys**. All §6 legs below run with
-keys minted after this step.
+**current valid anon + service_role keys**. Also clear the **DB-size quota
+violation** in the same dashboard pass (probed 402 `exceed_db_size_quota`;
+runbook step 3.6) — while it is active GoTrue cannot mint any session, which
+makes every other step moot. All §6 legs below run with keys minted after this
+step.
 
 1. Apply M0 + M1 (wave insertion A). The dark window is the key invalidation,
    not the tunnel state — M1's deadline is "before any new valid anon key

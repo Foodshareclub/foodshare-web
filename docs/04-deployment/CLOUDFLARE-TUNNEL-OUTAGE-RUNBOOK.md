@@ -190,6 +190,29 @@ curl -s -H "apikey: <anon>" 'https://api.foodshare.club/rest/v1/posts?select=loc
 # anon browse view -> must be 200 (proves the revoke did not kill public browse)
 ```
 
+### Step 3.6 — clear the DB-size quota restriction (must precede step 4)
+
+**Discovered 2026-11-12 (probed on the production default domain):** the project
+is quota-restricted. The one auth endpoint that skips the apikey gate —
+`GET /auth/v1/authorize?provider=google` — returns **402
+`exceed_db_size_quota`**: "The project owner must upgrade their plan or remove
+spend caps to restore service."
+
+Why it gates re-exposure: GoTrue rides the same project host. While the
+restriction is live it **cannot mint sessions at all** — a restored site 402s
+on every auth call and the restore looks broken when it is a plan limit, not a
+tunnel fault.
+
+- **Supabase dashboard → project → Usage/Billing:** clear the DB-size quota
+  violation (upgrade the plan or remove the spend cap, whichever is intended).
+- Verify, no key needed, harmless read: the same URL must **no longer return
+  402** (a 302 into the OAuth flow or any other non-402 auth response is
+  acceptable — the point is the restriction is off):
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' 'https://<ref>.supabase.co/auth/v1/authorize?provider=google'
+```
+
 ### Step 4 — fix the `api.` and `ai.` records in Cloudflare
 
 These must be **proxied** and routed to the tunnel, or pointed at the real origin. Never leave
