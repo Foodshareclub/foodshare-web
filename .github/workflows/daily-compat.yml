@@ -6,6 +6,7 @@ name: Daily Compatibility & E2E
 # 3. Vendored supabase/ drift check against foodshare-backend main
 # 4. Production health probes + cross-repo CI status
 # 5. AI test-gap analysis of the last 24h of commits (Groq -> Z.AI fallback)
+# 6. Stable-tsc divergence canary against the tsrs dev build
 
 on:
   schedule:
@@ -187,3 +188,27 @@ jobs:
         with:
           mode: test-gap
           since: "24 hours"
+
+  tsc-cross-check:
+    name: tsc cross-check (divergence canary)
+    # tsrs is the only type checker in this pipeline, and it is a DEV
+    # prerelease of the TypeScript 7 compiler lineage. A soundness bug in
+    # the dev build would be invisible here. This job runs the STABLE
+    # typescript@7.0.2 compiler (pinned in package.json) over the same
+    # tsconfig every night: any divergence between the two compilers turns
+    # this job red, so the dev build can never silently redefine "clean".
+    # ubuntu-latest (not self-hosted): the canary must not share the
+    # self-hosted runners' failure modes; the full-dep install on a
+    # clean GitHub runner is why the timeout is 20 minutes.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Type-check with stable tsc
+        run: bun run type-check:tsc
