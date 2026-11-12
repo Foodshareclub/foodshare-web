@@ -85,7 +85,8 @@ unit_source_dir="$ROOT"
 unit_names="foodshare-web.container foodshare-cloudflared-web.container foodshare-web.network"
 tunnel_unit_name="foodshare-cloudflared-web.container"
 if [ -f "$UNIT_DIR/foodshare-web.container" ]; then
-  if cmp -s "$UNIT_DIR/foodshare-web.container" "$ROOT/systemd/foodshare-web.container"; then
+  # Managed cache mounts and host comments must not change tunnel generation.
+  if grep -Fxq "Network=foodshare.network" "$UNIT_DIR/foodshare-web.container"; then
     unit_source_dir="$ROOT/systemd"
     unit_names="foodshare-web.container foodshare-cloudflared.container foodshare.network"
     tunnel_unit_name="foodshare-cloudflared.container"
@@ -190,6 +191,12 @@ cleanup_preflight() {
 trap cleanup_preflight EXIT
 trap 'exit 143' TERM INT
 if [ "$had_env" = 1 ]; then cp "$ENV_FILE" "$snapshot/env"; fi
+had_unit=0
+unit_changed=0
+if [ -f "$UNIT_DIR/foodshare-web.container" ]; then
+  cp "$UNIT_DIR/foodshare-web.container" "$snapshot/unit"
+  had_unit=1
+fi
 had_dropin=0
 if [ -f "$DROPIN_FILE" ]; then
   cp "$DROPIN_FILE" "$snapshot/image.conf"
@@ -281,6 +288,9 @@ rollback() {
   else
     rm -f "$ENV_FILE" 2>/dev/null || sudo -n rm -f "$ENV_FILE" || failed=1
   fi
+  if [ "$unit_changed" = 1 ] && [ "$had_unit" = 1 ]; then
+    cp "$snapshot/unit" "$UNIT_DIR/foodshare-web.container" || failed=1
+  fi
   if [ "$image_pinned" = 1 ]; then
     if [ -n "$previous_image" ]; then
       printf '[Container]\nImage=%s\n' "$previous_image" > "$DROPIN_FILE" || failed=1
@@ -289,6 +299,9 @@ rollback() {
     else
       rm -f "$DROPIN_FILE" || failed=1
     fi
+    systemctl --user daemon-reload || failed=1
+  fi
+  if [ "$unit_changed" = 1 ] && [ "$image_pinned" = 0 ]; then
     systemctl --user daemon-reload || failed=1
   fi
   if [ "$restart_attempted" = 1 ]; then
@@ -330,6 +343,35 @@ write_env_file "$snapshot/env.staged"
 # The environment file is in place, so the units can be installed and the
 # generator can build them.
 install_units
+
+# Only disposable Next.js caches are writable. Keep application code read-only
+# and preserve all unrelated host-specific unit settings and tmpfs mounts.
+# Sticky cache roots allow the non-root runtime user to write on rootless Podman.
+unit_changed=1
+python3 - "$UNIT_DIR/foodshare-web.container" <<'CACHE_PY'
+import pathlib, sys
+path = pathlib.Path(sys.argv[1])
+lines = path.read_text().splitlines()
+if "[Container]" not in lines:
+    raise ValueError("Web unit has no Container section")
+mounts = [
+    "Tmpfs=/app/.next/cache:rw,size=256m,mode=1777,nosuid,nodev,noexec",
+    "Tmpfs=/app/.next/server/route-cache:rw,size=128m,mode=1777,nosuid,nodev,noexec",
+]
+output = []
+container = False
+for line in lines:
+    if line.startswith("["):
+        container = line == "[Container]"
+    if container and line.startswith("Tmpfs=") and line.split("=", 1)[1].split(":", 1)[0] in {
+        "/app/.next/cache", "/app/.next/server/route-cache"
+    }:
+        continue
+    output.append(line)
+    if line == "[Container]":
+        output.extend(mounts)
+path.write_text("\n".join(output) + "\n")
+CACHE_PY
 
 # The tunnel's token is a podman secret on a host that runs the tunnel unit
 # that reads one, and a line in the environment file on a host that runs

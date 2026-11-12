@@ -5,6 +5,8 @@ Requires=foodshare-network.service
 BindsTo=foodshare-network.service
 
 [Container]
+Tmpfs=/app/.next/cache:rw,size=256m,mode=1777,nosuid,nodev,noexec
+Tmpfs=/app/.next/server/route-cache:rw,size=128m,mode=1777,nosuid,nodev,noexec
 # Pinned by tag on purpose: CI builds and pushes :latest per commit.
 # For digest-pinned deploys, replace with Image=ghcr.io/foodshareclub/foodshare-web@sha256:<digest>.
 # No AutoUpdate=registry here by design — deploys are deliberate via CI (see cd.yml),

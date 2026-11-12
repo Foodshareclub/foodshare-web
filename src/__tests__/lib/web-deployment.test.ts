@@ -63,7 +63,8 @@ async function deploy(options: Record<string, string> = {}, check = false) {
         // the repository's own, so the deployment recognises it.
         await Bun.write(
           join(unitDirectory, "foodshare-web.container"),
-          await Bun.file(join(repoRoot, "systemd", "foodshare-web.container")).text(),
+          (await Bun.file(join(repoRoot, "systemd", "foodshare-web.container")).text()) +
+            (options.MOCK_UNIT_APPEND ?? ""),
         );
       } else {
         await Bun.write(
@@ -72,6 +73,8 @@ async function deploy(options: Record<string, string> = {}, check = false) {
         );
       }
     }
+    const unitPath = join(unitDirectory, "foodshare-web.container");
+    const originalUnit = (await Bun.file(unitPath).exists()) ? await Bun.file(unitPath).text() : "";
     await Bun.write(
       join(directory, "podman"),
       `#!/bin/bash
@@ -193,6 +196,8 @@ fi
       dropin: (await dropinFile.exists()) ? await dropinFile.text() : "",
       environment: (await Bun.file(unitEnvironmentFile).exists()) ? await Bun.file(unitEnvironmentFile).text() : "",
       units: (await readdir(unitDirectory).catch(() => [])).sort().join(" "),
+      unit: (await Bun.file(unitPath).exists()) ? await Bun.file(unitPath).text() : "",
+      originalUnit,
       recoveryEnvironment: recoveryDirectory ? await Bun.file(join(recoveryDirectory, "env")).text() : "",
       recoverySnapshotMode: recoveryDirectory ? (await stat(recoveryDirectory)).mode & 0o777 : null,
       registryCredentialsRetained: recoveryDirectory
@@ -461,4 +466,38 @@ test("an interrupted dependency probe is removed without changing the app", asyn
   expect(result.environment).toBe(oldEnvironment);
   expect(result.commands).toContain("podman rm -f foodshare-web-preflight-");
   expect(result.commands).not.toContain("systemctl --user restart");
+});
+
+test("production rollout gives only Next.js caches bounded writable mounts", async () => {
+  const result = await deploy({ MOCK_UNIT_GENERATION: "systemd", MOCK_SECRET_EXISTS: "1" });
+  expect(result.code).toBe(0);
+  expect(result.unit).toContain("ReadOnly=true");
+  expect(result.unit).toContain("Tmpfs=/app/.next/cache:rw,size=256m,mode=1777,nosuid,nodev,noexec");
+  expect(result.unit).toContain("Tmpfs=/app/.next/server/route-cache:rw,size=128m,mode=1777,nosuid,nodev,noexec");
+  expect(result.unit.match(/^Tmpfs=\/app\/\.next\/cache:/gm)?.length).toBe(1);
+  expect(result.unit).toContain("NoNewPrivileges=true");
+});
+
+test("failed health restores the exact host unit including its original mounts", async () => {
+  const result = await deploy({ MOCK_HEALTH_FAIL: "1" });
+  expect(result.code).not.toBe(0);
+  expect(result.unit).toBe(result.originalUnit);
+});
+
+test("interrupted rollout restores the exact host unit", async () => {
+  const result = await deploy({ MOCK_INTERRUPT: "1" });
+  expect(result.code).not.toBe(0);
+  expect(result.unit).toBe(result.originalUnit);
+});
+
+test("host-specific unit comments cannot select a different tunnel generation", async () => {
+  const result = await deploy({
+    MOCK_UNIT_GENERATION: "systemd",
+    MOCK_SECRET_EXISTS: "1",
+    MOCK_UNIT_APPEND: "\n# preserved host setting\n",
+  });
+  expect(result.code).toBe(0);
+  expect(result.units).toContain("foodshare-cloudflared.container");
+  expect(result.units).not.toContain("foodshare-cloudflared-web.container");
+  expect(result.unit).toContain("# preserved host setting");
 });

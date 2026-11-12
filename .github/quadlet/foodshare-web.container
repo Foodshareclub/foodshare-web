@@ -9,6 +9,8 @@ Wants=network-online.target
 Requires=foodshare-web-network.service
 
 [Container]
+Tmpfs=/app/.next/cache:rw,size=256m,mode=1777,nosuid,nodev,noexec
+Tmpfs=/app/.next/server/route-cache:rw,size=128m,mode=1777,nosuid,nodev,noexec
 Image=ghcr.io/foodshareclub/foodshare-web:latest
 ContainerName=foodshare-web
 # Loopback only. `3000:3000` binds 0.0.0.0, which made the origin reachable
@@ -24,7 +26,6 @@ User=nextjs
 PidsLimit=100
 ReadOnly=true
 Tmpfs=/tmp
-Tmpfs=/app/.next/cache
 NoNewPrivileges=true
 DropCapability=ALL
 # The file-descriptor ceiling the service was given, so it is given here.
