@@ -54,20 +54,32 @@ keys minted after this step.
    `SUPABASE_ANON_KEY` **and** the service-role key (both invalidate
    together), web CI secrets (`NEXT_PUBLIC_SUPABASE_ANON_KEY`,
    `SUPABASE_SERVICE_ROLE_KEY`), app CI secrets (`SUPABASE_URL` /
-   `SUPABASE_ANON_KEY` — `android.yml:232-233` and the iOS equivalent).
+   `SUPABASE_ANON_KEY` — `android.yml:233,521`; the iOS build config takes
+   the publishable key, see the fleet note below).
 3. Finish runbook steps 2–4 (api/studio tunnel, CF re-exposure) + E1/E2 (wave
    insertion B) + **web rebuild/redeploy** with the current key.
 4. §6 verification with freshly-minted keys (@verifier leg 0: rotation status;
    leg 3: post-rotation mint requirement).
 
 **Client-fleet consequence of a rotated JWT secret:** web recovers with a
-rebuild (minutes); edge functions with the env update (minutes); **shipped
-apps do not** — the anon key is baked at build time on both platforms
-(Keychain/xcconfig on iOS, BuildConfig on Android), so installed fleets 401
-until the next app release carries the current key. Apps are already down
-(api dark), so the rotation _extends_ the app outage rather than creating one
-— a product decision for @user: emergency app release with the current key,
-or accept app downtime until the next scheduled release.
+rebuild (minutes); edge functions with the env update (minutes). The app
+fleets are **asymmetric** — the two platforms use different credential
+namespaces, and only one is necessarily invalidated by the rotation:
+
+- **Android** bakes the **legacy anon JWT** (`SUPABASE_ANON_KEY` via
+  `android.yml:233,521`) → if the JWT secret rotated, this fleet 401s on
+  every call until a release ships the current key.
+- **iOS** reads a **publishable key** (`supabasePublishableKey` → Keychain,
+  `SecretsManager.swift:26-47`) — a separate namespace from
+  SECRET_KEY_BASE-signed JWTs; **a JWT-secret rotation does not necessarily
+  invalidate it.** Question 3 on the leg-0 list (dashboard, API → Keys)
+  settles it: still valid → the iOS fleet resumes with the api, **no release
+  needed**; invalidated → the iOS build config needs the new key in the next
+  release.
+  Apps are already down (api dark), so any required release _extends_ the app
+  outage rather than creating one — the product decision for @user (emergency
+  release vs next scheduled release) applies **per platform, per the Q3
+  answer**.
 
 ## Prerequisites
 
@@ -159,13 +171,15 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
   `vendored` job red→green is the closure signal.
 - Dependabot: 1 moderate ≤48h of restoration; 3 low next maintenance cycle.
 - Rotation queue (operator, **authoritative list in the backend action doc
-  @ `023e8b50`** — updated 2026-11-12, ~28 history-only values, P0→P2
+  @ `3c153775`** — updated 2026-11-12, ~28 history-only values, P0→P2
   ordered): **P0 today: AWS full key pair** (ID + secret access key in public
   history — deactivate in IAM; the earlier "ID-only" claim is refuted) and
   **Supabase JWT signing secret** — verify against production and rotate at
   re-exposure (session-invalidating; per §Partial-restore state the deployed
-  keys no longer validate, so leg 0 may find it already rotated). **P1**: 2×
-  Supabase PAT + Postgres password (rotate in the same window as the
+  keys no longer validate, so leg 0 may find it already rotated — **if NOT
+  rotated, the at-re-exposure timing is void: rotate immediately**, the next
+  minted anon key re-opens the exact-location path until M1 lands). **P1**:
+  2× Supabase PAT + Postgres password (rotate in the same window as the
   key-bearing env updates in step 2 above — it touches every `DATABASE_URL`
   consumer). **P2**: remaining Upstash (8 tokens / 3 projects) / MotherDuck /
   Vercel / QStash / Resend / app-repo values per the doc.
