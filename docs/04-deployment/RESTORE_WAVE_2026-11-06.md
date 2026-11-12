@@ -7,6 +7,67 @@ backend `5719f997` (web mirror `019c22a2`). M2 retracted, end state A confirmed
 run it, or hand over estate-runner access and the team coordinates the run.**
 The Q3 product sign-off and the PAT are both optional and non-blocking
 (§Open items).
+**As of 2026-11-12 a partial restore is in progress — read §Partial-restore
+state first; it supersedes the §Execution order sequencing from the current
+state (the target order is unchanged).**
+
+## Partial-restore state (probed 2026-11-12)
+
+A partial restore is under way and it invalidated two premises of this doc.
+The continuation below applies **from the current state**; the target end
+state and artifact set are unchanged.
+
+**Facts (probes, 2026-11-12):**
+
+- `foodshare.club/` → 200, real app. `api.`/`studio.` still dark (identical
+  pre-restore TLS signature). Web is up; the API plane is not.
+- The anon key baked into the live web bundle (role=anon, iat 2026-06-21) →
+  **401 "Invalid API key"** on the production default domain. The deployed
+  web is a **data-less shell**: every Supabase call 401s.
+- The local untracked `foodshare-web/.env.production` holds a non-JWT
+  placeholder (payload decodes to an `access`/`sessings` blob) — no local env
+  file on this machine is a key source. The CI secrets and the Supabase
+  dashboard are the only ones.
+- The production default domain (`<ref>.supabase.co`) **resolves and serves a
+  live PostgREST** — correcting the earlier "dark-by-NXDOMAIN" premise in the
+  thread. It is _not_ dark; it is key-gated.
+
+**Consequence — the leak invariant is sharper than "M1 before re-exposure":**
+with no valid anon key in circulation (bundle key proven invalid on the live
+default domain), the exact-location trio is currently unreachable on _every_
+surface — default domain and tunnel alike. That closure is **accidental**
+(key invalidation), not the designed M1 closure. The invariant for the rest
+of the wave: **no newly-minted valid anon key may reach a public surface
+(web bundle, app build, public env) before M1 is applied.** Re-exposing the
+tunnel is not the leak path — a valid key is.
+
+**Re-sequenced continuation (from the current partial state):** 0. Operator: confirm in the Supabase dashboard whether the JWT signing secret
+was rotated (the bundle-key mismatch implies it — or the project config
+changed; the runbook actions are identical either way) and pull the
+**current valid anon + service_role keys**. All §6 legs below run with
+keys minted after this step.
+
+1. Apply M0 + M1 (wave insertion A). The dark window is the key invalidation,
+   not the tunnel state — M1's deadline is "before any new valid anon key
+   ships", and right now that window is wide open.
+2. Update the key-bearing envs in the same pass: edge-functions
+   `SUPABASE_ANON_KEY` **and** the service-role key (both invalidate
+   together), web CI secrets (`NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+   `SUPABASE_SERVICE_ROLE_KEY`), app CI secrets (`SUPABASE_URL` /
+   `SUPABASE_ANON_KEY` — `android.yml:232-233` and the iOS equivalent).
+3. Finish runbook steps 2–4 (api/studio tunnel, CF re-exposure) + E1/E2 (wave
+   insertion B) + **web rebuild/redeploy** with the current key.
+4. §6 verification with freshly-minted keys (@verifier leg 0: rotation status;
+   leg 3: post-rotation mint requirement).
+
+**Client-fleet consequence of a rotated JWT secret:** web recovers with a
+rebuild (minutes); edge functions with the env update (minutes); **shipped
+apps do not** — the anon key is baked at build time on both platforms
+(Keychain/xcconfig on iOS, BuildConfig on Android), so installed fleets 401
+until the next app release carries the current key. Apps are already down
+(api dark), so the rotation _extends_ the app outage rather than creating one
+— a product decision for @user: emergency app release with the current key,
+or accept app downtime until the next scheduled release.
 
 ## Prerequisites
 
@@ -98,11 +159,16 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
   `vendored` job red→green is the closure signal.
 - Dependabot: 1 moderate ≤48h of restoration; 3 low next maintenance cycle.
 - Rotation queue (operator, **authoritative list in the backend action doc
-  @ `a3b8e5f7`** — 5 history-only values, live HEAD clean): Brevo key →
-  Upstash VECTOR + SEARCH tokens (or confirm project 15379 retired) →
-  Twilio token → AWS key deactivate (**ID-only exposure — lowest priority**)
-  → Firebase retirement note for the PII item. Plus backend F2 historical
-  values and workspace `keys/` actions per the security review.
+  @ `023e8b50`** — updated 2026-11-12, ~28 history-only values, P0→P2
+  ordered): **P0 today: AWS full key pair** (ID + secret access key in public
+  history — deactivate in IAM; the earlier "ID-only" claim is refuted) and
+  **Supabase JWT signing secret** — verify against production and rotate at
+  re-exposure (session-invalidating; per §Partial-restore state the deployed
+  keys no longer validate, so leg 0 may find it already rotated). **P1**: 2×
+  Supabase PAT + Postgres password (rotate in the same window as the
+  key-bearing env updates in step 2 above — it touches every `DATABASE_URL`
+  consumer). **P2**: remaining Upstash (8 tokens / 3 projects) / MotherDuck /
+  Vercel / QStash / Resend / app-repo values per the doc.
 - App branch hygiene: none remaining (T2 closed — `feat/bun-tsrs-migration`
   deleted local + remote, full ancestor of main).
 
@@ -128,9 +194,10 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
 
 ## Open items
 
-- **Execute the restore** — runbook steps 1–5 with the wave insertions above.
-  Binary: the operator runs it, or hands over estate-runner access and the
-  team coordinates.
+- **Execute the restore** — web is already up (data-less shell), api/studio
+  still dark; continue per §Partial-restore state. Binary unchanged: the
+  operator runs it, or hands over estate-runner access and the team
+  coordinates.
 - **Q3 product sign-off** (user, at leisure, non-blocking) — confirm the
   behavior: owners see their own inactive rows.
 - **PAT** (user, at leisure, non-blocking) — E2E blob reports, Dependabot
