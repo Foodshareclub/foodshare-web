@@ -23,12 +23,7 @@
         "FASTMCP_LOG_LEVEL": "ERROR"
       },
       "disabled": false,
-      "autoApprove": [
-        "create_verification",
-        "create_verification_check",
-        "list_services",
-        "get_service"
-      ]
+      "autoApprove": ["list_services", "get_service"]
     },
     "awslabs.core-mcp-server": {
       "type": "stdio",
