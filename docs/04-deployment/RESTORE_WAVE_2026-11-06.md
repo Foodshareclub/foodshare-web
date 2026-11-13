@@ -251,7 +251,14 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
   still dark; continue per §Partial-restore state. Binary unchanged: the
   operator runs it, or hands over estate-runner access and the team
   coordinates.
-- **Q3 product sign-off** (user, at leisure, non-blocking) — confirm the
-  behavior: owners see their own inactive rows.
+- **Q3 product sign-off — SIGNED OFF (yes), 2026-11-13** (card t_d7e74d89).
+  Owners see their own inactive rows, verified against the live tree:
+  `getUserProducts` reads the `posts` base table through the user-scoped
+  cookie client (C1, web `55dc4c9d`, on main), and
+  `posts_select_policy`'s owner branch (`profile_id = auth.uid()`, verified
+  in the PG17 catalog; M1 `20261106000000` carries no policy statements)
+  admits own rows regardless of `is_active`; both callers (`/my-posts`,
+  `/user-listings`) are session-gated. The app gets the same path in phase
+  2 (§Post-wave) — unchanged.
 - **PAT** (user, at leisure, non-blocking) — E2E blob reports, Dependabot
   enumeration. Runner status has the operator-side fallback in §Prerequisites.
