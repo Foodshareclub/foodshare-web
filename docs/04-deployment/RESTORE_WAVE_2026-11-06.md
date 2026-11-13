@@ -109,9 +109,16 @@ namespaces, and only one is necessarily invalidated by the rotation:
    Origin stays dark.
 2. **Wave insertion A — apply pending Supabase migrations, origin still dark,
    as one batch:**
-   - M0: the 5 pending migrations already on backend main (engagement state,
+   - M0: the pending migration batch — the original 5 (engagement state,
      internal-analytics restriction, function privilege lockdown,
-     post-location privacy, image upload quota).
+     post-location privacy, image upload quota) **plus everything else
+     pending per the pre-fix cluster-catalog probe**: the batch grew on
+     backend main 2026-11-08/12 (the `20261108*` drop-dead batch — 249
+     columns, 9 views, dead service-role policies, indexes, triggers,
+     cron dedup — and
+     `20261112120000_storage_authenticated_owner_access.sql`). Apply the
+     exact pending list from the probe, one transaction-wrapped batch,
+     origin dark.
    - M1: `20261106000000_f1_posts_anon_column_grants.sql` @ backend
      `5719f997` (web mirror `019c22a2`) — `BEGIN;` → `REVOKE SELECT ON
 public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
@@ -189,14 +196,14 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
 
 | Artifact                               | Repo @ SHA                                                      | Verified by                                                                                                                                                    |
 | -------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| M0 (5 pending migrations)              | backend, in main, mirror byte-identical on web                  | verifier (diff -rq)                                                                                                                                            |
+| M0 (pending batch: original 5 + `20261108*` drop-dead + `20261112120000` storage; exact pending list per the pre-fix catalog probe) | backend main; web mirror byte-identical **except** `20261112120000` (absent from web origin) | verifier (diff -rq) — the 1-file gap closes with the wave re-sync, which must cover migrations as well as functions |
 | M1 anon REVOKE+GRANT                   | backend `5719f997` (web mirror `019c22a2`; original `aec49efd`) | verifier — column math recomputed: 49 Row − 46 GRANT = exactly the trio, no phantoms; security — signed off (convention edit: `BEGIN/COMMIT` + `NOTIFY pgrst`) |
 | M-RLS privilege fixes (F-013/F-010/F-011 + F-012 + 13-policy class) | backend `fb688685` (v2, 2026-11-12 — drop-only, BYPASSRLS contract fix; original `20471db7`; web mirror in the same push) | security — fix shapes specified per finding; hermes — predicates copied verbatim from the PG17-oracle catalog, 27/27 rls-audit + oracle green; v2 verified clean at tip `4d46337b`: BYPASSRLS contract now passes, remaining tip failures pre-date the fix (attributed on the runbook card) |
 | C1 (8 web sites) + Brevo HEAD deletion | web `55dc4c9d`                                                  | verifier — 8 sites line-by-line, 85/85 tests, type-check exit 0; Brevo absence confirmed via anonymous public clone                                            |
 | F4 internal gate                       | backend `d1c3c28e` + `a84487c2`                                 | security — 8/8 new tests; strict check still exactly the 111 pre-existing budgeted errors                                                                      |
 | F1 mapping (109 = 31/72/6)             | backend `ab406777`                                              | verifier — counts reconciled, four-path client inventory                                                                                                       |
 | Type-debt bug + follow-ups             | backend `d1e069e7`                                              | verifier — 111/30 reproduced                                                                                                                                   |
-| Mirror state                           | functions: exactly 3-file F4 drift (expected); migrations: 0    | verifier — `vendored` job red **by design** until the wave re-sync                                                                                             |
+| Mirror state                           | functions: exactly 3-file F4 drift (expected); migrations: 1 file absent (`20261112120000`) | verifier — `vendored` job red **by design** until the wave re-sync (which must cover both surfaces)                    |
 
 ## Post-wave (explicitly not in this wave)
 
