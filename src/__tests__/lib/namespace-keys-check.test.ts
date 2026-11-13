@@ -267,7 +267,11 @@ export function C() {
 });
 
 describe("namespaced key guard — the shipped tree", () => {
-  it("passes with no arguments, which is how it runs in test:build", () => {
+  // The child gets 120_000 ms to walk the shipped tree, so the harness budget
+  // must cover it: left at the default, a cold runner times out the it() first
+  // and reports the timeout as a test failure while the guard itself was
+  // passing — the same lie the catalogue guard's shipped-tree test made twice.
+  it("passes with no arguments, which is how it runs in test:build", { timeout: 120_000 }, () => {
     const result = runScript([SCRIPT], {
       cwd: PROJECT,
       env: { ...process.env, NO_COLOR: "1" },
