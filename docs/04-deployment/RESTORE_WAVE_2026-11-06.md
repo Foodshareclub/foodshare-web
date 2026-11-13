@@ -88,10 +88,39 @@ namespaces, and only one is necessarily invalidated by the rotation:
   settles it: still valid → the iOS fleet resumes with the api, **no release
   needed**; invalidated → the iOS build config needs the new key in the next
   release.
-  Apps are already down (api dark), so any required release _extends_ the app
-  outage rather than creating one — the product decision for @user (emergency
-  release vs next scheduled release) applies **per platform, per the Q3
-  answer**.
+Apps are already down (api dark), so any required release _extends_ the app
+outage rather than creating one — the product decision for @user (emergency
+release vs next scheduled release) applies **per platform, per the Q3
+answer**.
+
+## Contingency: self-hosted runner fleet down (observed 2026-11-13)
+
+The estate VPS is the critical path while its runner pool is
+0-registered (observed 2026-11-13: empty runner list, `supabase-rest`
+unhealthy, backup service dead). Adjudication for the batch gate's
+"CI green" leg, per the dead-origin rule:
+
+- **Queue-blocked legs** (Test/Lint/Validate-migrations/E2E queued
+  indefinitely on 0 runners) are **ENVIRONMENTAL** — the fleet is the
+  failure, not the code. No code action; closure = fleet recovery +
+  green re-run.
+- **Content reds** (jobs that ran and failed on measured content — the
+  storage-lane `contract-drift` unreferenced-columns and `doc-drift`
+  oracle.md-figure failures) do **not** match the dead-origin signature:
+  they are **real findings in the normal lane**, fleet-independent, and
+  must clear before the CI-green leg. They pre-date M-RLS and do not
+  affect M-RLS's standing.
+- **The migration apply (M0 + M1 + M-RLS + storage) is an operator
+  action on the estate, not a CI job — it proceeds regardless of the
+  fleet.** The CI-green leg is the *evidence* leg: interim standing =
+  by-construction verifies + the GitHub-hosted legs that ran; closure =
+  fleet re-run green after recovery.
+- The E2E-gated deploy step proceeds per the runbook with the E2E gate
+  **explicitly waived on the record** (E2E is structurally
+  dead-origin-dependent — the three production-wiring points in
+  `web.yml`; §6 is the verification that matters).
+- Dependabot PR merges (the hono wave) are blocked until the fleet
+  re-runs their CI.
 
 ## Prerequisites
 
