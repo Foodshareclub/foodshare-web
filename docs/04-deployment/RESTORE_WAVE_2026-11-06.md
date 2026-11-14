@@ -68,8 +68,11 @@ step.
    `SUPABASE_SERVICE_ROLE_KEY`), app CI secrets (`SUPABASE_URL` /
    `SUPABASE_ANON_KEY` — `android.yml:233,521`; the iOS build config takes
    the publishable key, see the fleet note below).
-3. Finish runbook steps 2–4 (api/studio tunnel, CF re-exposure) + E1/E2 (wave
-   insertion B) + **web rebuild/redeploy** with the current key.
+3. Finish runbook steps 2–4 (api/studio tunnel, CF re-exposure —
+   **landed 2026-11-13**: `api.` = Kong 404 over h2, studio 302,
+   unauthenticated `?check=services` = 200 pre-F4) + **F4 edge-function
+   deploy (gate)** + E1/E2 (wave insertion B, envs **after** the gate —
+   hard gate below) + **web rebuild/redeploy** with the current key.
 4. §6 verification with freshly-minted keys (@verifier leg 0: rotation status;
    leg 3: post-rotation mint requirement).
 
@@ -186,13 +189,33 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
    - M2 (owner-scoped view): **retracted** — not in this wave and not in phase
      2 as specced. See §Design decisions.
 3. **Wave insertion B — deploy the new web build + edge functions**
-   (C1 web `55dc4c9d`; F4 edge functions) **before** re-exposure, with env
-   coupling set first:
+   (C1 web `55dc4c9d`; F4 edge functions). **Hard gate on
+   edge-function deploy order (2026-11-13 ruling, @cybersecurity +
+   @lead, from the live probe): the F4-gated build deploys strictly
+   before — or atomically with — E1 and the service secrets it reads;
+   never envs first.** The build still serving at 2026-11-13
+   (unauthenticated `?check=services` = 200) is pre-F4, and its handler
+   reads the 16 service secret names (Vault or env;
+   `api-v1-cache/lib/health.ts` `checkUpstashServices`). Today they are
+   all template placeholders, so the body is safe wording only
+   (@verifier's 2026-11-13 probe: zero real-value tokens in the body).
+   Once real values are set, that same unauthenticated body serves the
+   raw service responses (`details`) and error paths carrying the real
+   instance host. E1 itself is not read by the pre-F4 build; the gate
+   covers it anyway because insertion B sets E1/E2 and the service envs
+   in the same pass. E2's auth-container copy is outside the gate — the
+   echo surface is the api-v1-cache handler only. **MEDIUM (separate
+   from the gate, carded as `t_b95f3346`): strip `details` (raw service
+   response) from the health results and keep error messages
+   host-free — a health endpoint should not echo service response
+   content even when gated.**
    - E1: `INTERNAL_SERVICE_SECRET` in `.env.functions` (F4's gated
-     `?check=services` returns 503 without it — that 503 is the intended loud
-     failure). External monitor does not probe this endpoint (verified in
-     both vendored copies). Anyone with dashboards hitting `?check=services`
-     unauthenticated will get 401/503 by design — tell them.
+     `?check=services` returns 503 without it — that 503 is the intended
+     loud failure). Set **after** the F4-gated build is serving.
+     External monitor does not probe this endpoint (verified in
+     both vendored copies). Anyone with dashboards hitting
+     `?check=services` unauthenticated will get 401/503 by design —
+     tell them.
    - E2: `GOTRUE_HOOK_SEND_EMAIL_SECRETS` in the auth container **and**
      `.env.functions` — without both, all auth mail (signup/recovery/
      magic-link) goes silently dark.
@@ -213,6 +236,10 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
      missing — set `INTERNAL_SERVICE_SECRET` and restart the function
      (dead-but-loud; nothing else in the estate probes this endpoint —
      both vendored external-monitor copies checked, 0 references).
+     **Observed 2026-11-13 after re-exposure: 200** — pre-F4 build
+     serving; per the rule the F4 deploy + E1 step precedes every §6
+     leg, and the F4-before-envs hard gate (wave insertion B) applies
+     to that deploy.
      Operator runs the with-token leg: same URL with
      `Authorization: Bearer $INTER...RET` → expect 200
      (the secret does not ride through the team thread).
@@ -230,9 +257,10 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
 | M-RLS privilege fixes (F-013/F-010/F-011 + F-012 + 13-policy class) | backend `fb688685` (v2, 2026-11-12 — drop-only, BYPASSRLS contract fix; original `20471db7`; web mirror in the same push) | security — fix shapes specified per finding; hermes — predicates copied verbatim from the PG17-oracle catalog, 27/27 rls-audit + oracle green; v2 verified clean at tip `4d46337b`: BYPASSRLS contract now passes, remaining tip failures pre-date the fix (attributed on the runbook card) |
 | C1 (8 web sites) + Brevo HEAD deletion | web `55dc4c9d`                                                  | verifier — 8 sites line-by-line, 85/85 tests, type-check exit 0; Brevo absence confirmed via anonymous public clone                                            |
 | F4 internal gate                       | backend `d1c3c28e` + `a84487c2`                                 | security — 8/8 new tests; strict check still exactly the 111 pre-existing budgeted errors                                                                      |
+| api-v1-cache health echo strip (MEDIUM)| carded `t_b95f3346` (ready, default) — not yet on origin; lands on backend before the F4 deploy step so one deploy carries gate + echo-strip | architect — spec; acceptance = local deno tests at the pushed SHA (fleet-independent); does not hold the F4 deploy (gate-only build is safe under the ordering gate) |
 | F1 mapping (109 = 31/72/6)             | backend `ab406777`                                              | verifier — counts reconciled, four-path client inventory                                                                                                       |
 | Type-debt bug + follow-ups             | backend `d1e069e7`                                              | verifier — 111/30 reproduced                                                                                                                                   |
-| Mirror state                           | functions: exactly 3-file F4 drift (expected); migrations: 1 file absent (`20261112120000`) | verifier — `vendored` job red **by design** until the wave re-sync (which must cover both surfaces)                    |
+| Mirror state                           | functions: exactly 3-file F4 drift (expected; grows to the same 3 files with new content when `t_b95f3346` lands); migrations: 1 file absent (`20261112120000`) | verifier — `vendored` job red **by design** until the wave re-sync (which must cover both surfaces)                    |
 
 ## Post-wave (explicitly not in this wave)
 
