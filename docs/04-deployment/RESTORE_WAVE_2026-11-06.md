@@ -200,15 +200,26 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
    all template placeholders, so the body is safe wording only
    (@verifier's 2026-11-13 probe: zero real-value tokens in the body).
    Once real values are set, that same unauthenticated body serves the
-   raw service responses (`details`) and error paths carrying the real
-   instance host. E1 itself is not read by the pre-F4 build; the gate
-   covers it anyway because insertion B sets E1/E2 and the service envs
-   in the same pass. E2's auth-container copy is outside the gate — the
-   echo surface is the api-v1-cache handler only. **MEDIUM (separate
-   from the gate, carded as `t_b95f3346`): strip `details` (raw service
-   response) from the health results and keep error messages
-   host-free — a health endpoint should not echo service response
-   content even when gated.**
+   raw service responses (`details`) — the load-bearing exposure:
+   QStash is checked at `/v2/schedules` through the same path, so the
+   estate's full schedule inventory (callback endpoints, intervals)
+   plus live Vector/Search counts are anonymously readable:
+   operationally reusable estate intelligence. No credential value
+   reaches the body at any point (tokens ride the Authorization header
+   only), and the catch path serializes `error.message` only — in Deno
+   the host lives in `error.cause`, which is never serialized; measured
+   2026-11-14 on Deno 2.9.8 (DNS/connect failures surface as the
+   generic "fetch failed", the port-block string is host-free), the
+   residual error-path exposure is generic messaging. E1 itself is not
+   read by the pre-F4 build; the gate covers it anyway because
+   insertion B sets E1/E2 and the service envs in the same pass. E2's
+   auth-container copy is outside the gate — the echo surface is the
+   api-v1-cache handler only. **MEDIUM (separate from the gate, carded
+   as `t_b95f3346`): strip `details` (raw service response) from the
+   health results — the load-bearing fix — and keep error messages
+   host-free (defense-in-depth in case a future change starts
+   serializing `error.cause`): a health endpoint should not echo
+   service response content even when gated.**
    - E1: `INTERNAL_SERVICE_SECRET` in `.env.functions` (F4's gated
      `?check=services` returns 503 without it — that 503 is the intended
      loud failure). Set **after** the F4-gated build is serving.
