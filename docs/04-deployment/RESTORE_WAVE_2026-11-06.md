@@ -100,7 +100,11 @@ answer**.
 
 The estate VPS is the critical path while its runner pool is
 0-registered (observed 2026-11-13: empty runner list, `supabase-rest`
-unhealthy, backup service dead). Adjudication for the batch gate's
+unhealthy, backup service dead; **2026-11-14: the runner flaps 0→1 but
+does not drain the queue — CI jobs pending 5h+ against a registered
+runner; for the operator's VPS item, "recovered" means a full CI/CD run
+*completes*, not runner count = 1** — dead backup first, per the
+standing order). Adjudication for the batch gate's
 "CI green" leg, per the dead-origin rule:
 
 - **Queue-blocked legs** (Test/Lint/Validate-migrations/E2E queued
