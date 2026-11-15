@@ -90,6 +90,36 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Secret scan over the full history, before anything else in the leg.
+      # A new leak fails `validate`, which `build` and every deploy depend on,
+      # so it blocks the pipeline at commit time instead of waiting on an
+      # untriaged secret-scanning alert. Known historical findings are pinned
+      # by (commit, path) in .gitleaks.toml. Pinned to gitleaks 8.28.0 with
+      # checksum verification, the same as foodshare-backend's security job.
+      - name: Gitleaks secret scan
+        if: matrix.job == 'lint'
+        run: |
+          set -euo pipefail
+          case "$(uname -m)" in
+            aarch64|arm64) architecture=arm64 ;;
+            x86_64) architecture=x64 ;;
+            *) echo "Unsupported Gitleaks architecture" >&2; exit 1 ;;
+          esac
+          destination="$RUNNER_TEMP/foodshare-gitleaks"
+          mkdir -p "$destination"
+          asset="gitleaks_8.28.0_linux_${architecture}.tar.gz"
+          base="https://github.com/gitleaks/gitleaks/releases/download/v8.28.0"
+          curl -fsSL "$base/$asset" -o "$destination/$asset"
+          curl -fsSL "$base/gitleaks_8.28.0_checksums.txt" -o "$destination/checksums.txt"
+          (
+            cd "$destination"
+            awk -v file="$asset" '$2 == file { print }' checksums.txt > selected-checksum.txt
+            test -s selected-checksum.txt
+            sha256sum --check selected-checksum.txt
+            tar -xzf "$asset" gitleaks
+          )
+          "$destination/gitleaks" detect --source . --redact --verbose --config .gitleaks.toml
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}

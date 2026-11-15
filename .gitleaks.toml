@@ -1,0 +1,149 @@
+title = "Foodshare Gitleaks configuration"
+
+[extend]
+useDefault = true
+# Team rules: gitleaks' default rules, minus the files that are *supposed* to
+# contain credential-shaped placeholders. Ported from foodshare-backend's
+# .gitleaks.toml. An allowlist states a file's INTENT, not whether its current
+# contents happen to be safe. The real `.env*` files are gitignored and stay
+# fully scanned.
+
+[[allowlists]]
+description = "Committed example env files — placeholder values by definition"
+paths = [
+  # Exact basename with an optional directory prefix, so a real `.env` at
+  # any depth is never caught by this rule.
+  '''(^|/)\.env\.example$''',
+  '''(^|/)\.env\.functions\.example$''',
+  '''(^|/)env\.example$''',
+  '''(^|/)env\.functions\.example$''',
+]
+
+[[allowlists]]
+description = "Documentation that quotes example commands with fake credentials"
+paths = [
+  '''(^|/)EXAMPLES\.md$''',
+  '''(^|/)DEPLOYMENT\.md$''',
+  '''(^|/)README\.md$''',
+]
+
+# ---------------------------------------------------------------------------
+# KNOWN HISTORICAL LEAKS — pinned by (commit, path), 2026-11-15
+#
+# These 48 findings (15 unique commit:file pairs) are the repository's
+# pre-existing leaked-secret history, including the values behind GitHub
+# secret-scanning alerts #1–#9. They are tracked in the rotation queue, not
+# here. Without this baseline the scan exits 1 on every push and a new leak is
+# indistinguishable from known debt. No secret content is embedded: each entry
+# names only the introducing commit SHA and the file path.
+#
+# Two details make each pin cover exactly one (commit, file) pair and nothing
+# else. Both were verified with a scratch-commit guard test:
+#
+#   condition = "AND"  gitleaks' default allowlist condition is OR, which would
+#                      ignore the path at EVERY commit, so a new secret added
+#                      later to a pinned file would pass silently.
+#   commits = [ sha ]  `commits` is matched as an exact SHA, not a regex; a
+#                      '^sha$' pattern never matches, and under AND would
+#                      leave the pin inert.
+#
+# Scan of record: main 0afa2619, gitleaks 8.28.0, this config, --redact:
+#   before: 48 findings, exit 1   after: 0 findings, exit 0
+# Regenerate with:
+#   gitleaks detect --source . --redact --config .gitleaks.toml \
+#     --report-path /tmp/r.json --report-format json
+# and rebuild the (commit, file) pairs from the report.
+#
+# If history is rewritten (e.g. a scrub + force-push), every SHA below changes
+# and this baseline must be regenerated against the new history.
+# ---------------------------------------------------------------------------
+
+[[allowlists]]
+description = "known historical leak: generic-api-key @ 19677b5:.kiro/settings/mcp.json"
+condition = "AND"
+commits = [ "19677b5d63f08b48d15d3ec7b520204ec2ae94e1" ]
+paths = [ '^\.kiro/settings/mcp\.json$' ]
+
+[[allowlists]]
+description = "known historical leak: generic-api-key @ 19677b5:.mcp.json"
+condition = "AND"
+commits = [ "19677b5d63f08b48d15d3ec7b520204ec2ae94e1" ]
+paths = [ '^\.mcp\.json$' ]
+
+[[allowlists]]
+description = "known historical leak: generic-api-key @ 815115d:.mcp.json"
+condition = "AND"
+commits = [ "815115d85558062aff46e17c3eca2ce781a41ed1" ]
+paths = [ '^\.mcp\.json$' ]
+
+[[allowlists]]
+description = "known historical leak: generic-api-key @ b12d506:build-log.txt"
+condition = "AND"
+commits = [ "b12d506c3053f104a72e224afd93fbbbcc2d2a1a" ]
+paths = [ '^build\-log\.txt$' ]
+
+[[allowlists]]
+description = "known historical leak: curl-auth-header @ 815115d:docs/04-deployment/DEPLOYMENT_GUIDE.md"
+condition = "AND"
+commits = [ "815115d85558062aff46e17c3eca2ce781a41ed1" ]
+paths = [ '^docs/04\-deployment/DEPLOYMENT_GUIDE\.md$' ]
+
+[[allowlists]]
+description = "known historical leak: sendinblue-api-token @ 815115d:docs/04-deployment/ENVIRONMENT_SETUP.md"
+condition = "AND"
+commits = [ "815115d85558062aff46e17c3eca2ce781a41ed1" ]
+paths = [ '^docs/04\-deployment/ENVIRONMENT_SETUP\.md$' ]
+
+[[allowlists]]
+description = "known historical leak: curl-auth-header @ a00d3b2:docs/HEALTH_MONITORING.md"
+condition = "AND"
+commits = [ "a00d3b2a3fb3a71d70c63b1f46199034129ae353" ]
+paths = [ '^docs/HEALTH_MONITORING\.md$' ]
+
+[[allowlists]]
+description = "known historical leak: generic-api-key, jwt @ 7539f41:docs/storages/storages_creds.md"
+condition = "AND"
+commits = [ "7539f41701d7efa3b7e449ba7c8559c25cf007aa" ]
+paths = [ '^docs/storages/storages_creds\.md$' ]
+
+[[allowlists]]
+description = "known historical leak: curl-auth-header @ 815115d:docs/supabase/EDGE_FUNCTIONS.md"
+condition = "AND"
+commits = [ "815115d85558062aff46e17c3eca2ce781a41ed1" ]
+paths = [ '^docs/supabase/EDGE_FUNCTIONS\.md$' ]
+
+[[allowlists]]
+description = "known historical leak: generic-api-key @ 815115d:scripts/archive-firebase/migrate-remaining-avatars.js"
+condition = "AND"
+commits = [ "815115d85558062aff46e17c3eca2ce781a41ed1" ]
+paths = [ '^scripts/archive\-firebase/migrate\-remaining\-avatars\.js$' ]
+
+[[allowlists]]
+description = "known historical leak: aws-access-token, generic-api-key, jwt, sendinblue-api-token, twilio-api-key @ 815115d:scripts/archive-firebase/restore-secrets.sh"
+condition = "AND"
+commits = [ "815115d85558062aff46e17c3eca2ce781a41ed1" ]
+paths = [ '^scripts/archive\-firebase/restore\-secrets\.sh$' ]
+
+[[allowlists]]
+description = "known historical leak: generic-api-key @ 815115d:scripts/git-hooks/security-check.sh"
+condition = "AND"
+commits = [ "815115d85558062aff46e17c3eca2ce781a41ed1" ]
+paths = [ '^scripts/git\-hooks/security\-check\.sh$' ]
+
+[[allowlists]]
+description = "known historical leak: curl-auth-header @ 2e2d5e2:src/app/api/health/upstash/setup-schedule/route.ts"
+condition = "AND"
+commits = [ "2e2d5e281afa3c47864ea7ca4edd072006a863d0" ]
+paths = [ '^src/app/api/health/upstash/setup\-schedule/route\.ts$' ]
+
+[[allowlists]]
+description = "known historical leak: generic-api-key @ 3a6d219:supabase/functions/__tests__/api-v1-cache-internal-auth.test.ts"
+condition = "AND"
+commits = [ "3a6d21981e2ccfeabdd540ec0afea755f9972612" ]
+paths = [ '^supabase/functions/__tests__/api\-v1\-cache\-internal\-auth\.test\.ts$' ]
+
+[[allowlists]]
+description = "known historical leak: curl-auth-header @ 839cf6b:supabase/functions/api-v1-notifications/INTEGRATION.md"
+condition = "AND"
+commits = [ "839cf6b6da5bca6fd48375dde33db82965613904" ]
+paths = [ '^supabase/functions/api\-v1\-notifications/INTEGRATION\.md$' ]
