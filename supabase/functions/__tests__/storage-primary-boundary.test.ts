@@ -10,9 +10,7 @@ Deno.test("public Storage URLs use the external API origin and encode object pat
     ),
     "https://api.foodshare.club/storage/v1/object/public/food-images/user/my%20photo.png",
   );
-  assertThrows(() =>
-    storagePublicUrl("http://kong:8000", "food-images", "user/a.png")
-  );
+  assertThrows(() => storagePublicUrl("http://kong:8000", "food-images", "user/a.png"));
   assertThrows(() =>
     storagePublicUrl(
       "https://user:password@api.foodshare.club",
@@ -20,9 +18,7 @@ Deno.test("public Storage URLs use the external API origin and encode object pat
       "user/a.png",
     )
   );
-  assertThrows(() =>
-    storagePublicUrl("https://api.foodshare.club", "food-images", "../a.png")
-  );
+  assertThrows(() => storagePublicUrl("https://api.foodshare.club", "food-images", "../a.png"));
 });
 Deno.test("application storage validation accepts Supabase and rejects R2 origins", async () => {
   const old = Deno.env.get("SUPABASE_PUBLIC_URL");
@@ -34,7 +30,12 @@ Deno.test("application storage validation accepts Supabase and rejects R2 origin
       ),
       { provider: "supabase", bucket: "posts", path: "user/a.png" },
     );
-    assertEquals(await parseStorageUrl("https://api.foodshare.club/storage/v1/object/public/food-images/user/a.png"), {provider:"supabase",bucket:"food-images",path:"user/a.png"});
+    assertEquals(
+      await parseStorageUrl(
+        "https://api.foodshare.club/storage/v1/object/public/food-images/user/a.png",
+      ),
+      { provider: "supabase", bucket: "food-images", path: "user/a.png" },
+    );
     assertEquals(
       await parseStorageUrl("https://pub-test.r2.dev/posts/user/a.png"),
       null,

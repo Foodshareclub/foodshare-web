@@ -963,8 +963,7 @@ function codeCorpus(): (name: string) => boolean {
     }
   });
   const cron = s.catalog.cronJobs.map((j) => j.command).join("\n");
-  return (name: string) =>
-    cron.includes(name) || texts.some((t) => t.includes(name));
+  return (name: string) => cron.includes(name) || texts.some((t) => t.includes(name));
 }
 
 Deno.test("contract: no view in the catalog has no live code reference", () => {
@@ -1130,8 +1129,7 @@ Deno.test("contract: no unreferenced column in the catalog has no live code refe
   // test, never silence.
   const PIN_REASON =
     "in-flight analytics feature — writers landed, reads not yet; re-audit at feature land.";
-  const PIN_EXPIRY =
-    "storage lane lands the analytics reads (t_d571979b workstream, " +
+  const PIN_EXPIRY = "storage lane lands the analytics reads (t_d571979b workstream, " +
     "commits aeb5aa13..4d46337b and its continuation); re-audit at that land.";
 
   const DEAD_COLUMN_KEYS = [
@@ -1340,8 +1338,8 @@ Deno.test("contract: no unreferenced column in the catalog has no live code refe
     "public.user_preferences.show_distance",
     "public.user_roles.granted_at",
   ];
-  const KNOWN_DEAD_COLUMNS: Record<string, { reason: string; expiresOn: string }> =
-    Object.fromEntries(
+  const KNOWN_DEAD_COLUMNS: Record<string, { reason: string; expiresOn: string }> = Object
+    .fromEntries(
       DEAD_COLUMN_KEYS.map((key) => [
         key,
         { reason: PIN_REASON, expiresOn: PIN_EXPIRY },

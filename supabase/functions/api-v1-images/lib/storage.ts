@@ -109,8 +109,7 @@ export async function uploadImage(
     throw new ServerError(`Upload failed: ${uploadError.message}`);
   }
 
-  const generated =
-    supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+  const generated = supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
   const publicUrl = storagePublicUrl(
     Deno.env.get("SUPABASE_PUBLIC_URL") || Deno.env.get("API_EXTERNAL_URL") ||
       generated,

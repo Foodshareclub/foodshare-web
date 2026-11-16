@@ -102,11 +102,7 @@ const networkFailure = (url: string): EndpointBehavior => ({
 });
 
 function stubFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const url = typeof input === "string"
-    ? input
-    : input instanceof URL
-    ? input.href
-    : input.url;
+  const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
 
   if (url.includes("/rest/v1/rpc/get_vault_secret")) {
     // A non-PGRST116 error: getSecret() falls back to Deno.env without
@@ -292,8 +288,7 @@ Deno.test("services (configured, ok): no raw payload, no host, no token, fixed m
           jsonResponse({ result: "PONG", metadata: { marker: MARKER } }),
         [`${SVC_VECTOR_URL}/info`]: () =>
           jsonResponse({ result: { vectorCount: 3, marker: MARKER } }),
-        [`${SVC_QSTASH_URL}/v2/schedules`]: () =>
-          jsonResponse([{ id: "sched-1", marker: MARKER }]),
+        [`${SVC_QSTASH_URL}/v2/schedules`]: () => jsonResponse([{ id: "sched-1", marker: MARKER }]),
         [`${SVC_SEARCH_URL}/info`]: () =>
           jsonResponse({ result: { vectorCount: 7, marker: MARKER } }),
       },
@@ -433,7 +428,9 @@ Deno.test("health (healthy redis): only operational metrics, no host, token or p
       audited: { UPSTASH_REDIS_URL: REDIS_URL, UPSTASH_REDIS_TOKEN: REDIS_TOKEN },
       endpoints: {
         [REDIS_URL]: (body) =>
-          body === `["PING"]` ? jsonResponse({ result: "PONG" }) : jsonResponse({ result: infoText }),
+          body === `["PING"]`
+            ? jsonResponse({ result: "PONG" })
+            : jsonResponse({ result: infoText }),
       },
     };
 

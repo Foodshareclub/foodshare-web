@@ -34,8 +34,7 @@ async function deleteOrphanImage(
   if (orphan.storage !== "supabase") {
     return {
       success: false,
-      error:
-        "Legacy storage records require verified migration; R2 backup storage is protected",
+      error: "Legacy storage records require verified migration; R2 backup storage is protected",
     };
   }
   if (dryRun) return { success: true };

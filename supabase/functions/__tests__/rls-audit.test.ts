@@ -335,7 +335,8 @@ Deno.test("rls audit: every table only the backend writes is in the set", () => 
     .filter(([, set]) => set.size === 1 && set.has("service"))
     .map(([name]) => name)
     .filter(
-      (name) => !serviceOwned.has(name) &&
+      (name) =>
+        !serviceOwned.has(name) &&
         !userWrittenOutsideCorpus.has(name) && s.relation(name).ok,
     )
     .sort();
