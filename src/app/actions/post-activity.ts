@@ -15,46 +15,10 @@
 
 import { invalidatePostActivityCaches } from "@/lib/data/cache-invalidation";
 import { type ActionResult, createError, failure, validateWithSchema, withErrorHandling } from "@/lib/errors";
+import { postActivityLimiter } from "@/lib/security/sharedRateLimit";
 import { createClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 import { z } from "zod";
-
-// ============================================================================
-// Rate Limiting (In-Memory for Edge Runtime)
-// ============================================================================
-
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 100; // Max requests per window
-
-// Simple in-memory rate limiter (use Redis in production for distributed)
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(identifier: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(identifier);
-
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(identifier, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
-    return true;
-  }
-
-  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return false;
-  }
-
-  entry.count++;
-  return true;
-}
-
-// Cleanup old entries periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, value] of rateLimitMap.entries()) {
-    if (now > value.resetAt) {
-      rateLimitMap.delete(key);
-    }
-  }
-}, RATE_LIMIT_WINDOW);
 
 // ============================================================================
 // Request Deduplication
@@ -183,8 +147,13 @@ export async function logPostActivity(input: z.infer<typeof logActivitySchema>):
   const headersList = await headers();
   const clientIp = headersList.get("x-forwarded-for")?.split(",")[0] || "unknown";
 
-  // Rate limit check
-  if (!checkRateLimit(`activity-${clientIp}`)) {
+  // Rate limit check — the counter is shared across web instances (see
+  // src/lib/security/sharedRateLimit.ts): 100 requests per minute per IP
+  const limit = await postActivityLimiter.check(clientIp);
+  if (!limit.success) {
+    if (limit.reason === "unavailable") {
+      return failure(createError("SERVICE_UNAVAILABLE", "Service temporarily unavailable. Please try again later."));
+    }
     return failure(createError("RATE_LIMIT", "Too many requests. Please slow down."));
   }
 
