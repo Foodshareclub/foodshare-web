@@ -47,6 +47,22 @@ function normalize(identifier: string): string {
   return cleaned;
 }
 
+/**
+ * Whether the identifier refers to the public schema (unqualified or
+ * `public.`). The migrations in this directory create tables only in
+ * public; Supabase's own schemas (storage, auth) are initialized by their
+ * services' DDL, which is not in this directory, so there is no create for
+ * an enable targeting `storage.objects` to match against. Indexing them
+ * would make "enabled but never created" flag every table the storage
+ * service owns, and 20261112120000 enables RLS on exactly those tables,
+ * on purpose. The invariant guarded here is the one the file documents:
+ * every table *this repo creates* — all of them in public — enables RLS.
+ */
+function isPublicSchema(qualified: string): boolean {
+  const schema = qualified.split(".")[0]?.replace(/"/g, "").toLowerCase();
+  return schema === undefined || schema === "public";
+}
+
 interface MigrationIndex {
   created: Map<string, string>;
   enabled: Map<string, string>;
@@ -77,15 +93,18 @@ function indexMigrations(dir: string): MigrationIndex {
     const sql = stripNoise(readFileSync(join(dir, file), "utf8"));
 
     for (const m of sql.matchAll(createForeign)) {
+      if (!isPublicSchema(m[1])) continue;
       const key = normalize(m[1]);
       created.set(key, file);
       isForeign.add(key);
     }
     for (const m of sql.matchAll(createTable)) {
+      if (!isPublicSchema(m[1])) continue;
       const key = normalize(m[1]);
       if (!created.has(key)) created.set(key, file);
     }
     for (const m of sql.matchAll(enableRls)) {
+      if (!isPublicSchema(m[1])) continue;
       const key = normalize(m[1]);
       if (!enabled.has(key)) enabled.set(key, file);
     }
