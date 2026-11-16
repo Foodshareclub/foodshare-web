@@ -18,11 +18,15 @@ was the chown incident of Nov 15 hitting the live Postgres data dir
 06:05Z restored it, VPS-verified. The site apex still 500s on the
 exhausted Upstash monthly quota (`t_c304087e`; the fail-open fix is in
 flight — a cache quota must not take the site down). LAN-side probes of
-`api.`/`studio.` are contaminated by an Xfinity xFi SNI block
-(Advanced Security) until disabled or whitelisted — the signature is a
-TLS `protocol version` alert with TCP reaching the correct CF IP; the
-independent-network confirmation is the phone curl (cellular):
-`?check=health` expect 200 pre-F4. The mirror re-sync has landed at web
+`api.`/`studio.` are unreliable — the Xfinity xFi SNI block
+(Advanced Security) is **stateful, not absolute**: some requests pass
+intact (two Kong-header-verified 404s at 08:12/09:11Z Nov 16
+independently corroborate the API-plane recovery) while others die with
+a TLS `protocol version` alert even though TCP reaches the correct CF
+IP — so no LAN reading can be told genuine from hijacked until the
+block is disabled or whitelisted. The independent-network
+confirmation is the phone curl (cellular): `?check=health` expect 200
+pre-F4. The mirror re-sync has landed at web
 `b44d50ee` (mirror-state row below) with a 6-file fmt tail pending.**
 
 ## Partial-restore state (probed 2026-11-12)
@@ -87,10 +91,11 @@ step.
    checkout) and was recovered at 06:05Z (Kiro, operator-approved,
    VPS-verified); the apex 500 at the same time is the exhausted
    Upstash quota (`t_c304087e`), not the tunnel. LAN probes of
-   `api.`/`studio.` are SNI-block-contaminated (xFi Advanced Security)
-   until disabled — use the phone (cellular) `?check=health` = 200
-   pre-F4 as the independent-network confirmation before continuing
-   this step.**) +
+   `api.`/`studio.` are unreliable under the xFi Advanced Security SNI
+   block (stateful: some requests pass, most are hijacked — you cannot
+   tell which is which) until disabled — use the phone (cellular)
+   `?check=health` = 200 pre-F4 as the independent-network
+   confirmation before continuing this step.**) +
    **F4 edge-function
    deploy (gate)** + E1/E2 (wave insertion B, envs **after** the gate —
    hard gate below) + **web rebuild/redeploy** with the current key.
@@ -277,11 +282,13 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
      leg, and the F4-before-envs hard gate (wave insertion B) applies
      to that deploy. **Re-observed 2026-11-15 (04:11Z, two-lane):
      530/1033 — then explained by the postmortem as the chown-incident
-     API-plane outage (recovered 06:05Z) plus, for all LAN-side probes
-     since ~04:11Z, an Xfinity xFi SNI block that contaminates
-     `api.`/`studio.` (TLS `protocol version` alert; apex SNI passes).
-     The tri-state is undecidable from this LAN until the SNI block is
-     lifted; re-run this probe from an independent network (phone,
+     API-plane outage (recovered 06:05Z — two Kong-header-verified 404s
+     from the LAN at 08:12/09:11Z Nov 16 corroborate the recovery) plus,
+     for LAN-side probes since ~04:11Z, an Xfinity xFi SNI block that is
+     **stateful**: it hijacked `api.`/`studio.` TLS with a `protocol
+     version` alert on most attempts (apex SNI passed) while letting
+     others through, so no LAN reading is trustworthy until it is
+     lifted. Re-run this probe from an independent network (phone,
      cellular) — expect 200 (the pre-F4 build is unchanged) before the
      F4 deploy.**
      Operator runs the with-token leg: same URL with
