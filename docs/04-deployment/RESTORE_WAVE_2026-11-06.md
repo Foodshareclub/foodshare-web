@@ -11,7 +11,14 @@ The Q3 product sign-off and the PAT are both optional and non-blocking
 (§Open items).
 **As of 2026-11-12 a partial restore is in progress — read §Partial-restore
 state first; it supersedes the §Execution order sequencing from the current
-state (the target order is unchanged).**
+state (the target order is unchanged). **Status as of 2026-11-15**
+(re-probe after the WAN blind window): origin DOWN — `api.` 530/1033
+(origin not found), apex 500, studio 302; two-lane confirmation at
+04:11Z. Consequence: VPS/tunnel recovery precedes the F4 deploy + E1
+(insertion B) and every §6 leg, and the F4 tri-state is undecidable in
+the window (530 matches none of 401/200/503). The mirror re-sync has
+landed at web `b44d50ee` (mirror-state row below) with a 6-file fmt tail
+pending.**
 
 ## Partial-restore state (probed 2026-11-12)
 
@@ -70,7 +77,12 @@ step.
    the publishable key, see the fleet note below).
 3. Finish runbook steps 2–4 (api/studio tunnel, CF re-exposure —
    **landed 2026-11-13**: `api.` = Kong 404 over h2, studio 302,
-   unauthenticated `?check=services` = 200 pre-F4) + **F4 edge-function
+   unauthenticated `?check=services` = 200 pre-F4. **Re-probed 2026-11-15
+   after the WAN blind window: origin DOWN — `api.` 530/1033 (origin not
+   found), apex 500, studio 302 — two-lane confirmation at 04:11Z; the
+   200 pre-F4 baseline no longer holds. VPS/tunnel recovery precedes the
+   rest of this step: the F4 deploy cannot reach a dead origin.**) +
+   **F4 edge-function
    deploy (gate)** + E1/E2 (wave insertion B, envs **after** the gate —
    hard gate below) + **web rebuild/redeploy** with the current key.
 4. §6 verification with freshly-minted keys (@verifier leg 0: rotation status;
@@ -254,7 +266,11 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
      **Observed 2026-11-13 after re-exposure: 200** — pre-F4 build
      serving; per the rule the F4 deploy + E1 step precedes every §6
      leg, and the F4-before-envs hard gate (wave insertion B) applies
-     to that deploy.
+     to that deploy. **Re-observed 2026-11-15 (04:11Z, two-lane):
+     530/1033 — origin down, dead-tunnel signature; 530 matches none of
+     the 401/200/503 tri-state, so the tri-state is undecidable until
+     VPS recovery and this probe re-runs post-recovery (expect 200
+     again — the pre-F4 build is unchanged — before the F4 deploy).**
      Operator runs the with-token leg: same URL with
      `Authorization: Bearer $INTER...RET` → expect 200
      (the secret does not ride through the team thread).
@@ -275,7 +291,7 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
 | api-v1-cache health echo strip (MEDIUM)| backend `af6fb235` (landed 2026-11-14, **before** the F4 deploy step — the constraint held, so one deploy carries gate + echo-strip) | card `t_b95f3346` closed: deno suite green at the pushed SHA (incl. new echo tests), tsrs at the budgeted error count; reviewer isolated re-run of the echo file 6/0 (6-vs-7 count note on the card, non-blocking) |
 | F1 mapping (109 = 31/72/6)             | backend `ab406777`                                              | verifier — counts reconciled, four-path client inventory                                                                                                       |
 | Type-debt bug + follow-ups             | backend `d1e069e7`                                              | verifier — 111/30 reproduced                                                                                                                                   |
-| Mirror state                           | **measured against origin 2026-11-14: re-sync scope = 20 files** — functions 19 (5 backend-only: 3 echo/boundary test files + `_shared/r2-account-capacity.ts` + `storage-public-url.ts`; 13 content-differ, incl. `api-v1-cache/lib/health.ts` + `types.ts` and the `api-v1-images` set; **1 web-only, direction ruled: DELETE `_shared/r2-storage.ts` from web**) + migrations 1 absent (`20261112120000`) | direction evidence (2026-11-14, architect): backend refactored storage — Supabase Storage primary, R2 isolated to backup/capacity (`r2-account-capacity.ts`); **zero references to `r2-storage.ts` in backend origin**, its `_shared/index.ts` export dropped; web's copy is the pre-refactor client (still imported by web's stale `storage-urls.ts` + `api-v1-images` set — all replaced by the 13-file set, so no dangling import after the full mirror). The re-sync is a **full mirror applied in one pass** (add + replace + delete; rsync `--delete` semantics) sourced from backend origin blobs — a one-way copy misses the web-only deletion and the `diff -r` gate stays red; `vendored` job green is the re-sync's acceptance |
+| Mirror state                           | **re-sync LANDED 2026-11-15: web `d330eee1` → `b44d50ee`** — one pass, 21 files (5 adds: 3 echo/boundary test files + `_shared/r2-account-capacity.ts` + `storage-public-url.ts`; 14 replaces, incl. `api-v1-cache/lib/health.ts` + `types.ts` and the `api-v1-images` set — the 21st file `__tests__/contract-drift.test.ts` entered via PIN commit `27b892a6`, a functional surface: the 204-column pin set now runs on web CI; **1 web-only DELETE: `_shared/r2-storage.ts`** per direction ruling); 1 migration `20261112120000`; `diff -r` clean vs backend origin blobs at execution (tips `c30873c9`/`d330eee1`). **Post-push drift, measured 2026-11-15 at live tips (backend `64d65b5a` / web `b44d50ee`): 6 files whitespace-only fmt** (fmt commit `64d65b5a`, card `t_11366cbf`: 4 `__tests__` + `api-v1-images/lib/storage.ts` + `services/cleanup.ts`) — re-sync pending in the executor lane; `vendored` red by design until it lands | direction evidence (2026-11-14, architect): backend refactored storage — Supabase Storage primary, R2 isolated to backup/capacity (`r2-account-capacity.ts`); **zero references to `r2-storage.ts` in backend origin**, its `_shared/index.ts` export dropped; web's copy is the pre-refactor client (still imported by web's stale `storage-urls.ts` + `api-v1-images` set — all replaced by the 13-file set, so no dangling import after the full mirror). The re-sync is a **full mirror applied in one pass** (add + replace + delete; rsync `--delete` semantics) sourced from backend origin blobs — a one-way copy misses the web-only deletion and the `diff -r` gate stays red; `vendored` job green is the re-sync's acceptance |
 
 ## Post-wave (explicitly not in this wave)
 
@@ -285,8 +301,9 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
   for own rows).
 - **M2** — owner-scoped view, if Q3 + the phase-2 end-state decision require
   it (see §Open items).
-- **Functions mirror re-sync** (web ← backend) — resolves the 3-file F4 drift;
-  `vendored` job red→green is the closure signal.
+- **Functions mirror re-sync** (web ← backend) — **LANDED 2026-11-15 at
+  web `b44d50ee`** (21 files; scope + the post-push 6-file fmt tail per
+  the mirror-state row); `vendored` job red→green is the closure signal.
 - Dependabot: 1 moderate ≤48h of restoration; 3 low next maintenance cycle.
 - Rotation queue (operator, **authoritative list in the backend action doc
   @ `3c153775`** — updated 2026-11-12, ~28 history-only values, P0→P2
