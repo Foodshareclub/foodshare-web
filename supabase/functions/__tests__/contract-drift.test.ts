@@ -1107,8 +1107,267 @@ Deno.test("contract: no unreferenced column in the catalog has no live code refe
     .map((c) => c.key)
     .sort();
 
-  // Pin: dead columns kept on purpose, with the reason.
-  const KNOWN_DEAD_COLUMNS: Record<string, string> = {};
+  // Pin: dead columns kept on purpose. Each entry carries the recorded
+  // reason and a named expiry trigger — the lead ruling of 2026-11-13
+  // 17:46 on t_d571979b (architect pin ruling + security tracked-expiry
+  // endorsement) requires both, and the assertion below gates the shape:
+  // a pin without a tracked expiry is deferred contract drift.
+  //
+  // Decision: PIN (recorded on t_a7ebc70a, comment 584; no operator
+  // veto). The set was re-derived from this test's own failing output
+  // at origin/main b8cae6c7: 204 columns, the in-flight
+  // analytics/marketing workstream's current footprint. The 25-column
+  // snapshot recorded 2026-11-12 (t_d571979b body) is a strict subset
+  // of it — the storage lane (commits aeb5aa13..4d46337b) kept landing
+  // writer-side migrations after the snapshot, with the reads still not
+  // landed.
+  //
+  // Every entry shares one recorded reason and one named expiry
+  // trigger: the storage lane landing the analytics reads, with the
+  // stalePins reverse-check as the mechanical backstop — it fails this
+  // pin the moment a column is referenced by code or the database, or
+  // leaves the catalog, so a pin that outlives its purpose is a red
+  // test, never silence.
+  const PIN_REASON =
+    "in-flight analytics feature — writers landed, reads not yet; re-audit at feature land.";
+  const PIN_EXPIRY =
+    "storage lane lands the analytics reads (t_d571979b workstream, " +
+    "commits aeb5aa13..4d46337b and its continuation); re-audit at that land.";
+
+  const DEAD_COLUMN_KEYS = [
+    "public.address.county",
+    "public.analytics_daily_stats.completed_shares",
+    "public.analytics_daily_stats.computed_at",
+    "public.analytics_daily_stats.messages_sent",
+    "public.analytics_daily_stats.new_listings",
+    "public.analytics_daily_stats.new_users",
+    "public.analytics_daily_stats.returning_users",
+    "public.analytics_daily_stats.top_categories",
+    "public.analytics_post_activity.posts_arranged",
+    "public.analytics_post_activity.posts_viewed",
+    "public.analytics_staging_rooms.sharer_id",
+    "public.analytics_user_activity.listings_saved",
+    "public.analytics_user_activity.listings_viewed",
+    "public.analytics_user_activity.messages_initiated",
+    "public.analytics_user_activity.shares_completed",
+    "public.audience_segments.cached_count",
+    "public.audience_segments.is_dynamic",
+    "public.audience_segments.is_system",
+    "public.audience_segments.last_calculated_at",
+    "public.automation_enrollments.converted_at",
+    "public.automation_enrollments.enrolled_at",
+    "public.automation_enrollments.exit_reason",
+    "public.automation_enrollments.exited_at",
+    "public.automation_enrollments.step_history",
+    "public.campaign_recipients.provider_message_id",
+    "public.challenge_participants.accepted_at",
+    "public.challenge_participants.is_completed",
+    "public.challenges.challenge_action",
+    "public.challenges.challenge_difficulty",
+    "public.challenges.challenge_published",
+    "public.challenges.challenge_updated_at",
+    "public.comments.reports_count",
+    "public.countries.continent",
+    "public.countries.iso2",
+    "public.countries.iso3",
+    "public.countries.local_name",
+    "public.crm_customer_notes.note_text",
+    "public.crm_customer_tags.is_system",
+    "public.crm_customers.archived_reason",
+    "public.crm_customers.first_interaction_at",
+    "public.crm_customers.last_interaction_at",
+    "public.crm_customers.ltv_score",
+    "public.crm_customers.total_interactions",
+    "public.crm_customers.total_transactions",
+    "public.daily_stats.completed_shares",
+    "public.daily_stats.computed_at",
+    "public.daily_stats.messages_sent",
+    "public.daily_stats.new_listings",
+    "public.daily_stats.new_users",
+    "public.daily_stats.returning_users",
+    "public.daily_stats.top_categories",
+    "public.device_attestations.os_version",
+    "public.email_automation_flows.conversion_goal",
+    "public.email_automation_flows.total_converted",
+    "public.email_automation_flows.total_enrolled",
+    "public.email_automation_flows.trigger_config",
+    "public.email_bounce_events.bounce_type",
+    "public.email_circuit_breaker_state.consecutive_successes",
+    "public.email_circuit_breaker_state.last_failure_time",
+    "public.email_dead_letter_queue.last_error",
+    "public.email_dead_letter_queue.recipient_email",
+    "public.email_dead_letter_queue.template_data",
+    "public.email_dead_letter_queue.template_name",
+    "public.email_logs.provider_message_id",
+    "public.email_logs.recipient_email",
+    "public.email_logs.template_data",
+    "public.email_preferences.chat_notifications",
+    "public.email_preferences.feedback_notifications",
+    "public.email_preferences.food_listings_notifications",
+    "public.email_preferences.review_reminders",
+    "public.email_provider_health_history.success_rate",
+    "public.email_provider_health_metrics.last_failure_at",
+    "public.email_provider_health_metrics.last_success_at",
+    "public.email_provider_metrics.success_count",
+    "public.email_provider_metrics.success_rate",
+    "public.email_queue.last_error",
+    "public.email_queue.next_retry_at",
+    "public.email_queue.recipient_email",
+    "public.email_queue.template_data",
+    "public.email_queue.template_name",
+    "public.email_suppression_list.bounce_type",
+    "public.experiment_assignments.variant_id",
+    "public.experiments.end_date",
+    "public.feature_flags.enabled_at",
+    "public.feature_flags.target_segments",
+    "public.forum.reports_count",
+    "public.forum.search_vector",
+    "public.forum_activity_types.is_public",
+    "public.forum_announcement_analytics.page_url",
+    "public.forum_announcements.background_color",
+    "public.forum_announcements.target_segment",
+    "public.forum_author_analytics.engagement_rate",
+    "public.forum_conversation_participants.joined_at",
+    "public.forum_feed_preferences.show_posts",
+    "public.forum_moderation_queue.flag_reason",
+    "public.forum_moderation_queue.flag_score",
+    "public.forum_moderation_queue.resolution_notes",
+    "public.forum_poll_options.option_text",
+    "public.forum_rate_limits.action_count",
+    "public.forum_recurring_posts.end_date",
+    "public.forum_reports.moderator_notes",
+    "public.forum_saved_searches.results_count",
+    "public.forum_search_history.results_count",
+    "public.forum_subscriptions.email_notifications",
+    "public.forum_subscriptions.notify_on_mention",
+    "public.forum_subscriptions.notify_on_reaction",
+    "public.forum_subscriptions.notify_on_reply",
+    "public.forum_tags.usage_count",
+    "public.forum_trust_levels.can_create_polls",
+    "public.forum_trust_levels.can_create_wiki",
+    "public.forum_trust_levels.can_delete_own_posts",
+    "public.forum_trust_levels.can_edit_own_posts",
+    "public.forum_trust_levels.can_flag",
+    "public.forum_trust_levels.can_like",
+    "public.forum_trust_levels.can_mention_users",
+    "public.forum_trust_levels.can_post",
+    "public.forum_trust_levels.can_post_links",
+    "public.forum_trust_levels.can_reply",
+    "public.forum_trust_levels.can_send_messages",
+    "public.forum_trust_levels.can_upload_images",
+    "public.forum_trust_levels.max_flags_per_day",
+    "public.forum_trust_levels.max_likes_per_day",
+    "public.forum_trust_levels.max_posts_per_day",
+    "public.forum_trust_levels.max_topics_per_day",
+    "public.forum_trust_levels.min_days_since_join",
+    "public.forum_trust_levels.min_likes_given",
+    "public.forum_trust_levels.min_likes_received",
+    "public.forum_trust_levels.min_posts_created",
+    "public.forum_trust_levels.min_posts_read",
+    "public.forum_trust_levels.min_replies_received",
+    "public.forum_trust_levels.min_time_spent_minutes",
+    "public.forum_trust_levels.min_topics_created",
+    "public.forum_trust_levels.min_topics_read",
+    "public.forum_user_badges.awarded_at",
+    "public.forum_user_reputation.current_streak",
+    "public.forum_user_reputation.longest_streak",
+    "public.forum_user_stats.flags_agreed",
+    "public.forum_user_stats.followers_count",
+    "public.forum_user_stats.following_count",
+    "public.forum_user_stats.helpful_count",
+    "public.forum_user_stats.joined_forum_at",
+    "public.forum_user_stats.last_comment_at",
+    "public.forum_user_stats.last_post_at",
+    "public.forum_user_stats.reactions_received",
+    "public.forum_user_stats.replies_received",
+    "public.forum_user_warnings.acknowledged_at",
+    "public.mfa_configuration.backup_codes_used",
+    "public.mfa_configuration.is_mfa_enabled",
+    "public.mfa_configuration.last_mfa_verification_at",
+    "public.mfa_configuration.mfa_enabled_at",
+    "public.mfa_configuration.require_mfa_for_admin",
+    "public.mfa_sessions.mfa_verified_at",
+    "public.moderation_queue.resolution_notes",
+    "public.newsletter_campaigns.preview_text",
+    "public.newsletter_campaigns.segment_id",
+    "public.newsletter_campaigns.total_bounced",
+    "public.newsletter_campaigns.total_clicked",
+    "public.newsletter_campaigns.total_delivered",
+    "public.newsletter_campaigns.total_opened",
+    "public.newsletter_campaigns.total_recipients",
+    "public.newsletter_campaigns.total_sent",
+    "public.newsletter_subscribers.subscribed_at",
+    "public.newsletter_subscribers.unsubscribe_reason",
+    "public.newsletter_subscribers.unsubscribed_at",
+    "public.post_activity_daily_stats.posts_arranged",
+    "public.post_activity_daily_stats.posts_collected",
+    "public.post_activity_daily_stats.posts_created",
+    "public.post_activity_daily_stats.posts_deleted",
+    "public.post_activity_daily_stats.posts_expired",
+    "public.post_activity_daily_stats.posts_reported",
+    "public.post_activity_daily_stats.posts_updated",
+    "public.post_activity_daily_stats.posts_viewed",
+    "public.post_activity_daily_stats.total_contacts",
+    "public.post_activity_daily_stats.total_shares",
+    "public.post_activity_daily_stats.unique_arrangers",
+    "public.post_activity_daily_stats.unique_posters",
+    "public.post_activity_daily_stats.unique_viewers",
+    "public.post_activity_logs.new_state",
+    "public.post_activity_logs.previous_state",
+    "public.post_reports.ai_analysis",
+    "public.post_reports.moderator_notes",
+    "public.precomputed_feed_cells.center_lat",
+    "public.precomputed_feed_cells.center_lng",
+    "public.precomputed_feed_cells.computed_at",
+    "public.precomputed_feed_cells.last_accessed_at",
+    "public.profile_stats.five_stars_rating",
+    "public.profile_stats.four_stars_rating",
+    "public.profile_stats.shared_posts_with_five_users",
+    "public.telegram_user_activity.new_users",
+    "public.translation_analytics.device_id",
+    "public.user_activity_summary.listings_saved",
+    "public.user_activity_summary.listings_viewed",
+    "public.user_activity_summary.messages_initiated",
+    "public.user_activity_summary.shares_completed",
+    "public.user_addresses.address_line1",
+    "public.user_addresses.address_line2",
+    "public.user_locale_preferences.date_format",
+    "public.user_locale_preferences.number_format",
+    "public.user_preferences.email_notifications",
+    "public.user_preferences.notifications_enabled",
+    "public.user_preferences.preferred_categories",
+    "public.user_preferences.push_notifications",
+    "public.user_preferences.show_distance",
+    "public.user_roles.granted_at",
+  ];
+  const KNOWN_DEAD_COLUMNS: Record<string, { reason: string; expiresOn: string }> =
+    Object.fromEntries(
+      DEAD_COLUMN_KEYS.map((key) => [
+        key,
+        { reason: PIN_REASON, expiresOn: PIN_EXPIRY },
+      ]),
+    );
+
+  // Ruling gate: every pin entry must carry a non-empty reason and a
+  // named expiry trigger (the commit or card that lands the reads). A
+  // pin missing either is deferred contract drift — the same failure
+  // class as a pin that outlives its column.
+  const malformedPins = Object.entries(KNOWN_DEAD_COLUMNS)
+    .filter(
+      ([, pin]) =>
+        typeof pin.reason !== "string" || pin.reason.trim() === "" ||
+        typeof pin.expiresOn !== "string" || pin.expiresOn.trim() === "" ||
+        !/(t_[a-f0-9]{8}|commit)/i.test(pin.expiresOn),
+    )
+    .map(([key]) => key)
+    .sort();
+  assertEquals(
+    malformedPins,
+    [],
+    "These pin entries lack a non-empty reason or a named expiry " +
+      "trigger (the commit or card that lands the reads): " +
+      malformedPins.join("\n"),
+  );
 
   const unpinned = dead.filter((key) => !(key in KNOWN_DEAD_COLUMNS));
   const stalePins = Object.keys(KNOWN_DEAD_COLUMNS)

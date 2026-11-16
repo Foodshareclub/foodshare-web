@@ -98,7 +98,6 @@ export interface ServiceCheckResult {
   service: string;
   status: "ok" | "error";
   message: string;
-  details?: unknown;
   responseTime?: number;
 }
 

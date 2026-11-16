@@ -19,7 +19,7 @@ import {
   checkRateLimit,
   isClientWritableBucket,
   scopedUploadPath,
-  uploadWithFallback,
+  uploadImage,
 } from "./storage.ts";
 import type { BatchUploadResponse, ImageUploadResponse } from "../types/index.ts";
 
@@ -82,7 +82,7 @@ export async function handleUpload(ctx: HandlerContext): Promise<Response> {
   const format = detectFormat(compressed.buffer);
   const path = scopedUploadPath(userId, customPath, format);
 
-  const { publicUrl, storage } = await uploadWithFallback(
+  const { publicUrl, storage } = await uploadImage(
     supabase,
     bucket,
     path,
@@ -96,7 +96,7 @@ export async function handleUpload(ctx: HandlerContext): Promise<Response> {
     const thumbPath = `${path.replace(/\.[^./]+$/, "")}_thumb.jpg`;
 
     try {
-      const thumbResult = await uploadWithFallback(
+      const thumbResult = await uploadImage(
         supabase,
         bucket,
         thumbPath,

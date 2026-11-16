@@ -33,6 +33,7 @@ function cacheSecret(name: string, value: string): void {
  * Falls back to Deno.env if the secret is not found in the Vault.
  */
 export async function getSecret(name: string): Promise<string | undefined> {
+  if (name.startsWith("R2_")) return undefined;
   // Check cache first
   if (cache.has(name) && Date.now() < (cacheExpiresAt.get(name) ?? 0)) {
     return cache.get(name);
@@ -49,7 +50,9 @@ export async function getSecret(name: string): Promise<string | undefined> {
 async function fetchSecret(name: string): Promise<string | undefined> {
   try {
     const supabase = getAdminClient();
-    const { data: secret, error } = await supabase.rpc("get_vault_secret", { secret_name: name })
+    const { data: secret, error } = await supabase.rpc("get_vault_secret", {
+      secret_name: name,
+    })
       .abortSignal(AbortSignal.timeout(5_000));
 
     if (error) {
@@ -83,6 +86,7 @@ async function fetchSecret(name: string): Promise<string | undefined> {
  * Assumes loadAllSecrets() has been called.
  */
 export function getSecretSync(name: string): string | undefined {
+  if (name.startsWith("R2_")) return undefined;
   if (cache.has(name)) {
     return cache.get(name);
   }
@@ -110,7 +114,10 @@ async function preloadSecrets(): Promise<void> {
     // service-role-only RPC and isolate decryption failures per requested name.
     const { entries: data, unreadable } = await readVaultEntries(
       VAULT_PRELOAD_NAMES,
-      (name) => supabase.rpc("get_vault_secret", { secret_name: name }).abortSignal(signal),
+      (name) =>
+        supabase.rpc("get_vault_secret", { secret_name: name }).abortSignal(
+          signal,
+        ),
     );
     if (unreadable) {
       logger.warn(
