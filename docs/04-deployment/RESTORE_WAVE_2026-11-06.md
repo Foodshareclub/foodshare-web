@@ -11,13 +11,15 @@ The Q3 product sign-off and the PAT are both optional and non-blocking
 (§Open items).
 **As of 2026-11-12 a partial restore is in progress — read §Partial-restore
 state first; it supersedes the §Execution order sequencing from the current
-state (the target order is unchanged). **Status as of 2026-11-15
+state (the target order is unchanged). **Status as of 2026-11-16
 (post-outage postmortem)**: the API-plane outage (the 04:11Z 530/1033)
 was the chown incident of Nov 15 hitting the live Postgres data dir
 (it sits inside the git checkout); Kiro's operator-approved recovery at
 06:05Z restored it, VPS-verified. The site apex still 500s on the
-exhausted Upstash monthly quota (`t_c304087e`; the fail-open fix is in
-flight — a cache quota must not take the site down). LAN-side probes of
+exhausted Upstash monthly quota (`t_c304087e`; the fail-open fix is on web
+main `450d733a`, deploy fleet-gated — a cache quota must not take the site
+down; the Upstash plan/limit decision remains the only path that also
+restores the cache). LAN-side probes of
 `api.`/`studio.` are unreliable — the Xfinity xFi SNI block
 (Advanced Security) is **stateful, not absolute**: some requests pass
 intact (two Kong-header-verified 404s at 08:12/09:11Z Nov 16
@@ -26,8 +28,8 @@ a TLS `protocol version` alert even though TCP reaches the correct CF
 IP — so no LAN reading can be told genuine from hijacked until the
 block is disabled or whitelisted. The independent-network
 confirmation is the phone curl (cellular): `?check=health` expect 200
-pre-F4. The mirror re-sync has landed at web
-`b44d50ee` (mirror-state row below) with a 6-file fmt tail pending.**
+pre-F4. The mirror is CLEAN at the 2026-11-16 final tips (web `6da8286b` / backend
+`f9e9fbf9` — churn ledger in the mirror-state row below).**
 
 ## Partial-restore state (probed 2026-11-12)
 
@@ -311,7 +313,7 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
 | api-v1-cache health echo strip (MEDIUM)| backend `af6fb235` (landed 2026-11-14, **before** the F4 deploy step — the constraint held, so one deploy carries gate + echo-strip) | card `t_b95f3346` closed: deno suite green at the pushed SHA (incl. new echo tests), tsrs at the budgeted error count; reviewer isolated re-run of the echo file 6/0 (6-vs-7 count note on the card, non-blocking) |
 | F1 mapping (109 = 31/72/6)             | backend `ab406777`                                              | verifier — counts reconciled, four-path client inventory                                                                                                       |
 | Type-debt bug + follow-ups             | backend `d1e069e7`                                              | verifier — 111/30 reproduced                                                                                                                                   |
-| Mirror state                           | **re-sync LANDED 2026-11-15: web `d330eee1` → `b44d50ee`** — one pass, 21 files (5 adds: 3 echo/boundary test files + `_shared/r2-account-capacity.ts` + `storage-public-url.ts`; 14 replaces, incl. `api-v1-cache/lib/health.ts` + `types.ts` and the `api-v1-images` set — the 21st file `__tests__/contract-drift.test.ts` entered via PIN commit `27b892a6`, a functional surface: the 204-column pin set now runs on web CI; **1 web-only DELETE: `_shared/r2-storage.ts`** per direction ruling); 1 migration `20261112120000`; `diff -r` clean vs backend origin blobs at execution (tips `c30873c9`/`d330eee1`). **Mirror CLEAN at the 2026-11-15 final tips** — the post-push 6-file whitespace-fmt drift (fmt commit `64d65b5a`, card `t_11366cbf`) was re-synced at web `54855896`; `diff -r` vs backend origin blobs = 0 files (measured 2026-11-15 after that push); `vendored` CI attestation pending on a held runner per the `4cc9fe8b` criterion | direction evidence (2026-11-14, architect): backend refactored storage — Supabase Storage primary, R2 isolated to backup/capacity (`r2-account-capacity.ts`); **zero references to `r2-storage.ts` in backend origin**, its `_shared/index.ts` export dropped; web's copy is the pre-refactor client (still imported by web's stale `storage-urls.ts` + `api-v1-images` set — all replaced by the 13-file set, so no dangling import after the full mirror). The re-sync is a **full mirror applied in one pass** (add + replace + delete; rsync `--delete` semantics) sourced from backend origin blobs — a one-way copy misses the web-only deletion and the `diff -r` gate stays red; `vendored` job green is the re-sync's acceptance |
+| Mirror state                           | **re-sync LANDED 2026-11-15: web `d330eee1` → `b44d50ee`** — one pass, 21 files (5 adds: 3 echo/boundary test files + `_shared/r2-account-capacity.ts` + `storage-public-url.ts`; 14 replaces, incl. `api-v1-cache/lib/health.ts` + `types.ts` and the `api-v1-images` set — the 21st file `__tests__/contract-drift.test.ts` entered via PIN commit `27b892a6`, a functional surface: the 204-column pin set now runs on web CI; **1 web-only DELETE: `_shared/r2-storage.ts`** per direction ruling); 1 migration `20261112120000`; `diff -r` clean vs backend origin blobs at execution (tips `c30873c9`/`d330eee1`). **Mirror CLEAN at the 2026-11-16 final tips** (web `6da8286b` / backend `f9e9fbf9`; `diff -r` vs backend origin blobs = 0 files, measured 2026-11-16; this doc commit is docs-only, out of mirror scope) — churn after the 11-15 sync, each cycle closed by a full-mirror re-sync from backend origin blobs: the 6-file whitespace-fmt tail (fmt commit `64d65b5a`, card `t_11366cbf`) re-synced at web `54855896`; the `contract-drift.test.ts` corpus-scoping pair (`ff59fac6`/`99da487c`) re-synced at web `4eef50a3`; the `seed_forum_categories` migration rename (backend `f9e9fbf9`) re-synced at web `6da8286b`; `vendored` CI attestation per the `4cc9fe8b` criterion rides the first green web run on the returned runner (fleet back online per lead's 21:5xZ read) | direction evidence (2026-11-14, architect): backend refactored storage — Supabase Storage primary, R2 isolated to backup/capacity (`r2-account-capacity.ts`); **zero references to `r2-storage.ts` in backend origin**, its `_shared/index.ts` export dropped; web's copy is the pre-refactor client (still imported by web's stale `storage-urls.ts` + `api-v1-images` set — all replaced by the 13-file set, so no dangling import after the full mirror). The re-sync is a **full mirror applied in one pass** (add + replace + delete; rsync `--delete` semantics) sourced from backend origin blobs — a one-way copy misses the web-only deletion and the `diff -r` gate stays red; `vendored` job green is the re-sync's acceptance |
 
 ## Post-wave (explicitly not in this wave)
 
