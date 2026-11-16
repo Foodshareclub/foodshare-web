@@ -11,14 +11,19 @@ The Q3 product sign-off and the PAT are both optional and non-blocking
 (§Open items).
 **As of 2026-11-12 a partial restore is in progress — read §Partial-restore
 state first; it supersedes the §Execution order sequencing from the current
-state (the target order is unchanged). **Status as of 2026-11-15**
-(re-probe after the WAN blind window): origin DOWN — `api.` 530/1033
-(origin not found), apex 500, studio 302; two-lane confirmation at
-04:11Z. Consequence: VPS/tunnel recovery precedes the F4 deploy + E1
-(insertion B) and every §6 leg, and the F4 tri-state is undecidable in
-the window (530 matches none of 401/200/503). The mirror re-sync has
-landed at web `b44d50ee` (mirror-state row below) with a 6-file fmt tail
-pending.**
+state (the target order is unchanged). **Status as of 2026-11-15
+(post-outage postmortem)**: the API-plane outage (the 04:11Z 530/1033)
+was the chown incident of Nov 15 hitting the live Postgres data dir
+(it sits inside the git checkout); Kiro's operator-approved recovery at
+06:05Z restored it, VPS-verified. The site apex still 500s on the
+exhausted Upstash monthly quota (`t_c304087e`; the fail-open fix is in
+flight — a cache quota must not take the site down). LAN-side probes of
+`api.`/`studio.` are contaminated by an Xfinity xFi SNI block
+(Advanced Security) until disabled or whitelisted — the signature is a
+TLS `protocol version` alert with TCP reaching the correct CF IP; the
+independent-network confirmation is the phone curl (cellular):
+`?check=health` expect 200 pre-F4. The mirror re-sync has landed at web
+`b44d50ee` (mirror-state row below) with a 6-file fmt tail pending.**
 
 ## Partial-restore state (probed 2026-11-12)
 
@@ -77,11 +82,15 @@ step.
    the publishable key, see the fleet note below).
 3. Finish runbook steps 2–4 (api/studio tunnel, CF re-exposure —
    **landed 2026-11-13**: `api.` = Kong 404 over h2, studio 302,
-   unauthenticated `?check=services` = 200 pre-F4. **Re-probed 2026-11-15
-   after the WAN blind window: origin DOWN — `api.` 530/1033 (origin not
-   found), apex 500, studio 302 — two-lane confirmation at 04:11Z; the
-   200 pre-F4 baseline no longer holds. VPS/tunnel recovery precedes the
-   rest of this step: the F4 deploy cannot reach a dead origin.**) +
+   unauthenticated `?check=services` = 200 pre-F4. **Re-probed 2026-11-15:
+   the API plane was down (chown incident, Nov 15 — data dir inside the
+   checkout) and was recovered at 06:05Z (Kiro, operator-approved,
+   VPS-verified); the apex 500 at the same time is the exhausted
+   Upstash quota (`t_c304087e`), not the tunnel. LAN probes of
+   `api.`/`studio.` are SNI-block-contaminated (xFi Advanced Security)
+   until disabled — use the phone (cellular) `?check=health` = 200
+   pre-F4 as the independent-network confirmation before continuing
+   this step.**) +
    **F4 edge-function
    deploy (gate)** + E1/E2 (wave insertion B, envs **after** the gate —
    hard gate below) + **web rebuild/redeploy** with the current key.
@@ -267,10 +276,14 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
      serving; per the rule the F4 deploy + E1 step precedes every §6
      leg, and the F4-before-envs hard gate (wave insertion B) applies
      to that deploy. **Re-observed 2026-11-15 (04:11Z, two-lane):
-     530/1033 — origin down, dead-tunnel signature; 530 matches none of
-     the 401/200/503 tri-state, so the tri-state is undecidable until
-     VPS recovery and this probe re-runs post-recovery (expect 200
-     again — the pre-F4 build is unchanged — before the F4 deploy).**
+     530/1033 — then explained by the postmortem as the chown-incident
+     API-plane outage (recovered 06:05Z) plus, for all LAN-side probes
+     since ~04:11Z, an Xfinity xFi SNI block that contaminates
+     `api.`/`studio.` (TLS `protocol version` alert; apex SNI passes).
+     The tri-state is undecidable from this LAN until the SNI block is
+     lifted; re-run this probe from an independent network (phone,
+     cellular) — expect 200 (the pre-F4 build is unchanged) before the
+     F4 deploy.**
      Operator runs the with-token leg: same URL with
      `Authorization: Bearer $INTER...RET` → expect 200
      (the secret does not ride through the team thread).
