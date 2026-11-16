@@ -906,10 +906,15 @@ Deno.test("contract: no policy survives that applies only to BYPASSRLS roles", (
  * A name is referenced when it appears in any of: the edge functions
  * (generated types excluded — they are the catalog's output, and every
  * name appears in them by construction), the Rust worker's crates, the
- * operational scripts, `volumes/`, the post-baseline migrations, the cron
- * job commands in the catalog, or the sibling checkouts when this
- * workspace has them (a bare CI checkout has none; the backend corpus is
- * the authority there). The backend-owned corpora are scanned only when
+ * operational scripts, `volumes/`, the post-baseline migrations, or the cron
+ * job commands in the catalog. Sibling checkouts (foodshare-web,
+ * foodshare-app) are deliberately NOT scanned: whether they sit next to this
+ * repository depends on the workspace, and a corpus that changes with the
+ * layout gave opposite verdicts in CI and in an umbrella checkout for the
+ * same pins (t_0cc5ef47). This repository's corpus is the only authority;
+ * a name read only from another repository is pinned with its reason, and
+ * cross-repo liveness belongs to a job that checks out every repository.
+ * The backend-owned corpora are scanned only when
  * this checkout owns them — a vendored checkout inherits the invariants
  * they carry by the byte-match gate. The baseline dump and the catalog
  * are definitions of the estate, not call sites.
@@ -933,25 +938,17 @@ function codeCorpus(): (name: string) => boolean {
   }
   if (ownsCorpus()) {
     add(new URL("services/crates/", REPO_ROOT), [".rs"]);
-    add(new URL("scripts/", REPO_ROOT), [".ts", ".sh", ".sql"]);
+    // scripts/watchdog/ is a Cloudflare Worker that probes public HTTP
+    // endpoints and never names a table; its own identifiers
+    // (`telegram_last_error`) would otherwise mark columns live by substring.
+    for (const rel of walkFiles(new URL("scripts/", REPO_ROOT), [".ts", ".sh", ".sql"])) {
+      if (!rel.startsWith("watchdog/")) files.push(new URL(rel, new URL("scripts/", REPO_ROOT)));
+    }
     add(new URL("volumes/", REPO_ROOT), [".yml", ".sql"]);
     const MIGRATIONS = new URL("supabase/migrations/", REPO_ROOT);
     for (const rel of walkFiles(MIGRATIONS, [".sql"])) {
       if (rel.startsWith("20260128195318")) continue; // the baseline dump
       files.push(new URL(rel, MIGRATIONS));
-    }
-  }
-  const SIBLINGS: Array<[string, string[]]> = [
-    ["../foodshare-web/src/", [".ts", ".tsx"]],
-    ["../foodshare-app/Sources/", [".swift"]],
-  ];
-  for (const [rel, extensions] of SIBLINGS) {
-    try {
-      if (Deno.statSync(new URL(rel, REPO_ROOT)).isDirectory) {
-        add(new URL(rel, REPO_ROOT), extensions);
-      }
-    } catch {
-      // a bare checkout has no sibling; the backend corpus is the authority
     }
   }
 
@@ -982,11 +979,9 @@ Deno.test("contract: no view in the catalog has no live code reference", () => {
   //   - post-baseline migrations (a migration that reads the view keeps it)
   //   - volumes/ (kong.yml, db init SQL)
   //   - the cron job commands in the catalog
-  //   - the sibling checkouts, when this workspace has them: a view read
-  //     only from the web app or the Swift client has no reference in this
-  //     repository, and in a bare CI checkout the siblings do not exist —
-  //     the backend corpus is the authority there, and every view the
-  //     estate reads from outside it would fail until pinned.
+  // Sibling checkouts are not scanned (see codeCorpus): a view read only
+  // from the web app or the Swift client has no reference in this
+  // repository and is pinned in KNOWN_EXTERNAL_ONLY_VIEWS with the reason.
   // The baseline dump, the catalog and the audit fixtures are definitions of
   // the estate, not call sites; scanning them would mark every view live.
   //
@@ -1043,7 +1038,7 @@ Deno.test("contract: no view in the catalog has no live code reference", () => {
     [],
     "These views have no reference in the code that runs against the " +
       "database — no edge function, no worker query, no script, no " +
-      "post-baseline migration, no cron job, no sibling checkout. They are " +
+      "post-baseline migration, no cron job. They are " +
       "surfaces that read like data exists, and a materialized view among " +
       "them may never have been populated at all. Either the view is dead " +
       "and should be dropped, or it is read somewhere this audit cannot " +
