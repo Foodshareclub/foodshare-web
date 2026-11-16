@@ -24,8 +24,7 @@ import { NextRequest } from "next/server";
  * (`isRateLimitingRequired`) — the exact production shape.
  */
 
-const QUOTA_ERROR =
-  "ERR max requests limit exceeded. Limit: 500000, Usage: 500001";
+const QUOTA_ERROR = "ERR max requests limit exceeded. Limit: 500000, Usage: 500001";
 
 class QuotaExhaustedRedis {
   /** Every Upstash REST call that leaves the process. */
@@ -69,10 +68,7 @@ process.env.NEXT_PUBLIC_APP_URL = "https://foodshare.club";
 
 const { proxy } = await import("../proxy");
 
-function request(
-  path: string,
-  init?: { method?: string; origin?: string },
-): NextRequest {
+function request(path: string, init?: { method?: string; origin?: string }): NextRequest {
   const req = new NextRequest(`https://foodshare.club${path}`, {
     method: init?.method ?? "GET",
   });
@@ -98,9 +94,7 @@ test("an exhausted Upstash quota degrades the proxy instead of 500ing (2026-11-1
 
   // 3. A mutation. The mutation limiter degrades too. This is the fifth
   //    consecutive Upstash failure, which opens the breaker.
-  response = await proxy(
-    request("/api/posts", { method: "POST", origin: "https://foodshare.club" }),
-  );
+  response = await proxy(request("/api/posts", { method: "POST", origin: "https://foodshare.club" }));
   expect(response.status).toBe(200);
   expect(QuotaExhaustedRedis.calls).toBe(5);
 
