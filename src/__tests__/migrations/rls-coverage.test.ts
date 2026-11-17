@@ -18,6 +18,13 @@ import { describe, expect, it } from "bun:test";
  *     files (3 of them RLS-critical) and 4 content-diverged ones, including the
  *     privilege grant migration.
  *
+ * The "enabled but never created" check carries exactly one documented
+ * carve-out (SERVICE_OWNED_TABLES below): the storage service's own tables,
+ * which 20261112120000 enables RLS on by design. App-owned non-public
+ * schemas (metrics, billing, audit, engagement_private) are created in this
+ * directory and stay fully covered — scoping the index to `public` alone
+ * (the b662a43c attempt) silently dropped those five tables from check 1.
+ *
  * Both checks were originally manual greps run from a skill doc, so neither ever
  * failed a build. Parsing is deliberately line-break tolerant: policies and
  * `ALTER TABLE` statements in this codebase routinely put the identifier on one
@@ -45,22 +52,6 @@ function normalize(identifier: string): string {
     .replace(/"/g, "")
     .trim();
   return cleaned;
-}
-
-/**
- * Whether the identifier refers to the public schema (unqualified or
- * `public.`). The migrations in this directory create tables only in
- * public; Supabase's own schemas (storage, auth) are initialized by their
- * services' DDL, which is not in this directory, so there is no create for
- * an enable targeting `storage.objects` to match against. Indexing them
- * would make "enabled but never created" flag every table the storage
- * service owns, and 20261112120000 enables RLS on exactly those tables,
- * on purpose. The invariant guarded here is the one the file documents:
- * every table *this repo creates* — all of them in public — enables RLS.
- */
-function isPublicSchema(qualified: string): boolean {
-  const schema = qualified.split(".")[0]?.replace(/"/g, "").toLowerCase();
-  return schema === undefined || schema === "public";
 }
 
 interface MigrationIndex {
@@ -93,18 +84,15 @@ function indexMigrations(dir: string): MigrationIndex {
     const sql = stripNoise(readFileSync(join(dir, file), "utf8"));
 
     for (const m of sql.matchAll(createForeign)) {
-      if (!isPublicSchema(m[1])) continue;
       const key = normalize(m[1]);
       created.set(key, file);
       isForeign.add(key);
     }
     for (const m of sql.matchAll(createTable)) {
-      if (!isPublicSchema(m[1])) continue;
       const key = normalize(m[1]);
       if (!created.has(key)) created.set(key, file);
     }
     for (const m of sql.matchAll(enableRls)) {
-      if (!isPublicSchema(m[1])) continue;
       const key = normalize(m[1]);
       if (!enabled.has(key)) enabled.set(key, file);
     }
@@ -123,6 +111,27 @@ const RLS_EXEMPT: Record<string, string> = {
   // not by table policies, and it mirrors third-party data rather than user
   // data. Documented as an explicit omission in 20260927010000.
   fridges: "foreign table (Airtable FDW); no RLS policies by design",
+};
+
+/**
+ * Tables that are enabled in this directory but never created here because a
+ * Supabase *service* owns them: `storage.objects` and `storage.buckets` are
+ * created by the storage service's init DDL (supabase/storage-api), not by
+ * migrations. 20261112120000 enables RLS on them on purpose — the service
+ * ships those tables without the ownership policies this app requires, and
+ * the migration tightens them. The "typo'd ALTER protects nothing" rationale
+ * behind the orphan check does not apply to these two identifiers: they are
+ * named against the service's own catalog, and 20261112120000 carries no
+ * IF EXISTS, so a typo would fail the migration at apply time instead of
+ * passing silently.
+ *
+ * Service-owned schemas only. App-owned non-public schemas (metrics,
+ * billing, audit, engagement_private) are created by migrations in this
+ * directory and remain fully covered by every check in this file.
+ */
+const SERVICE_OWNED_TABLES: Record<string, string> = {
+  "storage.objects": "owned by the storage service (init DDL); RLS enabled on purpose by 20261112120000",
+  "storage.buckets": "owned by the storage service (init DDL); RLS enabled on purpose by 20261112120000",
 };
 
 describe("RLS coverage across migrations", () => {
@@ -146,9 +155,24 @@ describe("RLS coverage across migrations", () => {
   });
 
   it("does not enable RLS on a table that was never created", () => {
-    const orphans = [...index.enabled.keys()].filter((t) => !index.created.has(t));
+    const orphans = [...index.enabled.keys()]
+      .filter((t) => !index.created.has(t) && !(t in SERVICE_OWNED_TABLES))
+      .sort();
     // A typo'd table name in an ALTER would silently protect nothing.
+    // SERVICE_OWNED_TABLES is the one documented carve-out — tables a
+    // Supabase service creates outside this directory (see the list).
     expect(orphans).toEqual([]);
+  });
+
+  it("service-owned exemptions are live orphans, not stale entries", () => {
+    // The exemption list must track the reality it explains: every entry is
+    // a table that IS enabled in this directory and NOT created here. If a
+    // create ever lands in a migration, the entry is dead weight and must
+    // come out; if an enable disappears, the entry was hiding nothing and
+    // must come out. This also stops the list being used to pre-clear a
+    // name that no migration enables.
+    const stale = Object.keys(SERVICE_OWNED_TABLES).filter((t) => !index.enabled.has(t) || index.created.has(t));
+    expect(stale).toEqual([]);
   });
 
   it("no table ships RLS-disabled in the same migration that creates it", () => {
