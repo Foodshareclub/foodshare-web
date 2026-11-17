@@ -77,16 +77,22 @@ pluggable `RateLimitStore`:
 
 ### What is new
 
-- **Failure policy: closed, not open.** A production deploy without
-  `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` logs FATAL at module
-  init and the affected actions answer `SERVICE_UNAVAILABLE` — the same
-  policy the proxy applies (503) for the same reason: the failure mode of a
-  missing limiter is "unlimited traffic", and falling back to a per-instance
-  `Map` would quietly recreate the N × limit this fix removes. A store that
-  is configured but does not answer (Upstash down, network error) is refused
-  the same way. The proxy's limiters share this dependency and failure
-  domain, so an availability argument for failing open does not apply to the
-  action layer: the request would not have reached the action anyway.
+- **Failure policy, settled in two directions.** A production deploy
+  without `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` logs FATAL
+  at module init and the affected actions answer `SERVICE_UNAVAILABLE` —
+  the same policy the proxy applies (503) for the same reason: a
+  misconfiguration is a different failure than a wired-up store answering
+  with errors, and the site must not silently run unbounded on the former
+  (a per-instance `Map` fallback would quietly recreate the N × limit this
+  fix removes). A store that _is_ wired up but does not answer (Upstash
+  down, or the monthly quota exhausted) fails **open**: the request is
+  served and the limit simply does not apply for that pass, counted by a
+  circuit breaker (five consecutive errors opens the circuit for a minute,
+  one half-open request re-tries, the first success closes it) that keeps
+  the degraded mode from paying Upstash per request while the store refuses
+  service. Both directions mirror the proxy's ruling in 450d733a, which
+  followed the 2026-11-15 incident in which an exhausted quota counter
+  500'd the whole site for 25 h.
 - **One Upstash call per check.** See quota below.
 
 ## Upstash quota cost
@@ -106,7 +112,7 @@ these two limiters.
 
 ## Tests
 
-`bun test src/__tests__/lib/security/sharedRateLimit.test.ts` — 13 tests:
+`bun test src/__tests__/lib/security/sharedRateLimit.test.ts` — 15 tests:
 
 - **two instances, one store, one budget** (the acceptance test): two
   limiter/store object pairs sharing one fake Upstash, driven with the real
@@ -116,7 +122,10 @@ these two limiters.
   is still one;
 - memory store matches the original algorithm check for check (behavior
   unchanged);
-- fail-closed verdicts for missing store and unresponsive store;
+- failure policy: no store configured refuses (fail closed); a store that
+  does not answer allows with `degraded` (fail open, per 450d733a); a
+  degraded pass consumes no budget; the circuit breaker stops paying
+  Upstash after five errors, re-tries half-open, and closes on success;
 - verdict shape (`remaining`, `retryAfterMs`).
 
 The fake implements the same `eval(script, keys, args)` surface the real

@@ -27,16 +27,31 @@
  * pressure, and a whole lot less than the per-request cost of the proxy
  * limiters it complements.
  *
- * ## When Redis is missing
+ * ## When Redis is missing — and when it answers with errors
  *
- * The policy follows the proxy (`rateLimitPolicy`): a production deploy
- * without Upstash fails closed — the affected actions answer with
- * SERVICE_UNAVAILABLE instead of silently running unlimited, because the
- * failure mode of a missing limiter is "unlimited traffic", and a per-
- * instance fallback would quietly recreate the N × limit this module exists
- * to remove. Development and CI (which run the production server without
- * Redis) keep a per-instance in-memory store with exactly the semantics the
- * original in-action Maps had, so local behavior is unchanged.
+ * Two different failures, two different directions (the policy the proxy
+ * settled in 450d733a, which this module follows):
+ *
+ * - **Never wired up** (production without `UPSTASH_REDIS_REST_URL` /
+ *   `UPSTASH_REDIS_REST_TOKEN`): fail **closed**. A misconfiguration is
+ *   answered with SERVICE_UNAVAILABLE — and a FATAL at module init —
+ *   instead of silently running unlimited, because a per-instance fallback
+ *   would quietly recreate the N × limit this module exists to remove.
+ *   Same reason the proxy answers 503.
+ * - **Wired up but answering with errors** (Upstash down, or the monthly
+ *   quota exhausted — the 2026-11-15 incident was "ERR max requests limit
+ *   exceeded. Limit: 500000", and a counter in a billing dashboard became
+ *   the site's availability state for 25 h): fail **open**. A rate limit
+ *   is a control, not the app; when it cannot be evaluated, the request is
+ *   still served and the limit simply does not apply for that pass. A
+ *   circuit breaker (five consecutive errors opens it for a minute, one
+ *   half-open request re-tries, the first success closes it) keeps the
+ *   degraded mode from paying Upstash on every request while the store
+ *   refuses service — the same breaker parameters the proxy uses.
+ *
+ * Development and CI (which run the production server without Redis) keep
+ * a per-instance in-memory store with exactly the semantics the original
+ * in-action Maps had, so local behavior is unchanged.
  *
  * ## Client bundle
  *
@@ -146,6 +161,66 @@ export class MemoryRateLimitStore implements RateLimitStore {
 }
 
 // ============================================================================
+// Circuit breaker (module-local, in-memory)
+// ============================================================================
+
+/**
+ * The same breaker the proxy keeps for its limiters (src/proxy.ts,
+ * 450d733a): five consecutive failures open the circuit for a minute, one
+ * half-open request re-tries, and the first success closes it. Ported with
+ * an injectable clock so the transitions are testable; the parameters are
+ * the proxy's, because this is the same dependency and the same failure —
+ * Upstash refusing service while the rest of the site keeps running.
+ */
+export class CircuitBreaker {
+  private failures = 0;
+  private lastFailure = 0;
+  private state: "closed" | "open" | "half-open" = "closed";
+
+  constructor(
+    private readonly threshold = 5,
+    private readonly openMs = 60_000,
+    private readonly halfOpenMs = 30_000,
+    private readonly now: () => number = () => Date.now(),
+  ) {}
+
+  isOpen(): boolean {
+    const now = this.now();
+
+    if (this.state === "open") {
+      if (now - this.lastFailure > this.openMs) {
+        this.state = "half-open";
+        return false;
+      }
+      return true;
+    }
+
+    if (this.state === "half-open" && now - this.lastFailure > this.halfOpenMs) {
+      // The half-open window passed with the circuit still carrying the
+      // failure count: treat the silence as recovery.
+      this.state = "closed";
+      this.failures = 0;
+    }
+
+    return false;
+  }
+
+  recordFailure(): void {
+    this.failures++;
+    this.lastFailure = this.now();
+    if (this.failures >= this.threshold) {
+      this.state = "open";
+      console.warn("[sharedRateLimit] circuit opened after repeated Upstash errors");
+    }
+  }
+
+  recordSuccess(): void {
+    this.failures = 0;
+    this.state = "closed";
+  }
+}
+
+// ============================================================================
 // Limiter
 // ============================================================================
 
@@ -154,10 +229,17 @@ export interface RateLimitVerdict {
   success: boolean;
   /**
    * "ok" — allowed; "limited" — the window's budget is exhausted;
-   * "unavailable" — no store to count against, or the store did not
-   * answer.
+   * "unavailable" — no store to count against (a production deploy
+   * missing Upstash: fail closed); "degraded" — the store is wired up
+   * but not answering, so the request is allowed and the limit does not
+   * apply for this pass (fail open, see the module docs).
    */
-  reason: "ok" | "limited" | "unavailable";
+  reason: "ok" | "limited" | "unavailable" | "degraded";
+  /**
+   * Present when reason is "degraded": why the limit did not apply for
+   * this pass.
+   */
+  degraded?: "circuit-open" | "redis-error";
   /** Budget remaining in the current window (informational). */
   remaining: number;
   /** Milliseconds until the window frees budget (0 when allowed). */
@@ -177,6 +259,12 @@ export interface SharedRateLimiterOptions {
    * Upstash, which is answered "unavailable" rather than unlimited.
    */
   store: RateLimitStore | null;
+  /**
+   * Optional breaker for the store's error path. Present in production so
+   * a degraded Upstash does not cost a REST call per request; see the
+   * module docs for the fail-open policy it implements.
+   */
+  breaker?: CircuitBreaker;
 }
 
 export class SharedRateLimiter {
@@ -185,15 +273,14 @@ export class SharedRateLimiter {
   /**
    * Count one request for `identifier` and say whether it is allowed.
    *
-   * Fails closed. A missing store, or a store that does not answer, is a
-   * misconfiguration to be answered loudly, not silently tolerated: the
-   * proxy's limiters share this process, this Upstash dependency and this
-   * failure domain, and they refuse too (see `rateLimitPolicy.ts` — the
-   * failure mode of a missing limiter is "unlimited traffic", and a shared-
-   * store limiter that failed open would undo the point of sharing).
+   * Two failure directions (see the module docs): no store configured is a
+   * misconfiguration, answered "unavailable" so the caller fails closed; a
+   * store that is wired up but does not answer fails open — the request is
+   * allowed and the limit simply does not apply for this pass — with the
+   * breaker keeping the degraded mode from paying Upstash per request.
    */
   async check(identifier: string): Promise<RateLimitVerdict> {
-    const { max, windowMs, prefix, store } = this.options;
+    const { max, windowMs, prefix, store, breaker } = this.options;
 
     if (!store) {
       return {
@@ -204,15 +291,29 @@ export class SharedRateLimiter {
       };
     }
 
-    const result = await store.increment(`${prefix}:${identifier}`, windowMs);
-    if (result === null) {
+    if (breaker?.isOpen()) {
       return {
-        success: false,
-        reason: "unavailable",
-        remaining: 0,
+        success: true,
+        reason: "degraded",
+        degraded: "circuit-open",
+        remaining: max,
         retryAfterMs: 0,
       };
     }
+
+    const result = await store.increment(`${prefix}:${identifier}`, windowMs);
+    if (result === null) {
+      breaker?.recordFailure();
+      console.warn("[sharedRateLimit] Upstash error, failing open for this pass");
+      return {
+        success: true,
+        reason: "degraded",
+        degraded: "redis-error",
+        remaining: max,
+        retryAfterMs: 0,
+      };
+    }
+    breaker?.recordSuccess();
 
     if (result.count > max) {
       return {
@@ -269,9 +370,15 @@ if (required && !upstashRedis && typeof console !== "undefined") {
   );
 }
 
-/** Store per limiter, so the development fallbacks stay separate as before. */
-function storeFor(limit: typeof POST_ACTIVITY_LIMIT | typeof AI_DRAFT_LIMIT): RateLimitStore | null {
-  void limit;
+/** One breaker for both limiters: same Upstash dependency, same failure. */
+const upstashBreaker = new CircuitBreaker();
+
+/**
+ * Store per limiter, so the development fallbacks stay separate as before.
+ * Production always gets the shared Upstash store, or null in a deploy that
+ * never wired it up (which then fails closed, see storeFor's callers).
+ */
+function storeFor(): RateLimitStore | null {
   if (upstashRedis) return new UpstashRateLimitStore(upstashRedis);
   if (required) return null;
   return new MemoryRateLimitStore();
@@ -284,7 +391,8 @@ function storeFor(limit: typeof POST_ACTIVITY_LIMIT | typeof AI_DRAFT_LIMIT): Ra
  */
 export const postActivityLimiter = new SharedRateLimiter({
   ...POST_ACTIVITY_LIMIT,
-  store: storeFor(POST_ACTIVITY_LIMIT),
+  store: storeFor(),
+  breaker: upstashBreaker,
 });
 
 /**
@@ -293,5 +401,6 @@ export const postActivityLimiter = new SharedRateLimiter({
  */
 export const aiDraftLimiter = new SharedRateLimiter({
   ...AI_DRAFT_LIMIT,
-  store: storeFor(AI_DRAFT_LIMIT),
+  store: storeFor(),
+  breaker: upstashBreaker,
 });

@@ -17,11 +17,13 @@
 import { describe, expect, it } from "bun:test";
 import {
   AI_DRAFT_LIMIT,
+  CircuitBreaker,
   FIXED_WINDOW_SCRIPT,
   MemoryRateLimitStore,
   POST_ACTIVITY_LIMIT,
   SharedRateLimiter,
   UpstashRateLimitStore,
+  type RateLimitCountResult,
   type RateLimitStore,
 } from "@/lib/security/sharedRateLimit";
 
@@ -65,6 +67,24 @@ class FakeUpstash {
 class BrokenStore implements RateLimitStore {
   async increment(): Promise<null> {
     return null;
+  }
+}
+
+/**
+ * A delegating store with a fail switch and a call counter: Upstash that
+ * refuses service for a while and then recovers, without paying anything
+ * while it refuses (the breaker's job).
+ */
+class FlakyStore implements RateLimitStore {
+  fail = false;
+  calls = 0;
+
+  constructor(private readonly inner: RateLimitStore) {}
+
+  async increment(key: string, windowMs: number): Promise<RateLimitCountResult | null> {
+    this.calls++;
+    if (this.fail) return null;
+    return this.inner.increment(key, windowMs);
   }
 }
 
@@ -278,11 +298,12 @@ describe("memory store (development/CI fallback)", () => {
 });
 
 // ============================================================================
-// Failure policy: closed, not open
+// Failure policy: misconfiguration closed, runtime errors open
+// (the two directions the proxy settled in 450d733a)
 // ============================================================================
 
 describe("failure policy", () => {
-  it("refuses with 'unavailable' when no store is configured", async () => {
+  it("refuses with 'unavailable' when no store is configured (misconfiguration stays closed)", async () => {
     // Production without Upstash: the actions answer SERVICE_UNAVAILABLE
     // rather than running unlimited (same policy as the proxy's 503).
     const limiter = new SharedRateLimiter({
@@ -296,7 +317,10 @@ describe("failure policy", () => {
     expect(verdict.reason).toBe("unavailable");
   });
 
-  it("refuses with 'unavailable' when the store does not answer", async () => {
+  it("allows with 'degraded' when the store does not answer (runtime errors fail open)", async () => {
+    // A rate limit is a control, not the app: when the wired-up store
+    // refuses service (the 2026-11-15 quota incident), the request is
+    // served and the limit simply does not apply for that pass.
     const limiter = new SharedRateLimiter({
       max: 5,
       windowMs: 60_000,
@@ -304,8 +328,72 @@ describe("failure policy", () => {
       store: new BrokenStore(),
     });
     const verdict = await limiter.check("x");
-    expect(verdict.success).toBe(false);
-    expect(verdict.reason).toBe("unavailable");
+    expect(verdict.success).toBe(true);
+    expect(verdict.reason).toBe("degraded");
+    expect(verdict.degraded).toBe("redis-error");
+  });
+
+  it("a degraded pass consumes no budget", async () => {
+    let t = 0;
+    const store = new FlakyStore(new MemoryRateLimitStore(() => t));
+    const limiter = new SharedRateLimiter({
+      max: 2,
+      windowMs: 60_000,
+      prefix: "p",
+      store,
+    });
+
+    expect((await limiter.check("x")).reason).toBe("ok"); // counted: 1
+    store.fail = true;
+    expect((await limiter.check("x")).reason).toBe("degraded"); // not counted
+    store.fail = false;
+    expect((await limiter.check("x")).reason).toBe("ok"); // counted: 2
+    expect((await limiter.check("x")).reason).toBe("limited"); // counted: 3
+  });
+
+  it("the breaker stops paying Upstash after five errors, re-tries half-open, closes on success", async () => {
+    let t = 0;
+    const store = new FlakyStore(new MemoryRateLimitStore(() => t));
+    store.fail = true;
+    const breaker = new CircuitBreaker(5, 60_000, 30_000, () => t);
+    const limiter = new SharedRateLimiter({
+      max: 5,
+      windowMs: 60_000,
+      prefix: "p",
+      store,
+      breaker,
+    });
+
+    // Five errors, all served, none counted.
+    for (let i = 0; i < 5; i++) {
+      const verdict = await limiter.check("x");
+      expect(verdict.success).toBe(true);
+      expect(verdict.degraded).toBe("redis-error");
+    }
+
+    // The fifth failure opened the circuit: the next check must not pay
+    // Upstash at all.
+    const calls = store.calls;
+    const open = await limiter.check("x");
+    expect(open.success).toBe(true);
+    expect(open.degraded).toBe("circuit-open");
+    expect(store.calls).toBe(calls);
+
+    // A minute later the circuit is half-open: exactly one re-trial.
+    t = 60_001;
+    const retry = await limiter.check("x");
+    expect(retry.degraded).toBe("redis-error");
+    expect(store.calls).toBe(calls + 1);
+
+    // The re-trial failed, so the circuit re-opens; a minute later the
+    // half-open request finds Upstash recovered and closes the circuit.
+    t = 120_002;
+    store.fail = false;
+    const ok = await limiter.check("x");
+    expect(ok.success).toBe(true);
+    expect(ok.reason).toBe("ok");
+    expect(breaker.isOpen()).toBe(false);
+    expect((await limiter.check("x")).reason).toBe("ok"); // counting for real again
   });
 });
 
