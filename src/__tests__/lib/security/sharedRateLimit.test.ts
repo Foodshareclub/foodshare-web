@@ -398,6 +398,44 @@ describe("failure policy", () => {
 });
 
 // ============================================================================
+// Degraded mode must still rate-limit (t_c22f82b8 — RED, t_9483b145 chain)
+// ============================================================================
+
+/**
+ * Today an Upstash outage turns both production limiters into "no limit":
+ * every check while the store errors (or while the breaker is open) answers
+ * success. On a single instance (N=1) that is strictly worse than the
+ * in-memory Map these limiters replaced. The planned fix (t_9483b145) counts
+ * degraded passes against a per-instance fallback, so one instance still
+ * enforces its own budget. Marked `.failing` so main stays green: it passes
+ * while the gap exists and turns red — remove `.failing` then — the moment
+ * the degraded branch enforces the budget. The fail-open tests in "failure
+ * policy" above describe today's behavior and will be revised by that fix.
+ */
+describe("degraded mode on one instance (N=1)", () => {
+  it.failing("the AI draft limiter still enforces 10/hour/user while Upstash errors", async () => {
+    let t = 0;
+    const limiter = new SharedRateLimiter({
+      ...AI_DRAFT_LIMIT,
+      store: new BrokenStore(),
+      // The production composition: the shared breaker opens after five
+      // errors, so passes 6+ go through the circuit-open branch.
+      breaker: new CircuitBreaker(5, 60_000, 30_000, () => t),
+    });
+
+    for (let i = 1; i <= AI_DRAFT_LIMIT.max; i++) {
+      t = i * 1_000;
+      const verdict = await limiter.check("user-1");
+      expect(verdict.success).toBe(true); // (a) within budget: served
+    }
+    t = (AI_DRAFT_LIMIT.max + 1) * 1_000;
+    const over = await limiter.check("user-1");
+    expect(over.success).toBe(false); // (b) budget + 1: limited, not served
+    expect(over.reason).toBe("limited");
+  });
+});
+
+// ============================================================================
 // Verdict shape
 // ============================================================================
 
