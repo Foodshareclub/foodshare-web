@@ -35,19 +35,34 @@
  * - **Never wired up** (production without `UPSTASH_REDIS_REST_URL` /
  *   `UPSTASH_REDIS_REST_TOKEN`): fail **closed**. A misconfiguration is
  *   answered with SERVICE_UNAVAILABLE — and a FATAL at module init —
- *   instead of silently running unlimited, because a per-instance fallback
- *   would quietly recreate the N × limit this module exists to remove.
- *   Same reason the proxy answers 503.
+ *   rather than silently degrading to the per-instance fallback below,
+ *   which would hide the missing configuration. Same reason the proxy
+ *   answers 503.
  * - **Wired up but answering with errors** (Upstash down, or the monthly
  *   quota exhausted — the 2026-11-15 incident was "ERR max requests limit
  *   exceeded. Limit: 500000", and a counter in a billing dashboard became
- *   the site's availability state for 25 h): fail **open**. A rate limit
- *   is a control, not the app; when it cannot be evaluated, the request is
- *   still served and the limit simply does not apply for that pass. A
- *   circuit breaker (five consecutive errors opens it for a minute, one
- *   half-open request re-tries, the first success closes it) keeps the
- *   degraded mode from paying Upstash on every request while the store
- *   refuses service — the same breaker parameters the proxy uses.
+ *   the site's availability state for 25 h): fall back to **per-instance
+ *   memory limiting**. A rate limit is a control, not the app, so
+ *   availability is preserved: within-budget requests are still served
+ *   (no 500), and over-budget ones receive the normal rate-limit response
+ *   — but the limit still applies for the duration of the outage, counted
+ *   against a per-instance `MemoryRateLimitStore` instead of being skipped
+ *   entirely. A circuit breaker (five consecutive errors opens it for a
+ *   minute, one half-open request re-tries, the first success closes it)
+ *   keeps the degraded mode from paying Upstash on every request while
+ *   the store refuses service — the same breaker parameters the proxy
+ *   uses. (The proxy's own limiters keep their 450d733a fail-open policy;
+ *   this module deliberately diverges on the runtime-error path, because
+ *   it guards low-frequency endpoints where a per-instance fallback costs
+ *   nothing.)
+ *
+ *   **Accepted residual (N× during an outage).** The fallback budget is
+ *   per instance, not shared: with N web instances behind the load
+ *   balancer, the effective limit during an Upstash outage is N × the
+ *   configured value. That is strictly stronger than the fail-open this
+ *   policy replaced (no limit at all) and identical to what the original
+ *   in-memory limiters always delivered; the outage bounds it, and the
+ *   shared budget resumes as soon as the store answers again.
  *
  * Development and CI (which run the production server without Redis) keep
  * a per-instance in-memory store with exactly the semantics the original
@@ -79,9 +94,10 @@ export interface RateLimitCountResult {
  * The counter backing a rate limiter.
  *
  * The production store keeps the counter in Upstash Redis, shared by every
- * web instance. The memory store is the per-process fallback for
- * development and CI, with exactly the semantics the original in-action
- * limiters had.
+ * web instance. The memory store is per-process by construction: it is the
+ * development/CI store and — since the degraded-mode fix — each limiter's
+ * per-instance fallback when the shared store does not answer, with exactly
+ * the semantics the original in-action limiters had.
  */
 export interface RateLimitStore {
   /**
@@ -138,10 +154,13 @@ export class UpstashRateLimitStore implements RateLimitStore {
 }
 
 /**
- * The development/CI store: a per-process Map with exactly the semantics
- * the original in-action limiters had (fixed window anchored at the first
- * request, strict `now > resetAt` expiry). Single-instance by construction
- * — production always uses the Upstash store or fails closed.
+ * The per-process store: a Map with exactly the semantics the original
+ * in-action limiters had (fixed window anchored at the first request,
+ * strict `now > resetAt` expiry). Used as the development/CI store and as
+ * each limiter's per-instance degraded-mode fallback in production (see
+ * the module docs for the accepted N× residual during an outage).
+ * Single-instance by construction — the shared production store is
+ * Upstash, and a production deploy missing it fails closed.
  */
 export class MemoryRateLimitStore implements RateLimitStore {
   private readonly entries = new Map<string, { count: number; resetAt: number }>();
@@ -228,16 +247,21 @@ export interface RateLimitVerdict {
   /** True when the request is allowed. */
   success: boolean;
   /**
-   * "ok" — allowed; "limited" — the window's budget is exhausted;
-   * "unavailable" — no store to count against (a production deploy
-   * missing Upstash: fail closed); "degraded" — the store is wired up
-   * but not answering, so the request is allowed and the limit does not
-   * apply for this pass (fail open, see the module docs).
+   * "ok" — allowed; "limited" — the window's budget is exhausted (the
+   * shared store's, or the per-instance fallback's while it answers for
+   * the shared one); "unavailable" — no store to count against (a
+   * production deploy missing Upstash: fail closed); "degraded" — the
+   * store is wired up but not answering, and the request was allowed
+   * against the per-instance fallback budget (see the module docs).
    */
   reason: "ok" | "limited" | "unavailable" | "degraded";
   /**
-   * Present when reason is "degraded": why the limit did not apply for
-   * this pass.
+   * Present when the verdict came from the degraded path — the shared
+   * store did not answer and the per-instance fallback decided:
+   * "circuit-open" (no Upstash call was even attempted) or "redis-error"
+   * (the store was asked and could not answer). Carried on "limited"
+   * verdicts as well, so an operator can see the limit came from the
+   * per-instance fallback during an outage.
    */
   degraded?: "circuit-open" | "redis-error";
   /** Budget remaining in the current window (informational). */
@@ -262,12 +286,21 @@ export interface SharedRateLimiterOptions {
   /**
    * Optional breaker for the store's error path. Present in production so
    * a degraded Upstash does not cost a REST call per request; see the
-   * module docs for the fail-open policy it implements.
+   * module docs for the degraded-mode policy it implements.
    */
   breaker?: CircuitBreaker;
 }
 
 export class SharedRateLimiter {
+  /**
+   * Per-instance fallback for the degraded path (see the module docs):
+   * when the shared store does not answer — or the breaker is open — the
+   * request is counted here instead of skipping the limit. One per limiter
+   * instance, so each web instance keeps its own budget while the shared
+   * store is down (accepted N× residual, module docs).
+   */
+  private readonly fallback = new MemoryRateLimitStore();
+
   constructor(private readonly options: SharedRateLimiterOptions) {}
 
   /**
@@ -275,9 +308,11 @@ export class SharedRateLimiter {
    *
    * Two failure directions (see the module docs): no store configured is a
    * misconfiguration, answered "unavailable" so the caller fails closed; a
-   * store that is wired up but does not answer fails open — the request is
-   * allowed and the limit simply does not apply for this pass — with the
-   * breaker keeping the degraded mode from paying Upstash per request.
+   * store that is wired up but does not answer is counted against this
+   * instance's per-instance fallback — within-budget requests are still
+   * served (availability), over-budget ones get the normal rate-limit
+   * response — with the breaker keeping the degraded mode from paying
+   * Upstash per request.
    */
   async check(identifier: string): Promise<RateLimitVerdict> {
     const { max, windowMs, prefix, store, breaker } = this.options;
@@ -292,26 +327,14 @@ export class SharedRateLimiter {
     }
 
     if (breaker?.isOpen()) {
-      return {
-        success: true,
-        reason: "degraded",
-        degraded: "circuit-open",
-        remaining: max,
-        retryAfterMs: 0,
-      };
+      return this.degradedCheck("circuit-open", identifier, max, windowMs, prefix);
     }
 
     const result = await store.increment(`${prefix}:${identifier}`, windowMs);
     if (result === null) {
       breaker?.recordFailure();
-      console.warn("[sharedRateLimit] Upstash error, failing open for this pass");
-      return {
-        success: true,
-        reason: "degraded",
-        degraded: "redis-error",
-        remaining: max,
-        retryAfterMs: 0,
-      };
+      console.warn("[sharedRateLimit] Upstash error — counting against the per-instance fallback for this pass");
+      return this.degradedCheck("redis-error", identifier, max, windowMs, prefix);
     }
     breaker?.recordSuccess();
 
@@ -327,6 +350,55 @@ export class SharedRateLimiter {
     return {
       success: true,
       reason: "ok",
+      remaining: max - result.count,
+      retryAfterMs: 0,
+    };
+  }
+
+  /**
+   * The degraded path: the shared store did not answer, so the request is
+   * counted against this instance's per-instance fallback instead of being
+   * served without the limit. Within the fallback budget the request is
+   * allowed (reason "degraded" — availability is preserved); over the
+   * budget it is limited exactly like a normal over-window request, and
+   * the verdict keeps the degraded marker so the limit's origin is
+   * visible. The fallback is per-instance: across N instances the
+   * effective limit during an outage is N× the configured value — the
+   * accepted residual, see the module docs.
+   */
+  private async degradedCheck(
+    degraded: "circuit-open" | "redis-error",
+    identifier: string,
+    max: number,
+    windowMs: number,
+    prefix: string,
+  ): Promise<RateLimitVerdict> {
+    const result = await this.fallback.increment(`${prefix}:${identifier}`, windowMs);
+    // The memory fallback never fails to answer. If a future replacement
+    // did, the last honest option is still to serve — never to guess a
+    // verdict — so a null from the fallback degrades to "served, uncounted".
+    if (result === null) {
+      return {
+        success: true,
+        reason: "degraded",
+        degraded,
+        remaining: max,
+        retryAfterMs: 0,
+      };
+    }
+    if (result.count > max) {
+      return {
+        success: false,
+        reason: "limited",
+        degraded,
+        remaining: 0,
+        retryAfterMs: Math.max(0, result.ttlMs),
+      };
+    }
+    return {
+      success: true,
+      reason: "degraded",
+      degraded,
       remaining: max - result.count,
       retryAfterMs: 0,
     };

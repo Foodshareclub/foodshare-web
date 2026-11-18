@@ -12,7 +12,10 @@
  *    101st post-activity request and the 11th AI draft are refused no
  *    matter which instance handles them;
  * 2. single-instance behavior is unchanged — the memory store's verdicts
- *    match the original in-action algorithm check for check.
+ *    match the original in-action algorithm check for check;
+ * 3. while the shared store does not answer, the limit still applies —
+ *    counted against a per-instance fallback — instead of failing open to
+ *    unlimited (the damage of the 2026-11-15 quota incident).
  */
 import { describe, expect, it } from "bun:test";
 import {
@@ -298,8 +301,10 @@ describe("memory store (development/CI fallback)", () => {
 });
 
 // ============================================================================
-// Failure policy: misconfiguration closed, runtime errors open
-// (the two directions the proxy settled in 450d733a)
+// Failure policy: misconfiguration closed, runtime errors fall back to the
+// per-instance store (the two directions the proxy settled in 450d733a,
+// with the runtime-error path strengthened for these low-frequency
+// endpoints — see the module docs)
 // ============================================================================
 
 describe("failure policy", () => {
@@ -317,23 +322,30 @@ describe("failure policy", () => {
     expect(verdict.reason).toBe("unavailable");
   });
 
-  it("allows with 'degraded' when the store does not answer (runtime errors fail open)", async () => {
+  it("counts degraded passes against the per-instance fallback (runtime errors no longer skip the limit)", async () => {
     // A rate limit is a control, not the app: when the wired-up store
     // refuses service (the 2026-11-15 quota incident), the request is
-    // served and the limit simply does not apply for that pass.
+    // still served — but the limit still applies, counted against this
+    // instance's per-instance fallback instead of being skipped.
     const limiter = new SharedRateLimiter({
       max: 5,
       windowMs: 60_000,
       prefix: "p",
       store: new BrokenStore(),
     });
-    const verdict = await limiter.check("x");
-    expect(verdict.success).toBe(true);
-    expect(verdict.reason).toBe("degraded");
-    expect(verdict.degraded).toBe("redis-error");
+    for (let i = 1; i <= 5; i++) {
+      const verdict = await limiter.check("x");
+      expect(verdict.success).toBe(true); // within the fallback budget: served
+      expect(verdict.reason).toBe("degraded");
+      expect(verdict.degraded).toBe("redis-error");
+    }
+    const over = await limiter.check("x"); // fallback budget exhausted
+    expect(over.success).toBe(false);
+    expect(over.reason).toBe("limited");
+    expect(over.degraded).toBe("redis-error");
   });
 
-  it("a degraded pass consumes no budget", async () => {
+  it("a degraded pass consumes fallback budget, not shared budget", async () => {
     let t = 0;
     const store = new FlakyStore(new MemoryRateLimitStore(() => t));
     const limiter = new SharedRateLimiter({
@@ -343,12 +355,22 @@ describe("failure policy", () => {
       store,
     });
 
-    expect((await limiter.check("x")).reason).toBe("ok"); // counted: 1
+    expect((await limiter.check("x")).reason).toBe("ok"); // shared counted: 1
     store.fail = true;
-    expect((await limiter.check("x")).reason).toBe("degraded"); // not counted
+    expect((await limiter.check("x")).reason).toBe("degraded"); // fallback counted: 1
     store.fail = false;
-    expect((await limiter.check("x")).reason).toBe("ok"); // counted: 2
-    expect((await limiter.check("x")).reason).toBe("limited"); // counted: 3
+    expect((await limiter.check("x")).reason).toBe("ok"); // shared counted: 2
+    expect((await limiter.check("x")).reason).toBe("limited"); // shared counted: 3
+    // The one degraded pass did not touch the shared budget (the shared
+    // store is already exhausted at 3/2), but it did consume the
+    // fallback's budget of 2: one more degraded pass is served, the next
+    // is limited — by the fallback, with the marker to show it.
+    store.fail = true;
+    expect((await limiter.check("x")).reason).toBe("degraded"); // fallback counted: 2
+    const over = await limiter.check("x"); // fallback counted: 3
+    expect(over.success).toBe(false);
+    expect(over.reason).toBe("limited");
+    expect(over.degraded).toBe("redis-error");
   });
 
   it("the breaker stops paying Upstash after five errors, re-tries half-open, closes on success", async () => {
@@ -364,7 +386,8 @@ describe("failure policy", () => {
       breaker,
     });
 
-    // Five errors, all served, none counted.
+    // Five errors, all served against the per-instance fallback budget,
+    // none counted on the shared store.
     for (let i = 0; i < 5; i++) {
       const verdict = await limiter.check("x");
       expect(verdict.success).toBe(true);
@@ -372,10 +395,12 @@ describe("failure policy", () => {
     }
 
     // The fifth failure opened the circuit: the next check must not pay
-    // Upstash at all.
+    // Upstash at all. The fallback budget (5) is exhausted by now, so the
+    // pass is served the normal rate-limit response — limited, not open.
     const calls = store.calls;
     const open = await limiter.check("x");
-    expect(open.success).toBe(true);
+    expect(open.success).toBe(false);
+    expect(open.reason).toBe("limited");
     expect(open.degraded).toBe("circuit-open");
     expect(store.calls).toBe(calls);
 
@@ -398,22 +423,21 @@ describe("failure policy", () => {
 });
 
 // ============================================================================
-// Degraded mode must still rate-limit (t_c22f82b8 — RED, t_9483b145 chain)
+// Degraded mode still rate-limits (red test from t_c22f82b8, t_9483b145)
 // ============================================================================
 
 /**
- * Today an Upstash outage turns both production limiters into "no limit":
- * every check while the store errors (or while the breaker is open) answers
- * success. On a single instance (N=1) that is strictly worse than the
- * in-memory Map these limiters replaced. The planned fix (t_9483b145) counts
- * degraded passes against a per-instance fallback, so one instance still
- * enforces its own budget. Marked `.failing` so main stays green: it passes
- * while the gap exists and turns red — remove `.failing` then — the moment
- * the degraded branch enforces the budget. The fail-open tests in "failure
- * policy" above describe today's behavior and will be revised by that fix.
+ * An Upstash outage must not turn the production limiters into "no limit".
+ * The red test (t_c22f82b8) proved the gap: every check while the store
+ * errors (or while the breaker is open) answered success, so the AI-draft
+ * limiter (10/hour/user) had no limit at all on a single instance —
+ * strictly worse than the in-memory Map it replaced. The fix routes the
+ * two degraded branches through the per-instance fallback
+ * (MemoryRateLimitStore), so the budget still applies per instance; the
+ * accepted N× residual across instances is recorded in the module docs.
  */
 describe("degraded mode on one instance (N=1)", () => {
-  it.failing("the AI draft limiter still enforces 10/hour/user while Upstash errors", async () => {
+  it("the AI draft limiter still enforces 10/hour/user while Upstash errors", async () => {
     let t = 0;
     const limiter = new SharedRateLimiter({
       ...AI_DRAFT_LIMIT,
