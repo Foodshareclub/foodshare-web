@@ -226,6 +226,15 @@ function isCircuitOpen(key: string): boolean {
 // ============================================================================
 
 // Initialize Redis for rate limiting (only with env vars)
+//
+// Vault exception (card t_736c23f9): these credentials are read from
+// process.env on purpose. The proxy initialises synchronously at module load
+// in the edge/proxy runtime, and the deploy injects UPSTASH_REDIS_REST_URL /
+// UPSTASH_REDIS_REST_TOKEN into the environment. The Vault helper
+// (src/lib/email/vault.ts) is env-only, async and has no Upstash field, so it
+// cannot serve this read. src/lib/security/sharedRateLimit.ts reads the same
+// variables the same way, and missing credentials follow the fail-open policy
+// from 450d733a (see "Rate limiter failure mode" below).
 const redis =
   process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
     ? new Redis({
