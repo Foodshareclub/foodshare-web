@@ -460,6 +460,112 @@ describe("degraded mode on one instance (N=1)", () => {
 });
 
 // ============================================================================
+// Bounded retention for the memory store (F-1, t_ff490d55): the degraded
+// fallback Map is capped — expired sweep + evict-oldest on cap pressure —
+// so a large unique-IP cohort during an Upstash outage cannot grow it
+// without bound
+// ============================================================================
+
+describe("memory store bounded retention (cap + sweep + evict-oldest)", () => {
+  it("evicts the oldest entry, not an arbitrary one, when a new key hits the cap", async () => {
+    let t = 0;
+    const store = new MemoryRateLimitStore(() => t, 3); // cap 3
+    const limiter = new SharedRateLimiter({
+      max: 1,
+      windowMs: 60_000,
+      prefix: "p",
+      store,
+    });
+
+    // Fill the store to the cap: three identifiers, one counted request each.
+    for (const id of ["a", "b", "c"]) {
+      expect((await limiter.check(id)).success).toBe(true);
+    }
+    expect(store.size).toBe(3);
+
+    // A fourth identifier hits the cap. Nothing has expired, so exactly the
+    // oldest-inserted entry ("a") is evicted to make room; the store stays
+    // bounded at the cap.
+    expect((await limiter.check("d")).success).toBe(true);
+    expect(store.size).toBe(3);
+
+    // The retained identifiers still enforce their budget — proving the
+    // eviction was the oldest, not any of these:
+    expect((await limiter.check("b")).success).toBe(false);
+    expect((await limiter.check("b")).reason).toBe("limited");
+    expect((await limiter.check("c")).success).toBe(false);
+    expect((await limiter.check("d")).success).toBe(false);
+
+    // The evicted identifier was uncounted from the eviction on: its next
+    // request re-anchors a fresh window and is served.
+    expect((await limiter.check("a")).success).toBe(true);
+  });
+
+  it("sweeps expired entries on cap pressure — a full window elapse reclaims them", async () => {
+    let t = 0;
+    const store = new MemoryRateLimitStore(() => t, 3);
+    const limiter = new SharedRateLimiter({
+      max: 1,
+      windowMs: 1000,
+      prefix: "p",
+      store,
+    });
+
+    // Window 1: three identifiers fill the cap.
+    for (const id of ["a", "b", "c"]) {
+      expect((await limiter.check(id)).success).toBe(true);
+    }
+    expect(store.size).toBe(3);
+
+    // A full window elapses: every entry is now expired.
+    t = 1001;
+
+    // A new identifier hits the cap: the sweep reclaims all three expired
+    // entries before the insert — the store drops to the one live entry
+    // instead of rotating a single one out.
+    expect((await limiter.check("d")).success).toBe(true);
+    expect(store.size).toBe(1);
+
+    // "b" is proof the sweep, not a single evict-oldest, ran: it is the
+    // middle-aged entry, and it starts fresh rather than staying limited.
+    expect((await limiter.check("b")).success).toBe(true);
+    expect(store.size).toBe(2);
+  });
+
+  it("keeps the store bounded across repeated windows (no growth, stable or rotating set)", async () => {
+    let t = 0;
+    const store = new MemoryRateLimitStore(() => t, 3);
+    const limiter = new SharedRateLimiter({
+      max: 1,
+      windowMs: 1000,
+      prefix: "p",
+      store,
+    });
+
+    // A stable identifier set across three full windows: the entries are
+    // re-anchored in place, the store never accumulates them.
+    for (let w = 0; w < 3; w++) {
+      for (const id of ["a", "b", "c"]) {
+        expect((await limiter.check(id)).success, `window ${w}: ${id} should start fresh`).toBe(true);
+      }
+      expect(store.size).toBe(3);
+      t += 1001;
+    }
+
+    // The outage shape the finding measured — a fresh cohort of identifiers
+    // per window — holds at the cap instead of accumulating one cohort per
+    // window (the reviewer's probe saw 200k entries ≈ 22 MiB after two
+    // cohorts).
+    for (let w = 0; w < 3; w++) {
+      for (const id of [`w${w}x`, `w${w}y`, `w${w}z`]) {
+        await limiter.check(id);
+      }
+      expect(store.size, `after window ${w}`).toBe(3);
+    }
+  });
+});
+
+// ============================================================================
 // Verdict shape
 // ============================================================================
 

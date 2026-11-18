@@ -161,21 +161,60 @@ export class UpstashRateLimitStore implements RateLimitStore {
  * the module docs for the accepted N× residual during an outage).
  * Single-instance by construction — the shared production store is
  * Upstash, and a production deploy missing it fails closed.
+ *
+ * **Bounded retention.** The entry count is capped (default 100_000, per
+ * limiter): when a *new* key arrives at the cap, entries whose window has
+ * fully elapsed are swept first, and if the cap is still full the
+ * oldest-inserted entry is evicted (the Map preserves insertion order). An
+ * evicted identifier is simply uncounted from that point on and re-anchors
+ * a fresh window when seen again — the accepted consequence of the
+ * sustained unique-IP pressure that alone reaches the cap; dev/CI never
+ * approach it.
  */
 export class MemoryRateLimitStore implements RateLimitStore {
   private readonly entries = new Map<string, { count: number; resetAt: number }>();
 
-  constructor(private readonly now: () => number = () => Date.now()) {}
+  constructor(
+    private readonly now: () => number = () => Date.now(),
+    /** Bound on tracked entries; see the class docs for the eviction policy. */
+    private readonly cap = 100_000,
+  ) {}
+
+  /** Current entry count (observability; the cap is enforced on insert). */
+  get size(): number {
+    return this.entries.size;
+  }
 
   async increment(key: string, windowMs: number): Promise<RateLimitCountResult | null> {
     const now = this.now();
     const existing = this.entries.get(key);
     if (!existing || now > existing.resetAt) {
+      // A new key grows the Map; an expired key reusing its own slot does
+      // not, so only the new-key path pays for room.
+      if (!existing) this.makeRoom(now);
       this.entries.set(key, { count: 1, resetAt: now + windowMs });
       return { count: 1, ttlMs: windowMs };
     }
     existing.count += 1;
     return { count: existing.count, ttlMs: existing.resetAt - now };
+  }
+
+  /**
+   * Make room for one new key when the store is at the cap: reclaim
+   * entries whose window has fully elapsed first, then evict the
+   * oldest-inserted entry if that is not enough. Verdict semantics are
+   * untouched — the evicted identifier is simply uncounted from here on
+   * and re-anchors a fresh window when it is seen again.
+   */
+  private makeRoom(now: number): void {
+    if (this.entries.size < this.cap) return;
+    for (const [key, entry] of this.entries) {
+      if (now > entry.resetAt) this.entries.delete(key);
+    }
+    if (this.entries.size >= this.cap) {
+      const oldest = this.entries.keys().next().value;
+      if (oldest !== undefined) this.entries.delete(oldest);
+    }
   }
 }
 
