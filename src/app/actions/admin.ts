@@ -75,10 +75,6 @@ interface AdminProfileRow {
   is_active: boolean;
 }
 
-interface AdminUserRoleRow {
-  roles: { name: string } | { name: string }[];
-}
-
 export type UserFilters = z.input<typeof UserFiltersSchema>;
 
 // ============================================================================
@@ -302,19 +298,10 @@ export async function getUsers(filters: UserFilters = {}): Promise<ServerActionR
 
     const usersWithData = await Promise.all(
       profileRows.map(async (user) => {
-        const [{ count: productsCount }, { data: userRoles }] = await Promise.all([
+        const [{ count: productsCount }, { roles }] = await Promise.all([
           supabase.from("posts").select("*", { count: "exact", head: true }).eq("profile_id", user.id),
-          supabase.from("user_roles").select("roles!inner(name)").eq("profile_id", user.id),
+          checkUserIsAdmin(user.id),
         ]);
-
-        const roleRows = (userRoles ?? []) as AdminUserRoleRow[];
-
-        const roles = roleRows
-          .map((r) => {
-            const roleData: { name: string } | { name: string }[] = r.roles;
-            return Array.isArray(roleData) ? roleData[0]?.name : roleData?.name;
-          })
-          .filter(Boolean) as string[];
 
         return {
           ...user,

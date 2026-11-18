@@ -1,6 +1,7 @@
 "use server";
 
 import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { checkUserIsAdmin } from "@/lib/data/admin-check";
 import { CACHE_TAGS } from "@/lib/data/cache-keys";
 import { type ActionResult, validateWithSchema, withErrorHandling } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -168,14 +169,8 @@ export async function resolvePostReport(input: z.infer<typeof resolveReportSchem
     } = await supabase.auth.getUser();
     if (!user) throw new Error("Authentication required");
 
-    const { data: userRole } = await supabase
-      .from("user_roles")
-      .select("roles!inner(name)")
-      .eq("profile_id", user.id)
-      .in("roles.name", ["admin", "superadmin"])
-      .maybeSingle();
-
-    if (!userRole) {
+    const { isAdmin } = await checkUserIsAdmin(user.id);
+    if (!isAdmin) {
       throw new Error("Admin access required");
     }
 
