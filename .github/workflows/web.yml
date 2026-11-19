@@ -380,7 +380,7 @@ jobs:
 
   build-and-publish:
     name: Build and publish production image
-    # Both serving hosts are ARM64; build on the matching architecture.
+    # The serving host is ARM64; build on the matching architecture.
     runs-on: ubuntu-24.04-arm
     needs: build
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
@@ -556,13 +556,16 @@ jobs:
     runs-on: [self-hosted, Linux]
     needs: [build-and-publish, e2e]
     strategy:
-      # The two hosts are separate serving nodes. One of them being
-      # unreachable must not cancel the deployment to the other: a host
-      # that is already down is the reason to update the one that is not.
+      # The web serving role is consolidated on the backend host. The
+      # separate frontend host was decommissioned -- its OCI instance and
+      # tailnet node are gone -- and foodshare-web with its Cloudflare
+      # tunnel now runs there as organic rootless quadlets. The matrix
+      # targets only the host that exists; a leg aimed at the removed
+      # frontend host could only ever time out on SSH (port 22).
       fail-fast: false
       max-parallel: 1
       matrix:
-        host: [VPS_BACKEND_HOST, VPS_FRONTEND_HOST]
+        host: [VPS_BACKEND_HOST]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     timeout-minutes: 15
     environment:
