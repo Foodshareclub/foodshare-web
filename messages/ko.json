@@ -1,4 +1,5 @@
 {
+  "reference_photo_disclaimer": "참고 사진 — 실제 물품 사진이 아닙니다",
   "search_filters": {
     "any_distance": "거리 제한 없음",
     "within_km": "{distance}km 이내",

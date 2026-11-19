@@ -11,6 +11,7 @@ import AuthenticationUserModal from "@/components/modals/AuthenticationUser/Auth
 import PopupNotificationModal from "@/components/modals/PopupNotificationModal";
 import TopTips from "@/components/topTips/TopTips";
 import { Button } from "@/components/ui/button";
+import { ReferencePhotoDisclosure } from "@/components/productCard/ReferencePhotoDisclosure";
 import { useAuth } from "@/hooks/useAuth";
 import type { InitialProductStateType } from "@/types/product.types";
 import { StarIcon } from "@/utils/icons";
@@ -107,6 +108,7 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
             loading="lazy"
             decoding="async"
           />
+          <ReferencePhotoDisclosure image={product.images?.[0]} className="self-center" />
           <h2 className="text-lg font-semibold text-center">{product.post_name}</h2>
           <TopTips />
         </div>
@@ -127,6 +129,9 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
           loading="lazy"
           decoding="async"
         />
+        <div className="pointer-events-none absolute start-3 top-3 max-w-[calc(100%-1.5rem)]">
+          <ReferencePhotoDisclosure image={product.images?.[0]} />
+        </div>
       </div>
 
       {/* Content */}

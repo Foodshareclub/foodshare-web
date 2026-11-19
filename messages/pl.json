@@ -1,4 +1,5 @@
 {
+  "reference_photo_disclaimer": "Zdjęcie poglądowe — nie przedstawia oferowanego przedmiotu",
   "search_filters": {
     "any_distance": "Dowolna odległość",
     "within_km": "W promieniu {distance} km",

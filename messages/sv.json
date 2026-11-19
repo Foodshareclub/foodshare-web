@@ -1,4 +1,5 @@
 {
+  "reference_photo_disclaimer": "Referensbild — inte det faktiska föremålet",
   "search_filters": {
     "any_distance": "Alla avstånd",
     "within_km": "Inom {distance} km",

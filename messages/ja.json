@@ -1,4 +1,5 @@
 {
+  "reference_photo_disclaimer": "参考写真 — 実際の品物ではありません",
   "search_filters": {
     "any_distance": "距離の制限なし",
     "within_km": "{distance} km以内",
