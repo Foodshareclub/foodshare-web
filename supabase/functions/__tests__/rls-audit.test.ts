@@ -55,6 +55,7 @@ import { assert, assertEquals } from "@std/assert";
 
 import { assertCatalogIsCurrent, schema } from "../../oracle/read.ts";
 import { scanCallSites } from "./lib/client-calls.ts";
+import { findClientWritableAccess, type Finding } from "./lib/rls-client-access.ts";
 
 const s = schema();
 
@@ -386,4 +387,187 @@ Deno.test("internal analytics exports are service-only while public profiles rem
   assert(profiles.ok);
   assert(profiles.value.reachableByAnon);
   assert(profiles.value.reachableByAuthenticated);
+});
+
+// ── Client-writable access: grants, permissive policies, forgeable claims ────
+//
+// The tests above look at policies on a hand-kept list of tables. These look at
+// every RLS-enabled table and ask the question from the client's side: through
+// which grant or policy can `anon`, `authenticated` or `PUBLIC` write? The
+// detectors live in `lib/rls-client-access.ts` so they can be run on synthetic
+// input as well as on the real catalog.
+
+/**
+ * Findings that predate this check, by `table:kind`, recorded so the audit can
+ * be strict about everything new without turning red on 22 tables that have not
+ * been triaged. It is a ratchet: an entry that no longer matches a finding fails
+ * the test, so the list can only shrink.
+ *
+ * `rate_limits` and `telegram_user_states` are deliberately NOT here (t_e27678c9,
+ * t_0ce80f20). Both are RLS-enabled with no policy while `anon` and
+ * `authenticated` still hold INSERT/UPDATE/DELETE/TRUNCATE, and TRUNCATE is not
+ * subject to row-level security. The migration for Requirement 7.2 revokes those
+ * grants, which is what turns the test below green.
+ */
+const KNOWN_CLIENT_WRITE_DEBT = new Set([
+  // RLS on, no policy, client write grants: same shape as the two tables above.
+  // Needs a REVOKE each; tracked separately from this batch.
+  "api_analytics:grant-without-policy",
+  "email_bounce_events:grant-without-policy",
+  "email_provider_monthly_quota:grant-without-policy",
+  "email_suppression_list:grant-without-policy",
+  "grok_usage_logs:grant-without-policy",
+  "group_message_deletions:grant-without-policy",
+  "infoplist_translation_cache:grant-without-policy",
+  "orphaned_storage_cleanup:grant-without-policy",
+  "rate_limit_entries:grant-without-policy",
+  "telegram_rate_limits:grant-without-policy",
+  "translation_usage_analytics:grant-without-policy",
+  "whatsapp_rate_limits:grant-without-policy",
+  "whatsapp_user_states:grant-without-policy",
+  // INSERT/UPDATE `(true)` policies for client roles. Some are intentional
+  // anonymous intake (feedback, post_views); each still needs an owner to say so.
+  "feedback:permissive-write-policy",
+  "forum_announcement_analytics:permissive-write-policy",
+  "forum_comment_history:permissive-write-policy",
+  "forum_notifications:permissive-write-policy",
+  "forum_post_history:permissive-write-policy",
+  "forum_user_badges:permissive-write-policy",
+  "location_update_queue:permissive-write-policy",
+  "post_views:permissive-write-policy",
+  "telegram_user_activity:permissive-write-policy",
+  "views:permissive-write-policy",
+]);
+
+const liveFindings = (): Finding[] =>
+  findClientWritableAccess({
+    relations: s.catalog.relations,
+    policies: s.catalog.policies,
+    grants: s.catalog.grants,
+  });
+
+Deno.test("rls audit: no client role reaches a write through a grant, a (true) policy or a forgeable claim", () => {
+  assertCatalogIsCurrent(s);
+
+  const fresh = liveFindings().filter((f) => !KNOWN_CLIENT_WRITE_DEBT.has(`${f.table}:${f.kind}`));
+
+  assertEquals(
+    fresh.map((f) => `${f.table} [${f.kind}] ${f.detail}`),
+    [],
+    "anon, authenticated or PUBLIC can write these through a grant or policy " +
+      "that is not listed in KNOWN_CLIENT_WRITE_DEBT. REVOKE the grant, scope " +
+      "the policy to a server-held fact, or (for a deliberate public intake) " +
+      "say why in the baseline.",
+  );
+});
+
+Deno.test("rls audit: the known client-write debt list has no stale entries", () => {
+  const live = new Set(liveFindings().map((f) => `${f.table}:${f.kind}`));
+  const stale = [...KNOWN_CLIENT_WRITE_DEBT].filter((k) => !live.has(k)).sort();
+  assertEquals(
+    stale,
+    [],
+    "These baseline entries no longer match a finding. Remove them so the " +
+      "ratchet tightens.",
+  );
+});
+
+Deno.test("rls audit: no policy is keyed on a user-writable JWT claim (waste_logs household_id)", () => {
+  const claimKeyed = liveFindings().filter((f) => f.kind === "claim-keyed-policy");
+  assertEquals(
+    claimKeyed.map((f) => `${f.table}: ${f.detail}`),
+    [],
+    "A registered user can set user_metadata and custom claims on their own " +
+      "account, so a policy that trusts one is a cross-tenant read/write.",
+  );
+});
+
+Deno.test("audit sensitivity: the detectors flag each hole shape on synthetic input", () => {
+  const rel = (name: string, rlsEnabled = true) => ({ name, kind: "table", rlsEnabled });
+  const pol = (
+    table: string,
+    command: string,
+    roles: string[],
+    using: string | null,
+    check: string | null = null,
+  ) => ({ table, name: `${table}_p`, command, roles, using, check });
+  const kinds = (f: Finding[]) => f.map((x) => `${x.table}:${x.kind}`);
+
+  // 1. PUBLIC (uppercase, as the catalog stores it) USING (true) write policy.
+  assertEquals(
+    kinds(findClientWritableAccess({
+      relations: [rel("a")],
+      policies: [pol("a", "ALL", ["PUBLIC"], "true")],
+      grants: [],
+    })),
+    ["a:permissive-write-policy"],
+  );
+  // ...and `(true)` as pg deparses it, WITH CHECK, no TO clause.
+  assertEquals(
+    kinds(findClientWritableAccess({
+      relations: [rel("a")],
+      policies: [pol("a", "INSERT", [], null, "(true)")],
+      grants: [],
+    })),
+    ["a:permissive-write-policy"],
+  );
+  // 2. Write grant to authenticated, RLS on, no policy (TRUNCATE ignores RLS).
+  assertEquals(
+    kinds(findClientWritableAccess({
+      relations: [rel("b")],
+      policies: [],
+      grants: [{ object: "b", grantee: "authenticated", privileges: ["SELECT", "TRUNCATE"] }],
+    })),
+    ["b:grant-without-policy"],
+  );
+  // 3. waste_logs shape: a policy keyed on a custom JWT claim.
+  assertEquals(
+    kinds(findClientWritableAccess({
+      relations: [rel("c")],
+      policies: [
+        pol(
+          "c",
+          "SELECT",
+          ["PUBLIC"],
+          "((household_id)::text = (auth.jwt() ->> 'household_id'::text))",
+        ),
+      ],
+      grants: [],
+    })),
+    ["c:claim-keyed-policy"],
+  );
+  assertEquals(
+    kinds(findClientWritableAccess({
+      relations: [rel("c")],
+      policies: [
+        pol(
+          "c",
+          "SELECT",
+          ["authenticated"],
+          "((auth.jwt() -> 'user_metadata') ->> 'tenant') = tenant",
+        ),
+      ],
+      grants: [],
+    })),
+    ["c:claim-keyed-policy"],
+  );
+
+  // Negatives: none of these may be flagged.
+  assertEquals(
+    findClientWritableAccess({
+      relations: [rel("ok"), rel("svc"), rel("ro"), rel("norls", false)],
+      policies: [
+        pol("ok", "ALL", ["authenticated"], "(owner_id = auth.uid())"),
+        pol("ok", "SELECT", ["PUBLIC"], "true"),
+        pol("svc", "ALL", ["job_worker"], "true"),
+        pol("ok", "SELECT", ["PUBLIC"], "((auth.jwt() ->> 'role'::text) = 'service_role'::text)"),
+      ],
+      grants: [
+        { object: "ro", grantee: "anon", privileges: ["SELECT", "REFERENCES"] },
+        { object: "svc", grantee: "service_role", privileges: ["INSERT", "TRUNCATE"] },
+        { object: "norls", grantee: "anon", privileges: ["INSERT"] },
+      ],
+    }),
+    [],
+  );
 });

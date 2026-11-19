@@ -16,6 +16,7 @@ import { getSupabaseClient } from "../../_shared/supabase.ts";
 import type { AuthMode, AuthResult } from "./types.ts";
 import { logger } from "../../_shared/logger.ts";
 import { getSecret } from "../../_shared/vault.ts";
+import { timingSafeEqual } from "../../_shared/utils.ts";
 
 const getSupabaseUrl = () => Deno.env.get("SUPABASE_URL")!;
 const getSupabaseServiceRoleKey = () => Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -121,19 +122,21 @@ async function authenticateService(req: Request): Promise<AuthResult> {
   const internalSecret = await resolveInternalSecret();
 
   // Check for service role key in Authorization header
-  if (serviceKey && authHeader === `Bearer ${serviceKey}`) {
+  if (serviceKey && authHeader !== null && timingSafeEqual(authHeader, `Bearer ${serviceKey}`)) {
     return { authenticated: true };
   }
 
   // Check for internal service secret in Authorization header
-  if (internalSecret && authHeader === `Bearer ${internalSecret}`) {
+  if (
+    internalSecret && authHeader !== null && timingSafeEqual(authHeader, `Bearer ${internalSecret}`)
+  ) {
     return { authenticated: true };
   }
 
   // ⚠️ REMOVED: anon key was previously accepted as service credential –\n  // this allowed unauthenticated callers to access service-mode routes.\n  // Service authentication now requires either the service role key or the\n  // internal service secret passed in the Authorization header.\n / x-api-key / x-webhook-secret header
   if (apiKey) {
-    if (serviceKey && apiKey === serviceKey) return { authenticated: true };
-    if (internalSecret && apiKey === internalSecret) return { authenticated: true };
+    if (serviceKey && timingSafeEqual(apiKey, serviceKey)) return { authenticated: true };
+    if (internalSecret && timingSafeEqual(apiKey, internalSecret)) return { authenticated: true };
     return { authenticated: false, error: "Invalid service credentials" }; // anon key no longer accepted
   }
 
@@ -224,14 +227,14 @@ async function authenticateAdmin(req: Request): Promise<AuthResult> {
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
 
   // Check if this is a service role key (for cron jobs)
-  if (token && token === getSupabaseServiceRoleKey()) {
+  if (token && timingSafeEqual(token, getSupabaseServiceRoleKey() ?? "")) {
     logger.info("Admin auth via service role key (cron/internal)");
     return { authenticated: true, isAdmin: true };
   }
 
   // Also check for internal service secret
   const internalSecret = Deno.env.get("INTERNAL_SERVICE_SECRET");
-  if (token && internalSecret && token === internalSecret) {
+  if (token && internalSecret && timingSafeEqual(token, internalSecret)) {
     logger.info("Admin auth via internal service secret");
     return { authenticated: true, isAdmin: true };
   }

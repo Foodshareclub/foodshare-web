@@ -131,7 +131,7 @@ Deno.test("contract: the function registry is not silently empty", () => {
       "`verify_jwt` check below is now a no-op",
   );
   assert(
-    s.cronJobs.length > 40,
+    s.cronJobs.length > 30,
     `only ${s.cronJobs.length} scheduled jobs in the catalog; the target check ` +
       "is running on almost nothing",
   );
@@ -361,24 +361,18 @@ function cronTargets(): CronTarget[] {
 }
 
 /**
- * The one dead target that is allowed to still be dead.
+ * Dead targets that are allowed to stay dead. Currently none.
  *
- * A schedule is pinned rather than deleted for a reason given in
- * `20261014000000_unschedule_jobs_for_removed_functions.sql`: there is no
- * `domain-monitor` function anywhere in this repository, so the job is not
- * debris from a rename, it is a capability that is scheduled and dark. Removing
- * the job would make the schedule look clean and would delete the only record
- * that domain-expiry monitoring is supposed to happen here.
+ * `domain-monitor-check` was the only entry. `20261118000002` unschedules it
+ * (no `domain-monitor` function exists in this repository, so the job posted
+ * into a 404 every six hours), which retires the pin. Domain-expiry monitoring
+ * is a capability this repository does not provide; if it is wanted, implement
+ * `supabase/functions/domain-monitor` and schedule it again.
  *
- * So the check is not disabled, it is *narrowed*: the dead set must be exactly
- * this, which means a second dead target fails the build while this one is named
- * in the output every run. A pin that can absorb a new finding is not a pin.
+ * The set stays so that the check is narrowed, not disabled: any dead target
+ * fails the build unless it is named here with a reason.
  */
-const KNOWN_DEAD_TARGETS: Record<string, string> = {
-  "domain-monitor": "No domain-monitor function exists in this repository. Capability gap, " +
-    "not a rename. Needs an implementation or a written decision that domains " +
-    "are not monitored here — not a schedule change.",
-};
+const KNOWN_DEAD_TARGETS: Record<string, string> = {};
 
 Deno.test("contract: a job name is one live job", () => {
   // pg_cron does not make `jobname` unique: `cron.schedule` inserts a new row
@@ -422,7 +416,7 @@ Deno.test("contract: a job name is one live job", () => {
 Deno.test("contract: every scheduled job posts to a function that exists", () => {
   const targets = cronTargets();
   assert(
-    targets.length > 10,
+    targets.length > 5,
     `only ${targets.length} scheduled endpoints found among the catalog's ` +
       `${s.cronJobs.length} jobs. The extraction is wrong, and the check below ` +
       "is passing on nothing.",

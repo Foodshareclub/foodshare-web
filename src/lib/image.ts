@@ -61,5 +61,7 @@ export function isReferenceImageUrl(value: string | undefined): boolean {
   if (!normalized || normalized.startsWith("/")) return false;
   const url = new URL(normalized);
   if (url.origin !== "https://api.foodshare.club") return false;
-  return /^\/storage\/v1\/object\/public\/(?:assets\/listing-reference\/[a-f0-9]{64}\/[^/]+|food-images\/[^/]+\/reference-covers\/[a-f0-9]{64}\.(?:jpeg|jpg|png|webp))$/.test(url.pathname);
+  return /^\/storage\/v1\/object\/public\/(?:assets\/listing-reference\/[a-f0-9]{64}\/[^/]+|food-images\/[^/]+\/reference-covers\/[a-f0-9]{64}\.(?:jpeg|jpg|png|webp))$/.test(
+    url.pathname,
+  );
 }

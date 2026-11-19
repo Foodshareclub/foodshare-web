@@ -38,3 +38,16 @@ No vendored backend or database migration was changed for this UI work.
 Production was checked independently: the same listing and backend cover render,
 but the new disclosure was not deployed at this checkpoint. Paired native mobile
 reference-photo UI, release builds and store publication remain separate gates.
+
+
+## CI follow-up
+
+The first disclosure pipeline passed both web test jobs and strict lint. It
+identified two native Bun formatting changes and a stale vendored backend tree.
+The follow-up copies only committed blobs from backend main
+0560ca438be96f0134e4aa229146b2cc15a22e1f: the two missing migrations and 20 differing
+Edge Function files, including the deployed cover-search implementation and its
+tests. No SQL is executed by copying these files. Existing dirty local backend
+or web-function edits are excluded from the commit and preserved in place.
+The complete committed function/migration trees must match before delivery;
+CI remains responsible for rechecking against backend main.

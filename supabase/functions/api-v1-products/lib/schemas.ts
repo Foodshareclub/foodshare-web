@@ -24,7 +24,7 @@ export const postTypeSchema = z.enum([
 export const createProductSchema = z.object({
   title: z.string().min(LISTING.title.minLength).max(LISTING.title.maxLength),
   description: z.string().max(LISTING.description.maxLength).optional(),
-  images: z.array(z.string().url()).max(5),
+  images: z.array(z.string().url()).max(5).default([]),
   postType: postTypeSchema,
   categoryMode: z.enum(["auto", "manual"]).optional(),
   latitude: latitudeSchema.optional(),

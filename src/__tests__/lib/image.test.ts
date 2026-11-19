@@ -44,7 +44,8 @@ describe("reference photo provenance namespaces", () => {
     expect(isReferenceImageUrl(url)).toBe(true);
   });
   test.each([
-    undefined, "/images/placeholder-food.png",
+    undefined,
+    "/images/placeholder-food.png",
     `https://api.foodshare.club/storage/v1/object/public/posts/${hash}.jpg`,
     `https://api.foodshare.club/storage/v1/object/public/food-images/owner/${hash}.jpeg`,
     `https://api.foodshare.club.untrusted.example/storage/v1/object/public/assets/listing-reference/${hash}/fridge.jpg`,

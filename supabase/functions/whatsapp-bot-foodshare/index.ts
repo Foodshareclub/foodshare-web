@@ -12,7 +12,7 @@
 
 import { createAPIHandler, type HandlerContext } from "../_shared/api-handler.ts";
 import { logger } from "../_shared/logger.ts";
-import { isDevelopment } from "../_shared/utils.ts";
+import { isDevelopment, timingSafeEqual } from "../_shared/utils.ts";
 import { getWhatsappAppSecret, getWhatsappVerifyToken } from "./config/index.ts";
 import { verifyMetaWebhook } from "../_shared/webhook-security.ts";
 import { checkRateLimitDistributed } from "./services/rate-limiter.ts";
@@ -145,7 +145,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
   if (mode === "subscribe" && token && challenge) {
     const expectedToken = await ctx.getSecret("WHATSAPP_VERIFY_TOKEN") ||
       getWhatsappVerifyToken();
-    if (token === expectedToken) {
+    if (expectedToken && timingSafeEqual(token, expectedToken)) {
       logger.info("Webhook verified successfully");
       return new Response(challenge, {
         status: 200,

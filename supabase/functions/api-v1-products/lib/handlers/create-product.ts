@@ -13,6 +13,7 @@ import { transformProduct } from "../transformers.ts";
 import { cache } from "../../../_shared/cache.ts";
 import { classifyListing } from "../classification.ts";
 import { predictListingCategory } from "../classification-ai.ts";
+import { createListingCover } from "../listing-cover.ts";
 
 export async function createProduct(
   ctx: HandlerContext<CreateProductBody>,
@@ -35,6 +36,17 @@ export async function createProduct(
   const sanitizedDescription = body.description ? sanitizeHtml(body.description) : undefined;
   const sanitizedPickupAddress = body.pickupAddress ? sanitizeHtml(body.pickupAddress) : undefined;
   const sanitizedPickupTime = body.pickupTime ? sanitizeHtml(body.pickupTime) : undefined;
+
+  if (body.latitude === undefined || body.longitude === undefined) {
+    throw new ValidationError("Location coordinates are required");
+  }
+
+  const coverResult = await createListingCover({
+    title: sanitizedTitle,
+    description: sanitizedDescription,
+    postType: body.postType,
+    images: body.images,
+  }, userId, supabase, ctx.ctx?.requestId || "");
 
   // `validate_listing_content` does not exist — no migration defines it, so
   // PostgREST rejected the call, `validation` was always null, and the gate
@@ -59,7 +71,7 @@ export async function createProduct(
     {
       p_title: sanitizedTitle,
       p_description: sanitizedDescription || "",
-      p_images: body.images ?? null,
+      p_images: coverResult.images,
       p_post_type: body.postType ?? "food",
       p_latitude: body.latitude ?? null,
       p_longitude: body.longitude ?? null,
@@ -95,7 +107,7 @@ export async function createProduct(
       profile_id: userId,
       post_name: sanitizedTitle,
       post_description: sanitizedDescription,
-      images: body.images,
+      images: coverResult.images,
       post_type: classification.postType,
       ...(body.longitude !== undefined && body.latitude !== undefined
         ? { location: `SRID=4326;POINT(${body.longitude} ${body.latitude})` }
@@ -109,7 +121,10 @@ export async function createProduct(
       category_id: classification.postType === body.postType ? body.categoryId : undefined,
       expires_at: body.expiresAt,
       is_active: classification.postType !== "volunteer",
-      metadata: { classification: { ...classification, decidedAt: new Date().toISOString() } },
+      metadata: {
+        classification: { ...classification, decidedAt: new Date().toISOString() },
+        ...(coverResult.cover ? { cover: coverResult.cover } : {}),
+      },
     })
     .select()
     .single();
