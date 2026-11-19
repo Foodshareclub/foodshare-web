@@ -373,23 +373,19 @@ export async function searchListingReference(
           }),
         ),
       );
-      const cacheKey = [...new Uint8Array(digest)].map((v) =>
-        v.toString(16).padStart(2, "0")
-      ).join(
+      const cacheKey = [...new Uint8Array(digest)].map((v) => v.toString(16).padStart(2, "0")).join(
         "",
       );
       const cached = matchCache.get(cacheKey);
       if (cached && cached.expiresAt <= Date.now()) matchCache.delete(cacheKey);
-      const selected = cached && cached.expiresAt > Date.now()
-        ? cached.selection
-        : await aiJson(
-          "Select the closest relevant REFERENCE image for the listing using the candidate titles and descriptions. It is not a photograph of the actual listed item. Match the explicit subject and intent; never choose an unrelated item, logo, person, meme or misleading branded product. For categoryOnly food/wanted listings choose only neutral mixed groceries; never a specific dish, single food item, prepared meal, branded sign or another organisation's vehicle. If no suitable neutral candidate exists, return null. If no candidate is clearly relevant, return pageId=null with low confidence. Confidence >=0.8 requires clear supporting evidence. Only use a pageId from the supplied candidates.",
-          rankingData,
-          MATCH_SCHEMA,
-          apiKey,
-          send,
-          signal,
-        );
+      const selected = cached && cached.expiresAt > Date.now() ? cached.selection : await aiJson(
+        "Select the closest relevant REFERENCE image for the listing using the candidate titles and descriptions. It is not a photograph of the actual listed item. Match the explicit subject and intent; never choose an unrelated item, logo, person, meme or misleading branded product. For categoryOnly food/wanted listings choose only neutral mixed groceries; never a specific dish, single food item, prepared meal, branded sign or another organisation's vehicle. If no suitable neutral candidate exists, return null. If no candidate is clearly relevant, return pageId=null with low confidence. Confidence >=0.8 requires clear supporting evidence. Only use a pageId from the supplied candidates.",
+        rankingData,
+        MATCH_SCHEMA,
+        apiKey,
+        send,
+        signal,
+      );
       // Licenses/candidates are refreshed before every lookup; a cached model
       // choice cannot bypass the current metadata and relevance gates.
       const match = matchedCandidate(candidates, selected);

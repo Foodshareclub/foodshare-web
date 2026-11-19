@@ -422,10 +422,8 @@ Deno.test("verified public-domain subjects are found after the CC0-only pass has
     assertEquals(url.searchParams.get("gsrlimit"), "20");
     const document = commons("Public domain");
     document.query.pages["42"].title = "File:Selidi pod shuboi.jpg";
-    document.query.pages["42"].imageinfo[0].extmetadata.Copyrighted.value =
-      "False";
-    document.query.pages["42"].imageinfo[0].extmetadata.ImageDescription.value =
-      "Dressed herring";
+    document.query.pages["42"].imageinfo[0].extmetadata.Copyrighted.value = "False";
+    document.query.pages["42"].imageinfo[0].extmetadata.ImageDescription.value = "Dressed herring";
     return Promise.resolve(Response.json(document));
   }) as typeof fetch;
   const result = await searchListingReference({
@@ -442,7 +440,6 @@ Deno.test("a public-domain label cannot bypass copyright or attribution checks",
   const valid = commons("Public domain");
   valid.query.pages["42"].imageinfo[0].extmetadata.Copyrighted.value = "False";
   assertEquals(commonsCandidates(valid).length, 1);
-  valid.query.pages["42"].imageinfo[0].extmetadata.AttributionRequired.value =
-    "True";
+  valid.query.pages["42"].imageinfo[0].extmetadata.AttributionRequired.value = "True";
   assertEquals(commonsCandidates(valid), []);
 });
