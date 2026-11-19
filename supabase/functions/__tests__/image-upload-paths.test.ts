@@ -12,6 +12,7 @@ import {
   CLIENT_WRITABLE_BUCKETS,
   isClientWritableBucket,
   scopedUploadPath,
+  uploadImage,
 } from "../api-v1-images/lib/storage.ts";
 
 const USER = "11111111-1111-1111-1111-111111111111";
@@ -43,4 +44,60 @@ Deno.test("image-paths: assets is not a client-writable bucket", () => {
   assertEquals(isClientWritableBucket("assets"), false);
   assertEquals(CLIENT_WRITABLE_BUCKETS.includes("assets"), false);
   assertEquals(isClientWritableBucket("food-images"), true);
+});
+
+Deno.test("image storage writes directly to Supabase and returns its canonical URL", async () => {
+  const bytes = new Uint8Array([1, 2, 3]);
+  const calls: string[] = [];
+  const client = {
+    storage: {
+      from(bucket: string) {
+        calls.push(bucket);
+        return {
+          upload(path: string, content: Uint8Array, options: { contentType: string }) {
+            assertEquals(path, USER + "/test.png");
+            assertEquals(content, bytes);
+            assertEquals(options.contentType, "image/png");
+            return Promise.resolve({ error: null });
+          },
+          getPublicUrl(path: string) {
+            return {
+              data: {
+                publicUrl: "https://api.foodshare.club/storage/v1/object/public/" + bucket + "/" +
+                  path,
+              },
+            };
+          },
+        };
+      },
+    },
+  } as unknown as Parameters<typeof uploadImage>[0];
+  const result = await uploadImage(client, "food-images", USER + "/test.png", bytes, "image/png");
+  assertEquals(result.storage, "supabase");
+  assertEquals(
+    result.publicUrl,
+    "https://api.foodshare.club/storage/v1/object/public/food-images/" + USER + "/test.png",
+  );
+  assertEquals(calls, ["food-images", "food-images"]);
+});
+
+Deno.test("image storage rejects failed Supabase writes", async () => {
+  const client = {
+    storage: {
+      from() {
+        return {
+          upload() {
+            return Promise.resolve({ error: { message: "fixture unavailable" } });
+          },
+        };
+      },
+    },
+  } as unknown as Parameters<typeof uploadImage>[0];
+  let failed = false;
+  try {
+    await uploadImage(client, "food-images", USER + "/test.png", new Uint8Array([1]), "image/png");
+  } catch {
+    failed = true;
+  }
+  assertEquals(failed, true);
 });

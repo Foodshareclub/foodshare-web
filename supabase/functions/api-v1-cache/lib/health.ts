@@ -54,10 +54,17 @@ async function performDetailedHealthCheck(
       message: "Redis connection successful",
     };
   } catch (error) {
+    // Same contract as the service checks: fixed message in the response,
+    // full error to the log. The connectivity error text is host-free in
+    // the canonical mode (the URL lives in error.cause, never serialized);
+    // the fixed message keeps it that way if that ever changes.
+    logger.error("Redis connectivity check failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     connectivityCheck = {
       status: "fail",
       value: "N/A",
-      message: `Connection failed: ${error instanceof Error ? error.message : "Unknown"}`,
+      message: "Connection failed",
     };
     alerts.push({
       severity: "critical",
@@ -357,18 +364,31 @@ async function checkUpstashServices(supabase: any): Promise<{
       const responseTime = Date.now() - startTime;
       const data = await response.json().catch(() => ({}));
       const validation = validateFn(data, response);
+      // The parsed service payload stays in this frame only. It is fed to
+      // the validator and then dropped: a health endpoint must not echo
+      // service response content, host or token, even behind the token gate.
       return {
         service,
         status: validation.ok ? "ok" : "error",
         message: validation.message,
-        details: data,
         responseTime,
       };
     } catch (error) {
+      // A fixed message, not error.message. The canonical fetch failure
+      // today is a generic "fetch failed" with the host in error.cause,
+      // which this code never serializes — but the fixed message pins the
+      // contract so a future change that starts serializing cause, or a
+      // provider that embeds the target URL in the message, cannot put an
+      // instance host in the response body. The full error goes to the
+      // log, so ops loses nothing.
+      logger.error("Cache service check failed", {
+        service,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         service,
         status: "error",
-        message: error instanceof Error ? error.message : "Unknown error",
+        message: "Connection/check failed",
       };
     }
   };

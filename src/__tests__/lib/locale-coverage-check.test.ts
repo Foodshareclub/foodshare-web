@@ -231,7 +231,7 @@ describe("locale coverage — the shipped catalogues", () => {
     // `de` carries 9 of the 18 namespaces. A guard that reported 0 nested
     // present everywhere would look identical in the totals and be useless.
     const measured = measure(load("de"), reference, leaves);
-    expect(measured.flatPresent).toBe(468);
+    expect(measured.flatPresent).toBe(469);
     expect(measured.nestedPresent).toBeGreaterThan(200);
     expect(measured.flatPresent + measured.nestedPresent).toBeGreaterThan(700);
   });

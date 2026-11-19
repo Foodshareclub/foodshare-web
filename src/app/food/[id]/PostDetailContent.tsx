@@ -8,6 +8,7 @@ import { PostTypeBadge } from "@/components/post/PostTypeBadge";
 import { ReportPostDialog } from "@/components/reports";
 import { ShareButton } from "@/components/share/ShareButton";
 import { Badge } from "@/components/ui/badge";
+import { ReferencePhotoDisclosure } from "@/components/productCard/ReferencePhotoDisclosure";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { AuthUser } from "@/lib/data/auth";
@@ -100,6 +101,10 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
 
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+          <div className="pointer-events-none absolute start-4 top-4 max-w-[calc(100%-7rem)]">
+            <ReferencePhotoDisclosure image={heroImage} />
+          </div>
 
           {/* Photo count badge */}
           {validImages.length > 1 && (

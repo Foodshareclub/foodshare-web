@@ -16,11 +16,19 @@ ContainerName=foodshare-web
 Network=foodshare.network
 PublishPort=127.0.0.1:3000:3000
 EnvironmentFile=%h/.config/foodshare/web.env
-HealthCmd=curl -f http://localhost:3000/ || exit 1
-HealthInterval=15s
-HealthTimeout=5s
-HealthRetries=3
-HealthStartPeriod=20s
+# Probe /api/ready, not /: the probe curls the app every interval, and /
+# passes the global rate limiter in src/proxy.ts — two Upstash REST calls
+# per probe (the limit script plus the analytics record). At the 15 s
+# cadence the probe alone burned ~345,000 of the 500,000-request monthly
+# quota with zero users behind it (2026-11-16). /api/ready is exempt from
+# the limiter, constant and prerendered — the probe pays zero Upstash
+# calls. The deep probe stays at /api/health for a slower monitoring
+# cadence. The parameters match the canonical unit at the repository root.
+HealthCmd=curl -fsS http://localhost:3000/api/ready || exit 1
+HealthInterval=20s
+HealthTimeout=10s
+HealthRetries=5
+HealthStartPeriod=60s
 Notify=healthy
 
 ReadOnly=true

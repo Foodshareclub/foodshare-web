@@ -6,9 +6,10 @@
  * - Zod schema validation
  * - Type-safe action results
  * - Audit logging
- * - Proper admin auth via user_roles
+ * - Proper admin auth via the shared checkUserIsAdmin helper
  */
 
+import { checkUserIsAdmin } from "@/lib/data/admin-check";
 import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { CACHE_TAGS } from "@/lib/data/cache-keys";
 import { type ServerActionResult, serverActionError, successVoid } from "@/lib/errors";
@@ -53,10 +54,6 @@ export interface CampaignResult {
   status: string;
 }
 
-interface AdminUserRoleRow {
-  roles: { name: string };
-}
-
 // ============================================================================
 // Helper: Verify Admin Access
 // ============================================================================
@@ -79,14 +76,7 @@ async function verifyAdminAccess(): Promise<AuthError | AuthSuccess> {
     return { error: "You must be logged in", code: "UNAUTHORIZED" };
   }
 
-  const { data: userRoles } = await supabase.from("user_roles").select("roles!inner(name)").eq("profile_id", user.id);
-
-  const roleRows = (userRoles ?? []) as AdminUserRoleRow[];
-
-  const roles = roleRows.map((r) => r.roles?.name).filter(Boolean);
-
-  const isAdmin = roles.includes("admin") || roles.includes("superadmin");
-
+  const { isAdmin } = await checkUserIsAdmin(user.id);
   if (!isAdmin) {
     return { error: "Admin access required", code: "FORBIDDEN" };
   }

@@ -16,7 +16,7 @@ import {
   checkRateLimit,
   isClientWritableBucket,
   scopedUploadPath,
-  uploadWithFallback,
+  uploadImage,
 } from "./storage.ts";
 
 /**
@@ -99,7 +99,7 @@ export async function handleProxy(ctx: HandlerContext): Promise<Response> {
   const format = detectFormat(compressed.buffer);
   const filename = `${crypto.randomUUID()}.${format}`;
 
-  const { publicUrl, storage } = await uploadWithFallback(
+  const { publicUrl, storage } = await uploadImage(
     ctx.supabase,
     bucket,
     filename,
@@ -205,7 +205,7 @@ export async function handleUploadFromUrl(
   const format = detectFormat(compressed.buffer);
   const filename = scopedUploadPath(userId, customPath, format);
 
-  const { publicUrl, storage } = await uploadWithFallback(
+  const { publicUrl, storage } = await uploadImage(
     supabase,
     bucket,
     filename,

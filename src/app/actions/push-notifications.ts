@@ -1,6 +1,5 @@
 "use server";
 
-import { ROLE_IDS } from "@/lib/constants";
 import { checkUserIsAdmin } from "@/lib/data/admin-check";
 import { createClient } from "@/lib/supabase/server";
 import { broadcastPushTask, sendPushTask } from "@/trigger/push-notifications";
@@ -96,16 +95,9 @@ export async function broadcastPushNotification(payload: PushPayload): Promise<S
     return { success: false, error: "Unauthorized" };
   }
 
-  // Check if user has admin role via user_roles table
-  const { data: adminRole } = await supabase
-    .from("user_roles")
-    .select("role_id")
-    .eq("profile_id", user.id)
-    .in("role_id", [ROLE_IDS.ADMIN, ROLE_IDS.SUPERADMIN])
-    .limit(1)
-    .maybeSingle();
-
-  if (!adminRole) {
+  // Check admin role via the shared service-role helper
+  const { isAdmin } = await checkUserIsAdmin(user.id);
+  if (!isAdmin) {
     return { success: false, error: "Admin access required" };
   }
 
@@ -175,15 +167,8 @@ export async function broadcastPushNotificationAsync(
   }
 
   // Check admin role
-  const { data: adminRole } = await supabase
-    .from("user_roles")
-    .select("role_id")
-    .eq("profile_id", user.id)
-    .in("role_id", [ROLE_IDS.ADMIN, ROLE_IDS.SUPERADMIN])
-    .limit(1)
-    .maybeSingle();
-
-  if (!adminRole) {
+  const { isAdmin } = await checkUserIsAdmin(user.id);
+  if (!isAdmin) {
     return { triggered: false };
   }
 

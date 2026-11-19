@@ -27,6 +27,20 @@ export async function runHfInference(
   const hfToken = Deno.env.get("HUGGINGFACE_ACCESS_TOKEN");
   if (!hfToken) throw new ServerError("Missing HUGGINGFACE_ACCESS_TOKEN");
 
+  // Binary output must not use the JSON cache (or its truncated base64 key).
+  // The current SDK routes through supported inference providers.
+  if (task === "textToImage") {
+    const { InferenceClient } = await import("@huggingface/inference");
+    const hf = new InferenceClient(hfToken);
+    const result = await hf.textToImage({
+      provider: "fal-ai",
+      model: body?.model || "black-forest-labs/FLUX.1-schnell",
+      inputs: (body?.inputs as string) || "",
+      parameters: { width: 768, height: 768, num_inference_steps: 4 },
+    }, { signal: AbortSignal.timeout(45_000) });
+    return { result, contentType: result.type || "image/jpeg", cached: false };
+  }
+
   const model = body?.model || task;
   const cacheKey = generateCacheKey(
     model,
@@ -63,16 +77,6 @@ export async function runHfInference(
         inputs: (body?.inputs as string) || "",
       });
       contentType = "audio/wav";
-      break;
-    }
-
-    case "textToImage": {
-      result = await hf.textToImage({
-        model: body?.model || "stabilityai/stable-diffusion-2",
-        inputs: (body?.inputs as string) || "",
-        parameters: body?.parameters,
-      });
-      contentType = "image/png";
       break;
     }
 

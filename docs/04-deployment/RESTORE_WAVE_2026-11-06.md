@@ -2,7 +2,8 @@
 
 Status: **all code artifacts authored, verified, and signed off. M1 closed at
 backend `5719f997` (web mirror `019c22a2`); M-RLS closed at backend
-`20471db7` (web mirror in the same push). M2 retracted, end state A confirmed
+`fb688685` (v2 drop-only revision of `20471db7`, web mirror in the same
+push). M2 retracted, end state A confirmed
 (§Design decisions). What remains is execution: the operator runs
 `CLOUDFLARE-TUNNEL-OUTAGE-RUNBOOK.md` steps 1–5 with the wave insertions below —
 run it, or hand over estate-runner access and the team coordinates the run.**
@@ -10,7 +11,25 @@ The Q3 product sign-off and the PAT are both optional and non-blocking
 (§Open items).
 **As of 2026-11-12 a partial restore is in progress — read §Partial-restore
 state first; it supersedes the §Execution order sequencing from the current
-state (the target order is unchanged).**
+state (the target order is unchanged). **Status as of 2026-11-16
+(post-outage postmortem)**: the API-plane outage (the 04:11Z 530/1033)
+was the chown incident of Nov 15 hitting the live Postgres data dir
+(it sits inside the git checkout); Kiro's operator-approved recovery at
+06:05Z restored it, VPS-verified. The site apex still 500s on the
+exhausted Upstash monthly quota (`t_c304087e`; the fail-open fix is on web
+main `450d733a`, deploy fleet-gated — a cache quota must not take the site
+down; the Upstash plan/limit decision remains the only path that also
+restores the cache). LAN-side probes of
+`api.`/`studio.` are unreliable — the Xfinity xFi SNI block
+(Advanced Security) is **stateful, not absolute**: some requests pass
+intact (two Kong-header-verified 404s at 08:12/09:11Z Nov 16
+independently corroborate the API-plane recovery) while others die with
+a TLS `protocol version` alert even though TCP reaches the correct CF
+IP — so no LAN reading can be told genuine from hijacked until the
+block is disabled or whitelisted. The independent-network
+confirmation is the phone curl (cellular): `?check=health` expect 200
+pre-F4. The mirror is CLEAN at the 2026-11-16 final tips (web `6da8286b` / backend
+`f9e9fbf9` — churn ledger in the mirror-state row below).**
 
 ## Partial-restore state (probed 2026-11-12)
 
@@ -67,8 +86,21 @@ step.
    `SUPABASE_SERVICE_ROLE_KEY`), app CI secrets (`SUPABASE_URL` /
    `SUPABASE_ANON_KEY` — `android.yml:233,521`; the iOS build config takes
    the publishable key, see the fleet note below).
-3. Finish runbook steps 2–4 (api/studio tunnel, CF re-exposure) + E1/E2 (wave
-   insertion B) + **web rebuild/redeploy** with the current key.
+3. Finish runbook steps 2–4 (api/studio tunnel, CF re-exposure —
+   **landed 2026-11-13**: `api.` = Kong 404 over h2, studio 302,
+   unauthenticated `?check=services` = 200 pre-F4. **Re-probed 2026-11-15:
+   the API plane was down (chown incident, Nov 15 — data dir inside the
+   checkout) and was recovered at 06:05Z (Kiro, operator-approved,
+   VPS-verified); the apex 500 at the same time is the exhausted
+   Upstash quota (`t_c304087e`), not the tunnel. LAN probes of
+   `api.`/`studio.` are unreliable under the xFi Advanced Security SNI
+   block (stateful: some requests pass, most are hijacked — you cannot
+   tell which is which) until disabled — use the phone (cellular)
+   `?check=health` = 200 pre-F4 as the independent-network
+   confirmation before continuing this step.**) +
+   **F4 edge-function
+   deploy (gate)** + E1/E2 (wave insertion B, envs **after** the gate —
+   hard gate below) + **web rebuild/redeploy** with the current key.
 4. §6 verification with freshly-minted keys (@verifier leg 0: rotation status;
    leg 3: post-rotation mint requirement).
 
@@ -87,10 +119,43 @@ namespaces, and only one is necessarily invalidated by the rotation:
   settles it: still valid → the iOS fleet resumes with the api, **no release
   needed**; invalidated → the iOS build config needs the new key in the next
   release.
-  Apps are already down (api dark), so any required release _extends_ the app
-  outage rather than creating one — the product decision for @user (emergency
-  release vs next scheduled release) applies **per platform, per the Q3
-  answer**.
+Apps are already down (api dark), so any required release _extends_ the app
+outage rather than creating one — the product decision for @user (emergency
+release vs next scheduled release) applies **per platform, per the Q3
+answer**.
+
+## Contingency: self-hosted runner fleet down (observed 2026-11-13)
+
+The estate VPS is the critical path while its runner pool is
+0-registered (observed 2026-11-13: empty runner list, `supabase-rest`
+unhealthy, backup service dead; **2026-11-14: the runner flaps 0→1 but
+does not drain the queue — CI jobs pending 5h+ against a registered
+runner; for the operator's VPS item, "recovered" means a full CI/CD run
+*completes*, not runner count = 1** — dead backup first, per the
+standing order). Adjudication for the batch gate's
+"CI green" leg, per the dead-origin rule:
+
+- **Queue-blocked legs** (Test/Lint/Validate-migrations/E2E queued
+  indefinitely on 0 runners) are **ENVIRONMENTAL** — the fleet is the
+  failure, not the code. No code action; closure = fleet recovery +
+  green re-run.
+- **Content reds** (jobs that ran and failed on measured content — the
+  storage-lane `contract-drift` unreferenced-columns and `doc-drift`
+  oracle.md-figure failures) do **not** match the dead-origin signature:
+  they are **real findings in the normal lane**, fleet-independent, and
+  must clear before the CI-green leg. They pre-date M-RLS and do not
+  affect M-RLS's standing.
+- **The migration apply (M0 + M1 + M-RLS + storage) is an operator
+  action on the estate, not a CI job — it proceeds regardless of the
+  fleet.** The CI-green leg is the *evidence* leg: interim standing =
+  by-construction verifies + the GitHub-hosted legs that ran; closure =
+  fleet re-run green after recovery.
+- The E2E-gated deploy step proceeds per the runbook with the E2E gate
+  **explicitly waived on the record** (E2E is structurally
+  dead-origin-dependent — the three production-wiring points in
+  `web.yml`; §6 is the verification that matters).
+- Dependabot PR merges (the hono wave) are blocked until the fleet
+  re-runs their CI.
 
 ## Prerequisites
 
@@ -108,9 +173,16 @@ namespaces, and only one is necessarily invalidated by the rotation:
    Origin stays dark.
 2. **Wave insertion A — apply pending Supabase migrations, origin still dark,
    as one batch:**
-   - M0: the 5 pending migrations already on backend main (engagement state,
+   - M0: the pending migration batch — the original 5 (engagement state,
      internal-analytics restriction, function privilege lockdown,
-     post-location privacy, image upload quota).
+     post-location privacy, image upload quota) **plus everything else
+     pending per the pre-fix cluster-catalog probe**: the batch grew on
+     backend main 2026-11-08/12 (the `20261108*` drop-dead batch — 249
+     columns, 9 views, dead service-role policies, indexes, triggers,
+     cron dedup — and
+     `20261112120000_storage_authenticated_owner_access.sql`). Apply the
+     exact pending list from the probe, one transaction-wrapped batch,
+     origin dark.
    - M1: `20261106000000_f1_posts_anon_column_grants.sql` @ backend
      `5719f997` (web mirror `019c22a2`) — `BEGIN;` → `REVOKE SELECT ON
 public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
@@ -120,15 +192,28 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
      `posts_with_location` view is `security_invoker`, so anon needs the column
      grants for the view to keep working (a bare revoke breaks public browse at
      re-exposure).
-   - M-RLS: `20261112000000_rls_privilege_fixes.sql` @ backend `20471db7`
-     (web mirror pushed with this doc) — closes F-013 (waste_logs policies
-     keyed on the user-writable `household_id` JWT claim → the
-     households-join pattern of the `household_waste_logs` sibling + the safe
-     profile branch), F-010 (telegram_user_states → service-role-only) and
-     F-011 (rate_limits → service-role-only; no owner column exists), plus
-     class completion: the remaining 13 TO-less (=> PUBLIC) policies on
-     service-owned tables narrowed to an explicit role, predicates verbatim
-     from the catalog. Same `BEGIN/COMMIT/NOTIFY pgrst` convention, **same
+   - M-RLS: `20261112000000_rls_privilege_fixes.sql` @ backend `fb688685`
+     (v2 drop-only revision of `20471db7`, web mirror pushed with this doc) —
+     closes F-013 (waste_logs policies keyed on the user-writable
+     `household_id` JWT claim → the households-join pattern of the
+     `household_waste_logs` sibling + the safe profile branch), F-010
+     (telegram_user_states: permissive PUBLIC policy dropped, nothing
+     created) and F-011 (rate_limits: same; no owner column exists), plus
+     class completion: the 13 remaining TO-less (=> PUBLIC) policies on
+     service-owned tables resolved — nine dropped with no replacement
+     (their service-role predicates were inert: service_role bypasses RLS
+     and no subject role can carry a genuine service_role claim), four
+     re-created `TO authenticated` with predicates verbatim from the
+     catalog. **v2 (2026-11-12):** the v1 batch also re-created the nine
+     Section-B policies and the two F-010/F-011 policies `TO service_role`
+     (eleven in all) — a policy whose TO list names only BYPASSRLS roles
+     is a rule the database never applies, and `contract-drift.test.ts`
+     rejects exactly that shape, so v1 failed the full suite by
+     construction; v2 deletes those CREATE blocks. Observable behaviour is
+     unchanged: zero policies + RLS enabled is default-deny for every
+     subject role, and service_role keeps its BYPASSRLS access — the same
+     end state `20261108240000_drop_dead_service_role_policies`
+     established. Same `BEGIN/COMMIT/NOTIFY pgrst` convention, **same
      batch as M1**: the re-exposed surface must not carry the vulnerable
      policies. `catalog.json` regenerated via the PG17 oracle for this file;
      the companion `rls-audit.test.ts` case fix (F-012) is what makes the
@@ -136,13 +221,44 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
    - M2 (owner-scoped view): **retracted** — not in this wave and not in phase
      2 as specced. See §Design decisions.
 3. **Wave insertion B — deploy the new web build + edge functions**
-   (C1 web `55dc4c9d`; F4 edge functions) **before** re-exposure, with env
-   coupling set first:
+   (C1 web `55dc4c9d`; F4 edge functions). **Hard gate on
+   edge-function deploy order (2026-11-13 ruling, @cybersecurity +
+   @lead, from the live probe): the F4-gated build deploys strictly
+   before — or atomically with — E1 and the service secrets it reads;
+   never envs first.** The build still serving at 2026-11-13
+   (unauthenticated `?check=services` = 200) is pre-F4, and its handler
+   reads the 16 service secret names (Vault or env;
+   `api-v1-cache/lib/health.ts` `checkUpstashServices`). Today they are
+   all template placeholders, so the body is safe wording only
+   (@verifier's 2026-11-13 probe: zero real-value tokens in the body).
+   Once real values are set, that same unauthenticated body serves the
+   raw service responses (`details`) — the load-bearing exposure:
+   QStash is checked at `/v2/schedules` through the same path, so the
+   estate's full schedule inventory (callback endpoints, intervals)
+   plus live Vector/Search counts are anonymously readable:
+   operationally reusable estate intelligence. No credential value
+   reaches the body at any point (tokens ride the Authorization header
+   only), and the catch path serializes `error.message` only — in Deno
+   the host lives in `error.cause`, which is never serialized; measured
+   2026-11-14 on Deno 2.9.8 (DNS/connect failures surface as the
+   generic "fetch failed", the port-block string is host-free), the
+   residual error-path exposure is generic messaging. E1 itself is not
+   read by the pre-F4 build; the gate covers it anyway because
+   insertion B sets E1/E2 and the service envs in the same pass. E2's
+   auth-container copy is outside the gate — the echo surface is the
+   api-v1-cache handler only. **MEDIUM (separate from the gate, carded
+   as `t_b95f3346`): strip `details` (raw service response) from the
+   health results — the load-bearing fix — and keep error messages
+   host-free (defense-in-depth in case a future change starts
+   serializing `error.cause`): a health endpoint should not echo
+   service response content even when gated.**
    - E1: `INTERNAL_SERVICE_SECRET` in `.env.functions` (F4's gated
-     `?check=services` returns 503 without it — that 503 is the intended loud
-     failure). External monitor does not probe this endpoint (verified in
-     both vendored copies). Anyone with dashboards hitting `?check=services`
-     unauthenticated will get 401/503 by design — tell them.
+     `?check=services` returns 503 without it — that 503 is the intended
+     loud failure). Set **after** the F4-gated build is serving.
+     External monitor does not probe this endpoint (verified in
+     both vendored copies). Anyone with dashboards hitting
+     `?check=services` unauthenticated will get 401/503 by design —
+     tell them.
    - E2: `GOTRUE_HOOK_SEND_EMAIL_SECRETS` in the auth container **and**
      `.env.functions` — without both, all auth mail (signup/recovery/
      magic-link) goes silently dark.
@@ -163,6 +279,20 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
      missing — set `INTERNAL_SERVICE_SECRET` and restart the function
      (dead-but-loud; nothing else in the estate probes this endpoint —
      both vendored external-monitor copies checked, 0 references).
+     **Observed 2026-11-13 after re-exposure: 200** — pre-F4 build
+     serving; per the rule the F4 deploy + E1 step precedes every §6
+     leg, and the F4-before-envs hard gate (wave insertion B) applies
+     to that deploy. **Re-observed 2026-11-15 (04:11Z, two-lane):
+     530/1033 — then explained by the postmortem as the chown-incident
+     API-plane outage (recovered 06:05Z — two Kong-header-verified 404s
+     from the LAN at 08:12/09:11Z Nov 16 corroborate the recovery) plus,
+     for LAN-side probes since ~04:11Z, an Xfinity xFi SNI block that is
+     **stateful**: it hijacked `api.`/`studio.` TLS with a `protocol
+     version` alert on most attempts (apex SNI passed) while letting
+     others through, so no LAN reading is trustworthy until it is
+     lifted. Re-run this probe from an independent network (phone,
+     cellular) — expect 200 (the pre-F4 build is unchanged) before the
+     F4 deploy.**
      Operator runs the with-token leg: same URL with
      `Authorization: Bearer $INTER...RET` → expect 200
      (the secret does not ride through the team thread).
@@ -175,14 +305,15 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
 
 | Artifact                               | Repo @ SHA                                                      | Verified by                                                                                                                                                    |
 | -------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| M0 (5 pending migrations)              | backend, in main, mirror byte-identical on web                  | verifier (diff -rq)                                                                                                                                            |
+| M0 (pending batch: original 5 + `20261108*` drop-dead + `20261112120000` storage; exact pending list per the pre-fix catalog probe) | backend main; web mirror byte-identical **except** `20261112120000` (absent from web origin) | verifier (diff -rq) — the 1-file gap closes with the wave re-sync, which must cover migrations as well as functions |
 | M1 anon REVOKE+GRANT                   | backend `5719f997` (web mirror `019c22a2`; original `aec49efd`) | verifier — column math recomputed: 49 Row − 46 GRANT = exactly the trio, no phantoms; security — signed off (convention edit: `BEGIN/COMMIT` + `NOTIFY pgrst`) |
-| M-RLS privilege fixes (F-013/F-010/F-011 + F-012 + 13-policy class) | backend `20471db7` (web mirror in the same push) | security — fix shapes specified per finding; hermes — predicates copied verbatim from the PG17-oracle catalog, 27/27 rls-audit + oracle tests green |
+| M-RLS privilege fixes (F-013/F-010/F-011 + F-012 + 13-policy class) | backend `fb688685` (v2, 2026-11-12 — drop-only, BYPASSRLS contract fix; original `20471db7`; web mirror in the same push) | security — fix shapes specified per finding; hermes — predicates copied verbatim from the PG17-oracle catalog, 27/27 rls-audit + oracle green; v2 verified clean at tip `4d46337b`: BYPASSRLS contract now passes, remaining tip failures pre-date the fix (attributed on the runbook card) |
 | C1 (8 web sites) + Brevo HEAD deletion | web `55dc4c9d`                                                  | verifier — 8 sites line-by-line, 85/85 tests, type-check exit 0; Brevo absence confirmed via anonymous public clone                                            |
 | F4 internal gate                       | backend `d1c3c28e` + `a84487c2`                                 | security — 8/8 new tests; strict check still exactly the 111 pre-existing budgeted errors                                                                      |
+| api-v1-cache health echo strip (MEDIUM)| backend `af6fb235` (landed 2026-11-14, **before** the F4 deploy step — the constraint held, so one deploy carries gate + echo-strip) | card `t_b95f3346` closed: deno suite green at the pushed SHA (incl. new echo tests), tsrs at the budgeted error count; reviewer isolated re-run of the echo file 6/0 (6-vs-7 count note on the card, non-blocking) |
 | F1 mapping (109 = 31/72/6)             | backend `ab406777`                                              | verifier — counts reconciled, four-path client inventory                                                                                                       |
 | Type-debt bug + follow-ups             | backend `d1e069e7`                                              | verifier — 111/30 reproduced                                                                                                                                   |
-| Mirror state                           | functions: exactly 3-file F4 drift (expected); migrations: 0    | verifier — `vendored` job red **by design** until the wave re-sync                                                                                             |
+| Mirror state                           | **re-sync LANDED 2026-11-15: web `d330eee1` → `b44d50ee`** — one pass, 21 files (5 adds: 3 echo/boundary test files + `_shared/r2-account-capacity.ts` + `storage-public-url.ts`; 14 replaces, incl. `api-v1-cache/lib/health.ts` + `types.ts` and the `api-v1-images` set — the 21st file `__tests__/contract-drift.test.ts` entered via PIN commit `27b892a6`, a functional surface: the 204-column pin set now runs on web CI; **1 web-only DELETE: `_shared/r2-storage.ts`** per direction ruling); 1 migration `20261112120000`; `diff -r` clean vs backend origin blobs at execution (tips `c30873c9`/`d330eee1`). **Mirror CLEAN at the 2026-11-16 final tips** (web `6da8286b` / backend `f9e9fbf9`; `diff -r` vs backend origin blobs = 0 files, measured 2026-11-16; this doc commit is docs-only, out of mirror scope) — churn after the 11-15 sync, each cycle closed by a full-mirror re-sync from backend origin blobs: the 6-file whitespace-fmt tail (fmt commit `64d65b5a`, card `t_11366cbf`) re-synced at web `54855896`; the `contract-drift.test.ts` corpus-scoping pair (`ff59fac6`/`99da487c`) re-synced at web `4eef50a3`; the `seed_forum_categories` migration rename (backend `f9e9fbf9`) re-synced at web `6da8286b`; `vendored` CI attestation per the `4cc9fe8b` criterion rides the first green web run on the returned runner (fleet back online per lead's 21:5xZ read) | direction evidence (2026-11-14, architect): backend refactored storage — Supabase Storage primary, R2 isolated to backup/capacity (`r2-account-capacity.ts`); **zero references to `r2-storage.ts` in backend origin**, its `_shared/index.ts` export dropped; web's copy is the pre-refactor client (still imported by web's stale `storage-urls.ts` + `api-v1-images` set — all replaced by the 13-file set, so no dangling import after the full mirror). The re-sync is a **full mirror applied in one pass** (add + replace + delete; rsync `--delete` semantics) sourced from backend origin blobs — a one-way copy misses the web-only deletion and the `diff -r` gate stays red; `vendored` job green is the re-sync's acceptance |
 
 ## Post-wave (explicitly not in this wave)
 
@@ -192,8 +323,9 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
   for own rows).
 - **M2** — owner-scoped view, if Q3 + the phase-2 end-state decision require
   it (see §Open items).
-- **Functions mirror re-sync** (web ← backend) — resolves the 3-file F4 drift;
-  `vendored` job red→green is the closure signal.
+- **Functions mirror re-sync** (web ← backend) — **LANDED 2026-11-15 at
+  web `b44d50ee`** (21 files; scope + the post-push 6-file fmt tail per
+  the mirror-state row); `vendored` job red→green is the closure signal.
 - Dependabot: 1 moderate ≤48h of restoration; 3 low next maintenance cycle.
 - Rotation queue (operator, **authoritative list in the backend action doc
   @ `3c153775`** — updated 2026-11-12, ~28 history-only values, P0→P2
@@ -237,7 +369,14 @@ public.posts FROM anon` → `GRANT SELECT (46 columns = 49 Row −
   still dark; continue per §Partial-restore state. Binary unchanged: the
   operator runs it, or hands over estate-runner access and the team
   coordinates.
-- **Q3 product sign-off** (user, at leisure, non-blocking) — confirm the
-  behavior: owners see their own inactive rows.
+- **Q3 product sign-off — SIGNED OFF (yes), 2026-11-13** (card t_d7e74d89).
+  Owners see their own inactive rows, verified against the live tree:
+  `getUserProducts` reads the `posts` base table through the user-scoped
+  cookie client (C1, web `55dc4c9d`, on main), and
+  `posts_select_policy`'s owner branch (`profile_id = auth.uid()`, verified
+  in the PG17 catalog; M1 `20261106000000` carries no policy statements)
+  admits own rows regardless of `is_active`; both callers (`/my-posts`,
+  `/user-listings`) are session-gated. The app gets the same path in phase
+  2 (§Post-wave) — unchanged.
 - **PAT** (user, at leisure, non-blocking) — E2E blob reports, Dependabot
   enumeration. Runner status has the operator-side fallback in §Prerequisites.

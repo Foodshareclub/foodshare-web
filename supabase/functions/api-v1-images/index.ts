@@ -31,7 +31,6 @@ import { createAPIHandler, type HandlerContext, ok } from "../_shared/api-handle
 import { AppError, AuthenticationError } from "../_shared/errors.ts";
 import { requireServiceAuth } from "../_shared/service-auth.ts";
 import { parseRoute } from "../_shared/routing.ts";
-import { isR2Configured } from "../_shared/r2-storage.ts";
 
 // Import handlers from lib/
 import { handleBatchUpload, handleUpload } from "./lib/upload.ts";
@@ -57,7 +56,8 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
       status: "healthy",
       version: VERSION,
       service: SERVICE,
-      r2: await isR2Configured(),
+      storage: "supabase",
+      r2: false,
     }, ctx);
   }
 

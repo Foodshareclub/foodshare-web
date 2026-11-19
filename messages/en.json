@@ -1,4 +1,5 @@
 {
+  "reference_photo_disclaimer": "Reference photo — not the actual item",
   "search_filters": {
     "any_distance": "Any distance",
     "within_km": "Within {distance} km",

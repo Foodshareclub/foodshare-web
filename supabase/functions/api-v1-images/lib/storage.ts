@@ -1,11 +1,11 @@
+import { storagePublicUrl } from "../../_shared/storage-public-url.ts";
 /**
- * Image storage utilities — rate limiting and upload with R2/Supabase fallback.
+ * Image storage utilities — rate limiting and primary VPS-backed Supabase uploads.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "../../_shared/logger.ts";
 import { ServerError } from "../../_shared/errors.ts";
-import { isR2Configured, uploadToR2 } from "../../_shared/r2-storage.ts";
 
 export const ALLOWED_BUCKETS = [
   "food-images",
@@ -89,26 +89,14 @@ export async function checkRateLimit(
   return data === true;
 }
 
-export async function uploadWithFallback(
+export async function uploadImage(
   // deno-lint-ignore no-explicit-any
   supabase: SupabaseClient<any, any, any>,
   bucket: string,
   path: string,
   buffer: Uint8Array,
   contentType: string,
-): Promise<{ publicUrl: string; storage: "r2" | "supabase" }> {
-  if (await isR2Configured()) {
-    const r2Path = `${bucket}/${path}`;
-    const result = await uploadToR2(buffer, r2Path, contentType);
-    if (result.success) {
-      return { publicUrl: result.publicUrl, storage: "r2" };
-    }
-    logger.error(
-      "R2 upload failed, falling back to Supabase",
-      new Error(result.error),
-    );
-  }
-
+): Promise<{ publicUrl: string; storage: "supabase" }> {
   const { error: uploadError } = await supabase.storage
     .from(bucket)
     .upload(path, buffer, {
@@ -121,6 +109,12 @@ export async function uploadWithFallback(
     throw new ServerError(`Upload failed: ${uploadError.message}`);
   }
 
-  const publicUrl = supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+  const generated = supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+  const publicUrl = storagePublicUrl(
+    Deno.env.get("SUPABASE_PUBLIC_URL") || Deno.env.get("API_EXTERNAL_URL") ||
+      generated,
+    bucket,
+    path,
+  );
   return { publicUrl, storage: "supabase" };
 }

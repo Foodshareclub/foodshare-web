@@ -125,6 +125,7 @@ interface ProxyMetrics {
   duration: number;
   status: number;
   rateLimitHit?: string;
+  rateLimitDegraded?: "circuit-open" | "redis-error";
   csrfBlocked?: boolean;
   authRefreshFailed?: boolean;
 }
@@ -225,6 +226,15 @@ function isCircuitOpen(key: string): boolean {
 // ============================================================================
 
 // Initialize Redis for rate limiting (only with env vars)
+//
+// Vault exception (card t_736c23f9): these credentials are read from
+// process.env on purpose. The proxy initialises synchronously at module load
+// in the edge/proxy runtime, and the deploy injects UPSTASH_REDIS_REST_URL /
+// UPSTASH_REDIS_REST_TOKEN into the environment. The Vault helper
+// (src/lib/email/vault.ts) is env-only, async and has no Upstash field, so it
+// cannot serve this read. src/lib/security/sharedRateLimit.ts reads the same
+// variables the same way, and missing credentials follow the fail-open policy
+// from 450d733a (see "Rate limiter failure mode" below).
 const redis =
   process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
     ? new Redis({
@@ -295,6 +305,55 @@ if (rateLimitingRequired && !rateLimitingConfigured && typeof console !== "undef
       "Set both GitHub production secrets, and add them to the env file the deploy " +
       "workflow writes, or this deployment has no abuse controls at all.",
   );
+}
+
+// ============================================================================
+// Rate limiter failure mode: fail open
+//
+// The Upstash REST client throws on any error it answers with — including
+// the monthly request quota ("ERR max requests limit exceeded. Limit:
+// 500000") — and the rate limiter propagates that throw straight out of
+// `limit()`. Uncaught in the middleware, one exhausted quota 500s every
+// request, and the /api/ready probe 500s too, so a counter in a billing
+// dashboard became the site's availability state: on 2026-11-15
+// foodshare.club answered 500 for 25 h while the only thing that was wrong
+// was the quota.
+//
+// A rate limit is a control, not the app. When it cannot be evaluated, the
+// request is still served and the limit simply does not apply for that
+// pass — the posture `src/lib/redis.ts` already takes for cache reads. What
+// stays fail-closed is a deployment where the limiters were never wired up
+// (missing env vars): that is the 503 guard above, and a misconfiguration
+// the site must not silently run without.
+//
+// The breaker above keeps the degraded mode from paying Upstash on every
+// request: five consecutive errors open the circuit and the limiter calls
+// are skipped for a minute; one request per half-open window re-tries, and
+// the first success closes the circuit and rate limiting resumes.
+// ============================================================================
+
+const UPSTASH_CIRCUIT_KEY = "upstash-redis";
+
+type LimitVerdict =
+  | { kind: "allowed" }
+  | { kind: "limited"; reset: number }
+  | { kind: "degraded"; reason: "circuit-open" | "redis-error" };
+
+async function evaluateLimiter(limiter: Ratelimit, limiterName: string, key: string): Promise<LimitVerdict> {
+  if (isCircuitOpen(UPSTASH_CIRCUIT_KEY)) {
+    return { kind: "degraded", reason: "circuit-open" };
+  }
+  try {
+    const { success, reset } = await limiter.limit(key);
+    recordCircuitSuccess(UPSTASH_CIRCUIT_KEY);
+    return success ? { kind: "allowed" } : { kind: "limited", reset };
+  } catch (error) {
+    recordCircuitFailure(UPSTASH_CIRCUIT_KEY);
+    console.warn(`[RateLimit] ${limiterName}: Upstash error, failing open for this pass`, {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return { kind: "degraded", reason: "redis-error" };
+  }
 }
 
 // ============================================================================
@@ -442,6 +501,17 @@ export async function proxy(request: NextRequest) {
   const fingerprint = getClientFingerprint(request);
   const { pathname } = request.nextUrl;
 
+  // Liveness and deep health endpoints. Exempt from the session refresh
+  // below and from the global limiter: the quadlet health probe curls
+  // /api/ready every 20 s — 43,200 probes a month — and each one used to
+  // pay the limiter two Upstash REST calls (the limit script plus the
+  // analytics record), so the site's own liveness check burned roughly
+  // 17% of the 500,000-request monthly quota with zero users behind it.
+  // The probe answers 500 for the same reason a page does when Upstash
+  // errors, so exempting it from the limiter and failing the limiter open
+  // are the same decision: the probe must not be able to fail the site.
+  const isHealthCheck = pathname.startsWith("/api/health") || pathname.startsWith("/api/ready");
+
   // IP reputation check
   if (isIPBlocked(ip)) {
     console.warn(`[Security] Blocked request from banned IP: ${ip}`, { correlationId });
@@ -501,8 +571,8 @@ export async function proxy(request: NextRequest) {
     const isMutation = MUTATION_METHODS.includes(request.method.toUpperCase());
 
     if (authLimiter && isAuthEndpoint) {
-      const { success, reset } = await authLimiter.limit(fingerprint);
-      if (!success) {
+      const verdict = await evaluateLimiter(authLimiter, "auth", fingerprint);
+      if (verdict.kind === "limited") {
         console.warn("[RateLimit] Auth limit exceeded", { ip, pathname });
         metricData.rateLimitHit = "auth";
         recordMetric({
@@ -513,16 +583,17 @@ export async function proxy(request: NextRequest) {
         return new NextResponse("Too Many Requests", {
           status: 429,
           headers: {
-            "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+            "Retry-After": Math.ceil((verdict.reset - Date.now()) / 1000).toString(),
             "X-RateLimit-Type": "auth",
           },
         });
       }
+      if (verdict.kind === "degraded") metricData.rateLimitDegraded = verdict.reason;
     }
 
     if (mutationLimiter && isMutation) {
-      const { success, reset } = await mutationLimiter.limit(`mutation:${fingerprint}`);
-      if (!success) {
+      const verdict = await evaluateLimiter(mutationLimiter, "mutation", `mutation:${fingerprint}`);
+      if (verdict.kind === "limited") {
         console.warn("[RateLimit] Mutation limit exceeded", { ip, pathname });
         metricData.rateLimitHit = "mutation";
         recordMetric({
@@ -533,16 +604,17 @@ export async function proxy(request: NextRequest) {
         return new NextResponse("Too Many Requests", {
           status: 429,
           headers: {
-            "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+            "Retry-After": Math.ceil((verdict.reset - Date.now()) / 1000).toString(),
             "X-RateLimit-Type": "mutation",
           },
         });
       }
+      if (verdict.kind === "degraded") metricData.rateLimitDegraded = verdict.reason;
     }
 
-    if (globalLimiter) {
-      const { success, reset } = await globalLimiter.limit(ip);
-      if (!success) {
+    if (globalLimiter && !isHealthCheck) {
+      const verdict = await evaluateLimiter(globalLimiter, "global", ip);
+      if (verdict.kind === "limited") {
         console.warn("[RateLimit] Global limit exceeded", { ip });
         metricData.rateLimitHit = "global";
         recordMetric({
@@ -553,11 +625,12 @@ export async function proxy(request: NextRequest) {
         return new NextResponse("Too Many Requests", {
           status: 429,
           headers: {
-            "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+            "Retry-After": Math.ceil((verdict.reset - Date.now()) / 1000).toString(),
             "X-RateLimit-Type": "global",
           },
         });
       }
+      if (verdict.kind === "degraded") metricData.rateLimitDegraded = verdict.reason;
     }
   }
 
@@ -622,7 +695,6 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const isHealthCheck = pathname.startsWith("/api/health") || pathname.startsWith("/api/ready");
   const isCI = process.env.CI === "true";
   let user = null;
 

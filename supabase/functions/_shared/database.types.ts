@@ -6,8 +6,8 @@
 // and dumps the catalog. The file is verified byte-for-byte by
 // `__tests__/generated-types.test.ts`, so it cannot drift from the schema.
 //
-// Regenerate:  deno run --allow-all supabase/oracle/types.ts --write
-// Verify:      deno run --allow-all supabase/oracle/types.ts --check
+// Regenerate:  bun supabase/oracle/types.ts --write
+// Verify:      bun supabase/oracle/types.ts --check
 /** Any JSON value, as PostgREST returns one. */
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -12388,6 +12388,24 @@ export type Database = {
   },
   storage: {
     Tables: {
+      buckets: {
+        Row: {
+        id: string;
+        name: string;
+        public: boolean | null;
+        };
+        Insert: {
+        id: string;
+        name: string;
+        public?: boolean;
+        };
+        Update: {
+        id?: string;
+        name?: string;
+        public?: boolean | null;
+        };
+        Relationships: [];
+      },
       objects: {
         Row: {
         bucket_id: string | null;

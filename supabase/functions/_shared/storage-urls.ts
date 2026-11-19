@@ -2,7 +2,7 @@
  * Storage URL Validation
  *
  * Validates that image URLs belong to our own storage providers
- * (Supabase Storage or Cloudflare R2). Used by api-v1-products
+ * (VPS-backed Supabase Storage). Used by api-v1-products
  * to reject external image URLs and by cleanup-orphan-images
  * to parse storage paths for deletion.
  *
@@ -10,7 +10,6 @@
  */
 
 import { validateImageUrl } from "./url-validation.ts";
-import { getR2Config } from "./r2-storage.ts";
 import { STORAGE_BUCKETS } from "./storage-constants.ts";
 import { getSecret } from "./vault.ts";
 
@@ -20,14 +19,14 @@ export interface ParsedStorageUrl {
   path: string;
 }
 
-const VALID_BUCKETS = new Set<string>(Object.values(STORAGE_BUCKETS));
+// The image processor also accepts its existing food-images bucket alias.
+const VALID_BUCKETS = new Set<string>([...Object.values(STORAGE_BUCKETS), "food-images"]);
 
 /**
  * Parse a URL into its storage provider, bucket, and path components.
  * Returns null if the URL doesn't match any known storage pattern.
  *
  * Supabase pattern: {SUPABASE_URL}/storage/v1/object/public/{bucket}/{path}
- * R2 pattern:       {R2_PUBLIC_URL}/{bucket}/{path}
  */
 export async function parseStorageUrl(
   url: string,
@@ -40,11 +39,14 @@ export async function parseStorageUrl(
   }
 
   // Check Supabase Storage pattern
-  const supabaseUrl = await getSecret("SUPABASE_URL");
+  const supabaseUrl = Deno.env.get("SUPABASE_PUBLIC_URL") ||
+    Deno.env.get("API_EXTERNAL_URL") || await getSecret("SUPABASE_URL");
   if (supabaseUrl) {
     try {
-      const supabaseHost = new URL(supabaseUrl).hostname;
-      if (parsed.hostname === supabaseHost) {
+      const supabaseOrigin = new URL(supabaseUrl).origin;
+      if (
+        parsed.origin === supabaseOrigin && !parsed.username && !parsed.password
+      ) {
         // Pattern: /storage/v1/object/public/{bucket}/{...path}
         const match = parsed.pathname.match(
           /^\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/,
@@ -61,32 +63,11 @@ export async function parseStorageUrl(
     }
   }
 
-  // Check R2 pattern
-  const r2Config = await getR2Config();
-  if (r2Config?.publicUrl) {
-    try {
-      const r2Host = new URL(r2Config.publicUrl).hostname;
-      if (parsed.hostname === r2Host) {
-        // Pattern: /{bucket}/{...path}
-        const segments = parsed.pathname.replace(/^\//, "").split("/");
-        if (segments.length >= 2) {
-          const bucket = segments[0];
-          const path = segments.slice(1).join("/");
-          if (VALID_BUCKETS.has(bucket)) {
-            return { provider: "r2", bucket, path };
-          }
-        }
-      }
-    } catch {
-      // Invalid R2_PUBLIC_URL — skip
-    }
-  }
-
   return null;
 }
 
 /**
- * Check whether a URL points to our own Supabase or R2 storage.
+ * Check whether a URL points to our primary Supabase storage.
  */
 export async function isOwnStorageUrl(url: string): Promise<boolean> {
   return (await parseStorageUrl(url)) !== null;

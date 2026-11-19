@@ -1,8 +1,8 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 /**
  * Orphan Image Cleanup Service
  */
 
-import { deleteFromR2 } from "../../_shared/r2-storage.ts";
 import { logger } from "../../_shared/logger.ts";
 
 interface OrphanImage {
@@ -27,23 +27,23 @@ export interface CleanupStats {
 }
 
 async function deleteOrphanImage(
-  supabase: any,
+  supabase: SupabaseClient,
   orphan: OrphanImage,
   dryRun: boolean,
 ): Promise<{ success: boolean; error?: string }> {
+  if (orphan.storage !== "supabase") {
+    return {
+      success: false,
+      error: "Legacy storage records require verified migration; R2 backup storage is protected",
+    };
+  }
   if (dryRun) return { success: true };
 
   try {
-    if (orphan.storage === "r2") {
-      const r2Path = `${orphan.bucket}/${orphan.path}`;
-      const result = await deleteFromR2(r2Path);
-      if (!result.success) return { success: false, error: result.error };
-    } else {
-      const { error } = await supabase.storage
-        .from(orphan.bucket)
-        .remove([orphan.path]);
-      if (error) return { success: false, error: error.message };
-    }
+    const { error } = await supabase.storage.from(orphan.bucket).remove([
+      orphan.path,
+    ]);
+    if (error) return { success: false, error: error.message };
 
     const { error: deleteMetricError } = await supabase
       .from("image_upload_metrics")
@@ -67,7 +67,7 @@ async function deleteOrphanImage(
 }
 
 export async function cleanupOrphanImages(
-  supabase: any,
+  supabase: SupabaseClient,
   options: {
     gracePeriodHours?: number;
     batchSize?: number;

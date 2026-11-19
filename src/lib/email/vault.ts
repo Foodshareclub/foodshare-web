@@ -7,6 +7,8 @@
  * and the database vault.
  */
 
+import { logger } from "@/lib/logger";
+
 // Types
 export interface EmailSecrets {
   resendApiKey: string | null;
@@ -40,7 +42,9 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
   // Check cache first
   if (secretsCache && Date.now() < cacheExpiry) {
     const ttlRemaining = Math.round((cacheExpiry - Date.now()) / 1000);
-    console.info(`[Secrets] ✅ Cache hit (TTL: ${ttlRemaining}s remaining)`);
+    // Steady state: every caller hits this every few seconds, so it logs at
+    // debug (silent in production) instead of info, which flooded journald.
+    logger.debug(`[Secrets] Cache hit (TTL: ${ttlRemaining}s remaining)`);
     return secretsCache;
   }
 

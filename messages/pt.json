@@ -1,4 +1,5 @@
 {
+  "reference_photo_disclaimer": "Foto de referência — não é o artigo real",
   "search_filters": {
     "any_distance": "Qualquer distância",
     "within_km": "Num raio de {distance} km",

@@ -12,7 +12,7 @@
  * - Security: csrf, rate-limiter, vault, webhook-security, url-validation
  * - Data & geo: cache, distance, supabase, geocoding, validation-rules
  * - Comms: telegram-client, telegram-alerts
- * - Storage: r2-storage, storage-constants, storage-urls, image-utils
+ * - Storage: storage-constants, storage-urls, image-utils
  * - Utils: context, utils, transformers, aggregation, traced-fetch, toggle
  */
 
@@ -91,7 +91,6 @@ export * from "./telegram-client.ts";
 export * from "./telegram-alerts.ts";
 
 // Storage
-export * from "./r2-storage.ts";
 export * from "./storage-constants.ts";
 export * from "./storage-urls.ts";
 export * from "./image-utils.ts";

@@ -1,4 +1,5 @@
 {
+  "reference_photo_disclaimer": "Ілюстрація — не фото пропонованої речі",
   "search_filters": {
     "any_distance": "Будь-яка відстань",
     "within_km": "У межах {distance} км",

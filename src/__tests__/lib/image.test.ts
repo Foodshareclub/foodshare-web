@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { isValidImageUrl, normalizeImageUrl } from "@/lib/image";
+import { isReferenceImageUrl, isValidImageUrl, normalizeImageUrl } from "@/lib/image";
 
 describe("listing image URLs", () => {
   test.each([
@@ -32,5 +32,28 @@ describe("listing image URLs", () => {
     expect(normalizeImageUrl("  firebasestorage.googleapis.com/v0/b/legacy/o/photo.jpg?alt=media  ")).toBe(
       "https://firebasestorage.googleapis.com/v0/b/legacy/o/photo.jpg?alt=media",
     );
+  });
+});
+
+describe("reference photo provenance namespaces", () => {
+  const hash = "a".repeat(64);
+  test.each([
+    `https://api.foodshare.club/storage/v1/object/public/assets/listing-reference/${hash}/fridge.jpg`,
+    `https://api.foodshare.club/storage/v1/object/public/food-images/owner/reference-covers/${hash}.jpeg`,
+  ])("identifies backend references: %s", (url) => {
+    expect(isReferenceImageUrl(url)).toBe(true);
+  });
+  test.each([
+    undefined,
+    "/images/placeholder-food.png",
+    `https://api.foodshare.club/storage/v1/object/public/posts/${hash}.jpg`,
+    `https://api.foodshare.club/storage/v1/object/public/food-images/owner/${hash}.jpeg`,
+    `https://api.foodshare.club.untrusted.example/storage/v1/object/public/assets/listing-reference/${hash}/fridge.jpg`,
+    `https://other.foodshare.club/storage/v1/object/public/assets/listing-reference/${hash}/fridge.jpg`,
+    `https://api.foodshare.club:8443/storage/v1/object/public/assets/listing-reference/${hash}/fridge.jpg`,
+    `https://api.foodshare.club/storage/v1/object/public/posts/photo.jpg?reference-covers=${hash}`,
+    `https://user:password@api.foodshare.club/storage/v1/object/public/assets/listing-reference/${hash}/fridge.jpg`,
+  ])("does not mislabel ordinary or foreign photos: %s", (url) => {
+    expect(isReferenceImageUrl(url)).toBe(false);
   });
 });

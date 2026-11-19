@@ -1,6 +1,7 @@
 "use server";
 
 import { type ActionResult, createError, failure, success, unauthorizedError, validationError } from "@/lib/errors";
+import { aiDraftLimiter } from "@/lib/security/sharedRateLimit";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
@@ -24,31 +25,6 @@ const draftSchema = z.object({
     .max(4, "Maximum 4 images"),
   postType: z.string().min(1, "Post type is required"),
 });
-
-// ============================================================================
-// Rate Limiting (in-memory, per-process)
-// ============================================================================
-
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT_MAX = 10;
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
-
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(userId);
-
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return true;
-  }
-
-  if (entry.count >= RATE_LIMIT_MAX) {
-    return false;
-  }
-
-  entry.count++;
-  return true;
-}
 
 // ============================================================================
 // System Prompts
@@ -112,8 +88,13 @@ export async function generateListingDraft(images: string[], postType: string): 
     return failure(unauthorizedError("You must be signed in to use AI drafting"));
   }
 
-  // Rate limit
-  if (!checkRateLimit(user.id)) {
+  // Rate limit — the counter is shared across web instances (see
+  // src/lib/security/sharedRateLimit.ts): 10 drafts per hour per user
+  const limit = await aiDraftLimiter.check(user.id);
+  if (!limit.success) {
+    if (limit.reason === "unavailable") {
+      return failure(createError("SERVICE_UNAVAILABLE", "Service temporarily unavailable. Please try again later."));
+    }
     return failure(createError("RATE_LIMIT", "You've reached the AI draft limit. Please try again later."));
   }
 
@@ -176,7 +157,10 @@ export async function generateListingDraft(images: string[], postType: string): 
       return failure(createError("INTERNAL_ERROR", "AI returned an empty response. Please try again."));
     }
 
-    const parsed_response = JSON.parse(messageContent) as { title?: string; description?: string };
+    const parsed_response = JSON.parse(messageContent) as {
+      title?: string;
+      description?: string;
+    };
 
     if (!parsed_response.title || !parsed_response.description) {
       console.error("[ai-draft] Invalid JSON structure from Groq:", messageContent);

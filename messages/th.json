@@ -1,4 +1,5 @@
 {
+  "reference_photo_disclaimer": "ภาพประกอบ — ไม่ใช่ภาพสิ่งของจริง",
   "search_filters": {
     "any_distance": "ทุกระยะทาง",
     "within_km": "ภายใน {distance} กม.",

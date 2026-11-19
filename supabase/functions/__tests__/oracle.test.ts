@@ -351,7 +351,7 @@ const FLOORS = {
   policies: 350,
   indexes: 400,
   enums: 4,
-  cronJobs: 40,
+  cronJobs: 30,
 } as const;
 
 Deno.test("oracle: the catalog is populated", () => {

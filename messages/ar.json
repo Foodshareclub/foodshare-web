@@ -1,4 +1,5 @@
 {
+  "reference_photo_disclaimer": "صورة توضيحية — ليست للغرض الفعلي",
   "search_filters": {
     "any_distance": "أي مسافة",
     "within_km": "ضمن {distance} كم",

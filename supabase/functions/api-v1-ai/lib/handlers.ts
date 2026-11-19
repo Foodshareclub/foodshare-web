@@ -1,12 +1,12 @@
 /**
  * AI Route Handlers (POST dispatch + GET info/models)
  *
- * Auth is per-route: chat/embeddings require JWT, inference/health/models
+ * Auth is per-route: chat/embeddings/inference require authentication; health/models
  * are public. Extracted from `api-v1-ai/index.ts` — no logic changes.
  */
 
 import { type HandlerContext, ok } from "../../_shared/api-handler.ts";
-import { ValidationError } from "../../_shared/errors.ts";
+import { AuthenticationError, RateLimitError, ValidationError } from "../../_shared/errors.ts";
 import type { createHealthHandler } from "../../_shared/health-handler.ts";
 import { logger } from "../../_shared/logger.ts";
 import { getSubPath } from "./path.ts";
@@ -15,6 +15,8 @@ import { runHfInference } from "./providers/huggingface.ts";
 import { zaiEmbeddings } from "./providers/zai.ts";
 import type { PostBody } from "./schemas.ts";
 import { VERSION } from "./config.ts";
+import { verifyServiceAuth } from "../../_shared/service-auth.ts";
+import { checkRateLimit } from "../../api-v1-images/lib/storage.ts";
 
 export function createRouteHandlers(
   healthCheck: ReturnType<typeof createHealthHandler>,
@@ -49,7 +51,11 @@ export function createRouteHandlers(
 
     // POST /inference/:task
     if (subPath.startsWith("inference/")) {
+      if (!ctx.userId && !verifyServiceAuth(ctx.request)) throw new AuthenticationError();
       const task = subPath.split("/")[1];
+      if (task === "textToImage" && ctx.userId && !await checkRateLimit(ctx.userId, ctx.supabase)) {
+        throw new RateLimitError("Cover generation quota exceeded");
+      }
       if (!task) throw new ValidationError("Inference task is required");
 
       logger.info("Processing HF inference", {
@@ -126,7 +132,7 @@ export function createRouteHandlers(
             },
             {
               task: "textToImage",
-              defaultModel: "stabilityai/stable-diffusion-2",
+              defaultModel: "black-forest-labs/FLUX.1-schnell",
               provider: "huggingface",
             },
             {
