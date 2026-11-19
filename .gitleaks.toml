@@ -28,14 +28,34 @@ paths = [
 ]
 
 # ---------------------------------------------------------------------------
-# KNOWN HISTORICAL LEAKS — pinned by (commit, path), 2026-11-15
+# KNOWN HISTORICAL LEAKS — pinned by (commit, path), 2026-11-15, rev 2026-11-19
 #
-# These 48 findings (15 unique commit:file pairs) are the repository's
-# pre-existing leaked-secret history, including the values behind GitHub
-# secret-scanning alerts #1–#9. They are tracked in the rotation queue, not
-# here. Without this baseline the scan exits 1 on every push and a new leak is
-# indistinguishable from known debt. No secret content is embedded: each entry
-# names only the introducing commit SHA and the file path.
+# These findings (16 unique commit:file pairs; 48 on this branch's own
+# history, 49 across all local refs) are the repository's pre-existing
+# leaked-secret history, including the values behind GitHub secret-scanning
+# alerts #1–#9. They are tracked in the rotation queue, not here. Without
+# this baseline the scan exits 1 on every push and a new leak is
+# indistinguishable from known debt. No secret content is embedded: each
+# entry names only the introducing commit SHA and the file path.
+#
+# HELD BASELINE — live Brevo key (lead ruling 2026-11-17 on t_99d5e5ba):
+# fingerprint 1f2732c16d92 is deliberately NOT baselined, and no allowlist
+# entry below covers it. Verified 2026-11-19 (t_13e7ba88): that value is
+# ABSENT from this repository's history — full-ref gitleaks scan, git
+# pickaxe over all refs, and base64-variant decode of every finding all
+# negative. It exists only in operator-side staging (t_5f77c879; probed
+# LIVE, HTTP 200 at 2026-11-19T06:24:29Z). If it ever enters this history
+# the gate flags it. There is no sendinblue/Brevo class suppression.
+#
+# The Brevo key that IS in this history (GitHub secret-scanning alert #7)
+# is a DIFFERENT value: fingerprint 077e34be20bc, vendor-probed DEAD
+# (HTTP 401) at 2026-11-16T20:26:56Z (t_5f77c879 probe record). Its two
+# pins below are historical-dead pins, retained per t_13e7ba88: "all
+# non-live historical findings should be pinned to zero". The fingerprint
+# attribution discrepancy vs the lead ruling (which names 1f2732c16d92 as
+# the in-history key) is reported on t_13e7ba88 / t_99d5e5ba for
+# re-adjudication; removing the two sendinblue pins is a two-line revert
+# if the lead rules otherwise.
 #
 # Two details make each pin cover exactly one (commit, file) pair and nothing
 # else. Both were verified with a scratch-commit guard test:
@@ -47,8 +67,15 @@ paths = [
 #                      '^sha$' pattern never matches, and under AND would
 #                      leave the pin inert.
 #
-# Scan of record: main 0afa2619, gitleaks 8.28.0, this config, --redact:
-#   before: 48 findings, exit 1   after: 0 findings, exit 0
+# Scan of record: branch foodshare/t_99d5e5ba-gitleaks-gate, gitleaks 8.28.0
+# (release tarball, sha256 d942f3ad1472…), this config, 2026-11-19:
+#   branch history (CI-parity single-branch clone):
+#     before: 48 findings, exit 1   after: 0 findings, exit 0
+#   all local refs (includes sibling/main commits not on this branch):
+#     before: 49 findings, exit 1   after: 0 findings, exit 0
+# The 49th finding is a Resend test fixture introduced by 6a55a948 (merged
+# to main via a sibling lane); it is pinned below so the gate is green on
+# either scan surface.
 # Regenerate with:
 #   gitleaks detect --source . --redact --config .gitleaks.toml \
 #     --report-path /tmp/r.json --report-format json
@@ -89,7 +116,7 @@ commits = [ "815115d85558062aff46e17c3eca2ce781a41ed1" ]
 paths = [ '^docs/04\-deployment/DEPLOYMENT_GUIDE\.md$' ]
 
 [[allowlists]]
-description = "known historical leak: sendinblue-api-token @ 815115d:docs/04-deployment/ENVIRONMENT_SETUP.md"
+description = "known historical leak (Brevo alert #7, fp 077e34be20bc, dead-probed 401 2026-11-16): sendinblue-api-token @ 815115d:docs/04-deployment/ENVIRONMENT_SETUP.md"
 condition = "AND"
 commits = [ "815115d85558062aff46e17c3eca2ce781a41ed1" ]
 paths = [ '^docs/04\-deployment/ENVIRONMENT_SETUP\.md$' ]
@@ -119,7 +146,7 @@ commits = [ "815115d85558062aff46e17c3eca2ce781a41ed1" ]
 paths = [ '^scripts/archive\-firebase/migrate\-remaining\-avatars\.js$' ]
 
 [[allowlists]]
-description = "known historical leak: aws-access-token, generic-api-key, jwt, sendinblue-api-token, twilio-api-key @ 815115d:scripts/archive-firebase/restore-secrets.sh"
+description = "known historical leak (incl. Brevo alert #7, fp 077e34be20bc, dead-probed 401 2026-11-16): aws-access-token, generic-api-key, jwt, sendinblue-api-token, twilio-api-key @ 815115d:scripts/archive-firebase/restore-secrets.sh"
 condition = "AND"
 commits = [ "815115d85558062aff46e17c3eca2ce781a41ed1" ]
 paths = [ '^scripts/archive\-firebase/restore\-secrets\.sh$' ]
@@ -147,3 +174,9 @@ description = "known historical leak: curl-auth-header @ 839cf6b:supabase/functi
 condition = "AND"
 commits = [ "839cf6b6da5bca6fd48375dde33db82965613904" ]
 paths = [ '^supabase/functions/api\-v1\-notifications/INTEGRATION\.md$' ]
+
+[[allowlists]]
+description = "test fixture, non-live (Resend re_test_ placeholder in a bun:test env stub): generic-api-key @ 6a55a948:src/lib/email/__tests__/vault.test.ts"
+condition = "AND"
+commits = [ "6a55a9482077fffe2b547ccea11769a5c8c53776" ]
+paths = [ '^src/lib/email/__tests__/vault\.test\.ts$' ]
