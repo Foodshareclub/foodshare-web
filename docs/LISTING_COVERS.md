@@ -4,11 +4,11 @@ Listing image bytes belong in the backend Supabase Storage service. R2 is
 reserved for encrypted recovery backups. Existing usable photos take priority;
 missing-photo search runs on the backend, never in a browser or mobile client.
 
-The web feed, canonical product-detail content (including intercepted modals),
-and arrangement detail use ReferencePhotoDisclosure. It labels reference
-images with a localized explanation that they are not photos of the actual item.
-The label follows the active carousel photo and disappears when that photo
-fails; detail follows the usable hero selected by the existing error handler.
+Product details (including intercepted modals) and arrangement details use
+ReferencePhotoDisclosure. Listing cards do not show this badge, per the owner's
+2026-11-19 decision. Detail views retain the localized explanation that reference
+images are not photos of the actual item. Detail follows the usable hero selected
+by the existing error handler.
 
 Only exact HTTPS api.foodshare.club Storage paths in the backend-owned
 assets/listing-reference/<sha256>/<file> and
@@ -51,3 +51,16 @@ tests. No SQL is executed by copying these files. Existing dirty local backend
 or web-function edits are excluded from the commit and preserved in place.
 The complete committed function/migration trees must match before delivery;
 CI remains responsible for rechecking against backend main.
+
+## Listing-card navigation (2026-11-19)
+
+The title's existing semantic Next.js link extends over unused card space.
+The photo carousel remains above that hit area so swipes, previous/next buttons,
+and photo links work independently. Save/report/edit actions remain separate
+controls. The decorative photo gradient ignores pointer events; it cannot block
+navigation. No nested links or JavaScript-only clickable containers are added.
+
+The real-data browser regression covers photo clicks, unused card space,
+keyboard Enter, browser Back and independent guest Save behavior at desktop and
+phone widths. Keep local checks, exact-revision CI and production verification
+separate when reporting delivery.

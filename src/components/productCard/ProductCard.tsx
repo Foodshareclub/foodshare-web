@@ -32,8 +32,8 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave, onClick }: Pr
       variant="listing"
       className="group relative flex h-full min-w-0 flex-col transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_20px_60px_rgba(0,0,0,0.35)] hover:-translate-y-1.5"
     >
-      <div className="relative isolate overflow-hidden rounded-2xl bg-muted">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-[1]" />
+      <div className="relative z-10 isolate overflow-hidden rounded-2xl bg-muted">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-[1]" />
 
         <ProductCardActions product={product} />
 
@@ -53,7 +53,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave, onClick }: Pr
           <h3 className="text-base leading-snug">
             <Link
               href={productUrl}
-              className="line-clamp-2 rounded-sm hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring transition-colors duration-200 hover:text-primary"
+              className="line-clamp-2 rounded-sm after:absolute after:inset-0 after:z-0 after:rounded-xl hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring transition-colors duration-200 hover:text-primary"
             >
               {product.post_name}
             </Link>

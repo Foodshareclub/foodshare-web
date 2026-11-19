@@ -9,7 +9,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { LISTING_PHOTO } from "./listing-layout";
-import { ReferencePhotoDisclosure } from "./ReferencePhotoDisclosure";
 
 type ImageCarouselProps = {
   images: string[];
@@ -102,12 +101,6 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
           </Link>
         ))}
       </div>
-
-      {!imageErrors[validImages[activeIndex]] && (
-        <div className="pointer-events-none absolute start-3 top-3 max-w-[calc(100%-6rem)]">
-          <ReferencePhotoDisclosure image={validImages[activeIndex]} />
-        </div>
-      )}
 
       {validImages.length > 1 && (
         <div className="pointer-events-none absolute inset-x-3 bottom-3 flex items-center justify-between gap-2">
