@@ -41,12 +41,17 @@ export async function createProduct(
     throw new ValidationError("Location coordinates are required");
   }
 
-  const coverResult = await createListingCover({
-    title: sanitizedTitle,
-    description: sanitizedDescription,
-    postType: body.postType,
-    images: body.images,
-  }, userId, supabase, ctx.ctx?.requestId || "");
+  const coverResult = await createListingCover(
+    {
+      title: sanitizedTitle,
+      description: sanitizedDescription,
+      postType: body.postType,
+      images: body.images,
+    },
+    userId,
+    supabase,
+    ctx.ctx?.requestId || "",
+  );
 
   // `validate_listing_content` does not exist — no migration defines it, so
   // PostgREST rejected the call, `validation` was always null, and the gate
