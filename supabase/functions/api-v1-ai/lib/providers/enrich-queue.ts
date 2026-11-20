@@ -70,7 +70,11 @@ export async function processEnrichQueue(
   dryRun = false,
 ): Promise<ProcessQueueResult> {
   const result: ProcessQueueResult = {
-    processed: 0, placed: 0, skipped: 0, fellThrough: 0, failed: 0,
+    processed: 0,
+    placed: 0,
+    skipped: 0,
+    fellThrough: 0,
+    failed: 0,
   };
 
   // Claim: flip pending (or stale-claim) rows to processing. The where clause
@@ -121,7 +125,8 @@ export async function processEnrichQueue(
 
 async function markDone(
   // deno-lint-ignore no-explicit-any
-  supabase: any, rowId: number,
+  supabase: any,
+  rowId: number,
 ): Promise<void> {
   await supabase.from("listing_enrich_queue")
     .update({ status: "done", claimed_at: null, updated_at: new Date().toISOString() })
@@ -130,7 +135,9 @@ async function markDone(
 
 async function markFailure(
   // deno-lint-ignore no-explicit-any
-  supabase: any, rowId: number, error: string,
+  supabase: any,
+  rowId: number,
+  error: string,
 ): Promise<void> {
   // Increment retry_count; if it reaches MAX_ATTEMPTS, mark failed (terminal).
   const { data: row } = await supabase.from("listing_enrich_queue")
