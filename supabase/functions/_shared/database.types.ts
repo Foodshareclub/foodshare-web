@@ -5512,6 +5512,39 @@ export type Database = {
         };
         Relationships: [];
       },
+      listing_enrich_queue: {
+        Row: {
+        claimed_at: string | null;
+        created_at: string;
+        id: number;
+        last_error: string | null;
+        post_id: number;
+        retry_count: number;
+        status: string;
+        updated_at: string;
+        };
+        Insert: {
+        claimed_at?: string;
+        created_at?: string;
+        id: number;
+        last_error?: string;
+        post_id: number;
+        retry_count?: number;
+        status?: string;
+        updated_at?: string;
+        };
+        Update: {
+        claimed_at?: string | null;
+        created_at?: string;
+        id?: number;
+        last_error?: string | null;
+        post_id?: number;
+        retry_count?: number;
+        status?: string;
+        updated_at?: string;
+        };
+        Relationships: [];
+      },
       location_update_queue: {
         Row: {
         completed_at: string | null;
@@ -10717,6 +10750,10 @@ export type Database = {
         Args: Record<never, never>;
         Returns: undefined;
       },
+      invoke_listing_enrich_queue: {
+        Args: Record<never, never>;
+        Returns: undefined;
+      },
       invoke_update_post_coordinates: {
         Args: Record<never, never>;
         Returns: undefined;
@@ -11785,6 +11822,10 @@ export type Database = {
         p_complained?: number | null;
       };
         Returns: undefined;
+      },
+      tg_listing_enrich_enqueue: {
+        Args: Record<never, never>;
+        Returns: unknown;
       },
       toggle_automation_cron: {
         Args: {

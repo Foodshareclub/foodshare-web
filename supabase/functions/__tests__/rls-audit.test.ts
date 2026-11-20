@@ -419,6 +419,7 @@ const KNOWN_CLIENT_WRITE_DEBT = new Set([
   "grok_usage_logs:grant-without-policy",
   "group_message_deletions:grant-without-policy",
   "infoplist_translation_cache:grant-without-policy",
+  "listing_enrich_queue:grant-without-policy",
   "orphaned_storage_cleanup:grant-without-policy",
   "rate_limit_entries:grant-without-policy",
   "telegram_rate_limits:grant-without-policy",

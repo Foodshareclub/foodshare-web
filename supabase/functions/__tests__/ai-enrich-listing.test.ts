@@ -3,8 +3,13 @@
  * columns; the community_fridges host carries them) and the a1-first /
  * operator-gated-a2 tier order, pinned by the place-cover merge (t_d12b4ce9).
  */
-import { assertEquals } from "@std/assert";
+import { assert, assertEquals, assertRejects } from "@std/assert";
+import type { HandlerContext } from "../_shared/api-handler.ts";
+import { RateLimitError } from "../_shared/errors.ts";
+import type { createHealthHandler } from "../_shared/health-handler.ts";
+import { createRouteHandlers } from "../api-v1-ai/lib/handlers.ts";
 import { enrichListing } from "../api-v1-ai/lib/providers/image-pipeline.ts";
+import type { PostBody } from "../api-v1-ai/lib/schemas.ts";
 
 function withEnv(
   vars: Record<string, string | undefined>,
@@ -78,7 +83,12 @@ Deno.test("enrichListing: city/state come from the host listing, not posts", asy
     assertEquals(selects.posts[0].includes("website"), true);
     assertEquals(selects.posts[0].includes("city"), false);
     assertEquals(selects.posts[0].includes("state"), false);
-    assertEquals(selects.community_fridges[0], "city, state");
+    // The provenance engine (close criterion (b)) and the EXIF-GPS tie
+    // (architect addendum) extend the host select beyond city/state.
+    const cfSelect = selects.community_fridges[0];
+    for (const col of ["city", "state", "host_company", "latitude", "longitude"]) {
+      assertEquals(cfSelect.includes(col), true, `community_fridges select must include ${col}`);
+    }
     assertEquals(result.error?.includes("a2 gated"), true);
   });
 });
@@ -119,4 +129,203 @@ Deno.test("enrichListing: a1 scrape runs before the gated a2 tier", async () => 
     globalThis.fetch = originalFetch;
     deno.resolveDns = originalDns;
   }
+});
+
+// =============================================================================
+// Route (handler level) — the service-path rate-limit line
+//
+// The estate suite otherwise calls the provider directly and bypasses the
+// handler's limiter line, so a broken limiter is only catchable here, at the
+// route: the round-1 defect was a string key through the uuid-typed
+// user-quota RPC (22P02 on every request → fail-closed → the route dead on
+// arrival, the consent-gated backfill unable to run at all).
+// =============================================================================
+
+const health = (() => Promise.resolve(new Response("healthy"))) as ReturnType<
+  typeof createHealthHandler
+>;
+const routeHandlers = createRouteHandlers(health);
+
+interface RpcCall {
+  name: string;
+  args: Record<string, unknown>;
+}
+
+function enrichRouteCtx(
+  rpcImpl: (
+    name: string,
+    args: Record<string, unknown>,
+  ) => Promise<{ data: unknown; error: { message: string } | null }>,
+  rpcCalls: RpcCall[],
+  flags: { postsTouched: boolean },
+  body: Record<string, unknown> = { post_id: 7 },
+): HandlerContext<PostBody> {
+  return {
+    request: new Request(
+      "https://api.foodshare.club/functions/v1/api-v1-ai/inference/enrichListing",
+      { method: "POST", headers: { authorization: "Bearer test-service-key" } },
+    ),
+    body: body as unknown as PostBody,
+    userId: null,
+    supabase: {
+      rpc: (name: string, args: Record<string, unknown>) => {
+        rpcCalls.push({ name, args });
+        return rpcImpl(name, args);
+      },
+      // The pipeline's first action is a posts select: if the route reaches
+      // here, the limiter allowed it (and the defect — the rpc call itself —
+      // is the one under test).
+      from: (table: string) => {
+        if (table === "posts") {
+          flags.postsTouched = true;
+          return {
+            select: () => ({
+              eq: () => ({
+                single: () =>
+                  Promise.resolve({
+                    data: {
+                      id: 7,
+                      post_name: "Parnell Community Fridge",
+                      post_address: "1 Main St, Auckland",
+                      post_type: "fridge",
+                      fridge_id: null,
+                      website: null,
+                      metadata: null,
+                      images: [],
+                    },
+                    error: null,
+                  }),
+              }),
+            }),
+          };
+        }
+        throw new Error(`unexpected table: ${table}`);
+      },
+    } as unknown as HandlerContext<PostBody>["supabase"],
+    corsHeaders: {},
+  } as HandlerContext<PostBody>;
+}
+
+const ROUTE_ENV = {
+  SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  ALLOW_SERP_FALLBACK: undefined,
+} as const;
+
+Deno.test("enrichListing route: within budget it succeeds on the string-key limiter", async () => {
+  await withEnv({ ...ROUTE_ENV }, async () => {
+    const rpcCalls: RpcCall[] = [];
+    const flags = { postsTouched: false };
+    const resp = await routeHandlers.handlePost(
+      enrichRouteCtx(
+        (name, args) => {
+          assertEquals(name, "check_rate_limit");
+          assertEquals(args, {
+            p_key: "service-enrich-7",
+            p_limit: 30,
+            p_window_ms: 60_000,
+          });
+          return Promise.resolve({
+            data: {
+              allowed: true,
+              remaining: 29,
+              reset_at: Date.now() + 60_000,
+              retry_after_ms: 0,
+            },
+            error: null,
+          });
+        },
+        rpcCalls,
+        flags,
+      ),
+    );
+    assertEquals(resp.status, 200);
+    const json = (await resp.json()) as { success: boolean; data: { status: string } };
+    assertEquals(json.success, true);
+    assertEquals(json.data.status, "fell_through"); // no website, a2 gated
+    assertEquals(flags.postsTouched, true, "the pipeline ran after the allow");
+    // Round-1 defect regression: the route rides the string-key distributed
+    // limiter — never the uuid-typed user-quota RPC, where a string key is a
+    // 22P02 cast error on every request.
+    assertEquals(rpcCalls.length, 1);
+    assertEquals(rpcCalls[0].name, "check_rate_limit");
+    assert(typeof rpcCalls[0].args.p_key === "string");
+  });
+});
+
+Deno.test("enrichListing route: an exhausted budget rejects before the pipeline runs", async () => {
+  await withEnv({ ...ROUTE_ENV }, async () => {
+    const rpcCalls: RpcCall[] = [];
+    const flags = { postsTouched: false };
+    await assertRejects(
+      () =>
+        routeHandlers.handlePost(
+          enrichRouteCtx(
+            () =>
+              Promise.resolve({
+                data: {
+                  allowed: false,
+                  remaining: 0,
+                  reset_at: Date.now() + 30_000,
+                  retry_after_ms: 30_000,
+                },
+                error: null,
+              }),
+            rpcCalls,
+            flags,
+          ),
+        ),
+      RateLimitError,
+      "Rate limit exceeded on enrichListing",
+    );
+    assertEquals(flags.postsTouched, false, "the pipeline never ran");
+    assertEquals(rpcCalls.length, 1, "exactly one limiter call, then the reject");
+  });
+});
+
+Deno.test("enrichListing route: a limiter RPC error fails closed (blocked, never unthrottled)", async () => {
+  await withEnv({ ...ROUTE_ENV }, async () => {
+    const rpcCalls: RpcCall[] = [];
+    const flags = { postsTouched: false };
+    await assertRejects(
+      () =>
+        routeHandlers.handlePost(
+          enrichRouteCtx(
+            () =>
+              Promise.resolve({
+                data: null,
+                error: { message: "22P02: invalid input syntax for type uuid" },
+              }),
+            rpcCalls,
+            flags,
+          ),
+        ),
+      RateLimitError,
+      "Rate limit exceeded on enrichListing",
+    );
+    assertEquals(flags.postsTouched, false, "an unavailable limiter is not an unlimited one");
+    assertEquals(rpcCalls[0].name, "check_rate_limit");
+  });
+});
+
+Deno.test("enrichListing route: a non-verdict (scalar) payload fails closed", async () => {
+  // check_rate_limit is overloaded in PostgreSQL; a wrong overload resolution
+  // could return a bare boolean. Only the JSONB sliding-window verdict is an
+  // allow — everything else blocks.
+  await withEnv({ ...ROUTE_ENV }, async () => {
+    const rpcCalls: RpcCall[] = [];
+    const flags = { postsTouched: false };
+    await assertRejects(
+      () =>
+        routeHandlers.handlePost(
+          enrichRouteCtx(
+            () => Promise.resolve({ data: true, error: null }),
+            rpcCalls,
+            flags,
+          ),
+        ),
+      RateLimitError,
+      "Rate limit exceeded on enrichListing",
+    );
+    assertEquals(flags.postsTouched, false);
+  });
 });

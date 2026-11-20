@@ -42,6 +42,7 @@ import {
 import { downloadImage } from "../../_shared/image-utils.ts";
 import { logger } from "../../_shared/logger.ts";
 import { requireServiceAuth } from "../../_shared/service-auth.ts";
+import { fetchPinned, resolveAndValidateUrl } from "../../_shared/url-validation.ts";
 import { STORAGE_BUCKETS } from "../../_shared/storage-constants.ts";
 import { runHfInference } from "../../api-v1-ai/lib/providers/huggingface.ts";
 import { coverSearchContext, rasterType } from "../../api-v1-products/lib/listing-cover.ts";
@@ -126,8 +127,11 @@ export function buildGenerationPrompt(input: CoverEnsureInput): string {
 }
 
 /**
- * Liveness probe: http(s) only, no redirects, bounded time. HEAD first; a
- * server that refuses HEAD is probed with a cancelled GET. Anything that
+ * Liveness probe: https only, resolve-validated and IP-pinned (rework
+ * criterion (b): the same gate as the download path — private/internal
+ * resolutions are rejected pre-fetch, the connection is pinned to a validated
+ * IP, redirects refused). fetchPinned is GET-only by contract, so the old
+ * HEAD-first probe is dropped in favor of one bounded GET. Anything that
  * errors, non-2xx's, or answers with a non-image content type is dead.
  */
 export async function probeImageUrl(url: string): Promise<boolean> {
@@ -137,23 +141,16 @@ export async function probeImageUrl(url: string): Promise<boolean> {
   } catch {
     return false;
   }
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+  if (parsed.protocol !== "https:") return false;
   try {
-    const head = await fetch(url, {
-      method: "HEAD",
-      redirect: "error",
-      signal: AbortSignal.timeout(8_000),
-    });
-    if (head.status === 405 || head.status === 501) {
-      const get = await fetch(url, {
-        redirect: "error",
-        signal: AbortSignal.timeout(8_000),
-      });
-      const alive = get.ok && (get.headers.get("content-type") ?? "").startsWith("image/");
-      await get.body?.cancel();
-      return alive;
-    }
-    return head.ok && (head.headers.get("content-type") ?? "").startsWith("image/");
+    const validation = await resolveAndValidateUrl(url, { allowHttp: false });
+    if (!validation.valid) return false;
+    // Fail-closed: no validated IP → dead. Never fetch the unpinned URL
+    // (that would re-resolve the hostname and reopen the rebind window).
+    if (!validation.resolvedIps || validation.resolvedIps.length === 0) return false;
+    // ORIGINAL url for SNI/cert + Host; the validated IP pins the connection.
+    const resp = await fetchPinned(url, validation.resolvedIps[0], { timeout: 8_000 });
+    return resp.ok && (resp.headers.get("content-type") ?? "").startsWith("image/");
   } catch {
     return false;
   }

@@ -33,6 +33,16 @@ export const postBodySchema = z
     image_url: z.string().optional(),
     listing_name: z.string().optional(),
     listing_address: z.string().optional(),
+    // imageVerify provenance fields (close criterion (b)): the gate is
+    // fail-closed on the tie to THIS listing, so the route must carry where
+    // the candidate came from and the location's own presence.
+    source_url: z.string().optional(),
+    source_domain: z.string().optional(),
+    listing_website: z.string().optional(),
+    host_company: z.string().optional(),
+    own_presence_urls: z.array(z.string()).optional(),
+    listing_lat: z.number().optional(),
+    listing_lng: z.number().optional(),
     // enrichListing field (backfill orchestrator dispatch, service-auth only)
     post_id: z.number().int().optional(),
   })

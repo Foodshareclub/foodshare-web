@@ -3,6 +3,7 @@
  */
 
 import { logger } from "./logger.ts";
+import { fetchPinned, resolveAndValidateUrl } from "./url-validation.ts";
 
 export function detectFormat(buffer: Uint8Array): string {
   if (buffer[0] === 0xFF && buffer[1] === 0xD8) return "jpeg";
@@ -17,56 +18,49 @@ const MAX_DOWNLOAD_BYTES = 10 * 1024 * 1024;
 /**
  * Download an image with bounded size, a timeout, and no redirects.
  *
- * A redirect is the standard way around a hostname-based SSRF check: the
- * public URL passes validation, then 302s to a metadata service or an internal
- * address. Refusing redirects means the address that was validated is the one
- * that is contacted. The byte cap is enforced while streaming so a server that
+ * SSRF-gated (rework criterion (b)): resolveAndValidateUrl validates the URL
+ * and resolves A+AAAA BEFORE any connection — a private/internal resolution
+ * (ANY answer) is rejected pre-fetch — and fetchPinned pins the connection to
+ * a validated IP: the address that was validated is the one contacted (no
+ * re-resolve at fetch time, redirects refused, SNI and Host on the original
+ * hostname, certificate validation intact). https-only, consistent with the
+ * proxy path: the estate serves storage over https, and the estate's http
+ * internal services are private-IP-blocked by the resolution gate regardless.
+ *
+ * The byte cap is enforced by the pinned fetch mid-read, so a server that
  * never ends the response cannot exhaust the isolate's memory.
  */
 export async function downloadImage(url: string): Promise<Uint8Array> {
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "FoodShare-ImageAPI/1.0",
-    },
-    redirect: "error",
-    signal: AbortSignal.timeout(10_000),
-  });
+  const validation = await resolveAndValidateUrl(url, { allowHttp: false });
+  if (!validation.valid) {
+    throw new Error(`Failed to fetch image: URL rejected (${validation.reason})`);
+  }
+  // Fail-closed: no validated IP → refuse. Never fall back to the unpinned
+  // URL (that would re-resolve the hostname and reopen the rebind window).
+  if (!validation.resolvedIps || validation.resolvedIps.length === 0) {
+    throw new Error("Failed to fetch image: no validated IP (fail-closed)");
+  }
+  let response: Response;
+  try {
+    // ORIGINAL url for SNI/cert + Host (fetchPinned arg-1 contract); the
+    // validated IP pins the connection (arg 2 — no DNS inside the fetch).
+    response = await fetchPinned(url, validation.resolvedIps[0], {
+      timeout: 10_000,
+      maxBytes: MAX_DOWNLOAD_BYTES,
+    });
+  } catch (err) {
+    throw new Error(`Failed to fetch image: ${String(err).slice(0, 120)}`);
+  }
 
   if (!response.ok) {
     throw new Error(`Failed to fetch image: ${response.status}`);
   }
 
-  const declaredLength = Number(response.headers.get("content-length"));
-  if (Number.isFinite(declaredLength) && declaredLength > MAX_DOWNLOAD_BYTES) {
+  const buf = await response.arrayBuffer();
+  if (buf.byteLength > MAX_DOWNLOAD_BYTES) {
     throw new Error("Image too large (max 10MB)");
   }
-
-  if (!response.body) {
-    throw new Error("Image response had no body");
-  }
-
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let total = 0;
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    total += value.byteLength;
-    if (total > MAX_DOWNLOAD_BYTES) {
-      await reader.cancel();
-      throw new Error("Image too large (max 10MB)");
-    }
-    chunks.push(value);
-  }
-
-  const result = new Uint8Array(total);
-  let offset = 0;
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return result;
+  return new Uint8Array(buf);
 }
 
 export async function logUploadMetrics(supabase: any, metrics: {

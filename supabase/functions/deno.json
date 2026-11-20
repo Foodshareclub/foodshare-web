@@ -20,6 +20,7 @@
     "@supabase/supabase-js": "npm:@supabase/supabase-js@2.43.4",
     "standardwebhooks": "npm:standardwebhooks@^1.0.0",
     "exifreader": "npm:exifreader@4.23.3",
+    "jpeg-js": "npm:jpeg-js@0.4.4",
     "web-push": "npm:web-push@3.6.7",
     "@huggingface/inference": "npm:@huggingface/inference@4.13.33",
     "@std/assert": "jsr:@std/assert@1",
