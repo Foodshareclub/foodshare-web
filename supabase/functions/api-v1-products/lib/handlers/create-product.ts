@@ -38,7 +38,15 @@ export async function createProduct(
   const sanitizedPickupTime = body.pickupTime ? sanitizeHtml(body.pickupTime) : undefined;
 
   if (body.latitude === undefined || body.longitude === undefined) {
-    throw new ValidationError("Location coordinates are required");
+    // Same shape as `validate_listing`'s errors, so callers see one format
+    // whether the location is rejected here or by the database rules.
+    throw new ValidationError("Location coordinates are required", [
+      {
+        field: "location",
+        code: "VALIDATION_REQUIRED",
+        message: "Location coordinates are required",
+      },
+    ]);
   }
 
   const coverResult = await createListingCover(

@@ -34,7 +34,7 @@ const { handleGet, handlePost } = createRouteHandlers(healthCheck);
 Deno.serve(createAPIHandler({
   service: "api-v1-ai",
   version: VERSION,
-  requireAuth: false, // Auth handled per-route: chat/embeddings require JWT, inference/health/models public
+  requireAuth: false, // Auth handled per-route: chat/embeddings require JWT; inference requires user JWT or service auth; health/models public
   csrf: false, // API clients
   rateLimit: {
     limit: 30,

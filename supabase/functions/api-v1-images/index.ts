@@ -21,6 +21,8 @@
  * - POST /upload-from-url  - Download and upload external image
  * - POST /cleanup          - Cleanup orphan images (cron)
  * - POST /recompress       - Recompress old images (cron)
+ * - POST /cover/ensure     - Guarantee a live listing cover (service)
+ * - POST /place-cover      - Real-photo pipeline for fridge/foodbank (service)
  * - GET  /health           - Health check
  *
  * @module api-v1-images
@@ -36,6 +38,8 @@ import { parseRoute } from "../_shared/routing.ts";
 import { handleBatchUpload, handleUpload } from "./lib/upload.ts";
 import { handleProxy, handleUploadFromUrl } from "./lib/proxy.ts";
 import { handleCleanup, handleRecompress } from "./lib/maintenance.ts";
+import { handleCoverEnsure } from "./lib/cover-ensure.ts";
+import { handlePlaceCover } from "./lib/place-cover.ts";
 
 const VERSION = "2.0.0";
 const SERVICE = "api-v1-images";
@@ -77,6 +81,22 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
       // These delete or rewrite stored objects. They are never user routes.
       requireServiceAuth(ctx.request);
       return route.resource === "cleanup" ? await handleCleanup(ctx) : await handleRecompress(ctx);
+
+    case "cover":
+      // Rewrites a listing's cover. Service-only, and the handler additionally
+      // binds the operation to the listing's owner context.
+      requireServiceAuth(ctx.request);
+      if (route.subPath !== "ensure") {
+        throw new AppError("Not found", "NOT_FOUND", 404);
+      }
+      return await handleCoverEnsure(ctx);
+
+    case "place-cover":
+      // Real-photo pipeline (crawl → verify → fetch → place) for fridge and
+      // foodbank listings. Service-only; called by the backfill sweep and the
+      // create-path upgrade hook.
+      requireServiceAuth(ctx.request);
+      return await handlePlaceCover(ctx);
 
     case "upload":
     case "batch":

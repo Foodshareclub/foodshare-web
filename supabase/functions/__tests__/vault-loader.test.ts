@@ -90,6 +90,16 @@ Deno.test("main router isolates dependency failures and never replays writes", a
     assertEquals(text.includes("NaN"), false);
     assertEquals(reads, 0);
     assertEquals(workers, 0);
+    for (const path of ["/metrics", "/_internal/metric", "/_internal/health"]) {
+      const proxied = await handler(new Request("http://functions:9000" + path,
+        {headers: {"X-Forwarded-For": "203.0.113.9"}}));
+      assertEquals(proxied.status, 404);
+      await proxied.body?.cancel();
+    }
+    const traversal = await handler(new Request("http://functions:9000/%2e%2e%2fsecret"));
+    assertEquals(traversal.status, 400);
+    await traversal.body?.cancel();
+    assertEquals(workers, 0);
     const responses = await Promise.all(Array.from({length: 12}, () =>
       handler(new Request("http://functions:9000/api-v1-products"))));
     for (const response of responses) {

@@ -2,6 +2,18 @@
   "_comment": "Known type errors in supabase/functions, produced by `tsrs` over every TypeScript file. `__tests__/typecheck-baseline.test.ts` fails if an error appears that is not here, and fails if one here no longer occurs, so this file can only shrink.",
   "errors": [
     {
+      "file": "__tests__/ssrf-bypass.test.ts",
+      "code": "TS2353",
+      "message": "Object literal may only specify known properties, and 'port' does not exist in type '(request: Request) => Promise<Response> | Response'.",
+      "count": 2
+    },
+    {
+      "file": "_shared/url-validation.ts",
+      "code": "TS2339",
+      "message": "Property 'resolveDns' does not exist on type 'typeof Deno'.",
+      "count": 2
+    },
+    {
       "file": "api-v1-metrics/lib/queries.ts",
       "code": "TS2345",
       "message": "Argument of type '\"get_request_count\"' is not assignable to parameter of type '\"…\"'.",

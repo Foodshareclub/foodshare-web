@@ -2,6 +2,7 @@ import { logger } from "../_shared/logger.ts";
 import { getAdminClient } from "../_shared/supabase.ts";
 import { readVaultEntries } from "../_shared/vault-loader.ts";
 import { VAULT_PRELOAD_NAMES } from "../_shared/vault-secret-names.ts";
+import { isProxiedRequest, isTelemetryPath, isValidServiceName } from "./request-guards.ts";
 
 logger.info("main function started");
 
@@ -70,6 +71,15 @@ Deno.serve(async (req: Request) => {
   const url = new URL(req.url);
   const { pathname } = url;
 
+  // Telemetry is for direct in-network callers (Prometheus, healthcheck). A
+  // request that came through Kong is public traffic and must not see it.
+  if (isTelemetryPath(pathname) && isProxiedRequest(req.headers)) {
+    return new Response(
+      JSON.stringify({ msg: "not found" }),
+      { status: 404, headers },
+    );
+  }
+
   if (pathname === "/_internal/health") {
     return new Response(
       JSON.stringify({ message: "ok" }),
@@ -135,6 +145,13 @@ Deno.serve(async (req: Request) => {
   if (!serviceName || serviceName === "") {
     return new Response(
       JSON.stringify({ msg: "missing function name in request" }),
+      { status: 400, headers },
+    );
+  }
+
+  if (!isValidServiceName(serviceName)) {
+    return new Response(
+      JSON.stringify({ msg: "invalid function name in request" }),
       { status: 400, headers },
     );
   }
