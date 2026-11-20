@@ -147,6 +147,12 @@ export function createRouteHandlers(
       }
 
       if (task === "enrichListing") {
+        // POST /inference/enrichListing — a1-first real-photo pipeline
+        // orchestrator. Service-auth ONLY (backend pipeline stage; the
+        // backfill and the queue worker call it with service credentials —
+        // no client UI calls it), mirroring the imageSearch guard. A user
+        // JWT here would be an IDOR: any user could target any post_id.
+        requireServiceAuth(ctx.request);
         // deno-lint-ignore no-explicit-any
         const body = (ctx.body || {}) as Record<string, any>;
         const postId = Number(body.post_id);
