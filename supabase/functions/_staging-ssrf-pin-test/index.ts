@@ -2,11 +2,19 @@
  * STAGING TEST ARTIFACT — SSRF pin deployed-runtime proof (TEST-B).
  * NOT a production endpoint. Service-auth gated. Remove after the proof lands.
  *
- * Purpose: prove the deployed edge-runtime's node: compat invokes the custom
- * `lookup` as a FULL DNS REPLACEMENT for RESOLVABLE hosts (not fallback-only).
- * This is @verifier's TEST-B ruling (1397) — the sole remaining line to close
- * t_a199d39d. TEST-A (non-resolvable host) is insufficient: a fallback-only
- * runtime passes TEST-A but ignores the pin for resolvable hosts.
+ * Purpose: prove the deployed edge-runtime (v1.70.1) connects to the
+ * VALIDATED IP for RESOLVABLE hosts — @verifier's TEST-B ruling (1397), the
+ * sole remaining line to close t_a199d39d.
+ *
+ * Mechanism history: the first probe on v1.70.1 (2026-11-20) showed the
+ * node:https `lookup` pin is ERR_NOT_IMPLEMENTED there — a hard error, so
+ * fetchPinned's pin is now a DIRECT Deno.connect to the validated IP (no DNS
+ * resolution at fetch time at all; SNI/cert on the original hostname, strict).
+ * TEST-B still proves the property that matters — for a RESOLVABLE host
+ * (example.com) the fetched body must be the staging target's marker, i.e.
+ * the connection went to pin_ip. With a direct connect there is no
+ * fallback-only semantics to hide: the hostname is never resolved at fetch
+ * time. TEST-A (non-resolvable host) is the sanity check, not the close.
  *
  * How the operator runs it (see scripts/ssrf-pin-test.md):
  *   1. Start the staging target server at a reachable IP (returns a marker).
@@ -24,7 +32,16 @@
 
 import { fetchPinned } from "../_shared/url-validation.ts";
 
-const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+// The deployed box's .env.functions carries SERVICE_ROLE_KEY (no
+// SUPABASE_ prefix); local runs use the prefixed name. Accept either.
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SERVICE_ROLE_KEY");
+
+// Deployed-env hardening: this artifact ships as a live test function, so
+// its attack surface is pinned to the estate's own staging addresses. A
+// leaked key must not become an SSRF oracle: pin_ip is allow-listed
+// (127.0.0.1, the podman bridge GW, the box tailnet IP), host is limited to
+// the TEST-A/TEST-B domains, scheme is http.
+const ALLOWED_PIN_IPS = new Set(["127.0.0.1", "10.89.0.1", "100.92.38.119"]);
 
 Deno.serve(async (req: Request): Promise<Response> => {
   // Service-auth gate: this is a test artifact, never public.
@@ -60,16 +77,31 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const port = Number(body.port ?? 80);
   const scheme = String(body.scheme ?? "http");
 
-  if (!pinIp) {
-    return new Response(JSON.stringify({ error: "pin_ip required" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+  if (!pinIp || !ALLOWED_PIN_IPS.has(pinIp)) {
+    return new Response(
+      JSON.stringify({ error: "pin_ip required and must be in the staging allow-list" }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
+  // TEST-A/B domains only: resolvable example.com (TEST-B) or a
+  // non-resolvable *.invalid (TEST-A). No open proxy.
+  if (host !== "example.com" && !host.endsWith(".invalid")) {
+    return new Response(
+      JSON.stringify({ error: "host must be example.com or a *.invalid name" }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
+  if (scheme !== "http") {
+    return new Response(
+      JSON.stringify({ error: "scheme must be http (staging target is plain http)" }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
   }
 
-  // TEST-B: resolvable host + pin to the staging target. If the runtime honors
-  // the lookup as a full replacement, the fetch lands on pinIp (the target).
-  // If fallback-only, it lands on host's real DNS (example.com) → FAIL.
+  // TEST-B: resolvable host + pin to the staging target. fetchPinned opens
+  // the connection DIRECTLY to pin_ip (no DNS at fetch time), so the only
+  // way the body can be the marker is that the connection went to pin_ip —
+  // a resolvable hostname cannot stand in for it.
   const url = `${scheme}://${host}:${port}/`;
   try {
     const resp = await fetchPinned(url, pinIp, { timeout: 10_000 });

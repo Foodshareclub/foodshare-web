@@ -115,8 +115,9 @@ Deno.test("SSRF: valid return always carries resolvedIps (pin invariant)", async
 
 // --- fetchPinned FETCH tests (the fetch actually runs — @verifier 1388) ---
 // These exercise the real fetch path, not just validation. A local target server
-// proves the lookup pins the connection to the validated IP:
-//  (A) a non-resolvable *.invalid host → only the lookup can connect it.
+// proves the connection is opened directly to the validated IP (no DNS at fetch
+// time):
+//  (A) a non-resolvable *.invalid host → DNS cannot reach it; only the pin can.
 //  (B) example.com with validatedIp=127.0.0.1 → the pin overrides real DNS (rebind-sim).
 
 async function withLocalServer(
@@ -139,16 +140,16 @@ async function withLocalServer(
   }
 }
 
-Deno.test("fetchPinned: non-resolvable host connects via lookup (pin proof)", async () => {
+Deno.test("fetchPinned: non-resolvable host connects via pin (pin proof)", async () => {
   await withLocalServer(async (port) => {
-    // *.invalid does NOT resolve via DNS — a successful connect can ONLY come
-    // from the custom lookup pinning to 127.0.0.1.
+    // *.invalid does NOT resolve via DNS — a successful connect can ONLY be
+    // the direct pin to 127.0.0.1 (no resolution happens at fetch time).
     const resp = await fetchPinned(
       `http://nonresolvable-host.invalid:${port}/`,
       "127.0.0.1",
       { timeout: 5_000 },
     );
-    assertEquals(resp.status, 200, `non-resolvable host should connect via lookup`);
+    assertEquals(resp.status, 200, `non-resolvable host should connect via pin`);
     const body = await resp.text();
     assertEquals(body, "PINNED-TARGET-OK", "fetch must land on the pinned target");
   });
@@ -186,6 +187,148 @@ Deno.test("fetchPinned: redirect rejected (redirect:error)", async () => {
       threw = true;
     }
     assertEquals(threw, true, "fetchPinned must reject redirects (not follow to metadata)");
+  } finally {
+    ac.abort();
+    await server.finished;
+  }
+});
+
+// --- fetchPinned resource bounds (@reviewer round 1: unbounded buffer OOM) ---
+// The reviewer's shape: a slow-trickle stream keeps any socket-idle timer from
+// firing and buffers without bound until the edge isolate OOMs.
+// fetchPinned now enforces (1) a streaming byte cap mid-read (plus a
+// declared content-length precheck) and (2) a total wall-clock deadline in
+// addition to the idle timeout.
+
+Deno.test("fetchPinned: declared content-length over the cap is refused before buffering", async () => {
+  const big = new Uint8Array(1_000_000).fill(0x61);
+  const ac = new AbortController();
+  let resolvePort: (p: number) => void;
+  const portPromise = new Promise<number>((r) => (resolvePort = r));
+  const server = Deno.serve(
+    { port: 0, signal: ac.signal, onListen: ({ port }) => resolvePort(port) },
+    () => new Response(big, { status: 200 }),
+  );
+  const port = await portPromise;
+  try {
+    let threw = "";
+    try {
+      await fetchPinned(`http://content-length-cap.invalid:${port}/`, "127.0.0.1", {
+        timeout: 5_000,
+        maxBytes: 1024,
+      });
+    } catch (err) {
+      threw = String(err);
+    }
+    assertEquals(
+      threw.includes("byte cap"),
+      true,
+      `declared 1MB body with maxBytes=1024 must be refused, got: ${threw || "no error"}`,
+    );
+  } finally {
+    ac.abort();
+    await server.finished;
+  }
+});
+
+Deno.test("fetchPinned: streaming byte cap destroys mid-read (chunked body, no content-length)", async () => {
+  // 20 x 1 KiB chunks with no declared length (chunked transfer): the cap
+  // (4 KiB) trips mid-stream, long before the 20 KiB would buffer.
+  async function* slowChunks() {
+    for (let i = 0; i < 20; i++) {
+      yield new Uint8Array(1024).fill(0x61);
+      await new Promise((r) => setTimeout(r, 5));
+    }
+  }
+  const ac = new AbortController();
+  let resolvePort: (p: number) => void;
+  const portPromise = new Promise<number>((r) => (resolvePort = r));
+  const server = Deno.serve(
+    { port: 0, signal: ac.signal, onListen: ({ port }) => resolvePort(port) },
+    () => {
+      const stream = new ReadableStream({
+        async start(controller) {
+          for await (const chunk of slowChunks()) {
+            controller.enqueue(chunk);
+          }
+          controller.close();
+        },
+      });
+      return new Response(stream, { status: 200 });
+    },
+  );
+  const port = await portPromise;
+  try {
+    let threw = "";
+    try {
+      await fetchPinned(`http://midstream-cap.invalid:${port}/`, "127.0.0.1", {
+        timeout: 5_000,
+        maxBytes: 4096,
+      });
+    } catch (err) {
+      threw = String(err);
+    }
+    assertEquals(
+      threw.includes("byte cap"),
+      true,
+      `chunked 20KiB body with maxBytes=4096 must trip mid-read, got: ${threw || "no error"}`,
+    );
+  } finally {
+    ac.abort();
+    await server.finished;
+  }
+});
+
+Deno.test("fetchPinned: total deadline fires on a slow trickle (idle timeout would not)", async () => {
+  // 1 byte every 100 ms: the socket is never idle for 10 s (the idle timeout
+  // would never fire), but the 600 ms total deadline must.
+  const encoder = new TextEncoder();
+  async function* trickle() {
+    for (;;) {
+      yield encoder.encode(".");
+      await new Promise((r) => setTimeout(r, 100));
+    }
+  }
+  const ac = new AbortController();
+  let resolvePort: (p: number) => void;
+  const portPromise = new Promise<number>((r) => (resolvePort = r));
+  const server = Deno.serve(
+    { port: 0, signal: ac.signal, onListen: ({ port }) => resolvePort(port) },
+    () => {
+      const stream = new ReadableStream({
+        async start(controller) {
+          for await (const chunk of trickle()) {
+            controller.enqueue(chunk);
+          }
+        },
+      });
+      return new Response(stream, { status: 200 });
+    },
+  );
+  const port = await portPromise;
+  try {
+    const started = Date.now();
+    let threw = "";
+    try {
+      await fetchPinned(`http://slow-trickle.invalid:${port}/`, "127.0.0.1", {
+        timeout: 10_000, // idle: would never fire at 1 byte / 100 ms
+        deadlineMs: 600,
+        maxBytes: 10_000_000,
+      });
+    } catch (err) {
+      threw = String(err);
+    }
+    const elapsed = Date.now() - started;
+    assertEquals(
+      threw.includes("deadline"),
+      true,
+      `trickle must hit the total deadline, got: ${threw || "no error"}`,
+    );
+    assertEquals(
+      elapsed < 5_000,
+      true,
+      `deadline must fire near 600ms, not the 10s idle timeout (took ${elapsed}ms)`,
+    );
   } finally {
     ac.abort();
     await server.finished;

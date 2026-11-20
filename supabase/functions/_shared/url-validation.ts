@@ -1,11 +1,23 @@
 /**
  * URL Validation and SSRF Protection
  *
- * Provides protection against Server-Side Request Forgery (SSRF) attacks by:
- * - Blocking requests to private/internal IP ranges
- * - Blocking cloud metadata endpoints
- * - Validating URL schemes
- * - Resolving hostnames to check actual IP addresses
+ * Protection against Server-Side Request Forgery (SSRF) attacks, in three
+ * layers:
+ *
+ * - validateUrl / validateImageUrl — synchronous checks: scheme, length,
+ *   ports, credentials, blocked hostnames, IP-literal ranges. These do NOT
+ *   resolve hostnames.
+ * - resolveAndValidateUrl — the SSRF gate: resolves A + AAAA records and
+ *   rejects the URL if ANY resolved IP is private/internal (RFC1918,
+ *   loopback, link-local/metadata, CGNAT, IPv6 ULA, TEST-NETs, multicast),
+ *   including decimal/octal/hex IP encodings and IPv4-mapped IPv6.
+ * - fetchPinned — the fetch: connects with DNS pinned to a validated IP
+ *   (rebinding-proof), SNI/Host/cert on the original hostname (cert
+ *   validation never disabled), redirects rejected, streaming byte cap and
+ *   total deadline enforced.
+ *
+ * Every server-side fetch path MUST call resolveAndValidateUrl and then
+ * fetchPinned with one of the validated IPs — never a bare fetch().
  */
 
 /**
@@ -106,7 +118,7 @@ function ipToNumber(ip: string): number {
  * Returns the normalized IP string.
  */
 function normalizeIp(ip: string): string {
-  let normalized = ip.replace(/^\[|\]$/g, "").toLowerCase();
+  const normalized = ip.replace(/^\[|\]$/g, "").toLowerCase();
 
   // IPv4-mapped IPv6 (dotted): ::ffff:a.b.c.d → a.b.c.d
   const mappedMatch = normalized.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
@@ -434,7 +446,7 @@ export async function resolveAndValidateUrl(
   }
 
   // Resolve A + AAAA records
-  let resolvedIps: string[] = [];
+  const resolvedIps: string[] = [];
   try {
     const aRecords = await Deno.resolveDns(hostname, "A");
     resolvedIps.push(...aRecords);
@@ -464,8 +476,10 @@ export async function resolveAndValidateUrl(
     }
   }
 
-  // Build a pinned URL using the first resolved IP (to prevent rebinding)
-  // The caller should fetch this pinned URL with the original Host header.
+  // Build a pinned URL using the first resolved IP (to prevent rebinding).
+  // The caller fetches the ORIGINAL url via fetchPinned(url, validatedIp),
+  // which pins DNS to the validated IP while SNI/Host/cert use the original
+  // hostname. pinnedUrl is retained for diagnostics.
   const pinnedHostname = resolvedIps[0].includes(":") ? `[${resolvedIps[0]}]` : resolvedIps[0];
   const pinnedUrl = url.toString().replace(hostname, pinnedHostname);
 
@@ -478,92 +492,306 @@ export async function resolveAndValidateUrl(
 }
 
 /**
- * SSRF-safe fetch with a PINNED DNS resolution (rebinding-proof).
+ * SSRF-safe fetch with a PINNED connection (rebinding-proof by construction).
  *
- * Fetches the ORIGINAL url (so SNI/cert validation and the Host header use the
- * real hostname — correct vhosting, valid certs), but pins the DNS lookup to
- * the validated IP so the connection cannot be redirected to an internal host
- * between validation and fetch. Never disables cert validation.
+ * Opens the connection DIRECTLY to the validated IP (Deno.connect). No DNS
+ * resolution happens at fetch time — there is no second resolution for an
+ * attacker to rebind between validation and fetch. The Host header, and for
+ * TLS the SNI + certificate validation, use the ORIGINAL hostname, so
+ * vhosting and certs stay correct and strict. Cert validation is never
+ * disabled (Deno.connect has no switch to disable it).
  *
- * Uses node:http/https with a custom `lookup` that always returns the validated
- * IP. Redirects are NOT followed (matches fetch redirect:"error").
+ * Why not node:https with a custom `lookup`? Probed on the deployed
+ * edge-runtime v1.70.1 (t_a199d39d, 2026-11-20):
+ * `ClientRequest.options.lookup` is ERR_NOT_IMPLEMENTED there — a hard error,
+ * so the node path cannot fetch at all on the deployed runtime.
+ * Deno.connect is a core API on every Deno (local 2.9.8 and the edge
+ * runtime alike), so one code path serves both.
+ *
+ * Redirects are NOT followed: any 3xx is an error (fetch redirect:"error").
+ *
+ * Resource bounds — an unbounded buffer OOMs the 150 MB edge isolate before
+ * any downstream cap can fire (@reviewer round 1, t_d12b4ce9):
+ * - `maxBytes` (default 10 MiB, the image-utils downloadImage cap) is
+ *   enforced MID-READ: a declared content-length over the cap is refused
+ *   before a byte is buffered, and the connection is closed on overflow.
+ * - `deadlineMs` (default: `timeout`) is a TOTAL wall-clock deadline. A
+ *   socket that dribbles one byte per tick, or one that goes silent, cannot
+ *   run past it.
  *
  * @param originalUrl - The original URL (hostname used for SNI/Host).
  * @param validatedIp - The IP that resolveAndValidateUrl validated.
- * @param options - timeout, headers.
+ * @param options - timeout (default 20 s; seeds deadlineMs when deadlineMs
+ *   is absent), deadlineMs (total wall-clock ms), maxBytes, headers.
  * @returns A fetch-like Response.
  */
 export async function fetchPinned(
   originalUrl: string,
   validatedIp: string,
-  options: { timeout?: number; headers?: Record<string, string> } = {},
+  options: {
+    /** Default 20 s: also the default total deadline (see deadlineMs). */
+    timeout?: number;
+    /** Total wall-clock deadline in ms (default: `timeout`). */
+    deadlineMs?: number;
+    /** Maximum response body in bytes (default 10 MiB). Enforced mid-read. */
+    maxBytes?: number;
+    headers?: Record<string, string>;
+  } = {},
 ): Promise<Response> {
   const url = new URL(originalUrl);
   const isHttps = url.protocol === "https:";
-  // deno-lint-ignore no-explicit-any
-  const mod: any = isHttps ? await import("node:https") : await import("node:http");
+  const idleMs = options.timeout ?? 20_000;
+  const deadlineMs = options.deadlineMs ?? idleMs;
+  const maxBytes = options.maxBytes ?? 10 * 1024 * 1024;
+  const port = url.port ? Number(url.port) : isHttps ? 443 : 80;
+  const requestPath = (url.pathname || "/") + (url.search || "");
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
 
-  const family = validatedIp.includes(":") ? 6 : 4;
+  // PIN: connect to the VALIDATED IP. No hostname resolution happens in this
+  // function — that is the entire rebind guarantee.
+  // Deno.connect + Deno.createSecureConn exist on every Deno the estate
+  // runs (1.x edge-runtime and 2.x local); createSecureConn has no option
+  // to skip certificate validation.
+  let conn: Deno.Conn;
+  try {
+    const tcp = await Deno.connect({ hostname: validatedIp, port });
+    conn = isHttps ? await upgradeTls(tcp, url.hostname) : tcp;
+  } catch (err) {
+    throw new Error(`Pinned connect failed for ${url.hostname}: ${String(err)}`);
+  }
 
-  return await new Promise<Response>((resolve, reject) => {
-    const req = mod.request(
-      originalUrl,
-      {
-        // Pin DNS resolution to the validated IP — no re-resolution, no rebind.
-        // All-aware: Deno invokes lookup with {all:true} and reads an ARRAY of
-        // {address,family}; the non-all signature (cb(null,ip,family)) returns
-        // address=undefined on Deno. Handle both shapes. (@verifier 1388)
-        // deno-lint-ignore no-explicit-any
-        lookup: (_hostname: string, opts: any, cb: any) => {
-          if (opts?.all) {
-            cb(null, [{ address: validatedIp, family }]);
-          } else {
-            cb(null, validatedIp, family);
-          }
-        },
-        // SNI + cert validation use the ORIGINAL hostname (never disabled).
-        servername: url.hostname,
-        timeout: options.timeout ?? 20_000,
-        headers: options.headers ?? {},
-        // node:http does not follow redirects by default (redirect:error).
-      },
-      // deno-lint-ignore no-explicit-any
-      (res: any) => {
-        const status = res.statusCode ?? 0;
-        // redirect:"error" — reject on any 3xx (do not follow)
-        if (status >= 300 && status < 400) {
-          res.resume(); // drain
-          reject(new Error(`Redirect not allowed (HTTP ${status})`));
-          return;
+  let deadlineFired = false;
+  const deadlineTimer = setTimeout(() => {
+    deadlineFired = true;
+    conn.close();
+  }, deadlineMs);
+  // conn.close() on an already-closed resource throws BadResource (Deno),
+  // so every close goes through this guard.
+  const safeClose = (): void => {
+    try {
+      conn.close();
+    } catch {
+      // already closed (deadline timer or the peer) — nothing to do
+    }
+  };
+
+  // Byte-stream state: `pending` holds bytes read from the socket; `pos` is
+  // how much of it has been consumed.
+  let pending: Uint8Array<ArrayBuffer> = new Uint8Array(0);
+  let pos = 0;
+  const have = (): number => pending.length - pos;
+  const take = (n: number): Uint8Array<ArrayBuffer> => {
+    const out = pending.slice(pos, pos + n);
+    pos += n;
+    return out;
+  };
+  const fill = async (): Promise<boolean> => {
+    if (pos > 0) {
+      pending = pending.slice(pos);
+      pos = 0;
+    }
+    const buf = new Uint8Array(8192);
+    const n = await conn.read(buf);
+    if (n === null) return false;
+    const chunk = buf.slice(0, n);
+    pending = pending.length ? concatBytes(pending, chunk) : chunk;
+    return true;
+  };
+  const ensure = async (n: number): Promise<boolean> => {
+    while (have() < n) {
+      if (!(await fill())) return false;
+    }
+    return true;
+  };
+  const findSeq = (seq: number[]): number => {
+    for (let i = pos; i + seq.length <= pending.length; i++) {
+      let match = true;
+      for (let j = 0; j < seq.length; j++) {
+        if (pending[i + j] !== seq[j]) {
+          match = false;
+          break;
         }
-        // deno-lint-ignore no-explicit-any
-        const chunks: any[] = [];
-        // deno-lint-ignore no-explicit-any
-        res.on("data", (chunk: any) => chunks.push(chunk));
-        res.on("end", () => {
-          // deno-lint-ignore no-explicit-any
-          const body = (mod as any).Buffer
-            // deno-lint-ignore no-explicit-any
-            ? (globalThis as any).Buffer.concat(chunks)
-            : new Uint8Array(chunks.flatMap((c) => Array.from(c)));
-          const headers = new Headers();
-          for (const [key, value] of Object.entries(res.headers)) {
-            if (value !== undefined) {
-              headers.set(key, Array.isArray(value) ? value.join(", ") : String(value));
-            }
+      }
+      if (match) return i;
+    }
+    return -1;
+  };
+  const CRLF = [13, 10];
+  const CRLFCRLF = [13, 10, 13, 10];
+  const readLine = async (): Promise<Uint8Array | null> => {
+    for (;;) {
+      const idx = findSeq(CRLF);
+      if (idx !== -1) {
+        const line = take(idx - pos);
+        take(2);
+        return line;
+      }
+      if (have() > 65536) {
+        throw new Error("Response line too long");
+      }
+      if (!(await fill())) {
+        return have() > 0 ? take(have()) : null;
+      }
+    }
+  };
+
+  try {
+    // --- request (GET only) ---
+    const lines = [
+      `GET ${requestPath} HTTP/1.1`,
+      `Host: ${url.host}`,
+      "Connection: close",
+      ...Object.entries(options.headers ?? {}).map(([key, value]) => `${key}: ${value}`),
+    ];
+    await conn.write(encoder.encode(lines.join("\r\n") + "\r\n\r\n"));
+
+    // --- response head ---
+    let headEnd = findSeq(CRLFCRLF);
+    for (;;) {
+      if (headEnd !== -1) break;
+      if (have() > 65536) throw new Error("Response headers too large");
+      if (!(await fill())) throw new Error("Connection closed before response");
+      headEnd = findSeq(CRLFCRLF);
+    }
+    const headStr = decoder.decode(take(headEnd - pos));
+    take(4); // the \r\n\r\n
+    const headParts = headStr.split("\r\n");
+    const statusMatch = (headParts[0] ?? "").match(/^HTTP\/1\.[01] (\d{3})/);
+    if (!statusMatch) {
+      throw new Error(`Malformed status line: ${headParts[0] ?? "<empty>"}`);
+    }
+    const status = Number(statusMatch[1]);
+    const respHeaderMap: Record<string, string> = {};
+    for (const line of headParts.slice(1)) {
+      const colon = line.indexOf(":");
+      if (colon > 0) {
+        respHeaderMap[line.slice(0, colon).trim().toLowerCase()] = line.slice(colon + 1).trim();
+      }
+    }
+
+    // redirect:"error" — never follow a 3xx.
+    if (status >= 300 && status < 400) {
+      throw new Error(`Redirect not allowed (HTTP ${status})`);
+    }
+    // Declared-length precheck: refuse before buffering a single byte.
+    const declaredLen = Number(respHeaderMap["content-length"]);
+    if (Number.isFinite(declaredLen) && declaredLen > maxBytes) {
+      throw new Error(`Response exceeds byte cap (${maxBytes} bytes)`);
+    }
+
+    // --- body, with the cap enforced mid-read ---
+    let body: Uint8Array<ArrayBuffer> = new Uint8Array(0);
+    const append = (chunk: Uint8Array<ArrayBuffer>): void => {
+      body = body.length ? concatBytes(body, chunk) : chunk;
+      if (body.length > maxBytes) {
+        throw new Error(`Response exceeds byte cap (${maxBytes} bytes)`);
+      }
+    };
+    if (Number.isFinite(declaredLen)) {
+      while (body.length < declaredLen) {
+        const need = Math.min(declaredLen - body.length, 65536);
+        if (!(await ensure(need))) {
+          throw new Error("Connection closed before body complete");
+        }
+        append(take(Math.min(need, have())));
+      }
+    } else if (/(^|,|\s)chunked(\s|,|$)/i.test(respHeaderMap["transfer-encoding"] ?? "")) {
+      for (;;) {
+        const sizeLine = await readLine();
+        if (sizeLine === null) {
+          throw new Error("Connection closed in chunked body");
+        }
+        let sizeText = "";
+        for (const byte of sizeLine) {
+          sizeText += byte >= 32 && byte < 127 ? String.fromCharCode(byte) : " ";
+        }
+        const semi = sizeText.indexOf(";");
+        if (semi >= 0) sizeText = sizeText.slice(0, semi);
+        const size = parseInt(sizeText.trim(), 16);
+        if (Number.isNaN(size)) throw new Error("Malformed chunk size");
+        if (size === 0) break;
+        let remaining = size;
+        while (remaining > 0) {
+          const need = Math.min(remaining, 65536);
+          if (!(await ensure(need))) {
+            throw new Error("Connection closed in chunked body");
           }
-          resolve(new Response(body, { status, headers }));
-        });
-        res.on("error", reject);
-      },
+          const chunk = take(Math.min(need, have()));
+          remaining -= chunk.length;
+          append(chunk);
+        }
+        const postChunk = await readLine();
+        if (postChunk === null || postChunk.length !== 0) {
+          throw new Error("Malformed chunked framing");
+        }
+      }
+    } else {
+      // No length, no chunking: read until the connection closes.
+      for (;;) {
+        if (!(await ensure(1))) break;
+        append(take(have()));
+      }
+    }
+    if (deadlineFired) {
+      throw new Error(`Fetch deadline exceeded (${deadlineMs}ms)`);
+    }
+
+    const respHeaders = new Headers();
+    for (const [key, value] of Object.entries(respHeaderMap)) {
+      if (key === "content-length" || key === "transfer-encoding") continue;
+      respHeaders.set(key, value);
+    }
+    respHeaders.set("content-length", String(body.length));
+    safeClose();
+    return new Response(body, { status, headers: respHeaders });
+  } catch (err) {
+    if (deadlineFired) {
+      throw new Error(`Fetch deadline exceeded (${deadlineMs}ms)`);
+    }
+    safeClose();
+    throw err instanceof Error ? err : new Error(`Pinned fetch failed: ${String(err)}`);
+  } finally {
+    clearTimeout(deadlineTimer);
+  }
+}
+
+/**
+ * Upgrade a TCP connection to TLS, with SNI + strict certificate validation
+ * against `hostname`. Deno renamed this primitive across major versions:
+ * `startTls` (2.x, local) and `createSecureConn` (1.x, the deployed
+ * edge-runtime). Neither has an option to skip certificate validation. The
+ * probe keeps one code path working on every Deno the estate runs.
+ */
+async function upgradeTls(conn: Deno.Conn, hostname: string): Promise<Deno.Conn> {
+  const deno = Deno as unknown as {
+    startTls?: (
+      c: Deno.Conn,
+      options?: { hostname?: string },
+    ) => Promise<Deno.Conn>;
+    createSecureConn?: (
+      c: Deno.Conn,
+      options?: { hostname?: string },
+    ) => Promise<Deno.Conn>;
+  };
+  const upgrade = deno.startTls ?? deno.createSecureConn;
+  if (!upgrade) {
+    throw new Error(
+      "No TLS upgrade API in this runtime (Deno.startTls / Deno.createSecureConn)",
     );
-    req.on("error", reject);
-    req.on("timeout", () => {
-      req.destroy();
-      reject(new Error("Fetch timeout"));
-    });
-    req.end();
-  });
+  }
+  return upgrade(conn, { hostname });
+}
+
+/** Join two byte arrays into a new one. */
+function concatBytes(
+  a: Uint8Array<ArrayBuffer>,
+  b: Uint8Array<ArrayBuffer>,
+): Uint8Array<ArrayBuffer> {
+  const out = new Uint8Array(a.length + b.length);
+  out.set(a, 0);
+  out.set(b, a.length);
+  return out;
 }
 
 /**

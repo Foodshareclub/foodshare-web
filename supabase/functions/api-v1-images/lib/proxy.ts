@@ -10,14 +10,59 @@ import {
   ValidationError,
 } from "../../_shared/errors.ts";
 import { compressImage } from "../../_shared/compression/index.ts";
-import { validateImageUrl } from "../../_shared/url-validation.ts";
-import { detectFormat, downloadImage, logUploadMetrics } from "../../_shared/image-utils.ts";
+import {
+  fetchPinned,
+  resolveAndValidateUrl,
+  validateImageUrl,
+} from "../../_shared/url-validation.ts";
+import { detectFormat, logUploadMetrics } from "../../_shared/image-utils.ts";
 import {
   checkRateLimit,
   isClientWritableBucket,
   scopedUploadPath,
   uploadImage,
 } from "./storage.ts";
+
+/**
+ * Fetch an external image through the SSRF primitive.
+ *
+ * Replaces the exact-string hostname blocklist, which only matched hostname
+ * strings: a decimal IP (2130706433), an IPv4-mapped IPv6
+ * ([::ffff:169.254.169.254]) or any public-looking host that RESOLVES to an
+ * internal address (DNS rebinding) sailed through it. The gate here
+ * resolves A + AAAA and refuses if ANY answer is private/internal, then
+ * fetches with DNS pinned to the validated IP (the pin is the rebind
+ * barrier), HTTPS only, redirects rejected, and the body byte-capped
+ * mid-read (10 MB, the downloadImage cap).
+ */
+async function fetchExternalImageBytes(imageUrl: string): Promise<Uint8Array> {
+  const validation = await resolveAndValidateUrl(imageUrl, { allowHttp: false });
+  if (!validation.valid) {
+    throw new ValidationError(`Invalid image URL: ${validation.reason}`);
+  }
+  // Fail-closed: no validated IP → refuse. Never fetch the unpinned URL
+  // (that would re-resolve the hostname and reopen the rebind window).
+  if (!validation.resolvedIps || validation.resolvedIps.length === 0) {
+    throw new ValidationError("Image URL validation failed: no resolved IP");
+  }
+  let response: Response;
+  try {
+    response = await fetchPinned(imageUrl, validation.resolvedIps[0], {
+      timeout: 10_000,
+      maxBytes: 10 * 1024 * 1024,
+      headers: { "User-Agent": "FoodShare-ImageAPI/1.0" },
+    });
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("byte cap")) {
+      throw new PayloadTooLargeError("Image too large (max 10MB)", 10 * 1024 * 1024);
+    }
+    throw err;
+  }
+  if (!response.ok) {
+    throw new ValidationError(`Failed to fetch: ${response.status}`);
+  }
+  return new Uint8Array(await response.arrayBuffer());
+}
 
 /**
  * Proxy an external image — download, compress, and re-upload.
@@ -44,49 +89,15 @@ export async function handleProxy(ctx: HandlerContext): Promise<Response> {
     throw new ValidationError("Missing 'url' field");
   }
 
+  // Image plausibility (extension / known host); the SSRF gate is below.
   const urlValidation = validateImageUrl(imageUrl);
   if (!urlValidation.valid) {
     throw new ValidationError(`Invalid image URL: ${urlValidation.reason}`);
   }
 
-  // Additional SSRF protection: block private IPs and localhost even if
-  // validation passed (defense-in-depth). The URL hostname is available
-  // after validateImageUrl ran its checks.
-  const parsedUrl = new URL(imageUrl);
-  const blockedHostnames = [
-    "localhost",
-    "127.0.0.1",
-    "::1",
-    "[::1]",
-    "0.0.0.0",
-    "169.254.169.254", // AWS metadata
-    "fd00:ec2::254", // AWS IPv6 metadata
-    "metadata.google.internal",
-    "metadata.goog",
-    "kubernetes.default",
-    "kubernetes.default.svc",
-    "host.docker.internal",
-    "host.containers.internal",
-  ];
-  if (blockedHostnames.includes(parsedUrl.hostname.toLowerCase())) {
-    throw new ValidationError("Access to local/private endpoints is not allowed");
-  }
-
-  // Enforce HTTPS only for image proxy
-  if (parsedUrl.protocol !== "https:") {
-    throw new ValidationError("Only HTTPS URLs are allowed for image proxy");
-  }
-
-  const response = await fetch(imageUrl, {
-    headers: { "User-Agent": "FoodShare-ImageAPI/1.0" },
-    signal: AbortSignal.timeout(10000),
-  });
-
-  if (!response.ok) {
-    throw new ValidationError(`Failed to fetch: ${response.status}`);
-  }
-
-  const imageData = new Uint8Array(await response.arrayBuffer());
+  // SSRF gate + fetch: resolved-IP validation, DNS-pinned, HTTPS-only,
+  // redirects rejected, byte-capped mid-read (fetchExternalImageBytes).
+  const imageData = await fetchExternalImageBytes(imageUrl);
 
   if (imageData.length > 10 * 1024 * 1024) {
     throw new PayloadTooLargeError(
@@ -159,39 +170,9 @@ export async function handleUploadFromUrl(
     throw new ValidationError("Missing imageUrl");
   }
 
-  // SSRF protection: block private IPs and localhost
-  try {
-    const parsedUrl = new URL(imageUrl);
-    const blockedHostnames = [
-      "localhost",
-      "127.0.0.1",
-      "::1",
-      "[::1]",
-      "0.0.0.0",
-      "169.254.169.254", // AWS metadata
-      "fd00:ec2::254", // AWS IPv6 metadata
-      "metadata.google.internal",
-      "metadata.goog",
-      "kubernetes.default",
-      "kubernetes.default.svc",
-      "host.docker.internal",
-      "host.containers.internal",
-    ];
-    if (blockedHostnames.includes(parsedUrl.hostname.toLowerCase())) {
-      throw new ValidationError("Access to local/private endpoints is not allowed");
-    }
-    // Enforce HTTPS only
-    if (parsedUrl.protocol !== "https:") {
-      throw new ValidationError("Only HTTPS URLs are allowed for image upload");
-    }
-  } catch (e: any) {
-    if (e instanceof ValidationError) {
-      throw e;
-    }
-    throw new ValidationError(`Invalid URL format: ${e.message}`);
-  }
-
-  const imageData = await downloadImage(imageUrl);
+  // SSRF gate + fetch: resolved-IP validation, DNS-pinned, HTTPS-only,
+  // redirects rejected, byte-capped mid-read (fetchExternalImageBytes).
+  const imageData = await fetchExternalImageBytes(imageUrl);
 
   if (imageData.length > 10 * 1024 * 1024) {
     throw new PayloadTooLargeError(
