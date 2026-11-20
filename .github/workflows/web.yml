@@ -329,7 +329,7 @@ jobs:
         with:
           name: blob-report-${{ matrix.shardIndex }}
           path: blob-report/
-          retention-days: 14
+          retention-days: 3
 
   merge-e2e-reports:
     name: Merge E2E Reports
@@ -376,7 +376,7 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report/
-          retention-days: 14
+          retention-days: 3
 
   build-and-publish:
     name: Build and publish production image
