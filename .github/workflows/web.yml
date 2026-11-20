@@ -177,9 +177,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.next/cache
-          key: nextjs-${{ hashFiles('bun.lock', 'next.config.ts', 'package.json') }}-${{ github.sha }}
+          key: nextjs-${{ hashFiles('bun.lock', 'next.config.ts', 'package.json') }}
           restore-keys: |
-            nextjs-${{ hashFiles('bun.lock', 'next.config.ts', 'package.json') }}-
             nextjs-
 
       - name: Build
