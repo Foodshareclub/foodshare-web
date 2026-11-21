@@ -126,7 +126,20 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
 
       - name: Install Playwright browsers
-        run: bunx --bun playwright install --with-deps chromium
+        # Do not use --with-deps here. That flag runs `playwright install-deps`
+        # after the browser download, which escalates with sudo to apt-get the
+        # browser's shared libraries. The self-hosted runner is a rootless
+        # Podman container with NoNewPrivileges=true and CAP_SETUID dropped, so
+        # sudo cannot start and the job fails before testing anything:
+        #
+        #   sudo: The "no new privileges" flag is set, which prevents sudo
+        #   from running as root.
+        #
+        # The runner image already carries Chromium's shared libraries (see the
+        # ghrunner Containerfile), so install the browser only. If the image
+        # ever loses one, the browser launch names the missing library instead
+        # of the job failing in apt.
+        run: bunx --bun playwright install chromium
 
       - name: Build production bundle
         run: bun run build
