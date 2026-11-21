@@ -39,7 +39,7 @@ export interface CategoryItemProps {
 export function CategoryItem({
   id,
   label,
-  icon,
+  icon: Icon,
   isActive = false,
   tabIndex,
   onClick,
@@ -71,32 +71,37 @@ export function CategoryItem({
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       className={cn(
-        "relative flex min-h-14 min-w-14 flex-col items-center justify-center gap-1.5 px-2 py-2",
-        "transition-colors duration-200 hover:bg-muted motion-reduce:transition-none",
-        isActive && "bg-primary/5",
+        "relative flex min-h-14 min-w-14 flex-col items-center justify-center gap-1.5 px-3 py-2",
+        "transition-all duration-200 motion-reduce:transition-none cursor-pointer",
+        isActive
+          ? "text-foreground font-semibold"
+          : "text-muted-foreground font-medium opacity-70 hover:opacity-100 hover:text-foreground",
         "rounded-lg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
         className,
       )}
     >
-      {icon && (
-        <span className={cn(isActive ? "text-primary" : "text-muted-foreground")} aria-hidden="true">
-          {(() => {
-            const Icon = icon;
-            return <Icon className="size-5 md:size-6" strokeWidth={isActive ? 2 : 1.5} />;
-          })()}
+      {Icon && (
+        <span
+          className={cn(
+            "transition-colors duration-200",
+            isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+          )}
+          aria-hidden="true"
+        >
+          <Icon className="size-5 md:size-6" strokeWidth={isActive ? 2 : 1.75} />
         </span>
       )}
       <span
         className={cn(
-          "select-none whitespace-nowrap text-xs",
+          "select-none whitespace-nowrap text-xs transition-colors duration-200",
           isActive ? "font-semibold text-foreground" : "font-medium text-muted-foreground",
         )}
       >
         {label}
       </span>
 
-      {/* Active Indicator - Bottom Border */}
-      {isActive && <div className="absolute bottom-0 inset-x-2 h-0.5 bg-primary rounded-full" />}
+      {/* Airbnb Active Indicator - Bottom Border */}
+      {isActive && <div className="absolute bottom-0 inset-x-2 h-0.5 bg-foreground rounded-full" />}
     </button>
   );
 }

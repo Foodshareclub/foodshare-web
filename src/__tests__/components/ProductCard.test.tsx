@@ -69,6 +69,7 @@ describe("ProductCard Airbnb Design", () => {
 
     // ((4 * 5) + (1 * 4)) / 5 = 24 / 5 = 4.8
     expect(screen.getByText("4.8")).toBeTruthy();
+    expect(screen.getByText("(5)")).toBeTruthy();
   });
 
   test("renders 'Reserved' badge when product is arranged", () => {

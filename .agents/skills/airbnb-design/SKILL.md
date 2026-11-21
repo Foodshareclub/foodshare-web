@@ -14,7 +14,7 @@ Listing cards use a frameless presentation with a 4-line metadata hierarchy:
 - **Aspect Ratio & Geometry**: `aspect-[20/19]` rounded image container (`rounded-2xl overflow-hidden`).
 - **Line 1 (Title & Star Rating)**:
   - Listing name in `text-[15px] font-semibold leading-snug text-foreground truncate`.
-  - Right-aligned star rating badge: `★ 5.0` (computed from `five_star` and `four_star` review aggregates) or `★ New` for listings without reviews, using Lucide `Star` with `fill-amber-400 text-amber-400`.
+  - Right-aligned star rating badge: `★ 5.0 (12)` (computed rating score + count when reviews exist) or `★ New` for listings without reviews, using Lucide `Star` with `fill-amber-400 text-amber-400`.
 - **Line 2 (Host & Ownership)**:
   - Community members: `By <FirstName>` with `User` icon.
   - Organizations/Fridges: `Hosted by <Organization>` or `<FoodBank Name>` in `emerald-600 dark:emerald-400` with `Building2` icon.
@@ -61,6 +61,7 @@ Listing cards use a frameless presentation with a 4-line metadata hierarchy:
 - **3-Segment Pill Structure**:
   - `What` (keywords and query suggestions) | `Distance` (radius slider) | `Category` (category filter).
   - Divided by subtle 1px border lines (`h-8 w-px bg-border`).
+  - Tactile segment activation: Individual rounded pills inside the capsule (`rounded-full transition-all duration-200 cursor-pointer`, `activeSection ? "bg-muted shadow-xs" : "hover:bg-muted/40"`).
 - **Signature Brand Search Button**:
   - Circular brand red/pink trigger (`variant="brand"` with `--brand-primary` `#FF2D55`).
   - Tactile hover zoom (`hover:scale-105 active:scale-95 shadow-sm transition-all duration-200`).
@@ -69,7 +70,8 @@ Listing cards use a frameless presentation with a 4-line metadata hierarchy:
 ## 6. Category Carousel Navigation (`CategoryNavigation.tsx`)
 
 - Sleek circular scroll arrows (`size-8 shrink-0 rounded-full border-border/80 bg-background/95 shadow-xs hover:scale-105`).
-- Active category tab has bottom indicator bar (`h-0.5 bg-primary rounded-full`).
+- Active category tab has bottom indicator bar in foreground contrast (`h-0.5 bg-foreground rounded-full`).
+- Active tab text and icon highlighted in `text-foreground font-semibold`; inactive tabs in `text-muted-foreground opacity-70 hover:opacity-100 hover:text-foreground`.
 - Graceful fade-out when at carousel extremes (`disabled:opacity-0`).
 
 ## 7. Top-Right Profile Capsule (`DesktopMenu.tsx`)

@@ -500,12 +500,13 @@ FoodShare incorporates core Airbnb design patterns adapted for surplus food and 
 1. **Card Architecture (`ProductCard.tsx`)**:
    - Aspect ratio: `aspect-[20/19]` rounded image container (`rounded-2xl`).
    - Frameless layout with subtle hover elevation (`group-hover/card:shadow-md`).
-   - Star rating badge aligned top-right (`★ 5.0` or `★ New`).
+   - Star rating badge aligned top-right (`★ 5.0 (12)` or `★ New`).
    - Live status pill indicators (`🟢 Available` / `🟠 Reserved`).
    - Tactile image zoom (`group-hover/card:scale-[1.04]`).
 
 2. **Search Pill Navigation (`SearchBar.tsx`)**:
    - 3-segment pill (`What` | `Distance` | `Category`) with 1px dividers.
+   - Individual tactile pill activation (`rounded-full`, `hover:bg-muted/40`, `active:bg-muted shadow-xs`).
    - Circular brand coral trigger button (`variant="brand"` `#FF2D55`) with hover scale.
 
 3. **User Profile Capsule (`DesktopMenu.tsx`)**:
@@ -519,7 +520,8 @@ FoodShare incorporates core Airbnb design patterns adapted for surplus food and 
 
 5. **Category Scroller Navigation (`CategoryNavigation.tsx`)**:
    - Sleek 32px circular glass scroller buttons (`size-8 rounded-full border border-border/80 bg-background/95 shadow-xs`).
-   - Active bottom indicator bar (`h-0.5 bg-primary rounded-full`).
+   - Active bottom indicator bar in foreground contrast (`h-0.5 bg-foreground rounded-full`).
+   - Icon and label highlighted in `text-foreground font-semibold`.
 
 ---
 

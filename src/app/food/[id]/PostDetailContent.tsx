@@ -187,8 +187,8 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
           >
             {post.post_type === "fridge" || post.post_type === "foodbank" ? (
               <>
-                <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-                  <Building2 className="h-5 w-5" />
+                <div className="flex items-center justify-center size-11 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                  <Building2 className="size-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -213,8 +213,8 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
               </>
             ) : (
               <>
-                <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10 text-primary shrink-0">
-                  <User className="h-5 w-5" />
+                <div className="flex items-center justify-center size-11 rounded-full bg-primary/10 text-primary shrink-0">
+                  <User className="size-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("author")}</p>

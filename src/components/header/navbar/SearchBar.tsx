@@ -279,8 +279,8 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           aria-controls={activeSection === "what" ? `${searchId}-what` : undefined}
           aria-expanded={activeSection === "what"}
           className={cn(
-            "flex h-14 min-w-0 flex-[1.5] flex-col items-start justify-center gap-0.5 rounded-none ps-4 pe-2 text-start sm:h-16 sm:px-5",
-            activeSection === "what" && "bg-muted",
+            "flex h-14 min-w-0 flex-[1.5] flex-col items-start justify-center gap-0.5 rounded-full ps-4 pe-2 text-start sm:h-16 sm:px-5 transition-all duration-200 cursor-pointer",
+            activeSection === "what" ? "bg-muted shadow-xs" : "hover:bg-muted/40",
           )}
           onClick={() => setActiveSection(activeSection === "what" ? null : "what")}
         >
@@ -305,8 +305,8 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
             aria-controls={activeSection === "distance" ? `${searchId}-distance` : undefined}
             aria-expanded={activeSection === "distance"}
             className={cn(
-              "flex h-14 w-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-none px-2 text-start sm:h-16 sm:w-auto sm:min-w-0 sm:flex-1 sm:items-start sm:px-5",
-              activeSection === "distance" && "bg-muted",
+              "flex h-14 w-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-full px-2 text-start sm:h-16 sm:w-auto sm:min-w-0 sm:flex-1 sm:items-start sm:px-5 transition-all duration-200 cursor-pointer",
+              activeSection === "distance" ? "bg-muted shadow-xs" : "hover:bg-muted/40",
             )}
             onClick={() => setActiveSection(activeSection === "distance" ? null : "distance")}
           >
@@ -329,8 +329,8 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           aria-expanded={activeSection === "category"}
           aria-label={`${t("category")}: ${categoryLabel}`}
           className={cn(
-            "flex h-14 w-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-none px-2 text-start sm:h-16 sm:w-auto sm:min-w-0 sm:flex-1 sm:items-start sm:px-5",
-            activeSection === "category" && "bg-muted",
+            "flex h-14 w-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-full px-2 text-start sm:h-16 sm:w-auto sm:min-w-0 sm:flex-1 sm:items-start sm:px-5 transition-all duration-200 cursor-pointer",
+            activeSection === "category" ? "bg-muted shadow-xs" : "hover:bg-muted/40",
           )}
           onClick={() => setActiveSection(activeSection === "category" ? null : "category")}
         >

@@ -43,6 +43,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave, onClick }: Pr
   // Airbnb rating and recency computation
   const hasRating =
     (product.five_star != null && product.five_star > 0) || (product.four_star != null && product.four_star > 0);
+  const totalReviews = (product.five_star ?? 0) + (product.four_star ?? 0);
   const ratingScore = hasRating
     ? (
         ((product.five_star ?? 0) * 5 + (product.four_star ?? 0) * 4) /
@@ -86,6 +87,9 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave, onClick }: Pr
             <span className="shrink-0 flex items-center gap-1 text-[13px] font-semibold text-foreground">
               <Star className="size-3.5 fill-amber-400 text-amber-400" aria-hidden="true" />
               <span>{ratingScore}</span>
+              {totalReviews > 1 && (
+                <span className="text-muted-foreground text-xs font-normal">{`(${totalReviews})`}</span>
+              )}
             </span>
           ) : (
             <span className="shrink-0 flex items-center gap-1 text-[13px] font-medium text-foreground">
