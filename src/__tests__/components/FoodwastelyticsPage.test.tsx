@@ -53,14 +53,16 @@ mock.module("@/components/foodlytics/advisor-chat", () => ({
 }));
 
 describe("FoodwastelyticsPage", () => {
-  it("does NOT render 'My Household' tab or household logging components", () => {
+  it("does NOT render 'My Household' tab or household logging components, nor 'v2.0 International'", () => {
     render(<FoodwastelyticsPage />);
 
-    // Assert "My Household" is absent
+    // Assert "My Household" and version badges are absent
     expect(screen.queryByText("My Household")).toBeNull();
     expect(screen.queryByText("US Household Benchmark")).toBeNull();
     expect(screen.queryByText("Log Discarded Food")).toBeNull();
     expect(screen.queryByText("Add Waste Entry")).toBeNull();
+    expect(screen.queryByText("v2.0 International")).toBeNull();
+    expect(screen.queryByText("v2.0")).toBeNull();
   });
 
   it("renders global food waste intelligence header and planetary macro metrics", () => {
@@ -68,7 +70,6 @@ describe("FoodwastelyticsPage", () => {
 
     // Header copy
     expect(screen.getByText("Foodwastelytics")).toBeDefined();
-    expect(screen.getByText("v2.0 International")).toBeDefined();
     expect(screen.getByText(/Planetary food loss accounting/i)).toBeDefined();
     expect(screen.getByText(/UN SDG 12.3 Target/i)).toBeDefined();
 

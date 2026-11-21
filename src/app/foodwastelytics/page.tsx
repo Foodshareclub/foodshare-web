@@ -106,7 +106,6 @@ const UI = {
   navHeading: "Navigation",
   heroBadge: "UNEP & FAO Aligned • Global Food Waste Intelligence",
   heroTitle: "Foodwastelytics",
-  heroVersion: "v2.0 International",
   heroSubtitle:
     "Planetary food loss accounting, global agricultural supply chain benchmarks, and UN SDG 12.3 2030 halving models across world economies.",
   scopeAll: "All Global Economies",
@@ -844,11 +843,8 @@ Published by FoodShare Foodwastelytics (https://foodshare.club/foodwastelytics)
               <Globe className="size-3.5 animate-pulse" />
               <span>{UI.heroBadge}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
               <span>{UI.heroTitle}</span>
-              <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                {UI.heroVersion}
-              </span>
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">{UI.heroSubtitle}</p>
           </div>
