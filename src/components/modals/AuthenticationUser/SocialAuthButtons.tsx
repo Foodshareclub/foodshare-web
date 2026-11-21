@@ -31,7 +31,7 @@ export const SocialAuthButtons: React.FC<SocialAuthButtonsProps> = ({ onSelectPr
           disabled={disabled}
           onClick={() => onSelectProvider("google")}
           variant="outline"
-          className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
+          className="w-full h-12 border border-border/80 rounded-xl font-semibold text-sm hover:border-foreground/50 hover:bg-muted/40 active:scale-[0.99] transition-all cursor-pointer"
         >
           <Image src={google} alt="Google" width={20} height={20} className="w-5 h-5 me-3" />
           {t("Auth.continueWithGoogle")}
@@ -44,7 +44,7 @@ export const SocialAuthButtons: React.FC<SocialAuthButtonsProps> = ({ onSelectPr
           disabled={disabled}
           onClick={() => onSelectProvider("facebook")}
           variant="outline"
-          className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
+          className="w-full h-12 border border-border/80 rounded-xl font-semibold text-sm hover:border-foreground/50 hover:bg-muted/40 active:scale-[0.99] transition-all cursor-pointer"
         >
           <Image src={facebook} alt="Facebook" width={20} height={20} className="w-5 h-5 me-3" />
           {t("Auth.continueWithFacebook")}
@@ -57,7 +57,7 @@ export const SocialAuthButtons: React.FC<SocialAuthButtonsProps> = ({ onSelectPr
           disabled={disabled}
           onClick={() => onSelectProvider("apple")}
           variant="outline"
-          className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
+          className="w-full h-12 border border-border/80 rounded-xl font-semibold text-sm hover:border-foreground/50 hover:bg-muted/40 active:scale-[0.99] transition-all cursor-pointer"
         >
           <Image src={apple} alt="Apple" width={20} height={20} className="w-5 h-5 me-3" />
           {t("Auth.continueWithApple")}

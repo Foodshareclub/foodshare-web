@@ -543,6 +543,19 @@ FoodShare incorporates core Airbnb design patterns adapted for surplus food and 
    - Circular host attribution card (`size-12 rounded-full`) and community badge.
    - Coral brand gradient CTA button for contacting the sharer.
 
+9. **Map View, Markers & Popup Cards (`MapView.tsx`, `ProductPopup.tsx`, `leaflet.css`)**:
+   - 20px rounded popup card container with glass backdrop blur and soft shadow elevation.
+   - 145px rounded food cover image with warm organic fallback placeholder when no photo exists.
+   - Live availability badge pill (`padding: 2.5px 9px; border-radius: 9999px; font-weight: 600;`).
+   - Signature Airbnb brand coral gradient CTA button (`linear-gradient(135deg, #ff2d55 0%, #e6284d 100%)`) with hover glow.
+   - Circular glass close button and dark mode theme support.
+   - Tactile map marker pins with scale hover transitions.
+
+10. **Listing Creation & Authentication Experience (`BecomeSharerBlock.tsx`, `AuthenticationUserModal.tsx`)**:
+    - Floating `rounded-3xl` glass listing creation popover with tactile category cards and subtle icon badges.
+    - Floating `rounded-3xl` authentication dialog with 48px rounded-xl input fields and focus rings.
+    - Full-width brand coral primary action button and tactile social auth buttons.
+
 ---
 
 _This is a living document. Update as you build and discover new patterns!_

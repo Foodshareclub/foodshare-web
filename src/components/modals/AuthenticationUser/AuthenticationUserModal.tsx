@@ -6,7 +6,7 @@
  */
 
 import { useAuth } from "@/hooks/useAuth";
-import { ViewIcon, ViewOffIcon } from "@/utils/icons";
+import { AlertCircle, AlertTriangle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import React, { useState, useEffect, useTransition } from "react";
 import { InvitationStep } from "./InvitationStep";
@@ -306,9 +306,13 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
 
       {/* Modal */}
       <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && handleClose()}>
-        <DialogContent variant="glass" className="max-w-[568px] rounded-2xl p-0" aria-describedby={undefined}>
+        <DialogContent
+          variant="glass"
+          className="max-w-[560px] rounded-3xl p-0 border border-border/80 bg-background/98 backdrop-blur-2xl shadow-2xl overflow-hidden"
+          aria-describedby={undefined}
+        >
           {/* Header with proper accessibility */}
-          <DialogHeader className="border-b border-border py-4 px-6 relative">
+          <DialogHeader className="border-b border-border/80 py-4 px-6 relative">
             <DialogTitle className="text-base font-semibold text-center text-foreground">
               {activeMode === "login" ? t("logIn") : t("signUp")}
             </DialogTitle>
@@ -332,18 +336,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                   <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 p-4">
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0">
-                        <svg
-                          aria-hidden="true"
-                          className="h-5 w-5 text-orange-400"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
+                        <AlertTriangle className="size-5 text-orange-500" aria-hidden="true" />
                       </div>
                       <div className="flex-1">
                         <h3 className="text-sm font-medium text-orange-800">{t("modal.memoryOnlyTitle")}</h3>
@@ -365,22 +358,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                   <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0">
-                        <svg aria-hidden="true" className="h-5 w-5 text-blue-400 animate-spin" viewBox="0 0 24 24">
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            fill="none"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
+                        <Loader2 className="size-5 text-blue-500 animate-spin" aria-hidden="true" />
                       </div>
                       <p className="text-sm font-medium text-blue-800" role="status" aria-live="polite">
                         {t("modal.checkingStorage")}
@@ -393,18 +371,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                   <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0">
-                        <svg
-                          aria-hidden="true"
-                          className="h-5 w-5 text-red-400"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
+                        <AlertCircle className="size-5 text-red-500" aria-hidden="true" />
                       </div>
                       <div className="flex-1">
                         <h3 className="text-sm font-medium text-red-800">{t("modal.storageErrorTitle")}</h3>
@@ -459,7 +426,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                             onChange={(e) => setFirstName(e.target.value)}
                             autoComplete="given-name"
                             required
-                            className="h-11 rounded-lg border border-border hover:border-foreground focus:border-foreground focus:ring-1 focus:ring-foreground"
+                            className="h-12 rounded-xl border border-border/80 bg-background/50 hover:border-foreground/50 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20 text-sm px-4 transition-all"
                           />
                         </div>
                         <div className="flex-1">
@@ -473,7 +440,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                             onChange={(e) => setLastName(e.target.value)}
                             autoComplete="family-name"
                             required
-                            className="h-11 rounded-lg border border-border hover:border-foreground focus:border-foreground focus:ring-1 focus:ring-foreground"
+                            className="h-12 rounded-xl border border-border/80 bg-background/50 hover:border-foreground/50 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20 text-sm px-4 transition-all"
                           />
                         </div>
                       </div>
@@ -493,11 +460,11 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                         onBlur={handleEmailBlur}
                         autoComplete="email"
                         required
-                        className={`h-11 rounded-lg border ${
-                          emailError ? "border-red-500 dark:border-red-400" : "border-border"
-                        } hover:border-foreground focus:border-foreground focus:ring-1 ${
-                          emailError ? "focus:ring-red-500 dark:focus:ring-red-400" : "focus:ring-foreground"
-                        }`}
+                        className={`h-12 rounded-xl border ${
+                          emailError ? "border-red-500 dark:border-red-400" : "border-border/80"
+                        } bg-background/50 hover:border-foreground/50 focus:border-[#FF2D55] focus:ring-2 ${
+                          emailError ? "focus:ring-red-500/20" : "focus:ring-[#FF2D55]/20"
+                        } text-sm px-4 transition-all`}
                         aria-invalid={!!emailError}
                         aria-describedby={emailError ? "auth-email-error" : undefined}
                       />
@@ -521,16 +488,16 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                         onChange={(e) => setPassword(e.target.value)}
                         autoComplete={activeMode === "login" ? "current-password" : "new-password"}
                         required
-                        className="h-11 rounded-lg border border-border pe-12 hover:border-foreground focus:border-foreground focus:ring-1 focus:ring-foreground"
+                        className="h-12 rounded-xl border border-border/80 pe-12 bg-background/50 hover:border-foreground/50 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20 text-sm px-4 transition-all"
                       />
                       <button
                         type="button"
                         aria-label={showPassword ? t("hidePassword") : t("showPassword")}
                         aria-pressed={showPassword}
-                        className="absolute end-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded"
+                        className="absolute end-2 top-1/2 -translate-y-1/2 p-2 hover:bg-muted/60 rounded-lg text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                        {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                       </button>
                     </div>
 
@@ -540,7 +507,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     {/* Submit Button */}
                     <Button
                       type="submit"
-                      className="h-11 w-full brand-gradient text-white font-semibold text-base rounded-lg hover:brand-gradient-hover hover:-translate-y-px hover:shadow-lg hover:shadow-primary/40 active:translate-y-0 transition-all"
+                      className="h-12 w-full rounded-xl bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E6284D] hover:to-[#E03150] text-white font-semibold text-sm shadow-md hover:shadow-lg shadow-[#FF2D55]/20 hover:shadow-[#FF2D55]/30 active:scale-[0.99] transition-all cursor-pointer"
                       disabled={isPending}
                     >
                       {isPending

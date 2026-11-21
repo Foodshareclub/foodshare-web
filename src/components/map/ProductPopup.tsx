@@ -38,8 +38,12 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
 
   return (
     <div className="product-popup-card">
-      {image && (
+      {image ? (
         <Image src={image} alt={name} className="product-popup-image" width={280} height={160} loading="lazy" />
+      ) : (
+        <div className="product-popup-placeholder" aria-hidden="true">
+          <span className="text-3xl select-none">🍲</span>
+        </div>
       )}
 
       <h4 className="product-popup-title">{name}</h4>

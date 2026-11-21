@@ -139,5 +139,30 @@ Listing cards use a frameless presentation with a 4-line metadata hierarchy:
   - Available hours (`Clock`), transportation (`Truck`), and description sections.
   - Prominent primary action button in brand coral gradient (`bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white font-semibold h-12 rounded-xl shadow-md transition-all`).
 
+## 13. Map View, Markers & Popup Cards (`MapView.tsx`, `ProductPopup.tsx`, `leaflet.css`)
+
+- **Map Popup Card Geometry & Elevation**:
+  - `rounded-2xl` / `20px` radius container with glass backdrop blur (`background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(16px);`) and elevated soft shadow (`box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.18)`).
+  - High-aspect rounded cover image (`height: 145px; border-radius: 14px;`) with warm organic fallback placeholder (`.product-popup-placeholder`) when no photo is attached.
+  - Crisp typography: bold title (`font-size: 15px; font-weight: 700; color: #0f172a;`), live category/availability badge pill (`padding: 2.5px 9px; border-radius: 9999px; font-weight: 600;`), and distance line.
+  - Signature brand CTA button: Airbnb brand coral gradient button (`linear-gradient(135deg, #ff2d55 0%, #e6284d 100%)`, `border-radius: 12px; height: 38px; font-weight: 600;`) with tactile hover lift and shadow glow.
+  - Floating dismiss button: Circular semi-transparent glass close button (`border-radius: 50%; background: rgba(0, 0, 0, 0.55); color: #fff;`) anchored in top-right corner.
+  - Full dark mode support (`.dark .product-card-popup`).
+- **Tactile Map Markers**:
+  - Marker pins with smooth hover scale (`scale(1.15)`) and depth filter (`filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.16))`).
+  - Circular cluster badges with bold typography and hover transitions.
+
+## 14. Listing Creation & Auth Modals (`BecomeSharerBlock.tsx`, `AuthenticationUserModal.tsx`, `SocialAuthButtons.tsx`)
+
+- **Airbnb Listing Creation Popover (`BecomeSharerBlock.tsx`)**:
+  - `rounded-3xl border border-border/80 bg-background/95 backdrop-blur-2xl shadow-2xl p-3 sm:p-4 min-w-[320px]`.
+  - Category tiles with rounded-xl containers, subtle icon badges (`size-8 rounded-lg bg-muted/50`), bold category labels, and micro-interactions.
+  - Refined uppercase tracker headers (`text-[10px] font-bold text-muted-foreground uppercase tracking-wider`).
+- **Airbnb Authentication Experience (`AuthenticationUserModal.tsx`, `SocialAuthButtons.tsx`)**:
+  - Floating `rounded-3xl` glass dialog (`max-w-[560px] rounded-3xl border border-border/80 bg-background/98 backdrop-blur-2xl shadow-2xl`).
+  - Smooth 48px rounded-xl input fields (`h-12 rounded-xl border border-border/80 bg-background/50 hover:border-foreground/50 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20`).
+  - Full-width brand coral primary action button (`h-12 rounded-xl bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E6284D] hover:to-[#E03150] font-semibold text-white shadow-md active:scale-[0.99]`).
+  - Tactile social auth buttons (`h-12 rounded-xl border border-border/80 font-semibold text-sm hover:border-foreground/50 hover:bg-muted/40 active:scale-[0.99]`).
+
 
 

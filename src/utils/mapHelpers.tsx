@@ -34,7 +34,9 @@ export const generateProductPopupHTML = (product: InitialProductStateType, produ
         alt="${escapeHtml(name)}"
         class="product-popup-image"
       />`
-    : "";
+    : `<div class="product-popup-placeholder" aria-hidden="true">
+        <span style="font-size: 28px; user-select: none;">🍲</span>
+      </div>`;
 
   const distance = (product as unknown as { distance?: number }).distance;
   const distanceHtml =
