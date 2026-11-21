@@ -55,10 +55,14 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
+      # Bun re-links from its package cache on install, so a node_modules
+      # cache was both slower and stale the moment the linker strategy
+      # changed. This is the same cache the main pipeline writes, so the
+      # nightly reuses it instead of keeping a second copy.
       - uses: actions/cache@v4
         with:
-          path: node_modules
-          key: bun-daily-${{ hashFiles('bun.lock') }}-${{ runner.os }}
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('bun.lock') }}-${{ runner.os }}
           restore-keys: |
             bun-
       - run: bun install --frozen-lockfile
@@ -111,10 +115,14 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
+      # Bun re-links from its package cache on install, so a node_modules
+      # cache was both slower and stale the moment the linker strategy
+      # changed. This is the same cache the main pipeline writes, so the
+      # nightly reuses it instead of keeping a second copy.
       - uses: actions/cache@v4
         with:
-          path: node_modules
-          key: bun-daily-${{ hashFiles('bun.lock') }}-${{ runner.os }}
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('bun.lock') }}-${{ runner.os }}
           restore-keys: |
             bun-
       - run: bun install --frozen-lockfile
