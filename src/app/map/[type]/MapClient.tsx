@@ -18,6 +18,7 @@ import { useMapPosition } from "@/hooks/useMapPosition";
 import { useMapZoom } from "@/hooks/useMapZoom";
 import { createClusterIcon, useCustomMarkerIcon, useUserLocationIcon } from "@/hooks/useMarkerIcon";
 import { useWebGLRenderer } from "@/hooks/useWebGLRenderer";
+import { MAP_CONFIG } from "@/lib/config";
 import type { AuthUser } from "@/lib/data/auth";
 import { type LocationType, getCoordinates } from "@/types/product.types";
 
@@ -81,6 +82,12 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
 
   // State to track if component is mounted (for SSR safety)
   const [mounted, setMounted] = useState(false);
+  // Generate unique map container key per mount and category to prevent React DOM node reuse
+  const [mapKey, setMapKey] = useState(() => `map-${type}-${Date.now()}`);
+
+  useEffect(() => {
+    setMapKey(`map-${type}-${Date.now()}`);
+  }, [type]);
 
   // Locations state - initialized with server data, updated by ViewportLoader
   const [locations, setLocations] = useState<LocationType[]>(initialLocations);
@@ -135,11 +142,16 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
     }, 0);
   }, [initialLocations]);
 
-  // Set mounted state for SSR safety
+  // Set mounted state for SSR safety and ensure container clean slate
   useEffect(() => {
-    setTimeout(() => {
-      setMounted(true);
-    }, 0);
+    setMounted(true);
+    return () => {
+      // Clear any dangling _leaflet_id on unmount to avoid "Map container is being reused" on soft reload
+      const containers = document.querySelectorAll(".leaflet-container");
+      containers.forEach((el) => {
+        delete (el as unknown as { _leaflet_id?: number })._leaflet_id;
+      });
+    };
   }, []);
 
   // Map center priority: Saved position > User's ACTUAL location > Nearby products > Timezone/Locale fallback
@@ -187,7 +199,6 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
           mapMode={true}
         />
         <div className="relative h-map w-full isolate">
-          <NavigateButtons navigateTo={type} title={"Show posts"} />
           <div className="h-full w-full animate-pulse bg-muted flex items-center justify-center">
             <div className="text-center">
               <div className="text-4xl mb-4">🗺️</div>
@@ -195,6 +206,7 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
             </div>
           </div>
         </div>
+        <NavigateButtons navigateTo={type} title="Show listings" />
       </div>
     );
   }
@@ -215,7 +227,6 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
         mapMode={true}
       />
       <div className="relative h-map w-full isolate contain-layout contain-style contain-paint">
-        <NavigateButtons navigateTo={type} title={"Show posts"} />
         {/* Show loading skeleton while determining map center */}
         {isCenterLoading ? (
           <div className="h-full w-full animate-pulse bg-muted flex items-center justify-center">
@@ -226,6 +237,7 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
           </div>
         ) : (
           <MapContainer
+            key={mapKey}
             style={{
               height: "100%",
               width: "100%",
@@ -261,17 +273,17 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
             {/* Viewport-based location loading - fetches markers as user pans/zooms */}
             <ViewportLoader productType={type} onLocationsLoaded={handleLocationsLoaded} />
 
-            {/* Beautiful CartoDB Voyager tiles with GPU acceleration */}
+            {/* Map Tiles (OSM by default, CARTO Voyager when API key is provided) */}
             <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-              maxZoom={20}
+              url={MAP_CONFIG.tileUrl}
+              attribution={MAP_CONFIG.tileAttribution}
+              maxZoom={19}
               minZoom={2}
               tileSize={256}
               updateWhenIdle={true}
               updateWhenZooming={false}
               keepBuffer={4}
-              maxNativeZoom={18}
+              maxNativeZoom={19}
               crossOrigin={true}
               className="gpu-accelerated-tiles"
             />
@@ -336,6 +348,7 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
           </div>
         )}
       </div>
+      <NavigateButtons navigateTo={type} title="Show listings" />
     </div>
   );
 }

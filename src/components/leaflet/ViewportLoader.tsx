@@ -98,6 +98,24 @@ const ViewportLoader: React.FC<ViewportLoaderProps> = ({ productType, onLocation
     [productType, onLocationsLoaded],
   );
 
+  const sanitizeBounds = (mapBounds: L.LatLngBounds): Bounds => {
+    const north = Math.max(-90, Math.min(90, mapBounds.getNorth()));
+    const south = Math.max(-90, Math.min(90, mapBounds.getSouth()));
+    let east = mapBounds.getEast();
+    let west = mapBounds.getWest();
+
+    // When zoomed out, longitude bounds can exceed [-180, 180] or wrap around
+    if (east - west >= 360) {
+      east = 180;
+      west = -180;
+    } else {
+      east = Math.max(-180, Math.min(180, east));
+      west = Math.max(-180, Math.min(180, west));
+    }
+
+    return { north, south, east, west };
+  };
+
   const map = useMapEvents({
     moveend() {
       if (debounceRef.current) {
@@ -105,13 +123,7 @@ const ViewportLoader: React.FC<ViewportLoaderProps> = ({ productType, onLocation
       }
 
       debounceRef.current = setTimeout(() => {
-        const mapBounds = map.getBounds();
-        void loadLocations({
-          north: mapBounds.getNorth(),
-          south: mapBounds.getSouth(),
-          east: mapBounds.getEast(),
-          west: mapBounds.getWest(),
-        });
+        void loadLocations(sanitizeBounds(map.getBounds()));
       }, DEBOUNCE_MS);
     },
   });
@@ -120,13 +132,7 @@ const ViewportLoader: React.FC<ViewportLoaderProps> = ({ productType, onLocation
   useEffect(() => {
     // Small delay to ensure map is fully initialized
     const timer = setTimeout(() => {
-      const mapBounds = map.getBounds();
-      void loadLocations({
-        north: mapBounds.getNorth(),
-        south: mapBounds.getSouth(),
-        east: mapBounds.getEast(),
-        west: mapBounds.getWest(),
-      });
+      void loadLocations(sanitizeBounds(map.getBounds()));
     }, 100);
 
     return () => {

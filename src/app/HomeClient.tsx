@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyListingState } from "@/components/emptyState/EmptyListingState";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 import { ProductGrid } from "@/components/productCard/ProductGrid";
 import { Button } from "@/components/ui/button";
@@ -436,6 +437,22 @@ export function HomeClient({
     };
   }, [searchParams, searchTerm, userLocation, setUserLocation, geoDistance, fetchNearby, productType, radiusMeters]);
 
+  const handleClearSearch = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("key_word");
+    params.delete("q");
+    const query = params.toString();
+    router.push(query ? `${window.location.pathname}?${query}` : window.location.pathname);
+  }, [searchParams, router]);
+
+  const isEmpty =
+    !initialFetchFailed &&
+    !paginationFailed &&
+    products.length === 0 &&
+    !isFetchingNearby &&
+    !isFetchingMore &&
+    !hasMore;
+
   return (
     <>
       <NavigateButtons title="Show map" />
@@ -454,27 +471,16 @@ export function HomeClient({
           </Button>
         </div>
       )}
-      {!initialFetchFailed &&
-        !paginationFailed &&
-        !products.length &&
-        !isFetchingNearby &&
-        !isFetchingMore &&
-        !hasMore &&
-        !effectiveIsLocationFiltered && (
-          <output className="block px-4 py-8 text-center text-muted-foreground">{t("no_listings_found")}</output>
-        )}
-      {!initialFetchFailed &&
-        !paginationFailed &&
-        effectiveIsLocationFiltered &&
-        !hasMore &&
-        products.length === 0 &&
-        !isFetchingNearby && (
-          <div className="text-center py-8 text-muted-foreground">
-            {searchTerm
-              ? t("no_listings_found")
-              : `Nothing shared within ${formatDistance(displayRadius, locale)} yet — be the first to post in your area!`}
-          </div>
-        )}
+      {isEmpty && (
+        <EmptyListingState
+          productType={productType}
+          searchTerm={searchTerm}
+          isLocationFiltered={effectiveIsLocationFiltered}
+          radiusMeters={displayRadius}
+          locale={locale}
+          onClearSearch={searchTerm ? handleClearSearch : undefined}
+        />
+      )}
     </>
   );
 }

@@ -32,7 +32,9 @@ globalThis.fetch = (async (input: RequestInfo | URL) => {
 }) as typeof fetch;
 mock.module("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams("lat=1&lng=2&radius=1000&distance=nearby&key_word=Banana"),
-  useRouter: () => ({ refresh: mock() }),
+  useRouter: () => ({ refresh: mock(), push: mock(), replace: mock() }),
+  usePathname: () => "/",
+  redirect: mock(),
 }));
 mock.module("next-intl", () => ({
   useLocale: () => "en",

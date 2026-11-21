@@ -46,9 +46,10 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
 
   // Request location on mount
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       requestLocation();
     }, 0);
+    return () => clearTimeout(timer);
   }, [requestLocation]);
 
   return (

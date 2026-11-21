@@ -7,14 +7,7 @@
  */
 
 // Re-export from constants for backwards compatibility
-export {
-  STORAGE_BUCKETS,
-  IMAGE_CONFIG,
-  API_CONFIG,
-  PAGINATION,
-  ROUTES,
-  CACHE_TIMES,
-} from "./constants";
+export { STORAGE_BUCKETS, IMAGE_CONFIG, API_CONFIG, PAGINATION, ROUTES, CACHE_TIMES } from "./constants";
 
 /**
  * Performance thresholds based on Google's Core Web Vitals
@@ -61,6 +54,22 @@ export const MAP_CONFIG = {
   maxLocationsPerViewport: 500,
   /** Viewport cache grid size in degrees */
   viewportCacheGridSize: 0.1,
+  /** CARTO Basemaps API key (optional — falls back to standard OpenStreetMap tiles) */
+  cartoApiKey: process.env.NEXT_PUBLIC_CARTO_API_KEY || "",
+  /** Tile URL template: relies on OpenStreetMap (OSM) by default, upgrades to CARTO Voyager when API key is provided */
+  tileUrl: process.env.NEXT_PUBLIC_CARTO_API_KEY
+    ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${process.env.NEXT_PUBLIC_CARTO_API_KEY}`
+    : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  /** Backward-compatible alias */
+  cartoTileUrl: process.env.NEXT_PUBLIC_CARTO_API_KEY
+    ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${process.env.NEXT_PUBLIC_CARTO_API_KEY}`
+    : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  /** Map tile attribution matching active provider */
+  tileAttribution: process.env.NEXT_PUBLIC_CARTO_API_KEY
+    ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  /** Identifying contact email for OpenStreetMap Nominatim geocoding policy */
+  geocodingContactEmail: process.env.NEXT_PUBLIC_NOMINATIM_EMAIL || "tamerlanium@gmail.com",
 } as const;
 
 /**

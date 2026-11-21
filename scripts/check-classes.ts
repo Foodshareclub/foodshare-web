@@ -401,7 +401,9 @@ function emittedClasses(sources: string[]): Set<string> {
         //
         // Reading the pseudo-class as part of the name made every variant+state
         // utility look dead — 400-odd false positives, all of them real CSS.
-        for (const match of part.matchAll(/\.((?:\\[0-9a-fA-F]{1,6}\s?|\\.|[^\s.[\]:(])+)/g)) {
+        // Parens are excluded so compound :is(...) and :where(...) wrappers in
+        // Tailwind 4.3.5+ do not bleed their closing parenthesis into the token.
+        for (const match of part.matchAll(/\.((?:\\[0-9a-fA-F]{1,6}\s?|\\.|[^\s.[\]():])+)/g)) {
           found.add(unescapeSelector(match[1]));
         }
       }
