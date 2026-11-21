@@ -19,12 +19,8 @@ export const CONFIG = {
     internal: { read: 10000, write: 5000, delete: 1000 },
   },
 
-  // Circuit breaker
-  circuitBreaker: {
-    failureThreshold: 5,
-    resetTimeoutMs: 30000,
-    halfOpenRequests: 3,
-  },
+  // The circuit breaker lives in `_shared/upstash-breaker.ts` (10 minute
+  // cool-down, one half-open try) and is shared with every other Upstash user.
 
   // TTL presets (seconds)
   ttlPresets: {
@@ -37,6 +33,9 @@ export const CONFIG = {
     week: 604800,
   },
 
+  // Default TTL (seconds) for any write that does not carry one, so no key is
+  // ever written without an expiry. Mirrors `ttlPresets.medium`.
+  defaultTtlSeconds: 900,
   // Health thresholds
   healthThresholds: {
     latencyWarningMs: 100,
@@ -70,13 +69,6 @@ export enum KeyScope {
   Global = "global",
 }
 
-export interface CircuitBreakerState {
-  state: "closed" | "open" | "half-open";
-  failures: number;
-  lastFailure: number;
-  halfOpenRemaining: number;
-}
-
 export interface CacheMetrics {
   totalRequests: number;
   successfulRequests: number;
@@ -104,13 +96,6 @@ export interface ServiceCheckResult {
 // =============================================================================
 // In-Memory State (per instance)
 // =============================================================================
-
-export const circuitBreaker: CircuitBreakerState = {
-  state: "closed",
-  failures: 0,
-  lastFailure: 0,
-  halfOpenRemaining: CONFIG.circuitBreaker.halfOpenRequests,
-};
 
 export const metrics: CacheMetrics = {
   totalRequests: 0,

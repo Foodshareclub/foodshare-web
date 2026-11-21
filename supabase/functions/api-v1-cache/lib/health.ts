@@ -10,14 +10,27 @@ import { getClientIp } from "../../_shared/request-ip.ts";
 import { logger } from "../../_shared/logger.ts";
 import { getSupabaseClient } from "../../_shared/supabase.ts";
 import { isConfigured, notConfiguredReason } from "../../_shared/placeholder-config.ts";
-import {
-  type CheckResult,
-  circuitBreaker,
-  CONFIG,
-  metrics,
-  type ServiceCheckResult,
-} from "./types.ts";
-import { executeRedisCommand, isCircuitBreakerOpen, parseRedisInfo } from "./redis.ts";
+import { type CheckResult, CONFIG, metrics, type ServiceCheckResult } from "./types.ts";
+import { executeRedisCommand, getBreakerState, parseRedisInfo } from "./redis.ts";
+import { redisBreaker } from "../../_shared/upstash-redis.ts";
+import { classifyUpstashFailure, UPSTASH_TIMEOUT_MS } from "../../_shared/upstash-breaker.ts";
+// =============================================================================
+// Cached Redis health sample
+// =============================================================================
+//
+// `?check=health` is polled every few minutes by the watchdog. A live sample
+// is five Redis commands (PING plus four INFO reads), which on the free tier
+// (500,000 requests a month) is a real share of the budget. So the detailed
+// check reports from state it already has: the shared circuit breaker and the
+// last successful sample, and only takes a new sample when that one is older
+// than `HEALTH_SAMPLE_TTL_MS`. While the breaker skips Upstash it takes none.
+export const HEALTH_SAMPLE_TTL_MS = 60 * 60 * 1000;
+type DetailedHealth = Awaited<ReturnType<typeof performDetailedHealthCheck>>;
+let healthSample: { takenAt: number; result: DetailedHealth } | null = null;
+/** Test helper: forget the cached sample. */
+export function resetHealthSample(): void {
+  healthSample = null;
+}
 
 // =============================================================================
 // Detailed Health Check
@@ -221,16 +234,12 @@ async function performDetailedHealthCheck(
   }
 
   // 7. Circuit Breaker Check
+  const breakerState = getBreakerState();
   const circuitBreakerCheck: CheckResult = {
-    status: circuitBreaker.state === "closed"
-      ? "pass"
-      : circuitBreaker.state === "half-open"
-      ? "warn"
-      : "fail",
-    value: circuitBreaker.state,
-    message: `Circuit breaker is ${circuitBreaker.state}`,
+    status: breakerState === "closed" ? "pass" : breakerState === "half-open" ? "warn" : "fail",
+    value: breakerState,
+    message: `Circuit breaker is ${breakerState}`,
   };
-
   // Determine overall status
   const checks = {
     connectivity: connectivityCheck,
@@ -342,6 +351,18 @@ async function checkUpstashServices(supabase: any): Promise<{
       response: Response,
     ) => { ok: boolean; message: string },
   ): Promise<ServiceCheckResult & { skipped?: boolean }> => {
+    // Redis shares the circuit breaker with the cache and translation paths.
+    // While Upstash is being skipped the daily keep-alive must not spend a
+    // command (or fail): it reports the skip and the next run tries again.
+    const guardsRedis = service === "Redis" && isConfigured(url, token);
+    if (guardsRedis && !redisBreaker().allow()) {
+      return {
+        service,
+        status: "ok",
+        message: "Skipped: Upstash circuit open (quota, auth or timeout), retrying after cool-down",
+        skipped: true,
+      };
+    }
     if (!isConfigured(url, token)) {
       // A service whose value is the template's placeholder is not
       // configured. The estate's environment files are copied from the
@@ -360,9 +381,32 @@ async function checkUpstashServices(supabase: any): Promise<{
       const startTime = Date.now();
       const response = await fetch(`${url}${endpoint}`, {
         headers: { Authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(UPSTASH_TIMEOUT_MS),
       });
       const responseTime = Date.now() - startTime;
       const data = await response.json().catch(() => ({}));
+      if (guardsRedis) {
+        const failure = classifyUpstashFailure({
+          status: response.status,
+          message: typeof data?.error === "string" ? data.error : undefined,
+        });
+        if (failure) {
+          redisBreaker().recordFailure(failure);
+          if (failure === "quota") {
+            // Quota exhaustion is degraded service until the monthly reset,
+            // not a broken integration: report it without failing the check.
+            return {
+              service,
+              status: "ok",
+              message: "Degraded: Upstash quota exhausted until the monthly reset",
+              responseTime,
+              skipped: true,
+            };
+          }
+        } else {
+          redisBreaker().recordSuccess();
+        }
+      }
       const validation = validateFn(data, response);
       // The parsed service payload stays in this frame only. It is fed to
       // the validator and then dropped: a health endpoint must not echo
@@ -374,6 +418,9 @@ async function checkUpstashServices(supabase: any): Promise<{
         responseTime,
       };
     } catch (error) {
+      if (guardsRedis) {
+        redisBreaker().recordFailure(classifyUpstashFailure({ error }) ?? "unavailable");
+      }
       // A fixed message, not error.message. The canonical fetch failure
       // today is a generic "fetch failed" with the host in error.cause,
       // which this code never serializes — but the fixed message pins the
@@ -501,9 +548,9 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
   if (checkType === "ping") {
     return ok({
       success: true,
-      status: isCircuitBreakerOpen() ? "degraded" : "healthy",
+      status: redisBreaker().isDegraded() ? "degraded" : "healthy",
       version: CONFIG.version,
-      circuitBreaker: circuitBreaker.state,
+      circuitBreaker: getBreakerState(),
       timestamp: new Date().toISOString(),
     }, ctx);
   }
@@ -519,7 +566,34 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
     }, ctx);
   }
 
-  // Detailed Redis health check
+  // Detailed Redis health check, from cached state where possible.
+  //
+  // 1. A sample younger than HEALTH_SAMPLE_TTL_MS is returned as it is.
+  // 2. While the breaker is skipping Upstash, report degraded and make no call.
+  // 3. Otherwise take one live sample and cache it.
+  if (healthSample && Date.now() - healthSample.takenAt < HEALTH_SAMPLE_TTL_MS) {
+    return ok({
+      ...healthSample.result,
+      cached: true,
+      sampleAgeSeconds: Math.round((Date.now() - healthSample.takenAt) / 1000),
+      version: CONFIG.version,
+      timestamp: new Date().toISOString(),
+    }, ctx);
+  }
+  if (redisBreaker().wouldSkip()) {
+    const snapshot = redisBreaker().snapshot();
+    return ok({
+      status: "degraded",
+      redis: "skipped",
+      reason: `Upstash is being skipped (circuit ${snapshot.state}, last failure: ${
+        snapshot.lastFailureKind ?? "unknown"
+      }); the stack is running without it and retries after the cool-down`,
+      circuitBreaker: snapshot.state,
+      retryAfterSeconds: redisBreaker().retryAfterSeconds(),
+      version: CONFIG.version,
+      timestamp: new Date().toISOString(),
+    }, ctx);
+  }
   const [urlResult, tokenResult] = await Promise.all([
     secretsClient.rpc("get_secret_audited", {
       secret_name: "UPSTASH_REDIS_URL",
@@ -565,6 +639,9 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
     tokenResult.data,
   );
 
+  if (healthResult.checks.connectivity.status === "pass") {
+    healthSample = { takenAt: Date.now(), result: healthResult };
+  }
   logger.info("Cache health check completed", {
     status: healthResult.status,
     hitRate: healthResult.metrics.redis.hitRate,

@@ -25,7 +25,6 @@ export const DEFAULT_ALLOWED_ORIGINS = [
   `https://${Deno.env.get("SITE_DOMAIN") || "foodshare.club"}`,
   `https://www.${Deno.env.get("SITE_DOMAIN") || "foodshare.club"}`,
   "http://localhost:3000", // React dev
-  "http://localhost:3030", // FoodShare web local dev
   "http://localhost:5173", // Vite dev
   "http://localhost:8000", // Alternative dev
 ];

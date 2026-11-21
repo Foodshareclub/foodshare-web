@@ -9,8 +9,11 @@
  *
  * Improvements:
  * - Batch operations for better performance
- * - Pipeline support for multiple operations
- * - Automatic retry with exponential backoff
+ * - Pipeline support for multiple operations (one /pipeline request)
+ * - Shared Upstash client: short timeout, no retries, and the shared circuit
+ *   breaker (quota/auth/timeout skips Upstash for 10 minutes, then one
+ *   half-open try; every miss goes to the database)
+ * - Every write carries a TTL (SETEX) and a namespaced key (`trans:`, `user:locale:`)
  * - Cache warming for popular content
  * - Metrics tracking
  *
@@ -32,13 +35,18 @@
 
 import { logger } from "../../_shared/logger.ts";
 import { isConfigured, notConfiguredReason } from "../../_shared/placeholder-config.ts";
+import {
+  redisBreaker,
+  upstashCommand,
+  upstashPipeline,
+  type UpstashRedisCreds,
+  UpstashUnavailableError,
+} from "../../_shared/upstash-redis.ts";
 
 const CACHE_TTL = 86400; // 24 hours
 const CACHE_PREFIX = "trans";
 const USER_LOCALE_PREFIX = "user:locale";
 const USER_LOCALE_TTL = 604800; // 7 days
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 1000;
 
 /**
  * Redis client singleton (lazy initialization)
@@ -50,116 +58,63 @@ interface RedisClient {
   get(key: string): Promise<string | null>;
   mget(...keys: string[]): Promise<(string | null)[]>;
   setex(key: string, ttl: number, value: string): Promise<void>;
-  del(key: string): Promise<void>;
+  del(...keys: string[]): Promise<void>;
   keys(pattern: string): Promise<string[]>;
   pipeline(commands: string[][]): Promise<unknown[]>;
 }
 
 /**
- * Initialize Redis client if credentials are available
- */
-/**
- * Upstash REST API client (Enhanced)
- * Uses direct HTTP calls for fast cold starts
- * Includes retry logic and better error handling
+ * Upstash REST API client.
+ *
+ * A thin adapter over the shared client (`_shared/upstash-redis.ts`), which
+ * supplies the short timeout and the circuit breaker shared with the other
+ * Upstash users. It does not retry: a retry against an exhausted quota only
+ * spends more of it, and a cache miss is always safe (the database is the
+ * source of truth).
  */
 class UpstashRestClient implements RedisClient {
-  private url: string;
-  private token: string;
-  private retries: number;
-
-  constructor(url: string, token: string, retries: number = MAX_RETRIES) {
-    this.url = url;
-    this.token = token;
-    this.retries = retries;
+  private creds: UpstashRedisCreds;
+  constructor(url: string, token: string) {
+    this.creds = { url, token };
   }
-
-  private async execute(
-    command: string[],
-    attempt: number = 0,
-  ): Promise<unknown> {
-    try {
-      const response = await fetch(this.url, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(command),
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Upstash error: ${response.status} ${response.statusText}`,
-        );
-      }
-
-      const data = await response.json();
-      if (data.error) {
-        throw new Error(`Upstash error: ${data.error}`);
-      }
-      return data.result;
-    } catch (error) {
-      // Retry with exponential backoff
-      if (attempt < this.retries) {
-        const backoffMs = RETRY_DELAY_MS * Math.pow(2, attempt);
-        logger.warn("Redis command failed, retrying", {
-          attempt: attempt + 1,
-          backoffMs,
-          error: (error as Error).message,
-        });
-        await new Promise((resolve) => setTimeout(resolve, backoffMs));
-        return this.execute(command, attempt + 1);
-      }
-      throw error;
-    }
-  }
-
   async get(key: string): Promise<string | null> {
-    const result = await this.execute(["GET", key]);
+    const result = await upstashCommand(this.creds, ["GET", key]);
     return result as string | null;
   }
-
   async mget(...keys: string[]): Promise<(string | null)[]> {
     if (keys.length === 0) return [];
-    const result = await this.execute(["MGET", ...keys]);
+    const result = await upstashCommand(this.creds, ["MGET", ...keys]);
     return result as (string | null)[];
   }
-
   async setex(key: string, ttl: number, value: string): Promise<void> {
-    await this.execute(["SETEX", key, String(ttl), value]);
+    await upstashCommand(this.creds, ["SETEX", key, String(ttl), value]);
   }
-
-  async del(key: string): Promise<void> {
-    await this.execute(["DEL", key]);
+  async del(...keys: string[]): Promise<void> {
+    if (keys.length === 0) return;
+    await upstashCommand(this.creds, ["DEL", ...keys]);
   }
-
   async keys(pattern: string): Promise<string[]> {
-    const result = await this.execute(["KEYS", pattern]);
+    const result = await upstashCommand(this.creds, ["KEYS", pattern]);
     return result as string[];
   }
-
   /**
-   * Pipeline multiple commands for better performance
+   * Send the commands in one `/pipeline` request (same command count, one
+   * round trip, one breaker decision).
    */
   async pipeline(commands: string[][]): Promise<unknown[]> {
-    const results: unknown[] = [];
-
-    // Execute commands in batches of 10 for better performance
-    const BATCH_SIZE = 10;
-    for (let i = 0; i < commands.length; i += BATCH_SIZE) {
-      const batch = commands.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(
-        batch.map((cmd) => this.execute(cmd)),
-      );
-      results.push(...batchResults);
-    }
-
-    return results;
+    return await upstashPipeline(this.creds, commands);
   }
 }
-
-async function initRedis(): Promise<RedisClient | null> {
+/**
+ * Log a cache failure, except when Upstash was skipped on purpose. The
+ * breaker logs its own open and close transitions, so a skipped call is
+ * silent rather than one warning per request.
+ */
+function warnUnlessSkipped(message: string, error: unknown): void {
+  if (error instanceof UpstashUnavailableError && error.skipped) return;
+  logger.warn(message, { error: (error as Error).message });
+}
+async function initClient(): Promise<RedisClient | null> {
   if (redisInitialized) return redisClient;
   redisInitialized = true;
 
@@ -193,6 +148,21 @@ async function initRedis(): Promise<RedisClient | null> {
   }
 }
 
+/** Test helper: forget the lazily built client so the next call re-reads the environment. */
+export function resetTranslationCacheForTests(): void {
+  redisClient = null;
+  redisInitialized = false;
+}
+/**
+ * The Redis client, or null when there is none to use: not configured, or the
+ * shared circuit breaker is skipping Upstash (quota, auth or timeout). Callers
+ * treat null as a cache miss and go to the database.
+ */
+async function initRedis(): Promise<RedisClient | null> {
+  const client = await initClient();
+  if (!client) return null;
+  return redisBreaker().wouldSkip() ? null : client;
+}
 /**
  * Generate cache key
  */
@@ -225,9 +195,7 @@ export const translationCache = {
       const key = getCacheKey(contentType, contentId, field, locale);
       return await redis.get(key);
     } catch (error) {
-      logger.warn("Translation cache get error", {
-        error: (error as Error).message,
-      });
+      warnUnlessSkipped("Translation cache get error", error);
       return null;
     }
   },
@@ -259,9 +227,7 @@ export const translationCache = {
         result[fields[i]] = values[i];
       }
     } catch (error) {
-      logger.warn("Translation cache mget error", {
-        error: (error as Error).message,
-      });
+      warnUnlessSkipped("Translation cache mget error", error);
     }
 
     return result;
@@ -284,9 +250,7 @@ export const translationCache = {
       const key = getCacheKey(contentType, contentId, field, locale);
       await redis.setex(key, CACHE_TTL, translation);
     } catch (error) {
-      logger.warn("Translation cache set error", {
-        error: (error as Error).message,
-      });
+      warnUnlessSkipped("Translation cache set error", error);
     }
   },
 
@@ -320,9 +284,7 @@ export const translationCache = {
         });
       }
     } catch (error) {
-      logger.warn("Translation cache setMultiple error", {
-        error: (error as Error).message,
-      });
+      warnUnlessSkipped("Translation cache setMultiple error", error);
     }
   },
 
@@ -363,9 +325,7 @@ export const translationCache = {
         });
       }
     } catch (error) {
-      logger.warn("Translation cache batchSet error", {
-        error: (error as Error).message,
-      });
+      warnUnlessSkipped("Translation cache batchSet error", error);
     }
   },
 
@@ -383,7 +343,7 @@ export const translationCache = {
       const pattern = `${CACHE_PREFIX}:${contentType}:${contentId}:*`;
       const keys = await redis.keys(pattern);
       if (keys.length > 0) {
-        await Promise.all(keys.map((key) => redis.del(key)));
+        await redis.del(...keys);
         logger.debug("Translation cache invalidated", {
           keyCount: keys.length,
           contentType,
@@ -391,9 +351,7 @@ export const translationCache = {
         });
       }
     } catch (error) {
-      logger.warn("Translation cache invalidate error", {
-        error: (error as Error).message,
-      });
+      warnUnlessSkipped("Translation cache invalidate error", error);
     }
   },
 
@@ -428,9 +386,7 @@ export const translationCache = {
         sampleKeys: keys.slice(0, 10),
       };
     } catch (error) {
-      logger.warn("Translation cache getStats error", {
-        error: (error as Error).message,
-      });
+      warnUnlessSkipped("Translation cache getStats error", error);
       return { available: false, totalKeys: 0, sampleKeys: [] };
     }
   },
@@ -495,9 +451,7 @@ export const userLocaleCache = {
       logger.debug("User locale cache miss", { userId });
       return null;
     } catch (error) {
-      logger.warn("User locale cache get error", {
-        error: (error as Error).message,
-      });
+      warnUnlessSkipped("User locale cache get error", error);
       return null;
     }
   },
@@ -524,9 +478,7 @@ export const userLocaleCache = {
       await redis.setex(key, USER_LOCALE_TTL, JSON.stringify(value));
       logger.debug("User locale cached", { userId, locale, source });
     } catch (error) {
-      logger.warn("User locale cache set error", {
-        error: (error as Error).message,
-      });
+      warnUnlessSkipped("User locale cache set error", error);
     }
   },
 
@@ -544,9 +496,7 @@ export const userLocaleCache = {
       await redis.del(key);
       logger.debug("User locale cache deleted", { userId });
     } catch (error) {
-      logger.warn("User locale cache delete error", {
-        error: (error as Error).message,
-      });
+      warnUnlessSkipped("User locale cache delete error", error);
     }
   },
 
@@ -575,9 +525,7 @@ export const userLocaleCache = {
 
       return null;
     } catch (error) {
-      logger.warn("User locale cache getWithMetadata error", {
-        error: (error as Error).message,
-      });
+      warnUnlessSkipped("User locale cache getWithMetadata error", error);
       return null;
     }
   },

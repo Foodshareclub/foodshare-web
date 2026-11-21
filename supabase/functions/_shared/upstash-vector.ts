@@ -5,8 +5,14 @@
  * - Connection pooling (singleton pattern)
  * - Batch operations for efficient indexing
  * - Metadata filtering support
- * - Circuit breaker integration
- * - Retry with exponential backoff
+ * - The shared Upstash circuit breaker (`upstash-breaker.ts`): a quota, auth
+ *   or timeout failure skips Upstash for 10 minutes, then one half-open try
+ * - Short request timeout, and no retry of a failure that opened the breaker
+ *
+ * TTL and namespace: Upstash Vector has no per-record TTL, and the index
+ * keeps the record ids (post ids) and the default namespace that existing
+ * data lives under, so writes here are not given a TTL or a new namespace.
+ * Stale records are removed by `delete` when a post is deactivated.
  *
  * Configuration:
  * - Index: foodshare-vector (fluent-mollusk)
@@ -17,8 +23,8 @@
  */
 
 import { logger } from "./logger.ts";
-import { getCircuitStatus, withCircuitBreaker } from "./circuit-breaker.ts";
 import { RETRY_PRESETS, withRetry } from "./retry.ts";
+import { classifyUpstashFailure, getUpstashBreaker } from "./upstash-breaker.ts";
 import { getSecretSync } from "./vault.ts";
 
 // =============================================================================
@@ -30,22 +36,22 @@ export interface VectorClientConfig {
   url: string;
   /** Upstash Vector REST Token */
   token: string;
-  /** Request timeout in ms (default: 30000) */
+  /** Request timeout in ms (default: 5000) */
   timeoutMs?: number;
   /** Max vectors per batch upsert (default: 100) */
   maxBatchSize?: number;
-  /** Circuit breaker failure threshold (default: 3) */
-  circuitBreakerThreshold?: number;
-  /** Circuit breaker reset timeout in ms (default: 30000) */
-  circuitBreakerResetMs?: number;
 }
 
 const DEFAULT_CONFIG = {
-  timeoutMs: 30000,
+  timeoutMs: 5000,
   maxBatchSize: 100,
-  circuitBreakerThreshold: 3,
-  circuitBreakerResetMs: 30000,
 };
+
+/** A 100-vector upsert is a ~1.5 MB body, so writes get a longer (still short) timeout. */
+const UPSERT_TIMEOUT_MS = 15000;
+
+/** The Vector index has its own quota, so it has its own breaker. */
+export const UPSTASH_VECTOR_BREAKER = "upstash-vector";
 
 // =============================================================================
 // Types
@@ -144,9 +150,16 @@ export class UpstashVectorClient {
     method: string,
     path: string,
     body?: unknown,
+    timeoutMs: number = this.config.timeoutMs,
   ): Promise<T> {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.config.timeoutMs);
+    const breaker = getUpstashBreaker(UPSTASH_VECTOR_BREAKER);
+    if (!breaker.allow()) {
+      throw new VectorClientError(
+        "Upstash Vector skipped: circuit open",
+        "CIRCUIT_OPEN",
+        false,
+      );
+    }
 
     try {
       const response = await fetch(`${this.baseUrl}${path}`, {
@@ -156,64 +169,63 @@ export class UpstashVectorClient {
           "Content-Type": "application/json",
         },
         body: body ? JSON.stringify(body) : undefined,
-        signal: controller.signal,
+        signal: AbortSignal.timeout(timeoutMs),
       });
-
-      clearTimeout(timeout);
 
       if (!response.ok) {
         const errorText = await response.text();
+        const kind = classifyUpstashFailure({ status: response.status, message: errorText });
+        if (kind) {
+          breaker.recordFailure(kind);
+        } else {
+          // Upstash answered, so it is reachable (a half-open probe succeeded).
+          breaker.recordSuccess();
+        }
         throw new VectorClientError(
           `Upstash Vector API error: ${response.status} - ${errorText}`,
           `HTTP_${response.status}`,
-          response.status >= 500 || response.status === 429,
+          // Never retried: a failure that opens the breaker would only be
+          // skipped on the next attempt, and a retry spends more quota.
+          false,
         );
       }
 
       const data = await response.json();
+      breaker.recordSuccess();
       return data.result ?? data;
     } catch (error) {
-      clearTimeout(timeout);
-
       if (error instanceof VectorClientError) throw error;
-
-      if (error instanceof Error && error.name === "AbortError") {
-        throw new VectorClientError("Request timeout", "TIMEOUT", true);
+      const kind = classifyUpstashFailure({ error }) ?? "unavailable";
+      breaker.recordFailure(kind);
+      if (kind === "timeout") {
+        throw new VectorClientError("Request timeout", "TIMEOUT", false);
       }
-
       throw new VectorClientError(
         `Request failed: ${error instanceof Error ? error.message : String(error)}`,
         "NETWORK_ERROR",
-        true,
+        false,
       );
     }
   }
 
   /**
-   * Execute request with circuit breaker and retry
+   * Execute a request through the shared breaker. Retries cover only the
+   * failures that leave the breaker closed; one that opens it is not retried.
    */
-  private async safeRequest<T>(
+  private safeRequest<T>(
     method: string,
     path: string,
     body?: unknown,
+    timeoutMs?: number,
   ): Promise<T> {
-    return withCircuitBreaker(
-      "upstash-vector",
-      async () => {
-        return withRetry(
-          () => this.request<T>(method, path, body),
-          {
-            ...RETRY_PRESETS.quick,
-            maxRetries: 2,
-            shouldRetry: (error) => {
-              return error instanceof VectorClientError && error.retryable;
-            },
-          },
-        );
-      },
+    return withRetry(
+      () => this.request<T>(method, path, body, timeoutMs),
       {
-        failureThreshold: this.config.circuitBreakerThreshold,
-        resetTimeoutMs: this.config.circuitBreakerResetMs,
+        ...RETRY_PRESETS.quick,
+        maxRetries: 2,
+        shouldRetry: (error) => {
+          return error instanceof VectorClientError && error.retryable;
+        },
       },
     );
   }
@@ -248,7 +260,7 @@ export class UpstashVectorClient {
     // Process in batches
     for (let i = 0; i < records.length; i += this.config.maxBatchSize) {
       const batch = records.slice(i, i + this.config.maxBatchSize);
-      await this.safeRequest("POST", "/upsert", batch);
+      await this.safeRequest("POST", "/upsert", batch, UPSERT_TIMEOUT_MS);
       totalUpserted += batch.length;
 
       logger.debug("Batch upserted", {
@@ -402,8 +414,7 @@ export class UpstashVectorClient {
    * Check if the client is healthy
    */
   isHealthy(): boolean {
-    const circuitStatus = getCircuitStatus("upstash-vector");
-    return circuitStatus?.state !== "open";
+    return !getUpstashBreaker(UPSTASH_VECTOR_BREAKER).isDegraded();
   }
 }
 
@@ -438,6 +449,14 @@ export function getVectorClient(
   }
 
   return clientInstance;
+}
+
+/**
+ * Is the Vector index being skipped right now? A read-only check for callers
+ * that would otherwise spend money (an embedding) before the query is refused.
+ */
+export function isVectorSkipped(): boolean {
+  return getUpstashBreaker(UPSTASH_VECTOR_BREAKER).wouldSkip();
 }
 
 /**

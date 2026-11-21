@@ -63,15 +63,18 @@ export class AWSSESProvider implements EmailProvider {
 
   constructor(config: Partial<AWSSESConfig> = {}) {
     this.config = {
-      region: config.region || getSecretSync("AWS_REGION") ||
-        getSecretSync("AWS_SES_REGION") || "",
+      // The SES-specific names win: the edge env carries a placeholder
+      // AWS_ACCESS_KEY_ID that must not shadow the real SES credentials.
+      // The generic names remain as a fallback.
+      region: config.region || getSecretSync("AWS_SES_REGION") ||
+        getSecretSync("AWS_REGION") || "",
       accessKeyId: config.accessKeyId ||
-        getSecretSync("AWS_ACCESS_KEY_ID") ||
         getSecretSync("AWS_SES_ACCESS_KEY_ID") ||
+        getSecretSync("AWS_ACCESS_KEY_ID") ||
         "",
       secretAccessKey: config.secretAccessKey ||
-        getSecretSync("AWS_SECRET_ACCESS_KEY") ||
         getSecretSync("AWS_SES_SECRET_ACCESS_KEY") ||
+        getSecretSync("AWS_SECRET_ACCESS_KEY") ||
         "",
       fromEmail: config.fromEmail ||
         getSecretSync("AWS_SES_FROM_EMAIL") ||
@@ -215,9 +218,9 @@ export class AWSSESProvider implements EmailProvider {
 
     if (!this.isConfigured() || !this.signer) {
       const missing: string[] = [];
-      if (!this.config.region) missing.push("AWS_REGION");
-      if (!this.config.accessKeyId) missing.push("AWS_ACCESS_KEY_ID");
-      if (!this.config.secretAccessKey) missing.push("AWS_SECRET_ACCESS_KEY");
+      if (!this.config.region) missing.push("AWS_SES_REGION");
+      if (!this.config.accessKeyId) missing.push("AWS_SES_ACCESS_KEY_ID");
+      if (!this.config.secretAccessKey) missing.push("AWS_SES_SECRET_ACCESS_KEY");
 
       return {
         provider: this.name,

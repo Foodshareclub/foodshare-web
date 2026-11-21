@@ -35,7 +35,8 @@ import { assert, assertEquals } from "@std/assert";
 
 import { type HandlerContext } from "../_shared/api-handler.ts";
 import { resetSupabaseClient } from "../_shared/supabase.ts";
-import { handleGetRequest } from "../api-v1-cache/lib/health.ts";
+import { resetUpstashBreakers } from "../_shared/upstash-breaker.ts";
+import { handleGetRequest, resetHealthSample } from "../api-v1-cache/lib/health.ts";
 
 // --- fixtures ----------------------------------------------------------------
 
@@ -161,9 +162,16 @@ async function withTestEnv(fn: () => Promise<void>): Promise<void> {
   Deno.env.set("SUPABASE_URL", FAKE_SUPABASE_URL);
   Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", SERVICE_ROLE_KEY);
   resetSupabaseClient();
+  // The Upstash breaker and the cached health sample are module state shared
+  // by every test in this process; each test starts from a closed breaker and
+  // no sample so a failure injected by one cannot skip Upstash in the next.
+  resetUpstashBreakers();
+  resetHealthSample();
   try {
     await fn();
   } finally {
+    resetUpstashBreakers();
+    resetHealthSample();
     globalThis.fetch = realFetch;
     for (const [name, value] of previous) {
       if (value === undefined) Deno.env.delete(name);

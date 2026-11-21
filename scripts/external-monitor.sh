@@ -54,6 +54,10 @@ fi
 # key skipped the whole loop, so the one endpoint that could still be
 # reached without a key was the one endpoint nobody checked.
 #
+# The website is asked at /api/ready, which answers from the process alone.
+# `/` renders a page through the rate limiter and spends Upstash commands on
+# every probe, which is not worth it against a 500,000 monthly free quota.
+#
 # Auth is asked for on the api hostname, with the key Kong gates it
 # behind. It used to be asked for at https://auth.foodshare.club/ -- the
 # root of the split hostname -- which answers 404 whatever the auth
@@ -63,7 +67,7 @@ ENDPOINTS=(
   "https://api.foodshare.club/functions/v1/api-v1-notifications/health|notification API|key"
   "https://api.foodshare.club/functions/v1/api-v1-email/health|email API|key"
   "https://api.foodshare.club/functions/v1/api-v1-health/health|health API|key"
-  "https://foodshare.club/|website"
+  "https://foodshare.club/api/ready|website"
   "https://api.foodshare.club/auth/v1/health|auth|key"
 )
 

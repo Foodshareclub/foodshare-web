@@ -9,105 +9,59 @@ import {
   ServerError,
   ValidationError,
 } from "../../_shared/errors.ts";
-import { circuitBreaker, CONFIG, KeyScope, metrics, pendingRequests } from "./types.ts";
+import {
+  redisBreaker,
+  upstashCommand,
+  UpstashCommandError,
+  upstashPipeline,
+} from "../../_shared/upstash-redis.ts";
+import { CONFIG, KeyScope, metrics, pendingRequests } from "./types.ts";
 
 // =============================================================================
-// Circuit Breaker
+// Circuit Breaker and Redis Operations
 // =============================================================================
-
+//
+// The breaker and the client are shared (`_shared/upstash-breaker.ts`,
+// `_shared/upstash-redis.ts`): a quota, auth or timeout failure skips Upstash
+// for a 10 minute cool-down, then lets one half-open try through.
+/** Read-only: is Upstash being skipped right now? Never takes the probe slot. */
 export function isCircuitBreakerOpen(): boolean {
-  if (circuitBreaker.state === "closed") return false;
-
-  if (circuitBreaker.state === "open") {
-    const elapsed = Date.now() - circuitBreaker.lastFailure;
-    if (elapsed >= CONFIG.circuitBreaker.resetTimeoutMs) {
-      circuitBreaker.state = "half-open";
-      circuitBreaker.halfOpenRemaining = CONFIG.circuitBreaker.halfOpenRequests;
-      return false;
-    }
-    return true;
-  }
-
-  // half-open
-  return circuitBreaker.halfOpenRemaining <= 0;
+  return redisBreaker().wouldSkip();
 }
-
-export function recordSuccess(): void {
-  if (circuitBreaker.state === "half-open") {
-    circuitBreaker.halfOpenRemaining--;
-    if (circuitBreaker.halfOpenRemaining <= 0) {
-      circuitBreaker.state = "closed";
-      circuitBreaker.failures = 0;
-    }
-  } else {
-    circuitBreaker.failures = 0;
-  }
+export function getBreakerState(): "closed" | "open" | "half-open" {
+  return redisBreaker().snapshot().state;
 }
-
-export function recordFailure(): void {
-  circuitBreaker.failures++;
-  circuitBreaker.lastFailure = Date.now();
-
-  if (
-    circuitBreaker.state === "half-open" ||
-    circuitBreaker.failures >= CONFIG.circuitBreaker.failureThreshold
-  ) {
-    circuitBreaker.state = "open";
-    metrics.circuitBreakerTrips++;
-  }
+export function breakerRetryAfterSeconds(): number {
+  return redisBreaker().retryAfterSeconds();
 }
-
-// =============================================================================
-// Redis Operations
-// =============================================================================
-
 export async function executeRedisCommand(
   redisUrl: string,
   redisToken: string,
   command: (string | number)[],
 ): Promise<unknown> {
-  const response = await fetch(redisUrl, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${redisToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(command),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new ServerError(`Redis command failed: ${JSON.stringify(data)}`);
+  try {
+    return await upstashCommand({ url: redisUrl, token: redisToken }, command);
+  } catch (error) {
+    if (error instanceof UpstashCommandError) {
+      throw new ServerError(`Redis command failed: ${error.message}`);
+    }
+    throw error;
   }
-
-  return data.result;
 }
-
 export async function executeRedisPipeline(
   redisUrl: string,
   redisToken: string,
   commands: (string | number)[][],
 ): Promise<unknown[]> {
-  const pipelineUrl = redisUrl.replace(/\/?$/, "/pipeline");
-  const response = await fetch(pipelineUrl, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${redisToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(commands),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new ServerError(`Redis pipeline failed: ${JSON.stringify(data)}`);
+  try {
+    return await upstashPipeline({ url: redisUrl, token: redisToken }, commands);
+  } catch (error) {
+    if (error instanceof UpstashCommandError) {
+      throw new ServerError(`Redis pipeline failed: ${error.message}`);
+    }
+    throw error;
   }
-
-  return data.map((r: { result: unknown }) => r.result);
 }
-
 // =============================================================================
 // Request Coalescing
 // =============================================================================

@@ -13,24 +13,54 @@ import {
   ServerError,
   ValidationError,
 } from "../../_shared/errors.ts";
-import { type CacheOperationRequest, circuitBreaker, CONFIG, metrics } from "./types.ts";
+import { UpstashUnavailableError } from "../../_shared/upstash-redis.ts";
+import { type CacheOperationRequest, CONFIG, metrics } from "./types.ts";
 import {
+  breakerRetryAfterSeconds,
   checkRateLimit,
   coalesceRequest,
   compressValue,
   decompressValue,
   executeRedisCommand,
   executeRedisPipeline,
+  getBreakerState,
   getOperationType,
   isCircuitBreakerOpen,
   isWriteOperation,
   parseRedisInfo,
-  recordFailure,
-  recordSuccess,
   shouldCompress,
   validateAndScopeKey,
 } from "./redis.ts";
 
+// =============================================================================
+// Helpers
+// =============================================================================
+/**
+ * Command that gives a written key an expiry. An explicit TTL replaces the
+ * key's expiry; otherwise the default TTL is applied only when the key has
+ * none (`NX`), so counters keep a fixed window and no write leaves a key
+ * that never expires.
+ */
+function expireCommand(key: string, ttl?: number): (string | number)[] {
+  return ttl ? ["EXPIRE", key, ttl] : ["EXPIRE", key, CONFIG.defaultTtlSeconds, "NX"];
+}
+function cacheUnavailableResponse(): Response {
+  const retryAfter = Math.max(1, breakerRetryAfterSeconds());
+  return new Response(
+    JSON.stringify({
+      error: "Cache temporarily unavailable; use the source of truth",
+      status: 503,
+      retryAfter,
+    }),
+    {
+      status: 503,
+      headers: {
+        "Content-Type": "application/json",
+        "Retry-After": String(retryAfter),
+      },
+    },
+  );
+}
 // =============================================================================
 // POST Handler (Cache Operations)
 // =============================================================================
@@ -52,7 +82,7 @@ export async function handleCacheOperation(
       result: {
         status: isCircuitBreakerOpen() ? "degraded" : "healthy",
         version: CONFIG.version,
-        circuitBreaker: circuitBreaker.state,
+        circuitBreaker: getBreakerState(),
         metrics: {
           totalRequests: metrics.totalRequests,
           successRate: metrics.totalRequests > 0
@@ -74,29 +104,10 @@ export async function handleCacheOperation(
     throw new AuthError("Authentication required");
   }
 
-  // Check circuit breaker
-  if (isCircuitBreakerOpen()) {
-    return new Response(
-      JSON.stringify({
-        error: "Service temporarily unavailable (circuit breaker open)",
-        status: 503,
-        retryAfter: Math.ceil(
-          (CONFIG.circuitBreaker.resetTimeoutMs -
-            (Date.now() - circuitBreaker.lastFailure)) / 1000,
-        ),
-      }),
-      {
-        status: 503,
-        headers: {
-          "Content-Type": "application/json",
-          "Retry-After": String(
-            Math.ceil(CONFIG.circuitBreaker.resetTimeoutMs / 1000),
-          ),
-        },
-      },
-    );
-  }
-
+  // Circuit breaker: while Upstash is being skipped, answer at once without
+  // touching Vault, the rate limiter or Upstash. Clients treat the cache as
+  // optional and go to the source.
+  if (isCircuitBreakerOpen()) return cacheUnavailableResponse();
   // Rate limiting
   if (userId) {
     const tier: keyof typeof CONFIG.rateLimits = "pro";
@@ -197,7 +208,7 @@ export async function handleCacheOperation(
             compressed = true;
           }
 
-          const ttl = body.ttl || CONFIG.ttlPresets.medium;
+          const ttl = body.ttl || CONFIG.defaultTtlSeconds;
           const cmd: (string | number)[] = [
             "SET",
             scopedKey,
@@ -237,13 +248,7 @@ export async function handleCacheOperation(
           ]) as string | null;
           if (oldValue) oldValue = await decompressValue(oldValue);
 
-          if (body.ttl) {
-            await executeRedisCommand(redisUrl, redisToken, [
-              "EXPIRE",
-              scopedKey,
-              body.ttl,
-            ]);
-          }
+          await executeRedisCommand(redisUrl, redisToken, expireCommand(scopedKey, body.ttl));
 
           return { oldValue, success: true };
         }
@@ -262,23 +267,23 @@ export async function handleCacheOperation(
         case "incr": {
           if (!body.key) throw new ValidationError("Missing key");
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
-          return {
-            value: await executeRedisCommand(redisUrl, redisToken, [
-              "INCR",
-              scopedKey,
-            ]),
-          };
+          const value = await executeRedisCommand(redisUrl, redisToken, [
+            "INCR",
+            scopedKey,
+          ]);
+          await executeRedisCommand(redisUrl, redisToken, expireCommand(scopedKey, body.ttl));
+          return { value };
         }
 
         case "decr": {
           if (!body.key) throw new ValidationError("Missing key");
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
-          return {
-            value: await executeRedisCommand(redisUrl, redisToken, [
-              "DECR",
-              scopedKey,
-            ]),
-          };
+          const value = await executeRedisCommand(redisUrl, redisToken, [
+            "DECR",
+            scopedKey,
+          ]);
+          await executeRedisCommand(redisUrl, redisToken, expireCommand(scopedKey, body.ttl));
+          return { value };
         }
 
         case "expire": {
@@ -355,7 +360,7 @@ export async function handleCacheOperation(
             ...scopedPairs,
           ]);
 
-          const ttl = body.ttl || CONFIG.ttlPresets.medium;
+          const ttl = body.ttl || CONFIG.defaultTtlSeconds;
           const pipeline = entries.map((_, i) =>
             ["EXPIRE", scopedPairs[i * 2], ttl] as (string | number)[]
           );
@@ -428,13 +433,7 @@ export async function handleCacheOperation(
             valueToStore,
           ]);
 
-          if (body.ttl) {
-            await executeRedisCommand(redisUrl, redisToken, [
-              "EXPIRE",
-              scopedKey,
-              body.ttl,
-            ]);
-          }
+          await executeRedisCommand(redisUrl, redisToken, expireCommand(scopedKey, body.ttl));
 
           return { created: hsetResult === 1 };
         }
@@ -457,13 +456,7 @@ export async function handleCacheOperation(
 
           await executeRedisCommand(redisUrl, redisToken, ["HMSET", ...args]);
 
-          if (body.ttl) {
-            await executeRedisCommand(redisUrl, redisToken, [
-              "EXPIRE",
-              scopedKey,
-              body.ttl,
-            ]);
-          }
+          await executeRedisCommand(redisUrl, redisToken, expireCommand(scopedKey, body.ttl));
 
           return { success: true };
         }
@@ -501,14 +494,14 @@ export async function handleCacheOperation(
           if (!body.field) throw new ValidationError("Missing field");
           const increment = typeof body.value === "number" ? body.value : 1;
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
-          return {
-            value: await executeRedisCommand(redisUrl, redisToken, [
-              "HINCRBY",
-              scopedKey,
-              body.field,
-              increment,
-            ]),
-          };
+          const value = await executeRedisCommand(redisUrl, redisToken, [
+            "HINCRBY",
+            scopedKey,
+            body.field,
+            increment,
+          ]);
+          await executeRedisCommand(redisUrl, redisToken, expireCommand(scopedKey, body.ttl));
+          return { value };
         }
 
         // List Operations
@@ -521,13 +514,7 @@ export async function handleCacheOperation(
             scopedKey,
             ...body.values,
           ]);
-          if (body.ttl) {
-            await executeRedisCommand(redisUrl, redisToken, [
-              "EXPIRE",
-              scopedKey,
-              body.ttl,
-            ]);
-          }
+          await executeRedisCommand(redisUrl, redisToken, expireCommand(scopedKey, body.ttl));
           return { length };
         }
 
@@ -540,13 +527,7 @@ export async function handleCacheOperation(
             scopedKey,
             ...body.values,
           ]);
-          if (body.ttl) {
-            await executeRedisCommand(redisUrl, redisToken, [
-              "EXPIRE",
-              scopedKey,
-              body.ttl,
-            ]);
-          }
+          await executeRedisCommand(redisUrl, redisToken, expireCommand(scopedKey, body.ttl));
           return { length };
         }
 
@@ -619,13 +600,7 @@ export async function handleCacheOperation(
               args.push(score, member);
             }
             const added = await executeRedisCommand(redisUrl, redisToken, args);
-            if (body.ttl) {
-              await executeRedisCommand(redisUrl, redisToken, [
-                "EXPIRE",
-                scopedKey,
-                body.ttl,
-              ]);
-            }
+            await executeRedisCommand(redisUrl, redisToken, expireCommand(scopedKey, body.ttl));
             return { added };
           } else if (body.score !== undefined && body.member) {
             const added = await executeRedisCommand(redisUrl, redisToken, [
@@ -634,13 +609,7 @@ export async function handleCacheOperation(
               body.score,
               body.member,
             ]);
-            if (body.ttl) {
-              await executeRedisCommand(redisUrl, redisToken, [
-                "EXPIRE",
-                scopedKey,
-                body.ttl,
-              ]);
-            }
+            await executeRedisCommand(redisUrl, redisToken, expireCommand(scopedKey, body.ttl));
             return { added };
           }
           throw new ValidationError("Missing score/member");
@@ -762,6 +731,7 @@ export async function handleCacheOperation(
             body.score ?? 1,
             body.member,
           ]) as string;
+          await executeRedisCommand(redisUrl, redisToken, expireCommand(scopedKey, body.ttl));
           return { score: parseFloat(newScore) };
         }
 
@@ -801,13 +771,7 @@ export async function handleCacheOperation(
             scopedKey,
             ...body.values,
           ]);
-          if (body.ttl) {
-            await executeRedisCommand(redisUrl, redisToken, [
-              "EXPIRE",
-              scopedKey,
-              body.ttl,
-            ]);
-          }
+          await executeRedisCommand(redisUrl, redisToken, expireCommand(scopedKey, body.ttl));
           return { added };
         }
 
@@ -964,11 +928,13 @@ export async function handleCacheOperation(
       result = await executeOperation();
     }
 
-    recordSuccess();
     metrics.successfulRequests++;
   } catch (error) {
-    recordFailure();
     metrics.failedRequests++;
+    // The shared client has already recorded the failure on the breaker.
+    // Validation and command errors say nothing about Upstash and do not
+    // count against it.
+    if (error instanceof UpstashUnavailableError) return cacheUnavailableResponse();
     throw error;
   }
 
@@ -993,7 +959,7 @@ export async function handleCacheOperation(
       version: CONFIG.version,
       compressed,
       executionMs: Math.round(executionMs),
-      circuitBreaker: circuitBreaker.state,
+      circuitBreaker: getBreakerState(),
     },
   }, ctx);
 }

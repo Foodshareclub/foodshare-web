@@ -9,6 +9,8 @@ import { slugify } from "../../_shared/utils.ts";
 import {
   buildVectorFilter,
   getVectorClient,
+  isVectorSkipped,
+  VectorClientError,
   type VectorRecord,
 } from "../../_shared/upstash-vector.ts";
 import {
@@ -40,6 +42,11 @@ export async function semanticSearch(
   offset: number,
   filters?: SearchFilters,
 ): Promise<{ results: SearchResultItem[]; total: number; provider: string }> {
+  // Do not pay for an embedding when the vector index is being skipped
+  // (quota, auth or timeout); callers fall back to text search.
+  if (isVectorSkipped()) {
+    throw new VectorClientError("Upstash Vector skipped: circuit open", "CIRCUIT_OPEN", false);
+  }
   const embeddingResult = await generateEmbedding(query);
 
   const vectorFilter = buildVectorFilter({
@@ -155,6 +162,9 @@ export async function executeSearch(
 ): Promise<{ results: SearchResultItem[]; total: number; provider?: string }> {
   switch (mode) {
     case "semantic":
+      // The vector index is being skipped (quota, auth or timeout): answer
+      // from the database rather than fail the request.
+      if (isVectorSkipped()) return textSearch(supabase, q, limit, offset, filters);
       return semanticSearch(q, limit, offset, filters);
     case "text":
       return textSearch(supabase, q, limit, offset, filters);
