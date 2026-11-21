@@ -65,6 +65,7 @@ describe("FoodwastelyticsPage", () => {
     expect(screen.queryByText("v2.0")).toBeNull();
     expect(screen.queryByText("UN SDG 12.3 Target (2030)")).toBeNull();
     expect(screen.queryByText("Export Intelligence Brief")).toBeNull();
+    expect(screen.queryByText("UNEP & FAO Aligned • Global Food Waste Intelligence")).toBeNull();
   });
 
   it("renders global food waste intelligence header and planetary macro metrics", () => {

@@ -114,7 +114,6 @@ export interface PolicyIntervention {
 // Localized / Structured UI copy dictionary
 const UI = {
   navHeading: "Navigation",
-  heroBadge: "UNEP & FAO Aligned • Global Food Waste Intelligence",
   heroTitle: "Foodwastelytics",
   heroSubtitle:
     "Planetary food loss accounting, global agricultural supply chain benchmarks, and UN SDG 12.3 2030 halving models across world economies.",
@@ -904,10 +903,6 @@ export default function FoodwastelyticsPage() {
       {/* Hero Header */}
       <section className="relative z-10 border-b border-border/40 bg-card/75 backdrop-blur-xl px-4 sm:px-6 pt-8 sm:pt-10 pb-8 sm:pb-10">
         <div className="max-w-4xl mx-auto flex flex-col items-center text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
-            <Globe className="size-3.5 animate-pulse" />
-            <span>{UI.heroBadge}</span>
-          </div>
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-foreground">
             <span>{UI.heroTitle}</span>
           </h1>
