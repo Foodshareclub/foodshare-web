@@ -97,4 +97,13 @@ Listing cards use a frameless presentation with a 4-line metadata hierarchy:
   - Uplifting headline and empathetic call to action to share surplus food or items.
   - Quick category shortcuts and clear-search filter reset pill.
 
+## 10. Footer Architecture & Legal Row (`Footer.tsx`)
+
+- **Airbnb Bottom Bar Layout**:
+  - Full-width container with subtle top border (`border-t border-border/40`).
+  - Leading legal links: `© {currentYear} Foodshare Club, Limited.` separated by interpuncts (`·`) with direct links to `Privacy` and `Terms`.
+  - Community heart badge: `Made with ❤️ for our community`.
+  - Trailing controls: Compact `LanguageSelector` dropdown with native names and country flags.
+
+
 

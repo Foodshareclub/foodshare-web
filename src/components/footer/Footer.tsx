@@ -61,7 +61,7 @@ export default async function Footer() {
   const currentYear = await getCurrentYear();
 
   return (
-    <footer className="relative mt-auto border-t border-border/50 bg-background/80 backdrop-blur-xl">
+    <footer id="site-footer" className="relative mt-auto border-t border-border/50 bg-background/80 backdrop-blur-xl">
       <OrganicShapes variant="subtle" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -115,16 +115,27 @@ export default async function Footer() {
             </div>
           </GlassCard>
 
-          <div className="flex flex-col items-center gap-3 text-center">
-            <p className="text-xs text-muted-foreground">
-              &copy; {currentYear} Foodshare Club, Limited. All rights reserved
-            </p>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span>{t("footer_made_with")}</span>
-              <Heart className="size-3 text-primary fill-primary" />
-              <span>{t("footer_for_community")}</span>
+          <div className="w-full pt-6 border-t border-border/40 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+              <span>{`© ${currentYear} Foodshare Club, Limited.`}</span>
+              <span aria-hidden="true">{"·"}</span>
+              <a href="/privacy" className="hover:underline hover:text-foreground transition-colors">
+                <span>{"Privacy"}</span>
+              </a>
+              <span aria-hidden="true">{"·"}</span>
+              <a href="/terms" className="hover:underline hover:text-foreground transition-colors">
+                <span>{"Terms"}</span>
+              </a>
+              <span aria-hidden="true">{"·"}</span>
+              <div className="flex items-center gap-1">
+                <span>{t("footer_made_with")}</span>
+                <Heart className="size-3 text-primary fill-primary" />
+                <span>{t("footer_for_community")}</span>
+              </div>
             </div>
-            <LanguageSelector />
+            <div className="flex items-center gap-3">
+              <LanguageSelector />
+            </div>
           </div>
         </div>
       </div>

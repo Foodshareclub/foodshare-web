@@ -523,6 +523,10 @@ FoodShare incorporates core Airbnb design patterns adapted for surplus food and 
    - Active bottom indicator bar in foreground contrast (`h-0.5 bg-foreground rounded-full`).
    - Icon and label highlighted in `text-foreground font-semibold`.
 
+6. **Footer Architecture & Legal Row (`Footer.tsx`)**:
+   - Clean horizontal layout with copyright notice and `Privacy` / `Terms` links.
+   - Community tribute and language selection dropdown.
+
 ---
 
 _This is a living document. Update as you build and discover new patterns!_
