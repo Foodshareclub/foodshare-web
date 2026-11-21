@@ -173,21 +173,12 @@ jobs:
         # shape is checked rather than trusted.
         run: bun run check:tsconfig-shape
 
-      - name: Cache month
-        # A key that never changes is saved once and then frozen; a key built
-        # from github.sha is unique per commit, so every push saved a fresh
-        # cache and no run restored one. Rotating monthly keeps the entry fresh
-        # at most twelve times a year instead of once per push.
-        id: cache-month
-        run: echo "value=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
-
       - name: Restore Next.js build cache
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.next/cache
-          key: nextjs-${{ hashFiles('bun.lock', 'next.config.ts', 'package.json') }}-${{ steps.cache-month.outputs.value }}
+          key: nextjs-${{ hashFiles('bun.lock', 'next.config.ts', 'package.json') }}
           restore-keys: |
-            nextjs-${{ hashFiles('bun.lock', 'next.config.ts', 'package.json') }}-
             nextjs-
 
       - name: Build
@@ -337,7 +328,7 @@ jobs:
         with:
           name: blob-report-${{ matrix.shardIndex }}
           path: blob-report/
-          retention-days: 14
+          retention-days: 3
 
   merge-e2e-reports:
     name: Merge E2E Reports
@@ -384,11 +375,11 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report/
-          retention-days: 14
+          retention-days: 3
 
   build-and-publish:
     name: Build and publish production image
-    # Both serving hosts are ARM64; build on the matching architecture.
+    # The serving host is ARM64; build on the matching architecture.
     runs-on: ubuntu-24.04-arm
     needs: build
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
@@ -465,8 +456,6 @@ jobs:
             NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED=${{ secrets.NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED }}
             NEXT_PUBLIC_OAUTH_APPLE_ENABLED=${{ secrets.NEXT_PUBLIC_OAUTH_APPLE_ENABLED }}
             NEXT_PUBLIC_OAUTH_GITHUB_ENABLED=${{ secrets.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED }}
-            NEXT_PUBLIC_CARTO_API_KEY=${{ secrets.NEXT_PUBLIC_CARTO_API_KEY }}
-            NEXT_PUBLIC_NOMINATIM_EMAIL=${{ secrets.NEXT_PUBLIC_NOMINATIM_EMAIL }}
 
       - name: Push the image
         id: push
@@ -566,13 +555,16 @@ jobs:
     runs-on: [self-hosted, Linux]
     needs: [build-and-publish, e2e]
     strategy:
-      # The two hosts are separate serving nodes. One of them being
-      # unreachable must not cancel the deployment to the other: a host
-      # that is already down is the reason to update the one that is not.
+      # The web serving role is consolidated on the backend host. The
+      # separate frontend host was decommissioned -- its OCI instance and
+      # tailnet node are gone -- and foodshare-web with its Cloudflare
+      # tunnel now runs there as organic rootless quadlets. The matrix
+      # targets only the host that exists; a leg aimed at the removed
+      # frontend host could only ever time out on SSH (port 22).
       fail-fast: false
       max-parallel: 1
       matrix:
-        host: [VPS_BACKEND_HOST, VPS_FRONTEND_HOST]
+        host: [VPS_BACKEND_HOST]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     timeout-minutes: 15
     environment:
@@ -655,8 +647,3 @@ jobs:
               'bash scripts/deploy-production.sh'
           } | ssh -i "$key" -o BatchMode=yes -o StrictHostKeyChecking=accept-new \
                   -o ConnectTimeout=30 "organic@$VPS_DEPLOY_HOST" 'bash -s'
-
-  # Artifacts and caches are what grow a repository's storage without a red
-  # build. The rules live in foodshare-tools so the repositories cannot drift.
-  storage-hygiene:
-    uses: Foodshareclub/foodshare-tools/.github/workflows/storage-hygiene.yml@main
