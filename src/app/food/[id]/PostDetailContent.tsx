@@ -64,6 +64,16 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
   const validImages = [...new Set(post.images?.map(normalizeImageUrl).filter((url): url is string => !!url))];
   const heroImage = validImages.find((url) => !failedImages[url]);
 
+  // Airbnb rating and review count computation
+  const hasRating = (post.five_star != null && post.five_star > 0) || (post.four_star != null && post.four_star > 0);
+  const totalReviews = (post.five_star ?? 0) + (post.four_star ?? 0);
+  const ratingScore = hasRating
+    ? (
+        ((post.five_star ?? 0) * 5 + (post.four_star ?? 0) * 4) /
+        ((post.five_star ?? 0) + (post.four_star ?? 0))
+      ).toFixed(1)
+    : null;
+
   useEffect(() => {
     const frameId = requestAnimationFrame(() => setIsLoaded(true));
     return () => cancelAnimationFrame(frameId);
@@ -90,8 +100,8 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
       {/* Main Post Card */}
       <div
         className={cn(
-          "relative overflow-hidden rounded-2xl border border-border/40 bg-card/80 backdrop-blur-xl shadow-sm transition-all duration-500",
-          "hover:shadow-xl hover:border-border/60",
+          "relative overflow-hidden rounded-3xl border border-border/60 bg-card/90 backdrop-blur-xl shadow-sm transition-all duration-500",
+          "hover:shadow-md hover:border-border/80",
           isLoaded ? "translate-y-0" : "translate-y-8",
         )}
       >
@@ -99,8 +109,51 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
         <div className="absolute -top-32 -end-32 h-64 w-64 rounded-full bg-gradient-to-br from-orange-500/10 to-rose-500/5 blur-3xl animate-pulse pointer-events-none" />
         <div className="absolute -bottom-32 -start-32 h-64 w-64 rounded-full bg-gradient-to-br from-teal-500/10 to-emerald-500/5 blur-3xl animate-pulse delay-1000 pointer-events-none" />
 
+        {/* Top Header Row (Airbnb Signature Header) */}
+        <div className="p-6 pb-4 border-b border-border/40">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <PostTypeBadge postType={post.post_type} variant="gradient" size="sm" />
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border",
+                    post.is_arranged
+                      ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                      : "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+                  )}
+                >
+                  <span className={cn("size-1.5 rounded-full", post.is_arranged ? "bg-amber-500" : "bg-emerald-500")} />
+                  {post.is_arranged ? "Reserved" : "Available"}
+                </span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">{post.post_name}</h1>
+              <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                <div className="flex items-center gap-1 font-semibold text-foreground">
+                  <Star className="size-3.5 fill-foreground text-foreground" />
+                  <span>{ratingScore ? `${ratingScore} (${totalReviews})` : "New"}</span>
+                </div>
+                <span>·</span>
+                <div className="flex items-center gap-1">
+                  <MapPin className="size-3.5 text-muted-foreground shrink-0" />
+                  <span className="truncate">
+                    {standardizeDisplayAddress(post.post_stripped_address || post.post_address)}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <ShareButton
+                url={`https://foodshare.club/food/${post.id}`}
+                title={post.post_name}
+                description={post.post_description}
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Hero Image */}
-        <div className="relative w-full group" style={{ aspectRatio: "16/9" }}>
+        <div className="relative w-full group overflow-hidden" style={{ aspectRatio: "16/9" }}>
           {heroImage ? (
             <Image
               src={heroImage}
@@ -148,88 +201,62 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
               <span>Inactive</span>
             </Badge>
           )}
-          {post.is_arranged && (
-            <Badge className="absolute top-4 end-4 bg-emerald-500/90 backdrop-blur-sm text-white border-0 flex items-center gap-1 text-xs">
-              <CheckCircle2 className="size-3.5" aria-hidden="true" />
-              <span>Arranged</span>
-            </Badge>
-          )}
         </div>
 
         {/* Content */}
-        <div className="relative p-6">
-          {/* Category Badge */}
+        <div className="relative p-6 space-y-6">
+          {/* Airbnb Host Attribution Section */}
           <div
             className={cn(
-              "mb-4 transform transition-all duration-500 delay-100",
+              "flex items-center justify-between p-4 rounded-2xl border border-border/60 bg-muted/20 transform transition-all duration-500 delay-175",
               isLoaded ? "translate-y-0" : "translate-y-4",
             )}
           >
-            <PostTypeBadge postType={post.post_type} variant="gradient" />
-          </div>
-
-          {/* Title */}
-          <h1
-            className={cn(
-              "text-2xl sm:text-3xl font-bold text-foreground mb-4 transform transition-all duration-500 delay-150",
-              isLoaded ? "translate-y-0" : "translate-y-4",
-            )}
-          >
-            {post.post_name}
-          </h1>
-
-          {/* Author or Organization / Entity Attribution */}
-          <div
-            className={cn(
-              "flex items-center gap-3 mb-4 p-3 rounded-xl bg-muted/40 transform transition-all duration-500 delay-175",
-              isLoaded ? "translate-y-0" : "translate-y-4",
-            )}
-          >
-            {post.post_type === "fridge" || post.post_type === "foodbank" ? (
-              <>
-                <div className="flex items-center justify-center size-11 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-                  <Building2 className="size-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    {post.post_type === "foodbank" ? "Food Bank Entity" : "Hosted by"}
-                  </p>
-                  <p className="text-sm font-semibold text-foreground truncate">
-                    {post.host_entity ||
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="flex items-center justify-center size-12 rounded-full border border-border/80 bg-background/80 shadow-2xs shrink-0 text-foreground">
+                {post.post_type === "fridge" || post.post_type === "foodbank" ? (
+                  <Building2 className="size-6 text-emerald-600 dark:text-emerald-400" />
+                ) : (
+                  <User className="size-6 text-primary" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  {post.post_type === "foodbank" ? "Food Bank Entity" : "Hosted by"}
+                </p>
+                <p className="text-base font-semibold text-foreground truncate">
+                  {post.post_type === "fridge" || post.post_type === "foodbank"
+                    ? post.host_entity ||
                       ((post.metadata as Record<string, unknown> | undefined)?.host_company as string) ||
-                      (post.post_type === "foodbank" ? post.post_name : "Community Host")}
+                      (post.post_type === "foodbank" ? post.post_name : "Community Host")
+                    : formatFirstAuthorName(post.author_name)}
+                </p>
+                {Boolean(
+                  post.point_person_name || (post.metadata as Record<string, unknown> | undefined)?.point_person_name,
+                ) && (
+                  <p className="text-xs text-muted-foreground truncate">
+                    {`Contact: ${String(
+                      post.point_person_name ||
+                        (post.metadata as Record<string, unknown> | undefined)?.point_person_name,
+                    )}`}
                   </p>
-                  {Boolean(
-                    post.point_person_name || (post.metadata as Record<string, unknown> | undefined)?.point_person_name,
-                  ) && (
-                    <p className="text-xs text-muted-foreground truncate">
-                      {`Contact: ${String(
-                        post.point_person_name ||
-                          (post.metadata as Record<string, unknown> | undefined)?.point_person_name,
-                      )}`}
-                    </p>
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center justify-center size-11 rounded-full bg-primary/10 text-primary shrink-0">
-                  <User className="size-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("author")}</p>
-                  <p className="text-sm font-semibold text-foreground truncate">
-                    {formatFirstAuthorName(post.author_name)}
-                  </p>
-                </div>
-              </>
-            )}
+                )}
+              </div>
+            </div>
+            <Badge
+              variant="outline"
+              className="hidden sm:inline-flex rounded-full text-xs font-medium border-border/80"
+            >
+              {post.post_type === "fridge" || post.post_type === "foodbank"
+                ? "Community Organization"
+                : "Community Sharer"}
+            </Badge>
           </div>
 
-          {/* Location */}
+          {/* Location Details */}
           <div
             className={cn(
-              "flex flex-col gap-2 mb-6 transform transition-all duration-500 delay-200",
+              "flex flex-col gap-2 transform transition-all duration-500 delay-200",
               isLoaded ? "translate-y-0" : "translate-y-4",
             )}
           >

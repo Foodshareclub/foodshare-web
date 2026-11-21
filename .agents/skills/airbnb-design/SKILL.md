@@ -105,5 +105,32 @@ Listing cards use a frameless presentation with a 4-line metadata hierarchy:
   - Community heart badge: `Made with ❤️ for our community`.
   - Trailing controls: Compact `LanguageSelector` dropdown with native names and country flags.
 
+## 11. Category Filters Pill & Modal (`FiltersModal.tsx`)
+
+- **Airbnb Desktop Filters Trigger**:
+  - Docks on the trailing side of the category scroller in `Navbar.tsx`.
+  - Tactile pill styling: `h-10 px-3.5 sm:px-4 rounded-xl border border-border/80 bg-background/80 hover:border-foreground/30 hover:bg-muted/40 shadow-2xs hover:shadow-xs flex items-center gap-2 text-xs font-semibold text-foreground/80 hover:text-foreground transition-all shrink-0 active:scale-95`.
+  - `SlidersHorizontal` icon (`size-3.5`) and active filter count badge (`1`) when `geoDistance > 0`.
+- **Airbnb Filter Dialog**:
+  - Centered modal title `Distance Filter` with standard `DialogClose` in the top end corner.
+  - Range display with dynamic read-out: `Within X km` or `Any distance`.
+  - Preset discovery chips: `5 km`, `10 km`, `25 km`, `50 km`, `Any distance` with high-contrast active indicator.
+  - Sticky footer with `Clear all` text button and solid high-contrast `Show listings` action button (`bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 rounded-xl h-10 px-5 font-semibold text-xs shadow-xs active:scale-95`).
+
+## 12. Listing Detail & Intercepted Modal (`PostDetailContent.tsx`)
+
+- **Airbnb Detail Header & Metadata Bar**:
+  - Proud listing title: `text-2xl sm:text-3xl font-bold tracking-tight text-foreground`.
+  - Top meta line: Star rating score (`★ 5.0 (12)` or `★ New`), interpuncts (`·`), live status indicator pill (`Available` / `Reserved`), and privacy-standardized address with `MapPin`.
+  - Integrated header actions: Share button (`ShareButton`) docked top-right.
+- **Framed Hero Media**:
+  - Clean rounded aspect ratio container (`aspect-[16/9] rounded-2xl overflow-hidden`) with reference photo disclosure badge and photo count pill (`Camera` + `X photos`).
+- **Airbnb Host Credibility Section**:
+  - Circular avatar container (`size-12 rounded-full border border-border/80 bg-background/80 shadow-2xs`).
+  - Clear attribution hierarchy: `Hosted by <Name>` / `Food Bank Entity` paired with `Community Sharer` / `Community Organization` badge.
+- **Structured Highlights & Primary CTA**:
+  - Available hours (`Clock`), transportation (`Truck`), and description sections.
+  - Prominent primary action button in brand coral gradient (`bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white font-semibold h-12 rounded-xl shadow-md transition-all`).
+
 
 

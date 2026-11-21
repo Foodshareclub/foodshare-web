@@ -14,6 +14,7 @@ import NavbarLogo from "./NavbarLogo";
 import SearchBar from "./SearchBar";
 import { CategoryNavigation } from "./organisms";
 import type { NavbarProps } from "./types";
+import FiltersModal from "@/components/modals/FiltersModal";
 
 import { CATEGORIES } from "@/constants/categories";
 import { PATH } from "@/utils";
@@ -94,8 +95,8 @@ function Navbar({
     const routeName = categoryId.toLowerCase();
     onProductTypeChange(categoryId);
 
-    // Forum, Challenge and Foodlytics have their own routes without map views
-    if (routeName === "forum" || routeName === "challenge" || routeName === "foodlytics") {
+    // Forum, Challenge and Foodwastelytics have their own routes without map views
+    if (routeName === "forum" || routeName === "challenge" || routeName === "foodwastelytics") {
       const keyword = routeName === "challenge" ? searchParams.get("key_word") : null;
       router.push(`/${routeName}${keyword ? `?${new URLSearchParams({ key_word: keyword })}` : ""}`);
       return;
@@ -182,20 +183,27 @@ function Navbar({
               onNavigateToDashboard={handleNavigateToDashboard}
             />
           </div>
-          {activeCategory !== "foodlytics" && activeCategory !== "forum" && (
+          {activeCategory !== "foodwastelytics" && activeCategory !== "forum" && (
             <div className="col-span-2 row-start-2 w-full min-w-0 max-w-[720px] justify-self-center lg:col-span-1 lg:col-start-2 lg:row-start-1">
               <SearchBar key={activeCategory} onSearchClick={handleSearchClick} defaultCategory={activeCategory} />
             </div>
           )}
         </div>
         <div className="border-t border-border/60">
-          <div className={LISTING_CONTAINER}>
-            <CategoryNavigation
-              categories={translatedCategories}
-              activeCategory={activeCategory}
-              onCategoryChange={handleCategoryChange}
-              className="gap-3 py-2 sm:gap-5 lg:justify-between"
-            />
+          <div className={cn(LISTING_CONTAINER, "flex items-center justify-between gap-3 sm:gap-4")}>
+            <div className="min-w-0 flex-1">
+              <CategoryNavigation
+                categories={translatedCategories}
+                activeCategory={activeCategory}
+                onCategoryChange={handleCategoryChange}
+                className="gap-3 py-2 sm:gap-5"
+              />
+            </div>
+            {activeCategory !== "foodwastelytics" && activeCategory !== "forum" && (
+              <div className="shrink-0 py-2">
+                <FiltersModal />
+              </div>
+            )}
           </div>
         </div>
       </header>

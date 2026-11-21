@@ -527,6 +527,17 @@ FoodShare incorporates core Airbnb design patterns adapted for surplus food and 
    - Clean horizontal layout with copyright notice and `Privacy` / `Terms` links.
    - Community tribute and language selection dropdown.
 
+7. **Category Filters Pill & Modal (`FiltersModal.tsx`)**:
+   - Docks on the trailing side of the category scroller in `Navbar.tsx`.
+   - `SlidersHorizontal` icon, "Filters" label, and active filter counter badge.
+   - Preset discovery chips (`5 km`, `10 km`, `25 km`, `50 km`, `Any distance`), slider, and high-contrast action button.
+
+8. **Listing Detail View & Modal (`PostDetailContent.tsx`)**:
+   - Top-level title and metadata line with star score (`★ 5.0 (12)` or `★ New`), availability pill (`Available` / `Reserved`), and privacy-standardized address.
+   - Framed hero media presentation with reference photo disclosure.
+   - Circular host attribution card (`size-12 rounded-full`) and community badge.
+   - Coral brand gradient CTA button for contacting the sharer.
+
 ---
 
 _This is a living document. Update as you build and discover new patterns!_
