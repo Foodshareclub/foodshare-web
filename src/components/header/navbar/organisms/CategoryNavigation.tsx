@@ -144,13 +144,13 @@ export const CategoryNavigation: FC<CategoryNavigationProps> = ({
       {scrollState.overflow && (
         <Button
           variant="outline"
-          size="icon-lg"
-          className="size-11 shrink-0 rounded-full"
+          size="icon-sm"
+          className="size-8 shrink-0 rounded-full border-border/80 bg-background/95 shadow-xs backdrop-blur-xs transition-all hover:scale-105 hover:bg-background active:scale-95"
           disabled={!scrollState.previous}
           aria-label={`${t("previous")} — ${t("category")}`}
           onClick={() => scrollCategories(-1)}
         >
-          <ChevronLeft data-icon="inline-start" className="rtl:rotate-180" />
+          <ChevronLeft data-icon="inline-start" className="size-4 rtl:rotate-180" />
         </Button>
       )}
       <div
@@ -184,13 +184,13 @@ export const CategoryNavigation: FC<CategoryNavigationProps> = ({
       {scrollState.overflow && (
         <Button
           variant="outline"
-          size="icon-lg"
-          className="size-11 shrink-0 rounded-full"
+          size="icon-sm"
+          className="size-8 shrink-0 rounded-full border-border/80 bg-background/95 shadow-xs backdrop-blur-xs transition-all hover:scale-105 hover:bg-background active:scale-95"
           disabled={!scrollState.next}
           aria-label={`${t("next")} — ${t("category")}`}
           onClick={() => scrollCategories(1)}
         >
-          <ChevronRight data-icon="inline-end" className="rtl:rotate-180" />
+          <ChevronRight data-icon="inline-end" className="size-4 rtl:rotate-180" />
         </Button>
       )}
     </div>

@@ -24,8 +24,7 @@ import {
 } from "@/lib/listing-search";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/zustand/useUIStore";
-import { SearchIcon } from "@/utils/icons";
-import { MapPin, SlidersHorizontal } from "lucide-react";
+import { Clock, MapPin, Search, SlidersHorizontal, TrendingUp, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import type React from "react";
@@ -232,14 +231,16 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
       <Button
         type="button"
         variant="outline"
-        className="h-14 w-full justify-start gap-3 rounded-full px-4 text-start shadow-sm motion-reduce:transition-none"
+        className="h-14 w-full justify-start gap-3 rounded-full px-3 text-start shadow-sm motion-reduce:transition-none hover:shadow-md transition-shadow"
         onClick={() => {
           setActiveSection("what");
           onSearchClick();
         }}
         aria-label={t("msgsearchheader")}
       >
-        <SearchIcon className="size-5 shrink-0 text-primary" aria-hidden="true" />
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-xs">
+          <Search className="size-4.5" aria-hidden="true" />
+        </div>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="truncate text-sm font-semibold">{searchTerm || t("msgsearchheader")}</span>
           <span className="truncate text-xs font-normal text-muted-foreground">{t("what_are_you_looking_for")}</span>
@@ -342,14 +343,15 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
 
         <Button
           type="button"
+          variant="brand"
           size="icon-lg"
           aria-label={t("search")}
-          className="me-2 shrink-0 rounded-full"
+          className="me-2 size-11 shrink-0 rounded-full shadow-sm hover:scale-105 active:scale-95 transition-all duration-200"
           disabled={isLocating || isNavigating}
           aria-busy={isLocating || isNavigating}
           onClick={() => handleSearchSubmit()}
         >
-          <SearchIcon className="size-5" aria-hidden="true" />
+          <Search className="size-5" aria-hidden="true" />
         </Button>
       </div>
 
@@ -383,7 +385,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
               autoFocus
             />
             <div className="absolute inset-s-4 top-1/2 -translate-y-1/2">
-              <SearchIcon className="text-lg text-muted-foreground" />
+              <Search className="size-5 text-muted-foreground" aria-hidden="true" />
             </div>
             {isLoading && (
               <div className="absolute inset-e-4 top-1/2 -translate-y-1/2">
@@ -423,37 +425,11 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
                       onClick={() => handleSearchSubmit(suggestion.text)}
                     >
                       {suggestion.type === "history" ? (
-                        <svg
-                          aria-hidden="true"
-                          className="w-5 h-5 text-muted-foreground"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
+                        <Clock aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
                       ) : suggestion.type === "popular" ? (
-                        <svg
-                          aria-hidden="true"
-                          className="w-5 h-5 text-muted-foreground"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                          />
-                        </svg>
+                        <TrendingUp aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
                       ) : (
-                        <SearchIcon className="text-lg text-muted-foreground" />
+                        <Search aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
                       )}
                       <div className="flex-1">
                         <p className="text-sm font-medium text-foreground">{suggestion.text}</p>
@@ -474,15 +450,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
                         className="shrink-0 text-muted-foreground hover:text-foreground"
                         aria-label="Remove from history"
                       >
-                        <svg
-                          aria-hidden="true"
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <X aria-hidden="true" className="size-4" />
                       </Button>
                     )}
                   </div>
@@ -588,15 +556,15 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
               {
                 id: "all",
                 label: t.has("forum_all_categories") ? t("forum_all_categories") : "All categories",
-                icon: SearchIcon,
+                icon: Search,
               },
-              ...CATEGORIES.filter((category) => category.id !== "forum" && category.id !== "foodlytics").map(
-                (category) => ({
-                  id: category.id,
-                  label: t(category.labelKey),
-                  icon: category.icon,
-                }),
-              ),
+              ...CATEGORIES.filter(
+                (category) => category.id !== "forum" && (category.id as string) !== "foodwastelytics",
+              ).map((category) => ({
+                id: category.id,
+                label: t(category.labelKey),
+                icon: category.icon,
+              })),
             ].map((category) => (
               <Button
                 type="button"

@@ -56,7 +56,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave, onClick }: Pr
       aria-label={product.post_name}
     >
       {/* 1. Media: Airbnb Image Carousel */}
-      <div className="relative z-10 isolate overflow-hidden rounded-2xl bg-muted aspect-[20/19] w-full">
+      <div className="relative z-10 isolate overflow-hidden rounded-2xl bg-muted aspect-[20/19] w-full transition-shadow duration-300 group-hover/card:shadow-md">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover/card:opacity-100 z-[1]" />
 
         <ProductCardActions product={product} />

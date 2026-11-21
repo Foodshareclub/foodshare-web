@@ -11,12 +11,31 @@ import { Badge } from "@/components/ui/badge";
 import { ReferencePhotoDisclosure } from "@/components/productCard/ReferencePhotoDisclosure";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { standardizeDisplayAddress } from "@/lib/address-standardizer";
 import type { AuthUser } from "@/lib/data/auth";
+import { formatFirstAuthorName } from "@/lib/data/author-display";
 import { normalizeImageUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
-import { StarIcon } from "@/utils/icons";
-import { Calendar, Clock, Eye, FileText, Flag, Heart, MapPin, Sparkles, Truck } from "lucide-react";
+import {
+  AlertTriangle,
+  Building2,
+  Calendar,
+  Camera,
+  CheckCircle2,
+  Clock,
+  Eye,
+  FileText,
+  Flag,
+  Heart,
+  MapPin,
+  Package,
+  PauseCircle,
+  Sparkles,
+  Star,
+  Truck,
+  User,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
@@ -94,8 +113,16 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
               onError={() => setFailedImages((previous) => ({ ...previous, [heroImage]: true }))}
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
-              <span className="text-7xl">📦</span>
+            <div className="w-full h-full bg-gradient-to-br from-amber-500/10 via-emerald-500/5 to-teal-500/10 dark:from-amber-950/25 dark:via-neutral-900 dark:to-emerald-950/20 flex flex-col items-center justify-center p-6 text-muted-foreground relative">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-80" />
+              <div className="relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/60 bg-white/70 px-6 py-5 shadow-xs backdrop-blur-md dark:border-white/10 dark:bg-neutral-900/70">
+                <span className="flex size-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Package className="size-7" strokeWidth={1.75} aria-hidden="true" />
+                </span>
+                <span className="text-xs font-semibold tracking-wider text-foreground/80 uppercase">
+                  {post.post_type === "food" || post.post_type === "vegan" ? "Community Food" : "Community Listing"}
+                </span>
+              </div>
             </div>
           )}
 
@@ -108,20 +135,23 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
 
           {/* Photo count badge */}
           {validImages.length > 1 && (
-            <Badge className="absolute bottom-4 end-4 bg-black/60 backdrop-blur-sm text-white border-0 px-3 py-1.5">
-              📷 {validImages.length} photos
+            <Badge className="absolute bottom-4 end-4 bg-black/60 backdrop-blur-sm text-white border-0 px-3 py-1.5 flex items-center gap-1.5 text-xs">
+              <Camera className="size-3.5" aria-hidden="true" />
+              <span>{validImages.length} photos</span>
             </Badge>
           )}
 
           {/* Status badges */}
           {!post.is_active && (
-            <Badge className="absolute top-4 end-4 bg-yellow-500/90 backdrop-blur-sm text-white border-0">
-              ⏸️ Inactive
+            <Badge className="absolute top-4 end-4 bg-yellow-500/90 backdrop-blur-sm text-white border-0 flex items-center gap-1 text-xs">
+              <PauseCircle className="size-3.5" aria-hidden="true" />
+              <span>Inactive</span>
             </Badge>
           )}
           {post.is_arranged && (
-            <Badge className="absolute top-4 end-4 bg-emerald-500/90 backdrop-blur-sm text-white border-0">
-              ✅ Arranged
+            <Badge className="absolute top-4 end-4 bg-emerald-500/90 backdrop-blur-sm text-white border-0 flex items-center gap-1 text-xs">
+              <CheckCircle2 className="size-3.5" aria-hidden="true" />
+              <span>Arranged</span>
             </Badge>
           )}
         </div>
@@ -148,6 +178,54 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
             {post.post_name}
           </h1>
 
+          {/* Author or Organization / Entity Attribution */}
+          <div
+            className={cn(
+              "flex items-center gap-3 mb-4 p-3 rounded-xl bg-muted/40 transform transition-all duration-500 delay-175",
+              isLoaded ? "translate-y-0" : "translate-y-4",
+            )}
+          >
+            {post.post_type === "fridge" || post.post_type === "foodbank" ? (
+              <>
+                <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                  <Building2 className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {post.post_type === "foodbank" ? "Food Bank Entity" : "Hosted by"}
+                  </p>
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {post.host_entity ||
+                      ((post.metadata as Record<string, unknown> | undefined)?.host_company as string) ||
+                      (post.post_type === "foodbank" ? post.post_name : "Community Host")}
+                  </p>
+                  {Boolean(
+                    post.point_person_name || (post.metadata as Record<string, unknown> | undefined)?.point_person_name,
+                  ) && (
+                    <p className="text-xs text-muted-foreground truncate">
+                      {`Contact: ${String(
+                        post.point_person_name ||
+                          (post.metadata as Record<string, unknown> | undefined)?.point_person_name,
+                      )}`}
+                    </p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10 text-primary shrink-0">
+                  <User className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("author")}</p>
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {formatFirstAuthorName(post.author_name)}
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Location */}
           <div
             className={cn(
@@ -159,11 +237,13 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
               <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/50 dark:to-emerald-950/30">
                 <MapPin className="h-5 w-5 text-teal-600 dark:text-teal-400" />
               </div>
-              <p className="text-muted-foreground">{post.post_stripped_address}</p>
+              <p className="text-muted-foreground">
+                {standardizeDisplayAddress(post.post_stripped_address || post.post_address)}
+              </p>
             </div>
             <p className="text-xs text-muted-foreground/70 flex items-center gap-1.5 ms-13">
-              <span className="text-amber-500">&#9888;</span>
-              {t("location_approximate_disclaimer")}
+              <AlertTriangle className="size-3.5 text-amber-500 shrink-0" aria-hidden="true" />
+              <span>{t("location_approximate_disclaimer")}</span>
             </p>
           </div>
 
@@ -193,19 +273,31 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
           {!isOwner && (
             <div
               className={cn(
-                "flex justify-center gap-2 mb-6 p-4 rounded-xl bg-muted/30 transform transition-all duration-500 delay-300",
+                "flex items-center justify-center gap-2 mb-6 p-4 rounded-xl bg-muted/30 transform transition-all duration-500 delay-300",
                 isLoaded ? "translate-y-0" : "translate-y-4",
               )}
             >
-              <span className="text-sm text-muted-foreground me-2">Rate this listing:</span>
-              {STAR_VALUES.map((star) => (
-                <StarIcon
-                  key={star}
-                  onClick={() => onStarClick(star - 1)}
-                  color={star <= rating ? "teal.500" : "gray.300"}
-                  cursor="pointer"
-                />
-              ))}
+              <span className="text-sm font-medium text-muted-foreground me-2">Rate this listing:</span>
+              <div className="flex items-center gap-1" role="group">
+                {STAR_VALUES.map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => onStarClick(star - 1)}
+                    className="p-1 rounded-sm transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-ring"
+                    aria-label={`Rate ${star} stars`}
+                  >
+                    <Star
+                      className={cn(
+                        "size-5 transition-colors",
+                        star <= rating
+                          ? "fill-amber-400 text-amber-400"
+                          : "text-muted-foreground/40 hover:text-amber-300",
+                      )}
+                    />
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -310,13 +402,13 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
           {!post.is_active && (
             <div
               className={cn(
-                "mt-6 p-4 rounded-xl bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/20 border border-yellow-200/50 dark:border-yellow-800/30 text-center transform transition-all duration-500 delay-450",
+                "mt-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-center transform transition-all duration-500 delay-450",
                 isLoaded ? "translate-y-0" : "translate-y-4",
               )}
             >
-              <p className="text-yellow-800 dark:text-yellow-300 text-sm font-medium flex items-center justify-center gap-2">
-                <span>⚠️</span>
-                {t("this_listing_is_no_longer_active")}
+              <p className="text-amber-800 dark:text-amber-300 text-sm font-medium flex items-center justify-center gap-2">
+                <AlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                <span>{t("this_listing_is_no_longer_active")}</span>
               </p>
             </div>
           )}
@@ -324,13 +416,13 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
           {post.is_arranged && (
             <div
               className={cn(
-                "mt-6 p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-200/50 dark:border-emerald-800/30 text-center transform transition-all duration-500 delay-450",
+                "mt-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 text-center transform transition-all duration-500 delay-450",
                 isLoaded ? "translate-y-0" : "translate-y-4",
               )}
             >
               <p className="text-emerald-800 dark:text-emerald-300 text-sm font-medium flex items-center justify-center gap-2">
-                <span>🎉</span>
-                {t("this_item_has_been_arranged")}
+                <CheckCircle2 className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <span>{t("this_item_has_been_arranged")}</span>
               </p>
             </div>
           )}

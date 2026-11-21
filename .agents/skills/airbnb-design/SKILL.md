@@ -55,3 +55,20 @@ Listing cards use a frameless presentation with a 4-line metadata hierarchy:
 - Container: `LISTING_CONTAINER = "mx-auto w-full max-w-[1920px] px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16"`.
 - Responsive Columns: `LISTING_GRID = "grid grid-cols-1 min-[550px]:grid-cols-2 min-[950px]:grid-cols-3 min-[1200px]:grid-cols-4 min-[1640px]:grid-cols-5 min-[1880px]:grid-cols-6 items-stretch gap-x-6 gap-y-10"`.
 - Floating Map Pill: Centered bottom floating pill (`Show map`) with backdrop blur and tactile elevation.
+
+## 5. Header & Pill Search Bar (`SearchBar.tsx`)
+
+- **3-Segment Pill Structure**:
+  - `What` (keywords and query suggestions) | `Distance` (radius slider) | `Category` (category filter).
+  - Divided by subtle 1px border lines (`h-8 w-px bg-border`).
+- **Signature Brand Search Button**:
+  - Circular brand red/pink trigger (`variant="brand"` with `--brand-primary` `#FF2D55`).
+  - Tactile hover zoom (`hover:scale-105 active:scale-95 shadow-sm transition-all duration-200`).
+  - Mobile compact search pill includes a circular brand icon badge for instant visual recognition.
+
+## 6. Category Carousel Navigation (`CategoryNavigation.tsx`)
+
+- Sleek circular scroll arrows (`size-8 shrink-0 rounded-full border-border/80 bg-background/95 shadow-xs hover:scale-105`).
+- Active category tab has bottom indicator bar (`h-0.5 bg-primary rounded-full`).
+- Graceful fade-out when at carousel extremes (`disabled:opacity-0`).
+
