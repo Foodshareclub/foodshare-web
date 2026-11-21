@@ -2,63 +2,115 @@ title = "Foodshare Gitleaks configuration"
 
 [extend]
 useDefault = true
-# Team rules: gitleaks' default rules, minus the files that are *supposed* to
-# contain credential-shaped placeholders. Ported from foodshare-backend's
-# .gitleaks.toml. An allowlist states a file's INTENT, not whether its current
-# contents happen to be safe. The real `.env*` files are gitignored and stay
-# fully scanned.
+# Detection = the gitleaks built-in default rules (the same useDefault
+# umbrella as the foodshare-backend gate) PLUS two local team rules at the
+# bottom of this file: aws-secret-access-key and twilio-account-sid. They
+# close the default rule set's structural gaps for this repo's own leaked
+# classes (alerts #1, #4, #6) - the default generic-api-key charset rejects
+# /+ in a 40-char aws secret, and the default twilio rule is SK-only (never
+# matches AC SIDs). Local rules only: no remote config fetch. The rules are
+# owed a mirror in the backend config (t_81e23c4a) so the two configs do not
+# diverge (lead ruling c1301, t_f7d1f23b; approved t_b3249e09).
+#
+# An allowlist entry states a file's INTENT at a specific commit, not
+# whether its current contents happen to be safe. The real `.env*` files are
+# gitignored and stay fully scanned.
+
+# Fixture-class findings in committed documentation (previously baselined by
+# a path-only allowlist, which suppressed them at EVERY commit - the F1
+# bypass of the security review t_0c920f78). Re-pinned per (commit, path),
+# condition=AND, per the approved spec (t_a1f9aacb): a fresh value in any of
+# these files at a NEW commit is still detected. All five verified
+# fixture-class (fake placeholder credentials / stub PEM),
+# mutation-verified 2026-11-19 (t_a1f9aacb) and re-verified 2026-11-21
+# (t_99d5e5ba run 974 probe table).
 
 [[allowlists]]
-description = "Committed example env files — placeholder values by definition"
-paths = [
-  # Exact basename with an optional directory prefix, so a real `.env` at
-  # any depth is never caught by this rule.
-  '''(^|/)\.env\.example$''',
-  '''(^|/)\.env\.functions\.example$''',
-  '''(^|/)env\.example$''',
-  '''(^|/)env\.functions\.example$''',
-]
+description = "fixture-class placeholder, curl-auth-header @ 815115d:docs/03-features/email/README.md"
+condition = "AND"
+commits = [ "815115d85558062aff46e17c3eca2ce781a41ed1" ]
+paths = [ '^docs/03\-features/email/README\.md$' ]
 
 [[allowlists]]
-description = "Documentation that quotes example commands with fake credentials"
-paths = [
-  '''(^|/)EXAMPLES\.md$''',
-  '''(^|/)DEPLOYMENT\.md$''',
-  '''(^|/)README\.md$''',
-]
+description = "fixture-class placeholder, curl-auth-header @ 839cf6b:supabase/functions/api-v1-notifications/README.md"
+condition = "AND"
+commits = [ "839cf6b6da5bca6fd48375dde33db82965613904" ]
+paths = [ '^supabase/functions/api\-v1\-notifications/README\.md$' ]
+
+[[allowlists]]
+description = "fixture-class placeholder, curl-auth-header @ 839cf6b:supabase/functions/api-v1-notifications/EXAMPLES.md"
+condition = "AND"
+commits = [ "839cf6b6da5bca6fd48375dde33db82965613904" ]
+paths = [ '^supabase/functions/api\-v1\-notifications/EXAMPLES\.md$' ]
+
+[[allowlists]]
+description = "fixture-class placeholder, private-key (stub PEM) @ 839cf6b:supabase/functions/api-v1-notifications/DEPLOYMENT.md"
+condition = "AND"
+commits = [ "839cf6b6da5bca6fd48375dde33db82965613904" ]
+paths = [ '^supabase/functions/api\-v1\-notifications/DEPLOYMENT\.md$' ]
+
+[[allowlists]]
+description = "fixture-class placeholder, curl-auth-header @ fd14f3c:supabase/functions/update-post-coordinates/README.md"
+condition = "AND"
+commits = [ "fd14f3c339561fcfd9815c104fc8dd7379a4f08d" ]
+paths = [ '^supabase/functions/update\-post\-coordinates/README\.md$' ]
+
 
 # ---------------------------------------------------------------------------
-# KNOWN HISTORICAL LEAKS — pinned by (commit, path), 2026-11-15, rev 2026-11-19
+# KNOWN HISTORICAL LEAKS - pinned by (commit, path), 2026-11-15, rev 2026-11-21
 #
-# These findings (16 unique commit:file pairs; 48 on this branch's own
-# history, 49 across all local refs) are the repository's pre-existing
-# leaked-secret history, including the values behind GitHub secret-scanning
-# alerts #1–#9. They are tracked in the rotation queue, not here. Without
-# this baseline the scan exits 1 on every push and a new leak is
-# indistinguishable from known debt. No secret content is embedded: each
-# entry names only the introducing commit SHA and the file path.
+# These findings are the repository's pre-existing leaked-secret history:
+# 21 unique (commit, file) pairs under the default rule set - the values
+# behind the GitHub secret-scanning alerts, plus the fixture-class
+# findings in committed documentation (re-pinned per commit, above). They
+# are tracked in the rotation queue, not here. Without this baseline the
+# scan exits 1 on every push and a new leak is indistinguishable from known
+# debt. 21 of the 24 allowlist entries below name only the introducing
+# commit SHA and the file path - no secret content embedded (the three
+# f2-pin-* entries are the documented carve-out, see below).
 #
-# HELD BASELINE — live Brevo key (lead ruling 2026-11-17 on t_99d5e5ba):
+# COVERAGE OF GITHUB SECRET-SCANNING ALERTS #1-#9 (precise statement per
+# lead ruling c1301 on t_f7d1f23b, extended by the review verdict c1332):
+#   #1 (AWS secret) and #4/#6 (Twilio Account SIDs): covered by the two
+#     local team rules below - the default rule set is structurally blind
+#     to both classes - AND the 3 historical values are value-pinned
+#     (the f2-pin-* entries).
+#   #2/#5/#7/#8: covered by the default rule set and pinned above.
+#   #3/#9 (Supabase service keys): absent from reachable history (verified
+#     2026-11-19/21 by full-ref gitleaks scan + pickaxe over all refs);
+#     covered by the default jwt rule on re-introduction.
+#
+# HELD BASELINE - live Brevo key (lead ruling 2026-11-17 on t_99d5e5ba):
 # fingerprint 1f2732c16d92 is deliberately NOT baselined, and no allowlist
-# entry below covers it. Verified 2026-11-19 (t_13e7ba88): that value is
-# ABSENT from this repository's history — full-ref gitleaks scan, git
-# pickaxe over all refs, and base64-variant decode of every finding all
-# negative. It exists only in operator-side staging (t_5f77c879; probed
-# LIVE, HTTP 200 at 2026-11-19T06:24:29Z). If it ever enters this history
-# the gate flags it. There is no sendinblue/Brevo class suppression.
+# entry below covers it. Verified 2026-11-19 (t_13e7ba88) and re-verified
+# 2026-11-21 (t_9d41a3cb): that value is ABSENT from this repository's
+# history - full-ref gitleaks scan, git pickaxe over all refs, and
+# base64-variant decode of every finding all negative. It exists only in
+# operator-side staging (t_5f77c879, revocation still open). If it ever
+# enters this history the gate flags it. There is no sendinblue/Brevo
+# class suppression.
 #
 # The Brevo key that IS in this history (GitHub secret-scanning alert #7)
 # is a DIFFERENT value: fingerprint 077e34be20bc, vendor-probed DEAD
 # (HTTP 401) at 2026-11-16T20:26:56Z (t_5f77c879 probe record). Its two
 # pins below are historical-dead pins, retained per t_13e7ba88: "all
 # non-live historical findings should be pinned to zero". The fingerprint
-# attribution discrepancy vs the lead ruling (which names 1f2732c16d92 as
-# the in-history key) is reported on t_13e7ba88 / t_99d5e5ba for
-# re-adjudication; removing the two sendinblue pins is a two-line revert
-# if the lead rules otherwise.
+# attribution discrepancy vs the lead ruling (which named 1f2732c16d92 as
+# the in-history key) is resolved: the NO-OP close of t_9d41a3cb was
+# approved 2026-11-21 after three value-level verifications.
 #
-# Two details make each pin cover exactly one (commit, file) pair and nothing
-# else. Both were verified with a scratch-commit guard test:
+# F2 VALUE-PIN CARVE-OUT (lead binding correction c1330 on t_a1f9aacb;
+# approved t_b3249e09): the three f2-pin-* entries carry the EXACT
+# (regex-escaped) historical values as regexTarget="secret" regexes. Those
+# values are already public in this public repository's history and proven
+# inert (aws secret: exposed key pair deactivated 2026-11-21, t_48912444/
+# t_f7fb4b33; twilio SIDs: test-account class, alert #4/#6). The pins are
+# value-scoped, not class suppression - any OTHER aws secret or twilio SID
+# of the same class is still flagged by the team rules below.
+#
+# Two details make each (commit, path) pin cover exactly one (commit, file)
+# pair and nothing else. Both were verified with a scratch-commit guard
+# test:
 #
 #   condition = "AND"  gitleaks' default allowlist condition is OR, which would
 #                      ignore the path at EVERY commit, so a new secret added
@@ -67,23 +119,33 @@ paths = [
 #                      '^sha$' pattern never matches, and under AND would
 #                      leave the pin inert.
 #
-# Scan of record: branch foodshare/t_99d5e5ba-gitleaks-gate, gitleaks 8.28.0
-# (release tarball, sha256 d942f3ad1472…), this config, 2026-11-19:
-#   branch history (CI-parity single-branch clone):
-#     before: 48 findings, exit 1   after: 0 findings, exit 0
-#   all local refs (includes sibling/main commits not on this branch):
-#     before: 49 findings, exit 1   after: 0 findings, exit 0
-# The 49th finding is a Resend test fixture introduced by 6a55a948 (merged
-# to main via a sibling lane); it is pinned below so the gate is green on
-# either scan surface.
+# Scan of record (gitleaks 8.28.0, release tarball sha256 d942f3ad1472...,
+# binary sha256 5588b5d942df...; measured 2026-11-21 on branch tip
+# 2f1597bc, t_99d5e5ba run 974):
+#   Surfaces:
+#     branch   = single-branch clone of this branch, plain detect
+#                (1013 commits)
+#     all-refs = all branch tips + tags + refs/pull/207/merge fetched,
+#                detect --log-opts=--all (1286 commits at 2f1597bc; the CI
+#                parity surface - CI scans the PR merge ref, whose history
+#                advances with each push)
+#   Baseline (default rules only, no allowlists):
+#     before: 80 findings / 21 pairs, exit 1 - identical pair set on both
+#     surfaces
+#   Baseline + the two team rules below:
+#     83 findings / 21 pairs, exit 1 - exactly +3, all at
+#     815115d:scripts/archive-firebase/restore-secrets.sh (L122, L129, L136)
+#   This config:
+#     after: 0 findings, exit 0 - both surfaces
 # Regenerate with:
 #   gitleaks detect --source . --redact --config .gitleaks.toml \
 #     --report-path /tmp/r.json --report-format json
 # and rebuild the (commit, file) pairs from the report.
 #
-# If history is rewritten (e.g. a scrub + force-push), every SHA below changes
-# and this baseline must be regenerated against the new history.
+# If history is rewritten (e.g. a scrub + force-push), every SHA below
+# changes and this baseline must be regenerated against the new history.
 # ---------------------------------------------------------------------------
+
 
 [[allowlists]]
 description = "known historical leak: generic-api-key @ 19677b5:.kiro/settings/mcp.json"
@@ -180,3 +242,40 @@ description = "test fixture, non-live (Resend re_test_ placeholder in a bun:test
 condition = "AND"
 commits = [ "6a55a9482077fffe2b547ccea11769a5c8c53776" ]
 paths = [ '^src/lib/email/__tests__/vault\.test\.ts$' ]
+
+# ---------------------------------------------------------------------------
+# F2 VALUE PINS - exact historical values newly detected by the two team
+# rules at 815115d:scripts/archive-firebase/restore-secrets.sh. The pair is
+# already (commit, path)-pinned above; these value-scoped pins are the
+# approved belt-and-braces record (lead binding correction c1330) and make
+# each pinned value independently accountable. Carve-out rationale in the
+# header above (already-public, proven-inert values).
+# ---------------------------------------------------------------------------
+
+[[allowlists]]
+description = "f2-pin-aws-secret-815115d8: exact historical value, already public + proven inert (fp fb946305f9b3; alert #1; scripts/archive-firebase/restore-secrets.sh L122)"
+regexTarget = "secret"
+regexes = ['^\+rBDknmyieo6nmDF8QhpoM2q0XlJELILM4N28Hgg$']
+
+[[allowlists]]
+description = "f2-pin-twilio-sid-815115d8: exact historical value, already public + proven inert (fp 0a0ec4008fac; alert #4; scripts/archive-firebase/restore-secrets.sh L129)"
+regexTarget = "secret"
+regexes = ['^ACffdce5ff52463cc83772beac07ac37c8$']
+
+[[allowlists]]
+description = "f2-pin-twilio-test-sid-815115d8: exact historical value, already public + proven inert (fp fadadf80857d; alert #6; scripts/archive-firebase/restore-secrets.sh L136)"
+regexTarget = "secret"
+regexes = ['^ACac1a815f34a8f66742eba8e2fdf90e1b$']
+[[rules]]
+id = "aws-secret-access-key"
+description = "AWS Secret Access Key (keyword-context, 40-char base64 charset)"
+regex = '''(?i)aws.{0,20}secret.{0,20}?[:=]\s*['"]?([A-Za-z0-9/+=]{40})(?:['"]|[^A-Za-z0-9/+=]|$)'''
+keywords = ["aws"]
+secretGroup = 1
+
+[[rules]]
+id = "twilio-account-sid"
+description = "Twilio Account SID (AC + 32 lowercase hex, keyword-context)"
+regex = '''(?i)twilio.{0,40}?[^0-9A-Za-z](AC[0-9a-f]{32})(?:[^0-9a-f]|$)'''
+keywords = ["twilio"]
+secretGroup = 1
