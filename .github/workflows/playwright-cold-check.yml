@@ -5,6 +5,9 @@ name: Playwright cold install check
 # has to be downloaded and installed from scratch.
 
 on:
+  push:
+    branches:
+      - ci/playwright-cold-check
   workflow_dispatch:
 
 permissions:
@@ -16,7 +19,7 @@ jobs:
     runs-on: [self-hosted, Linux]
     timeout-minutes: 20
     env:
-      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/playwright-cold-${{ github.run_id }}
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-cold
     steps:
       - uses: actions/checkout@v4
 
@@ -29,6 +32,7 @@ jobs:
 
       - name: Prove the browser path starts empty
         run: |
+          rm -rf "$PLAYWRIGHT_BROWSERS_PATH"
           test ! -e "$PLAYWRIGHT_BROWSERS_PATH"
           echo "cold path: $PLAYWRIGHT_BROWSERS_PATH"
 
