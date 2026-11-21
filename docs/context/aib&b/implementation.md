@@ -4,6 +4,8 @@
 
 A complete, production-ready guide for building an Airbnb-style application using the modern stack.
 
+> ⚠️ **Reference only.** This is a generic "build an Airbnb clone" guide captured during Phase 19. It is not FoodShare guidance: several of its prescriptions (font, primary colour, border radius, gradient buttons) have since been superseded by the canonical design source, `.kiro/steering/design.md`. Read it for implementation technique, not for tokens or rules.
+
 ---
 
 ## Table of Contents

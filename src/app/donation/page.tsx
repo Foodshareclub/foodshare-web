@@ -1,11 +1,9 @@
-import bracketsDown from "@/assets/bracketsDown.png";
-import bracketsUp from "@/assets/bracketsUp.png";
 import { PageHeader } from "@/components/navigation/PageHeader";
-import { Check, HandHeart, Heart, Leaf, Star, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Check, HandHeart, Heart, Leaf, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
-import Image from "next/image";
 import Link from "next/link";
 
 import { type PublicStats, getPublicStats } from "@/lib/data/public-stats";
@@ -76,7 +74,6 @@ type Value =
 const CARDS: ReadonlyArray<{
   id: string;
   Icon: LucideIcon;
-  accent: "pink" | "blue" | "green";
   value: Value;
   titleKey: string;
   bodyKey: string;
@@ -84,7 +81,6 @@ const CARDS: ReadonlyArray<{
   {
     id: "direct",
     Icon: HandHeart,
-    accent: "pink",
     value: { kind: "symbol" },
     titleKey: "impact_direct_title",
     bodyKey: "impact_direct_body",
@@ -92,7 +88,6 @@ const CARDS: ReadonlyArray<{
   {
     id: "members",
     Icon: Users,
-    accent: "blue",
     value: { kind: "measured", from: (s) => s.members },
     titleKey: "impact_members_title",
     bodyKey: "impact_members_body",
@@ -100,7 +95,6 @@ const CARDS: ReadonlyArray<{
   {
     id: "waste",
     Icon: Leaf,
-    accent: "green",
     value: { kind: "word", key: "impact_waste_value" },
     titleKey: "impact_waste_title",
     bodyKey: "impact_waste_body",
@@ -124,153 +118,91 @@ export default async function DonationPage() {
   const formatCount = makeGroupedFormatter(locale);
 
   return (
-    <div className="min-h-screen bg-muted/30 dark:bg-background">
+    <div className="min-h-screen bg-background">
       <PageHeader title={t("title")} />
 
-      <div className="relative overflow-hidden pb-16">
-        {/* Animated gradient background */}
-        <div className="absolute top-0 inset-x-0 bottom-0 bg-gradient-to-br from-pink-50 via-background to-purple-50 dark:from-pink-950/20 dark:via-background dark:to-purple-950/20 -z-10" />
+      <div className="container mx-auto max-w-5xl px-4 py-12 md:py-16">
+        {/* Hero */}
+        <div className="flex flex-col items-center gap-5 text-center">
+          <span className="inline-flex items-center gap-2 rounded-full bg-brand/10 px-4 py-1.5 text-xs font-medium uppercase tracking-wider text-brand">
+            {t("hero_badge")}
+          </span>
+          <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+            {t("hero_title")}
+          </h1>
+          <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
+            {t("hero_subtitle")}
+          </p>
+        </div>
 
-        {/* Floating decorative orbs */}
-        <div className="absolute -top-[10%] -right-[5%] w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(255,107,157,0.15),transparent_70%)] dark:bg-[radial-gradient(circle,rgba(255,107,157,0.08),transparent_70%)] rounded-full blur-[80px] pointer-events-none -z-10" />
-        <div className="absolute -bottom-[15%] -left-[10%] w-[700px] h-[700px] bg-[radial-gradient(circle,rgba(102,126,234,0.12),transparent_70%)] dark:bg-[radial-gradient(circle,rgba(102,126,234,0.06),transparent_70%)] rounded-full blur-[100px] pointer-events-none -z-10" />
-        <div className="absolute top-[30%] left-[50%] w-[400px] h-[400px] bg-[radial-gradient(circle,rgba(240,147,251,0.1),transparent_70%)] dark:bg-[radial-gradient(circle,rgba(240,147,251,0.05),transparent_70%)] rounded-full blur-[90px] pointer-events-none -z-10" />
+        {/* Primary CTA panel */}
+        <div className="mt-12 rounded-3xl border border-border bg-card p-8 text-center shadow-sm md:p-12">
+          <div className="mx-auto flex max-w-2xl flex-col items-center gap-6">
+            <span className="flex size-16 items-center justify-center rounded-full bg-brand/10">
+              <Heart className="size-8 text-brand" />
+            </span>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+              {t("cta_title")}
+            </h2>
+            <p className="leading-relaxed text-muted-foreground">{t("cta_body")}</p>
+            <DonateButton kofiUrl={KOFI_URL} variant="hero" label={t("kofi_hero")} />
 
-        <div className="container mx-auto max-w-7xl px-4 relative z-10">
-          {/* Hero Section */}
-          <div className="flex flex-col gap-12 text-center mb-24 pt-12">
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center justify-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-pink-400" />
-                <div className="px-5 py-2 rounded-full bg-pink-100 dark:bg-pink-900/50 text-pink-700 dark:text-pink-300 text-xs uppercase tracking-wider font-bold shadow-[0_2px_8px_rgba(255,45,85,0.2)]">
-                  {t("hero_badge")}
+            {/* Trust indicators */}
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-1">
+              {TRUST_BADGES.map(({ key, Icon }) => (
+                <div key={key} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Icon className="size-4 text-brand" />
+                  <span>{t(key)}</span>
                 </div>
-                <div className="w-3 h-3 rounded-full bg-pink-400" />
-              </div>
-              <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-r from-[#FF2D55] via-[#FF6B9D] via-[#f093fb] to-[#667eea] bg-clip-text text-transparent leading-tight tracking-tighter max-w-4xl mx-auto">
-                {t("hero_title")}
-              </h1>
-              <p className="text-lg md:text-2xl text-muted-foreground max-w-3xl mx-auto font-medium leading-relaxed">
-                {t("hero_subtitle")}
-              </p>
-            </div>
-
-            {/* Premium Ko-fi CTA with glassmorphism */}
-            <div className="w-full max-w-5xl mx-auto relative">
-              {/* Multi-layer glow effect */}
-              <div className="absolute -top-[30px] -left-[30px] -right-[30px] -bottom-[30px] bg-gradient-to-br from-[rgba(255,45,85,0.3)] to-[rgba(240,147,251,0.3)] rounded-[4rem] blur-[40px] pointer-events-none opacity-60" />
-
-              <div className="relative p-10 md:p-16 bg-gradient-to-br from-[#FF2D55] via-[#FF6B9D] to-[#f093fb] rounded-[3rem] shadow-[0_30px_60px_rgba(255,45,85,0.3)] overflow-hidden hover:translate-y-[-8px] hover:scale-[1.01] hover:shadow-[0_40px_80px_rgba(255,45,85,0.4)] transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]">
-                {/* Subtle dot pattern overlay */}
-                <div
-                  className="absolute top-0 inset-x-0 bottom-0 opacity-[0.08] pointer-events-none"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(circle at 25% 25%, white 2px, transparent 2px), radial-gradient(circle at 75% 75%, white 2px, transparent 2px)",
-                    backgroundSize: "60px 60px",
-                  }}
-                />
-
-                <div className="flex flex-col gap-8 relative z-10">
-                  <div className="bg-white/20 p-6 rounded-full backdrop-blur-[10px] border-2 border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.1)] w-fit mx-auto">
-                    <Heart className="w-16 h-16 md:w-24 md:h-24 text-white" />
-                  </div>
-                  <div className="flex flex-col gap-4">
-                    <h2 className="text-xl md:text-5xl text-white font-black tracking-tight">{t("cta_title")}</h2>
-                    <p className="text-lg md:text-xl max-w-[750px] mx-auto text-white/95 leading-[1.8] font-medium">
-                      {t("cta_body")}
-                    </p>
-                  </div>
-                  <DonateButton kofiUrl={KOFI_URL} variant="hero" label={t("kofi_hero")} />
-
-                  {/* Trust indicators */}
-                  <div className="flex flex-wrap items-center justify-center gap-6 pt-4">
-                    {TRUST_BADGES.map(({ key, Icon }) => (
-                      <div key={key} className="flex items-center gap-2 text-white/90">
-                        <Icon />
-                        <span className="text-sm font-medium">{t(key)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
+        </div>
 
-          {/* Impact cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24">
-            {CARDS.filter((card) => card.value.kind !== "measured" || stats).map(
-              ({ id, Icon, accent, value, titleKey, bodyKey }) => (
-                <ImpactCard
-                  key={id}
-                  accent={accent}
-                  Icon={Icon}
-                  value={
-                    value.kind === "measured"
-                      ? formatCount(value.from(stats as PublicStats))
-                      : value.kind === "word"
-                        ? t(value.key)
-                        : "100%"
-                  }
-                  title={t(titleKey)}
-                  body={t(bodyKey)}
-                />
-              ),
-            )}
-          </div>
-
-          {/* Mission Statement - Premium glassmorphism card */}
-          <div className="bg-card/90 dark:bg-card/80 backdrop-blur-[20px] backdrop-saturate-[180%] p-12 md:p-20 rounded-[4rem] shadow-[0_20px_60px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.4)] border border-border mb-24 relative overflow-hidden">
-            {/* Decorative gradient accent */}
-            <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-gradient-to-bl from-[rgba(240,147,251,0.1)] dark:from-[rgba(240,147,251,0.05)] to-transparent rounded-bl-full" />
-
-            <div className="flex flex-col md:flex-row items-center justify-between gap-10 md:gap-14 relative">
-              <Image
-                src={bracketsUp}
-                alt=""
-                className="w-0 md:w-24 h-0 md:h-24 opacity-25 dark:opacity-40 dark:invert hidden md:block"
+        {/* Impact cards */}
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+          {CARDS.filter((card) => card.value.kind !== "measured" || stats).map(
+            ({ id, Icon, value, titleKey, bodyKey }) => (
+              <ImpactCard
+                key={id}
+                Icon={Icon}
+                value={
+                  value.kind === "measured"
+                    ? formatCount(value.from(stats as PublicStats))
+                    : value.kind === "word"
+                      ? t(value.key)
+                      : "100%"
+                }
+                title={t(titleKey)}
+                body={t(bodyKey)}
               />
-              <div className="flex flex-col gap-8 flex-1 text-center">
-                <p className="text-xl md:text-2xl font-medium text-muted-foreground leading-[1.8] tracking-wide">
-                  {t("mission_statement")}
-                </p>
-                <div className="flex items-center justify-center gap-4">
-                  <Star className="text-pink-400 w-6 h-6" />
-                  {/* One key, not two: the name and the role are a single
-                      attribution, and ja/ko/ar put them in the other order. */}
-                  <h3 className="text-2xl bg-gradient-to-r from-[#FF2D55] to-[#f093fb] bg-clip-text text-transparent font-black">
-                    {t("founder_attribution")}
-                  </h3>
-                  <Star className="text-pink-400 w-6 h-6" />
-                </div>
-              </div>
-              <Image
-                src={bracketsDown}
-                alt=""
-                className="w-0 md:w-24 h-0 md:h-24 opacity-25 dark:opacity-40 dark:invert hidden md:block"
-              />
-            </div>
-          </div>
+            ),
+          )}
+        </div>
 
-          {/* Final CTA Section */}
-          <div className="flex flex-col gap-10 text-center mb-16 pb-12">
-            <div className="flex flex-col gap-5">
-              <h2 className="text-4xl md:text-5xl text-foreground font-black tracking-tight">{t("final_cta_title")}</h2>
-              <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto font-medium leading-[1.7]">
-                {t("final_cta_body")}
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-6 pt-8 w-full justify-center">
-              <DonateButton kofiUrl={KOFI_URL} variant="cta" label={t("kofi_cta")} />
-              <Link href="/about-us">
-                <button
-                  type="button"
-                  className="border-[3px] border-pink-600 dark:border-pink-500 text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-950/50 hover:-translate-y-1 hover:border-pink-700 dark:hover:border-pink-400 hover:shadow-[0_10px_25px_rgba(255,45,85,0.15)] dark:hover:shadow-[0_10px_25px_rgba(255,45,85,0.25)] active:scale-[0.98] transition-all duration-300 px-14 py-9 rounded-full font-black text-xl h-auto"
-                >
-                  {t("secondary_cta")}
-                </button>
-              </Link>
-            </div>
+        {/* Mission statement */}
+        <div className="mt-8 rounded-3xl border border-border bg-card p-8 md:p-12">
+          <p className="mx-auto max-w-3xl text-center text-xl leading-relaxed text-muted-foreground">
+            {t("mission_statement")}
+          </p>
+          <p className="mt-6 text-center text-lg font-bold text-brand">
+            {t("founder_attribution")}
+          </p>
+        </div>
+
+        {/* Final CTA */}
+        <div className="mt-16 flex flex-col items-center gap-4 text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+            {t("final_cta_title")}
+          </h2>
+          <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
+            {t("final_cta_body")}
+          </p>
+          <div className="mt-4 flex flex-col gap-4 sm:flex-row">
+            <DonateButton kofiUrl={KOFI_URL} variant="cta" label={t("kofi_cta")} />
+            <Button variant="brand-outline" size="xl" asChild>
+              <Link href="/about-us">{t("secondary_cta")}</Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -281,66 +213,30 @@ export default async function DonationPage() {
 /**
  * The three cards, one component.
  *
- * The per-accent class tables are keyed by name rather than spread through
- * `cn()` branches so a card cannot pick up a hover glow that does not match its
- * top border.
+ * A single warm brand accent across all three keeps the row reading as one
+ * system rather than three unrelated colour swatches — the "pink / blue /
+ * green" split made it look like a different product. The icon chip, value and
+ * body all use the semantic tokens so dark mode resolves from the theme.
  */
-const ACCENT = {
-  pink: {
-    shell:
-      "border-pink-400 hover:shadow-[0_20px_60px_rgba(255,45,85,0.15)] dark:hover:shadow-[0_20px_60px_rgba(255,45,85,0.25)]",
-    wash: "bg-[radial-gradient(circle,rgba(255,45,85,0.08),transparent)] dark:bg-[radial-gradient(circle,rgba(255,45,85,0.15),transparent)]",
-    chip: "bg-pink-50 dark:bg-pink-950/50 border-pink-100 dark:border-pink-900",
-    glyph: "text-pink-500",
-  },
-  blue: {
-    shell:
-      "border-blue-400 hover:shadow-[0_20px_60px_rgba(22,182,223,0.15)] dark:hover:shadow-[0_20px_60px_rgba(22,182,223,0.25)]",
-    wash: "bg-[radial-gradient(circle,rgba(22,182,223,0.08),transparent)] dark:bg-[radial-gradient(circle,rgba(22,182,223,0.15),transparent)]",
-    chip: "bg-blue-50 dark:bg-blue-950/50 border-blue-100 dark:border-blue-900",
-    glyph: "text-blue-500",
-  },
-  green: {
-    shell:
-      "border-green-400 hover:shadow-[0_20px_60px_rgba(16,185,129,0.15)] dark:hover:shadow-[0_20px_60px_rgba(16,185,129,0.25)]",
-    wash: "bg-[radial-gradient(circle,rgba(16,185,129,0.08),transparent)] dark:bg-[radial-gradient(circle,rgba(16,185,129,0.15),transparent)]",
-    chip: "bg-green-50 dark:bg-green-950/50 border-green-100 dark:border-green-900",
-    glyph: "text-green-500",
-  },
-} as const;
-
 function ImpactCard({
-  accent,
   Icon,
   value,
   title,
   body,
 }: {
-  accent: keyof typeof ACCENT;
   Icon: LucideIcon;
   value: string;
   title: string;
   body: string;
 }) {
-  const a = ACCENT[accent];
-
   return (
-    <div
-      className={`bg-card p-10 rounded-[3rem] shadow-[0_10px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.3)] border-t-[6px] relative overflow-hidden transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-2 ${a.shell}`}
-    >
-      <div
-        className={`absolute -top-[50px] -right-[50px] w-[150px] h-[150px] rounded-full pointer-events-none ${a.wash}`}
-      />
-      <div className="flex flex-col gap-5 items-start relative">
-        <div className={`w-16 h-16 rounded-full border-[3px] flex items-center justify-center ${a.chip}`}>
-          <Icon className={`w-8 h-8 ${a.glyph}`} />
-        </div>
-        <div className="flex flex-col gap-3 items-start">
-          <h3 className="text-5xl text-foreground font-black tracking-tight">{value}</h3>
-          <h4 className="text-xl text-foreground font-bold">{title}</h4>
-          <p className="text-muted-foreground leading-[1.7] text-base">{body}</p>
-        </div>
-      </div>
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm transition-shadow hover:shadow-md">
+      <span className="flex size-12 items-center justify-center rounded-full bg-brand/10">
+        <Icon className="size-6 text-brand" />
+      </span>
+      <h3 className="mt-4 text-3xl font-bold tracking-tight text-foreground">{value}</h3>
+      <h4 className="mt-1 text-base font-semibold text-foreground">{title}</h4>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{body}</p>
     </div>
   );
 }

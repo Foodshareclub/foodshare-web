@@ -1,5 +1,11 @@
 # Airbnb Website Design Guide
 
+> ⚠️ **Historical / reference only — not the source of truth.** This is a generic Airbnb design reference (Rausch palette, Cereal font, etc.) captured during Phase 19, with a FoodShare implementation log appended near the end. The single source of design rules and tokens is `.kiro/steering/design.md` (and the `foodshare-design` skill). Where this document disagrees with the canonical source or the code, **the canonical source and the code win.** In particular, the prescriptions below are **retired** and must not be reproduced in new work:
+> - Gradient buttons / gradient headings → use solid `Button variant="brand"`, `bg-primary` text
+> - Cereal font / `#FF5A5F`–`#FF385C` palette / 4px grid → real stack is Geist, an 8px rhythm, `--primary` `#EB003B`, `--brand-primary` `#FF2D55`
+> - Multi-line (4–5 line) cards → the grid targets a two-line meta block
+> Keep this file for research and history only.
+
 A comprehensive reference for recreating Airbnb's beautiful web design on your local laptop.
 
 ---

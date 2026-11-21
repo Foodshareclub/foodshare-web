@@ -4,6 +4,8 @@
 
 This document provides a comprehensive analysis of Airbnb's navigation bar design, functionality, and user experience patterns as of November 2024.
 
+> ⚠️ **Reference only.** This is research on Airbnb's *own* navbar (its "Where / Check in / Check out / Who" fields, etc.), captured during Phase 19 — not a description of FoodShare's header. FoodShare's search pill is `Location / Distance / Category` and is governed by `.kiro/steering/design.md`. Do not implement from this document.
+
 ---
 
 ## 1. Structure & Layout

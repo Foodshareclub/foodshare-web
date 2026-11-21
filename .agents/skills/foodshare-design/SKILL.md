@@ -6,6 +6,8 @@ description: Design rules for FoodShare web UI (Airbnb-style, photo-first). Use 
 
 The rules and tokens are in [`.kiro/steering/design.md`](../../../.kiro/steering/design.md). Read it first; it is the only design source. Token evidence with file:line is in [references/tokens.md](references/tokens.md).
 
+- `docs/context/aib&b/` (`design.md`, `implementation.md`, `navbar.md`) is a Phase 19 historical log plus generic Airbnb research. It is **not** guidance: where it conflicts, `.kiro/steering/design.md` and the code win. Do not reproduce its retired patterns (gradient buttons/headings, Cereal font, `#FF385C` primary, 4–5-line cards).
+
 ## When to use
 - Editing anything under `src/components/productCard`, `src/components/header`, `src/app/food`, `src/app/map`, or `src/components/ui`.
 - Adding a card, pill, bar, sheet, skeleton, or empty state.
