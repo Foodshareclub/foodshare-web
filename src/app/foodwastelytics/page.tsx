@@ -121,7 +121,6 @@ const UI = {
   scopeAll: "All Global Economies",
   scopeHighIncome: "High-Income",
   scopeDeveloping: "Developing & Emerging",
-  economicScopeTabsHeading: "Economic Perspective Filters",
   variantLanding: "Landing Page (Editorial)",
   variantDashboard: "Executive Suite (Tabbed)",
   variantStoryboard: "Infographic Story",
@@ -902,68 +901,62 @@ export default function FoodwastelyticsPage() {
       <FloatingOrbs opacity={0.12} />
 
       {/* Hero Header */}
-      <section className="relative z-10 border-b border-border/40 bg-card/75 backdrop-blur-xl px-4 sm:px-6 pt-8 sm:pt-10 pb-8 sm:pb-10">
-        <div className="max-w-4xl mx-auto flex flex-col items-center text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
-            <Globe className="size-3.5 animate-pulse" />
-            <span>{UI.heroBadge}</span>
+      <section className="relative z-10 border-b border-border/40 bg-card/75 backdrop-blur-xl px-4 sm:px-6 pt-6 sm:pt-8 pb-6 sm:pb-8">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+              <Globe className="size-3.5 animate-pulse" />
+              <span>{UI.heroBadge}</span>
+            </div>
+            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+              <span>{UI.heroTitle}</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">{UI.heroSubtitle}</p>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-foreground">
-            <span>{UI.heroTitle}</span>
-          </h1>
-          <p className="text-xs sm:text-base text-muted-foreground max-w-2xl leading-relaxed">{UI.heroSubtitle}</p>
 
-          {/* Centered Economic Perspectives Tabs */}
-          <div className="pt-2 flex justify-center w-full">
-            <div
-              aria-labelledby="economic-scope-heading"
-              className="inline-flex flex-wrap items-center justify-center p-1.5 rounded-2xl bg-muted/60 border border-border/60 shadow-xs backdrop-blur-md gap-1 text-xs sm:text-sm font-semibold"
-            >
-              <h2 id="economic-scope-heading" className="sr-only">
-                {UI.economicScopeTabsHeading}
-              </h2>
+          {/* Perspective Selector & Global Export */}
+          <div className="flex flex-wrap items-center gap-2.5 self-stretch md:self-auto">
+            {/* Global Perspective Pill */}
+            <div className="inline-flex rounded-xl bg-muted/60 p-1 border border-border/60 text-xs font-semibold">
               <button
                 type="button"
                 onClick={() => setEconomicScope("all")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   economicScope === "all"
-                    ? "bg-emerald-600 text-white shadow-xs font-bold"
-                    : "text-muted-foreground hover:text-foreground hover:bg-card/50"
+                    ? "bg-card text-foreground shadow-xs font-bold"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Globe aria-hidden="true" className="size-3.5 shrink-0" />
-                <span>{UI.scopeAll}</span>
+                {UI.scopeAll}
               </button>
               <button
                 type="button"
                 onClick={() => setEconomicScope("high-income")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   economicScope === "high-income"
                     ? "bg-emerald-600 text-white shadow-xs font-bold"
-                    : "text-muted-foreground hover:text-foreground hover:bg-card/50"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <DollarSign aria-hidden="true" className="size-3.5 shrink-0" />
-                <span>{UI.scopeHighIncome}</span>
+                {UI.scopeHighIncome}
               </button>
               <button
                 type="button"
                 onClick={() => setEconomicScope("developing")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   economicScope === "developing"
                     ? "bg-emerald-600 text-white shadow-xs font-bold"
-                    : "text-muted-foreground hover:text-foreground hover:bg-card/50"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Leaf aria-hidden="true" className="size-3.5 shrink-0" />
-                <span>{UI.scopeDeveloping}</span>
+                {UI.scopeDeveloping}
               </button>
             </div>
           </div>
         </div>
 
         {/* Layout Variant Switcher Subheader */}
-        <div className="max-w-7xl mx-auto mt-8 pt-4 border-t border-border/30 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="max-w-7xl mx-auto mt-6 pt-4 border-t border-border/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
             <Layout className="size-4 text-emerald-500" />
             <span>{UI.layoutVariantLabel}</span>

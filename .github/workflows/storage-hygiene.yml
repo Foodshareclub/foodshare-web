@@ -1,0 +1,22 @@
+name: Storage hygiene
+
+# Artifacts and caches grow a repository's storage without ever failing a
+# build, so the rules that catch the leaks live in foodshare-tools and this
+# repository runs them on every change.
+#
+# Kept in its own workflow rather than as a job in the main pipeline: a fault
+# in the guard, or a change to the shared workflow it calls, must be able to
+# fail this check without stopping the rest of CI from reporting.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  storage-hygiene:
+    uses: Foodshareclub/foodshare-tools/.github/workflows/storage-hygiene.yml@main
