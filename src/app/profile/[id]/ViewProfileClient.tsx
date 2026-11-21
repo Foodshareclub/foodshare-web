@@ -4,13 +4,11 @@
  * Action buttons are extracted to ProfileActions client wrapper
  */
 
-import peak from "@/assets/peakpx-min.jpg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { AuthUser } from "@/lib/data/auth";
 import type { PublicProfile } from "@/lib/data/profiles";
 import { coarseAreaLabel, parsePostGISPoint } from "@/utils/postgis";
-import { Calendar, MapPin } from "lucide-react";
-import Image from "next/image";
+import { Calendar, MapPin, ShieldCheck } from "lucide-react";
 import { ProfileActions } from "./ProfileActions";
 
 interface ViewProfileClientProps {
@@ -38,91 +36,93 @@ export function ViewProfileClient({ profile, user, isVolunteer = false }: ViewPr
     : "Unknown";
 
   return (
-    <div className="min-h-screen bg-muted/30 dark:bg-background">
-      <div className="container mx-auto max-w-4xl pt-24 pb-12 px-4">
-        <div className="glass rounded-xl p-0 overflow-hidden">
-          {/* Cover Photo */}
-          <div className="relative h-[200px] w-full">
-            <Image src={peak} alt="Cover" fill className="object-cover" priority />
-          </div>
+    <div className="min-h-screen bg-muted/20 dark:bg-background">
+      <div className="container mx-auto max-w-5xl pt-24 pb-16 px-4 sm:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Airbnb Host ID Badge Card */}
+          <div className="md:col-span-5 lg:col-span-4">
+            <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl shadow-xl p-6 sm:p-8 flex flex-col items-center text-center">
+              {/* Soft ambient halo */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-16 inset-x-0 mx-auto size-48 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 blur-3xl"
+              />
 
-          {/* Profile Content */}
-          <div className="p-8">
-            {/* Avatar */}
-            <div className="flex justify-center -mt-20 mb-6">
-              <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
-                <AvatarImage src={profile.avatar_url || undefined} alt={profile.first_name || "User"} />
-                <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-emerald-400 to-emerald-600 text-white">
-                  {initials || "?"}
-                </AvatarFallback>
-              </Avatar>
-            </div>
+              {/* Avatar with Verified Badge */}
+              <div className="relative mb-4">
+                <Avatar className="size-28 sm:size-32 rounded-full border-4 border-background shadow-xl">
+                  <AvatarImage src={profile.avatar_url || undefined} alt={profile.first_name || "User"} />
+                  <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-emerald-500 to-teal-700 text-white">
+                    {initials || "?"}
+                  </AvatarFallback>
+                </Avatar>
+                <div
+                  className="absolute bottom-1 end-1 size-7 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-md border-2 border-background"
+                  aria-hidden="true"
+                >
+                  <ShieldCheck className="size-4 stroke-[2.5]" />
+                </div>
+              </div>
 
-            {/* Name */}
-            <div className="text-center mb-6">
-              <h1 className="text-3xl font-bold text-foreground mb-2">
+              {/* Host Name & Tag */}
+              <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">
                 {profile.first_name} {profile.second_name}
               </h1>
-              {profile.nickname && <p className="text-lg text-muted-foreground">@{profile.nickname}</p>}
-            </div>
+              {profile.nickname && (
+                <p className="text-sm text-muted-foreground mb-3 font-medium">@{profile.nickname}</p>
+              )}
 
-            {/* Volunteer Badge */}
-            {isVolunteer && (
-              <div className="flex justify-center mb-6">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
-                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-sm">🤝 Volunteer</span>
-                </div>
-              </div>
-            )}
-
-            {/* About Me */}
-            {profile.about_me && (
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold mb-3 text-foreground">About</h2>
-                <div className="glass-subtle rounded-xl p-4">
-                  <p className="text-foreground/80 whitespace-pre-wrap">{profile.about_me}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Profile Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Join Date */}
-              <div className="glass-subtle rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0 p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-                    <Calendar className="text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase font-medium">Member Since</p>
-                    <p className="text-foreground font-semibold">{joinDate}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Location — coarse area only, and only if they allow it */}
-              {coarseArea && (
-                <div className="glass-subtle rounded-xl p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                      <MapPin className="text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase font-medium">Location</p>
-                      {/* An ~11 km cell, not a pin. The raw point was rendered
-                          here, which both printed "[object Object]" whenever
-                          PostgREST returned GeoJSON and published a member's
-                          home coordinates on a public page. */}
-                      <p className="text-foreground font-semibold">{coarseArea}</p>
-                      <p className="text-xs text-muted-foreground">Approximate area</p>
-                    </div>
-                  </div>
+              {/* Volunteer Badge */}
+              {isVolunteer && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 rounded-full text-xs font-semibold mb-6">
+                  <span>🤝 Volunteer</span>
                 </div>
               )}
-            </div>
 
-            {/* Action buttons (client component) */}
-            <ProfileActions profileId={profile.id} isAuthenticated={isAuthenticated} />
+              {/* Key Host Stats / Details */}
+              <div className="w-full space-y-2.5 pt-4 border-t border-border/60">
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/40 border border-border/40 text-start">
+                  <div className="size-8 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400">
+                    <Calendar className="size-4" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Member Since</p>
+                    <p className="text-xs font-semibold text-foreground truncate">{joinDate}</p>
+                  </div>
+                </div>
+
+                {coarseArea && (
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/40 border border-border/40 text-start">
+                    <div className="size-8 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400">
+                      <MapPin className="size-4" aria-hidden="true" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Location</p>
+                      <p className="text-xs font-semibold text-foreground truncate">{coarseArea}</p>
+                      <p className="text-[10px] text-muted-foreground">Approximate area</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Host Bio & Details */}
+          <div className="md:col-span-7 lg:col-span-8 space-y-6">
+            <div className="rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl shadow-xl p-6 sm:p-8">
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground mb-4">About</h2>
+
+              {profile.about_me && (
+                <div className="rounded-2xl border border-border/50 bg-muted/20 p-5 text-sm sm:text-base leading-relaxed text-foreground/80 whitespace-pre-wrap mb-6">
+                  {profile.about_me}
+                </div>
+              )}
+
+              {/* Action buttons (client component) */}
+              <div className="pt-4 border-t border-border/60">
+                <ProfileActions profileId={profile.id} isAuthenticated={isAuthenticated} />
+              </div>
+            </div>
           </div>
         </div>
       </div>

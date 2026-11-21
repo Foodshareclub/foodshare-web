@@ -5,7 +5,7 @@ import peak from "@/assets/peakpx-min.jpg";
 import AvatarWithRipple from "@/components/listingPersonCard/AvatarWithRipple";
 import { ALLOWED_MIME_TYPES } from "@/constants/mime-types";
 import { createPhotoUrl } from "@/utils";
-import { EditIcon } from "@/utils/icons";
+import { Pencil } from "lucide-react";
 import type { ChangeEvent, ReactNode } from "react";
 import type React from "react";
 import { useRef, useState } from "react";
@@ -46,26 +46,27 @@ const ListingPersonCards: React.FC<PropsType> = ({ children, settings, profile }
   };
 
   return (
-    <div className="glass rounded-xl p-0 overflow-hidden">
+    <div className="rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl shadow-xl p-0 overflow-hidden">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="h-[200px] w-full object-cover" src={peak.src} alt="Cover" loading="lazy" decoding="async" />
+      <img className="h-[180px] w-full object-cover" src={peak.src} alt="Cover" loading="lazy" decoding="async" />
 
-      <div className="flex justify-center -mt-12">
-        <AvatarWithRipple img={pastUrl || profile?.avatar_url || undefined} />
-        {settings && (
-          <button
-            type="button"
-            className="bg-muted hover:bg-green-200 dark:hover:bg-green-900 p-2 rounded-full absolute cursor-pointer transition-colors"
-            style={{ top: "48vh", left: "51vw" }}
-            onClick={() => inputFileRef?.current?.click()}
-          >
-            <EditIcon />
-          </button>
-        )}
+      <div className="flex justify-center -mt-14 mb-2">
+        <div className="relative inline-block">
+          <AvatarWithRipple img={pastUrl || profile?.avatar_url || undefined} />
+          {settings && (
+            <button
+              type="button"
+              className="absolute bottom-0 end-0 size-8 bg-background hover:bg-muted p-1.5 rounded-full border border-border/80 shadow-md cursor-pointer transition-transform hover:scale-110 active:scale-95 flex items-center justify-center text-foreground"
+              onClick={() => inputFileRef?.current?.click()}
+            >
+              <Pencil className="size-4" />
+            </button>
+          )}
+        </div>
       </div>
-      <div className="self-center p-4">
+      <div className="self-center p-6 text-center">
         <div>
-          <h2 className="text-center text-lg font-semibold">
+          <h2 className="text-xl font-bold tracking-tight text-foreground">
             {profile?.first_name} {profile?.second_name}
           </h2>
           <input

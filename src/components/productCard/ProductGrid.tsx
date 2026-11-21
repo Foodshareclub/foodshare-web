@@ -2,7 +2,9 @@
 
 import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
+import { Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { ProductCard } from "./ProductCard";
 import SkeletonCard from "./SkeletonCard";
@@ -22,6 +24,17 @@ interface ProductGridProps {
 // Pre-computed skeleton array (module-level constant)
 const SKELETON_ITEMS = Array.from({ length: 10 }, (_, i) => i);
 const LOADING_MORE_SKELETONS = Array.from({ length: 4 }, (_, i) => i);
+
+const EXPLORE_CATEGORIES = [
+  { href: "/food", key: "food" },
+  { href: "/zerowaste", key: "zerowaste" },
+  { href: "/thing", key: "things" },
+  { href: "/borrow", key: "borrow" },
+  { href: "/wanted", key: "wanted" },
+  { href: "/fridge", key: "fridges" },
+  { href: "/foodbank", key: "foodbanks" },
+  { href: "/volunteer", key: "volunteers" },
+] as const;
 
 /**
  * ProductGrid - Displays products in a responsive grid with infinite scroll
@@ -75,6 +88,28 @@ export function ProductGrid({
           {isFetchingMore &&
             LOADING_MORE_SKELETONS.map((i) => <SkeletonCard key={`loading-more-${i}`} isLoaded={false} />)}
         </div>
+
+        {/* End-of-Feed Continue Exploring Section */}
+        {!hasMore && !isLoading && products.length > 0 && (
+          <div className="mt-14 pt-12 border-t border-border/60 text-center">
+            <div className="inline-flex items-center justify-center size-10 rounded-full bg-muted/60 mb-3 text-muted-foreground">
+              <Sparkles className="size-5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+            </div>
+            <h3 className="text-lg font-bold tracking-tight text-foreground mb-1">{t("Home.categories_title")}</h3>
+            <p className="text-xs text-muted-foreground mb-6 max-w-sm mx-auto">{t("Home.categories_subtitle")}</p>
+            <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto">
+              {EXPLORE_CATEGORIES.map((cat) => (
+                <Link
+                  key={cat.key}
+                  href={cat.href}
+                  className="text-xs font-semibold px-4 py-2 rounded-full border border-border/80 bg-background/80 hover:bg-muted/60 hover:border-foreground/30 active:scale-95 shadow-2xs hover:shadow-xs transition-all text-foreground"
+                >
+                  {t(`categories.${cat.key}`)}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Infinite scroll trigger */}

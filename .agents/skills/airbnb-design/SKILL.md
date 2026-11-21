@@ -164,5 +164,31 @@ Listing cards use a frameless presentation with a 4-line metadata hierarchy:
   - Full-width brand coral primary action button (`h-12 rounded-xl bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E6284D] hover:to-[#E03150] font-semibold text-white shadow-md active:scale-[0.99]`).
   - Tactile social auth buttons (`h-12 rounded-xl border border-border/80 font-semibold text-sm hover:border-foreground/50 hover:bg-muted/40 active:scale-[0.99]`).
 
+## 15. Feed Continuation & Category Discovery (`ProductGrid.tsx`)
+
+- **End-of-Feed Exploration Section**:
+  - Automatically rendered when listings feed is exhausted (`!hasMore && !isLoading && products.length > 0`).
+  - Subtle top divider line (`border-t border-border/60 mt-14 pt-12 text-center`).
+  - Centered sparkle icon badge (`size-10 rounded-full bg-muted/60`).
+  - Localized section title and subtitle (`Home.categories_title` and `Home.categories_subtitle`).
+  - Interactive rounded pill chips (`rounded-full border border-border/80 bg-background/80 hover:bg-muted/60 shadow-2xs hover:shadow-xs active:scale-95 transition-all text-xs font-semibold`) mapping to all community categories (`Food`, `Zero Waste`, `Things`, `Borrow`, `Wanted`, `Fridges`, `FoodBanks`, `Volunteers`).
+
+## 16. Host Profile & Identity Badge Architecture (`ViewProfileClient.tsx`, `ProfileActions.tsx`, `ListingPersonCards.tsx`)
+
+- **Two-Column Host Architecture**:
+  - Responsive two-column grid (`grid grid-cols-1 md:grid-cols-12 gap-8 items-start`).
+  - **Left Host ID Card (`md:col-span-5 lg:col-span-4`)**:
+    - Floating `rounded-3xl` glass card (`border border-border/80 bg-card/95 backdrop-blur-2xl shadow-xl p-6 sm:p-8`).
+    - Ambient emerald glow halo (`size-48 rounded-full bg-emerald-500/10 blur-3xl`).
+    - Large circular avatar (`size-28 sm:size-32 rounded-full border-4 border-background shadow-xl`) with verified shield badge (`ShieldCheck` badge anchored bottom-right).
+    - Host name and tag (`@nickname`).
+    - Role pill badge: `🤝 Volunteer` or `Community Sharer`.
+    - Credential stat tiles: Member since date (`Calendar`) and Location / Approximate area (`MapPin`).
+  - **Right Bio & Details Column (`md:col-span-7 lg:col-span-8`)**:
+    - Clean About section with generous line spacing and rounded card container.
+    - Actions: Signature Airbnb brand coral CTA (`Send Message`) with `active:scale-[0.98]` and smooth back button.
+- **Account Settings Avatar Edit (`ListingPersonCards.tsx`)**:
+  - Relocated pencil button to an anchored relative position on the avatar (`absolute bottom-0 end-0 size-8 rounded-full border border-border/80 shadow-md hover:scale-110 active:scale-95`), eliminating legacy viewport-based positioning.
+
 
 

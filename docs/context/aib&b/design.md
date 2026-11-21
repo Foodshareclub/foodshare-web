@@ -556,6 +556,15 @@ FoodShare incorporates core Airbnb design patterns adapted for surplus food and 
     - Floating `rounded-3xl` authentication dialog with 48px rounded-xl input fields and focus rings.
     - Full-width brand coral primary action button and tactile social auth buttons.
 
+11. **Feed Continuation & Category Discovery (`ProductGrid.tsx`)**:
+    - Centered "Browse Categories" section rendered at the bottom of exhausted listing feeds.
+    - Sparkle badge icon, localized heading/subtitle, and interactive category chips (`Food`, `Zero Waste`, `Things`, `Borrow`, `Wanted`, `Fridges`, `FoodBanks`, `Volunteers`).
+
+12. **Host Profile & Identity Badge Architecture (`ViewProfileClient.tsx`, `ProfileActions.tsx`, `ListingPersonCards.tsx`)**:
+    - Two-column Airbnb host profile layout with floating ID badge card, circular verified avatar, and credential stat tiles.
+    - Dedicated About section with primary brand coral message CTA.
+    - Anchored avatar edit button on profile settings eliminating legacy viewport positioning.
+
 ---
 
 _This is a living document. Update as you build and discover new patterns!_
