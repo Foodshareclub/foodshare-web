@@ -5,22 +5,27 @@
  * Receives pre-fetched locations and user data from Server Component
  */
 
+import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import "@/components/leaflet/leaflet.css";
 
 import Navbar from "@/components/header/navbar/Navbar";
+import { MapListingCard, MapPreviewCard } from "@/components/map/MapListingCard";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
+import { Button } from "@/components/ui/button";
 import { useDefaultMapCenter } from "@/hooks/useDefaultMapCenter";
 import { useMapPosition } from "@/hooks/useMapPosition";
 import { useMapZoom } from "@/hooks/useMapZoom";
-import { createClusterIcon, useCustomMarkerIcon, useUserLocationIcon } from "@/hooks/useMarkerIcon";
+import { createClusterIcon, createPillMarkerIcon, useUserLocationIcon } from "@/hooks/useMarkerIcon";
 import { useWebGLRenderer } from "@/hooks/useWebGLRenderer";
 import { MAP_CONFIG } from "@/lib/config";
 import type { AuthUser } from "@/lib/data/auth";
 import { type LocationType, getCoordinates } from "@/types/product.types";
+import { List, Map as MapIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 // Dynamic imports for Leaflet components (SSR: false is critical!)
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), {
@@ -32,8 +37,6 @@ const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLa
 });
 
 const Marker = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false });
-
-const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), { ssr: false });
 
 const MarkerClusterGroup = dynamic(() => import("react-leaflet-cluster"), {
   ssr: false,
@@ -64,11 +67,6 @@ const UserLocationMarker = dynamic(() => import("@/components/leaflet/UserLocati
   ssr: false,
 });
 
-const ProductPopup = dynamic(
-  () => import("@/components/map/ProductPopup").then((mod) => ({ default: mod.ProductPopup })),
-  { ssr: false },
-);
-
 const ViewportLoader = dynamic(() => import("@/components/leaflet/ViewportLoader"), { ssr: false });
 
 interface MapClientProps {
@@ -79,6 +77,7 @@ interface MapClientProps {
 
 export function MapClient({ type, initialLocations, user }: MapClientProps) {
   const router = useRouter();
+  const t = useTranslations();
 
   // State to track if component is mounted (for SSR safety)
   const [mounted, setMounted] = useState(false);
@@ -118,8 +117,26 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
     [router],
   );
 
+  // Selection state shared by the list, the markers and the preview card
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
+  // Mobile shows one pane at a time. The map stays mounted underneath the list so it keeps its size.
+  const [mobileView, setMobileView] = useState<"map" | "list">("map");
+  const selectedItem = locations.find((item) => item.id === selectedId) ?? null;
+
+  const listRef = useRef<HTMLElement>(null);
+  const handleSelect = useCallback((id: number) => {
+    setSelectedId(id);
+    // Scroll only the list pane; scrollIntoView would also move the page.
+    const list = listRef.current;
+    const card = document.getElementById(`map-card-${id}`);
+    if (!list || !card) return;
+    const top = card.getBoundingClientRect().top - list.getBoundingClientRect().top + list.scrollTop - 24;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    list.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
+  }, []);
+
   // Custom marker icons
-  const beautifulMarker = useCustomMarkerIcon();
   const userMarker = useUserLocationIcon();
 
   // WebGL-accelerated renderer for ultra-fast marker rendering
@@ -184,7 +201,7 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
   // Don't render map until mounted (SSR safety)
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-900">
+      <div className="min-h-screen bg-background">
         <Navbar
           userId={userId}
           isAuth={isAuth}
@@ -206,13 +223,12 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
             </div>
           </div>
         </div>
-        <NavigateButtons navigateTo={type} title="Show listings" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <Navbar
         userId={userId}
         isAuth={isAuth}
@@ -226,129 +242,172 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
         signalOfNewMessage={[]}
         mapMode={true}
       />
-      <div className="relative h-map w-full isolate contain-layout contain-style contain-paint">
-        {/* Show loading skeleton while determining map center */}
-        {isCenterLoading ? (
-          <div className="h-full w-full animate-pulse bg-muted flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-4xl mb-4">🗺️</div>
-              <p className="text-muted-foreground">Loading map...</p>
+      <div className="relative w-full lg:grid lg:grid-cols-[minmax(0,55fr)_minmax(0,45fr)]">
+        {/* List: start column on desktop, full-bleed overlay on mobile when toggled */}
+        <section
+          ref={listRef}
+          aria-label="Listings on the map"
+          className={cn(
+            "h-map overflow-y-auto bg-background p-4 lg:static lg:block lg:p-6",
+            mobileView === "list" ? "absolute inset-0 z-20 block pb-28" : "hidden",
+          )}
+        >
+          {hasLocations ? (
+            <div className="grid grid-cols-1 gap-x-6 gap-y-9 min-[600px]:grid-cols-2">
+              {locations.map((item) => (
+                <MapListingCard
+                  key={item.id}
+                  item={item}
+                  productType={type}
+                  selected={item.id === selectedId}
+                  highlighted={item.id === hoveredId}
+                  onHover={setHoveredId}
+                />
+              ))}
             </div>
-          </div>
-        ) : (
-          <MapContainer
-            key={mapKey}
-            style={{
-              height: "100%",
-              width: "100%",
-              zIndex: 0,
-              transform: "translate3d(0, 0, 0)",
-              willChange: "transform",
-            }}
-            center={mapCenter}
-            zoom={finalZoom}
-            scrollWheelZoom={true}
-            zoomControl={true}
-            attributionControl={false}
-            zoomAnimation={true}
-            fadeAnimation={true}
-            markerZoomAnimation={true}
-            renderer={webglRenderer} // WebGL-accelerated rendering
-          >
-            {/* Dynamic view controller - updates center/zoom ONCE on initial load */}
-            <MapViewController
+          ) : (
+            <p className="py-16 text-center text-sm text-muted-foreground">{t("no_listings_found")}</p>
+          )}
+        </section>
+        <div className="relative h-map w-full isolate contain-layout contain-style contain-paint">
+          {/* Show loading skeleton while determining map center */}
+          {isCenterLoading ? (
+            <div className="h-full w-full animate-pulse bg-muted flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-4xl mb-4">🗺️</div>
+                <p className="text-muted-foreground">Loading map...</p>
+              </div>
+            </div>
+          ) : (
+            <MapContainer
+              key={mapKey}
+              style={{
+                height: "100%",
+                width: "100%",
+                zIndex: 0,
+                transform: "translate3d(0, 0, 0)",
+                willChange: "transform",
+              }}
               center={mapCenter}
               zoom={finalZoom}
-              isUserLocation={isUserLocation && !hasSavedPosition}
-            />
-
-            {/* Track user zoom changes and cache preferences */}
-            <ZoomTracker onZoomChange={updateZoom} />
-
-            {/* Track map position changes and save for next visit */}
-            <MapPositionTracker category={type} onPositionChange={savePosition} />
-
-            <SearchMenu />
-
-            {/* Viewport-based location loading - fetches markers as user pans/zooms */}
-            <ViewportLoader productType={type} onLocationsLoaded={handleLocationsLoaded} />
-
-            {/* Map Tiles (OSM by default, CARTO Voyager when API key is provided) */}
-            <TileLayer
-              url={MAP_CONFIG.tileUrl}
-              attribution={MAP_CONFIG.tileAttribution}
-              maxZoom={19}
-              minZoom={2}
-              tileSize={256}
-              updateWhenIdle={true}
-              updateWhenZooming={false}
-              keepBuffer={4}
-              maxNativeZoom={19}
-              crossOrigin={true}
-              className="gpu-accelerated-tiles"
-            />
-
-            <UserLocationMarker icon={userMarker} />
-
-            {hasLocations ? (
-              <MarkerClusterGroup
-                chunkedLoading
-                maxClusterRadius={100}
-                spiderfyOnMaxZoom={true}
-                showCoverageOnHover={false}
-                animate={true}
-                animateAddingMarkers={true}
-                removeOutsideVisibleBounds={true} // Viewport culling
-                iconCreateFunction={(cluster: { getChildCount: () => number }) => {
-                  return createClusterIcon(cluster.getChildCount());
-                }}
-              >
-                {locations
-                  .map((item, index) => {
-                    const coords = getCoordinates(item);
-                    if (!coords) return null;
-
-                    return (
-                      <Marker
-                        icon={beautifulMarker}
-                        key={`marker-${item.id}-${index}`}
-                        position={[coords.lat, coords.lng]}
-                      >
-                        <Popup className="custom-popup product-card-popup" closeButton={true} maxWidth={280}>
-                          <ProductPopup
-                            id={item.id}
-                            productType={type}
-                            name={item.post_name}
-                            type={item.post_type}
-                            image={(item as LocationType & { images?: string[] }).images?.[0]}
-                          />
-                        </Popup>
-                      </Marker>
-                    );
-                  })
-                  .filter(Boolean)}
-              </MarkerClusterGroup>
-            ) : null}
-          </MapContainer>
-        )}
-
-        {/* Empty state overlay */}
-        {!hasLocations && !isCenterLoading && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1000] pointer-events-none">
-            <div
-              className="bg-white p-8 rounded-2xl flex flex-col gap-3"
-              style={{ boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)" }}
+              scrollWheelZoom={true}
+              zoomControl={true}
+              attributionControl={false}
+              zoomAnimation={true}
+              fadeAnimation={true}
+              markerZoomAnimation={true}
+              renderer={webglRenderer} // WebGL-accelerated rendering
             >
-              <span className="text-5xl text-center">🗺️</span>
-              <p className="text-xl font-semibold text-gray-700">No items found</p>
-              <p className="text-sm text-gray-500 text-center max-w-[300px]">
-                There are currently no {type} items with location data in this area
-              </p>
+              {/* Dynamic view controller - updates center/zoom ONCE on initial load */}
+              <MapViewController
+                center={mapCenter}
+                zoom={finalZoom}
+                isUserLocation={isUserLocation && !hasSavedPosition}
+              />
+
+              {/* Track user zoom changes and cache preferences */}
+              <ZoomTracker onZoomChange={updateZoom} />
+
+              {/* Track map position changes and save for next visit */}
+              <MapPositionTracker category={type} onPositionChange={savePosition} />
+
+              <SearchMenu />
+
+              {/* Viewport-based location loading - fetches markers as user pans/zooms */}
+              <ViewportLoader productType={type} onLocationsLoaded={handleLocationsLoaded} />
+
+              {/* Map Tiles (OSM by default, CARTO Voyager when API key is provided) */}
+              <TileLayer
+                url={MAP_CONFIG.tileUrl}
+                attribution={MAP_CONFIG.tileAttribution}
+                maxZoom={19}
+                minZoom={2}
+                tileSize={256}
+                updateWhenIdle={true}
+                updateWhenZooming={false}
+                keepBuffer={4}
+                maxNativeZoom={19}
+                crossOrigin={true}
+                className="gpu-accelerated-tiles"
+              />
+
+              <UserLocationMarker icon={userMarker} />
+
+              {hasLocations ? (
+                <MarkerClusterGroup
+                  chunkedLoading
+                  maxClusterRadius={100}
+                  spiderfyOnMaxZoom={true}
+                  showCoverageOnHover={false}
+                  animate={true}
+                  animateAddingMarkers={true}
+                  removeOutsideVisibleBounds={true} // Viewport culling
+                  iconCreateFunction={(cluster: { getChildCount: () => number }) => {
+                    return createClusterIcon(cluster.getChildCount());
+                  }}
+                >
+                  {locations
+                    .map((item, index) => {
+                      const coords = getCoordinates(item);
+                      if (!coords) return null;
+
+                      const state = item.id === selectedId ? "selected" : item.id === hoveredId ? "hovered" : "default";
+                      return (
+                        <Marker
+                          icon={createPillMarkerIcon(item.post_name, state)}
+                          key={`marker-${item.id}-${index}`}
+                          position={[coords.lat, coords.lng]}
+                          title={item.post_name}
+                          zIndexOffset={state === "default" ? 0 : 1000}
+                          // Marker hover is CSS-only: swapping the icon on mouseover replaces
+                          // its element and swallows the click.
+                          eventHandlers={{ click: () => handleSelect(item.id) }}
+                        />
+                      );
+                    })
+                    .filter(Boolean)}
+                </MarkerClusterGroup>
+              ) : null}
+            </MapContainer>
+          )}
+
+          {/* Empty state overlay */}
+          {!hasLocations && !isCenterLoading && (
+            <div className="pointer-events-none absolute left-1/2 top-1/2 z-[1000] -translate-x-1/2 -translate-y-1/2">
+              <div className="flex flex-col gap-3 rounded-2xl border border-border bg-background p-8 shadow-lg">
+                <span className="text-center text-5xl" aria-hidden="true">
+                  🗺
+                </span>
+                <p className="text-xl font-semibold text-foreground">No items found</p>
+                <p className="max-w-[300px] text-center text-sm text-muted-foreground">
+                  There are currently no {type} items with location data in this area
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-      <NavigateButtons navigateTo={type} title="Show listings" />
+      {/* Selected-marker preview (mobile map view); outside the contained map wrapper so it can be fixed */}
+      {selectedItem && mobileView === "map" && (
+        <div className="fixed inset-x-4 bottom-[calc(max(1.5rem,env(safe-area-inset-bottom))+3.5rem)] z-40 lg:hidden">
+          <MapPreviewCard item={selectedItem} productType={type} onClose={() => setSelectedId(null)} />
+        </div>
+      )}
+      {/* Desktop keeps the existing route back to the listings grid */}
+      <div className="hidden lg:block">
+        <NavigateButtons navigateTo={type} title="Show listings" />
+      </div>
+      {/* Mobile list/map toggle pill */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-[max(1.5rem,env(safe-area-inset-bottom))] z-40 flex justify-center lg:hidden">
+        <Button
+          type="button"
+          onClick={() => setMobileView((view) => (view === "map" ? "list" : "map"))}
+          className="pointer-events-auto h-11 rounded-full bg-foreground px-5 font-semibold text-background shadow-lg hover:bg-foreground/90"
+        >
+          {mobileView === "map" ? <List aria-hidden="true" /> : <MapIcon aria-hidden="true" />}
+          {mobileView === "map" ? t("listings") : t("Home.nav_map")}
+        </Button>
+      </div>
     </div>
   );
 }

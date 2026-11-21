@@ -134,10 +134,10 @@ test.describe("Map Page", () => {
   test('should display "Show posts" navigation button', async ({ page }) => {
     await page.goto("/map/food");
 
-    // NavigateButtons shows "Show posts" button on map pages.
+    // NavigateButtons shows the "Show listings" button on map pages (desktop).
     // The page streams in via Suspense, so wait for it instead of
     // checking instantly after domcontentloaded.
-    const postsButton = page.locator("button").filter({ hasText: /show posts/i });
+    const postsButton = page.locator("button").filter({ hasText: /show (posts|listings)/i });
     await expect(postsButton).toBeVisible({ timeout: 30000 });
   });
 
@@ -159,7 +159,7 @@ test.describe("Map Page", () => {
     expect(hasMarkers || hasEmptyState || true).toBeTruthy();
   });
 
-  test("should open popup when clicking a marker", async ({ page }) => {
+  test("should select a listing when clicking a marker", async ({ page }) => {
     await page.goto("/map/food");
 
     const mapContainer = page.locator(".leaflet-container");
@@ -178,13 +178,13 @@ test.describe("Map Page", () => {
     const hasMarker = await marker.isVisible().catch(() => false);
 
     if (hasMarker) {
-      // Dispatch click directly on the element: pulse/cluster animations keep
+      // Dispatch click directly on the element: cluster animations keep
       // markers in motion, so positional clicks would land on the wrong spot
       await marker.dispatchEvent("click");
 
-      // Wait for popup to appear (popup animation is instant in Leaflet)
-      const popup = page.locator(".leaflet-popup");
-      await expect(popup).toBeVisible({ timeout: 5000 });
+      // Selecting a marker marks its card in the list (desktop) or opens the preview (mobile)
+      const selected = page.locator('[aria-current="true"], [role="dialog"]');
+      await expect(selected.first()).toBeVisible({ timeout: 5000 });
     }
   });
 
@@ -239,7 +239,7 @@ test.describe("Map with Location", () => {
     await page.waitForLoadState("domcontentloaded");
 
     // Click "Show posts" button
-    const postsButton = page.locator("button").filter({ hasText: /show posts/i });
+    const postsButton = page.locator("button").filter({ hasText: /show (posts|listings)/i });
     const isVisible = await postsButton.isVisible().catch(() => false);
 
     if (isVisible) {

@@ -53,7 +53,7 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
 
   if (!oneProduct) {
     return (
-      <div className="h-full min-h-[300px] bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
+      <div className="h-full min-h-[300px] bg-muted flex items-center justify-center">
         <div className="text-center">
           <span className="text-6xl mb-4 block">🗺️</span>
           <p className="text-muted-foreground text-sm">Loading map...</p>
@@ -66,7 +66,7 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
   const coords = getCoordinates(oneProduct);
   if (!coords) {
     return (
-      <div className="h-full min-h-[300px] bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
+      <div className="h-full min-h-[300px] bg-muted flex items-center justify-center">
         <div className="text-center">
           <span className="text-6xl mb-4 block">📍</span>
           <p className="text-muted-foreground text-sm">Location not available</p>
@@ -133,31 +133,6 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
           </Popup>
         </Marker>
       </MapContainer>
-
-      {/* Floating Info Card */}
-      <div className="absolute bottom-4 inset-x-4 lg:start-4 lg:end-auto lg:max-w-xs z-[1000]">
-        <div className="bg-card/90 backdrop-blur-lg rounded-2xl shadow-xl border border-border/50 p-4">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <span className="text-lg">📍</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-foreground truncate">{oneProduct.post_name}</p>
-              <p className="text-sm text-muted-foreground truncate">{oneProduct.post_stripped_address}</p>
-              {oneProduct.available_hours && (
-                <p className="text-xs text-muted-foreground/70 mt-1">🕐 {oneProduct.available_hours}</p>
-              )}
-            </div>
-          </div>
-          {/* Location approximation disclaimer */}
-          <div className="mt-3 pt-3 border-t border-border/30">
-            <p className="text-xs text-muted-foreground/70 flex items-center gap-1.5">
-              <span className="text-amber-500">⚠</span>
-              {t("location_approximate_disclaimer")}
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

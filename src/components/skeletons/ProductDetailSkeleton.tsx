@@ -1,57 +1,41 @@
+import { LISTING_CONTAINER } from "@/components/productCard/listing-layout";
 import { cn } from "@/lib/utils";
 import { NavbarSkeleton } from "./NavbarSkeleton";
 
 interface ProductDetailSkeletonProps {
   className?: string;
+  /** The page route already renders the header; the route-level loading state does not. */
+  withNavbar?: boolean;
 }
 
 /**
- * Product detail page skeleton with split view (product + map)
+ * Product detail page skeleton: title block, photo mosaic, content column and action card.
  */
-export function ProductDetailSkeleton({ className }: ProductDetailSkeletonProps) {
+export function ProductDetailSkeleton({ className, withNavbar = true }: ProductDetailSkeletonProps) {
   return (
-    <div
-      className={cn(
-        "min-h-screen bg-gradient-to-br from-muted/30 to-background dark:from-background dark:to-muted/20",
-        className,
-      )}
-    >
-      <NavbarSkeleton />
-
-      <div className="flex flex-col lg:flex-row">
-        {/* Left Column - Product Detail */}
-        <div className="w-full lg:w-1/2 px-4 pb-12">
-          <div className="animate-pulse">
-            <div className="glass w-full overflow-hidden rounded-xl">
-              {/* Image with back button */}
-              <div className="relative aspect-[16/9] bg-muted">
-                <div className="absolute top-4 start-4 h-9 w-20 bg-background/90 rounded-lg" />
-              </div>
-              <div className="p-6">
-                <div className="h-6 bg-muted rounded w-20 mb-3" />
-                <div className="h-8 bg-muted rounded mb-3" />
-                <div className="h-4 bg-muted rounded w-2/3 mb-4" />
-                <hr className="my-4 border-border" />
-                <div className="flex justify-between mb-4">
-                  <div className="h-4 bg-muted rounded w-20" />
-                  <div className="h-4 bg-muted rounded w-20" />
-                  <div className="h-4 bg-muted rounded w-20" />
-                </div>
-                <hr className="my-4 border-border" />
-                <div className="space-y-3">
-                  <div className="h-4 bg-muted rounded" />
-                  <div className="h-4 bg-muted rounded" />
-                  <div className="h-4 bg-muted rounded w-3/4" />
-                </div>
-                <div className="mt-6 h-12 bg-muted rounded" />
-              </div>
-            </div>
-          </div>
+    <div className={cn("min-h-screen bg-background", className)}>
+      {withNavbar && <NavbarSkeleton />}
+      <div
+        className={cn(LISTING_CONTAINER, "max-w-[1120px] animate-pulse py-6 motion-reduce:animate-none sm:py-8")}
+        aria-hidden="true"
+      >
+        <div className="mb-6 space-y-3">
+          <div className="h-5 w-24 rounded-full bg-muted" />
+          <div className="h-8 w-2/3 rounded-md bg-muted" />
+          <div className="h-4 w-1/3 rounded-md bg-muted" />
         </div>
-
-        {/* Right Column - Map */}
-        <div className="w-full lg:w-1/2 h-[400px] lg:h-auto lg:fixed lg:end-0 lg:top-0 lg:bottom-0 bg-muted animate-pulse flex items-center justify-center">
-          <span className="text-4xl">🗺️</span>
+        <div className="aspect-[4/3] rounded-2xl bg-muted md:aspect-[2/1]" />
+        <div className="mt-6 grid gap-x-12 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="space-y-8">
+            {["a", "b", "c"].map((key) => (
+              <div key={key} className="space-y-3 border-t border-border pt-6">
+                <div className="h-6 w-32 rounded-md bg-muted" />
+                <div className="h-4 rounded-md bg-muted" />
+                <div className="h-4 w-3/4 rounded-md bg-muted" />
+              </div>
+            ))}
+          </div>
+          <div className="hidden h-56 rounded-xl bg-muted lg:block" />
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { describe, expect, it, mock } from "bun:test";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 mock.module("next-intl", () => ({
   useTranslations: () => (key: string) => {
@@ -128,5 +128,54 @@ describe("PostDetailContent - Airbnb Detail Layout", () => {
     const saveButton = screen.getByRole("button", { name: "Save to wishlist" });
     expect(saveButton).toBeDefined();
     expect(saveButton.textContent).toContain("Save");
+  });
+
+  it("keeps host, transit and pickup hours on the detail page", () => {
+    render(<PostDetailContent post={basePost} user={null} />);
+    expect(screen.getByText("Elena")).toBeDefined();
+    expect(screen.getByText("Curbside pickup")).toBeDefined();
+    expect(screen.getAllByText("Anytime before 6pm").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("renders one primary CTA without gradient or hex classes", () => {
+    render(<PostDetailContent post={basePost} user={null} />);
+    const cta = screen.getByRole("button", { name: "Login to Contact" });
+    expect(cta.className).toContain("bg-brand");
+    expect(cta.className).not.toMatch(/gradient|#[0-9a-f]{3,6}/i);
+  });
+
+  it("shows the finding-a-photo state when there is no usable image", () => {
+    render(<PostDetailContent post={{ ...basePost, images: [] }} user={null} />);
+    expect(screen.getByTestId("finding-photo")).toBeDefined();
+  });
+
+  it("opens all photos from the mosaic", () => {
+    const images = [1, 2, 3, 4, 5, 6].map((i) => `/photos/p${i}.jpg`);
+    render(<PostDetailContent post={{ ...basePost, images }} user={null} />);
+    fireEvent.click(screen.getByRole("button", { name: "photos (6)" }));
+    expect(screen.getAllByRole("img", { name: /Fresh Bread Loaf \(\d\/6\)/ }).length).toBeGreaterThanOrEqual(6);
+  });
+
+  it("keeps the cover credit on the gallery for reference covers", () => {
+    const cover = {
+      kind: "reference",
+      sourcePageUrl: "https://commons.wikimedia.org/wiki/File:Bread.jpg",
+      license: "CC BY-SA 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
+      artist: "Jane Doe",
+      disclosure: "Reference image; not a photograph of the listed item",
+    };
+    const image =
+      "https://api.foodshare.club/storage/v1/object/public/food-images/user/reference-covers/" +
+      "a".repeat(64) +
+      ".jpeg";
+    render(<PostDetailContent post={{ ...basePost, images: [image], metadata: { cover } }} user={null} />);
+    expect(screen.getByTestId("cover-credit")).toBeDefined();
+    expect(
+      screen
+        .getByText(/Source: Wikimedia Commons · Jane Doe/)
+        .closest("a")
+        ?.getAttribute("href"),
+    ).toBe(cover.sourcePageUrl);
   });
 });
