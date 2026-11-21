@@ -584,6 +584,14 @@ FoodShare incorporates core Airbnb design patterns adapted for surplus food and 
     - Modernized `rounded-3xl` dialog with tactile star rating buttons (`hover:scale-125`).
     - Rounded-xl textarea input and brand coral action CTA button.
 
+17. **Host Listing Creation Experience (`NewProductForm.tsx`)**:
+    - High-elevation `rounded-3xl` glass container with ambient backdrop blur (`p-6 sm:p-10 space-y-6`).
+    - Pill-shaped Back button (`h-9 px-3.5 rounded-full`) and custom header badge.
+    - Photo uploader with "Cover photo" badge pill on cover image, circular glass remove button, and dashed dropzone.
+    - AI Draft assistant pill button with `Sparkles` icon and animated state.
+    - 48px rounded-xl input fields and selects with brand coral focus rings.
+    - Full-width / flex brand coral gradient submit buttons (`bg-gradient-to-r from-[#FF2D55] to-[#FF385C]`) for both standard listings and volunteer applications.
+
 ---
 
 _This is a living document. Update as you build and discover new patterns!_

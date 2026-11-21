@@ -352,48 +352,48 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background dark:from-background dark:to-muted/20">
+    <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background dark:from-background dark:to-muted/20 py-8">
       {/* Form */}
-      <div className="container mx-auto px-4 pb-8 max-w-3xl">
+      <div className="container mx-auto px-4 max-w-3xl">
         {/* Page Header */}
-        <div className="mb-6">
+        <div className="mb-8">
           <button
             type="button"
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
+            className="h-9 px-3.5 rounded-full border border-border/80 bg-background/80 hover:bg-muted/60 text-foreground transition-all shadow-2xs hover:shadow-xs active:scale-95 inline-flex items-center gap-2 text-xs font-semibold mb-6"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="size-4" />
             <span>Back</span>
           </button>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
-              <PlusCircle className="w-6 h-6 text-orange-500" />
+          <div className="flex items-center gap-3.5 mb-2">
+            <div className="flex size-11 items-center justify-center rounded-2xl bg-muted/60 border border-border/80 text-foreground shadow-inner">
+              <PlusCircle className="size-6 text-brand" />
             </div>
-            <h1 className="text-3xl font-bold text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-display">
               {isVolunteerForm ? "Become a Volunteer" : "Create New Listing"}
             </h1>
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
             {isVolunteerForm
               ? "Join our community of food heroes making a difference"
               : "Share food items or services with your community"}
           </p>
         </div>
         <form onSubmit={handleSubmit}>
-          <div className="glass rounded-xl p-6">
+          <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl shadow-xl p-6 sm:p-10 space-y-6">
             {error && (
-              <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
-                <p className="text-red-800 dark:text-red-300 text-sm">{error}</p>
+              <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-2xl">
+                <p className="text-destructive text-sm font-medium">{error}</p>
               </div>
             )}
 
             {/* Category Selection */}
-            <div className="mb-6">
-              <Label htmlFor="post_type" className="text-base font-semibold mb-2 block">
-                {t("category")} <span className="text-red-500">*</span>
+            <div>
+              <Label htmlFor="post_type" className="text-base font-semibold mb-2 block text-foreground">
+                {t("category")} <span className="text-destructive">*</span>
               </Label>
               <Select value={formData.post_type} onValueChange={(value) => handleInputChange("post_type", value)}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full h-12 rounded-xl border-border/80 bg-background/60 hover:border-foreground/30 focus:ring-2 focus:ring-primary/20 text-sm">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -646,11 +646,11 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full font-semibold py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                    className="w-full h-12 rounded-xl font-semibold text-sm bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E02447] hover:to-[#E0284D] active:scale-95 text-white shadow-md hover:shadow-lg shadow-[#FF2D55]/20 hover:shadow-[#FF2D55]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="size-4 animate-spin" />
                         Submitting...
                       </span>
                     ) : (
@@ -662,10 +662,10 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                   </p>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     onClick={() => router.back()}
                     disabled={isSubmitting}
-                    className="w-full"
+                    className="w-full h-12 rounded-xl border-border/80 bg-background/80 hover:bg-muted/60 text-foreground font-semibold text-sm active:scale-95 transition-all"
                   >
                     {t("cancel")}
                   </Button>
@@ -679,26 +679,34 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
 
                 {/* Images (first — eBay-style flow) */}
                 <div className="mb-6">
-                  <Label className="text-base font-semibold mb-2 block">
-                    {t("photos")} <span className="text-red-500">*</span>
+                  <Label className="text-base font-semibold mb-2 block text-foreground">
+                    {t("photos")} <span className="text-destructive">*</span>
                   </Label>
                   <div className="space-y-4">
                     {imagePreviews.length > 0 && (
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         {imagePreviews.map((preview, index) => (
-                          <div key={preview} className="relative group">
+                          <div
+                            key={preview}
+                            className="relative group rounded-2xl overflow-hidden border border-border/80 shadow-xs hover:shadow-md transition-all"
+                          >
                             {/* eslint-disable-next-line @next/next/no-img-element -- blob URLs for local previews */}
                             <img
                               src={preview}
                               alt={`Preview ${index + 1}`}
-                              className="w-full aspect-square object-cover rounded-lg"
+                              className="w-full aspect-square object-cover"
                             />
+                            {index === 0 && (
+                              <span className="absolute bottom-2 start-2 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-black/75 text-white backdrop-blur-xs shadow-xs">
+                                {"Cover photo"}
+                              </span>
+                            )}
                             <button
                               type="button"
                               onClick={() => handleRemoveImage(index)}
-                              className="absolute top-2 end-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-2 end-2 size-7 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-xs"
                             >
-                              <X className="w-3 h-3" />
+                              <X className="size-3.5" />
                             </button>
                           </div>
                         ))}
@@ -716,17 +724,17 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                         />
                         <label
                           htmlFor="image-upload"
-                          className="flex items-center justify-center w-full p-6 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-orange-400 dark:hover:border-orange-500 transition-colors"
+                          className="flex flex-col items-center justify-center w-full p-8 sm:p-10 border-2 border-dashed border-border/80 hover:border-foreground/40 rounded-2xl cursor-pointer hover:bg-muted/30 transition-all text-center"
                         >
-                          <div className="text-center">
-                            <ImagePlus className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                            <p className="text-sm text-muted-foreground">
-                              {t("click_to_add_photos", {
-                                current: selectedImages.length,
-                                max: MAX_IMAGES,
-                              })}
-                            </p>
+                          <div className="flex size-14 items-center justify-center rounded-2xl bg-muted/60 text-foreground mb-3 shadow-inner">
+                            <ImagePlus className="size-7" />
                           </div>
+                          <p className="text-sm font-medium text-foreground">
+                            {t("click_to_add_photos", {
+                              current: selectedImages.length,
+                              max: MAX_IMAGES,
+                            })}
+                          </p>
                         </label>
                       </div>
                     )}
@@ -740,16 +748,16 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                       type="button"
                       onClick={handleAIDraft}
                       disabled={isDrafting}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-950/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="h-10 px-4 rounded-full border border-border/80 bg-background/80 hover:bg-muted/60 hover:border-foreground/30 text-foreground text-xs font-semibold shadow-2xs hover:shadow-xs active:scale-95 transition-all inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isDrafting ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="size-4 animate-spin text-brand" />
                           <span>Analyzing images...</span>
                         </>
                       ) : (
                         <>
-                          <Sparkles className="w-4 h-4" />
+                          <Sparkles className="size-4 text-emerald-600 dark:text-emerald-400" />
                           <span>Draft with AI</span>
                         </>
                       )}
@@ -762,8 +770,8 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
 
                 {/* Title */}
                 <div className="mb-6">
-                  <Label htmlFor="post_name" className="text-base font-semibold mb-2 block">
-                    {t("title")} <span className="text-red-500">*</span>
+                  <Label htmlFor="post_name" className="text-base font-semibold mb-2 block text-foreground">
+                    {t("title")} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="post_name"
@@ -771,7 +779,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                     value={formData.post_name}
                     onChange={(e) => handleInputChange("post_name", e.target.value)}
                     placeholder="e.g., Fresh Homemade Pasta"
-                    className="w-full"
+                    className="w-full h-12 rounded-xl border-border/80 bg-background/60 hover:border-foreground/30 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20 text-sm"
                     maxLength={LISTING.title.maxLength}
                   />
                   <p className="text-sm text-muted-foreground mt-1">
@@ -781,15 +789,15 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
 
                 {/* Description */}
                 <div className="mb-6">
-                  <Label htmlFor="post_description" className="text-base font-semibold mb-2 block">
-                    {t("description")} <span className="text-red-500">*</span>
+                  <Label htmlFor="post_description" className="text-base font-semibold mb-2 block text-foreground">
+                    {t("description")} <span className="text-destructive">*</span>
                   </Label>
                   <Textarea
                     id="post_description"
                     value={formData.post_description}
                     onChange={(e) => handleInputChange("post_description", e.target.value)}
                     placeholder="Describe your item in detail..."
-                    className="w-full min-h-[120px]"
+                    className="w-full min-h-[120px] rounded-xl border-border/80 bg-background/60 hover:border-foreground/30 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20 text-sm p-3.5"
                     maxLength={LISTING.description.maxLength}
                   />
                   <p className="text-sm text-muted-foreground mt-1">
@@ -799,8 +807,8 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
 
                 {/* Available Hours */}
                 <div className="mb-6">
-                  <Label htmlFor="available_hours" className="text-base font-semibold mb-2 block">
-                    {t("available_hours")} <span className="text-red-500">*</span>
+                  <Label htmlFor="available_hours" className="text-base font-semibold mb-2 block text-foreground">
+                    {t("available_hours")} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="available_hours"
@@ -808,20 +816,20 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                     value={formData.available_hours}
                     onChange={(e) => handleInputChange("available_hours", e.target.value)}
                     placeholder="e.g., Weekdays 6-8 PM"
-                    className="w-full"
+                    className="w-full h-12 rounded-xl border-border/80 bg-background/60 hover:border-foreground/30 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20 text-sm"
                   />
                 </div>
 
                 {/* Transportation */}
                 <div className="mb-6">
-                  <Label htmlFor="transportation" className="text-base font-semibold mb-2 block">
+                  <Label htmlFor="transportation" className="text-base font-semibold mb-2 block text-foreground">
                     {t("transportation")}
                   </Label>
                   <Select
                     value={formData.transportation}
                     onValueChange={(value) => handleInputChange("transportation", value)}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full h-12 rounded-xl border-border/80 bg-background/60 hover:border-foreground/30 focus:ring-2 focus:ring-primary/20 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -834,8 +842,8 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
 
                 {/* Address */}
                 <div className="mb-6">
-                  <Label htmlFor="post_address" className="text-base font-semibold mb-2 block">
-                    {t("address")} <span className="text-red-500">*</span>
+                  <Label htmlFor="post_address" className="text-base font-semibold mb-2 block text-foreground">
+                    {t("address")} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="post_address"
@@ -843,7 +851,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                     value={formData.post_address}
                     onChange={(e) => handleInputChange("post_address", e.target.value)}
                     placeholder="Enter your address"
-                    className="w-full"
+                    className="w-full h-12 rounded-xl border-border/80 bg-background/60 hover:border-foreground/30 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20 text-sm"
                   />
                   <p className="text-sm text-muted-foreground mt-1">
                     {t("your_exact_address_wont_be_shared_publicly")}
@@ -851,24 +859,24 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                 </div>
 
                 {/* Submit Button */}
-                <div className="flex gap-4 pt-4">
+                <div className="flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t border-border/40">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => router.back()}
                     disabled={isSubmitting}
-                    className="flex-1"
+                    className="flex-1 h-12 rounded-xl border-border/80 bg-background/80 hover:bg-muted/60 hover:border-foreground/30 text-foreground font-semibold text-sm active:scale-95 transition-all"
                   >
                     {t("cancel")}
                   </Button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 font-semibold py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 h-12 rounded-xl font-semibold text-sm bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E02447] hover:to-[#E0284D] active:scale-95 text-white shadow-md hover:shadow-lg shadow-[#FF2D55]/20 hover:shadow-[#FF2D55]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="size-4 animate-spin" />
                         {t("creating")}
                       </span>
                     ) : (

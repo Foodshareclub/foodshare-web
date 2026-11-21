@@ -218,6 +218,25 @@ Listing cards use a frameless presentation with a 4-line metadata hierarchy:
   - Smooth tactile star rating buttons with scale zoom on hover (`hover:scale-125 transition-transform duration-200`) and active amber fill.
   - Rounded-xl textarea input and full-width brand coral action CTA (`h-12 px-7 rounded-xl bg-gradient-to-r from-[#FF2D55] to-[#FF385C] text-white font-semibold text-sm shadow-md`).
 
+## 20. Host Listing Creation Experience (`NewProductForm.tsx`)
+
+- **Page Header & Navigation**:
+  - Tactile rounded-full Back button (`h-9 px-3.5 rounded-full border border-border/80 bg-background/80 hover:bg-muted/60 text-foreground text-xs font-semibold shadow-2xs hover:shadow-xs active:scale-95`).
+  - Brand header badge (`size-11 rounded-2xl bg-muted/60 border border-border/80 text-foreground`) with community `PlusCircle` icon.
+  - Expressive typography: `font-display text-2xl sm:text-3xl font-bold tracking-tight text-foreground`.
+- **Form Card Architecture**:
+  - High-elevation glassmorphic container: `rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl shadow-xl p-6 sm:p-10 space-y-6`.
+- **Media Upload Presentation**:
+  - Prominent "Cover photo" badge pill on image index 0 (`absolute bottom-2 start-2 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-black/75 text-white backdrop-blur-xs`).
+  - Circular glass remove button (`size-7 rounded-full bg-black/60 hover:bg-black/80 text-white`).
+  - 2-dashed border dropzone (`border-2 border-dashed border-border/80 rounded-2xl hover:bg-muted/30 transition-colors`).
+  - Smart AI draft pill with Sparkles icon (`h-10 px-4 rounded-full border border-border/80 bg-background/80 hover:bg-muted/60 text-xs font-semibold`).
+- **Input Fields & Form Controls**:
+  - 48px rounded-xl input fields and select dropdowns: `h-12 rounded-xl border-border/80 bg-background/60 hover:border-foreground/30 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20 text-sm`.
+- **Primary Host Submission CTA**:
+  - Full-width / flex brand coral gradient button: `h-12 rounded-xl font-semibold text-sm bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E02447] hover:to-[#E0284D] active:scale-95 text-white shadow-md hover:shadow-lg shadow-[#FF2D55]/20 hover:shadow-[#FF2D55]/30`.
+
+
 
 
 
