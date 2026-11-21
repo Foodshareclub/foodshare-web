@@ -1,5 +1,6 @@
 {
   "reference_photo_disclaimer": "Reference photo — not the actual item",
+  "cover_source_wikimedia": "Source: Wikimedia Commons",
   "search_filters": {
     "any_distance": "Any distance",
     "within_km": "Within {distance} km",
@@ -239,6 +240,7 @@
   "get_in_touch": "Get In Touch",
   "get_started": "Get Started",
   "go_back": "Go Back",
+  "go_to_slide": "Slide",
   "google": "Google",
   "guide": "Guide",
   "haptic_feedback": "Haptic Feedback",

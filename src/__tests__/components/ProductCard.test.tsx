@@ -10,7 +10,12 @@ mock.module("next/navigation", () => ({
 }));
 
 mock.module("next-intl", () => ({
-  useTranslations: () => (key: string, opts?: { defaultMessage?: string }) => opts?.defaultMessage || key,
+  useTranslations: () => (key: string, opts?: { defaultMessage?: string }) => {
+    const translations: Record<string, string> = {
+      cover_source_wikimedia: "Source: Wikimedia Commons",
+    };
+    return translations[key] || opts?.defaultMessage || key;
+  },
 }));
 
 mock.module("@/hooks/useAuth", () => ({
