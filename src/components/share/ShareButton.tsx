@@ -44,11 +44,19 @@ interface ShareButtonProps {
   description?: string;
   className?: string;
   variant?: "icon" | "default";
+  defaultOpen?: boolean;
 }
 
-export function ShareButton({ url, title, description, className, variant = "icon" }: ShareButtonProps) {
+export function ShareButton({
+  url,
+  title,
+  description,
+  className,
+  variant = "icon",
+  defaultOpen = false,
+}: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
 
   const canNativeShare = typeof navigator !== "undefined" && !!navigator.share;
 
@@ -111,116 +119,122 @@ export function ShareButton({ url, title, description, className, variant = "ico
           variant="outline"
           size={variant === "icon" ? "icon" : "default"}
           className={cn(
-            variant === "icon" && "h-12 w-12 rounded-xl",
-            "border-border/50 text-muted-foreground",
-            "hover:text-teal-600 hover:border-teal-500/50 hover:bg-teal-500/10",
-            "transition-all duration-300",
+            variant === "icon"
+              ? "size-9 sm:size-10 rounded-full"
+              : "h-10 px-4 rounded-full text-xs sm:text-sm font-semibold gap-2",
+            "border-border/80 bg-background/80 hover:bg-muted/60 hover:border-foreground/30 text-foreground",
+            "shadow-2xs hover:shadow-xs active:scale-95 transition-all duration-200",
             className,
           )}
           aria-label="Share this listing"
         >
-          <Share2 className="h-5 w-5" />
-          {variant === "default" && <span className="ms-2">Share</span>}
+          <Share2 className={cn(variant === "icon" ? "size-4 sm:size-4.5" : "size-4")} />
+          {variant === "default" && <span>Share</span>}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-56 rounded-xl border-border/50 bg-card/95 backdrop-blur-xl shadow-xl"
+        className="w-64 rounded-2xl border-border/80 bg-background/95 backdrop-blur-2xl shadow-xl p-2"
       >
-        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Share this listing</DropdownMenuLabel>
-        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="text-xs text-muted-foreground font-semibold px-2.5 py-1.5">
+          Share this listing
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator className="my-1" />
 
         {/* Copy Link */}
         <DropdownMenuItem
-          onClick={handleCopyLink}
-          className="cursor-pointer gap-3 rounded-lg focus:bg-teal-500/10 focus:text-teal-600"
+          onSelect={(e) => {
+            e.preventDefault();
+            handleCopyLink();
+          }}
+          className="cursor-pointer gap-3 rounded-xl p-2 focus:bg-muted/60 transition-colors"
         >
           {copied ? (
             <>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10">
-                <Check className="h-4 w-4 text-emerald-500" />
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <Check className="size-4" />
               </div>
-              <span className="text-emerald-600 font-medium">Link copied!</span>
+              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Link copied!</span>
             </>
           ) : (
             <>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-                <Link2 className="h-4 w-4" />
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted/80 text-foreground">
+                <Link2 className="size-4" />
               </div>
-              <span>Copy link</span>
+              <span className="text-xs font-medium text-foreground">Copy link</span>
             </>
           )}
         </DropdownMenuItem>
 
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="my-1" />
 
         {/* WhatsApp */}
         <DropdownMenuItem
           onClick={() => openShareLink("whatsapp")}
-          className="cursor-pointer gap-3 rounded-lg focus:bg-[#25D366]/10 focus:text-[#25D366]"
+          className="cursor-pointer gap-3 rounded-xl p-2 focus:bg-muted/60 transition-colors"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#25D366]/10">
-            <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366]">
+            <WhatsAppIcon className="size-4" />
           </div>
-          <span>WhatsApp</span>
+          <span className="text-xs font-medium text-foreground">WhatsApp</span>
         </DropdownMenuItem>
 
         {/* Telegram */}
         <DropdownMenuItem
           onClick={() => openShareLink("telegram")}
-          className="cursor-pointer gap-3 rounded-lg focus:bg-[#0088cc]/10 focus:text-[#0088cc]"
+          className="cursor-pointer gap-3 rounded-xl p-2 focus:bg-muted/60 transition-colors"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0088cc]/10">
-            <TelegramIcon className="h-4 w-4 text-[#0088cc]" />
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#0088cc]/10 text-[#0088cc]">
+            <TelegramIcon className="size-4" />
           </div>
-          <span>Telegram</span>
+          <span className="text-xs font-medium text-foreground">Telegram</span>
         </DropdownMenuItem>
 
         {/* Twitter/X */}
         <DropdownMenuItem
           onClick={() => openShareLink("twitter")}
-          className="cursor-pointer gap-3 rounded-lg focus:bg-foreground/10"
+          className="cursor-pointer gap-3 rounded-xl p-2 focus:bg-muted/60 transition-colors"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground/5">
-            <TwitterXIcon className="h-4 w-4" />
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted/80 text-foreground">
+            <TwitterXIcon className="size-4" />
           </div>
-          <span>X (Twitter)</span>
+          <span className="text-xs font-medium text-foreground">X (Twitter)</span>
         </DropdownMenuItem>
 
         {/* Facebook */}
         <DropdownMenuItem
           onClick={() => openShareLink("facebook")}
-          className="cursor-pointer gap-3 rounded-lg focus:bg-[#1877F2]/10 focus:text-[#1877F2]"
+          className="cursor-pointer gap-3 rounded-xl p-2 focus:bg-muted/60 transition-colors"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1877F2]/10">
-            <FacebookIcon className="h-4 w-4 text-[#1877F2]" />
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#1877F2]/10 text-[#1877F2]">
+            <FacebookIcon className="size-4" />
           </div>
-          <span>Facebook</span>
+          <span className="text-xs font-medium text-foreground">Facebook</span>
         </DropdownMenuItem>
 
         {/* Email */}
         <DropdownMenuItem
           onClick={() => openShareLink("email")}
-          className="cursor-pointer gap-3 rounded-lg focus:bg-orange-500/10 focus:text-orange-600"
+          className="cursor-pointer gap-3 rounded-xl p-2 focus:bg-muted/60 transition-colors"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10">
-            <Mail className="h-4 w-4 text-orange-500" />
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <Mail className="size-4" />
           </div>
-          <span>Email</span>
+          <span className="text-xs font-medium text-foreground">Email</span>
         </DropdownMenuItem>
 
         {/* Native share option for supported browsers */}
         {canNativeShare && (
           <>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="my-1" />
             <DropdownMenuItem
               onClick={handleNativeShare}
-              className="cursor-pointer gap-3 rounded-lg focus:bg-primary/10 focus:text-primary"
+              className="cursor-pointer gap-3 rounded-xl p-2 focus:bg-muted/60 transition-colors"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500/10 to-rose-500/10">
-                <MessageCircle className="h-4 w-4 text-orange-500" />
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <MessageCircle className="size-4" />
               </div>
-              <span>More options...</span>
+              <span className="text-xs font-medium text-foreground">More options...</span>
             </DropdownMenuItem>
           </>
         )}

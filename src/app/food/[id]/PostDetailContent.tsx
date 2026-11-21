@@ -2,6 +2,7 @@
 
 const STAR_VALUES = [1, 2, 3, 4, 5] as const;
 
+import { togglePostLike } from "@/app/actions/post-engagement";
 import { PostDetailSection } from "@/components/post/PostDetailSection";
 import { PostStatsCard } from "@/components/post/PostStatsCard";
 import { PostTypeBadge } from "@/components/post/PostTypeBadge";
@@ -40,7 +41,7 @@ import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 interface PostDetailContentProps {
   post: InitialProductStateType;
@@ -60,6 +61,9 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
 
   const [rating, setRating] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.post_like_counter || 0);
+  const [isPendingSave, startSaveTransition] = useTransition();
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const validImages = [...new Set(post.images?.map(normalizeImageUrl).filter((url): url is string => !!url))];
   const heroImage = validImages.find((url) => !failedImages[url]);
@@ -81,6 +85,29 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
 
   const onStarClick = (index: number) => {
     setRating(index + 1);
+  };
+
+  const handleToggleSave = () => {
+    if (!isAuth) {
+      router.push("/auth/login");
+      return;
+    }
+    const previousSaved = isSaved;
+    setIsSaved(!previousSaved);
+    setLikeCount((prev) => (previousSaved ? Math.max(0, prev - 1) : prev + 1));
+
+    startSaveTransition(async () => {
+      try {
+        const result = await togglePostLike(post.id);
+        if (result.success && result.data) {
+          setIsSaved(result.data.isLiked);
+          setLikeCount(result.data.likeCount);
+        }
+      } catch {
+        setIsSaved(previousSaved);
+        setLikeCount(post.post_like_counter || 0);
+      }
+    });
   };
 
   const handleContactSharer = () => {
@@ -147,7 +174,29 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
                 url={`https://foodshare.club/food/${post.id}`}
                 title={post.post_name}
                 description={post.post_description}
+                variant="default"
               />
+              <Button
+                type="button"
+                variant="outline"
+                size="default"
+                onClick={handleToggleSave}
+                disabled={isPendingSave}
+                className={cn(
+                  "h-10 px-3.5 sm:px-4 rounded-full text-xs sm:text-sm font-semibold gap-1.5 sm:gap-2",
+                  "border-border/80 bg-background/80 hover:bg-muted/60 hover:border-foreground/30 text-foreground",
+                  "shadow-2xs hover:shadow-xs active:scale-95 transition-all duration-200",
+                )}
+                aria-label={isSaved ? "Saved to wishlist" : "Save to wishlist"}
+              >
+                <Heart
+                  className={cn(
+                    "size-4 transition-colors",
+                    isSaved ? "fill-[#FF2D55] text-[#FF2D55]" : "text-foreground",
+                  )}
+                />
+                <span>{isSaved ? "Saved" : "Save"}</span>
+              </Button>
             </div>
           </div>
         </div>
@@ -283,7 +332,7 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
               isLoaded ? "translate-y-0" : "translate-y-4",
             )}
           >
-            <PostStatsCard icon={Heart} value={post.post_like_counter || 0} label="likes" colorScheme="rose" />
+            <PostStatsCard icon={Heart} value={likeCount} label="likes" colorScheme="rose" />
             <PostStatsCard icon={Eye} value={post.post_views || 0} label="views" colorScheme="blue" />
             <PostStatsCard
               icon={Calendar}
@@ -300,18 +349,23 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
           {!isOwner && (
             <div
               className={cn(
-                "flex items-center justify-center gap-2 mb-6 p-4 rounded-xl bg-muted/30 transform transition-all duration-500 delay-300",
+                "flex flex-col sm:flex-row items-center justify-between gap-3 p-4 sm:p-5 rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md shadow-xs transform transition-all duration-500 delay-300",
                 isLoaded ? "translate-y-0" : "translate-y-4",
               )}
             >
-              <span className="text-sm font-medium text-muted-foreground me-2">Rate this listing:</span>
-              <div className="flex items-center gap-1" role="group">
+              <div className="flex items-center gap-2.5">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
+                  <Star className="size-4.5 fill-amber-400 text-amber-400" />
+                </div>
+                <span className="text-sm font-semibold text-foreground">Rate this listing:</span>
+              </div>
+              <div className="flex items-center gap-1 sm:gap-1.5" role="group">
                 {STAR_VALUES.map((star) => (
                   <button
                     key={star}
                     type="button"
                     onClick={() => onStarClick(star - 1)}
-                    className="p-1 rounded-sm transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-ring"
+                    className="p-1 rounded-full transition-transform hover:scale-125 focus-visible:outline-2 focus-visible:outline-ring"
                     aria-label={`Rate ${star} stars`}
                   >
                     <Star
@@ -319,7 +373,7 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
                         "size-5 transition-colors",
                         star <= rating
                           ? "fill-amber-400 text-amber-400"
-                          : "text-muted-foreground/40 hover:text-amber-300",
+                          : "text-muted-foreground/30 hover:text-amber-300",
                       )}
                     />
                   </button>
@@ -371,7 +425,7 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
                 <Button
                   onClick={handleEditPost}
                   size="lg"
-                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 shadow-lg shadow-orange-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/30 hover:scale-[1.02] font-semibold"
+                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E02447] hover:to-[#E0284D] text-white shadow-md hover:shadow-lg shadow-[#FF2D55]/20 hover:shadow-[#FF2D55]/30 active:scale-95 transition-all font-semibold text-sm"
                 >
                   {isAdmin && !isOwner ? `${t("edit_listing")} (Admin)` : t("edit_listing")}
                 </Button>
@@ -380,7 +434,7 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
                     <Button
                       variant="outline"
                       size="lg"
-                      className="w-full h-12 rounded-xl border-border/50 hover:bg-muted/50 transition-all duration-300 hover:scale-[1.02] font-semibold"
+                      className="w-full h-12 rounded-xl border-border/80 bg-background/80 hover:bg-muted/60 hover:border-foreground/30 active:scale-95 transition-all font-semibold text-sm"
                     >
                       {t("my_listings")}
                     </Button>
@@ -397,7 +451,7 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
                 <Button
                   onClick={handleContactSharer}
                   size="lg"
-                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 shadow-lg shadow-orange-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/30 hover:scale-[1.02] font-semibold"
+                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E02447] hover:to-[#E0284D] text-white shadow-md hover:shadow-lg shadow-[#FF2D55]/20 hover:shadow-[#FF2D55]/30 active:scale-95 transition-all font-semibold text-sm"
                 >
                   {isAuth ? t("contact_sharer") : t("login_to_contact")}
                 </Button>
@@ -414,9 +468,9 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-12 w-12 rounded-xl border-border/50 text-muted-foreground hover:text-destructive hover:border-destructive/50 hover:bg-destructive/10 transition-all duration-300"
+                        className="size-12 rounded-xl border-border/80 bg-background/80 hover:bg-muted/60 hover:border-foreground/30 text-muted-foreground hover:text-destructive hover:border-destructive/50 hover:bg-destructive/10 active:scale-95 transition-all"
                       >
-                        <Flag className="h-5 w-5" />
+                        <Flag className="size-5" />
                       </Button>
                     }
                   />

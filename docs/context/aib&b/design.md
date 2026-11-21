@@ -565,6 +565,25 @@ FoodShare incorporates core Airbnb design patterns adapted for surplus food and 
     - Dedicated About section with primary brand coral message CTA.
     - Anchored avatar edit button on profile settings eliminating legacy viewport positioning.
 
+13. **Interactive Share Popover Architecture (`ShareButton.tsx`)**:
+    - Sleek 40px rounded-full icon button and default pill button with `Share` label.
+    - Floating `rounded-2xl` glass dropdown menu with circular brand platform badges (WhatsApp, Telegram, X, Facebook, Email).
+    - Quick "Copy link" action with dynamic green confirmation feedback.
+
+14. **Wishlist & Top Action Pairing (`PostDetailContent.tsx`)**:
+    - Docked `Share` and `Save` (Wishlist) pill buttons in top-right action cluster.
+    - Interactive heart wishlist toggle with optimistic feedback and live like counters.
+    - Full-width brand coral primary action button and tactile review rating container.
+
+15. **Warm Empty State & Community Discovery (`EmptyListingState.tsx`)**:
+    - Floating `rounded-3xl` glass container with ambient radial glow and category badge icon.
+    - Empathetic copy and signature brand coral primary CTA to share goods or food.
+    - Quick category shortcut chips and secondary clear search action.
+
+16. **Post-Exchange Feedback & Rating Experience (`PopupNotificationModal.tsx`)**:
+    - Modernized `rounded-3xl` dialog with tactile star rating buttons (`hover:scale-125`).
+    - Rounded-xl textarea input and brand coral action CTA button.
+
 ---
 
 _This is a living document. Update as you build and discover new patterns!_

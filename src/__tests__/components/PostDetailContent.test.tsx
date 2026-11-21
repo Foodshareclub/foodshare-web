@@ -41,6 +41,10 @@ mock.module("@/components/reports", () => ({
   ReportPostDialog: () => <div data-testid="report-dialog" />,
 }));
 
+mock.module("@/app/actions/post-engagement", () => ({
+  togglePostLike: mock(() => Promise.resolve({ success: true, data: { isLiked: true, likeCount: 13 } })),
+}));
+
 import { PostDetailContent } from "@/app/food/[id]/PostDetailContent";
 import type { InitialProductStateType } from "@/types/product.types";
 
@@ -116,5 +120,13 @@ describe("PostDetailContent - Airbnb Detail Layout", () => {
 
     expect(screen.getByRole("button", { name: "Login to Contact" })).toBeDefined();
     expect(screen.getAllByRole("button", { name: "Share" }).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("renders wishlist Save button alongside Share in top actions", () => {
+    render(<PostDetailContent post={basePost} user={null} isModal />);
+
+    const saveButton = screen.getByRole("button", { name: "Save to wishlist" });
+    expect(saveButton).toBeDefined();
+    expect(saveButton.textContent).toContain("Save");
   });
 });

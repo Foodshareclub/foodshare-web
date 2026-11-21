@@ -16,7 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
-import { StarIcon } from "@/utils/icons";
+import { cn } from "@/lib/utils";
+import { Star } from "lucide-react";
 
 // ============================================================================
 // Types & Constants
@@ -60,7 +61,7 @@ function StarRating({ value, onChange }: StarRatingProps) {
   const t = useTranslations();
 
   return (
-    <fieldset className="flex justify-center" aria-label={t("rate_your_experience")}>
+    <fieldset className="flex justify-center gap-1.5 py-2" aria-label={t("rate_your_experience")}>
       {Array.from({ length: STAR_COUNT }, (_, i) => (
         <button
           key={STAR_BUTTON_KEYS[i]}
@@ -68,9 +69,15 @@ function StarRating({ value, onChange }: StarRatingProps) {
           aria-label={t("rate_count_of_total_stars", { count: i + 1, total: STAR_COUNT })}
           aria-pressed={i < value}
           onClick={() => onChange(i + 1)}
-          className="p-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
+          className="p-1.5 focus:outline-none focus:ring-2 focus:ring-primary rounded-full transition-transform hover:scale-125 duration-200"
         >
-          <StarIcon size={STAR_SIZE} color={i < value ? STAR_COLORS.active : STAR_COLORS.inactive} cursor="pointer" />
+          <Star
+            className={cn(
+              "size-8 cursor-pointer transition-colors",
+              i < value ? "fill-amber-400 text-amber-400" : "fill-muted text-muted-foreground/30 hover:text-amber-300",
+            )}
+            aria-hidden="true"
+          />
         </button>
       ))}
     </fieldset>
@@ -158,12 +165,19 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         if (!open) handleClose();
       }}
     >
-      <DialogContent variant="glass">
+      <DialogContent
+        variant="glass"
+        className="rounded-3xl border border-border/80 bg-background/95 backdrop-blur-2xl shadow-2xl p-6 sm:p-8"
+      >
         <DialogHeader>
-          {title && <DialogTitle className="pt-4 text-base text-center">{title}</DialogTitle>}
+          {title && (
+            <DialogTitle className="pt-2 text-lg sm:text-xl font-bold tracking-tight text-center text-foreground">
+              {title}
+            </DialogTitle>
+          )}
         </DialogHeader>
 
-        <div className="pb-6 pt-0">
+        <div className="pb-4 pt-2">
           {/* Step 1: Calendar prompt */}
           {step === "first" && (
             <>
@@ -185,7 +199,7 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
           {step === "second" && (
             <>
               <Image src={stars} alt="" width={250} height={80} className="object-cover m-auto mb-2.5" />
-              <p className="font-medium text-center">{t("would_you_like_to_leave_feedback")}</p>
+              <p className="font-medium text-center text-foreground">{t("would_you_like_to_leave_feedback")}</p>
             </>
           )}
 
@@ -196,7 +210,7 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
               <Textarea
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
-                className="mt-5"
+                className="mt-5 rounded-xl border-border/80 bg-background/80 focus:ring-2 focus:ring-primary/20 text-sm p-3.5"
                 placeholder={t("please_write_your_feedback")}
                 aria-label={t("feedback_text")}
               />
@@ -209,10 +223,7 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
           {/* Action button for steps 2 & 3 */}
           {(step === "second" || step === "third") && (
             <Button
-              variant="glass"
-              className={`block mx-auto mt-5 uppercase glass-accent-orange ${
-                step === "second" ? "h-[55px] rounded-full" : "h-10 rounded-lg"
-              }`}
+              className="w-full sm:w-auto min-w-[160px] h-12 px-7 rounded-xl bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E02447] hover:to-[#E0284D] active:scale-95 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all block mx-auto mt-6"
               onClick={handleSubmit}
               disabled={isPending}
             >

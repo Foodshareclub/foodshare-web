@@ -100,9 +100,12 @@ Listing cards use a frameless presentation with a 4-line metadata hierarchy:
 ## 9. Empty States & Zero-Waste Community Fallbacks (`EmptyListingState.tsx`)
 
 - **Warm Zero-State Experience**:
-  - Organic ambient radial glow and category badge icon.
-  - Uplifting headline and empathetic call to action to share surplus food or items.
-  - Quick category shortcuts and clear-search filter reset pill.
+  - `rounded-3xl` glass container (`border border-border/80 bg-gradient-to-b from-card/95 via-card/80 to-card/60 backdrop-blur-2xl shadow-xl p-8 sm:p-12 text-center`).
+  - Organic ambient radial glow and category badge icon (`size-16 sm:size-20 rounded-2xl bg-muted/60 border border-border/80`) with corner plus badge in brand coral gradient (`size-6 rounded-full bg-gradient-to-r from-[#FF2D55] to-[#FF385C]`).
+  - Uplifting headline (`text-xl sm:text-2xl font-bold tracking-tight text-foreground font-display`) and empathetic call to action to share surplus food or items.
+  - Signature brand coral primary action button (`h-12 px-7 rounded-xl bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E02447] hover:to-[#E0284D] active:scale-95 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all`).
+  - High-contrast secondary clear search action (`h-12 px-6 rounded-xl border border-border/80 bg-background/80 hover:bg-muted/60 text-foreground font-semibold text-sm`).
+  - Quick category discovery shortcut chips (`rounded-full border border-border/80 bg-background/80 hover:bg-muted/60 shadow-2xs hover:shadow-xs active:scale-95 text-xs font-semibold px-3.5 py-1.5`).
 
 ## 10. Footer Architecture & Legal Row (`Footer.tsx`)
 
@@ -129,15 +132,16 @@ Listing cards use a frameless presentation with a 4-line metadata hierarchy:
 - **Airbnb Detail Header & Metadata Bar**:
   - Proud listing title: `text-2xl sm:text-3xl font-bold tracking-tight text-foreground`.
   - Top meta line: Star rating score (`★ 5.0 (12)` or `★ New`), interpuncts (`·`), live status indicator pill (`Available` / `Reserved`), and privacy-standardized address with `MapPin`.
-  - Integrated header actions: Share button (`ShareButton`) docked top-right.
+  - Integrated header actions: Share button (`ShareButton`) paired alongside the wishlist Save button (`Button` with `Heart` icon and `isSaved` / `likeCount` state).
 - **Framed Hero Media**:
   - Clean rounded aspect ratio container (`aspect-[16/9] rounded-2xl overflow-hidden`) with reference photo disclosure badge and photo count pill (`Camera` + `X photos`).
 - **Airbnb Host Credibility Section**:
   - Circular avatar container (`size-12 rounded-full border border-border/80 bg-background/80 shadow-2xs`).
   - Clear attribution hierarchy: `Hosted by <Name>` / `Food Bank Entity` paired with `Community Sharer` / `Community Organization` badge.
-- **Structured Highlights & Primary CTA**:
+- **Structured Highlights, Rating Prompt & Primary CTA**:
   - Available hours (`Clock`), transportation (`Truck`), and description sections.
-  - Prominent primary action button in brand coral gradient (`bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white font-semibold h-12 rounded-xl shadow-md transition-all`).
+  - Interactive rating prompt card (`rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md shadow-xs p-4 sm:p-5`) with star scale hover effects (`hover:scale-125`).
+  - Prominent primary action button in signature brand coral gradient (`bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E02447] hover:to-[#E0284D] active:scale-95 text-white font-semibold text-sm h-12 rounded-xl shadow-md transition-all`).
 
 ## 13. Map View, Markers & Popup Cards (`MapView.tsx`, `ProductPopup.tsx`, `leaflet.css`)
 
@@ -189,6 +193,31 @@ Listing cards use a frameless presentation with a 4-line metadata hierarchy:
     - Actions: Signature Airbnb brand coral CTA (`Send Message`) with `active:scale-[0.98]` and smooth back button.
 - **Account Settings Avatar Edit (`ListingPersonCards.tsx`)**:
   - Relocated pencil button to an anchored relative position on the avatar (`absolute bottom-0 end-0 size-8 rounded-full border border-border/80 shadow-md hover:scale-110 active:scale-95`), eliminating legacy viewport-based positioning.
+
+## 17. Interactive Share Popover Architecture (`ShareButton.tsx`)
+
+- **Trigger Variations**:
+  - Icon pill: `size-9 sm:size-10 rounded-full border border-border/80 bg-background/80 hover:bg-muted/60 text-foreground shadow-2xs hover:shadow-xs active:scale-95`.
+  - Default pill: `h-10 px-4 rounded-full border border-border/80 bg-background/80 hover:bg-muted/60 text-foreground text-xs font-semibold flex items-center gap-2`.
+- **Dropdown Menu Geometry**:
+  - `w-64 rounded-2xl border border-border/80 bg-background/95 backdrop-blur-2xl shadow-xl p-2`.
+  - Copy link row with circular icon container (`size-8 rounded-full bg-muted/80`) and dynamic green feedback pill (`Link copied!`) on click.
+  - Dedicated brand share options (WhatsApp `#25D366`, Telegram `#0088cc`, X/Twitter, Facebook `#1877F2`, and Email) with circular badges.
+
+## 18. Wishlist & Top Action Pairing (`PostDetailContent.tsx`)
+
+- **Airbnb Header Action Cluster**:
+  - Top right corner of listing details houses both `Share` and `Save` (Wishlist) side by side.
+  - Tactile interactive state: Toggle heart between outline and solid brand coral fill (`fill-[#FF2D55] text-[#FF2D55]`).
+  - Live synchronization with optimistic update and rollback on failure.
+
+## 19. Post-Exchange Feedback & Rating Experience (`PopupNotificationModal.tsx`)
+
+- **Floating Review Modal**:
+  - `rounded-3xl border border-border/80 bg-background/95 backdrop-blur-2xl shadow-2xl p-6 sm:p-8`.
+  - Smooth tactile star rating buttons with scale zoom on hover (`hover:scale-125 transition-transform duration-200`) and active amber fill.
+  - Rounded-xl textarea input and full-width brand coral action CTA (`h-12 px-7 rounded-xl bg-gradient-to-r from-[#FF2D55] to-[#FF385C] text-white font-semibold text-sm shadow-md`).
+
 
 
 

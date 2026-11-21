@@ -295,25 +295,25 @@ export function EmptyListingState({
 
   return (
     <div role="status" aria-live="polite" className="w-full max-w-xl mx-auto my-10 px-4">
-      <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-b from-card/90 via-card/70 to-card/50 backdrop-blur-xl p-8 sm:p-12 text-center shadow-lg shadow-black/5 dark:shadow-black/25">
+      <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-b from-card/95 via-card/80 to-card/60 backdrop-blur-2xl p-8 sm:p-12 text-center shadow-xl">
         {/* Soft background ambient glow */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -top-24 inset-x-0 mx-auto size-72 sm:size-96 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 blur-3xl"
+          className="pointer-events-none absolute -top-24 inset-x-0 mx-auto size-72 sm:size-96 rounded-full bg-gradient-to-br from-emerald-500/10 via-primary/5 to-transparent blur-3xl"
         />
 
         {/* Category Icon Badge */}
         <div className="relative inline-flex items-center justify-center mb-6">
           <div
             aria-hidden="true"
-            className="absolute inset-0 rounded-2xl bg-emerald-500/20 blur-xl opacity-60 dark:opacity-40"
+            className="absolute inset-0 rounded-2xl bg-muted/40 blur-xl opacity-60 dark:opacity-40"
           />
-          <div className="relative size-16 sm:size-20 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-inner">
+          <div className="relative size-16 sm:size-20 rounded-2xl bg-muted/60 border border-border/80 flex items-center justify-center text-foreground shadow-inner">
             <CategoryIcon className="size-8 sm:size-10 stroke-[1.75]" aria-hidden="true" />
           </div>
           <div
             aria-hidden="true"
-            className="absolute -bottom-1 -end-1 size-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-md border-2 border-card"
+            className="absolute -bottom-1 -end-1 size-6 rounded-full bg-gradient-to-r from-[#FF2D55] to-[#FF385C] text-white flex items-center justify-center shadow-md border-2 border-card"
           >
             <Plus className="size-3.5 stroke-[2.5]" aria-hidden="true" />
           </div>
@@ -321,8 +321,8 @@ export function EmptyListingState({
 
         {/* Category Pill Tag */}
         <div className="mb-3">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-            <Sparkles className="size-3 stroke-[2]" aria-hidden="true" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase bg-muted/60 text-foreground border border-border/80 shadow-2xs">
+            <Sparkles className="size-3 stroke-[2] text-amber-500" aria-hidden="true" />
             <span>{config.name}</span>
           </span>
         </div>
@@ -340,7 +340,7 @@ export function EmptyListingState({
           <Button
             type="button"
             onClick={handleAction}
-            className="w-full sm:w-auto min-h-12 px-7 rounded-full text-base font-semibold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 inline-flex items-center justify-center gap-2"
+            className="w-full sm:w-auto min-h-12 px-7 rounded-xl text-sm font-semibold bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E02447] hover:to-[#E0284D] active:scale-95 text-white shadow-md hover:shadow-lg transition-all inline-flex items-center justify-center gap-2"
           >
             <Plus className="size-5 stroke-[2.5]" aria-hidden="true" />
             <span>{config.actionLabel}</span>
@@ -351,7 +351,7 @@ export function EmptyListingState({
               type="button"
               variant="outline"
               onClick={onClearSearch}
-              className="w-full sm:w-auto min-h-12 px-5 rounded-full text-sm font-medium border-border/80 hover:bg-muted/60 inline-flex items-center justify-center gap-2"
+              className="w-full sm:w-auto min-h-12 px-6 rounded-xl text-sm font-semibold border border-border/80 bg-background/80 hover:bg-muted/60 hover:border-foreground/30 active:scale-95 text-foreground shadow-2xs hover:shadow-xs transition-all inline-flex items-center justify-center gap-2"
             >
               <X className="size-4" aria-hidden="true" />
               <span>{"Clear search"}</span>
@@ -369,7 +369,7 @@ export function EmptyListingState({
               <Link
                 key={cat.href}
                 href={cat.href}
-                className="text-xs px-3 py-1.5 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/40 transition-colors font-medium"
+                className="text-xs font-semibold px-3.5 py-1.5 rounded-full border border-border/80 bg-background/80 hover:bg-muted/60 hover:border-foreground/30 text-foreground transition-all shadow-2xs hover:shadow-xs active:scale-95"
               >
                 <span>{cat.label}</span>
               </Link>
