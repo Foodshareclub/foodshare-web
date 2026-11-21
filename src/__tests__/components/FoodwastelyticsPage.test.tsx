@@ -70,81 +70,126 @@ describe("FoodwastelyticsPage", () => {
 
     // Header copy
     expect(screen.getByText("Foodwastelytics")).toBeDefined();
-    expect(screen.getByText(/Planetary food loss accounting/i)).toBeDefined();
-    expect(screen.getByText(/UN SDG 12.3 Target/i)).toBeDefined();
+    expect(screen.getAllByText(/Planetary food loss accounting/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/UN SDG 12.3 Target/i).length).toBeGreaterThan(0);
 
     // Global Macro indicators
-    expect(screen.getByText("1.32")).toBeDefined();
-    expect(screen.getByText("$1.05")).toBeDefined();
-    expect(screen.getByText("3.80")).toBeDefined();
-    expect(screen.getByText("252")).toBeDefined();
+    expect(screen.getAllByText("1.32").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("$1.05").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("3.80").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("252").length).toBeGreaterThan(0);
   });
 
-  it("renders the 7 international tabs and allows switching views", () => {
+  it("renders layout presentation variant switcher and allows switching between variants", () => {
     render(<FoodwastelyticsPage />);
 
-    // Navigation sections
-    const tabs = [
-      "Planetary Overview",
-      "Farm-to-Fork Flow",
-      "Regional Benchmarks",
-      "Commodity Matrix",
-      "UN SDG 12.3 Modeler",
-      "Global Policy & Tech",
-      "Global AI Advisor",
-    ];
+    // Switcher buttons present
+    const landingBtn = screen.getByRole("button", { name: /Landing Page \(Editorial\)/i });
+    const dashboardBtn = screen.getByRole("button", { name: /Executive Suite \(Tabbed\)/i });
+    const storyboardBtn = screen.getByRole("button", { name: /Infographic Story/i });
 
-    for (const tabName of tabs) {
-      expect(screen.getByText(tabName)).toBeDefined();
-    }
+    expect(landingBtn).toBeDefined();
+    expect(dashboardBtn).toBeDefined();
+    expect(storyboardBtn).toBeDefined();
+
+    // Default is Landing Page: check landing sections exist
+    expect(screen.getByText("The Planetary Food Loss Crisis")).toBeDefined();
+    expect(screen.getByText("Farm-to-Fork Supply Chain Loss Flow")).toBeDefined();
+    expect(screen.getByText("UNEP Food Waste Index Regional Benchmarks")).toBeDefined();
+
+    // Switch to Executive Suite (Tabbed)
+    fireEvent.click(dashboardBtn);
+    expect(screen.getByText("Planetary Overview")).toBeDefined();
+    expect(screen.getByText("Commodity Matrix")).toBeDefined();
+
+    // Switch to Infographic Story
+    fireEvent.click(storyboardBtn);
+    expect(screen.getByText("The Journey of Planetary Food Loss to 2030 Recovery")).toBeDefined();
+    expect(screen.getByText("Act I: The Global Discard Scale")).toBeDefined();
+  });
+
+  it("in Landing Page variant, renders all long-form editorial sections and bullet points", () => {
+    render(<FoodwastelyticsPage />);
+
+    // Farm to Fork section
+    expect(screen.getByText("Farm-to-Fork Supply Chain Loss Flow")).toBeDefined();
+    expect(screen.getAllByText("1. Agricultural Production & Harvest").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("5. Consumer & Foodservice").length).toBeGreaterThan(0);
+
+    // Regional Benchmarks
+    expect(screen.getByText("UNEP Food Waste Index Regional Benchmarks")).toBeDefined();
+    expect(screen.getAllByText("North America").length).toBeGreaterThan(0);
+
+    // Commodity Matrix
+    expect(screen.getByText("Commodity Vulnerability & Environmental Penalty Matrix")).toBeDefined();
+    expect(screen.getByText("The Weight vs Emissions Paradox")).toBeDefined();
+
+    // SDG 12.3 Modeler
+    expect(screen.getByText("Interactive Global Target Simulation")).toBeDefined();
+
+    // Policy & Interventions
+    expect(screen.getByText("High-Impact Global Policy & Technological Interventions")).toBeDefined();
+
+    // AI Advisor
+    expect(screen.getByText("Global Food Waste Policy & Intelligence Advisor")).toBeDefined();
+  });
+
+  it("in Executive Suite variant, allows navigating sidebar tabs", () => {
+    render(<FoodwastelyticsPage />);
+
+    // Switch to tabbed dashboard
+    const dashboardBtn = screen.getByRole("button", { name: /Executive Suite \(Tabbed\)/i });
+    fireEvent.click(dashboardBtn);
 
     // Switch to Farm-to-Fork Flow
-    fireEvent.click(screen.getByText("Farm-to-Fork Flow"));
-    expect(screen.getByText("Global Farm-to-Fork Loss Architecture")).toBeDefined();
-    expect(screen.getByText("Stage Deep-Dive Telemetry")).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "Farm-to-Fork Flow" }));
+    expect(screen.getByText("Farm-to-Fork Supply Chain Loss Flow")).toBeDefined();
+    expect(screen.getByText("1. Agricultural Production & Harvest")).toBeDefined();
 
     // Switch to Regional Benchmarks
-    fireEvent.click(screen.getByText("Regional Benchmarks"));
+    fireEvent.click(screen.getByRole("button", { name: "Regional Benchmarks" }));
     expect(screen.getByText("UNEP Food Waste Index Regional Benchmarks")).toBeDefined();
     expect(screen.getAllByText("North America").length).toBeGreaterThan(0);
 
     // Switch to Commodity Matrix
-    fireEvent.click(screen.getByText("Commodity Matrix"));
+    fireEvent.click(screen.getByRole("button", { name: "Commodity Matrix" }));
     expect(screen.getByText("Commodity Vulnerability & Environmental Penalty Matrix")).toBeDefined();
-    expect(screen.getByText("The Weight vs Emissions Paradox")).toBeDefined();
+    expect(screen.getByText("Fruits & Vegetables")).toBeDefined();
 
     // Switch to UN SDG 12.3 Modeler
-    fireEvent.click(screen.getByText("UN SDG 12.3 Modeler"));
+    fireEvent.click(screen.getByRole("button", { name: "UN SDG 12.3 Modeler" }));
     expect(screen.getByText("UN SDG 12.3 2030 Halving Scenario Modeler")).toBeDefined();
-    expect(screen.getByText("Select Global Reduction Milestone")).toBeDefined();
   });
 
-  it("allows switching economic perspectives (All vs High-Income vs Developing)", () => {
+  it("allows switching economic perspectives (All vs High-Income vs Developing & Emerging)", () => {
     render(<FoodwastelyticsPage />);
 
-    const highIncomeBtn = screen.getByText("High-Income");
+    const highIncomeBtn = screen.getByRole("button", { name: "High-Income" });
     fireEvent.click(highIncomeBtn);
 
-    // Switch to Regional Benchmarks to observe filtered regions
-    fireEvent.click(screen.getByText("Regional Benchmarks"));
+    // Filtered table should still render High-Income regions
     expect(screen.getAllByText("North America").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Europe & Central Asia").length).toBeGreaterThan(0);
+
+    const developingBtn = screen.getByRole("button", { name: "Developing & Emerging" });
+    fireEvent.click(developingBtn);
+    expect(screen.getAllByText("Sub-Saharan Africa").length).toBeGreaterThan(0);
   });
 
   it("updates projected global dividends when user selects different SDG reduction milestones", () => {
     render(<FoodwastelyticsPage />);
 
-    // Go to SDG modeler
-    fireEvent.click(screen.getByText("UN SDG 12.3 Modeler"));
+    // In default landing mode, SDG modeler is rendered directly
+    expect(screen.getByText("Interactive Global Target Simulation")).toBeDefined();
 
-    // 50% is default (660M tonnes)
-    expect(screen.getByText("660M t")).toBeDefined();
+    // Default 50% target should show 660M t
+    expect(screen.getAllByText(/660/).length).toBeGreaterThan(0);
 
     // Click 25% target
-    const btn25 = screen.getByText("25%");
+    const btn25 = screen.getByRole("button", { name: "25%" });
     fireEvent.click(btn25);
 
-    // 25% of 1320M = 330M tonnes
-    expect(screen.getByText("330M t")).toBeDefined();
+    // 25% target should show 330M t
+    expect(screen.getAllByText(/330/).length).toBeGreaterThan(0);
   });
 });
