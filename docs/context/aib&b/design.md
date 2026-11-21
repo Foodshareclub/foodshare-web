@@ -227,45 +227,61 @@ Airbnb uses generous spacing to create a calm, breathable UI.
 - Pill-shaped buttons: `24px` - `50px`
 - Small buttons/badges: `4px` - `6px`
 
-### Cards
+### Cards (Frameless Airbnb Layout)
 
-```css
-.card {
-  background: #ffffff;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
+FoodShare adopts Airbnb's signature frameless card architecture with clean vertical hierarchy:
 
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
+```tsx
+<article className="group/card relative flex h-full min-w-0 flex-col @container/card focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 rounded-2xl">
+  {/* 1. Media: Aspect-[20/19] Carousel with Tactile Hover Zoom */}
+  <div className="relative z-10 isolate overflow-hidden rounded-2xl bg-muted aspect-[20/19] w-full">
+    <ProductCardActions product={product} />
+    <ImageCarousel images={product.images} ... />
+  </div>
 
-.card-img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 12px;
-}
+  {/* 2. Content Stack: 4-Line Metadata Hierarchy */}
+  <div className="flex flex-1 flex-col pt-3 gap-0.5">
+    {/* Line 1: Title & Airbnb Star Rating Badge */}
+    <div className="flex items-baseline justify-between gap-2">
+      <h3 className="text-[15px] font-semibold leading-snug text-foreground truncate">
+        <Link href={productUrl}>{product.post_name}</Link>
+      </h3>
+      <span className="shrink-0 flex items-center gap-1 text-[13px] font-semibold text-foreground">
+        <Star className="size-3.5 fill-amber-400 text-amber-400" />
+        {ratingScore || "New"}
+      </span>
+    </div>
 
-.card-body {
-  padding: 12px;
-}
+    {/* Line 2: Host Attribution or Organization */}
+    <p className="flex items-center gap-1.5 text-[13px] text-muted-foreground truncate">
+      <User className="size-3.5" /> By {authorName}
+    </p>
 
-.card-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #222222;
-  margin-bottom: 4px;
-}
+    {/* Line 3: Standardized Address & Pickup Hours */}
+    <p className="flex items-center gap-1.5 text-[14px] text-muted-foreground truncate">
+      <MapPin className="size-3.5" /> {displayAddress}
+    </p>
 
-.card-subtitle {
-  font-size: 14px;
-  color: #717171;
-}
+    {/* Line 4: Price & Live Availability Indicator */}
+    <div className="mt-1.5 flex items-center justify-between pt-0.5 text-[15px]">
+      <div className="flex items-center gap-2">
+        <span className="font-semibold text-foreground">Free</span>
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+          <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          Available
+        </span>
+      </div>
+    </div>
+  </div>
+</article>
 ```
+
+### Media Fallback & Micro-Interactions
+
+- **Organic Ambient Fallback**: Listings without images feature a warm ambient gradient (`bg-gradient-to-br from-amber-500/10 via-emerald-500/5 to-teal-500/10 dark:from-amber-950/25 dark:via-neutral-900 dark:to-emerald-950/20`), an ambient radial glow, and a frosted glass badge (`backdrop-blur-md bg-white/70 dark:bg-neutral-900/70 border border-white/60 dark:border-white/10 shadow-xs`) with category icon and label.
+- **Card Hover Zoom**: Images smoothly scale `group-hover/card:scale-[1.04]` over a 500ms ease-out transition.
+- **Wishlist Action**: Circular glass pill (`airbnb-action-btn`) with spring toggle (`fill-brand text-brand scale-110`).
+
 
 ### Search Bar
 

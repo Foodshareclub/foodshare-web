@@ -25,11 +25,26 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const validImages = [...new Set(images.filter(isValidImageUrl).map((url) => normalizeImageUrl(url) as string))];
   const PlaceholderIcon = postType === "food" || postType === "vegan" ? Leaf : Package;
+  const placeholderLabel =
+    postType === "food" || postType === "vegan"
+      ? "Community Food"
+      : postType === "fridge"
+        ? "Community Fridge"
+        : postType === "foodbank"
+          ? "Food Bank"
+          : "Community Item";
+
   const placeholder = (
-    <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-muted via-muted to-primary/5 text-muted-foreground">
-      <span className="flex size-20 items-center justify-center rounded-full border border-border/60 bg-background/60">
-        <PlaceholderIcon className="size-8" strokeWidth={1.25} aria-hidden="true" />
-      </span>
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-amber-500/10 via-emerald-500/5 to-teal-500/10 dark:from-amber-950/25 dark:via-neutral-900 dark:to-emerald-950/20 text-muted-foreground p-4">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-80" />
+      <div className="relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/60 bg-white/70 px-5 py-4 shadow-xs backdrop-blur-md transition-all duration-300 group-hover/card:scale-105 group-hover/card:shadow-md dark:border-white/10 dark:bg-neutral-900/70">
+        <span className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <PlaceholderIcon className="size-6" strokeWidth={1.75} aria-hidden="true" />
+        </span>
+        <span className="text-[11px] font-semibold tracking-wider text-foreground/80 uppercase">
+          {placeholderLabel}
+        </span>
+      </div>
     </div>
   );
 
@@ -70,11 +85,11 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
   }
 
   return (
-    <div className={cn(LISTING_PHOTO, "relative overflow-hidden")}>
+    <div className={cn(LISTING_PHOTO, "group/carousel relative overflow-hidden")}>
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex size-full snap-x snap-mandatory overflow-x-auto scrollbar-none"
+        className="flex size-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain scrollbar-none"
       >
         {validImages.map((image, index) => (
           <Link
@@ -89,13 +104,13 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
               placeholder
             ) : (
               <Image
-                className="object-cover"
+                className="object-cover transition-transform duration-500 ease-out group-hover/card:scale-[1.04]"
                 style={index === 0 ? { viewTransitionName: `product-hero-${productId}` } : undefined}
                 src={image}
                 alt={postName}
                 fill
                 onError={() => setImageErrors((previous) => ({ ...previous, [image]: true }))}
-                sizes="(min-width: 1440px) 316px, (min-width: 1280px) 25vw, (min-width: 960px) 33vw, (min-width: 600px) 50vw, 100vw"
+                sizes="(min-width: 1880px) 290px, (min-width: 1640px) 330px, (min-width: 1200px) 25vw, (min-width: 950px) 33vw, (min-width: 550px) 50vw, 100vw"
               />
             )}
           </Link>
@@ -103,37 +118,67 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
       </div>
 
       {validImages.length > 1 && (
-        <div className="pointer-events-none absolute inset-x-3 bottom-3 flex items-center justify-between gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="icon-lg"
-            className="pointer-events-auto rounded-full"
-            onClick={(event) => scrollToIndex(activeIndex - 1, event)}
-            disabled={activeIndex === 0}
-            aria-label={`${t("previous")} — ${postName}`}
-          >
-            <ChevronLeft className="rtl:rotate-180" />
-          </Button>
-          <span
-            className="rounded-full bg-background/95 px-3 py-1 text-xs font-medium tabular-nums text-foreground"
-            aria-hidden="true"
-            dir="ltr"
-          >
-            {activeIndex + 1} / {validImages.length}
-          </span>
-          <Button
-            type="button"
-            variant="secondary"
-            size="icon-lg"
-            className="pointer-events-auto rounded-full"
-            onClick={(event) => scrollToIndex(activeIndex + 1, event)}
-            disabled={activeIndex === validImages.length - 1}
-            aria-label={`${t("next")} — ${postName}`}
-          >
-            <ChevronRight className="rtl:rotate-180" />
-          </Button>
-        </div>
+        <>
+          {/* Airbnb-style Navigation Arrows: centered vertically, circular, revealed on hover */}
+          <div className="pointer-events-none absolute inset-x-2.5 top-1/2 z-10 flex -translate-y-1/2 justify-between">
+            <button
+              type="button"
+              className={cn(
+                "pointer-events-auto flex size-8 items-center justify-center rounded-full bg-white/90 text-neutral-800 shadow-md backdrop-blur-xs transition-all duration-200 hover:scale-105 hover:bg-white active:scale-95 focus-visible:outline-2 focus-visible:outline-ring dark:bg-black/75 dark:text-neutral-100 dark:hover:bg-black/90",
+                activeIndex === 0
+                  ? "pointer-events-none opacity-0"
+                  : "opacity-0 group-hover/carousel:opacity-100 focus-visible:opacity-100",
+              )}
+              onClick={(event) => scrollToIndex(activeIndex - 1, event)}
+              disabled={activeIndex === 0}
+              aria-label={`${t("previous")} — ${postName}`}
+            >
+              <ChevronLeft className="size-4 rtl:rotate-180" />
+            </button>
+            <button
+              type="button"
+              className={cn(
+                "pointer-events-auto flex size-8 items-center justify-center rounded-full bg-white/90 text-neutral-800 shadow-md backdrop-blur-xs transition-all duration-200 hover:scale-105 hover:bg-white active:scale-95 focus-visible:outline-2 focus-visible:outline-ring dark:bg-black/75 dark:text-neutral-100 dark:hover:bg-black/90",
+                activeIndex === validImages.length - 1
+                  ? "pointer-events-none opacity-0"
+                  : "opacity-0 group-hover/carousel:opacity-100 focus-visible:opacity-100",
+              )}
+              onClick={(event) => scrollToIndex(activeIndex + 1, event)}
+              disabled={activeIndex === validImages.length - 1}
+              aria-label={`${t("next")} — ${postName}`}
+            >
+              <ChevronRight className="size-4 rtl:rotate-180" />
+            </button>
+          </div>
+
+          {/* Airbnb-style Pagination Dots: centered at bottom with accessible touch targets */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-2.5 z-10 flex items-center justify-center gap-1.5">
+            <div className="pointer-events-auto flex items-center gap-1 rounded-full px-2 py-0.5">
+              {validImages.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={(event) => scrollToIndex(i, event)}
+                  aria-label={`${t("go_to_slide", { defaultMessage: "Slide" })} ${i + 1}`}
+                  aria-current={i === activeIndex ? "true" : undefined}
+                  className="flex size-6 items-center justify-center p-0 transition-transform focus-visible:outline-none"
+                >
+                  <span
+                    className={cn(
+                      "block rounded-full transition-all duration-200",
+                      i === activeIndex
+                        ? "size-2 scale-110 bg-white shadow-xs"
+                        : "size-1.5 bg-white/60 hover:bg-white/90 shadow-2xs",
+                    )}
+                  />
+                </button>
+              ))}
+            </div>
+            <span className="sr-only" role="status" aria-live="polite">
+              {activeIndex + 1} / {validImages.length}
+            </span>
+          </div>
+        </>
       )}
     </div>
   );

@@ -12,8 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
 import { gpu120Interactive } from "@/utils/gpuStyles";
-import { EditIcon } from "@/utils/icons";
-import { Flag, Heart } from "lucide-react";
+import { Flag, Heart, Pencil } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -65,18 +64,22 @@ export function ProductCardActions({ product }: ProductCardActionsProps) {
   return (
     <div className="absolute top-3 inset-e-3 z-10 flex gap-2">
       {/* Universal Like Button (Airbnb style) */}
-      <Button
+      <button
         type="button"
-        variant="secondary"
-        size="icon-lg"
         onClick={handleLike}
         disabled={isPending}
-        className="rounded-full"
+        className="airbnb-action-btn airbnb-action-btn-hover"
         aria-label="Save listing"
         aria-pressed={isLiked}
+        style={gpu120Interactive}
       >
-        <Heart className={cn("motion-safe:transition-colors", isLiked && "fill-current text-brand")} />
-      </Button>
+        <Heart
+          className={cn(
+            "size-[18px] motion-safe:transition-all motion-safe:duration-200",
+            isLiked ? "fill-brand text-brand scale-110" : "text-foreground/80 hover:text-foreground",
+          )}
+        />
+      </button>
 
       {/* Report button */}
       {canReport && (
@@ -114,7 +117,7 @@ export function ProductCardActions({ product }: ProductCardActionsProps) {
             aria-label="update"
             style={gpu120Interactive}
           >
-            <EditIcon />
+            <Pencil className="size-4" />
           </button>
           {isEditOpen && (
             <PublishListingModal

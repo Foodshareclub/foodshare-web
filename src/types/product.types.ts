@@ -45,6 +45,11 @@ export type InitialProductStateType = {
   is_active: boolean;
   post_views: number;
   profile_id: string;
+  author_name?: string | null;
+  author_avatar_url?: string | null;
+  host_entity?: string | null;
+  point_person_name?: string | null;
+  metadata?: Record<string, unknown> | null;
   /** Database revision captured when this listing was loaded for editing. */
   version?: number | null;
   reviews?: Array<ReviewsType>;
