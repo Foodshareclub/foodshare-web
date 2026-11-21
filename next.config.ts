@@ -162,6 +162,27 @@ const nextConfig: NextConfig = {
   // Custom redirects — 308 permanent for SEO reindex to agnostic /product/[id]-[slug]
   async redirects() {
     return [
+      // Convenience registration routes → /auth/login?mode=signup
+      {
+        source: "/register",
+        destination: "/auth/login?mode=signup",
+        permanent: false,
+      },
+      {
+        source: "/signup",
+        destination: "/auth/login?mode=signup",
+        permanent: false,
+      },
+      {
+        source: "/auth/register",
+        destination: "/auth/login?mode=signup",
+        permanent: false,
+      },
+      {
+        source: "/auth/signup",
+        destination: "/auth/login?mode=signup",
+        permanent: false,
+      },
       // Require a detail segment: an optional catch-all also redirects category indexes to /product (404).
       // Legacy /listing/* routes → /product/:id* (single hop to agnostic product)
       {

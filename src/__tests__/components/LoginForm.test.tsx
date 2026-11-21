@@ -106,9 +106,11 @@ mock.module("next-intl", () => ({
   useLocale: () => currentLocale,
 }));
 
+let mockSearchParams = new URLSearchParams();
+
 mock.module("next/navigation", () => ({
   useRouter: () => ({ replace: () => {}, push: () => {}, refresh: () => {} }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
   usePathname: () => "/auth/login",
 }));
 
@@ -340,5 +342,21 @@ describe("sign-in form renders its own locale", () => {
     // read. It renders now.
     currentLocale = "de";
     expect(resolve("de", "AuthFlow.errors.oauthFailed")).not.toBe("AuthFlow.errors.oauthFailed");
+  });
+
+  it("renders registration form and accessible autofill attributes when mode=signup", () => {
+    mockSearchParams = new URLSearchParams("mode=signup");
+    const html = render("en");
+    expect(html).toContain("Join FoodShare");
+    expect(html).toContain('name="firstName"');
+    expect(html).toContain('autoComplete="given-name"');
+    expect(html).toContain('name="lastName"');
+    expect(html).toContain('autoComplete="family-name"');
+    expect(html).toContain('name="email"');
+    expect(html).toContain('autoComplete="email"');
+    expect(html).toContain('name="password"');
+    expect(html).toContain('autoComplete="new-password"');
+    expect(html).toContain('minLength="8"');
+    mockSearchParams = new URLSearchParams();
   });
 });

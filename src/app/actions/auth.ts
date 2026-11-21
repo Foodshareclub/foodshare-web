@@ -271,11 +271,13 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
 
   // Build display name from firstName/lastName or use name directly
   const displayName = firstName && lastName ? `${firstName} ${lastName}` : firstName || name || "";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://foodshare.club";
 
   const { data: _data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo: `${siteUrl}/auth/callback`,
       data: {
         name: displayName,
         first_name: firstName,

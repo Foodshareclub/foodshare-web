@@ -21,7 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { OAUTH_PROVIDERS, hasEnabledProviders } from "@/lib/config/oauth";
 import { safeInternalPath } from "@/lib/security/redirect";
 import { motion } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -81,7 +81,9 @@ export function LoginForm() {
 
   const callbackError = CALLBACK_ERRORS.has(searchParams.get("error") ?? "") ? t("errors.oauthFailed") : null;
 
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const initialMode = searchParams.get("mode") === "signup" ? "signup" : "login";
+  const [mode, setMode] = useState<"login" | "signup">(initialMode);
+  const [signupSuccessEmail, setSignupSuccessEmail] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -91,6 +93,14 @@ export function LoginForm() {
 
   // Get redirect URL from query params
   const from = safeInternalPath(searchParams.get("from"));
+
+  // Keep mode in sync if search params change
+  useEffect(() => {
+    const requestedMode = searchParams.get("mode");
+    if (requestedMode === "signup" || requestedMode === "login") {
+      setMode(requestedMode);
+    }
+  }, [searchParams]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -134,6 +144,7 @@ export function LoginForm() {
           lastName,
         });
         if (result.success) {
+          setSignupSuccessEmail(email);
           setMode("login");
         }
       }
@@ -151,6 +162,7 @@ export function LoginForm() {
 
   const toggleMode = () => {
     setMode(mode === "login" ? "signup" : "login");
+    setSignupSuccessEmail(null);
     clearError();
   };
 
@@ -218,6 +230,20 @@ export function LoginForm() {
               failed submission cannot announce twice at once.
             */}
             <div role="alert" aria-atomic="true">
+              {signupSuccessEmail && !authError && !callbackError && (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+                  <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <p className="text-sm text-emerald-800 dark:text-emerald-200 font-medium">
+                        {t("errors.emailNotConfirmed")}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
               {(callbackError || authError) && (
                 <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
                   <div className="rounded-xl bg-red-50 border border-red-200 p-4">
@@ -258,9 +284,16 @@ export function LoginForm() {
                       </label>
                       <Input
                         id="first-name"
+                        name="firstName"
+                        autoComplete="given-name"
+                        autoCapitalize="words"
+                        enterKeyHint="next"
                         placeholder={t("firstName")}
                         value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
+                        onChange={(e) => {
+                          setFirstName(e.target.value);
+                          setSignupSuccessEmail(null);
+                        }}
                         required
                         className="h-12 rounded-xl border border-border bg-background hover:border-muted-foreground focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
                       />
@@ -271,9 +304,16 @@ export function LoginForm() {
                       </label>
                       <Input
                         id="last-name"
+                        name="lastName"
+                        autoComplete="family-name"
+                        autoCapitalize="words"
+                        enterKeyHint="next"
                         placeholder={t("lastName")}
                         value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
+                        onChange={(e) => {
+                          setLastName(e.target.value);
+                          setSignupSuccessEmail(null);
+                        }}
                         required
                         className="h-12 rounded-xl border border-border bg-background hover:border-muted-foreground focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
                       />
@@ -288,10 +328,18 @@ export function LoginForm() {
                   </label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
+                    autoComplete="email"
+                    spellCheck={false}
+                    autoCapitalize="none"
+                    enterKeyHint="next"
                     placeholder="you@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setSignupSuccessEmail(null);
+                    }}
                     required
                     className="h-12 rounded-xl border border-border bg-background hover:border-muted-foreground focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
                   />
@@ -315,11 +363,17 @@ export function LoginForm() {
                   <div className="relative">
                     <Input
                       id="password"
+                      name="password"
                       type={showPassword ? "text" : "password"}
                       placeholder={t("enterPassword")}
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setSignupSuccessEmail(null);
+                      }}
                       required
+                      minLength={mode === "signup" ? 8 : undefined}
+                      enterKeyHint="done"
                       autoComplete={mode === "login" ? "current-password" : "new-password"}
                       className="h-12 rounded-xl border border-border bg-background pe-12 hover:border-muted-foreground focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
                     />
