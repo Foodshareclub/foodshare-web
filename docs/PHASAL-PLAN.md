@@ -265,7 +265,7 @@ The phasal plan execution is complete with all verified steps. The codebase main
 ### 7.4 Docker→Quadlet continuation (no-break, rollback intact)
 
 - Web `Deploy` stays on `docker compose` (active path + instant rollback) but documents the Quadlet cutover (`systemctl --user restart foodshare-web` after `podman pull`) inline.
-- `Caddyfile` header marks it RETIRED (tunnel replaces host reverse-proxy) but kept for compose rollback; explicit DO-NOT-add-`caddy.container` guard.
+- `Caddyfile` was RETIRED (tunnel replaces host reverse-proxy) and has since been removed (task 22.1, 2026-11-21: Caddy is no longer used); do NOT add a `caddy.container` or reintroduce a Caddyfile.
 - Backend Supabase stays Docker per Phase-2 strategy (rollback path); runner fleet stays Docker (needs socket). Quadlet units (`web`, `cloudflared`, `network`) unchanged and valid.
 
 ### 7.5 Commit & push (programmatic) + CI watch

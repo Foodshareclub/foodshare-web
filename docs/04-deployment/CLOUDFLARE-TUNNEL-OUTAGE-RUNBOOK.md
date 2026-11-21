@@ -76,11 +76,12 @@ The site is **self-hosted on the operator's Mac behind a Cloudflare Tunnel**, no
 provider. The chain is:
 
 ```
-foodshare-web (Next.js :3000)  →  foodshare-web.network  →  Caddy  →  cloudflared  →  Cloudflare  →  foodshare.club
+foodshare-web (Next.js :3000)  →  foodshare-web.network  →  cloudflared  →  Cloudflare  →  foodshare.club
 ```
 
 Quadlets in this repo: `foodshare-web.container`, `foodshare-web.network`,
-`foodshare-cloudflared-web.container`, with `Caddyfile` proxying to `foodshare-web:3000`.
+`foodshare-cloudflared-web.container`. cloudflared connects to `foodshare-web:3000` directly; there
+is no Caddy or other host reverse proxy.
 
 Cloudflare returned **530 Origin DNS error** because the tunnel was not connected. Two
 independent causes, both required:

@@ -1252,7 +1252,7 @@ As the project matured and moved towards a self-hosted Supabase infrastructure, 
 **Negative:**
 
 - ⚠️ Manual infrastructure management
-- ⚠️ Need to handle own SSL (managed via Cloudflare/Caddy)
+- ⚠️ Need to handle own SSL (managed via Cloudflare)
 - ⚠️ More complex initial setup
 
 **Current Status:** Active. Fully migrated to `web.foodshare.club`.
