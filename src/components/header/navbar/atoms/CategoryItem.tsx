@@ -71,7 +71,7 @@ export function CategoryItem({
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       className={cn(
-        "relative flex min-h-14 min-w-14 flex-col items-center justify-center gap-1.5 px-3 py-2",
+        "group relative flex min-h-14 min-w-14 flex-col items-center justify-center gap-1.5 px-3 py-2",
         "transition-all duration-200 motion-reduce:transition-none cursor-pointer",
         isActive
           ? "text-foreground font-semibold"
@@ -83,7 +83,7 @@ export function CategoryItem({
       {Icon && (
         <span
           className={cn(
-            "transition-colors duration-200",
+            "transition-all duration-200 group-hover:scale-105",
             isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
           )}
           aria-hidden="true"
@@ -94,7 +94,7 @@ export function CategoryItem({
       <span
         className={cn(
           "select-none whitespace-nowrap text-xs transition-colors duration-200",
-          isActive ? "font-semibold text-foreground" : "font-medium text-muted-foreground",
+          isActive ? "font-semibold text-foreground" : "font-medium text-muted-foreground group-hover:text-foreground",
         )}
       >
         {label}
@@ -102,6 +102,9 @@ export function CategoryItem({
 
       {/* Airbnb Active Indicator - Bottom Border */}
       {isActive && <div className="absolute bottom-0 inset-x-2 h-0.5 bg-foreground rounded-full" />}
+      {!isActive && (
+        <div className="absolute bottom-0 inset-x-3 h-0.5 bg-muted-foreground/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+      )}
     </button>
   );
 }

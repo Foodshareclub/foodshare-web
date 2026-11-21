@@ -361,9 +361,9 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           id={`${searchId}-what`}
           aria-labelledby={`${searchId}-what-trigger`}
           className={cn(
-            "absolute top-[calc(100%+8px)] inset-x-0 z-10",
-            "bg-popover text-popover-foreground rounded-2xl border border-border p-6",
-            "shadow-lg",
+            "absolute top-[calc(100%+8px)] inset-x-0 z-20",
+            "bg-background/95 text-foreground rounded-3xl border border-border/80 p-5 sm:p-6",
+            "shadow-2xl backdrop-blur-2xl animate-in fade-in-0 zoom-in-95 duration-200",
             "max-h-[min(500px,55dvh)] overflow-y-auto overscroll-contain scrollbar-thin",
           )}
         >
@@ -412,27 +412,29 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
                   <div
                     key={suggestion.id}
                     className={cn(
-                      "flex items-center justify-between gap-3 px-3 py-3 rounded-lg cursor-pointer",
+                      "flex items-center justify-between gap-3 px-2 py-1.5 rounded-xl cursor-pointer",
                       "transition-all duration-200 ease-in-out",
-                      selectedIndex === index ? "bg-primary/10 border border-primary" : "bg-transparent hover:bg-muted",
+                      selectedIndex === index ? "bg-muted shadow-xs" : "bg-transparent hover:bg-muted/50",
                     )}
                     onMouseEnter={() => setSelectedIndex(index)}
                   >
                     <Button
                       type="button"
                       variant="ghost"
-                      className="h-auto min-h-12 min-w-0 flex-1 justify-start whitespace-normal text-start"
+                      className="h-auto min-h-12 min-w-0 flex-1 justify-start whitespace-normal text-start gap-3 p-2 rounded-xl"
                       onClick={() => handleSearchSubmit(suggestion.text)}
                     >
-                      {suggestion.type === "history" ? (
-                        <Clock aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
-                      ) : suggestion.type === "popular" ? (
-                        <TrendingUp aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
-                      ) : (
-                        <Search aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
-                      )}
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">{suggestion.text}</p>
+                      <div className="flex size-9 items-center justify-center rounded-full bg-muted/60 shrink-0">
+                        {suggestion.type === "history" ? (
+                          <Clock aria-hidden="true" className="size-4 text-muted-foreground" />
+                        ) : suggestion.type === "popular" ? (
+                          <TrendingUp aria-hidden="true" className="size-4 text-muted-foreground" />
+                        ) : (
+                          <Search aria-hidden="true" className="size-4 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-foreground truncate">{suggestion.text}</p>
                         {suggestion.category && suggestion.category !== selectedCategory && (
                           <p className="text-xs text-muted-foreground">in {suggestion.category}</p>
                         )}
@@ -475,13 +477,17 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           id={`${searchId}-distance`}
           aria-labelledby={`${searchId}-distance-trigger`}
           className={cn(
-            "absolute top-[calc(100%+8px)] inset-x-0 z-10",
-            "bg-popover text-popover-foreground rounded-2xl border border-border p-6",
-            "shadow-lg max-h-[55dvh] overflow-y-auto overscroll-contain scrollbar-thin",
+            "absolute top-[calc(100%+8px)] inset-x-0 z-20",
+            "bg-background/95 text-foreground rounded-3xl border border-border/80 p-5 sm:p-6",
+            "shadow-2xl backdrop-blur-2xl animate-in fade-in-0 zoom-in-95 duration-200",
+            "max-h-[55dvh] overflow-y-auto overscroll-contain scrollbar-thin",
           )}
         >
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-foreground">{t("distance_filter")}</h3>
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-2">
+              <MapPin className="size-4 text-primary" />
+              <h3 className="text-base font-semibold text-foreground">{t("distance_filter")}</h3>
+            </div>
             <Button
               variant="ghost"
               size="sm"
@@ -490,50 +496,50 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
                 setLocationError(false);
                 setActiveSection(null);
               }}
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-xs font-semibold text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
             >
               {t("clear")}
             </Button>
           </div>
 
-          <p className="text-sm text-muted-foreground mb-4">{t("select_distance_range")}</p>
+          <p className="text-xs text-muted-foreground mb-4">{t("select_distance_range")}</p>
           {locationError && (
-            <p role="alert" className="mb-4 rounded-xl border border-border bg-muted p-3 text-sm text-foreground">
+            <p role="alert" className="mb-4 rounded-xl border border-border bg-muted p-3 text-xs text-foreground">
               {t("search_filters.location_error")}
             </p>
           )}
 
-          {/* Distance Options */}
-          <div className="flex flex-col gap-2">
+          {/* Distance Options Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             {[
               ...[1, 2, 5, 10].map((km) => ({
                 value: km * 1000,
                 label: t("search_filters.within_km", { distance: km }),
               })),
               { value: null, label: t("search_filters.any_distance") },
-            ].map((option) => (
-              <Button
-                type="button"
-                variant="ghost"
-                aria-pressed={selectedRadius === option.value}
-                key={option.value ?? "any"}
-                className={cn(
-                  "h-12 justify-start px-4 rounded-lg border",
-                  "transition-all duration-200 ease-in-out",
-                  selectedRadius === option.value
-                    ? "bg-primary/10 border-primary"
-                    : "bg-transparent border-transparent",
-                  "hover:bg-muted hover:border-border",
-                )}
-                onClick={() => {
-                  setSelectedRadius(option.value);
-                  setLocationError(false);
-                  setActiveSection(null);
-                }}
-              >
-                <span className="text-sm font-medium text-foreground">{option.label}</span>
-              </Button>
-            ))}
+            ].map((option) => {
+              const isSelected = selectedRadius === option.value;
+              return (
+                <button
+                  type="button"
+                  aria-pressed={isSelected}
+                  key={option.value ?? "any"}
+                  className={cn(
+                    "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-200 cursor-pointer text-center",
+                    isSelected
+                      ? "border-foreground bg-foreground text-background font-semibold shadow-xs"
+                      : "border-border/70 hover:border-foreground/30 hover:bg-muted/40 text-muted-foreground hover:text-foreground",
+                  )}
+                  onClick={() => {
+                    setSelectedRadius(option.value);
+                    setLocationError(false);
+                    setActiveSection(null);
+                  }}
+                >
+                  <span className="text-xs font-medium truncate max-w-full">{option.label}</span>
+                </button>
+              );
+            })}
           </div>
         </section>
       )}
@@ -544,14 +550,17 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           id={`${searchId}-category`}
           aria-labelledby={`${searchId}-category-trigger`}
           className={cn(
-            "absolute top-[calc(100%+8px)] inset-x-0 z-10",
-            "bg-popover text-popover-foreground rounded-2xl border border-border p-4",
-            "shadow-lg",
-            "max-h-[min(400px,55dvh)] overflow-y-auto overscroll-contain scrollbar-thin",
+            "absolute top-[calc(100%+8px)] inset-x-0 z-20",
+            "bg-background/95 text-foreground rounded-3xl border border-border/80 p-5 sm:p-6",
+            "shadow-2xl backdrop-blur-2xl animate-in fade-in-0 zoom-in-95 duration-200",
+            "max-h-[min(460px,60dvh)] overflow-y-auto overscroll-contain scrollbar-thin",
           )}
         >
-          <p className="text-sm font-semibold text-foreground mb-3">{t("select_a_category")}</p>
-          <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-foreground">{t("select_a_category")}</h3>
+            <span className="text-xs text-muted-foreground">{t("category")}</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             {[
               {
                 id: "all",
@@ -565,27 +574,36 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
                 label: t(category.labelKey),
                 icon: category.icon,
               })),
-            ].map((category) => (
-              <Button
-                type="button"
-                variant="ghost"
-                aria-pressed={selectedCategory === category.id}
-                key={category.id}
-                className={cn(
-                  "h-12 justify-start gap-3 px-3 rounded-lg",
-                  "transition-all duration-200 ease-in-out",
-                  selectedCategory === category.id ? "bg-primary/10" : "bg-transparent",
-                  "hover:bg-muted",
-                )}
-                onClick={() => {
-                  setSelectedCategory(category.id);
-                  setActiveSection(null);
-                }}
-              >
-                <category.icon className="size-5" aria-hidden="true" />
-                <span className="text-sm font-medium text-foreground">{category.label}</span>
-              </Button>
-            ))}
+            ].map((category) => {
+              const isSelected = selectedCategory === category.id;
+              const Icon = category.icon;
+              return (
+                <button
+                  type="button"
+                  aria-pressed={isSelected}
+                  key={category.id}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-2 p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer text-center",
+                    isSelected
+                      ? "border-foreground bg-foreground/5 shadow-xs font-semibold text-foreground ring-1 ring-foreground"
+                      : "border-border/70 hover:border-foreground/30 hover:bg-muted/40 text-muted-foreground hover:text-foreground",
+                  )}
+                  onClick={() => {
+                    setSelectedCategory(category.id);
+                    setActiveSection(null);
+                  }}
+                >
+                  <Icon
+                    className={cn(
+                      "size-6 transition-transform duration-200",
+                      isSelected ? "text-foreground scale-110" : "text-muted-foreground",
+                    )}
+                    aria-hidden="true"
+                  />
+                  <span className="text-xs font-medium truncate max-w-full">{category.label}</span>
+                </button>
+              );
+            })}
           </div>
         </section>
       )}

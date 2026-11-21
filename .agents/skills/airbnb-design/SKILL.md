@@ -62,23 +62,30 @@ Listing cards use a frameless presentation with a 4-line metadata hierarchy:
   - `What` (keywords and query suggestions) | `Distance` (radius slider) | `Category` (category filter).
   - Divided by subtle 1px border lines (`h-8 w-px bg-border`).
   - Tactile segment activation: Individual rounded pills inside the capsule (`rounded-full transition-all duration-200 cursor-pointer`, `activeSection ? "bg-muted shadow-xs" : "hover:bg-muted/40"`).
+- **Interactive Search Popovers**:
+  - Popover geometry: `rounded-3xl border border-border/80 bg-background/95 backdrop-blur-2xl shadow-2xl p-5 sm:p-6 animate-in fade-in-0 zoom-in-95 duration-200`.
+  - **Category Grid**: Interactive tile grid (`grid grid-cols-2 sm:grid-cols-3 gap-2.5`) with 24px category icons and tactile selection ring.
+  - **Distance Chips**: Radius option chips (`grid grid-cols-2 sm:grid-cols-3 gap-2.5`) with high-contrast active states.
+  - **Suggestions List**: Recent and popular searches with circular icon badges (`size-9 rounded-full bg-muted/60`).
 - **Signature Brand Search Button**:
   - Circular brand red/pink trigger (`variant="brand"` with `--brand-primary` `#FF2D55`).
   - Tactile hover zoom (`hover:scale-105 active:scale-95 shadow-sm transition-all duration-200`).
   - Mobile compact search pill includes a circular brand icon badge for instant visual recognition.
 
-## 6. Category Carousel Navigation (`CategoryNavigation.tsx`)
+## 6. Category Carousel Navigation (`CategoryNavigation.tsx`, `CategoryItem.tsx`)
 
 - Sleek circular scroll arrows (`size-8 shrink-0 rounded-full border-border/80 bg-background/95 shadow-xs hover:scale-105`).
 - Active category tab has bottom indicator bar in foreground contrast (`h-0.5 bg-foreground rounded-full`).
-- Active tab text and icon highlighted in `text-foreground font-semibold`; inactive tabs in `text-muted-foreground opacity-70 hover:opacity-100 hover:text-foreground`.
+- Inactive tabs display a subtle hover underline hint (`bg-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity`) and icon micro-zoom (`group-hover:scale-105`).
 - Graceful fade-out when at carousel extremes (`disabled:opacity-0`).
 
-## 7. Top-Right Profile Capsule (`DesktopMenu.tsx`)
+## 7. Profile Menu Capsules (`DesktopMenu.tsx`, `MobileMenu.tsx`)
 
 - **Airbnb Signature Menu Pill**:
   - Encapsulated capsule button: `rounded-full border border-border/80 bg-background/80 py-1.25 ps-3.5 pe-1.5 shadow-2xs backdrop-blur-xs transition-all duration-200 hover:border-border hover:shadow-md cursor-pointer focus-visible:outline-2 focus-visible:outline-ring`.
   - Iconography & Avatar: 3-line hamburger menu icon (`Menu` from `lucide-react`, `size-4 text-foreground/80`) on the leading side, paired with the 32px user avatar (`NavbarAvatar size="sm"`).
+  - Mobile capsule button: `py-1.5 ps-3.5 pe-2 rounded-full border border-border/80 bg-background/80 shadow-2xs` with hamburger menu and avatar indicator.
+  - Mobile drawer: Refined touch-friendly cards (`p-3.5 rounded-2xl glass-subtle`) with `size-10` rounded icon containers and `text-base font-semibold` typography.
   - Dropdown presentation: `DropdownMenuContent` with `glass-strong rounded-2xl min-w-[240px] shadow-xl border border-border/80 p-1.5` aligning to the end.
 
 ## 8. Floating Navigation & Action Pills (`NavigateButtons.tsx`, `AddListingButton.tsx`)

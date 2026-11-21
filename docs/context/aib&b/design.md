@@ -504,15 +504,20 @@ FoodShare incorporates core Airbnb design patterns adapted for surplus food and 
    - Live status pill indicators (`🟢 Available` / `🟠 Reserved`).
    - Tactile image zoom (`group-hover/card:scale-[1.04]`).
 
-2. **Search Pill Navigation (`SearchBar.tsx`)**:
+2. **Search Pill Navigation & Popovers (`SearchBar.tsx`)**:
    - 3-segment pill (`What` | `Distance` | `Category`) with 1px dividers.
    - Individual tactile pill activation (`rounded-full`, `hover:bg-muted/40`, `active:bg-muted shadow-xs`).
    - Circular brand coral trigger button (`variant="brand"` `#FF2D55`) with hover scale.
+   - Interactive popover panel (`rounded-3xl border border-border/80 bg-background/95 backdrop-blur-2xl shadow-2xl p-5 sm:p-6`).
+   - Interactive 3-column category tile grid (`grid-cols-2 sm:grid-cols-3 gap-2.5`) with 24px custom icons and active selection ring.
+   - Distance preset chips (`1 km`, `2 km`, `5 km`, `10 km`, `Any distance`) with high-contrast active state.
+   - Enhanced suggestions list with circular icon badges (`size-9 rounded-full bg-muted/60`).
 
-3. **User Profile Capsule (`DesktopMenu.tsx`)**:
+3. **User Profile Capsule & Mobile Menu (`DesktopMenu.tsx`, `MobileMenu.tsx`)**:
    - Signature pill capsule button (`rounded-full border border-border/80 bg-background/80 py-1.25 ps-3.5 pe-1.5 shadow-2xs`).
-   - Hamburger `Menu` icon + 32px user avatar (`NavbarAvatar size="sm"`).
-   - Elevated glass dropdown menu (`rounded-2xl shadow-xl min-w-[240px]`).
+   - Hamburger `Menu` icon + user avatar indicator (`NavbarAvatar size="sm"` on desktop, `User` badge on mobile).
+   - Elevated glass dropdown menu on desktop (`rounded-2xl shadow-xl min-w-[240px]`).
+   - Refined mobile drawer menu with touch-friendly cards (`rounded-2xl glass-subtle p-3.5`) and clear typography hierarchy.
 
 4. **Floating Map/Listings Pill (`NavigateButtons.tsx`)**:
    - Floating centered pill (`rounded-full px-5 md:px-6 py-2.5 h-11`).

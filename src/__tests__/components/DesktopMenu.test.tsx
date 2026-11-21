@@ -15,6 +15,7 @@ mock.module("@/components/modals/AuthenticationUser/AuthenticationUserModal", ()
 
 import { AddListingButton } from "@/components/becomeSharerBlock/AddListingButton";
 import { DesktopMenu } from "@/components/header/navbar/organisms/DesktopMenu";
+import { MobileMenu } from "@/components/header/navbar/organisms/MobileMenu";
 
 describe("Airbnb Navigation Elements", () => {
   it("renders DesktopMenu trigger as an accessible capsule button with menu icon and avatar", () => {
@@ -45,5 +46,26 @@ describe("Airbnb Navigation Elements", () => {
     expect(button).toBeDefined();
     expect(button.className).toContain("rounded-full");
     expect(button.className).toContain("bg-emerald-600");
+  });
+
+  it("renders MobileMenu trigger as an accessible capsule button", () => {
+    render(
+      <MobileMenu
+        isAuth={false}
+        signalOfNewMessage={[]}
+        onNavigateToMyLists={() => {}}
+        onNavigateToLogout={() => {}}
+        onNavigateToAccSettings={() => {}}
+        onNavigateToHelp={() => {}}
+        onNavigateToAboutUs={() => {}}
+        onNavigateToMyMessages={() => {}}
+      />,
+    );
+
+    const triggerButton = screen.getByRole("button", { name: "seeMenu" });
+    expect(triggerButton).toBeDefined();
+    expect(triggerButton.className).toContain("rounded-full");
+    expect(triggerButton.className).toContain("border");
+    expect(triggerButton.className).toContain("shadow-2xs");
   });
 });
