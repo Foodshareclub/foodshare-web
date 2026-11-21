@@ -1,112 +1,100 @@
 /**
- * Upstash Redis Client
- * Used for caching, rate limiting, and session storage
+ * Upstash Redis cache, rate limit and lock helpers.
+ *
+ * Built on the shared access layer (`@/lib/upstash/access`): one client and
+ * one circuit breaker for the process. While the breaker is open, reads miss
+ * and writes are skipped (callers go to the source), the rate limiter counts
+ * in memory with the same limits, and locks are held in process (one web
+ * instance). Every write has a TTL and every key is namespaced under
+ * `fs:web:`.
  */
-import { Redis } from "@upstash/redis";
+import type { Redis } from "@upstash/redis";
+import { MemorySlidingWindowLimiter } from "@/lib/security/localRateLimit";
+import { getUpstashRedis, namespacedKey, withUpstash } from "@/lib/upstash/access";
 
-// Singleton instance
-let redis: Redis | null = null;
+// Default TTL values (in seconds)
+export const CACHE_TTL = {
+  SHORT: 60, // 1 minute
+  MEDIUM: 300, // 5 minutes
+  LONG: 3600, // 1 hour
+  DAY: 86400, // 24 hours
+} as const;
 
 /**
- * Get Redis client instance (singleton)
+ * Get the shared Redis client.
+ * Throws when Upstash is not configured; prefer the `cache` helpers, which
+ * degrade instead.
  */
 export function getRedis(): Redis {
-  if (!redis) {
-    redis = Redis.fromEnv();
+  const client = getUpstashRedis();
+  if (!client) {
+    throw new Error("Upstash Redis is not configured (UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN)");
   }
-  return redis;
+  return client;
+}
+
+function ttlOrDefault(ttlSeconds: number | undefined): number {
+  return Math.max(1, Math.floor(ttlSeconds ?? CACHE_TTL.MEDIUM));
 }
 
 /**
  * Cache wrapper with automatic JSON serialization and error handling
  */
 export const cache = {
-  /**
-   * Get cached value with error handling
-   */
   async get<T>(key: string): Promise<T | null> {
-    try {
-      const client = getRedis();
-      return await client.get<T>(key);
-    } catch (error) {
-      console.error(`[Redis] Failed to get key "${key}":`, error);
-      return null;
-    }
+    return withUpstash(
+      (client) => client.get<T>(namespacedKey(key)),
+      () => null,
+    );
   },
 
   /**
-   * Set cached value with optional TTL (in seconds)
+   * Set cached value. Every write expires: the TTL defaults to CACHE_TTL.MEDIUM.
    */
   async set<T>(key: string, value: T, ttlSeconds?: number): Promise<boolean> {
-    try {
-      const client = getRedis();
-      if (ttlSeconds) {
-        await client.set(key, value, { ex: ttlSeconds });
-      } else {
-        await client.set(key, value);
-      }
-      return true;
-    } catch (error) {
-      console.error(`[Redis] Failed to set key "${key}":`, error);
-      return false;
-    }
+    return withUpstash(
+      async (client) => {
+        await client.set(namespacedKey(key), value, { ex: ttlOrDefault(ttlSeconds) });
+        return true;
+      },
+      () => false,
+    );
   },
 
-  /**
-   * Delete cached value
-   */
   async del(key: string): Promise<boolean> {
-    try {
-      const client = getRedis();
-      await client.del(key);
-      return true;
-    } catch (error) {
-      console.error(`[Redis] Failed to delete key "${key}":`, error);
-      return false;
-    }
+    return withUpstash(
+      async (client) => {
+        await client.del(namespacedKey(key));
+        return true;
+      },
+      () => false,
+    );
   },
 
-  /**
-   * Delete multiple keys
-   */
   async delMany(keys: string[]): Promise<number> {
     if (keys.length === 0) return 0;
-    try {
-      const client = getRedis();
-      return await client.del(...keys);
-    } catch (error) {
-      console.error("[Redis] Failed to delete keys:", error);
-      return 0;
-    }
+    return withUpstash(
+      (client) => client.del(...keys.map(namespacedKey)),
+      () => 0,
+    );
   },
 
-  /**
-   * Delete multiple keys by pattern
-   */
   async delByPattern(pattern: string): Promise<number> {
-    try {
-      const client = getRedis();
-      const keys = await client.keys(pattern);
-      if (keys.length === 0) return 0;
-      return await client.del(...keys);
-    } catch (error) {
-      console.error(`[Redis] Failed to delete by pattern "${pattern}":`, error);
-      return 0;
-    }
+    return withUpstash(
+      async (client) => {
+        const keys = await client.keys(namespacedKey(pattern));
+        if (keys.length === 0) return 0;
+        return client.del(...keys);
+      },
+      () => 0,
+    );
   },
 
-  /**
-   * Check if key exists
-   */
   async exists(key: string): Promise<boolean> {
-    try {
-      const client = getRedis();
-      const result = await client.exists(key);
-      return result === 1;
-    } catch (error) {
-      console.error(`[Redis] Failed to check existence of "${key}":`, error);
-      return false;
-    }
+    return withUpstash(
+      async (client) => (await client.exists(namespacedKey(key))) === 1,
+      () => false,
+    );
   },
 
   /**
@@ -123,52 +111,55 @@ export const cache = {
   },
 
   /**
-   * Increment a counter
+   * Increment a counter. The counter expires (default CACHE_TTL.DAY).
    */
-  async incr(key: string): Promise<number> {
-    try {
-      const client = getRedis();
-      return await client.incr(key);
-    } catch (error) {
-      console.error(`[Redis] Failed to increment "${key}":`, error);
-      return 0;
-    }
+  async incr(key: string, ttlSeconds: number = CACHE_TTL.DAY): Promise<number> {
+    return withUpstash(
+      async (client) => {
+        const k = namespacedKey(key);
+        const value = await client.incr(k);
+        if (value === 1) await client.expire(k, ttlOrDefault(ttlSeconds));
+        return value;
+      },
+      () => 0,
+    );
   },
 
-  /**
-   * Set expiration on existing key
-   */
   async expire(key: string, seconds: number): Promise<boolean> {
-    try {
-      const client = getRedis();
-      const result = await client.expire(key, seconds);
-      return result === 1;
-    } catch (error) {
-      console.error(`[Redis] Failed to set expiration on "${key}":`, error);
-      return false;
-    }
+    return withUpstash(
+      async (client) => (await client.expire(namespacedKey(key), seconds)) === 1,
+      () => false,
+    );
   },
 
-  /**
-   * Get TTL of a key in seconds
-   */
   async ttl(key: string): Promise<number> {
-    try {
-      const client = getRedis();
-      return await client.ttl(key);
-    } catch (error) {
-      console.error(`[Redis] Failed to get TTL of "${key}":`, error);
-      return -1;
-    }
+    return withUpstash(
+      (client) => client.ttl(namespacedKey(key)),
+      () => -1,
+    );
   },
 };
+
+/** In-memory limiters used while the breaker is open, one per (limit, window). */
+const localLimiters = new Map<string, MemorySlidingWindowLimiter>();
+
+function localLimiter(limit: number, windowSeconds: number): MemorySlidingWindowLimiter {
+  const id = `${limit}:${windowSeconds}`;
+  let limiter = localLimiters.get(id);
+  if (!limiter) {
+    limiter = new MemorySlidingWindowLimiter({ limit, windowMs: windowSeconds * 1000 });
+    localLimiters.set(id, limiter);
+  }
+  return limiter;
+}
 
 /**
  * Rate limiter using sliding window
  */
 export const rateLimiter = {
   /**
-   * Check if request is allowed
+   * Check if request is allowed. Falls back to the same limit in memory when
+   * Upstash is unavailable, so it never fails fully open.
    * @returns { allowed: boolean, remaining: number, reset: number }
    */
   async check(
@@ -176,36 +167,40 @@ export const rateLimiter = {
     limit: number,
     windowSeconds: number,
   ): Promise<{ allowed: boolean; remaining: number; reset: number }> {
-    const redis = getRedis();
-    const key = `ratelimit:${identifier}`;
-    const now = Date.now();
-    const windowStart = now - windowSeconds * 1000;
-
-    // Remove old entries
-    await redis.zremrangebyscore(key, 0, windowStart);
-
-    // Count current requests
-    const count = await redis.zcard(key);
-
-    if (count >= limit) {
-      const oldestEntry = await redis.zrange<{ score: number; member: string }[]>(key, 0, 0, { withScores: true });
-      const reset =
-        oldestEntry.length > 0 && oldestEntry[0]?.score
-          ? Math.ceil((Number(oldestEntry[0].score) + windowSeconds * 1000 - now) / 1000)
-          : windowSeconds;
-
-      return { allowed: false, remaining: 0, reset };
-    }
-
-    // Add new entry
-    await redis.zadd(key, { score: now, member: `${now}-${Math.random()}` });
-    await redis.expire(key, windowSeconds);
-
-    return {
-      allowed: true,
-      remaining: limit - count - 1,
-      reset: windowSeconds,
+    const fallback = () => {
+      const local = localLimiter(limit, windowSeconds).check(identifier);
+      return {
+        allowed: local.success,
+        remaining: local.remaining,
+        reset: Math.max(1, Math.ceil((local.reset - Date.now()) / 1000)),
+      };
     };
+    return withUpstash(async (redis) => {
+      const key = namespacedKey(REDIS_KEYS.RATE_LIMIT(identifier));
+      const now = Date.now();
+      const windowStart = now - windowSeconds * 1000;
+
+      await redis.zremrangebyscore(key, 0, windowStart);
+      const count = await redis.zcard(key);
+
+      if (count >= limit) {
+        const oldestEntry = await redis.zrange<{ score: number; member: string }[]>(key, 0, 0, { withScores: true });
+        const reset =
+          oldestEntry.length > 0 && oldestEntry[0]?.score
+            ? Math.ceil((Number(oldestEntry[0].score) + windowSeconds * 1000 - now) / 1000)
+            : windowSeconds;
+        return { allowed: false, remaining: 0, reset };
+      }
+
+      await redis.zadd(key, { score: now, member: `${now}-${Math.random()}` });
+      await redis.expire(key, windowSeconds);
+
+      return {
+        allowed: true,
+        remaining: limit - count - 1,
+        reset: windowSeconds,
+      };
+    }, fallback);
   },
 };
 
@@ -218,7 +213,7 @@ export type RateLimitResult = {
 
 export type CacheTTL = (typeof CACHE_TTL)[keyof typeof CACHE_TTL];
 
-// Cache key prefixes for different data types
+// Cache key prefixes for different data types (namespaced on write)
 export const REDIS_KEYS = {
   PRODUCT: (id: string) => `product:${id}`,
   PRODUCTS_LIST: (type?: string) => (type ? `products:list:${type}` : "products:list:all"),
@@ -228,13 +223,21 @@ export const REDIS_KEYS = {
   SEARCH_RESULTS: (query: string) => `search:${query}`,
 } as const;
 
-// Default TTL values (in seconds)
-export const CACHE_TTL = {
-  SHORT: 60, // 1 minute
-  MEDIUM: 300, // 5 minutes
-  LONG: 3600, // 1 hour
-  DAY: 86400, // 24 hours
-} as const;
+/** In-process locks used while Upstash is unavailable (single web instance). */
+const localLocks = new Map<string, { token: string; expiresAt: number }>();
+
+function newToken(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function acquireLocal(lockKey: string, ttlSeconds: number): string | null {
+  const now = Date.now();
+  const held = localLocks.get(lockKey);
+  if (held && held.expiresAt > now) return null;
+  const token = `local:${newToken()}`;
+  localLocks.set(lockKey, { token, expiresAt: now + ttlSeconds * 1000 });
+  return token;
+}
 
 /**
  * Distributed lock using Redis
@@ -245,40 +248,40 @@ export const lock = {
    * @returns lock token if acquired, null if lock is held by another process
    */
   async acquire(key: string, ttlSeconds = 30): Promise<string | null> {
-    try {
-      const client = getRedis();
-      const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      const lockKey = `lock:${key}`;
-
-      // SET NX (only if not exists) with expiration
-      const result = await client.set(lockKey, token, { nx: true, ex: ttlSeconds });
-
-      return result === "OK" ? token : null;
-    } catch (error) {
-      console.error(`[Redis] Failed to acquire lock "${key}":`, error);
-      return null;
-    }
+    const lockKey = namespacedKey(`lock:${key}`);
+    return withUpstash(
+      async (client) => {
+        const token = newToken();
+        const result = await client.set(lockKey, token, { nx: true, ex: ttlOrDefault(ttlSeconds) });
+        return result === "OK" ? token : null;
+      },
+      () => acquireLocal(lockKey, ttlSeconds),
+    );
   },
 
   /**
    * Release a lock (only if we own it)
    */
   async release(key: string, token: string): Promise<boolean> {
-    try {
-      const client = getRedis();
-      const lockKey = `lock:${key}`;
-
-      // Only delete if token matches (we own the lock)
-      const currentToken = await client.get<string>(lockKey);
-      if (currentToken === token) {
-        await client.del(lockKey);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error(`[Redis] Failed to release lock "${key}":`, error);
-      return false;
+    const lockKey = namespacedKey(`lock:${key}`);
+    if (token.startsWith("local:")) {
+      const held = localLocks.get(lockKey);
+      if (held?.token !== token) return false;
+      localLocks.delete(lockKey);
+      return true;
     }
+    return withUpstash(
+      async (client) => {
+        const currentToken = await client.get<string>(lockKey);
+        if (currentToken === token) {
+          await client.del(lockKey);
+          return true;
+        }
+        return false;
+      },
+      // The lock expires on its own TTL.
+      () => false,
+    );
   },
 
   /**

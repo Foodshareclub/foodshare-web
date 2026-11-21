@@ -14,9 +14,9 @@ import { NextRequest } from "next/server";
  * calls throw the production error. That is the seam the incident lived on:
  * the REST client throws, `@upstash/ratelimit` propagates it out of
  * `limit()`, and the middleware decides what a limit error means. The
- * decision under test: the request is still served (200), the limit is
- * skipped for that pass, and the circuit breaker stops paying Upstash on
- * every request.
+ * decision under test (task 23.1): the request is still served (200), the
+ * shared breaker opens on the first quota error and stops paying Upstash,
+ * and the auth and mutation limits keep applying in memory.
  *
  * The proxy reads its environment at module load, so the env must be set
  * before the import, and the import must be dynamic. `NODE_ENV=production`
@@ -80,30 +80,34 @@ function request(path: string, init?: { method?: string; origin?: string }): Nex
 }
 
 test("an exhausted Upstash quota degrades the proxy instead of 500ing (2026-11-15 incident)", async () => {
-  // 1. The home page. The global limiter's Upstash call throws the quota
-  //    error; the request is still served. One evalsha left the process.
+  // 1. The home page. The global limiter is in memory only: no Upstash call.
   let response = await proxy(request("/"));
+  expect(response.status).toBe(200);
+  expect(QuotaExhaustedRedis.calls).toBe(0);
+
+  // 2. An auth endpoint. The auth limiter asks Upstash once, gets the quota
+  //    error, and the shared breaker opens at once (quota errors do not wait
+  //    for five failures). The request is still served.
+  response = await proxy(request("/auth/login"));
   expect(response.status).toBe(200);
   expect(QuotaExhaustedRedis.calls).toBe(1);
 
-  // 2. An auth endpoint. Both the auth limiter and the global limiter
-  //    degrade; still 200. Three calls in total.
-  response = await proxy(request("/auth/login"));
-  expect(response.status).toBe(200);
-  expect(QuotaExhaustedRedis.calls).toBe(3);
-
-  // 3. A mutation. The mutation limiter degrades too. This is the fifth
-  //    consecutive Upstash failure, which opens the breaker.
+  // 3. A mutation. Breaker open: the mutation limiter counts in memory and
+  //    Upstash is not asked again.
   response = await proxy(request("/api/posts", { method: "POST", origin: "https://foodshare.club" }));
   expect(response.status).toBe(200);
-  expect(QuotaExhaustedRedis.calls).toBe(5);
+  expect(QuotaExhaustedRedis.calls).toBe(1);
 
-  // 4. Breaker open: the next request is served without paying Upstash
-  //    again. The counter stays put — the degradation no longer costs a
-  //    rejected request per request while the quota is exhausted.
-  response = await proxy(request("/"));
-  expect(response.status).toBe(200);
-  expect(QuotaExhaustedRedis.calls).toBe(5);
+  // 4. The auth limit still applies while Upstash is gone: 10 per minute per
+  //    fingerprint, counted in memory (request 2 was the first). The 11th is
+  //    answered 429, and still no further Upstash call leaves the process.
+  const statuses: number[] = [];
+  for (let i = 0; i < 10; i++) {
+    statuses.push((await proxy(request("/auth/login"))).status);
+  }
+  expect(statuses.slice(0, 9).every((status) => status === 200)).toBe(true);
+  expect(statuses[9]).toBe(429);
+  expect(QuotaExhaustedRedis.calls).toBe(1);
 });
 
 test("the health probe no longer pays the global limiter", async () => {

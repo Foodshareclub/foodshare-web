@@ -1,27 +1,28 @@
 /**
  * Redis-based Email Caching and Rate Limiting
  * Provides fast access to email health, quotas, and stats
+ *
+ * Uses the shared Upstash client and circuit breaker (`@/lib/upstash/access`)
+ * instead of a second client of its own. While the breaker is open, reads
+ * return their empty value, writes are skipped, the email rate limit counts
+ * in memory with the same limits, and locks are held in process. Every key is
+ * namespaced under `fs:web:` and every write has a TTL.
  */
 
-import { Redis } from "@upstash/redis";
+import { MemorySlidingWindowLimiter } from "@/lib/security/localRateLimit";
+import { namespacedKey, withUpstash } from "@/lib/upstash/access";
 
-// Initialize Redis client (singleton)
-let redisClient: Redis | null = null;
+const KEYS = {
+  health: namespacedKey("email:health:latest"),
+  stats: namespacedKey("email:stats:daily"),
+  timeseries: namespacedKey("email:metrics:timeseries"),
+  alerts: namespacedKey("email:alerts:critical"),
+  rateLimit: (email: string) => namespacedKey(`email:ratelimit:${email}`),
+  lock: (lockKey: string) => namespacedKey(`email:lock:${lockKey}`),
+} as const;
 
-function getRedis(): Redis {
-  if (!redisClient) {
-    if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
-      throw new Error("Redis environment variables not configured");
-    }
-
-    redisClient = new Redis({
-      url: process.env.KV_REST_API_URL,
-      token: process.env.KV_REST_API_TOKEN,
-    });
-  }
-
-  return redisClient;
-}
+/** Critical alerts are kept for a week. */
+const ALERTS_TTL_SECONDS = 7 * 24 * 3600;
 
 // ============================================================================
 // Health Caching
@@ -57,66 +58,69 @@ export interface CachedHealthData {
 }
 
 export async function getCachedHealth(): Promise<CachedHealthData | null> {
-  try {
-    const redis = getRedis();
-    const data = await redis.get<string>("email:health:latest");
-
-    if (!data) return null;
-
-    return typeof data === "string" ? JSON.parse(data) : data;
-  } catch (error) {
-    console.error("[redis-cache] Failed to get cached health:", error);
-    return null;
-  }
+  return withUpstash(
+    async (redis) => {
+      const data = await redis.get<string | CachedHealthData>(KEYS.health);
+      if (!data) return null;
+      return typeof data === "string" ? (JSON.parse(data) as CachedHealthData) : data;
+    },
+    () => null,
+  );
 }
 
 export async function setCachedHealth(data: CachedHealthData, ttl = 300): Promise<void> {
-  try {
-    const redis = getRedis();
-    await redis.setex("email:health:latest", ttl, JSON.stringify(data));
-  } catch (error) {
-    console.error("[redis-cache] Failed to set cached health:", error);
-  }
+  await withUpstash(
+    async (redis) => {
+      await redis.setex(KEYS.health, Math.max(1, Math.floor(ttl)), JSON.stringify(data));
+    },
+    () => undefined,
+  );
 }
 
 // ============================================================================
 // Rate Limiting
 // ============================================================================
 
+const localLimiters = new Map<string, MemorySlidingWindowLimiter>();
+
+function localLimiter(maxAttempts: number, windowSeconds: number): MemorySlidingWindowLimiter {
+  const id = `${maxAttempts}:${windowSeconds}`;
+  let limiter = localLimiters.get(id);
+  if (!limiter) {
+    limiter = new MemorySlidingWindowLimiter({ limit: maxAttempts, windowMs: windowSeconds * 1000 });
+    localLimiters.set(id, limiter);
+  }
+  return limiter;
+}
+
 /**
  * Check if an email address has exceeded rate limits
- * Uses sliding window rate limiting
+ * Uses sliding window rate limiting; counts in memory when Upstash is
+ * unavailable, so it does not fail open.
  */
 export async function checkRateLimit(
   email: string,
   maxAttempts = 5,
   windowSeconds = 3600,
 ): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
-  try {
-    const redis = getRedis();
-    const key = `email:ratelimit:${email}`;
+  const fallback = () => {
+    const local = localLimiter(maxAttempts, windowSeconds).check(email);
+    return { allowed: local.success, remaining: local.remaining, resetAt: Math.floor(local.reset / 1000) };
+  };
+  return withUpstash(async (redis) => {
+    const key = KEYS.rateLimit(email);
     const now = Date.now();
     const windowStart = now - windowSeconds * 1000;
 
-    // Remove old entries
     await redis.zremrangebyscore(key, 0, windowStart);
-
-    // Count recent attempts
     const count = await redis.zcard(key);
 
     if (count >= maxAttempts) {
-      // Get oldest attempt to calculate reset time
       const oldest = await redis.zrange<{ member: string; score: number }[]>(key, 0, 0, { withScores: true });
       const resetAt = oldest.length > 0 ? oldest[0].score + windowSeconds * 1000 : now + windowSeconds * 1000;
-
-      return {
-        allowed: false,
-        remaining: 0,
-        resetAt: Math.floor(resetAt / 1000),
-      };
+      return { allowed: false, remaining: 0, resetAt: Math.floor(resetAt / 1000) };
     }
 
-    // Add current attempt
     await redis.zadd(key, { score: now, member: `${now}` });
     await redis.expire(key, windowSeconds);
 
@@ -125,11 +129,7 @@ export async function checkRateLimit(
       remaining: maxAttempts - count - 1,
       resetAt: Math.floor((now + windowSeconds * 1000) / 1000),
     };
-  } catch (error) {
-    console.error("[redis-cache] Rate limit check failed:", error);
-    // Fail open - allow the request
-    return { allowed: true, remaining: 0, resetAt: 0 };
-  }
+  }, fallback);
 }
 
 // ============================================================================
@@ -144,50 +144,43 @@ export interface DailyStats {
 }
 
 export async function getDailyStats(): Promise<DailyStats> {
-  try {
-    const redis = getRedis();
-    const stats = await redis.hgetall<Record<string, number>>("email:stats:daily");
-
-    const processed = stats?.processed || 0;
-    const successful = stats?.successful || 0;
-    const failed = stats?.failed || 0;
-
-    return {
-      processed,
-      successful,
-      failed,
-      successRate: processed > 0 ? Math.round((successful / processed) * 100) : 0,
-    };
-  } catch (error) {
-    console.error("[redis-cache] Failed to get daily stats:", error);
-    return { processed: 0, successful: 0, failed: 0, successRate: 0 };
-  }
+  const stats = await withUpstash(
+    (redis) => redis.hgetall<Record<string, number>>(KEYS.stats),
+    () => null,
+  );
+  const processed = Number(stats?.processed) || 0;
+  const successful = Number(stats?.successful) || 0;
+  const failed = Number(stats?.failed) || 0;
+  return {
+    processed,
+    successful,
+    failed,
+    successRate: processed > 0 ? Math.round((successful / processed) * 100) : 0,
+  };
 }
 
 export async function incrementStat(stat: "processed" | "successful" | "failed", amount = 1): Promise<void> {
-  try {
-    const redis = getRedis();
-    await redis.hincrby("email:stats:daily", stat, amount);
-
-    // Set expiration for stats to reset at midnight UTC
-    const now = new Date();
-    const midnight = new Date(now);
-    midnight.setUTCHours(24, 0, 0, 0);
-    const ttl = Math.floor((midnight.getTime() - now.getTime()) / 1000);
-
-    await redis.expire("email:stats:daily", ttl);
-  } catch (error) {
-    console.error("[redis-cache] Failed to increment stat:", error);
-  }
+  await withUpstash(
+    async (redis) => {
+      await redis.hincrby(KEYS.stats, stat, amount);
+      // Expire at midnight UTC so the stats reset daily.
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setUTCHours(24, 0, 0, 0);
+      const ttl = Math.max(1, Math.floor((midnight.getTime() - now.getTime()) / 1000));
+      await redis.expire(KEYS.stats, ttl);
+    },
+    () => undefined,
+  );
 }
 
 export async function resetDailyStats(): Promise<void> {
-  try {
-    const redis = getRedis();
-    await redis.del("email:stats:daily");
-  } catch (error) {
-    console.error("[redis-cache] Failed to reset daily stats:", error);
-  }
+  await withUpstash(
+    async (redis) => {
+      await redis.del(KEYS.stats);
+    },
+    () => undefined,
+  );
 }
 
 // ============================================================================
@@ -204,25 +197,20 @@ export interface MetricPoint {
 }
 
 export async function getMetricsTimeSeries(hours = 24): Promise<MetricPoint[]> {
-  try {
-    const redis = getRedis();
-    const cutoff = Date.now() - hours * 60 * 60 * 1000;
-
-    const results = await redis.zrange<string[]>("email:metrics:timeseries", cutoff, "+inf", { byScore: true });
-
-    return results
-      .map((r: string): MetricPoint | null => {
-        try {
-          return JSON.parse(r) as MetricPoint;
-        } catch {
-          return null;
-        }
-      })
-      .filter((r: MetricPoint | null): r is MetricPoint => r !== null);
-  } catch (error) {
-    console.error("[redis-cache] Failed to get metrics time-series:", error);
-    return [];
-  }
+  const cutoff = Date.now() - hours * 60 * 60 * 1000;
+  const results = await withUpstash(
+    (redis) => redis.zrange<string[]>(KEYS.timeseries, cutoff, "+inf", { byScore: true }),
+    () => [] as string[],
+  );
+  return results
+    .map((r): MetricPoint | null => {
+      try {
+        return (typeof r === "string" ? JSON.parse(r) : r) as MetricPoint;
+      } catch {
+        return null;
+      }
+    })
+    .filter((r): r is MetricPoint => r !== null);
 }
 
 // ============================================================================
@@ -230,59 +218,68 @@ export async function getMetricsTimeSeries(hours = 24): Promise<MetricPoint[]> {
 // ============================================================================
 
 export async function getCriticalAlerts(limit = 10): Promise<string[]> {
-  try {
-    const redis = getRedis();
-    return await redis.lrange("email:alerts:critical", 0, limit - 1);
-  } catch (error) {
-    console.error("[redis-cache] Failed to get critical alerts:", error);
-    return [];
-  }
+  return withUpstash(
+    (redis) => redis.lrange(KEYS.alerts, 0, limit - 1),
+    () => [] as string[],
+  );
 }
 
 export async function addCriticalAlert(alert: string): Promise<void> {
-  try {
-    const redis = getRedis();
-    await redis.lpush("email:alerts:critical", alert);
-    await redis.ltrim("email:alerts:critical", 0, 99); // Keep last 100
-  } catch (error) {
-    console.error("[redis-cache] Failed to add critical alert:", error);
-  }
+  await withUpstash(
+    async (redis) => {
+      const pipeline = redis.pipeline();
+      pipeline.lpush(KEYS.alerts, alert);
+      pipeline.ltrim(KEYS.alerts, 0, 99); // Keep last 100
+      pipeline.expire(KEYS.alerts, ALERTS_TTL_SECONDS);
+      await pipeline.exec();
+    },
+    () => undefined,
+  );
 }
 
 // ============================================================================
 // Distributed Locking
 // ============================================================================
 
+/** In-process locks used while Upstash is unavailable (single web instance). */
+const localLocks = new Map<string, { value: string; expiresAt: number }>();
+
 export async function acquireLock(lockKey: string, ttlSeconds = 300): Promise<string | null> {
-  try {
-    const redis = getRedis();
-    const lockValue = crypto.randomUUID();
-
-    const acquired = await redis.set(lockKey, lockValue, {
-      ex: ttlSeconds,
-      nx: true,
-    });
-
-    return acquired ? lockValue : null;
-  } catch (error) {
-    console.error("[redis-cache] Failed to acquire lock:", error);
-    return null;
-  }
+  const key = KEYS.lock(lockKey);
+  const lockValue = crypto.randomUUID();
+  return withUpstash(
+    async (redis) => {
+      const acquired = await redis.set(key, lockValue, { ex: Math.max(1, Math.floor(ttlSeconds)), nx: true });
+      return acquired ? lockValue : null;
+    },
+    () => {
+      const now = Date.now();
+      const held = localLocks.get(key);
+      if (held && held.expiresAt > now) return null;
+      const local = `local:${lockValue}`;
+      localLocks.set(key, { value: local, expiresAt: now + ttlSeconds * 1000 });
+      return local;
+    },
+  );
 }
 
 export async function releaseLock(lockKey: string, lockValue: string): Promise<boolean> {
-  try {
-    const redis = getRedis();
-    const current = await redis.get(lockKey);
-
-    if (current === lockValue) {
-      await redis.del(lockKey);
-      return true;
-    }
-
-    return false;
-  } catch (error) {
-    console.error("[redis-cache] Failed to release lock:", error);
-    return false;
+  const key = KEYS.lock(lockKey);
+  if (lockValue.startsWith("local:")) {
+    if (localLocks.get(key)?.value !== lockValue) return false;
+    localLocks.delete(key);
+    return true;
   }
+  return withUpstash(
+    async (redis) => {
+      const current = await redis.get(key);
+      if (current === lockValue) {
+        await redis.del(key);
+        return true;
+      }
+      return false;
+    },
+    // The lock expires on its own TTL.
+    () => false,
+  );
 }

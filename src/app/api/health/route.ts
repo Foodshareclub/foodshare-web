@@ -4,7 +4,10 @@
  * 1. Direct DB connectivity via PostgREST
  * 2. Auth (GoTrue) health endpoint
  * 3. Storage (storage-api) status endpoint
- * 4. Redis (Upstash) connectivity when configured
+ * 4. Redis (Upstash) when configured: "up", or "degraded" while the app runs
+ *    on its local fallbacks (breaker open or PING failed). The PING answer is
+ *    cached for a few minutes (`@/lib/health/redis-probe`), so the route does
+ *    not spend an Upstash command per call.
  *
  * The probes themselves live in `@/lib/health/estate-probe`, because the
  * database probe should follow the product-data path rather than treating
@@ -19,6 +22,7 @@ import {
   isTemplateValue,
   probe,
 } from "@/lib/health/estate-probe";
+import { type RedisHealthState, probeRedisHealth } from "@/lib/health/redis-probe";
 import { logger } from "@/lib/logger";
 import { NextResponse, connection } from "next/server";
 
@@ -30,7 +34,7 @@ interface HealthStatus {
     database: ServiceState;
     auth: ServiceState;
     storage: ServiceState;
-    redis?: ServiceState;
+    redis?: RedisHealthState;
   };
   latency?: {
     database?: number;
@@ -85,21 +89,11 @@ export async function GET(): Promise<NextResponse<HealthStatus>> {
 
   const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
   if (redisUrl && !isTemplateValue(redisUrl)) {
-    const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-    const redis = await probe(
-      redisUrl,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token ?? ""}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(["PING"]),
-      },
-      PROBE_TIMEOUT_MS,
-    );
+    const redis = await probeRedisHealth(redisUrl, process.env.UPSTASH_REDIS_REST_TOKEN, {
+      timeoutMs: PROBE_TIMEOUT_MS,
+    });
     services.redis = redis.state;
-    latency.redis = redis.ms;
+    if (redis.ms !== undefined) latency.redis = redis.ms;
   }
 
   const databaseUp = services.database === "up";

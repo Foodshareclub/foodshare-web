@@ -47,14 +47,12 @@
  *   (no 500), and over-budget ones receive the normal rate-limit response
  *   — but the limit still applies for the duration of the outage, counted
  *   against a per-instance `MemoryRateLimitStore` instead of being skipped
- *   entirely. A circuit breaker (five consecutive errors opens it for a
- *   minute, one half-open request re-tries, the first success closes it)
- *   keeps the degraded mode from paying Upstash on every request while
- *   the store refuses service — the same breaker parameters the proxy
- *   uses. (The proxy's own limiters keep their 450d733a fail-open policy;
- *   this module deliberately diverges on the runtime-error path, because
- *   it guards low-frequency endpoints where a per-instance fallback costs
- *   nothing.)
+ *   entirely. The process-wide Upstash breaker (`@/lib/upstash/access`,
+ *   shared with the proxy and the caches) opens on the first quota, auth or
+ *   timeout error, or after five consecutive other errors, skips Upstash for
+ *   a 10-minute cool-down, then lets one half-open probe through; the first
+ *   success closes it. The proxy's auth and mutation limiters fall back to
+ *   memory the same way (task 23.1).
  *
  *   **Accepted residual (N× during an outage).** The fallback budget is
  *   per instance, not shared: with N web instances behind the load
@@ -76,7 +74,7 @@
  * dragging `@upstash/redis` into every page.
  */
 
-import { Redis } from "@upstash/redis";
+import { getUpstashBreaker, getUpstashRedis } from "@/lib/upstash/access";
 import { isRateLimitingRequired } from "./rateLimitPolicy";
 
 // ============================================================================
@@ -108,6 +106,8 @@ export interface RateLimitStore {
    * could not answer.
    */
   increment(key: string, windowMs: number): Promise<RateLimitCountResult | null>;
+  /** The error behind the last null answer, for the breaker's classification. */
+  readonly lastError?: unknown;
 }
 
 /**
@@ -138,16 +138,20 @@ export interface EvalClient {
  * instance counts against the same budget.
  */
 export class UpstashRateLimitStore implements RateLimitStore {
+  lastError: unknown = undefined;
+
   constructor(private readonly client: EvalClient) {}
 
   async increment(key: string, windowMs: number): Promise<RateLimitCountResult | null> {
+    this.lastError = undefined;
     try {
       const [count, ttlMs] = await this.client.eval(FIXED_WINDOW_SCRIPT, [key], [String(windowMs)]);
       // A verdict that is not two numbers is not a verdict. Refuse it the
       // same way a missing one is refused: fail closed, never guess.
       if (typeof count !== "number" || typeof ttlMs !== "number") return null;
       return { count, ttlMs };
-    } catch {
+    } catch (error) {
+      this.lastError = error;
       return null;
     }
   }
@@ -263,7 +267,7 @@ export class CircuitBreaker {
     return false;
   }
 
-  recordFailure(): void {
+  recordFailure(_error?: unknown): void {
     this.failures++;
     this.lastFailure = this.now();
     if (this.failures >= this.threshold) {
@@ -309,6 +313,17 @@ export interface RateLimitVerdict {
   retryAfterMs: number;
 }
 
+/**
+ * What a limiter needs from a breaker. Both `CircuitBreaker` above and the
+ * process-wide `UpstashBreaker` (`@/lib/upstash/access`) satisfy it.
+ */
+export interface RateLimitBreaker {
+  /** True when the store must not be asked now. */
+  isOpen(): boolean;
+  recordFailure(error?: unknown): void;
+  recordSuccess(): void;
+}
+
 export interface SharedRateLimiterOptions {
   /** Maximum requests allowed per window. */
   max: number;
@@ -327,7 +342,7 @@ export interface SharedRateLimiterOptions {
    * a degraded Upstash does not cost a REST call per request; see the
    * module docs for the degraded-mode policy it implements.
    */
-  breaker?: CircuitBreaker;
+  breaker?: RateLimitBreaker;
 }
 
 export class SharedRateLimiter {
@@ -371,8 +386,8 @@ export class SharedRateLimiter {
 
     const result = await store.increment(`${prefix}:${identifier}`, windowMs);
     if (result === null) {
-      breaker?.recordFailure();
-      console.warn("[sharedRateLimit] Upstash error — counting against the per-instance fallback for this pass");
+      breaker?.recordFailure(store.lastError);
+      // No per-failure log: the breaker logs when it opens and closes.
       return this.degradedCheck("redis-error", identifier, max, windowMs, prefix);
     }
     breaker?.recordSuccess();
@@ -462,13 +477,8 @@ export const AI_DRAFT_LIMIT = {
   prefix: "ratelimit:ai-draft",
 } as const;
 
-const upstashRedis =
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-    ? new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN,
-      })
-    : null;
+/** The process-wide Upstash client (`@/lib/upstash/access`). */
+const upstashRedis = getUpstashRedis();
 
 const required = isRateLimitingRequired(process.env);
 
@@ -481,8 +491,12 @@ if (required && !upstashRedis && typeof console !== "undefined") {
   );
 }
 
-/** One breaker for both limiters: same Upstash dependency, same failure. */
-const upstashBreaker = new CircuitBreaker();
+/**
+ * The process-wide Upstash breaker, shared with the proxy and the caches: it
+ * opens on the first quota, auth or timeout error and skips Upstash for a
+ * 10-minute cool-down, during which these limiters count per instance.
+ */
+const upstashBreaker = getUpstashBreaker();
 
 /**
  * Store per limiter, so the development fallbacks stay separate as before.

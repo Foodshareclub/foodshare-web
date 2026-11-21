@@ -1,37 +1,25 @@
 /**
- * Redis/Upstash Client Utility
+ * Redis/Upstash cache helpers
  *
- * Provides a shared Redis client and caching helpers for:
+ * Provides caching helpers for:
  * - Leaderboard caching
  * - Request deduplication
  * - Session management
  *
- * Uses same Upstash credentials as rate limiting (proxy.ts)
+ * Every call goes through the shared access layer (`@/lib/upstash/access`):
+ * one client, one circuit breaker. While the breaker is open (quota
+ * exhausted, auth error, timeouts) reads miss and writes are skipped, so
+ * callers go straight to the source. Every write has a TTL, and every key is
+ * namespaced under `fs:web:`.
  */
 
-import { Redis } from "@upstash/redis";
-
-// ============================================================================
-// Redis Client
-// ============================================================================
+import { getUpstashBreaker, isUpstashConfigured, namespacedKey, withUpstash } from "@/lib/upstash/access";
 
 /**
- * Shared Redis client - null if not configured
- * Same pattern as proxy.ts for consistency
- */
-export const redis =
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-    ? new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN,
-      })
-    : null;
-
-/**
- * Check if Redis is configured and available
+ * Whether Redis is configured and the breaker currently lets calls through.
  */
 export function isRedisAvailable(): boolean {
-  return redis !== null;
+  return isUpstashConfigured() && getUpstashBreaker().state !== "open";
 }
 
 // ============================================================================
@@ -58,48 +46,40 @@ export const REDIS_TTL = {
 
 /**
  * Get cached value from Redis
- * Returns null if Redis unavailable or key doesn't exist
+ * Returns null if Redis is unavailable, the breaker is open, or the key is missing
  */
 export async function cacheGet<T>(key: string): Promise<T | null> {
-  if (!redis) return null;
-
-  try {
-    const value = await redis.get<T>(key);
-    return value;
-  } catch (error) {
-    console.error("[Redis] Get error:", error);
-    return null;
-  }
+  return withUpstash(
+    (redis) => redis.get<T>(namespacedKey(key)),
+    () => null,
+  );
 }
 
 /**
- * Set cached value in Redis with TTL
+ * Set cached value in Redis with TTL (always set; at least one second)
  */
 export async function cacheSet<T>(key: string, value: T, ttlSeconds: number = REDIS_TTL.LEADERBOARD): Promise<boolean> {
-  if (!redis) return false;
-
-  try {
-    await redis.set(key, value, { ex: ttlSeconds });
-    return true;
-  } catch (error) {
-    console.error("[Redis] Set error:", error);
-    return false;
-  }
+  const ex = Math.max(1, Math.floor(ttlSeconds));
+  return withUpstash(
+    async (redis) => {
+      await redis.set(namespacedKey(key), value, { ex });
+      return true;
+    },
+    () => false,
+  );
 }
 
 /**
  * Delete cached value from Redis
  */
 export async function cacheDelete(key: string): Promise<boolean> {
-  if (!redis) return false;
-
-  try {
-    await redis.del(key);
-    return true;
-  } catch (error) {
-    console.error("[Redis] Delete error:", error);
-    return false;
-  }
+  return withUpstash(
+    async (redis) => {
+      await redis.del(namespacedKey(key));
+      return true;
+    },
+    () => false,
+  );
 }
 
 /**
@@ -107,27 +87,22 @@ export async function cacheDelete(key: string): Promise<boolean> {
  * Uses SCAN for safety (doesn't block Redis)
  */
 export async function cacheDeletePattern(pattern: string): Promise<number> {
-  if (!redis) return 0;
-
-  try {
-    let cursor = 0;
-    let deletedCount = 0;
-
-    do {
-      const [nextCursor, keys] = await redis.scan(cursor, { match: pattern, count: 100 });
-      cursor = Number(nextCursor);
-
-      if (keys.length > 0) {
-        await redis.del(...keys);
-        deletedCount += keys.length;
-      }
-    } while (cursor !== 0);
-
-    return deletedCount;
-  } catch (error) {
-    console.error("[Redis] Delete pattern error:", error);
-    return 0;
-  }
+  return withUpstash(
+    async (redis) => {
+      let cursor = 0;
+      let deletedCount = 0;
+      do {
+        const [nextCursor, keys] = await redis.scan(cursor, { match: namespacedKey(pattern), count: 500 });
+        cursor = Number(nextCursor);
+        if (keys.length > 0) {
+          await redis.del(...keys);
+          deletedCount += keys.length;
+        }
+      } while (cursor !== 0);
+      return deletedCount;
+    },
+    () => 0,
+  );
 }
 
 // ============================================================================
@@ -149,19 +124,15 @@ export async function cacheThrough<T>(
   fetchFn: () => Promise<T>,
   ttlSeconds: number = REDIS_TTL.LEADERBOARD,
 ): Promise<T> {
-  // Try to get from cache first
   const cached = await cacheGet<T>(key);
   if (cached !== null) {
     return cached;
   }
 
-  // Fetch fresh data
   const data = await fetchFn();
 
-  // Cache the result (fire and forget)
-  cacheSet(key, data, ttlSeconds).catch(() => {
-    // Ignore cache errors - data is still returned
-  });
+  // Fire and forget; skipped while the breaker is open.
+  cacheSet(key, data, ttlSeconds).catch(() => {});
 
   return data;
 }
@@ -179,7 +150,8 @@ export function getLeaderboardKey(limit = 100): string {
 
 /**
  * Invalidate leaderboard cache
- * Called when a user completes a challenge
+ * Called when a user completes a challenge. While the breaker is open nothing
+ * is cached, and older entries expire within REDIS_TTL.LEADERBOARD.
  */
 export async function invalidateLeaderboard(): Promise<boolean> {
   const deleted = await cacheDeletePattern(`${REDIS_PREFIXES.LEADERBOARD}:*`);
@@ -194,32 +166,26 @@ export async function invalidateLeaderboard(): Promise<boolean> {
  * Check if a request is in-flight (for deduplication)
  */
 export async function isRequestInFlight(key: string): Promise<boolean> {
-  if (!redis) return false;
-
-  try {
-    const exists = await redis.exists(`${REDIS_PREFIXES.DEDUP}:${key}`);
-    return exists === 1;
-  } catch {
-    return false;
-  }
+  return withUpstash(
+    async (redis) => (await redis.exists(namespacedKey(`${REDIS_PREFIXES.DEDUP}:${key}`))) === 1,
+    () => false,
+  );
 }
 
 /**
  * Mark a request as in-flight
  */
 export async function markRequestInFlight(key: string, ttlSeconds: number = REDIS_TTL.DEDUP): Promise<boolean> {
-  if (!redis) return false;
-
-  try {
-    // SET NX (only if not exists) with TTL
-    const result = await redis.set(`${REDIS_PREFIXES.DEDUP}:${key}`, "1", {
-      nx: true,
-      ex: ttlSeconds,
-    });
-    return result === "OK";
-  } catch {
-    return false;
-  }
+  return withUpstash(
+    async (redis) => {
+      const result = await redis.set(namespacedKey(`${REDIS_PREFIXES.DEDUP}:${key}`), "1", {
+        nx: true,
+        ex: Math.max(1, Math.floor(ttlSeconds)),
+      });
+      return result === "OK";
+    },
+    () => false,
+  );
 }
 
 /**

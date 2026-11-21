@@ -1,0 +1,36 @@
+name: Upstash request budget
+# Daily read of the production Upstash Redis monthly request count (free tier:
+# 500,000 requests a month). Warns above 70%; never fails the run, because the
+# web app degrades to local fallbacks on its own when the quota runs out.
+#
+# Required repository secrets (add them in Settings -> Secrets -> Actions):
+#   UPSTASH_EMAIL    Upstash account email
+#   UPSTASH_API_KEY  Upstash Developer API key (console -> Account -> Management API)
+# Without them the step logs a notice and skips. Values are never printed.
+on:
+  schedule:
+    - cron: "40 5 * * *" # 05:40 UTC daily
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: upstash-budget
+  cancel-in-progress: true
+env:
+  BUN_VERSION: "1.4.4"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+jobs:
+  budget:
+    name: Upstash request budget
+    runs-on: [self-hosted, Linux]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Check Upstash monthly requests
+        env:
+          UPSTASH_EMAIL: ${{ secrets.UPSTASH_EMAIL }}
+          UPSTASH_API_KEY: ${{ secrets.UPSTASH_API_KEY }}
+        run: bun scripts/upstash-budget-guard.ts

@@ -1,10 +1,16 @@
 import { defaultLocale, isValidLocale } from "@/i18n/config";
 import { negotiateLocale, resolveRequestLocale } from "@/i18n/resolve";
+import {
+  HybridRateLimiter,
+  MemorySlidingWindowLimiter,
+  shouldSkipRateLimit,
+  upstashRatelimitOptions,
+} from "@/lib/security/localRateLimit";
 import { isRateLimitingRequired } from "@/lib/security/rateLimitPolicy";
+import { UPSTASH_REQUEST_TIMEOUT_MS, getUpstashBreaker, getUpstashRedis } from "@/lib/upstash/access";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
 import { type NextRequest, NextResponse } from "next/server";
 
 // ============================================================================
@@ -225,68 +231,61 @@ function isCircuitOpen(key: string): boolean {
 // Rate Limiting Configuration
 // ============================================================================
 
-// Initialize Redis for rate limiting (only with env vars)
+// One Upstash client and one breaker for the whole process, from
+// src/lib/upstash/access.ts (task 23.1, operator option A: stay on the free
+// tier and keep working without Upstash until the monthly reset).
 //
-// Vault exception (card t_736c23f9): these credentials are read from
-// process.env on purpose. The proxy initialises synchronously at module load
-// in the edge/proxy runtime, and the deploy injects UPSTASH_REDIS_REST_URL /
-// UPSTASH_REDIS_REST_TOKEN into the environment. The Vault helper
-// (src/lib/email/vault.ts) is env-only, async and has no Upstash field, so it
-// cannot serve this read. src/lib/security/sharedRateLimit.ts reads the same
-// variables the same way, and missing credentials follow the fail-open policy
-// from 450d733a (see "Rate limiter failure mode" below).
-const redis =
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-    ? new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+// Vault exception (card t_736c23f9): the access layer reads
+// UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN from process.env, which
+// the deploy injects; missing credentials follow the policy below.
+const redis = getUpstashRedis();
+const upstashBreaker = getUpstashBreaker();
+
+function upstashLimiter(limit: number, window: `${number} ${"s" | "m"}`, prefix: string): Ratelimit | null {
+  return redis
+    ? new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(limit, window),
+        prefix,
+        ...upstashRatelimitOptions(UPSTASH_REQUEST_TIMEOUT_MS),
       })
     : null;
+}
 
 /**
- * Global rate limiter: 100 requests per 10 seconds per IP
- * Protects against general abuse and DDoS
+ * Global rate limiter: 100 requests per 10 seconds per IP, in memory only.
+ *
+ * Production runs a single web instance, so a per-process sliding window
+ * counts the same as a shared one, and the busiest limiter spends no Upstash
+ * commands at all. It used to cost one or two commands on every proxied
+ * request, which is most of what exhausted the free-tier quota.
  */
-const globalLimiter = redis
-  ? new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(100, "10 s"),
-      analytics: true,
-      prefix: "ratelimit:global",
-    })
-  : null;
+const globalLimiter = new MemorySlidingWindowLimiter({ limit: 100, windowMs: 10_000, maxKeys: 10_000 });
 
 /**
- * Auth endpoint rate limiter: 10 requests per minute per IP
- * Stricter limit to prevent brute force attacks
+ * Auth endpoint rate limiter: 10 requests per minute per fingerprint.
+ * Upstash while the breaker is closed, the same limit in memory while open.
  */
-const authLimiter = redis
-  ? new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(10, "1 m"),
-      analytics: true,
-      prefix: "ratelimit:auth",
-    })
-  : null;
+const authLimiter = new HybridRateLimiter({
+  upstash: upstashLimiter(10, "1 m", "ratelimit:auth"),
+  memory: new MemorySlidingWindowLimiter({ limit: 10, windowMs: 60_000, maxKeys: 10_000 }),
+  breaker: upstashBreaker,
+});
 
 /**
- * Mutation rate limiter: 30 mutations per minute per user/IP
- * Protects against spam and abuse of write operations
+ * Mutation rate limiter: 30 mutations per minute per fingerprint.
+ * Upstash while the breaker is closed, the same limit in memory while open.
  */
-const mutationLimiter = redis
-  ? new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(30, "1 m"),
-      analytics: true,
-      prefix: "ratelimit:mutations",
-    })
-  : null;
+const mutationLimiter = new HybridRateLimiter({
+  upstash: upstashLimiter(30, "1 m", "ratelimit:mutations"),
+  memory: new MemorySlidingWindowLimiter({ limit: 30, windowMs: 60_000, maxKeys: 10_000 }),
+  breaker: upstashBreaker,
+});
 
 /**
- * True when the limiters are wired up. Separate from `redis` being non-null so
- * a future limiter added here is covered by the same assertion.
+ * True when Upstash is wired up for the auth and mutation limiters.
  */
-const rateLimitingConfigured = Boolean(globalLimiter && authLimiter && mutationLimiter);
+const rateLimitingConfigured = redis !== null;
 
 /**
  * Whether a missing limiter is a misconfiguration that has to be answered with
@@ -308,52 +307,34 @@ if (rateLimitingRequired && !rateLimitingConfigured && typeof console !== "undef
 }
 
 // ============================================================================
-// Rate limiter failure mode: fail open
+// Rate limiter failure mode: degrade to the in-memory limiter
 //
-// The Upstash REST client throws on any error it answers with — including
-// the monthly request quota ("ERR max requests limit exceeded. Limit:
-// 500000") — and the rate limiter propagates that throw straight out of
-// `limit()`. Uncaught in the middleware, one exhausted quota 500s every
-// request, and the /api/ready probe 500s too, so a counter in a billing
-// dashboard became the site's availability state: on 2026-11-15
-// foodshare.club answered 500 for 25 h while the only thing that was wrong
-// was the quota.
-//
-// A rate limit is a control, not the app. When it cannot be evaluated, the
-// request is still served and the limit simply does not apply for that
-// pass — the posture `src/lib/redis.ts` already takes for cache reads. What
-// stays fail-closed is a deployment where the limiters were never wired up
-// (missing env vars): that is the 503 guard above, and a misconfiguration
-// the site must not silently run without.
-//
-// The breaker above keeps the degraded mode from paying Upstash on every
-// request: five consecutive errors open the circuit and the limiter calls
-// are skipped for a minute; one request per half-open window re-tries, and
-// the first success closes the circuit and rate limiting resumes.
+// The Upstash REST client throws on any error it answers with, including the
+// monthly request quota ("ERR max requests limit exceeded. Limit: 500000").
+// On 2026-11-15 that throw 500'd every request for 25 h (fixed in 450d733a by
+// failing open). Now the limit keeps applying: the shared breaker opens on
+// the first quota, auth or timeout error, the auth and mutation limiters count
+// in memory with the same limits for the 10-minute cool-down, and one
+// half-open probe per cool-down finds out when Upstash answers again (after
+// the monthly reset). No request is served unlimited and no request 500s
+// because of Upstash. What stays fail-closed is a deployment where Upstash
+// was never wired up: the 503 guard above.
 // ============================================================================
 
-const UPSTASH_CIRCUIT_KEY = "upstash-redis";
-
 type LimitVerdict =
-  | { kind: "allowed" }
-  | { kind: "limited"; reset: number }
-  | { kind: "degraded"; reason: "circuit-open" | "redis-error" };
+  | { kind: "allowed"; degraded?: "circuit-open" | "redis-error" }
+  | { kind: "limited"; reset: number; degraded?: "circuit-open" | "redis-error" };
 
-async function evaluateLimiter(limiter: Ratelimit, limiterName: string, key: string): Promise<LimitVerdict> {
-  if (isCircuitOpen(UPSTASH_CIRCUIT_KEY)) {
-    return { kind: "degraded", reason: "circuit-open" };
-  }
-  try {
-    const { success, reset } = await limiter.limit(key);
-    recordCircuitSuccess(UPSTASH_CIRCUIT_KEY);
-    return success ? { kind: "allowed" } : { kind: "limited", reset };
-  } catch (error) {
-    recordCircuitFailure(UPSTASH_CIRCUIT_KEY);
-    console.warn(`[RateLimit] ${limiterName}: Upstash error, failing open for this pass`, {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return { kind: "degraded", reason: "redis-error" };
-  }
+async function evaluateLimiter(limiter: HybridRateLimiter, key: string): Promise<LimitVerdict> {
+  const result = await limiter.check(key);
+  return result.success
+    ? { kind: "allowed", degraded: result.degraded }
+    : { kind: "limited", reset: result.reset, degraded: result.degraded };
+}
+
+function evaluateGlobalLimiter(key: string): LimitVerdict {
+  const result = globalLimiter.check(key);
+  return result.success ? { kind: "allowed" } : { kind: "limited", reset: result.reset };
 }
 
 // ============================================================================
@@ -502,14 +483,10 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Liveness and deep health endpoints. Exempt from the session refresh
-  // below and from the global limiter: the quadlet health probe curls
-  // /api/ready every 20 s — 43,200 probes a month — and each one used to
-  // pay the limiter two Upstash REST calls (the limit script plus the
-  // analytics record), so the site's own liveness check burned roughly
-  // 17% of the 500,000-request monthly quota with zero users behind it.
-  // The probe answers 500 for the same reason a page does when Upstash
-  // errors, so exempting it from the limiter and failing the limiter open
-  // are the same decision: the probe must not be able to fail the site.
+  // below and from rate limiting (see shouldSkipRateLimit): the quadlet
+  // health probe curls /api/ready every 20 s, 43,200 probes a month, and
+  // each one used to pay the limiter two Upstash REST calls, roughly 17% of
+  // the 500,000-request monthly quota with zero users behind it.
   const isHealthCheck = pathname.startsWith("/api/health") || pathname.startsWith("/api/ready");
 
   // IP reputation check
@@ -554,7 +531,11 @@ export async function proxy(request: NextRequest) {
   }
 
   // Rate Limiting
-  if (rateLimitingRequired) {
+  //
+  // Static assets, Next internals, images, favicon/robots/sitemap, the
+  // health/readiness probes and prefetches are not limited (GET/HEAD only).
+  const skipRateLimit = shouldSkipRateLimit(request.method, pathname, request.headers);
+  if (rateLimitingRequired && !skipRateLimit) {
     // See the module-level note: a missing limiter is a misconfiguration, not an
     // unlimited allowance. This is the only place that decides it, so no call
     // site can forget. The predicate is the module-level one, so the log above
@@ -570,32 +551,22 @@ export async function proxy(request: NextRequest) {
     const isAuthEndpoint = pathname.startsWith("/auth") || pathname.startsWith("/api/auth");
     const isMutation = MUTATION_METHODS.includes(request.method.toUpperCase());
 
-    if (authLimiter && isAuthEndpoint) {
-      const verdict = await evaluateLimiter(authLimiter, "auth", fingerprint);
-      if (verdict.kind === "limited") {
-        console.warn("[RateLimit] Auth limit exceeded", { ip, pathname });
-        metricData.rateLimitHit = "auth";
-        recordMetric({
-          ...metricData,
-          duration: Date.now() - startTime,
-          status: 429,
-        } as ProxyMetrics);
-        return new NextResponse("Too Many Requests", {
-          status: 429,
-          headers: {
-            "Retry-After": Math.ceil((verdict.reset - Date.now()) / 1000).toString(),
-            "X-RateLimit-Type": "auth",
-          },
-        });
-      }
-      if (verdict.kind === "degraded") metricData.rateLimitDegraded = verdict.reason;
+    // The in-memory global limiter runs first: a request it rejects never
+    // spends an Upstash command on the auth or mutation limiter.
+    const checks: Array<{ type: "global" | "auth" | "mutation"; run: () => Promise<LimitVerdict> | LimitVerdict }> = [
+      { type: "global", run: () => evaluateGlobalLimiter(ip) },
+    ];
+    if (isAuthEndpoint) checks.push({ type: "auth", run: () => evaluateLimiter(authLimiter, fingerprint) });
+    if (isMutation) {
+      checks.push({ type: "mutation", run: () => evaluateLimiter(mutationLimiter, `mutation:${fingerprint}`) });
     }
 
-    if (mutationLimiter && isMutation) {
-      const verdict = await evaluateLimiter(mutationLimiter, "mutation", `mutation:${fingerprint}`);
+    for (const check of checks) {
+      const verdict = await check.run();
+      if (verdict.degraded) metricData.rateLimitDegraded = verdict.degraded;
       if (verdict.kind === "limited") {
-        console.warn("[RateLimit] Mutation limit exceeded", { ip, pathname });
-        metricData.rateLimitHit = "mutation";
+        console.warn(`[RateLimit] ${check.type} limit exceeded`, { ip, pathname });
+        metricData.rateLimitHit = check.type;
         recordMetric({
           ...metricData,
           duration: Date.now() - startTime,
@@ -604,33 +575,11 @@ export async function proxy(request: NextRequest) {
         return new NextResponse("Too Many Requests", {
           status: 429,
           headers: {
-            "Retry-After": Math.ceil((verdict.reset - Date.now()) / 1000).toString(),
-            "X-RateLimit-Type": "mutation",
+            "Retry-After": Math.max(1, Math.ceil((verdict.reset - Date.now()) / 1000)).toString(),
+            "X-RateLimit-Type": check.type,
           },
         });
       }
-      if (verdict.kind === "degraded") metricData.rateLimitDegraded = verdict.reason;
-    }
-
-    if (globalLimiter && !isHealthCheck) {
-      const verdict = await evaluateLimiter(globalLimiter, "global", ip);
-      if (verdict.kind === "limited") {
-        console.warn("[RateLimit] Global limit exceeded", { ip });
-        metricData.rateLimitHit = "global";
-        recordMetric({
-          ...metricData,
-          duration: Date.now() - startTime,
-          status: 429,
-        } as ProxyMetrics);
-        return new NextResponse("Too Many Requests", {
-          status: 429,
-          headers: {
-            "Retry-After": Math.ceil((verdict.reset - Date.now()) / 1000).toString(),
-            "X-RateLimit-Type": "global",
-          },
-        });
-      }
-      if (verdict.kind === "degraded") metricData.rateLimitDegraded = verdict.reason;
     }
   }
 
