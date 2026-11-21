@@ -72,3 +72,27 @@ Listing cards use a frameless presentation with a 4-line metadata hierarchy:
 - Active category tab has bottom indicator bar (`h-0.5 bg-primary rounded-full`).
 - Graceful fade-out when at carousel extremes (`disabled:opacity-0`).
 
+## 7. Top-Right Profile Capsule (`DesktopMenu.tsx`)
+
+- **Airbnb Signature Menu Pill**:
+  - Encapsulated capsule button: `rounded-full border border-border/80 bg-background/80 py-1.25 ps-3.5 pe-1.5 shadow-2xs backdrop-blur-xs transition-all duration-200 hover:border-border hover:shadow-md cursor-pointer focus-visible:outline-2 focus-visible:outline-ring`.
+  - Iconography & Avatar: 3-line hamburger menu icon (`Menu` from `lucide-react`, `size-4 text-foreground/80`) on the leading side, paired with the 32px user avatar (`NavbarAvatar size="sm"`).
+  - Dropdown presentation: `DropdownMenuContent` with `glass-strong rounded-2xl min-w-[240px] shadow-xl border border-border/80 p-1.5` aligning to the end.
+
+## 8. Floating Navigation & Action Pills (`NavigateButtons.tsx`, `AddListingButton.tsx`)
+
+- **Floating Map/Listings Pill**:
+  - Centered floating bottom capsule button (`h-11 px-5 md:px-6 py-2.5 rounded-full font-semibold text-sm`).
+  - High-contrast adaptive palette: `bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border border-white/15 dark:border-black/10 shadow-[0_6px_20px_rgba(0,0,0,0.25)] hover:scale-105 hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)] active:scale-95`.
+  - Dynamic `Map` / `List` Lucide icons with `text-current` matching the theme.
+- **Add Listing Action Button**:
+  - Refined `h-10 rounded-full bg-emerald-600 hover:bg-emerald-700 px-4 text-sm font-semibold text-white shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer flex items-center gap-1.5`. Matches navbar height harmoniously.
+
+## 9. Empty States & Zero-Waste Community Fallbacks (`EmptyListingState.tsx`)
+
+- **Warm Zero-State Experience**:
+  - Organic ambient radial glow and category badge icon.
+  - Uplifting headline and empathetic call to action to share surplus food or items.
+  - Quick category shortcuts and clear-search filter reset pill.
+
+

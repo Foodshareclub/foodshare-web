@@ -493,4 +493,34 @@ Since Airbnb Cereal is proprietary:
 
 ---
 
+## FoodShare Airbnb Implementation Reference
+
+FoodShare incorporates core Airbnb design patterns adapted for surplus food and item sharing:
+
+1. **Card Architecture (`ProductCard.tsx`)**:
+   - Aspect ratio: `aspect-[20/19]` rounded image container (`rounded-2xl`).
+   - Frameless layout with subtle hover elevation (`group-hover/card:shadow-md`).
+   - Star rating badge aligned top-right (`★ 5.0` or `★ New`).
+   - Live status pill indicators (`🟢 Available` / `🟠 Reserved`).
+   - Tactile image zoom (`group-hover/card:scale-[1.04]`).
+
+2. **Search Pill Navigation (`SearchBar.tsx`)**:
+   - 3-segment pill (`What` | `Distance` | `Category`) with 1px dividers.
+   - Circular brand coral trigger button (`variant="brand"` `#FF2D55`) with hover scale.
+
+3. **User Profile Capsule (`DesktopMenu.tsx`)**:
+   - Signature pill capsule button (`rounded-full border border-border/80 bg-background/80 py-1.25 ps-3.5 pe-1.5 shadow-2xs`).
+   - Hamburger `Menu` icon + 32px user avatar (`NavbarAvatar size="sm"`).
+   - Elevated glass dropdown menu (`rounded-2xl shadow-xl min-w-[240px]`).
+
+4. **Floating Map/Listings Pill (`NavigateButtons.tsx`)**:
+   - Floating centered pill (`rounded-full px-5 md:px-6 py-2.5 h-11`).
+   - Dark/light mode adaptive high-contrast elevation (`bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-lg`).
+
+5. **Category Scroller Navigation (`CategoryNavigation.tsx`)**:
+   - Sleek 32px circular glass scroller buttons (`size-8 rounded-full border border-border/80 bg-background/95 shadow-xs`).
+   - Active bottom indicator bar (`h-0.5 bg-primary rounded-full`).
+
+---
+
 _This is a living document. Update as you build and discover new patterns!_

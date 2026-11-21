@@ -5,7 +5,6 @@ import { useState } from "react";
 import type { CustomRoomType } from "@/api/chatAPI";
 import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
 import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
-import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   ClipboardList,
@@ -14,6 +13,7 @@ import {
   LayoutGrid,
   LogIn,
   LogOut,
+  Menu,
   MessageCircle,
   Settings,
   UserPlus,
@@ -103,19 +103,28 @@ export function DesktopMenu({
       <div className="self-center p-0 text-foreground">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button type="button" variant="ghost" size="icon-lg" className="rounded-full" aria-label={t("seeMenu")}>
+            <button
+              type="button"
+              className="flex items-center gap-2.5 rounded-full border border-border/80 bg-background/80 py-1.25 ps-3.5 pe-1.5 shadow-2xs backdrop-blur-xs transition-all duration-200 hover:border-border hover:shadow-md cursor-pointer focus-visible:outline-2 focus-visible:outline-ring"
+              aria-label={t("seeMenu")}
+            >
+              <Menu className="size-4 text-foreground/80" aria-hidden="true" />
               <NavbarAvatar
                 src={imgUrl}
                 alt={t("userProfilePhoto")}
                 firstName={firstName}
                 secondName={secondName}
                 hasNotification={hasNotifications}
-                size="md"
+                size="sm"
               />
-            </Button>
+            </button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent variant="glass" className="glass-strong rounded-xl min-w-[220px]" align="end">
+          <DropdownMenuContent
+            variant="glass"
+            className="glass-strong rounded-2xl min-w-[240px] shadow-xl border border-border/80 p-1.5"
+            align="end"
+          >
             {isAuth ? (
               <>
                 {/* User Profile Info Header */}

@@ -9,13 +9,13 @@ export function AddListingButton({ className, children = "Add listing", ...props
     <Button
       type="button"
       className={cn(
-        "min-h-12 rounded-full bg-emerald-700 px-4 text-white shadow-sm hover:bg-emerald-800 motion-reduce:transition-none",
+        "h-10 rounded-full bg-emerald-600 hover:bg-emerald-700 px-4 text-sm font-semibold text-white shadow-xs hover:shadow-sm transition-all duration-200 motion-reduce:transition-none cursor-pointer flex items-center gap-1.5",
         className,
       )}
       {...props}
     >
-      <Plus className="size-4" aria-hidden="true" />
-      {children}
+      <Plus className="size-4 shrink-0" aria-hidden="true" />
+      <span>{children}</span>
     </Button>
   );
 }
