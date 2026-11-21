@@ -161,6 +161,7 @@ supabase/               # Vendored copy — canonical source lives in foodshare-
 ```
 
 ## Key Patterns
+**Design**: single source is `.kiro/steering/design.md`; load the `foodshare-design` skill (`.agents/skills/foodshare-design`, mirrored into `.claude/skills` and `.kiro/skills`) before any UI change. Tailwind utilities and semantic tokens only; no new global CSS.
 
 **i18n**: `next-intl` with 21 languages. Translations in `/messages/{locale}.json`. Locales: en, cs, de, es, fr, pt, ru, uk, zh, hi, ar (RTL), it, pl, nl, ja, ko, tr, vi, id, th, sv.
 

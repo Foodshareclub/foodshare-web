@@ -10,7 +10,7 @@
 - **Web Frontend Stack:**
   - **Framework:** Next.js 16 (App Router exclusively) with Hono API routes (`src/app/api/[[...route]]/route.ts`).
   - **React Features:** Enforce React 19 best practices (`useActionState`, `useFormStatus`, `useOptimistic`, and `use()` hook patterns). Do not use deprecated React 18 patterns for forms.
-  - **Styling:** Tailwind CSS v4 with the specialized "Liquid Glass" aesthetic. Prioritize micro-animations and View Transitions.
+  - **Styling:** Tailwind CSS v4 with shadcn/ui. Design rules are in `.kiro/steering/design.md` (load the `foodshare-design` skill for UI work): photo-first, frameless cards, glass only on floating chrome, motion that respects `prefers-reduced-motion`.
   - **Caching:** Leverage Turbopack caching paradigms correctly to prevent directive crashes.
   - **i18n:** Utilize `next-intl` for the 21 supported languages. Always sync translation keys using `bun run translations:sync`.
   - **Deployment:** The frontend is self-hosted via Podman/Quadlet on a VPS and exposed exclusively via Cloudflare Zero Trust Tunnels (`foodshare-frontend`). DO NOT use Vercel for deployment or DNS records.

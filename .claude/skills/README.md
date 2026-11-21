@@ -59,6 +59,20 @@ React 19 + TypeScript development for Next.js applications.
 
 ### UI & Styling Skills
 
+#### foodshare-design
+
+FoodShare web visual system and Airbnb-style browse patterns. Mirrored from `.agents/skills/foodshare-design` (symlink); the rules live in `.kiro/steering/design.md`.
+
+**Topics Covered:**
+
+- Brand and semantic tokens, type, radius, elevation, motion
+- Photo-first listing card, search pill, category bar, grid, detail, map
+- Skeletons, empty states, contrast, focus, reduced motion, RTL
+
+**When to Use:** Building or restyling any web UI surface, reviewing UI diffs
+
+---
+
 #### shadcn-ui
 
 Component library patterns with shadcn/ui and Radix UI.

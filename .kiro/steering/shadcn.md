@@ -9,7 +9,7 @@ inclusion: always
 - **Style**: `new-york`
 - **Base color**: `neutral`
 - **CSS Variables**: enabled
-- **RSC**: false (components are client-side)
+- **RSC**: true (`components.json`); add `"use client"` per component where needed
 
 ## Installation
 
@@ -207,19 +207,5 @@ import { RichTextEditor } from '@/components/ui/rich-text-editor';
 Features: Bold, italic, headings (H1-H3), lists, blockquotes, code blocks, links, images, undo/redo, visual/HTML view toggle.
 
 ## Custom Variants
-
-Extend in feature components, not in ui/ files:
-
-```typescript
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-
-export function BrandButton({ className, ...props }) {
-  return (
-    <Button
-      className={cn('bg-[#FF2D55] hover:bg-[#E6284D]', className)}
-      {...props}
-    />
-  );
-}
-```
+Extend in feature components, not in ui/ files. Brand coral already exists as `<Button variant="brand">`
+(`bg-brand`); colors, radii and patterns are defined in `design.md`, not here. Do not hard-code hex in `className`.
