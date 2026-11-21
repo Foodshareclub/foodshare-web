@@ -87,7 +87,7 @@ Edit `.env.local` with your actual values. See the [Environment Variables](#envi
 bun run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+Open [http://localhost:3030](http://localhost:3030) to view the application.
 
 > [!NOTE]
 > This project uses `src/proxy.ts` and `src/instrumentation.ts` for core middleware and observability. The `proxy.ts` file handles routing, security, and session management.

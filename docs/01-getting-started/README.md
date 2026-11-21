@@ -37,7 +37,7 @@ cp .env.local.example .env.local
 bun run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the app.
+Open [http://localhost:3030](http://localhost:3030) to view the app.
 
 ## Essential Commands
 

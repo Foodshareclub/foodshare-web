@@ -75,7 +75,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 # Start development server
 bun run dev
 
-# Should open at http://localhost:3000
+# Should open at http://localhost:3030
 ```
 
 **Verify git hooks:**
@@ -336,11 +336,11 @@ Git hooks automation:
 
 ### Port Already in Use
 
-If port 3000 is in use:
+If port 3030 is in use:
 
 ```bash
-# Kill process on port 3000
-bunx kill-port 3000
+# Kill process on port 3030
+bunx kill-port 3030
 
 # Or use a different port
 bun run dev -- --port 3001

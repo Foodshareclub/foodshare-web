@@ -146,7 +146,7 @@ Documentation about documentation:
 | ---------------- | -------------------------- | ---------------- |
 | **Routing**      | File-based (App Router)    | React Router     |
 | **Entry**        | `src/app/layout.tsx`       | `index.html`     |
-| **Dev Server**   | Next.js + Turbopack (3000) | Vite (5173)      |
+| **Dev Server**   | Next.js + Turbopack (3030) | Vite (5173)      |
 | **Build Output** | `.next/`                   | `dist/`          |
 | **SSR**          | Built-in SSR/RSC           | None (pure SPA)  |
 | **Env Vars**     | `NEXT_PUBLIC_` prefix      | `VITE_` prefix   |

@@ -274,7 +274,7 @@ be diagnosed from the same symptom.
 - The `supabase` CLI in this environment is **not linked** to a project, so the auth Site URL
   cannot be read or corrected from the shell — it is a dashboard-only change.
 - **Production `NEXT_PUBLIC_SITE_URL` is `https://foodshare.club`** (`.env.production`), and
-  `.env.local` is `http://localhost:3000`. A magic link pointing at a staging host is a
+  `.env.local` is `http://localhost:3030`. A magic link pointing at a staging host is a
   dashboard value that has drifted from the deployed configuration.
 - **A GitHub PAT is embedded in plaintext in this repository's `origin` remote URL.** Anyone who
   can read `.git/config` has a working repository credential. Rotate the token in GitHub first,

@@ -376,8 +376,8 @@ const ALLOWED_ORIGINS = [
   // Loopback for local development and for the E2E job, which runs the app
   // directly. Listed once each: development *and* CI used to append the same
   // two origins, so the comparison below walked duplicates on every mutation.
-  process.env.NODE_ENV === "development" || process.env.CI === "true" ? "http://localhost:3000" : null,
-  process.env.NODE_ENV === "development" || process.env.CI === "true" ? "http://127.0.0.1:3000" : null,
+  process.env.NODE_ENV === "development" || process.env.CI === "true" ? "http://localhost:3030" : null,
+  process.env.NODE_ENV === "development" || process.env.CI === "true" ? "http://127.0.0.1:3030" : null,
 ]
   .filter((origin): origin is string => Boolean(origin))
   // NEXT_PUBLIC_APP_URL is usually https://foodshare.club, so the literal above

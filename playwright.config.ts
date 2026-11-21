@@ -34,7 +34,7 @@ export default defineConfig({
   // Shared settings for all projects
   use: {
     // Base URL for navigation
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3030",
 
     // Timeouts for navigation and actions (SSR/streaming needs more time)
     navigationTimeout: 30000,
@@ -108,7 +108,7 @@ export default defineConfig({
     : {
         webServer: {
           command: process.env.CI ? "bun run start" : "bun run dev",
-          url: "http://localhost:3000/api/ready",
+          url: "http://localhost:3030/api/ready",
           reuseExistingServer: !process.env.CI,
           timeout: 120 * 1000,
           env: {

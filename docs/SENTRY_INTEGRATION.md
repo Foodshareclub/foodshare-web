@@ -108,7 +108,7 @@ For testing in development without switching to production mode, use the API tes
 
 ```bash
 # Send a test event directly to Sentry
-curl http://localhost:3000/api/sentry-test
+curl http://localhost:3030/api/sentry-test
 ```
 
 **Response (success)**:
@@ -483,7 +483,7 @@ beforeSend(event, hint) {
 echo $NEXT_PUBLIC_SENTRY_DSN
 
 # Quick test without production mode (bypasses SDK)
-curl http://localhost:3000/api/sentry-test
+curl http://localhost:3030/api/sentry-test
 
 # Test in production mode
 NODE_ENV=production bun run build

@@ -46,7 +46,7 @@ inclusion: always
 ## Commands
 
 ```bash
-bun run dev          # Turbopack dev server (port 3000)
+bun run dev          # Turbopack dev server (port 3030)
 bun run build        # Production build
 bun run lint         # ESLint
 bun run type-check   # TypeScript check

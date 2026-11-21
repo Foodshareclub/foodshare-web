@@ -525,7 +525,7 @@ AWS_SECRET_ACCESS_KEY=your_aws_secret
 ## NPM Scripts
 
 ```bash
-bun run dev          # Start dev server with Turbopack (port 3000)
+bun run dev          # Start dev server with Turbopack (port 3030)
 bun run build        # Production build
 bun run build:analyze # Build with bundle analyzer
 bun run start        # Start production server

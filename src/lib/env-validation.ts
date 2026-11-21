@@ -208,10 +208,10 @@ export const clientEnv = {
     return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   },
   get appUrl() {
-    return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3030";
   },
   get siteUrl() {
-    return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3030";
   },
   get sentryDsn() {
     return process.env.NEXT_PUBLIC_SENTRY_DSN;

@@ -75,7 +75,7 @@ cp .env.example .env.local
 # 5. Start development server (Turbopack)
 bun run dev
 
-# 6. Open browser to http://localhost:3000
+# 6. Open browser to http://localhost:3030
 ```
 
 **Verification:**
@@ -87,7 +87,7 @@ bun run dev
 
 **Troubleshooting:**
 
-- If port 3000 is in use: Pass a different port with `bun run dev -- -p 3001`
+- If port 3030 is in use: Pass a different port with `bun run dev -- -p 3001`
 - If dependencies fail: Try `rm -rf node_modules package-lock.json && bun install`
 - If env vars not working: Check `NEXT_PUBLIC_` prefix is used (not `VITE_` or `REACT_APP_`)
 
@@ -1160,7 +1160,7 @@ git stash pop
 ### NPM Scripts
 
 ```bash
-bun run dev          # Start dev server (Turbopack, port 3000)
+bun run dev          # Start dev server (Turbopack, port 3030)
 bun run build        # Production build
 bun run start        # Start production server
 bun run lint         # Run ESLint

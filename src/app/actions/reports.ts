@@ -232,7 +232,7 @@ interface AIAnalysisResult {
 }
 
 async function analyzeReportWithAI(input: AIAnalysisInput): Promise<AIAnalysisResult | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3030";
 
   try {
     const response = await fetch(`${baseUrl}/api/moderation/analyze`, {

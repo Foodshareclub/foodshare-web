@@ -812,7 +812,7 @@ Ensure Supabase Storage CORS is configured:
 
 1. Go to Supabase Dashboard → Storage → Settings
 2. Add your domain to allowed origins
-3. Include `http://localhost:3000` for development
+3. Include `http://localhost:3030` for development
 
 ### File Not Found
 

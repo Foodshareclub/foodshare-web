@@ -71,7 +71,7 @@ BREVO_API_KEY=your-brevo-key
 bun run dev
 ```
 
-Application opens at `http://localhost:3000`
+Application opens at `http://localhost:3030`
 
 ---
 
@@ -117,7 +117,7 @@ Application opens at `http://localhost:3000`
 
 ```bash
 # Development
-bun run dev              # Start dev server (Turbopack, port 3000)
+bun run dev              # Start dev server (Turbopack, port 3030)
 
 # Build
 bun run build            # Production build

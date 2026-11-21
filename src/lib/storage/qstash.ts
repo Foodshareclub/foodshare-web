@@ -259,7 +259,7 @@ export const CRON_SCHEDULES = {
  * Get the full URL for a job endpoint
  */
 export function getJobEndpoint(jobType: JobType | string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3030";
   return `${baseUrl}/api/jobs/${jobType}`;
 }
 

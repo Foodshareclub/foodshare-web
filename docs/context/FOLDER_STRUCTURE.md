@@ -404,7 +404,7 @@ const nextConfig: NextConfig = {
 ### Development (`bun run dev`)
 
 ```
-http://localhost:3000/            # Next.js dev server
+http://localhost:3030/            # Next.js dev server
 ├── Turbopack HMR                 # Instant updates
 ├── Server Components             # Automatic RSC handling
 ├── Source maps                   # Debugging support
@@ -737,7 +737,7 @@ supabase/
 | ---------------- | -------------------------- | --------------------- |
 | **Routing**      | File-based (App Router)    | React Router          |
 | **Entry Point**  | `src/app/layout.tsx`       | `index.html`          |
-| **Dev Server**   | Next.js + Turbopack (3000) | Vite (5173)           |
+| **Dev Server**   | Next.js + Turbopack (3030) | Vite (5173)           |
 | **Build Output** | `.next/`                   | `dist/`               |
 | **SSR**          | Built-in SSR/RSC           | None (pure SPA)       |
 | **Mutations**    | Server Actions             | API calls             |

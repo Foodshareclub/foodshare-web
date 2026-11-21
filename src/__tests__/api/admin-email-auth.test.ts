@@ -93,7 +93,7 @@ describe("Admin Email API Auth", () => {
         mockIsAdmin = false;
 
         const mod = await import(`../../app/api/admin/email/${route.name}/route`);
-        const request = createRequest(`http://localhost:3000/api/admin/email/${route.name}`);
+        const request = createRequest(`http://localhost:3030/api/admin/email/${route.name}`);
         const response = await mod.GET(request);
 
         expect(response.status).toBe(401);
@@ -106,7 +106,7 @@ describe("Admin Email API Auth", () => {
         mockIsAdmin = false;
 
         const mod = await import(`../../app/api/admin/email/${route.name}/route`);
-        const request = createRequest(`http://localhost:3000/api/admin/email/${route.name}`);
+        const request = createRequest(`http://localhost:3030/api/admin/email/${route.name}`);
         const response = await mod.GET(request);
 
         expect(response.status).toBe(403);
@@ -119,7 +119,7 @@ describe("Admin Email API Auth", () => {
         mockIsAdmin = true;
 
         const mod = await import(`../../app/api/admin/email/${route.name}/route`);
-        const request = createRequest(`http://localhost:3000/api/admin/email/${route.name}`);
+        const request = createRequest(`http://localhost:3030/api/admin/email/${route.name}`);
         const response = await mod.GET(request);
 
         expect(response.status).toBe(200);

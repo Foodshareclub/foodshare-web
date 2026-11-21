@@ -67,7 +67,7 @@ All deployments are **fully automated** via GitHub Actions in full scale. **Neve
 
 | Command                     | Purpose                                                         |
 | --------------------------- | --------------------------------------------------------------- |
-| `bun run dev`               | Dev server (Turbopack, port 3000)                               |
+| `bun run dev`               | Dev server (Turbopack, port 3030)                               |
 | `bun run build`             | Production build                                                |
 | `bun run type-check`        | TypeScript checking (`tsrs`, the Rust port of `tsc`)            |
 | `bun run check:no-node`     | Fail if Node.js creeps back into the toolchain                 |
