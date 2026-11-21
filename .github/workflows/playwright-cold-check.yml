@@ -1,0 +1,43 @@
+name: Playwright cold install check
+
+# Temporary verification workflow for the self-hosted install path. It uses a
+# job-local, empty PLAYWRIGHT_BROWSERS_PATH and no actions/cache, so the browser
+# has to be downloaded and installed from scratch.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cold-install:
+    name: Cold Playwright browser install
+    runs-on: [self-hosted, Linux]
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/playwright-cold-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.4"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Prove the browser path starts empty
+        run: |
+          test ! -e "$PLAYWRIGHT_BROWSERS_PATH"
+          echo "cold path: $PLAYWRIGHT_BROWSERS_PATH"
+
+      - name: Install the browser without root
+        run: bunx --bun playwright install chromium
+
+      - name: Prove Chromium launches with the image libraries
+        run: |
+          bun -e 'import { chromium } from "playwright"; const browser = await chromium.launch(); const page = await browser.newPage(); await page.setContent("<h1>cold install ok</h1>"); const text = await page.textContent("h1"); console.log("launched", browser.version(), text); await browser.close();'
+
+      - name: List the cold browser tree
+        run: find "$PLAYWRIGHT_BROWSERS_PATH" -maxdepth 2 -type d -print
