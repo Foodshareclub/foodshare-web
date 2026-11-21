@@ -260,6 +260,7 @@ const UI = {
   pctWasted: "% Wasted",
   savedLabel: "Saved",
   retainedLabel: "Retained",
+  billionUnit: "B",
   storyBadge: "International Sustainability Narrative",
   storyTitle: "The Journey of Planetary Food Loss to 2030 Recovery",
   storyDesc:
