@@ -1,6 +1,7 @@
 "use client";
 import { type CoverCredit } from "@/lib/cover-provenance";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 
 /** Transient state for listings whose photo is still being found. */
@@ -27,6 +28,7 @@ export function FindingPhotoState({ label, className }: { label: string; classNa
 
 /** Disclosure plus source/license credit for a stored reference cover. */
 export function CoverCreditLine({ credit, className }: { credit: CoverCredit; className?: string }) {
+  const t = useTranslations();
   const link = "underline underline-offset-2 hover:text-white focus-visible:outline-2 focus-visible:outline-ring";
   return (
     <div
@@ -39,7 +41,7 @@ export function CoverCreditLine({ credit, className }: { credit: CoverCredit; cl
       <p>{credit.disclosure}</p>
       <p>
         <a href={credit.sourcePageUrl} target="_blank" rel="noopener noreferrer" className={link}>
-          Source: Wikimedia Commons
+          {t("cover_source_wikimedia")}
           {credit.artist ? ` · ${credit.artist}` : ""}
         </a>
         {" · "}
