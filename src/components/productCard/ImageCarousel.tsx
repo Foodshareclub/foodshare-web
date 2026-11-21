@@ -9,7 +9,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { CoverCreditLine, FindingPhotoState } from "./CoverStatus";
-import { LISTING_PHOTO } from "./listing-layout";
 
 type ImageCarouselProps = {
   images: string[];
@@ -64,10 +63,7 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
       <Link
         href={productUrl}
         aria-label={postName}
-        className={cn(
-          LISTING_PHOTO,
-          "relative block focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-ring",
-        )}
+        className="relative block size-full focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-ring"
       >
         {placeholder}
       </Link>
@@ -75,7 +71,7 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
   }
 
   return (
-    <div className={cn(LISTING_PHOTO, "group/carousel relative overflow-hidden")}>
+    <div className="group/carousel relative size-full overflow-hidden">
       <div
         ref={scrollRef}
         onScroll={handleScroll}
@@ -94,7 +90,7 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
               placeholder
             ) : (
               <Image
-                className="object-cover transition-transform duration-500 ease-out group-hover/card:scale-[1.04]"
+                className="object-cover transition-transform duration-500 ease-out motion-safe:group-hover/card:scale-[1.03] motion-reduce:transition-none"
                 style={index === 0 ? { viewTransitionName: `product-hero-${productId}` } : undefined}
                 src={image}
                 alt={postName}
@@ -115,10 +111,10 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
             <button
               type="button"
               className={cn(
-                "pointer-events-auto flex size-8 items-center justify-center rounded-full bg-white/90 text-neutral-800 shadow-md backdrop-blur-xs transition-all duration-200 hover:scale-105 hover:bg-white active:scale-95 focus-visible:outline-2 focus-visible:outline-ring dark:bg-black/75 dark:text-neutral-100 dark:hover:bg-black/90",
+                "pointer-events-auto flex size-8 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md backdrop-blur-xs transition-all duration-200 hover:scale-105 hover:bg-background active:scale-95 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-ring",
                 activeIndex === 0
                   ? "pointer-events-none opacity-0"
-                  : "opacity-0 group-hover/carousel:opacity-100 focus-visible:opacity-100",
+                  : "opacity-0 group-focus-within/carousel:opacity-100 group-hover/carousel:opacity-100 focus-visible:opacity-100",
               )}
               onClick={(event) => scrollToIndex(activeIndex - 1, event)}
               disabled={activeIndex === 0}
@@ -129,10 +125,10 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
             <button
               type="button"
               className={cn(
-                "pointer-events-auto flex size-8 items-center justify-center rounded-full bg-white/90 text-neutral-800 shadow-md backdrop-blur-xs transition-all duration-200 hover:scale-105 hover:bg-white active:scale-95 focus-visible:outline-2 focus-visible:outline-ring dark:bg-black/75 dark:text-neutral-100 dark:hover:bg-black/90",
+                "pointer-events-auto flex size-8 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md backdrop-blur-xs transition-all duration-200 hover:scale-105 hover:bg-background active:scale-95 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-ring",
                 activeIndex === validImages.length - 1
                   ? "pointer-events-none opacity-0"
-                  : "opacity-0 group-hover/carousel:opacity-100 focus-visible:opacity-100",
+                  : "opacity-0 group-focus-within/carousel:opacity-100 group-hover/carousel:opacity-100 focus-visible:opacity-100",
               )}
               onClick={(event) => scrollToIndex(activeIndex + 1, event)}
               disabled={activeIndex === validImages.length - 1}
@@ -143,7 +139,12 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
           </div>
 
           {/* Airbnb-style Pagination Dots: centered at bottom with accessible touch targets */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-2.5 z-10 flex items-center justify-center gap-1.5">
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-x-0 z-10 flex items-center justify-center gap-1.5",
+              showCredit ? "bottom-14" : "bottom-2.5",
+            )}
+          >
             <div className="pointer-events-auto flex items-center gap-1 rounded-full px-2 py-0.5">
               {validImages.map((_, i) => (
                 <button
@@ -152,14 +153,14 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
                   onClick={(event) => scrollToIndex(i, event)}
                   aria-label={`${t("go_to_slide", { defaultMessage: "Slide" })} ${i + 1}`}
                   aria-current={i === activeIndex ? "true" : undefined}
-                  className="flex size-6 items-center justify-center p-0 transition-transform focus-visible:outline-none"
+                  className="flex size-6 items-center justify-center rounded-full p-0 focus-visible:outline-2 focus-visible:outline-ring"
                 >
                   <span
                     className={cn(
-                      "block rounded-full transition-all duration-200",
+                      "block rounded-full transition-all duration-200 motion-reduce:transition-none",
                       i === activeIndex
-                        ? "size-2 scale-110 bg-white shadow-xs"
-                        : "size-1.5 bg-white/60 hover:bg-white/90 shadow-2xs",
+                        ? "size-2 bg-white shadow-xs"
+                        : "size-1.5 bg-white/60 shadow-2xs hover:bg-white/90",
                     )}
                   />
                 </button>

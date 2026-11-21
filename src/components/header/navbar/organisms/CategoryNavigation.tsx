@@ -145,7 +145,7 @@ export const CategoryNavigation: FC<CategoryNavigationProps> = ({
         <Button
           variant="outline"
           size="icon-sm"
-          className="size-8 shrink-0 rounded-full border-border/80 bg-background/95 shadow-xs backdrop-blur-xs transition-all hover:scale-105 hover:bg-background active:scale-95"
+          className="hidden size-8 shrink-0 rounded-full border-border/80 bg-background/95 shadow-xs backdrop-blur-xs transition-all hover:scale-105 hover:bg-background active:scale-95 motion-reduce:transition-none md:inline-flex"
           disabled={!scrollState.previous}
           aria-label={`${t("previous")} — ${t("category")}`}
           onClick={() => scrollCategories(-1)}
@@ -159,7 +159,9 @@ export const CategoryNavigation: FC<CategoryNavigationProps> = ({
         role="tablist"
         aria-label="Category navigation"
         className={cn(
-          "flex min-w-0 flex-1 items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-none",
+          "flex min-w-0 flex-1 snap-x items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-none",
+          scrollState.overflow &&
+            "px-6 [mask-image:linear-gradient(to_right,transparent,black_1.5rem,black_calc(100%-1.5rem),transparent)]",
           className,
         )}
       >
@@ -167,7 +169,7 @@ export const CategoryNavigation: FC<CategoryNavigationProps> = ({
           const isActive = category.id === activeCategory;
 
           return (
-            <div className="shrink-0" key={category.id}>
+            <div className="shrink-0 snap-start" key={category.id}>
               <CategoryItem
                 id={category.id}
                 label={category.label}
@@ -185,7 +187,7 @@ export const CategoryNavigation: FC<CategoryNavigationProps> = ({
         <Button
           variant="outline"
           size="icon-sm"
-          className="size-8 shrink-0 rounded-full border-border/80 bg-background/95 shadow-xs backdrop-blur-xs transition-all hover:scale-105 hover:bg-background active:scale-95"
+          className="hidden size-8 shrink-0 rounded-full border-border/80 bg-background/95 shadow-xs backdrop-blur-xs transition-all hover:scale-105 hover:bg-background active:scale-95 motion-reduce:transition-none md:inline-flex"
           disabled={!scrollState.next}
           aria-label={`${t("next")} — ${t("category")}`}
           onClick={() => scrollCategories(1)}

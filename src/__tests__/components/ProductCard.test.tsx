@@ -62,9 +62,25 @@ describe("ProductCard Airbnb Design", () => {
 
     expect(screen.getByText("Fresh Organic Avocados")).toBeTruthy();
     expect(screen.getByText("New")).toBeTruthy();
-    expect(screen.getByText(/By Maria/)).toBeTruthy();
     expect(screen.getByText("Free")).toBeTruthy();
+  });
+  test("shows two meta lines: title row and one muted area and pickup line", () => {
+    const { container } = render(<ProductCard product={baseProduct} />);
+    expect(screen.getByText("Green St, Portland · 10:00 AM - 4:00 PM")).toBeTruthy();
+    // Host, transit and extra facts moved to the detail page.
+    expect(screen.queryByText(/By Maria/)).toBeNull();
+    expect(screen.queryByText("Walk or bike")).toBeNull();
+    // Media shares the listing photo ratio with the skeleton.
+    expect(container.querySelector(".aspect-\\[20\\/19\\]")).toBeTruthy();
+  });
+  test("shows an Available badge for non-food listings", () => {
+    render(<ProductCard product={{ ...baseProduct, post_type: "fridge" }} />);
     expect(screen.getByText("Available")).toBeTruthy();
+    expect(screen.queryByText("Free")).toBeNull();
+  });
+  test("exposes a labelled, pressable save button", () => {
+    render(<ProductCard product={baseProduct} />);
+    expect(screen.getByRole("button", { name: "Save listing" }).getAttribute("aria-pressed")).toBe("false");
   });
 
   test("renders Airbnb star rating score when ratings exist", () => {
@@ -90,15 +106,17 @@ describe("ProductCard Airbnb Design", () => {
     expect(screen.getByText("Reserved")).toBeTruthy();
   });
 
-  test("renders organization host attribution when post is foodbank", () => {
+  test("keeps food bank listings to the title and one muted line", () => {
     const foodbankProduct: InitialProductStateType = {
       ...baseProduct,
       post_type: "foodbank",
+      post_name: "Oregon Food Bank",
       host_entity: "Oregon Food Bank",
     };
     render(<ProductCard product={foodbankProduct} />);
 
-    expect(screen.getByText("Oregon Food Bank")).toBeTruthy();
+    expect(screen.getAllByText("Oregon Food Bank").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Hosted by/)).toBeNull();
   });
 
   test("shows the transient finding-a-photo state instead of the static icon when images are empty", () => {

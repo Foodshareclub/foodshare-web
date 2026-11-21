@@ -73,9 +73,7 @@ export function CategoryItem({
       className={cn(
         "group relative flex min-h-14 min-w-14 flex-col items-center justify-center gap-1.5 px-3 py-2",
         "transition-all duration-200 motion-reduce:transition-none cursor-pointer",
-        isActive
-          ? "text-foreground font-semibold"
-          : "text-muted-foreground font-medium opacity-70 hover:opacity-100 hover:text-foreground",
+        isActive ? "text-foreground font-semibold" : "text-muted-foreground font-medium hover:text-foreground",
         "rounded-lg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
         className,
       )}
@@ -83,7 +81,7 @@ export function CategoryItem({
       {Icon && (
         <span
           className={cn(
-            "transition-all duration-200 group-hover:scale-105",
+            "transition-colors duration-200",
             isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
           )}
           aria-hidden="true"

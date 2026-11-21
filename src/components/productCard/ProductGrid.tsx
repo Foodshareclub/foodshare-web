@@ -78,6 +78,9 @@ export function ProductGrid({
   return (
     <div aria-busy={isLoading || isFetchingMore}>
       <h2 className="sr-only">{t("active_listings")}</h2>
+      <p className="sr-only" role="status" aria-live="polite">
+        {isLoading || isFetchingMore ? t("loading") : ""}
+      </p>
       <div className={cn(LISTING_CONTAINER, "py-6 pb-28 sm:py-8 sm:pb-32")}>
         <div className={LISTING_GRID}>
           {isLoading
@@ -95,14 +98,14 @@ export function ProductGrid({
             <div className="inline-flex items-center justify-center size-10 rounded-full bg-muted/60 mb-3 text-muted-foreground">
               <Sparkles className="size-5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
             </div>
-            <h3 className="text-lg font-bold tracking-tight text-foreground mb-1">{t("Home.categories_title")}</h3>
+            <h3 className="text-lg font-semibold tracking-tight text-foreground mb-1">{t("Home.categories_title")}</h3>
             <p className="text-xs text-muted-foreground mb-6 max-w-sm mx-auto">{t("Home.categories_subtitle")}</p>
             <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto">
               {EXPLORE_CATEGORIES.map((cat) => (
                 <Link
                   key={cat.key}
                   href={cat.href}
-                  className="text-xs font-semibold px-4 py-2 rounded-full border border-border/80 bg-background/80 hover:bg-muted/60 hover:border-foreground/30 active:scale-95 shadow-2xs hover:shadow-xs transition-all text-foreground"
+                  className="text-xs font-semibold px-4 py-2 rounded-full border border-border/80 bg-background/80 hover:bg-muted/60 hover:border-foreground/30 shadow-2xs transition-shadow hover:shadow-xs motion-reduce:transition-none text-foreground"
                 >
                   {t(`categories.${cat.key}`)}
                 </Link>

@@ -264,9 +264,9 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
     >
       <div
         className={cn(
-          "relative flex items-center overflow-hidden rounded-full border bg-background/80 backdrop-blur-xl backdrop-saturate-150 shadow-[0_2px_8px_rgba(0,0,0,0.04)]",
+          "relative flex items-center overflow-hidden rounded-full border bg-background/80 backdrop-blur-xl backdrop-saturate-150 shadow-sm",
           "transition-all duration-300 motion-reduce:transition-none",
-          isHovered || activeSection ? "border-foreground/30 shadow-[0_4px_16px_rgba(0,0,0,0.08)]" : "border-border/50",
+          isHovered || activeSection ? "border-foreground/30 shadow-md" : "border-border/50",
         )}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -279,7 +279,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           aria-controls={activeSection === "what" ? `${searchId}-what` : undefined}
           aria-expanded={activeSection === "what"}
           className={cn(
-            "flex h-14 min-w-0 flex-[1.5] flex-col items-start justify-center gap-0.5 rounded-full ps-4 pe-2 text-start sm:h-16 sm:px-5 transition-all duration-200 cursor-pointer",
+            "flex h-14 min-w-0 flex-[1.5] flex-col items-start justify-center gap-0.5 rounded-full ps-4 pe-2 text-start sm:h-14 sm:px-5 cursor-pointer transition-colors duration-200 motion-reduce:transition-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
             activeSection === "what" ? "bg-muted shadow-xs" : "hover:bg-muted/40",
           )}
           onClick={() => setActiveSection(activeSection === "what" ? null : "what")}
@@ -305,7 +305,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
             aria-controls={activeSection === "distance" ? `${searchId}-distance` : undefined}
             aria-expanded={activeSection === "distance"}
             className={cn(
-              "flex h-14 w-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-full px-2 text-start sm:h-16 sm:w-auto sm:min-w-0 sm:flex-1 sm:items-start sm:px-5 transition-all duration-200 cursor-pointer",
+              "flex h-14 w-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-full px-2 text-start sm:h-14 sm:w-auto sm:min-w-0 sm:flex-1 sm:items-start sm:px-5 cursor-pointer transition-colors duration-200 motion-reduce:transition-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
               activeSection === "distance" ? "bg-muted shadow-xs" : "hover:bg-muted/40",
             )}
             onClick={() => setActiveSection(activeSection === "distance" ? null : "distance")}
@@ -329,7 +329,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           aria-expanded={activeSection === "category"}
           aria-label={`${t("category")}: ${categoryLabel}`}
           className={cn(
-            "flex h-14 w-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-full px-2 text-start sm:h-16 sm:w-auto sm:min-w-0 sm:flex-1 sm:items-start sm:px-5 transition-all duration-200 cursor-pointer",
+            "flex h-14 w-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-full px-2 text-start sm:h-14 sm:w-auto sm:min-w-0 sm:flex-1 sm:items-start sm:px-5 cursor-pointer transition-colors duration-200 motion-reduce:transition-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
             activeSection === "category" ? "bg-muted shadow-xs" : "hover:bg-muted/40",
           )}
           onClick={() => setActiveSection(activeSection === "category" ? null : "category")}
@@ -346,7 +346,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           variant="brand"
           size="icon-lg"
           aria-label={t("search")}
-          className="me-2 size-11 shrink-0 rounded-full shadow-sm hover:scale-105 active:scale-95 transition-all duration-200"
+          className="me-2 size-11 shrink-0 rounded-full shadow-sm transition-transform duration-200 hover:scale-105 active:scale-95 motion-reduce:transition-none"
           disabled={isLocating || isNavigating}
           aria-busy={isLocating || isNavigating}
           onClick={() => handleSearchSubmit()}

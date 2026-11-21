@@ -22,6 +22,9 @@ const PublishListingModal = dynamic(() => import("@/components/modals/PublishLis
   ssr: false,
 });
 
+/** 32px translucent round button over the photo; the pseudo-element pads the hit area to 44px. */
+const ACTION_BUTTON =
+  "relative flex size-8 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm backdrop-blur-xs transition-transform duration-150 after:absolute after:-inset-1.5 after:content-[''] hover:scale-105 hover:bg-background active:scale-95 motion-reduce:transition-none focus-visible:ring-2 focus-visible:ring-ring";
 type ProductCardActionsProps = {
   product: InitialProductStateType;
 };
@@ -68,7 +71,7 @@ export function ProductCardActions({ product }: ProductCardActionsProps) {
         type="button"
         onClick={handleLike}
         disabled={isPending}
-        className="airbnb-action-btn airbnb-action-btn-hover"
+        className={ACTION_BUTTON}
         aria-label="Save listing"
         aria-pressed={isLiked}
         style={gpu120Interactive}
@@ -93,7 +96,7 @@ export function ProductCardActions({ product }: ProductCardActionsProps) {
                 e.preventDefault();
                 e.stopPropagation();
               }}
-              className="airbnb-action-btn airbnb-action-btn-hover"
+              className={ACTION_BUTTON}
               aria-label="report"
               style={gpu120Interactive}
             >
@@ -108,7 +111,7 @@ export function ProductCardActions({ product }: ProductCardActionsProps) {
         <>
           <button
             type="button"
-            className="airbnb-action-btn airbnb-action-btn-hover"
+            className={ACTION_BUTTON}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
