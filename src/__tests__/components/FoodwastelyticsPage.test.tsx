@@ -63,6 +63,8 @@ describe("FoodwastelyticsPage", () => {
     expect(screen.queryByText("Add Waste Entry")).toBeNull();
     expect(screen.queryByText("v2.0 International")).toBeNull();
     expect(screen.queryByText("v2.0")).toBeNull();
+    expect(screen.queryByText("UN SDG 12.3 Target (2030)")).toBeNull();
+    expect(screen.queryByText("Export Intelligence Brief")).toBeNull();
   });
 
   it("renders global food waste intelligence header and planetary macro metrics", () => {
@@ -71,7 +73,6 @@ describe("FoodwastelyticsPage", () => {
     // Header copy
     expect(screen.getByText("Foodwastelytics")).toBeDefined();
     expect(screen.getAllByText(/Planetary food loss accounting/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/UN SDG 12.3 Target/i).length).toBeGreaterThan(0);
 
     // Global Macro indicators
     expect(screen.getAllByText("1.32").length).toBeGreaterThan(0);

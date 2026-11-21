@@ -13,13 +13,11 @@ import {
   BarChart2,
   BarChart3,
   Beef,
-  Check,
   CheckCircle2,
   ChevronRight,
   Compass,
   Cpu,
   DollarSign,
-  Download,
   Droplet,
   Fish,
   Flame,
@@ -126,9 +124,6 @@ const UI = {
   variantLanding: "Landing Page (Editorial)",
   variantDashboard: "Executive Suite (Tabbed)",
   variantStoryboard: "Infographic Story",
-  sdgBadge: "UN SDG 12.3 Target (2030)",
-  exportDownloaded: "Brief Downloaded!",
-  exportButton: "Export Intelligence Brief",
   macroSectionTitle: "The Planetary Food Loss Crisis",
   macroSectionSubtitle:
     "Empirical benchmarks across physical volume, macroeconomic capital, greenhouse gas forcing, and freshwater depletion.",
@@ -763,9 +758,6 @@ export default function FoodwastelyticsPage() {
   // Regional view mode: per-capita vs total-mass
   const [regionalViewMode, setRegionalViewMode] = useState<"perCapita" | "totalMass">("perCapita");
 
-  // Export state
-  const [isExportCopied, setIsExportCopied] = useState(false);
-
   // Filtered Regional Data based on economic scope
   const filteredRegions = useMemo(() => {
     if (economicScope === "high-income") {
@@ -904,62 +896,6 @@ export default function FoodwastelyticsPage() {
     ]);
   };
 
-  const handleExportGlobalBrief = () => {
-    const report = `# FoodShare Foodwastelytics — Global Food Waste Intelligence Brief
-Generated: ${new Date().toLocaleDateString()}
-Standards: UNEP Food Waste Index 2024 • UN FAO Food Loss Index • UN SDG 12.3
-
-## 1. Executive Summary & Planetary Macro Indicators
-- Global Edible Food Discarded: 1.32 Billion Metric Tonnes / year (33.3% of global harvest)
-- Direct Economic Loss: $1.05 Trillion USD / year ($2.6T societal & environmental cost)
-- Greenhouse Gas Impact: 3.80 GigaTonnes CO₂e / year (8% - 10% of total global emissions)
-- Irrigation Freshwater Lost: 252 km³ / year (3× the volume of Lake Geneva)
-- Arable Land Lost to Unconsumed Crops: 1.40 Billion Hectares (28% of Earth's agricultural area)
-- Caloric Recovery Capacity: Sufficient to nourish 1.26 Billion individuals worldwide
-
-## 2. Supply Chain Loss Distribution (Farm-to-Fork)
-1. Agricultural Production: 520 Million Tonnes (39% of loss) — Aesthetic grading, unharvested acreage
-2. Post-Harvest & Cold Chain: 350 Million Tonnes (26% of loss) — Broken cold chain, silo spoilage
-3. Industrial Processing: 160 Million Tonnes (12% of loss) — Trimming, sorting calibration
-4. Wholesale & Retail: 210 Million Tonnes (16% of loss) — Expiry clearance, overstocking
-5. Consumer & Foodservice: 610 Million Tonnes (46% of downstream stream) — Date label confusion, plate waste
-
-## 3. UN SDG 12.3 Halving Target Projections (${targetReductionPct}% Target Selected)
-- Annual Food Saved: ${simulatedReductionMetrics.divertedTonnesMillions} Million Metric Tonnes
-- Direct Capital Saved: +$${simulatedReductionMetrics.capitalSavedBillions} Billion USD
-- Prevented Greenhouse Gas: ${simulatedReductionMetrics.co2AvoidedGigatonnes} Gt CO₂e
-- Freshwater Conserved: ${simulatedReductionMetrics.waterSavedKm3} km³
-- Undernourished Population Nourished: ${simulatedReductionMetrics.peopleFedMillions} Million People
-
-## 4. UNEP Regional Benchmarks
-${REGIONAL_BENCHMARKS.map(
-  (r) =>
-    `- ${r.region}: ${r.perCapitaKg} kg/capita/year | Total: ${r.totalLossMt} Mt/yr | Primary Loss Stage: ${r.primaryStage}`,
-).join("\n")}
-
-## 5. Commodity Vulnerability & Carbon Disparity
-${COMMODITY_MATRIX.map(
-  (c) =>
-    `- ${c.name}: ${c.lossRatePct}% discarded | ${c.annualLossMt} Mt loss | ${c.carbonIntensity} kg CO₂e/kg footprint`,
-).join("\n")}
-
-Published by FoodShare Foodwastelytics (https://foodshare.club/foodwastelytics)
-`;
-
-    const blob = new Blob([report], { type: "text/markdown;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `foodwastelytics-global-brief-${new Date().toISOString().slice(0, 10)}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    setIsExportCopied(true);
-    setTimeout(() => setIsExportCopied(false), 2500);
-  };
-
   return (
     <div className="min-h-screen text-foreground font-sans antialiased flex flex-col flex-1 pb-16">
       <FloatingOrbs opacity={0.12} />
@@ -1016,29 +952,6 @@ Published by FoodShare Foodwastelytics (https://foodshare.club/foodwastelytics)
                 {UI.scopeDeveloping}
               </button>
             </div>
-
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
-              <Target className="size-3.5" />
-              <span>{UI.sdgBadge}</span>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleExportGlobalBrief}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-card hover:bg-muted border border-border/60 text-foreground text-xs font-semibold shadow-xs transition-all cursor-pointer"
-            >
-              {isExportCopied ? (
-                <>
-                  <Check className="size-3.5 text-emerald-500" />
-                  <span className="text-emerald-500 font-bold">{UI.exportDownloaded}</span>
-                </>
-              ) : (
-                <>
-                  <Download className="size-3.5 text-muted-foreground" />
-                  <span>{UI.exportButton}</span>
-                </>
-              )}
-            </button>
           </div>
         </div>
 
