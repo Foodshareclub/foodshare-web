@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { ProductCard } from "@/components/productCard/ProductCard";
 import type { InitialProductStateType } from "@/types/product.types";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 mock.module("next/navigation", () => ({
   useRouter: () => ({ push: mock(), refresh: mock() }),
@@ -18,9 +18,17 @@ mock.module("@/hooks/useAuth", () => ({
 }));
 
 mock.module("next/image", () => ({
-  default: ({ src, alt, className }: { src: string; alt: string; className?: string }) => (
-    <img src={src} alt={alt} className={className} />
-  ),
+  default: ({
+    src,
+    alt,
+    className,
+    onError,
+  }: {
+    src: string;
+    alt: string;
+    className?: string;
+    onError?: () => void;
+  }) => <img src={src} alt={alt} className={className} onError={onError} />,
 }));
 
 afterEach(cleanup);
@@ -35,7 +43,7 @@ const baseProduct: InitialProductStateType = {
   created_at: new Date().toISOString(),
   five_star: null,
   four_star: null,
-  images: ["https://example.com/avocado.jpg"],
+  images: ["https://api.foodshare.club/storage/v1/object/public/food-images/user/avocado.jpg"],
   location: "0101000020E610000000000000000000000000000000000000",
   post_address: "123 Green St, Portland, OR",
   post_stripped_address: "123 Green St, Portland",
@@ -93,13 +101,53 @@ describe("ProductCard Airbnb Design", () => {
     expect(screen.getByText("Oregon Food Bank")).toBeTruthy();
   });
 
-  test("renders organic fallback placeholder when images are empty", () => {
-    const noImageProduct: InitialProductStateType = {
-      ...baseProduct,
-      images: [],
+  test("shows the transient finding-a-photo state instead of the static icon when images are empty", () => {
+    render(<ProductCard product={{ ...baseProduct, images: [] }} />);
+    const status = screen.getByRole("status");
+    expect(status.getAttribute("aria-label")).toBe("Finding a photo for this Community Food listing…");
+    expect(screen.queryByTestId("cover-credit")).toBeNull();
+  });
+  test("shows the transient state when every image fails to load", () => {
+    render(<ProductCard product={baseProduct} />);
+    fireEvent.error(screen.getByAltText("Fresh Organic Avocados"));
+    expect(screen.getByTestId("finding-photo")).toBeTruthy();
+  });
+  test("renders a stored reference cover with disclosure and source/license credit", () => {
+    const cover = {
+      kind: "reference",
+      provider: "wikimedia-commons",
+      sourcePageUrl: "https://commons.wikimedia.org/wiki/File:Avocado.jpg",
+      license: "CC BY-SA 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
+      artist: "<a href='x'>Jane Doe</a>",
+      disclosure: "Reference image; not a photograph of the listed item",
     };
-    render(<ProductCard product={noImageProduct} />);
-
-    expect(screen.getByText("Community Food")).toBeTruthy();
+    render(
+      <ProductCard
+        product={{
+          ...baseProduct,
+          images: [
+            "https://api.foodshare.club/storage/v1/object/public/food-images/user/reference-covers/" +
+              "a".repeat(64) +
+              ".jpeg",
+          ],
+          metadata: { cover },
+        }}
+      />,
+    );
+    expect(screen.getByText("Reference image; not a photograph of the listed item")).toBeTruthy();
+    const source = screen.getByText(/Source: Wikimedia Commons · Jane Doe/).closest("a");
+    expect(source?.getAttribute("href")).toBe(cover.sourcePageUrl);
+    expect(source?.getAttribute("target")).toBe("_blank");
+    expect(source?.getAttribute("rel")).toBe("noopener noreferrer");
+    expect(screen.getByText("CC BY-SA 4.0").closest("a")?.getAttribute("href")).toBe(cover.licenseUrl);
+  });
+  test("ignores malformed cover provenance", () => {
+    render(
+      <ProductCard
+        product={{ ...baseProduct, metadata: { cover: { kind: "reference", sourcePageUrl: "javascript:alert(1)" } } }}
+      />,
+    );
+    expect(screen.queryByTestId("cover-credit")).toBeNull();
   });
 });

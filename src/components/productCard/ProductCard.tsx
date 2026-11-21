@@ -1,3 +1,4 @@
+import { getCoverCredit } from "@/lib/cover-provenance";
 import { standardizeDisplayAddress } from "@/lib/address-standardizer";
 import { formatFirstAuthorName } from "@/lib/data/author-display";
 import type { InitialProductStateType } from "@/types/product.types";
@@ -68,6 +69,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave, onClick }: Pr
           productId={product.id}
           postName={product.post_name}
           postType={product.post_type}
+          cover={getCoverCredit(product.metadata)}
         />
       </div>
 

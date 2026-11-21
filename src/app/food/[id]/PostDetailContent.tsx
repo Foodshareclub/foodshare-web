@@ -9,13 +9,15 @@ import { PostTypeBadge } from "@/components/post/PostTypeBadge";
 import { ReportPostDialog } from "@/components/reports";
 import { ShareButton } from "@/components/share/ShareButton";
 import { Badge } from "@/components/ui/badge";
+import { CoverCreditLine, FindingPhotoState } from "@/components/productCard/CoverStatus";
 import { ReferencePhotoDisclosure } from "@/components/productCard/ReferencePhotoDisclosure";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { standardizeDisplayAddress } from "@/lib/address-standardizer";
 import type { AuthUser } from "@/lib/data/auth";
 import { formatFirstAuthorName } from "@/lib/data/author-display";
-import { normalizeImageUrl } from "@/lib/image";
+import { getCoverCredit } from "@/lib/cover-provenance";
+import { isReferenceImageUrl, normalizeImageUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
 import {
@@ -30,7 +32,6 @@ import {
   Flag,
   Heart,
   MapPin,
-  Package,
   PauseCircle,
   Sparkles,
   Star,
@@ -67,6 +68,7 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const validImages = [...new Set(post.images?.map(normalizeImageUrl).filter((url): url is string => !!url))];
   const heroImage = validImages.find((url) => !failedImages[url]);
+  const coverCredit = getCoverCredit(post.metadata);
 
   // Airbnb rating and review count computation
   const hasRating = (post.five_star != null && post.five_star > 0) || (post.four_star != null && post.four_star > 0);
@@ -215,25 +217,20 @@ export function PostDetailContent({ post, user, isAdmin = false, isModal = false
               onError={() => setFailedImages((previous) => ({ ...previous, [heroImage]: true }))}
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-amber-500/10 via-emerald-500/5 to-teal-500/10 dark:from-amber-950/25 dark:via-neutral-900 dark:to-emerald-950/20 flex flex-col items-center justify-center p-6 text-muted-foreground relative">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-80" />
-              <div className="relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/60 bg-white/70 px-6 py-5 shadow-xs backdrop-blur-md dark:border-white/10 dark:bg-neutral-900/70">
-                <span className="flex size-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Package className="size-7" strokeWidth={1.75} aria-hidden="true" />
-                </span>
-                <span className="text-xs font-semibold tracking-wider text-foreground/80 uppercase">
-                  {post.post_type === "food" || post.post_type === "vegan" ? "Community Food" : "Community Listing"}
-                </span>
-              </div>
-            </div>
+            <FindingPhotoState
+              label={post.post_type === "food" || post.post_type === "vegan" ? "Community Food" : "Community Listing"}
+            />
           )}
 
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
           <div className="pointer-events-none absolute start-4 top-4 max-w-[calc(100%-7rem)]">
-            <ReferencePhotoDisclosure image={heroImage} />
+            {!coverCredit && <ReferencePhotoDisclosure image={heroImage} />}
           </div>
+          {coverCredit && heroImage && heroImage === validImages[0] && isReferenceImageUrl(heroImage) && (
+            <CoverCreditLine credit={coverCredit} className="absolute start-4 bottom-4 z-10 max-w-[calc(100%-8rem)]" />
+          )}
 
           {/* Photo count badge */}
           {validImages.length > 1 && (

@@ -1,13 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { isValidImageUrl, normalizeImageUrl } from "@/lib/image";
+import { type CoverCredit } from "@/lib/cover-provenance";
+import { isReferenceImageUrl, isValidImageUrl, normalizeImageUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Leaf, Package } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
+import { CoverCreditLine, FindingPhotoState } from "./CoverStatus";
 import { LISTING_PHOTO } from "./listing-layout";
 
 type ImageCarouselProps = {
@@ -16,15 +17,16 @@ type ImageCarouselProps = {
   productId: number;
   postName: string;
   postType: string;
+  /** Provenance of a stored reference cover (`posts.metadata.cover`). */
+  cover?: CoverCredit | null;
 };
 
-export function ImageCarousel({ images, productUrl, productId, postName, postType }: ImageCarouselProps) {
+export function ImageCarousel({ images, productUrl, productId, postName, postType, cover }: ImageCarouselProps) {
   const t = useTranslations();
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const validImages = [...new Set(images.filter(isValidImageUrl).map((url) => normalizeImageUrl(url) as string))];
-  const PlaceholderIcon = postType === "food" || postType === "vegan" ? Leaf : Package;
   const placeholderLabel =
     postType === "food" || postType === "vegan"
       ? "Community Food"
@@ -33,21 +35,9 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
         : postType === "foodbank"
           ? "Food Bank"
           : "Community Item";
-
-  const placeholder = (
-    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-amber-500/10 via-emerald-500/5 to-teal-500/10 dark:from-amber-950/25 dark:via-neutral-900 dark:to-emerald-950/20 text-muted-foreground p-4">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-80" />
-      <div className="relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/60 bg-white/70 px-5 py-4 shadow-xs backdrop-blur-md transition-all duration-300 group-hover/card:scale-105 group-hover/card:shadow-md dark:border-white/10 dark:bg-neutral-900/70">
-        <span className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <PlaceholderIcon className="size-6" strokeWidth={1.75} aria-hidden="true" />
-        </span>
-        <span className="text-[11px] font-semibold tracking-wider text-foreground/80 uppercase">
-          {placeholderLabel}
-        </span>
-      </div>
-    </div>
-  );
-
+  const placeholder = <FindingPhotoState label={placeholderLabel} />;
+  const allDead = validImages.length > 0 && validImages.every((image) => imageErrors[image]);
+  const showCredit = !!cover && !allDead && activeIndex === 0 && isReferenceImageUrl(validImages[0]);
   const handleScroll = () => {
     const element = scrollRef.current;
     if (!element || !element.clientWidth) return;
@@ -69,7 +59,7 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
     setActiveIndex(index);
   };
 
-  if (validImages.length === 0) {
+  if (validImages.length === 0 || allDead) {
     return (
       <Link
         href={productUrl}
@@ -117,6 +107,7 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
         ))}
       </div>
 
+      {showCredit && cover && <CoverCreditLine credit={cover} className="absolute inset-x-2 bottom-2 z-10" />}
       {validImages.length > 1 && (
         <>
           {/* Airbnb-style Navigation Arrows: centered vertically, circular, revealed on hover */}
