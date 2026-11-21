@@ -258,8 +258,13 @@ jobs:
       # `patches/` travels with the artifact: `patchedDependencies` is applied
       # during `bun install`, so the e2e job needs the patch file to rebuild
       # node_modules with the same patched Playwright.
+      #
+      # `.next/cache` stays out. It is the compiler cache, not runtime output:
+      # `next start` never reads it, and the build cache has its own entry in
+      # the actions cache. Including it made this artifact about 379 MB, which
+      # all sixteen e2e shards then downloaded and unpacked.
       - name: Tar build output
-        run: tar -cvf build-output.tar .next public messages package.json bun.lock patches
+        run: tar --exclude='.next/cache' -cvf build-output.tar .next public messages package.json bun.lock patches
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
