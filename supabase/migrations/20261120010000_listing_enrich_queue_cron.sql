@@ -82,11 +82,18 @@ COMMENT ON FUNCTION public.invoke_listing_enrich_queue() IS 'Drains the listing_
 GRANT EXECUTE ON FUNCTION public.invoke_listing_enrich_queue() TO postgres, service_role;
 
 -- Ensure pg_cron schedule is active (every 5 min).
+-- Existing rows are removed by jobid: `cron.unschedule(text)` only matches jobs
+-- owned by current_user, and a failure swallowed below would leave the old job
+-- running next to the new one.
 DO $$
+DECLARE
+  r record;
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
     BEGIN
-      PERFORM cron.unschedule('listing-enrich-queue-drain');
+      FOR r IN SELECT jobid FROM cron.job WHERE jobname = 'listing-enrich-queue-drain' LOOP
+        PERFORM cron.unschedule(r.jobid);
+      END LOOP;
     EXCEPTION WHEN OTHERS THEN
       NULL;
     END;

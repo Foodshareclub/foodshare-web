@@ -2,8 +2,15 @@
 --
 -- Unlike 20261108180000, which collapses rows that share a *name*, these are
 -- different names that fire the same target, so name-based dedup cannot see
--- them. Each is removed by name, only if present, so the migration is a no-op
--- on a database that has already been cleaned and on one without pg_cron.
+-- them. Each name is looked up in cron.job and every row carrying it is removed
+-- by jobid, so the migration is a no-op on a database that has already been
+-- cleaned and on one without pg_cron.
+--
+-- By jobid, never `cron.unschedule(name)`: pg_cron's text overload matches only
+-- jobs owned by current_user and raises "could not find valid entry for job"
+-- for a job another role owns, even though the superuser running this migration
+-- can see the row in cron.job. The bigint overload removes any owner's job for
+-- a superuser (deploy run 45056807758 failed on the by-name form).
 --
 -- Kept / removed:
 --   api-v1-localization/backfill-challenges
@@ -35,14 +42,15 @@ DECLARE
     'domain-monitor-check'
   ];
   j text;
+  r record;
 BEGIN
   IF to_regclass('cron.job') IS NULL THEN
     RAISE NOTICE 'pg_cron is not installed; no schedules to remove';
     RETURN;
   END IF;
   FOREACH j IN ARRAY doomed LOOP
-    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = j) THEN
-      PERFORM cron.unschedule(j);
-    END IF;
+    FOR r IN SELECT jobid FROM cron.job WHERE jobname = j LOOP
+      PERFORM cron.unschedule(r.jobid);
+    END LOOP;
   END LOOP;
 END $$;
