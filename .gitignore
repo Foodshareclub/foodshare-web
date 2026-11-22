@@ -70,3 +70,5 @@ logs/
 .check-classes-*/
 .check-adornments-*/
 .check-i18n-text-*/
+# Local design files (App Store, Cards, Infographics; ~845 MB), not app source
+/assets/

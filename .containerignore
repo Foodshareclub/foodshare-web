@@ -24,3 +24,5 @@ test-results/
 .turbo
 .eslintcache
 bundle-report.html
+# Local design files at the repo root; the build never reads them
+/assets/
