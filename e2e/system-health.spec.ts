@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("System Health Checks & Resilience", () => {
-  test("Web application health endpoint returns 200 OK", async ({ request }) => {
+  test("Web application health endpoint returns 200 OK", async ({
+    request,
+  }) => {
     // Attempt to hit the healthcheck route
     const response = await request.get("/api/health");
 
@@ -14,7 +16,11 @@ test.describe("System Health Checks & Resilience", () => {
     // Verify the response body indicates health
     const data = await response.json();
     expect(data).toHaveProperty("status");
-    expect(["ok", "healthy"]).toContain(data.status);
+    // Task 23.1 (2026-11-21) widened the health contract: while the estate
+    // serves on its local fallbacks (breaker open, or a non-database probe
+    // down) the endpoint answers 200 + "degraded" instead of failing.
+    // "unhealthy" (database down) answers 503 and is caught by response.ok().
+    expect(["ok", "healthy", "degraded"]).toContain(data.status);
   });
 
   test("SSR Hydration & Turbopack Cache Integrity", async ({ page }) => {
