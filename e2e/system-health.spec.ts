@@ -1,9 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("System Health Checks & Resilience", () => {
-  test("Web application health endpoint returns 200 OK", async ({
-    request,
-  }) => {
+  test("Web application health endpoint returns 200 OK", async ({ request }) => {
     // Attempt to hit the healthcheck route
     const response = await request.get("/api/health");
 
