@@ -105,7 +105,10 @@ Deno.test("generated types: no column type is unmapped", () => {
 
   // And the exception must still exist, or the list above is a ratchet on
   // nothing.
-  const geographyColumns = unmapped.filter((u) => isGeography(u.type)).reduce((n, u) => n + u.columns.length, 0);
+  const geographyColumns = unmapped.filter((u) => isGeography(u.type)).reduce(
+    (n, u) => n + u.columns.length,
+    0,
+  );
   assert(
     geographyColumns === 6,
     "expected the 6 documented geography columns to still be unmapped, found " +
