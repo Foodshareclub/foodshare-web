@@ -27,18 +27,24 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
-  # The web repository carries a vendored copy of the backend's migrations,
-  # and the test that proves the two are the same is skipped when the
-  # backend is not there -- which is everywhere in CI, because the
-  # repositories are siblings in a developer's checkout and not in a
-  # runner's.
+  # The web repository carries a vendored copy of the backend's
+  # `supabase/functions`, `supabase/migrations` and
+  # `scripts/external-monitor.sh`. It is not what production executes
+  # (the app talks to the backend's Supabase project), but the mirror is
+  # a load-bearing recurrence control, not a convenience: the
+  # dangling-42c2b998 class (a guard synced from an unpushed backend
+  # commit, then worktree discarded) hid for weeks because the only
+  # comparison ran at web-sync time, against the tree it had just been
+  # copied from.
   #
-  # The copy had drifted, and only a machine with both repositories on it
-  # could see it. This is that check, in CI.
-  #
-  # It is a report, not a gate. The vendored copy is not what the deployed
-  # app runs on -- the app talks to the backend's Supabase -- so a stale
-  # copy must not be able to stop a deployment.
+  # This job is a GATE, not a report. It compares against the backend's
+  # LIVE origin/main (via CROSS_REPO_TOKEN — never the sync-SHA the copy
+  # was taken from) and blocks the production image on any divergence in
+  # either direction: web-only files mean a sync from an unpushed or
+  # dead ref; backend-only or modified files mean the backend advanced
+  # and the mirror went stale. Zero divergence, byte-exact, no
+  # formatting exceptions, no allowlist — a file with a "known delta" is
+  # exactly where a future dropped guard hides.
   vendored:
     name: The vendored copies match their sources
     runs-on: ubuntu-24.04
@@ -52,16 +58,15 @@ jobs:
           path: .compat/backend
           token: ${{ secrets.CROSS_REPO_TOKEN }}
 
-      - name: The migrations are the backend's
-        run: |
-          diff -r supabase/migrations .compat/backend/supabase/migrations
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
 
-      - name: The edge functions are the backend's
-        run: |
-          diff -r --exclude=node_modules supabase/functions .compat/backend/supabase/functions
-
-      - name: The external monitor matches the backend source
-        run: cmp scripts/external-monitor.sh .compat/backend/scripts/external-monitor.sh
+      # One owner of the vendored list: the same comparison the local
+      # pre-push gate and the sync's self-proof use. Fails the workflow —
+      # and the build, which needs this job — on the first divergence.
+      - name: The vendored copies are the backend's, byte-exact (hard gate)
+        run: bun scripts/check-vendored.ts --backend-dir .compat/backend
 
   # Combined validation job - runs TSRS, Bun formatting, domain checks and tests in parallel
   validate:
@@ -128,7 +133,10 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-24.04
-    needs: validate
+    # The vendored mirror is a hard gate: a divergent vendored tree is
+    # the dangling-42c2b998 class, and it must not reach the production
+    # image.
+    needs: [validate, vendored]
     timeout-minutes: 30
     outputs:
       build-artifact: build-output
