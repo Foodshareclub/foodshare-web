@@ -124,7 +124,7 @@ CREATE OR REPLACE VIEW public.posts_with_location WITH (security_invoker='true')
     p.profile_id,
     p.images,
     p.post_views,
-    NULL::extensions.geography AS location,
+    NULL::extensions.geography(Point,4326) AS location,
     CASE
       WHEN f.latitude IS NULL THEN NULL
       ELSE jsonb_build_object(
