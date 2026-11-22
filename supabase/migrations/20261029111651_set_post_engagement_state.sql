@@ -1,6 +1,6 @@
 -- Desired-state writes are safe to repeat after a lost response. Share the
 -- advisory lock namespace with legacy toggles so both APIs serialize together.
-CREATE SCHEMA engagement_private;
+CREATE SCHEMA IF NOT EXISTS engagement_private;
 REVOKE ALL ON SCHEMA engagement_private FROM PUBLIC, anon;
 GRANT USAGE ON SCHEMA engagement_private TO authenticated, service_role;
 
