@@ -127,12 +127,8 @@ export default async function DonationPage() {
           <span className="inline-flex items-center gap-2 rounded-full bg-brand/10 px-4 py-1.5 text-xs font-medium uppercase tracking-wider text-brand">
             {t("hero_badge")}
           </span>
-          <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-            {t("hero_title")}
-          </h1>
-          <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            {t("hero_subtitle")}
-          </p>
+          <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-foreground md:text-5xl">{t("hero_title")}</h1>
+          <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">{t("hero_subtitle")}</p>
         </div>
 
         {/* Primary CTA panel */}
@@ -141,9 +137,7 @@ export default async function DonationPage() {
             <span className="flex size-16 items-center justify-center rounded-full bg-brand/10">
               <Heart className="size-8 text-brand" />
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-              {t("cta_title")}
-            </h2>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">{t("cta_title")}</h2>
             <p className="leading-relaxed text-muted-foreground">{t("cta_body")}</p>
             <DonateButton kofiUrl={KOFI_URL} variant="hero" label={t("kofi_hero")} />
 
@@ -185,19 +179,13 @@ export default async function DonationPage() {
           <p className="mx-auto max-w-3xl text-center text-xl leading-relaxed text-muted-foreground">
             {t("mission_statement")}
           </p>
-          <p className="mt-6 text-center text-lg font-bold text-brand">
-            {t("founder_attribution")}
-          </p>
+          <p className="mt-6 text-center text-lg font-bold text-brand">{t("founder_attribution")}</p>
         </div>
 
         {/* Final CTA */}
         <div className="mt-16 flex flex-col items-center gap-4 text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-            {t("final_cta_title")}
-          </h2>
-          <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            {t("final_cta_body")}
-          </p>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">{t("final_cta_title")}</h2>
+          <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">{t("final_cta_body")}</p>
           <div className="mt-4 flex flex-col gap-4 sm:flex-row">
             <DonateButton kofiUrl={KOFI_URL} variant="cta" label={t("kofi_cta")} />
             <Button variant="brand-outline" size="xl" asChild>
@@ -218,17 +206,7 @@ export default async function DonationPage() {
  * green" split made it look like a different product. The icon chip, value and
  * body all use the semantic tokens so dark mode resolves from the theme.
  */
-function ImpactCard({
-  Icon,
-  value,
-  title,
-  body,
-}: {
-  Icon: LucideIcon;
-  value: string;
-  title: string;
-  body: string;
-}) {
+function ImpactCard({ Icon, value, title, body }: { Icon: LucideIcon; value: string; title: string; body: string }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-6 shadow-sm transition-shadow hover:shadow-md">
       <span className="flex size-12 items-center justify-center rounded-full bg-brand/10">
