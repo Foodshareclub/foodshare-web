@@ -19,8 +19,13 @@
  *       sync is refused while the commit is unpushed, the web tree is
  *       left untouched, and the only path forward is pushing the
  *       artifact to origin/main and syncing from the tip.
+ *
+ * Order-independence: the repo runs the suite in a random order
+ * (test:order) on purpose. Every test that mutates a fixture therefore
+ * owns a fresh one (beforeEach/afterEach), and the end-to-end story is
+ * a single sequential test instead of two state-sharing ones.
  */
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
 import {
   cpSync,
@@ -122,11 +127,19 @@ class DanglingFixture {
     git(this.backend, "push", "-q", "origin", "main");
   }
 
-  /** Seed `web` with a correctly-synced copy of the three vendored paths. */
-  seedWebFromPushed(): void {
+  /**
+   * Push the three vendored files as the base commit and seed `web` with
+   * a correctly-synced copy. Returns the pushed base sha.
+   */
+  seedBaseMirror(): string {
+    this.commit(this.backend, MIGRATION, MIGRATION_V1);
+    this.commit(this.backend, FUNCTION, FUNCTION_UNGUARDED);
+    this.commit(this.backend, MONITOR, MONITOR_V1);
+    this.pushBackend();
     for (const [rel, content] of this.pushedTree()) {
       writeRepoFile(this.web, rel, content);
     }
+    return git(this.origin, "rev-parse", "refs/heads/main");
   }
 
   /** Tree of the backend at its origin/main tip (what a sync may use). */
@@ -145,16 +158,11 @@ class DanglingFixture {
 
 describe("compareVendored — the hard F1-mirror gate (leg C)", () => {
   const fx = new DanglingFixture();
-  beforeAll(() => fx.setup());
-  afterAll(() => fx.cleanup());
+  beforeEach(() => fx.setup());
+  afterEach(() => fx.cleanup());
 
   test("zero divergence → empty report", () => {
-    const base = fx.commit(fx.backend, MIGRATION, MIGRATION_V1);
-    fx.commit(fx.backend, FUNCTION, FUNCTION_UNGUARDED);
-    fx.commit(fx.backend, MONITOR, MONITOR_V1);
-    fx.pushBackend();
-    fx.seedWebFromPushed();
-    expect(base).toHaveLength(40);
+    fx.seedBaseMirror();
     const report = compareVendored(fx.web, fx.backend);
     expect(report.divergences).toEqual([]);
     expect(report.filesCompared).toBeGreaterThan(0);
@@ -163,14 +171,15 @@ describe("compareVendored — the hard F1-mirror gate (leg C)", () => {
   test("catches the dangling class: a guard only in web (only-in-web)", () => {
     // The web carries service-auth.ts; the backend's origin/main does not.
     // This is the exact direction of dangling-42c2b998.
+    fx.seedBaseMirror();
     writeRepoFile(fx.web, GUARD, GUARD_SRC);
     const report = compareVendored(fx.web, fx.backend);
     expect(report.divergences).toEqual([{ path: GUARD, kind: "only-in-web" }]);
   });
 
   test("catches a stale mirror: backend advanced (only-in-backend + modified)", () => {
-    // Remove the web-only guard, then advance the backend past the mirror.
-    rmSync(join(fx.web, GUARD), { force: true });
+    fx.seedBaseMirror();
+    // The backend advances past the mirror: one modified, one new file.
     fx.commit(fx.backend, FUNCTION, FUNCTION_GUARDED);
     fx.commit(
       fx.backend,
@@ -186,22 +195,21 @@ describe("compareVendored — the hard F1-mirror gate (leg C)", () => {
 
 describe("verifySyncSource — vendor-sync provenance (leg B)", () => {
   const fx = new DanglingFixture();
-  beforeAll(() => fx.setup());
-  afterAll(() => fx.cleanup());
-
   let baseSha = "";
   let unpushedSha = "";
 
   beforeAll(() => {
-    fx.commit(fx.backend, MIGRATION, MIGRATION_V1);
-    baseSha = git(fx.backend, "rev-parse", "HEAD");
-    fx.pushBackend();
-    // The guard lands only on a local commit (the worktree shape): present
-    // in the object store, absent from origin.
+    fx.setup();
+    // Base state: a pushed base, then a guard commit stranded on a local
+    // (unpushed) commit — the worktree shape of the incident.
+    baseSha = fx.seedBaseMirror();
     writeRepoFile(fx.backend, GUARD, GUARD_SRC);
     fx.commit(fx.backend, FUNCTION, FUNCTION_GUARDED);
     unpushedSha = git(fx.backend, "rev-parse", "HEAD");
   });
+  afterAll(() => fx.cleanup());
+
+  // Both tests are read-only over the shared state; order-independent.
 
   test("refuses a commit that is not reachable from origin/main", () => {
     // verifySyncSource is synchronous: it throws, it does not reject.
@@ -224,47 +232,39 @@ describe("syncFromSource end-to-end — the dangling-42c2b998 scenario cannot co
   beforeAll(() => fx.setup());
   afterAll(() => fx.cleanup());
 
-  let guardSha = "";
-
-  test("an unpushed guard is refused at sync and the web tree is untouched", async () => {
-    // Base state: backend main pushed, web a correct mirror of it.
-    fx.commit(fx.backend, MIGRATION, MIGRATION_V1);
-    fx.commit(fx.backend, FUNCTION, FUNCTION_UNGUARDED);
-    fx.commit(fx.backend, MONITOR, MONITOR_V1);
-    fx.pushBackend();
-    fx.seedWebFromPushed();
+  // One sequential story: refuse → discard → push → converge. Splitting it
+  // into order-independent tests would break the narrative the card names.
+  test("an unpushed guard is refused; after it is pushed, the sync converges byte-exact", () => {
+    // 1. Base state: backend main pushed, web a correct mirror of it.
+    fx.seedBaseMirror();
     const before = treeSnapshot(fx.web);
 
-    // The guard lands only on a local (unpushed) commit.
+    // 2. The guard lands only on a local (unpushed) commit.
     writeRepoFile(fx.backend, GUARD, GUARD_SRC);
     fx.commit(fx.backend, FUNCTION, FUNCTION_GUARDED);
-    guardSha = git(fx.backend, "rev-parse", "HEAD");
+    const guardSha = git(fx.backend, "rev-parse", "HEAD");
 
-    // The sync must refuse fail-closed, before any copy happens.
+    // 3. The sync must refuse fail-closed, before any copy happens.
     expect(() => syncFromSource(fx.backend, fx.web, guardSha)).toThrow(/provenance REFUSED/);
 
-    // Web tree byte-identical to before the attempt: no partial copy, and
-    // the guard never arrived.
+    // 4. Web tree byte-identical to before the attempt: no partial copy,
+    //    and the guard never arrived.
     expect(treeSnapshot(fx.web)).toEqual(before);
     expect(existsSync(join(fx.web, GUARD))).toBe(false);
-  });
 
-  test("after the artifact is pushed, syncing from the tip converges byte-exact", async () => {
-    // The worktree is discarded: the local ref moves off the guard, leaving
-    // the commit dangling in the object store.
+    // 5. The worktree is discarded: the local ref moves off the guard,
+    //    leaving the commit dangling in the object store.
     git(fx.backend, "reset", "--hard", "HEAD~1");
 
-    // The operator recovers the artifact the only legal way: it is pushed
-    // to the named ref.
+    // 6. The operator recovers the artifact the only legal way: it is
+    //    pushed to the named ref.
     git(fx.backend, "push", "-q", "origin", `${guardSha}:main`);
 
+    // 7. Syncing from the tip now converges byte-exact.
     const result = syncFromSource(fx.backend, fx.web);
     expect(result.sha).toBe(guardSha);
     expect(result.tip).toBe(guardSha);
-
-    // The web now carries exactly the backend's origin/main tree.
-    const expected = fx.pushedTree();
-    expect(treeSnapshot(fx.web)).toEqual(expected);
+    expect(treeSnapshot(fx.web)).toEqual(fx.pushedTree());
     expect(readFileSync(join(fx.web, GUARD), "utf8")).toBe(GUARD_SRC);
     expect(statSync(join(fx.web, GUARD)).isFile()).toBe(true);
   });
@@ -274,6 +274,9 @@ describe("CLI contract — the command the CI vendored job runs", () => {
   const fx = new DanglingFixture();
   beforeAll(() => fx.setup());
   afterAll(() => fx.cleanup());
+
+  // Each test builds its own backend fixture under its own subdirectory;
+  // the shared fixture only provides the temp root. Order-independent.
 
   test("exits 1 and names the divergence when the trees differ", () => {
     // A backend fixture that differs from the repo's real vendored tree.
