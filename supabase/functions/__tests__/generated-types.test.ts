@@ -84,10 +84,12 @@ Deno.test("generated types: no column type is unmapped", () => {
   // a GeoJSON object or a WKT string — so neither `string` nor a point type
   // would be a fact. `unknown` makes every use of those six columns a
   // deliberate act rather than an accident.
-  const ALLOWED = new Set(["extensions.geography"]);
+  // The type carries its modifier (`geography(Point,4326)` in production, a
+  // stand-in encoding in the oracle), so it is matched with or without one.
+  const isGeography = (type: string) => /^extensions\.geography(\(.*\))?$/.test(type);
 
   const unexpected = unmapped
-    .filter((u) => !ALLOWED.has(u.type))
+    .filter((u) => !isGeography(u.type))
     .map((u) => `${u.type}  (${u.columns.length}: ${u.columns.slice(0, 3).join(", ")})`);
 
   assertEquals(
@@ -103,12 +105,12 @@ Deno.test("generated types: no column type is unmapped", () => {
 
   // And the exception must still exist, or the list above is a ratchet on
   // nothing.
-  const geography = unmapped.find((u) => u.type === "extensions.geography");
+  const geographyColumns = unmapped.filter((u) => isGeography(u.type)).reduce((n, u) => n + u.columns.length, 0);
   assert(
-    geography !== undefined && geography.columns.length === 6,
+    geographyColumns === 6,
     "expected the 6 documented geography columns to still be unmapped, found " +
-      `${geography?.columns.length ?? 0}. Either the mapping was added — in ` +
-      "which case delete this assertion and the ALLOWED entry — or a column " +
+      `${geographyColumns}. Either the mapping was added — in ` +
+      "which case delete this assertion and the geography exemption — or a column " +
       "changed type, in which case the comment above is out of date.",
   );
 });

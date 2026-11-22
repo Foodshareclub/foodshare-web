@@ -554,11 +554,11 @@ Deno.test("oracle: the substitutions that change the catalog are recorded in it"
   // only the containment check above, flipping any flag to `false` shrank the
   // expected set and still passed.
   //
-  // The four that alter the catalog, and why:
+  // The four that alter the catalog, and why (`geography` is not among them:
+  // the stand-in carries the typmod itself, so the modifier is not rewritten):
   //
   //   airtable-foreign-table-options  the foreign table exists either way, but
   //                                  its recorded definition differs
-  //   geography-typmod                `atttypmod` on the location columns
   //   vector-typmod                   `atttypmod` on posts.embedding
   //   hnsw-index                      the access method in the index definition
   //   postgis-gist-index              likewise, for the two spatial indexes
@@ -572,7 +572,6 @@ Deno.test("oracle: the substitutions that change the catalog are recorded in it"
     affecting.slice().sort(),
     [
       "airtable-foreign-table-options",
-      "geography-typmod",
       "hnsw-index",
       "postgis-gist-index",
       "vector-typmod",
