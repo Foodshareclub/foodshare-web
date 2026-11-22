@@ -106,10 +106,13 @@ BEGIN
             'posts_with_location', 'profiles_public',
             'analytics_full_favorites', 'analytics_full_listings',
             'analytics_full_reviews', 'analytics_full_rooms',
-            'analytics_full_users', 'vector_type_substituted'
+            'analytics_full_users'
         );
-    IF keepers <> 8 THEN
-        RAISE EXCEPTION 'keeper views damaged: % of 8 intact', keepers;
+    -- `vector_type_substituted` is an oracle-only marker (supabase/oracle/
+    -- platform.sql); production has real pgvector and never had it, so it
+    -- cannot be required here. This migration does not drop it either way.
+    IF keepers <> 7 THEN
+        RAISE EXCEPTION 'keeper views damaged: % of 7 intact', keepers;
     END IF;
 
     IF NOT EXISTS (

@@ -114,6 +114,33 @@ DROP POLICY IF EXISTS "Service role full access" ON user_events_2026_01;
 DROP POLICY IF EXISTS "Service role full access" ON user_events_2026_02;
 DROP POLICY IF EXISTS "Service role can insert notifications" ON user_notifications;
 
+-- Production carries dead policies the list above does not name (created
+-- out of band; the first deploy found 8). Drop whatever the predicate
+-- still matches, and log each one so the deploy log records exactly what
+-- went. The predicate is the one the assertion below re-derives, so the
+-- loop and the assertion cannot disagree; a fresh database matches
+-- nothing here, and the policies are never evaluated, so no access changes.
+DO $$
+DECLARE pol record;
+BEGIN
+  FOR pol IN
+    SELECT p.schemaname, p.tablename, p.policyname
+    FROM pg_policies p
+    WHERE cardinality(p.roles) > 0
+      AND NOT ('public' = ANY(p.roles))
+      AND NOT EXISTS (
+        SELECT 1 FROM pg_roles r
+        WHERE r.rolname = ANY(p.roles) AND NOT r.rolbypassrls
+      )
+    ORDER BY p.schemaname, p.tablename, p.policyname
+  LOOP
+    RAISE NOTICE 'dropping dead BYPASSRLS-only policy %.%.%',
+      pol.schemaname, pol.tablename, pol.policyname;
+    EXECUTE format('DROP POLICY %I ON %I.%I',
+      pol.policyname, pol.schemaname, pol.tablename);
+  END LOOP;
+END
+$$;
 -- Re-derive the dead set the way the audit does: any policy whose role
 -- list is non-empty, names no public pseudo-group, and contains no role
 -- that is subject to RLS. The cardinality guard keeps a hypothetical
