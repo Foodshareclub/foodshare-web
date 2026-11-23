@@ -100,7 +100,12 @@ export function MapPreviewCard({
           {image ? (
             <Image src={image} alt="" fill sizes="80px" className="object-cover" onError={onError} />
           ) : (
-            <FindingPhotoState label={findingLabel(item)} postName={item.post_name} postType={item.post_type} className="p-1 [&>div]:p-1 [&_span]:hidden" />
+            <FindingPhotoState
+              label={findingLabel(item)}
+              postName={item.post_name}
+              postType={item.post_type}
+              className="p-1 [&>div]:p-1 [&_span]:hidden"
+            />
           )}
         </div>
         <div className="min-w-0 space-y-1 pe-8">
