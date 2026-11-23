@@ -10,14 +10,33 @@
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 import { ProductCard } from "@/components/productCard/ProductCard";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
-import { useGridSize } from "@/hooks/useGridSize";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import type { InitialProductStateType, ProductWithCoordinates } from "@/types/product.types";
+import { isValidImageUrl } from "@/lib/image";
+import { isPublishableListing } from "@/lib/listing-search";
+import {
+  isGenericReusedReferenceCover,
+  resolveRealisticCover,
+} from "@/lib/realistic-covers";
+import type {
+  InitialProductStateType,
+  ProductWithCoordinates,
+} from "@/types/product.types";
 import { getCoordinates } from "@/types/product.types";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { MapView } from "./MapView";
 
-const MAIN_GRID_SKELETON_KEYS = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"] as const;
+const MAIN_GRID_SKELETON_KEYS = [
+  "a",
+  "b",
+  "c",
+  "d",
+  "e",
+  "f",
+  "g",
+  "h",
+  "i",
+  "j",
+] as const;
 
 type MainWithMapProps = {
   /** Products to display (passed from Server Component) */
@@ -29,11 +48,14 @@ type MainWithMapProps = {
 // React Compiler handles memoization automatically
 export function MainWithMap({ products, isLoading = false }: MainWithMapProps) {
   const [hoveredProductId, setHoveredProductId] = useState<number | null>(null);
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(
+    null,
+  );
 
   const loaded = !isLoading;
-  const gridSize = useGridSize();
-  const messagesAnchorRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
+  const messagesAnchorRef = useRef<HTMLDivElement>(
+    null,
+  ) as React.RefObject<HTMLDivElement>;
 
   // Show map on desktop only (>= 1024px breakpoint)
   const showMap = useMediaQuery("(min-width: 1024px)");
@@ -61,10 +83,36 @@ export function MainWithMap({ products, isLoading = false }: MainWithMapProps) {
     setSelectedProductId(productId);
   };
 
+  const coverMap = useMemo(() => {
+    const usedUrls = new Set<string>();
+    const map = new Map<number, string>();
+    for (const product of products) {
+      const hasRealPhoto =
+        product.images &&
+        product.images.some(
+          (url) => isValidImageUrl(url) && !isGenericReusedReferenceCover(url),
+        );
+      if (!hasRealPhoto) {
+        const cover = resolveRealisticCover({
+          title: product.post_name,
+          postType: product.post_type,
+          postId: product.id,
+          excludeUrls: Array.from(usedUrls),
+        });
+        map.set(product.id, cover);
+        usedUrls.add(cover);
+      }
+    }
+    return map;
+  }, [products]);
+
   return (
     <>
       {/* Fixed buttons */}
-      <NavigateButtons messagesAnchorRef={messagesAnchorRef} title={"Show map"} />
+      <NavigateButtons
+        messagesAnchorRef={messagesAnchorRef}
+        title={"Show map"}
+      />
 
       {/* Split-view layout */}
       <div className="block lg:grid lg:grid-cols-[65%_35%] gap-0 min-h-[calc(100vh-80px)]">
@@ -79,24 +127,29 @@ export function MainWithMap({ products, isLoading = false }: MainWithMapProps) {
           }}
         >
           <div
-            className="grid gap-10 px-7 py-7 xl:px-20"
+            className="grid gap-x-6 gap-y-10 p-4 sm:p-6 lg:p-8"
             style={{
-              gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
+              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
               transform: "translateZ(0)",
               willChange: "contents",
             }}
           >
             {!loaded
-              ? MAIN_GRID_SKELETON_KEYS.map((k) => <SkeletonCard key={k} isLoaded={false} />)
-              : products.map((product: InitialProductStateType) => (
-                  <ProductCard
-                    product={product}
-                    key={product.id}
-                    onMouseEnter={() => handleProductHover(product.id)}
-                    onMouseLeave={() => handleProductHover(null)}
-                    onClick={() => handleProductClick(product.id)}
-                  />
-                ))}
+              ? MAIN_GRID_SKELETON_KEYS.map((k) => (
+                  <SkeletonCard key={k} isLoaded={false} />
+                ))
+              : products
+                  .filter(isPublishableListing)
+                  .map((product: InitialProductStateType) => (
+                    <ProductCard
+                      product={product}
+                      coverUrl={coverMap.get(product.id)}
+                      key={product.id}
+                      onMouseEnter={() => handleProductHover(product.id)}
+                      onMouseLeave={() => handleProductHover(null)}
+                      onClick={() => handleProductClick(product.id)}
+                    />
+                  ))}
           </div>
         </div>
 

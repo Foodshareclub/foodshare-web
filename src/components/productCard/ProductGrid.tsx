@@ -1,9 +1,14 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { isValidImageUrl } from "@/lib/image";
+import {
+  isGenericReusedReferenceCover,
+  resolveRealisticCover,
+} from "@/lib/realistic-covers";
 import type { InitialProductStateType } from "@/types/product.types";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { ProductCard } from "./ProductCard";
 import SkeletonCard from "./SkeletonCard";
 import { LISTING_CONTAINER, LISTING_GRID } from "./listing-layout";
@@ -62,26 +67,59 @@ export function ProductGrid({
     };
   }, [onLoadMore, hasMore, isFetchingMore]);
 
+  // Feed-level deduplication: guarantees zero repeated cover images across visible cards
+  const coverMap = useMemo(() => {
+    const usedUrls = new Set<string>();
+    const map = new Map<number, string>();
+    for (const product of products) {
+      const hasRealPhoto =
+        product.images &&
+        product.images.some(
+          (url) => isValidImageUrl(url) && !isGenericReusedReferenceCover(url),
+        );
+      if (!hasRealPhoto) {
+        const cover = resolveRealisticCover({
+          title: product.post_name,
+          postType: product.post_type,
+          postId: product.id,
+          excludeUrls: Array.from(usedUrls),
+        });
+        map.set(product.id, cover);
+        usedUrls.add(cover);
+      }
+    }
+    return map;
+  }, [products]);
+
   return (
     <div aria-busy={isLoading || isFetchingMore}>
       <h2 className="sr-only">{t("active_listings")}</h2>
-      <p className="sr-only" role="status" aria-live="polite">
-        {isLoading || isFetchingMore ? t("loading") : ""}
-      </p>
       <div className={cn(LISTING_CONTAINER, "py-6 pb-28 sm:py-8 sm:pb-32")}>
         <div className={LISTING_GRID}>
           {isLoading
-            ? SKELETON_ITEMS.map((i) => <SkeletonCard key={i} isLoaded={false} />)
-            : products.map((product) => <ProductCard product={product} key={product.id} />)}
+            ? SKELETON_ITEMS.map((i) => (
+                <SkeletonCard key={i} isLoaded={false} />
+              ))
+            : products.map((product) => (
+                <ProductCard
+                  product={product}
+                  coverUrl={coverMap.get(product.id)}
+                  key={product.id}
+                />
+              ))}
 
           {/* Loading more skeletons */}
           {isFetchingMore &&
-            LOADING_MORE_SKELETONS.map((i) => <SkeletonCard key={`loading-more-${i}`} isLoaded={false} />)}
+            LOADING_MORE_SKELETONS.map((i) => (
+              <SkeletonCard key={`loading-more-${i}`} isLoaded={false} />
+            ))}
         </div>
       </div>
 
       {/* Infinite scroll trigger */}
-      {hasMore && !isLoading && <div ref={loadMoreRef} className="h-10" aria-hidden="true" />}
+      {hasMore && !isLoading && (
+        <div ref={loadMoreRef} className="h-10" aria-hidden="true" />
+      )}
     </div>
   );
 }

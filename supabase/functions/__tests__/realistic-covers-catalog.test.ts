@@ -122,3 +122,19 @@ Deno.test("realistic catalog: target listings 2662, 2659, and 2626 resolve to mu
   assertNotEquals(c2659.url, c2626.url);
   assertNotEquals(c2662.url, c2626.url);
 });
+
+Deno.test("realistic catalog: pastry and meal subjects resolve authentically", () => {
+  const schnecke = resolveRealisticCover({
+    title: "2 walnuss Ahorn schnecken",
+    postId: 2618,
+  });
+  assertEquals(schnecke.subject, "pastry");
+  assertEquals(schnecke.url.includes("assets/covers/food/pastry"), true);
+
+  const shuba = resolveRealisticCover({
+    title: "Сельдь под шубой",
+    postId: 2726,
+  });
+  assertEquals(shuba.subject, "meal");
+  assertEquals(shuba.url.includes("assets/covers/food/meal"), true);
+});

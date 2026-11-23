@@ -19,6 +19,8 @@ type ImageCarouselProps = {
   postType: string;
   /** Provenance of a stored reference cover (`posts.metadata.cover`). */
   cover?: CoverCredit | null;
+  /** Optional pre-resolved unique cover URL computed for feed deduplication */
+  coverUrl?: string;
 };
 
 export function ImageCarousel({
@@ -28,6 +30,7 @@ export function ImageCarousel({
   postName,
   postType,
   cover,
+  coverUrl,
 }: ImageCarouselProps) {
   const t = useTranslations();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -59,6 +62,7 @@ export function ImageCarousel({
       postName={postName}
       postType={postType}
       postId={productId}
+      resolvedCoverUrl={coverUrl}
     />
   );
   const allDead =

@@ -25,6 +25,15 @@ export const REALISTIC_COVERS_CATALOG: Record<string, string[]> = {
     "assets/covers/food/assorted-3.jpg",
     "assets/covers/food/assorted-4.jpg",
   ],
+  pastry: [
+    "assets/covers/food/pastry-1.jpg",
+    "assets/covers/food/pastry-2.jpg",
+    "assets/covers/food/pastry-3.jpg",
+  ],
+  meal: [
+    "assets/covers/food/meal-1.jpg",
+    "assets/covers/food/meal-2.jpg",
+  ],
   banana: [
     "assets/covers/food/banana-1.jpg",
     "assets/covers/food/banana-2.jpg",
@@ -38,6 +47,7 @@ export const REALISTIC_COVERS_CATALOG: Record<string, string[]> = {
   ],
   produce: [
     "assets/covers/food/produce-1.jpg",
+    "assets/covers/food/produce-2.jpg",
   ],
   pantry: [
     "assets/covers/food/pantry-1.jpg",
@@ -48,12 +58,18 @@ export const REALISTIC_COVERS_CATALOG: Record<string, string[]> = {
   ],
   food_fallback: [
     "assets/covers/food/assorted-1.jpg",
+    "assets/covers/food/pastry-1.jpg",
     "assets/covers/food/produce-1.jpg",
+    "assets/covers/food/meal-1.jpg",
     "assets/covers/food/assorted-2.jpg",
     "assets/covers/food/bread-1.jpg",
+    "assets/covers/food/pastry-2.jpg",
     "assets/covers/food/assorted-3.jpg",
+    "assets/covers/food/meal-2.jpg",
     "assets/covers/food/apple-1.jpg",
+    "assets/covers/food/produce-2.jpg",
     "assets/covers/food/assorted-4.jpg",
+    "assets/covers/food/pastry-3.jpg",
     "assets/covers/food/banana-1.jpg",
   ],
   community_fallback: [
@@ -68,7 +84,6 @@ export const REALISTIC_COVERS_CATALOG: Record<string, string[]> = {
 const HAUL_KEYWORDS = new Set([
   "verschiedenes",
   "alles",
-  "lebensmittel",
   "gemischt",
   "gemischtes",
   "kiste",
@@ -105,7 +120,6 @@ const HAUL_KEYWORDS = new Set([
   "varios",
 ]);
 
-/** Multilingual keyword dictionary mapping tokens to canonical subjects */
 const SUBJECT_KEYWORDS: Record<string, string> = {
   // Bananas
   banana: "banana",
@@ -144,9 +158,54 @@ const SUBJECT_KEYWORDS: Record<string, string> = {
   roll: "bread",
   brötchen: "bread",
   broetchen: "bread",
-  bun: "bread",
-  pastry: "bread",
-  croissant: "bread",
+
+  // Pastry & Sweet Bakes (Schnecken, Croissants, Cinnamon rolls, Danishes)
+  schnecken: "pastry",
+  schnecke: "pastry",
+  ahorn: "pastry",
+  walnuss: "pastry",
+  walnut: "pastry",
+  maple: "pastry",
+  croissant: "pastry",
+  croissants: "pastry",
+  pastry: "pastry",
+  pastries: "pastry",
+  danish: "pastry",
+  muffin: "pastry",
+  muffins: "pastry",
+  donut: "pastry",
+  donuts: "pastry",
+  gebäck: "pastry",
+  gebaeck: "pastry",
+  plunder: "pastry",
+  cinnamon: "pastry",
+  zimtschnecke: "pastry",
+  bun: "pastry",
+  buns: "pastry",
+  brioche: "pastry",
+  выпечка: "pastry",
+  булочка: "pastry",
+  булочки: "pastry",
+  круассан: "pastry",
+  круассаны: "pastry",
+
+  // Prepared Meals, Traditional Dishes & Casseroles
+  шуба: "meal",
+  селедка: "meal",
+  сельдь: "meal",
+  запеканка: "meal",
+  auflauf: "meal",
+  casserole: "meal",
+  suppe: "meal",
+  soup: "meal",
+  stew: "meal",
+  gericht: "meal",
+  mahlzeit: "meal",
+  lasagna: "meal",
+  lasagne: "meal",
+  curry: "meal",
+  blini: "meal",
+  блины: "meal",
 
   // Dairy & Cold Cuts
   dairy: "dairy",
@@ -190,12 +249,17 @@ const SUBJECT_KEYWORDS: Record<string, string> = {
   greens: "produce",
   fruit: "produce",
   früchte: "produce",
+  fruechte: "produce",
   produce: "produce",
   lemon: "produce",
   citrus: "produce",
   orange: "produce",
+  avocado: "produce",
+  avocados: "produce",
+  berries: "produce",
+  beeren: "produce",
 
-  // Pantry & Grains
+  // Pantry, Dry Staples & Grains
   pantry: "pantry",
   pasta: "pantry",
   nudeln: "pantry",
@@ -205,11 +269,29 @@ const SUBJECT_KEYWORDS: Record<string, string> = {
   grains: "pantry",
   canned: "pantry",
   konserve: "pantry",
+  konserven: "pantry",
   noodle: "pantry",
   noodles: "pantry",
   cereal: "pantry",
   beans: "pantry",
   bohnen: "pantry",
+  klöße: "pantry",
+  kloesse: "pantry",
+  salzstangen: "pantry",
+  tüten: "pantry",
+  tueten: "pantry",
+  suppen: "pantry",
+  suppenpulver: "pantry",
+  flour: "pantry",
+  mehl: "pantry",
+  öl: "pantry",
+  oil: "pantry",
+  zucker: "pantry",
+  sugar: "pantry",
+  snack: "pantry",
+  snacks: "pantry",
+  chips: "pantry",
+  lebensmittel: "pantry",
 
   // Fridge & Community
   fridge: "fridge",
@@ -219,7 +301,6 @@ const SUBJECT_KEYWORDS: Record<string, string> = {
   холодильник: "fridge",
 };
 
-/** Deterministic string hashing for variant selection */
 function hashText(text: string): number {
   let hash = 0;
   for (let i = 0; i < text.length; i++) {
@@ -279,11 +360,19 @@ export function resolveRealisticCover(input: {
   }
 
   let matchedSubject: string | null = null;
-  // If multiple distinct categories or haul keyword, classify as 'assorted'
-  if (hasHaulKeyword || matchedSubjects.size >= 2 || matchedSubjects.has("dairy")) {
-    matchedSubject = "assorted";
-  } else if (matchedSubjects.size === 1) {
+  if (matchedSubjects.size === 1) {
     matchedSubject = Array.from(matchedSubjects)[0];
+  } else if (
+    matchedSubjects.size > 0 &&
+    Array.from(matchedSubjects).every((s) => s === "pantry")
+  ) {
+    matchedSubject = "pantry";
+  } else if (
+    hasHaulKeyword ||
+    matchedSubjects.size >= 2 ||
+    matchedSubjects.has("dairy")
+  ) {
+    matchedSubject = "assorted";
   }
 
   // 2. Fall back to postType or default category
@@ -298,7 +387,7 @@ export function resolveRealisticCover(input: {
     }
   }
 
-  const pool = REALISTIC_COVERS_CATALOG[matchedSubject] ||
+  const primaryPool = REALISTIC_COVERS_CATALOG[matchedSubject] ||
     REALISTIC_COVERS_CATALOG.assorted;
   const excluded = new Set(input.excludeUrls || []);
 
@@ -307,8 +396,21 @@ export function resolveRealisticCover(input: {
   const seed = fmix32(((input.postId ?? 0) + 2) ^ hashText(normalizedTitle));
 
   // Prefer candidate variants that haven't been used by adjacent listings
-  const available = pool.filter((p) => !excluded.has(`${base}/${p}`));
-  const candidatePool = available.length > 0 ? available : pool;
+  const availablePrimary = primaryPool.filter((p) => !excluded.has(`${base}/${p}`));
+  if (availablePrimary.length > 0) {
+    const chosenPath = availablePrimary[seed % availablePrimary.length];
+    return {
+      url: `${base}/${chosenPath}`,
+      path: chosenPath,
+      subject: matchedSubject,
+      isRealisticCatalogCover: true,
+    };
+  }
+
+  // If primary pool exhausted, draw from wider fallback pool
+  const fallbackPool = REALISTIC_COVERS_CATALOG.food_fallback || primaryPool;
+  const availableFallback = fallbackPool.filter((p) => !excluded.has(`${base}/${p}`));
+  const candidatePool = availableFallback.length > 0 ? availableFallback : primaryPool;
 
   const chosenPath = candidatePool[seed % candidatePool.length];
   const url = `${base}/${chosenPath}`;

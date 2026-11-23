@@ -14,19 +14,23 @@ export function FindingPhotoState({
   postType,
   postId,
   className,
+  resolvedCoverUrl,
 }: {
   label: string;
   postName?: string;
   postType?: string;
   postId?: number;
   className?: string;
+  resolvedCoverUrl?: string;
 }) {
   const message = `Finding a photo for this ${label} listing…`;
-  const realisticCover = resolveRealisticCover({
-    title: postName || label,
-    postType,
-    postId,
-  });
+  const realisticCover =
+    resolvedCoverUrl ||
+    resolveRealisticCover({
+      title: postName || label,
+      postType,
+      postId,
+    });
 
   return (
     <div

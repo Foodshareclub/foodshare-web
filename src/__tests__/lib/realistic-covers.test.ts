@@ -24,7 +24,23 @@ describe("resolveRealisticCover", () => {
     const cover = resolveRealisticCover({
       title: "Garden Tomatoes and Greens",
     });
-    expect(cover).toBe("/assets/covers/food/produce-1.jpg");
+    expect(cover).toMatch(/\/assets\/covers\/food\/produce-[12]\.jpg/);
+  });
+
+  it("resolves realistic cover for pastries and sweet rolls", () => {
+    const cover = resolveRealisticCover({
+      title: "2 walnuss Ahorn schnecken",
+      postId: 2618,
+    });
+    expect(cover).toMatch(/\/assets\/covers\/food\/pastry-[1-3]\.jpg/);
+  });
+
+  it("resolves realistic cover for prepared meals and casseroles", () => {
+    const cover = resolveRealisticCover({
+      title: "Сельдь под шубой",
+      postId: 2726,
+    });
+    expect(cover).toMatch(/\/assets\/covers\/food\/meal-[12]\.jpg/);
   });
 
   it("resolves realistic cover for pantry items", () => {

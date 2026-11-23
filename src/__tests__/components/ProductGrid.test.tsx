@@ -2,6 +2,28 @@ import { describe, expect, it, mock } from "bun:test";
 import { render, screen } from "@testing-library/react";
 import React from "react";
 
+mock.module("next/navigation", () => ({
+  useRouter: () => ({ push: mock(), refresh: mock() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/food",
+}));
+
+mock.module("@/hooks/useAuth", () => ({
+  useAuth: () => ({ user: null, isAdmin: false }),
+}));
+
+mock.module("next/image", () => ({
+  default: ({
+    src,
+    alt,
+    className,
+  }: {
+    src: string;
+    alt: string;
+    className?: string;
+  }) => <img src={src} alt={alt} className={className} />,
+}));
+
 mock.module("next-intl", () => ({
   useTranslations: () => (key: string) => {
     const messages: Record<string, string> = {
@@ -19,12 +41,6 @@ mock.module("next-intl", () => ({
     };
     return messages[key] || key;
   },
-}));
-
-mock.module("@/components/productCard/ProductCard", () => ({
-  ProductCard: ({ product }: { product: { post_name: string } }) => (
-    <div data-testid="product-card">{product.post_name}</div>
-  ),
 }));
 
 mock.module("@/components/productCard/SkeletonCard", () => ({
@@ -51,11 +67,13 @@ const mockProducts = [
 
 describe("ProductGrid - Airbnb Listing Feed", () => {
   it("renders product cards when loaded", () => {
-    render(<ProductGrid products={mockProducts} isLoading={false} hasMore={false} />);
+    render(
+      <ProductGrid products={mockProducts} isLoading={false} hasMore={false} />,
+    );
 
     expect(screen.getByText("Fresh Sourdough Bread")).toBeDefined();
     expect(screen.getByText("Organic Apples")).toBeDefined();
-    expect(screen.getAllByTestId("product-card")).toHaveLength(2);
+    expect(screen.getAllByRole("article")).toHaveLength(2);
   });
 
   it("renders skeletons when isLoading is true", () => {
