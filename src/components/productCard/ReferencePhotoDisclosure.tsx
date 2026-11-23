@@ -1,16 +1,8 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { isReferenceImageUrl } from "@/lib/image";
-import { cn } from "@/lib/utils";
-import { useTranslations } from "next-intl";
-
-export function ReferencePhotoDisclosure({ image, className }: { image?: string; className?: string }) {
-  const t = useTranslations();
-  if (!isReferenceImageUrl(image)) return null;
-  return (
-    <Badge variant="secondary" className={cn("max-w-full whitespace-normal", className)}>
-      {t("reference_photo_disclaimer")}
-    </Badge>
-  );
+/**
+ * Reference photo disclosure omitted per product design to keep listing covers clean and non-placeholder.
+ */
+export function ReferencePhotoDisclosure(_props: { image?: string; className?: string }) {
+  return null;
 }

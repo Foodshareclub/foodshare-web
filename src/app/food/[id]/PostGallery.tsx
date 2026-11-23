@@ -1,11 +1,9 @@
 "use client";
 
-import { CoverCreditLine, FindingPhotoState } from "@/components/productCard/CoverStatus";
-import { ReferencePhotoDisclosure } from "@/components/productCard/ReferencePhotoDisclosure";
+import { FindingPhotoState } from "@/components/productCard/CoverStatus";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { CoverCredit } from "@/lib/cover-provenance";
-import { isReferenceImageUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
 import { Grid2x2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -47,24 +45,13 @@ export function PostGallery({ postId, title, images, coverCredit, emptyLabel, ba
   const shown = images.filter((url) => !failed[url]);
   const cover = shown[0];
   const sideCount = Math.min(Math.max(shown.length - 1, 0), 4);
-  const showCredit = Boolean(coverCredit && cover && cover === images[0] && isReferenceImageUrl(cover));
-
   const onError = (url: string) => setFailed((previous) => ({ ...previous, [url]: true }));
 
-  const overlays = (
+  const overlays = badge ? (
     <div className="pointer-events-none absolute inset-0 z-10">
-      <div className="absolute start-3 top-3 max-w-[calc(100%-5rem)]">
-        {!coverCredit && <ReferencePhotoDisclosure image={cover} />}
-      </div>
-      {showCredit && coverCredit && (
-        <CoverCreditLine
-          credit={coverCredit}
-          className="pointer-events-auto absolute start-3 bottom-3 max-w-[calc(100%-6rem)]"
-        />
-      )}
-      {badge && <div className="absolute end-3 top-3">{badge}</div>}
+      <div className="absolute end-3 top-3">{badge}</div>
     </div>
-  );
+  ) : null;
 
   if (!cover) {
     return (

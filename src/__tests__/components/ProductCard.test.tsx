@@ -10,12 +10,7 @@ mock.module("next/navigation", () => ({
 }));
 
 mock.module("next-intl", () => ({
-  useTranslations: () => (key: string, opts?: { defaultMessage?: string }) => {
-    const translations: Record<string, string> = {
-      cover_source_wikimedia: "Source: Wikimedia Commons",
-    };
-    return translations[key] || opts?.defaultMessage || key;
-  },
+  useTranslations: () => (key: string, opts?: { defaultMessage?: string }) => opts?.defaultMessage || key,
 }));
 
 mock.module("@/hooks/useAuth", () => ({
@@ -135,7 +130,7 @@ describe("ProductCard Airbnb Design", () => {
     fireEvent.error(screen.getByAltText("Fresh Organic Avocados"));
     expect(screen.getByTestId("finding-photo")).toBeTruthy();
   });
-  test("renders a stored reference cover with disclosure and source/license credit", () => {
+  test("renders a stored reference cover cleanly without redundant disclosure overlays", () => {
     const cover = {
       kind: "reference",
       provider: "wikimedia-commons",
@@ -158,12 +153,8 @@ describe("ProductCard Airbnb Design", () => {
         }}
       />,
     );
-    expect(screen.getByText("Reference image; not a photograph of the listed item")).toBeTruthy();
-    const source = screen.getByText(/Source: Wikimedia Commons · Jane Doe/).closest("a");
-    expect(source?.getAttribute("href")).toBe(cover.sourcePageUrl);
-    expect(source?.getAttribute("target")).toBe("_blank");
-    expect(source?.getAttribute("rel")).toBe("noopener noreferrer");
-    expect(screen.getByText("CC BY-SA 4.0").closest("a")?.getAttribute("href")).toBe(cover.licenseUrl);
+    expect(screen.queryByTestId("cover-credit")).toBeNull();
+    expect(screen.queryByText("Reference image; not a photograph of the listed item")).toBeNull();
   });
   test("ignores malformed cover provenance", () => {
     render(

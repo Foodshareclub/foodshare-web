@@ -1,14 +1,14 @@
 "use client";
 
 import { type CoverCredit } from "@/lib/cover-provenance";
-import { isReferenceImageUrl, isValidImageUrl, normalizeImageUrl } from "@/lib/image";
+import { isValidImageUrl, normalizeImageUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { CoverCreditLine, FindingPhotoState } from "./CoverStatus";
+import { FindingPhotoState } from "./CoverStatus";
 
 type ImageCarouselProps = {
   images: string[];
@@ -36,7 +36,6 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
           : "Community Item";
   const placeholder = <FindingPhotoState label={placeholderLabel} postName={postName} postType={postType} />;
   const allDead = validImages.length > 0 && validImages.every((image) => imageErrors[image]);
-  const showCredit = !!cover && !allDead && activeIndex === 0 && isReferenceImageUrl(validImages[0]);
   const handleScroll = () => {
     const element = scrollRef.current;
     if (!element || !element.clientWidth) return;
@@ -103,7 +102,6 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
         ))}
       </div>
 
-      {showCredit && cover && <CoverCreditLine credit={cover} className="absolute inset-x-2 bottom-2 z-10" />}
       {validImages.length > 1 && (
         <>
           {/* Airbnb-style Navigation Arrows: centered vertically, circular, revealed on hover */}
@@ -139,12 +137,7 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
           </div>
 
           {/* Airbnb-style Pagination Dots: centered at bottom with accessible touch targets */}
-          <div
-            className={cn(
-              "pointer-events-none absolute inset-x-0 z-10 flex items-center justify-center gap-1.5",
-              showCredit ? "bottom-14" : "bottom-2.5",
-            )}
-          >
+          <div className="pointer-events-none absolute inset-x-0 bottom-2.5 z-10 flex items-center justify-center gap-1.5">
             <div className="pointer-events-auto flex items-center gap-1 rounded-full px-2 py-0.5">
               {validImages.map((_, i) => (
                 <button

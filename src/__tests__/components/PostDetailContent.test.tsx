@@ -160,7 +160,7 @@ describe("PostDetailContent - Airbnb Detail Layout", () => {
     expect(screen.getAllByRole("img", { name: /Fresh Bread Loaf \(\d\/6\)/ }).length).toBeGreaterThanOrEqual(6);
   });
 
-  it("keeps the cover credit on the gallery for reference covers", () => {
+  it("renders reference covers cleanly without redundant disclosure overlays", () => {
     const cover = {
       kind: "reference",
       sourcePageUrl: "https://commons.wikimedia.org/wiki/File:Bread.jpg",
@@ -174,12 +174,7 @@ describe("PostDetailContent - Airbnb Detail Layout", () => {
       "a".repeat(64) +
       ".jpeg";
     render(<PostDetailContent post={{ ...basePost, images: [image], metadata: { cover } }} user={null} />);
-    expect(screen.getByTestId("cover-credit")).toBeDefined();
-    expect(
-      screen
-        .getByText(/Source: Wikimedia Commons · Jane Doe/)
-        .closest("a")
-        ?.getAttribute("href"),
-    ).toBe(cover.sourcePageUrl);
+    expect(screen.queryByTestId("cover-credit")).toBeNull();
+    expect(screen.queryByText(/Source: Wikimedia Commons/)).toBeNull();
   });
 });

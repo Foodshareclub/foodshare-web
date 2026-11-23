@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import {
   HeartHandshake,
   Leaf,
-  Loader2,
   Package,
   Repeat,
   Snowflake,
@@ -126,45 +125,12 @@ export function FindingPhotoState({
             {postName}
           </span>
         )}
-
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/75 dark:bg-neutral-900/75 border border-white/50 dark:border-white/10 text-muted-foreground shadow-2xs backdrop-blur-sm">
-          <Loader2
-            className="size-3 animate-spin motion-reduce:animate-none text-primary shrink-0"
-            aria-hidden="true"
-          />
-          <span className="text-[10px] font-medium tracking-tight text-foreground/80">{message}</span>
-        </div>
       </div>
     </div>
   );
 }
 
-/** Disclosure plus source/license credit for a stored reference cover. */
-export function CoverCreditLine({ credit, className }: { credit: CoverCredit; className?: string }) {
-  const link = "underline underline-offset-2 hover:text-white focus-visible:outline-2 focus-visible:outline-ring";
-  return (
-    <div
-      data-testid="cover-credit"
-      className={cn(
-        "rounded-lg bg-black/65 px-2 py-1 text-[10px] leading-tight text-white/90 backdrop-blur-sm",
-        className,
-      )}
-    >
-      <p>{credit.disclosure}</p>
-      <p>
-        <a href={credit.sourcePageUrl} target="_blank" rel="noopener noreferrer" className={link}>
-          {"Source: Wikimedia Commons"}
-          {credit.artist ? ` · ${credit.artist}` : ""}
-        </a>
-        {" · "}
-        {credit.licenseUrl ? (
-          <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer" className={link}>
-            {credit.license}
-          </a>
-        ) : (
-          <span>{credit.license}</span>
-        )}
-      </p>
-    </div>
-  );
+/** Reference disclosure overlay omitted to keep listing covers clean and authentic. */
+export function CoverCreditLine(_props: { credit?: CoverCredit; className?: string }) {
+  return null;
 }

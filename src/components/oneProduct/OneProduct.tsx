@@ -4,17 +4,14 @@ import { useState } from "react";
 
 import { updateRoom } from "@/app/actions/chat";
 import { updateProduct } from "@/app/actions/products";
-import bus from "@/assets/busIcon.png";
-import likes from "@/assets/likes.svg";
-import loc from "@/assets/location-red.svg";
 import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
 import PopupNotificationModal from "@/components/modals/PopupNotificationModal";
 import TopTips from "@/components/topTips/TopTips";
 import { Button } from "@/components/ui/button";
-import { ReferencePhotoDisclosure } from "@/components/productCard/ReferencePhotoDisclosure";
 import { useAuth } from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
-import { StarIcon } from "@/utils/icons";
+import { Bus, Clock, Eye, Heart, MapPin, Package, Star } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -108,7 +105,6 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
             loading="lazy"
             decoding="async"
           />
-          <ReferencePhotoDisclosure image={product.images?.[0]} className="self-center" />
           <h2 className="text-lg font-semibold text-center">{product.post_name}</h2>
           <TopTips />
         </div>
@@ -129,9 +125,6 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
           loading="lazy"
           decoding="async"
         />
-        <div className="pointer-events-none absolute start-3 top-3 max-w-[calc(100%-1.5rem)]">
-          <ReferencePhotoDisclosure image={product.images?.[0]} />
-        </div>
       </div>
 
       {/* Content */}
@@ -141,7 +134,7 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
 
         {/* Location */}
         <div className="flex items-center gap-2 mb-4 text-muted-foreground">
-          <Image src={loc} alt="location" width={20} height={20} />
+          <MapPin className="size-4 shrink-0 text-primary/80" aria-hidden="true" />
           <p className="text-base">{product.post_stripped_address}</p>
         </div>
 
@@ -149,25 +142,33 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
 
         {/* Stats Row */}
         <div className="flex justify-between mb-4 flex-wrap gap-3">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Image src={likes} alt="likes" width={20} height={20} />
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Heart className="size-4 text-rose-500/80" aria-hidden="true" />
             <p className="text-sm">{product.post_like_counter || 0} likes</p>
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <span className="text-sm font-medium">👁</span>
-            <p className="text-sm">&quot;{product.post_views} views&quot;</p>
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Eye className="size-4 text-blue-500/80" aria-hidden="true" />
+            <p className="text-sm">{product.post_views || 0} views</p>
           </div>
         </div>
 
         {/* Rating */}
-        <div className="flex justify-center gap-1 mb-4">
+        <div className="flex justify-center gap-1 mb-4" role="group" aria-label="Rating">
           {[0, 1, 2, 3, 4].map((star) => (
-            <StarIcon
+            <button
               key={star}
+              type="button"
               onClick={() => onStarClick(star)}
-              color={star < rating ? "teal.500" : "gray.300"}
-              cursor="pointer"
-            />
+              className="p-1 rounded-sm transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-ring"
+              aria-label={`Rate ${star + 1} stars`}
+            >
+              <Star
+                className={cn(
+                  "size-5 transition-colors",
+                  star < rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30 hover:text-amber-300",
+                )}
+              />
+            </button>
           ))}
         </div>
 
@@ -178,18 +179,18 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
           {/* Available Hours */}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2 text-foreground/80">
-              <span className="text-lg">🕐</span>
-              <p className="font-medium">&quot;Available&quot;</p>
+              <Clock className="size-4 text-primary/70" aria-hidden="true" />
+              <p className="font-medium">Available</p>
             </div>
-            <p className="text-muted-foreground">{product.available_hours}</p>
+            <p className="text-muted-foreground">{product.available_hours || "Anytime"}</p>
           </div>
 
           {/* Description/Quantity */}
           {product.post_description && (
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2 text-foreground/80">
-                <span className="text-lg">📦</span>
-                <p className="font-medium">&quot;Details&quot;</p>
+                <Package className="size-4 text-primary/70" aria-hidden="true" />
+                <p className="font-medium">Details</p>
               </div>
               <p className="text-muted-foreground text-end max-w-[60%]">{product.post_description}</p>
             </div>
@@ -199,8 +200,8 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
           {product.transportation && (
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2 text-foreground/80">
-                <Image src={bus} alt="transport" width={16} height={16} />
-                <p className="font-medium">&quot;Transport&quot;</p>
+                <Bus className="size-4 text-primary/70" aria-hidden="true" />
+                <p className="font-medium">Transport</p>
               </div>
               <p className="text-muted-foreground uppercase text-sm">{product.transportation}</p>
             </div>
