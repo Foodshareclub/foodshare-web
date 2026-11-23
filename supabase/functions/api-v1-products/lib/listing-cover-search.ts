@@ -644,7 +644,14 @@ export async function searchListingReferenceDeterministic(
 
   for (const { query, includePublicDomain } of attempts) {
     const found = await searchCommons(query, send, signal, includePublicDomain);
-    const candidates = categoryOnly ? neutralCategoryCandidates(found, input.postType) : found;
+    const rawCandidates = categoryOnly ? neutralCategoryCandidates(found, input.postType) : found;
+    if (!rawCandidates.length) continue;
+
+    // Filter out already-used candidates to avoid fake/reused duplicate covers across listings
+    const candidates = rawCandidates.filter((c) =>
+      !input.excludePageIds?.includes(c.pageId) &&
+      !input.excludeUrls?.includes(c.imageUrl)
+    );
     if (!candidates.length) continue;
 
     let topCandidate: ReferenceCandidate | null = null;
@@ -755,10 +762,18 @@ export async function searchListingReference(
         signal,
         includePublicDomain,
       );
-      const candidates = proposed.categoryOnly
+      const rawCandidates = proposed.categoryOnly
         ? neutralCategoryCandidates(found, input.postType)
         : found;
+      if (!rawCandidates.length) continue;
+
+      // Filter out already-used candidates to avoid fake/reused duplicate covers across listings
+      const candidates = rawCandidates.filter((c) =>
+        !input.excludePageIds?.includes(c.pageId) &&
+        !input.excludeUrls?.includes(c.imageUrl)
+      );
       if (!candidates.length) continue;
+
       const rankingData = {
         listing: proposed.categoryOnly ? { category: input.postType } : context,
         categoryOnly: proposed.categoryOnly,

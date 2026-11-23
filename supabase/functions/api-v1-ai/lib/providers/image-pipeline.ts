@@ -19,6 +19,7 @@ import ExifReader from "exifreader";
 import JPEG from "jpeg-js";
 import { Buffer } from "node:buffer";
 import { generateCacheKey, getCachedResult, setCachedResult } from "../cache.ts";
+import { createListingCover } from "../../../api-v1-products/lib/listing-cover.ts";
 
 // =============================================================================
 // Types
@@ -1116,7 +1117,9 @@ export async function enrichListing(
   // 1. Read the listing
   const { data: post, error: postErr } = await supabase
     .from("posts")
-    .select("id, post_name, post_address, post_type, fridge_id, website, metadata, images")
+    .select(
+      "id, profile_id, post_name, post_description, post_address, post_type, fridge_id, website, metadata, images",
+    )
     .eq("id", postId)
     .single();
 
@@ -1129,7 +1132,7 @@ export async function enrichListing(
     };
   }
 
-  const postType = (post.post_type === "foodbank" ? "foodbank" : "fridge") as "fridge" | "foodbank";
+  const postType = post.post_type || "food";
   const name = post.post_name || "";
   const address = post.post_address || undefined;
   // posts has no city/state columns — the host listing carries them, plus the
@@ -1152,9 +1155,15 @@ export async function enrichListing(
     listingLng = fridge?.longitude ?? undefined;
   }
 
-  // 2. Idempotency: skip if already placed
+  // 2. Idempotency: skip if already placed with usable image URLs
+  const hasUsableImages = Array.isArray(post.images) &&
+    post.images.length > 0 &&
+    post.images.some((img: unknown) =>
+      typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://"))
+    );
+
   const provenance = post.metadata?.image_provenance;
-  if (provenance?.status === "placed") {
+  if (hasUsableImages && provenance?.status === "placed") {
     return {
       status: "skipped",
       post_id: postId,
@@ -1164,194 +1173,310 @@ export async function enrichListing(
     };
   }
 
-  // 3. A1 tier (PRIMARY): scrape the listing's own website for images
+  // 2.5 Ingest user-uploaded photo from Telegram if present (preserves authentic user photos)
+  const rawImages = Array.isArray(post.images) ? post.images : [];
+  const telegramFileId = rawImages.find((img: unknown) =>
+    typeof img === "string" && img.startsWith("AgAC") && img.length > 20
+  );
+
+  if (telegramFileId && Deno.env.get("TELEGRAM_BOT_TOKEN")) {
+    try {
+      const { downloadAndUploadTelegramFile } = await import(
+        "../../../telegram-bot-foodshare/services/telegram-files.ts"
+      );
+      const uploadedUrl = await downloadAndUploadTelegramFile(telegramFileId as string, 0);
+      if (uploadedUrl) {
+        const now = new Date().toISOString();
+        const newMetadata = {
+          ...(post.metadata || {}),
+          image_provenance: {
+            source_url: uploadedUrl,
+            source: "telegram-user-upload",
+            verify_score: 1.0,
+            verify_model: "telegram-file-ingest",
+            crawled_at: now,
+            placed_at: now,
+            status: "placed",
+            query_type: postType,
+          },
+        };
+        const { error: updateErr } = await supabase
+          .from("posts")
+          .update({ images: [uploadedUrl], metadata: newMetadata })
+          .eq("id", postId);
+
+        if (!updateErr) {
+          logger.info("enrichListing: recovered authentic user photo from Telegram", {
+            post_id: postId,
+            image: uploadedUrl,
+          });
+          return {
+            status: "placed",
+            post_id: postId,
+            image_url: uploadedUrl,
+            provenance: newMetadata.image_provenance,
+            attempts: 1,
+          };
+        }
+      }
+    } catch (err) {
+      logger.warn("Telegram photo recovery failed, proceeding to cover search", {
+        post_id: postId,
+        error: String(err),
+      });
+    }
+  }
+
+  // 3. A1/A2 tier: scrape website or SERP for fridge/foodbank
   let candidates: ImageCandidate[] = [];
   let source = "a1-own-domain";
   const website = (post.website && post.website !== "-" && post.website.trim() !== "")
     ? post.website.trim()
     : null;
 
-  if (website) {
-    try {
-      candidates = await a1Scrape(website, { fetchHtml: deps.fetchHtml });
-      attempts.a1 = `scraped ${website.slice(0, 40)} → ${candidates.length} own-domain candidates`;
-    } catch (err) {
-      attempts.a1 = `error: ${String(err).slice(0, 80)}`;
-    }
-  } else {
-    attempts.a1 = "no website on listing";
-  }
-
-  // 4. A2 tier (FALLBACK, operator-gated): SERP external search
-  //    Only runs if the operator has set ALLOW_SERP_FALLBACK=true.
-  //    A provisioned SERP key is a capability, not a source decision.
-  if (candidates.length === 0) {
-    const allowSerp = Deno.env.get("ALLOW_SERP_FALLBACK") === "true";
-    if (allowSerp) {
-      source = "a2-serp";
+  if (postType === "fridge" || postType === "foodbank") {
+    if (website) {
       try {
-        const searchResult = await imageSearch({
-          name,
-          city,
-          state,
-          post_type: postType,
-          max_results: 10,
-        }, supabase);
-        candidates = searchResult.candidates;
-        attempts.a2 = `serp found ${candidates.length}`;
+        candidates = await a1Scrape(website, { fetchHtml: deps.fetchHtml });
+        attempts.a1 = `scraped ${
+          website.slice(0, 40)
+        } → ${candidates.length} own-domain candidates`;
       } catch (err) {
-        attempts.a2 = `error: ${String(err).slice(0, 80)}`;
+        attempts.a1 = `error: ${String(err).slice(0, 80)}`;
       }
     } else {
-      attempts.a2 = "gated (ALLOW_SERP_FALLBACK not set)";
+      attempts.a1 = "no website on listing";
     }
-  }
 
-  if (candidates.length === 0) {
-    return {
-      status: "fell_through",
-      post_id: postId,
-      error: website
-        ? "no usable own-domain image (a1 exhausted; a2 gated)"
-        : "no website + a2 gated — covers-wave floor handles",
-      attempts: 0,
-    };
-  }
-
-  // 4. Verify — find the first candidate that passes
-  let verifiedUrl: string | null = null;
-  let verifyResult: ImageVerifyResult | null = null;
-  let verifyAttempts = 0;
-  const maxVerify = Math.min(candidates.length, 5);
-
-  for (const candidate of candidates.slice(0, maxVerify)) {
-    verifyAttempts++;
-    try {
-      // Provenance inputs: where this candidate came from, and the location's
-      // own presence. a1 candidates are own-domain by construction (a1Scrape
-      // filters to the listing's website host); a2 candidates carry their
-      // external host and will only tie through the provenance signals.
-      const result = await imageVerify(
-        {
-          image_url: candidate.url,
-          listing_name: name,
-          listing_address: address,
-          post_type: postType,
-          source_url: candidate.url,
-          source_domain: domainOf(candidate.url) ?? undefined,
-          listing_website: website ?? undefined,
-          host_company: hostCompany,
-          listing_lat: listingLat,
-          listing_lng: listingLng,
-        },
-        supabase,
-        { fetchImage: deps.fetchImage },
-      );
-      attempts[`verify_${verifyAttempts}`] =
-        `score=${result.score} pass=${result.pass} basis=${result.provenance.basis}`;
-      if (result.pass) {
-        verifiedUrl = candidate.url;
-        verifyResult = result;
-        break;
+    // 4. A2 tier (FALLBACK, operator-gated): SERP external search
+    if (candidates.length === 0) {
+      const allowSerp = Deno.env.get("ALLOW_SERP_FALLBACK") === "true";
+      if (allowSerp) {
+        source = "a2-serp";
+        try {
+          const searchResult = await imageSearch({
+            name,
+            city,
+            state,
+            post_type: postType as "fridge" | "foodbank",
+            max_results: 10,
+          }, supabase);
+          candidates = searchResult.candidates;
+          attempts.a2 = `serp found ${candidates.length}`;
+        } catch (err) {
+          attempts.a2 = `error: ${String(err).slice(0, 80)}`;
+        }
+      } else {
+        attempts.a2 = "gated (ALLOW_SERP_FALLBACK not set)";
       }
+    }
+
+    if (candidates.length === 0) {
+      return {
+        status: "fell_through",
+        post_id: postId,
+        error: website
+          ? "no usable own-domain image (a1 exhausted; a2 gated)"
+          : "no website + a2 gated — covers-wave floor handles",
+        attempts: 0,
+      };
+    }
+
+    // 4. Verify candidate images if any found
+    let verifiedUrl: string | null = null;
+    let verifyResult: ImageVerifyResult | null = null;
+    let verifyAttempts = 0;
+    const maxVerify = Math.min(candidates.length, 5);
+
+    for (const candidate of candidates.slice(0, maxVerify)) {
+      verifyAttempts++;
+      try {
+        const result = await imageVerify(
+          {
+            image_url: candidate.url,
+            listing_name: name,
+            listing_address: address,
+            post_type: postType as "fridge" | "foodbank",
+            source_url: candidate.url,
+            source_domain: domainOf(candidate.url) ?? undefined,
+            listing_website: website ?? undefined,
+            host_company: hostCompany,
+            listing_lat: listingLat,
+            listing_lng: listingLng,
+          },
+          supabase,
+          { fetchImage: deps.fetchImage },
+        );
+        attempts[`verify_${verifyAttempts}`] =
+          `score=${result.score} pass=${result.pass} basis=${result.provenance.basis}`;
+        if (result.pass) {
+          verifiedUrl = candidate.url;
+          verifyResult = result;
+          break;
+        }
+      } catch (err) {
+        attempts[`verify_${verifyAttempts}`] = `error: ${String(err).slice(0, 80)}`;
+      }
+    }
+
+    if (!verifiedUrl || !verifyResult) {
+      return {
+        status: "fell_through",
+        post_id: postId,
+        error: "no candidate passed verification",
+        attempts: verifyAttempts,
+      };
+    }
+
+    // 5. Fetch — SSRF-safe: resolve + validate, then pinned fetch.
+    const stage = await (deps.fetchBytes ?? fetchVerifiedImageBytes)(verifiedUrl);
+    if ("error" in stage) {
+      return {
+        status: "fell_through",
+        post_id: postId,
+        error: `fetch: ${stage.error}`,
+        attempts: verifyAttempts,
+      };
+    }
+
+    const imageData: Uint8Array = stage.bytes;
+    const contentType = stage.contentType;
+    attempts.fetch = `${(imageData.byteLength / 1024).toFixed(1)}KB ${contentType}`;
+
+    // 6. Place — upload to storage + update DB
+    const safeName = name.replace(/[^a-z0-9]/gi, "-").toLowerCase().slice(0, 50) ||
+      `post-${postId}`;
+    const storagePath = `fridge-foodbank/${postId}-${safeName}.jpg`;
+    const now = new Date().toISOString();
+
+    try {
+      // Upload to Supabase Storage
+      const { error: uploadErr } = await supabase.storage
+        .from("posts")
+        .upload(storagePath, new Blob([imageData.buffer as ArrayBuffer], { type: contentType }), {
+          contentType,
+          upsert: true,
+        });
+      if (uploadErr) throw new Error(uploadErr.message);
+
+      // Get the public URL
+      const { data: urlData } = supabase.storage.from("posts").getPublicUrl(storagePath);
+      const imageUrl = urlData.publicUrl;
+
+      // Update the post: set images[0] + provenance
+      const existingImages = post.images && post.images.length > 0 ? post.images : [];
+      const newImages = [imageUrl, ...existingImages.slice(0, 2)]; // keep max 3
+      const newMetadata = {
+        ...(post.metadata || {}),
+        image_provenance: {
+          source_url: verifiedUrl,
+          source_domain: verifyResult.provenance.source_domain,
+          signal_basis: verifyResult.provenance.basis,
+          source, // "a1-own-domain" | "a2-serp"
+          verify_score: verifyResult.score,
+          verify_model: verifyResult.model,
+          verify_description: verifyResult.description,
+          ...(verifyResult.perceptual_hash
+            ? { perceptual_hash: verifyResult.perceptual_hash }
+            : {}),
+          crawled_at: now,
+          placed_at: now,
+          status: "placed",
+          query_type: postType,
+        },
+      };
+
+      const { error: updateErr } = await supabase
+        .from("posts")
+        .update({ images: newImages, metadata: newMetadata })
+        .eq("id", postId);
+      if (updateErr) throw new Error(updateErr.message);
+
+      attempts.place = `storage+db ok`;
+      logger.info("enrichListing: placed", {
+        post_id: postId,
+        image: imageUrl.slice(0, 80),
+        score: verifyResult.score,
+        model: verifyResult.model,
+      });
+
+      return {
+        status: "placed",
+        post_id: postId,
+        image_url: imageUrl,
+        provenance: newMetadata.image_provenance,
+        attempts: verifyAttempts,
+      };
     } catch (err) {
-      attempts[`verify_${verifyAttempts}`] = `error: ${String(err).slice(0, 80)}`;
+      attempts.place = `error: ${String(err).slice(0, 100)}`;
+      return {
+        status: "fell_through",
+        post_id: postId,
+        error: `place: ${String(err).slice(0, 100)}`,
+        attempts: verifyAttempts,
+      };
     }
   }
 
-  if (!verifiedUrl || !verifyResult) {
-    return {
-      status: "fell_through",
-      post_id: postId,
-      error: `no candidate passed verification (${verifyAttempts} attempts)`,
-      attempts: verifyAttempts,
-    };
-  }
-
-  // 5. Fetch — SSRF-safe: resolve + validate, then pinned fetch. Re-fetched
-  //    here (not reused from verify) because a cached verdict can be days
-  //    old; the storage bytes must be current and pass the size floor.
-  const stage = await (deps.fetchBytes ?? fetchVerifiedImageBytes)(verifiedUrl);
-  if ("error" in stage) {
-    return {
-      status: "fell_through",
-      post_id: postId,
-      error: `fetch: ${stage.error}`,
-      attempts: verifyAttempts,
-    };
-  }
-  const imageData: Uint8Array = stage.bytes;
-  const contentType = stage.contentType;
-  attempts.fetch = `${(imageData.byteLength / 1024).toFixed(1)}KB ${contentType}`;
-
-  // 6. Place — upload to storage + update DB
-  const safeName = name.replace(/[^a-z0-9]/gi, "-").toLowerCase().slice(0, 50) || `post-${postId}`;
-  const storagePath = `fridge-foodbank/${postId}-${safeName}.jpg`;
-  const now = new Date().toISOString();
-
+  // 7. Universal AI reference cover tier: for community listings (food, borrow, things, etc.)
   try {
-    // Upload to Supabase Storage
-    const { error: uploadErr } = await supabase.storage
-      .from("posts")
-      .upload(storagePath, new Blob([imageData.buffer as ArrayBuffer], { type: contentType }), {
-        contentType,
-        upsert: true,
-      });
-    if (uploadErr) throw new Error(uploadErr.message);
-
-    // Get the public URL
-    const { data: urlData } = supabase.storage.from("posts").getPublicUrl(storagePath);
-    const imageUrl = urlData.publicUrl;
-
-    // Update the post: set images[0] + provenance
-    const existingImages = post.images && post.images.length > 0 ? post.images : [];
-    const newImages = [imageUrl, ...existingImages.slice(0, 2)]; // keep max 3
-    const newMetadata = {
-      ...(post.metadata || {}),
-      image_provenance: {
-        source_url: verifiedUrl,
-        source_domain: verifyResult.provenance.source_domain,
-        signal_basis: verifyResult.provenance.basis,
-        source: source, // "a1-own-domain" | "a2-serp"
-        verify_score: verifyResult.score,
-        verify_model: verifyResult.model,
-        verify_description: verifyResult.description,
-        ...(verifyResult.perceptual_hash ? { perceptual_hash: verifyResult.perceptual_hash } : {}),
-        crawled_at: now,
-        placed_at: now,
-        status: "placed",
-        query_type: postType,
+    const coverResult = await createListingCover(
+      {
+        title: post.post_name || "Community Food",
+        description: post.post_description || undefined,
+        postType: post.post_type || "food",
+        images: [],
       },
-    };
+      post.profile_id || "system",
+      supabase,
+      `enrich-${postId}`,
+      { quota: () => Promise.resolve(true) },
+    );
 
-    const { error: updateErr } = await supabase
-      .from("posts")
-      .update({ images: newImages, metadata: newMetadata })
-      .eq("id", postId);
-    if (updateErr) throw new Error(updateErr.message);
+    if (coverResult.images && coverResult.images.length > 0) {
+      const imageUrl = coverResult.images[0];
+      const now = new Date().toISOString();
+      const newMetadata = {
+        ...(post.metadata || {}),
+        cover: coverResult.cover,
+        image_provenance: {
+          source_url: coverResult.cover?.sourceImageUrl || imageUrl,
+          source: coverResult.cover?.provider || "commons-search-v1",
+          verify_score: coverResult.cover?.confidence ?? 1.0,
+          verify_model: coverResult.cover?.model || "commons-search-v1",
+          crawled_at: now,
+          placed_at: now,
+          status: "placed",
+          query_type: post.post_type || "food",
+        },
+      };
 
-    attempts.place = `storage+db ok`;
-    logger.info("enrichListing: placed", {
-      post_id: postId,
-      image: imageUrl.slice(0, 80),
-      score: verifyResult.score,
-      model: verifyResult.model,
-    });
+      const { error: updateErr } = await supabase
+        .from("posts")
+        .update({ images: [imageUrl], metadata: newMetadata })
+        .eq("id", postId);
 
-    return {
-      status: "placed",
-      post_id: postId,
-      image_url: imageUrl,
-      provenance: newMetadata.image_provenance,
-      attempts: verifyAttempts,
-    };
+      if (updateErr) throw new Error(updateErr.message);
+
+      return {
+        status: "placed",
+        post_id: postId,
+        image_url: imageUrl,
+        provenance: newMetadata.image_provenance,
+        attempts: 1,
+      };
+    }
   } catch (err) {
-    attempts.place = `error: ${String(err).slice(0, 100)}`;
-    return {
-      status: "fell_through",
-      post_id: postId,
-      error: `place: ${String(err).slice(0, 100)}`,
-      attempts: verifyAttempts,
-    };
+    logger.warn("createListingCover fallback failed in enrichListing", {
+      postId,
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
+
+  return {
+    status: "fell_through",
+    post_id: postId,
+    error: "no usable cover found in Commons reference search",
+    attempts: 1,
+  };
 }

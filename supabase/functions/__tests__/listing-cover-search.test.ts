@@ -511,3 +511,67 @@ Deno.test("deterministic search uses title plus description when AI key is not c
   assertEquals(result.confidence >= 0.85, true);
   assertEquals(searchedUrls.length >= 1, true);
 });
+
+Deno.test("deduplication: candidate exclusions filter out already used covers and select distinct candidates", async () => {
+  const send = (() => {
+    const document = {
+      query: {
+        pages: {
+          "101": {
+            pageid: 101,
+            title: "File:Red delicious apples.jpg",
+            imageinfo: [
+              {
+                url: "https://upload.wikimedia.org/red-apple.jpg",
+                mime: "image/jpeg",
+                width: 1024,
+                height: 768,
+                extmetadata: {
+                  LicenseShortName: { value: "CC0" },
+                  AttributionRequired: { value: "false" },
+                  Artist: { value: "Photographer A" },
+                  ImageDescription: { value: "Fresh red delicious apples on table" },
+                },
+              },
+            ],
+          },
+          "102": {
+            pageid: 102,
+            title: "File:Honeycrisp apples fresh.jpg",
+            imageinfo: [
+              {
+                url: "https://upload.wikimedia.org/honeycrisp.jpg",
+                mime: "image/jpeg",
+                width: 1200,
+                height: 900,
+                extmetadata: {
+                  LicenseShortName: { value: "CC0" },
+                  AttributionRequired: { value: "false" },
+                  Artist: { value: "Gardener" },
+                  ImageDescription: { value: "Freshly harvested honeycrisp apples from orchard" },
+                },
+              },
+            ],
+          },
+        },
+      },
+    };
+    return Promise.resolve(Response.json(document));
+  }) as typeof fetch;
+
+  // When pageId 102 is already used by an existing listing, it must be excluded to prevent duplicate placeholders
+  const result = await searchListingReference(
+    {
+      title: "Apples",
+      description: "Crisp honeycrisp apples from our orchard",
+      postType: "food",
+      images: [],
+      excludePageIds: [102],
+    },
+    { fetch: send },
+  );
+
+  // Successfully selects the distinct, non-duplicate candidate 101!
+  assertEquals(result.candidate.pageId, 101);
+  assertEquals(result.candidate.title, "File:Red delicious apples.jpg");
+});

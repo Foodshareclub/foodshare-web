@@ -14,6 +14,8 @@ export interface CoverInput {
   description?: string;
   postType: string;
   images: string[];
+  excludePageIds?: number[];
+  excludeUrls?: string[];
 }
 export interface CoverProvenance {
   kind: "reference";
@@ -97,13 +99,64 @@ export async function createListingCover(
   userId: string,
   supabase: Parameters<typeof uploadImage>[0],
   _requestId: string,
+  overrides?: Partial<CoverDependencies>,
 ) {
-  return await ensureListingCover(input, userId, {
-    quota: () => checkRateLimit(userId, supabase),
-    search: (context) => searchListingReference(context),
-    download: downloadImage,
-    store: async (path, bytes, contentType) =>
-      (await uploadImage(supabase, "food-images", path, bytes, contentType)).publicUrl,
-    verify: downloadImage,
+  const excludePageIds = input.excludePageIds ? [...input.excludePageIds] : [];
+  const excludeUrls = input.excludeUrls ? [...input.excludeUrls] : [];
+
+  // Query existing active covers to guarantee distinct photos and prevent duplicate placeholders
+  if (
+    excludePageIds.length === 0 && excludeUrls.length === 0 && supabase &&
+    typeof (supabase as unknown as { from?: unknown }).from === "function"
+  ) {
+    try {
+      const db = supabase as unknown as {
+        from: (table: string) => {
+          select: (cols: string) => {
+            eq: (col: string, val: unknown) => {
+              limit: (
+                n: number,
+              ) => Promise<{ data?: Array<{ images?: unknown; metadata?: unknown }> }>;
+            };
+          };
+        };
+      };
+      const { data: activePosts } = await db
+        .from("posts")
+        .select("images, metadata")
+        .eq("is_active", true)
+        .limit(200);
+
+      if (activePosts) {
+        for (const p of activePosts) {
+          const meta = p.metadata as { cover?: { pageId?: unknown } } | undefined;
+          const pageId = meta?.cover?.pageId;
+          if (typeof pageId === "number") excludePageIds.push(pageId);
+          if (Array.isArray(p.images)) {
+            for (const img of p.images) {
+              if (typeof img === "string") excludeUrls.push(img);
+            }
+          }
+        }
+      }
+    } catch {
+      // Non-fatal deduplication lookup
+    }
+  }
+
+  const distinctInput: CoverInput = {
+    ...input,
+    excludePageIds,
+    excludeUrls,
+  };
+
+  return await ensureListingCover(distinctInput, userId, {
+    quota: overrides?.quota ?? (() => checkRateLimit(userId, supabase)),
+    search: overrides?.search ?? ((context) => searchListingReference(context)),
+    download: overrides?.download ?? downloadImage,
+    store: overrides?.store ??
+      (async (path, bytes, contentType) =>
+        (await uploadImage(supabase, "food-images", path, bytes, contentType)).publicUrl),
+    verify: overrides?.verify ?? downloadImage,
   });
 }

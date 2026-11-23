@@ -48,7 +48,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if new.post_type in ('fridge', 'foodbank') then
+  if (new.images is null or cardinality(new.images) = 0 or new.post_type in ('fridge', 'foodbank')) then
     insert into public.listing_enrich_queue (post_id)
     values (new.id)
     on conflict (post_id) where status in ('pending', 'processing') do nothing;
@@ -61,5 +61,5 @@ drop trigger if exists trg_posts_listing_enrich on public.posts;
 create trigger trg_posts_listing_enrich
   after insert on public.posts
   for each row
-  when (new.post_type in ('fridge', 'foodbank'))
+  when (new.images is null or cardinality(new.images) = 0 or new.post_type in ('fridge', 'foodbank'))
   execute function public.tg_listing_enrich_enqueue();
