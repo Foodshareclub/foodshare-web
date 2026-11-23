@@ -2,6 +2,7 @@
 
 import { type CoverCredit } from "@/lib/cover-provenance";
 import { isValidImageUrl, normalizeImageUrl } from "@/lib/image";
+import { resolveRealisticCover } from "@/lib/realistic-covers";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -20,12 +21,25 @@ type ImageCarouselProps = {
   cover?: CoverCredit | null;
 };
 
-export function ImageCarousel({ images, productUrl, productId, postName, postType, cover }: ImageCarouselProps) {
+export function ImageCarousel({
+  images,
+  productUrl,
+  productId,
+  postName,
+  postType,
+  cover,
+}: ImageCarouselProps) {
   const t = useTranslations();
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-  const validImages = [...new Set(images.filter(isValidImageUrl).map((url) => normalizeImageUrl(url) as string))];
+  const validImages = [
+    ...new Set(
+      images
+        .filter(isValidImageUrl)
+        .map((url) => normalizeImageUrl(url) as string),
+    ),
+  ];
   const placeholderLabel =
     postType === "food" || postType === "vegan"
       ? "Community Food"
@@ -34,13 +48,22 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
         : postType === "foodbank"
           ? "Food Bank"
           : "Community Item";
-  const placeholder = <FindingPhotoState label={placeholderLabel} postName={postName} postType={postType} />;
-  const allDead = validImages.length > 0 && validImages.every((image) => imageErrors[image]);
+  const placeholder = (
+    <FindingPhotoState
+      label={placeholderLabel}
+      postName={postName}
+      postType={postType}
+    />
+  );
+  const allDead =
+    validImages.length > 0 && validImages.every((image) => imageErrors[image]);
   const handleScroll = () => {
     const element = scrollRef.current;
     if (!element || !element.clientWidth) return;
     // RTL scrollLeft is negative. Keep the logical image index positive.
-    const index = Math.round(Math.abs(element.scrollLeft) / element.clientWidth);
+    const index = Math.round(
+      Math.abs(element.scrollLeft) / element.clientWidth,
+    );
     setActiveIndex(Math.min(validImages.length - 1, Math.max(0, index)));
   };
 
@@ -52,7 +75,9 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
     const direction = getComputedStyle(element).direction === "rtl" ? -1 : 1;
     element.scrollTo({
       left: direction * index * element.clientWidth,
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
     });
     setActiveIndex(index);
   };
@@ -90,11 +115,17 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
             ) : (
               <Image
                 className="object-cover transition-transform duration-500 ease-out motion-safe:group-hover/card:scale-[1.03] motion-reduce:transition-none"
-                style={index === 0 ? { viewTransitionName: `product-hero-${productId}` } : undefined}
+                style={
+                  index === 0
+                    ? { viewTransitionName: `product-hero-${productId}` }
+                    : undefined
+                }
                 src={image}
                 alt={postName}
                 fill
-                onError={() => setImageErrors((previous) => ({ ...previous, [image]: true }))}
+                onError={() =>
+                  setImageErrors((previous) => ({ ...previous, [image]: true }))
+                }
                 sizes="(min-width: 1880px) 290px, (min-width: 1640px) 330px, (min-width: 1200px) 25vw, (min-width: 950px) 33vw, (min-width: 550px) 50vw, 100vw"
               />
             )}

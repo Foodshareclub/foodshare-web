@@ -2,8 +2,15 @@
 
 import { FindingPhotoState } from "@/components/productCard/CoverStatus";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { CoverCredit } from "@/lib/cover-provenance";
+import { resolveRealisticCover } from "@/lib/realistic-covers";
 import { cn } from "@/lib/utils";
 import { Grid2x2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -36,7 +43,15 @@ const SIDE_GRID: Record<number, string> = {
  * Photo mosaic (md+) and swipe carousel with counter pill (mobile).
  * The cover credit and the finding-a-photo state stay on the first tile or slide.
  */
-export function PostGallery({ postId, title, images, coverCredit, emptyLabel, badge, className }: PostGalleryProps) {
+export function PostGallery({
+  postId,
+  title,
+  images,
+  coverCredit,
+  emptyLabel,
+  badge,
+  className,
+}: PostGalleryProps) {
   const t = useTranslations();
   const [failed, setFailed] = useState<Record<string, boolean>>({});
   const [current, setCurrent] = useState(0);
@@ -45,7 +60,8 @@ export function PostGallery({ postId, title, images, coverCredit, emptyLabel, ba
   const shown = images.filter((url) => !failed[url]);
   const cover = shown[0];
   const sideCount = Math.min(Math.max(shown.length - 1, 0), 4);
-  const onError = (url: string) => setFailed((previous) => ({ ...previous, [url]: true }));
+  const onError = (url: string) =>
+    setFailed((previous) => ({ ...previous, [url]: true }));
 
   const overlays = badge ? (
     <div className="pointer-events-none absolute inset-0 z-10">
@@ -55,7 +71,12 @@ export function PostGallery({ postId, title, images, coverCredit, emptyLabel, ba
 
   if (!cover) {
     return (
-      <div className={cn("relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted sm:aspect-[16/9]", className)}>
+      <div
+        className={cn(
+          "relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted sm:aspect-[16/9]",
+          className,
+        )}
+      >
         <FindingPhotoState label={emptyLabel} postName={title} />
         {overlays}
       </div>
@@ -79,7 +100,10 @@ export function PostGallery({ postId, title, images, coverCredit, emptyLabel, ba
           }}
         >
           {shown.map((url, index) => (
-            <li key={url} className="relative h-full w-full shrink-0 snap-center">
+            <li
+              key={url}
+              className="relative h-full w-full shrink-0 snap-center"
+            >
               <Image
                 src={url}
                 alt={`${title} (${index + 1}/${shown.length})`}
@@ -168,7 +192,10 @@ export function PostGallery({ postId, title, images, coverCredit, emptyLabel, ba
           </DialogHeader>
           <ul className="space-y-3">
             {shown.map((url, index) => (
-              <li key={url} className="relative aspect-[4/3] overflow-hidden rounded-xl bg-muted">
+              <li
+                key={url}
+                className="relative aspect-[4/3] overflow-hidden rounded-xl bg-muted"
+              >
                 <Image
                   src={url}
                   alt={`${title} (${index + 1}/${shown.length})`}

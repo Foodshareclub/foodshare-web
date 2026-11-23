@@ -137,3 +137,24 @@ Deno.test("omitted images enter automatic cover search", () => {
     [],
   );
 });
+
+Deno.test("createListingCover falls back to photorealistic catalog cover when search fails", async () => {
+  const { createListingCover } = await import("../api-v1-products/lib/listing-cover.ts");
+  const fallbackResult = await createListingCover(
+    {
+      title: "Fresh Bananas",
+      description: "Organic bunch",
+      postType: "food",
+      images: [],
+    },
+    "test-user",
+    // deno-lint-ignore no-explicit-any
+    null as any,
+    "req-123",
+  );
+
+  assertEquals(fallbackResult.images.length, 1);
+  assertEquals(fallbackResult.images[0].includes("assets/covers/food/banana"), true);
+  assertEquals(fallbackResult.cover?.kind, "reference");
+  assertEquals(fallbackResult.cover?.provider, "realistic-catalog");
+});

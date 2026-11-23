@@ -1,85 +1,12 @@
 "use client";
 import { type CoverCredit } from "@/lib/cover-provenance";
+import { resolveRealisticCover } from "@/lib/realistic-covers";
 import { cn } from "@/lib/utils";
-import {
-  HeartHandshake,
-  Leaf,
-  Package,
-  Repeat,
-  Snowflake,
-  Sparkles,
-  Users,
-  Utensils,
-  type LucideIcon,
-} from "lucide-react";
-
-interface CategoryTheme {
-  icon: LucideIcon;
-  gradient: string;
-  label: string;
-}
-
-const CATEGORY_THEMES: Record<string, CategoryTheme> = {
-  food: {
-    icon: Utensils,
-    gradient:
-      "from-amber-500/15 via-orange-500/10 to-emerald-500/15 dark:from-amber-950/30 dark:via-neutral-900 dark:to-emerald-950/25",
-    label: "Community Food",
-  },
-  vegan: {
-    icon: Leaf,
-    gradient:
-      "from-emerald-500/15 via-green-500/10 to-teal-500/15 dark:from-emerald-950/30 dark:via-neutral-900 dark:to-teal-950/25",
-    label: "Community Food",
-  },
-  fridge: {
-    icon: Snowflake,
-    gradient:
-      "from-cyan-500/15 via-sky-500/10 to-blue-500/15 dark:from-cyan-950/30 dark:via-neutral-900 dark:to-blue-950/25",
-    label: "Community Fridge",
-  },
-  foodbank: {
-    icon: HeartHandshake,
-    gradient:
-      "from-rose-500/15 via-amber-500/10 to-orange-500/15 dark:from-rose-950/30 dark:via-neutral-900 dark:to-amber-950/25",
-    label: "Food Bank",
-  },
-  borrow: {
-    icon: Repeat,
-    gradient:
-      "from-indigo-500/15 via-purple-500/10 to-blue-500/15 dark:from-indigo-950/30 dark:via-neutral-900 dark:to-purple-950/25",
-    label: "Borrow",
-  },
-  wanted: {
-    icon: Sparkles,
-    gradient:
-      "from-pink-500/15 via-rose-500/10 to-amber-500/15 dark:from-pink-950/30 dark:via-neutral-900 dark:to-rose-950/25",
-    label: "Wanted",
-  },
-  volunteer: {
-    icon: Users,
-    gradient:
-      "from-teal-500/15 via-emerald-500/10 to-cyan-500/15 dark:from-teal-950/30 dark:via-neutral-900 dark:to-cyan-950/25",
-    label: "Volunteer",
-  },
-  zerowaste: {
-    icon: Leaf,
-    gradient:
-      "from-green-500/15 via-emerald-500/10 to-lime-500/15 dark:from-green-950/30 dark:via-neutral-900 dark:to-emerald-950/25",
-    label: "Zero Waste",
-  },
-};
-
-const DEFAULT_THEME: CategoryTheme = {
-  icon: Package,
-  gradient:
-    "from-neutral-500/10 via-neutral-400/5 to-neutral-600/10 dark:from-neutral-800/30 dark:via-neutral-900 dark:to-neutral-950/25",
-  label: "Community Item",
-};
+import Image from "next/image";
 
 /**
- * Airbnb-grade tactile fallback cover for listings whose photos are missing,
- * dead, or actively awaiting enrichment.
+ * Photorealistic cover renderer for listings whose photos are missing,
+ * dead, or awaiting enrichment. Eliminates artificial placeholder aesthetics.
  */
 export function FindingPhotoState({
   label,
@@ -93,9 +20,10 @@ export function FindingPhotoState({
   className?: string;
 }) {
   const message = `Finding a photo for this ${label} listing…`;
-  const normalizedType = postType?.toLowerCase() || "";
-  const theme = CATEGORY_THEMES[normalizedType] || DEFAULT_THEME;
-  const Icon = theme.icon;
+  const realisticCover = resolveRealisticCover({
+    title: postName || label,
+    postType,
+  });
 
   return (
     <div
@@ -104,33 +32,25 @@ export function FindingPhotoState({
       aria-label={message}
       data-testid="finding-photo"
       className={cn(
-        "absolute inset-0 flex flex-col items-center justify-center p-4 select-none overflow-hidden",
-        "bg-gradient-to-br",
-        theme.gradient,
+        "absolute inset-0 select-none overflow-hidden bg-muted",
         className,
       )}
     >
-      <div className="relative flex flex-col items-center justify-center gap-2 text-center z-10 max-w-[85%]">
-        <div
-          className={cn(
-            "flex size-11 items-center justify-center rounded-2xl border shadow-2xs backdrop-blur-md transition-transform duration-300 motion-safe:group-hover/card:scale-105",
-            "bg-white/85 dark:bg-neutral-900/85 border-white/60 dark:border-white/10",
-          )}
-        >
-          <Icon className="size-5.5 text-foreground/80" aria-hidden="true" />
-        </div>
-
-        {postName && (
-          <span className="text-[13px] font-semibold tracking-tight text-foreground/90 truncate max-w-full">
-            {postName}
-          </span>
-        )}
-      </div>
+      <Image
+        className="object-cover transition-transform duration-500 ease-out motion-safe:group-hover/card:scale-[1.03] motion-reduce:transition-none"
+        src={realisticCover}
+        alt={postName || label}
+        fill
+        sizes="(min-width: 1880px) 290px, (min-width: 1640px) 330px, (min-width: 1200px) 25vw, (min-width: 950px) 33vw, (min-width: 550px) 50vw, 100vw"
+      />
     </div>
   );
 }
 
 /** Reference disclosure overlay omitted to keep listing covers clean and authentic. */
-export function CoverCreditLine(_props: { credit?: CoverCredit; className?: string }) {
+export function CoverCreditLine(_props: {
+  credit?: CoverCredit;
+  className?: string;
+}) {
   return null;
 }
