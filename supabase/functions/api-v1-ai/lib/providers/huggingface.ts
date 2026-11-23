@@ -7,8 +7,27 @@
  */
 
 import { ServerError, ValidationError } from "../../../_shared/errors.ts";
+import { downloadImage } from "../../../_shared/image-utils.ts";
 import { generateCacheKey, getCachedResult, setCachedResult } from "../cache.ts";
 import type { PostBody } from "../schemas.ts";
+
+/**
+ * Fetch a caller-supplied image URL for imageToText through the SSRF gate.
+ * `downloadImage` validates + resolves before any connection (private and
+ * metadata hosts rejected, https-only), pins the connection to the validated
+ * IP, refuses redirects, and caps time (10 s) and size (10 MiB).
+ */
+export async function fetchImageBlob(imageUrl: string): Promise<Blob> {
+  try {
+    return new Blob([new Uint8Array(await downloadImage(imageUrl))]);
+  } catch (err) {
+    throw new ValidationError(
+      `imageUrl could not be fetched: ${
+        String(err instanceof Error ? err.message : err).slice(0, 160)
+      }`,
+    );
+  }
+}
 
 export async function runHfInference(
   task: string,
@@ -81,9 +100,7 @@ export async function runHfInference(
     }
 
     case "imageToText": {
-      const imageData = body?.imageUrl
-        ? await (await fetch(body.imageUrl)).blob()
-        : body?.imageData;
+      const imageData = body?.imageUrl ? await fetchImageBlob(body.imageUrl) : body?.imageData;
       result = await hf.imageToText({
         data: imageData as Blob,
         model: body?.model || "nlpconnect/vit-gpt2-image-captioning",
