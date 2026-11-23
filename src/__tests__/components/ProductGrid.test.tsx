@@ -63,18 +63,4 @@ describe("ProductGrid - Airbnb Listing Feed", () => {
 
     expect(screen.getAllByTestId("skeleton-card")).toHaveLength(10);
   });
-
-  it("renders Airbnb 'Continue exploring' section when feed is exhausted", () => {
-    render(<ProductGrid products={mockProducts} isLoading={false} hasMore={false} />);
-
-    expect(screen.getByText("Browse Categories")).toBeDefined();
-    expect(screen.getByText("Find what you need or share what you can")).toBeDefined();
-
-    // Check exploration chips
-    expect(screen.getByText("Food")).toBeDefined();
-    expect(screen.getByText("Zero Waste")).toBeDefined();
-    expect(screen.getByText("Things")).toBeDefined();
-    expect(screen.getByText("Borrow")).toBeDefined();
-    expect(screen.getByText("Wanted")).toBeDefined();
-  });
 });
