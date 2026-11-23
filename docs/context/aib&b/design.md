@@ -608,6 +608,11 @@ FoodShare incorporates core Airbnb design patterns adapted for surplus food and 
     - Standardized 48px rounded-xl input controls with active brand elevation across login, signup, reset password, and profile editing.
     - Personal info blocks (`NameBlock.tsx`, `EmailBlock.tsx`, `PhoneNumberBlock.tsx`, `AddressBlock.tsx`) elevated to `rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl p-6 shadow-xs hover:shadow-md` cards with clean typography and rounded-full edit/cancel pill triggers.
 
+21. **Category Navigation, Feedback & System Banner Architecture (`CategoryNav.tsx`, `FeedbackModal.tsx`, `LocationPermissionBanner.tsx`)**:
+    - `CategoryNav.tsx` elevated with logical inset underline indicator (`inset-x-2 bottom-0 h-0.5 bg-foreground rounded-full`), active `text-brand` iconography, and capsule search/filter action buttons (`rounded-full border border-border/80 bg-background/80 hover:border-foreground/40 shadow-2xs`).
+    - `FeedbackModal.tsx` upgraded to a `rounded-3xl border border-border/80 bg-background/95 backdrop-blur-2xl shadow-2xl` dialog with 44px rounded-xl input fields and a tokenized brand primary action button (`bg-brand hover:bg-brand-hover`).
+    - `LocationPermissionBanner.tsx` aligned with `rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl shadow-xs` card surfaces and pill-style retry actions.
+
 ---
 
 _This is a living document. Update as you build and discover new patterns!_

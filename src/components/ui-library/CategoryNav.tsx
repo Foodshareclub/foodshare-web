@@ -102,13 +102,13 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
                 aria-selected={isActive}
                 aria-label={label}
                 tabIndex={isActive ? 0 : -1}
-                className="flex flex-col items-center gap-1 md:gap-1.5 min-w-fit px-2 md:px-3 cursor-pointer relative pb-2 md:pb-3 transition-all duration-200 ease-in-out transform translate-z-0 hover:-translate-y-0.5 active:-translate-y-1 active:transition-[transform_0.15s_ease-in-out] focus:outline-2 focus:outline-primary focus:outline-offset-4 focus:rounded-lg"
+                className="flex flex-col items-center gap-1 md:gap-1.5 min-w-fit px-2 md:px-3 cursor-pointer relative pb-2 md:pb-3 transition-all duration-200 ease-in-out transform translate-z-0 hover:-translate-y-0.5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded-lg"
                 onClick={() => handleCategoryClick(category.id)}
                 onKeyDown={(e) => handleKeyDown(e, category.id)}
               >
                 {/* Icon */}
                 <div
-                  className={`transition-all duration-200 ${isActive ? "text-primary" : "text-muted-foreground"}`}
+                  className={`transition-all duration-200 ${isActive ? "text-brand" : "text-muted-foreground hover:text-foreground"}`}
                   aria-hidden="true"
                 >
                   <category.icon className="w-6 h-6 md:w-7 md:h-7" strokeWidth={1.75} />
@@ -128,7 +128,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
 
                 {/* Active Indicator - Bottom Border */}
                 {isActive && (
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-0.5 bg-foreground rounded-t-sm transition-all duration-200" />
+                  <div className="absolute bottom-0 inset-x-2 h-0.5 bg-foreground rounded-full transition-all duration-200" />
                 )}
               </div>
             );
@@ -141,7 +141,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
           <button
             type="button"
             aria-label="Open search"
-            className="flex items-center justify-center gap-1.5 px-2.5 md:px-3 py-1.5 md:py-2 border border-border rounded-[20px] cursor-pointer transition-all duration-200 bg-background min-w-[70px] md:min-w-[85px] hover:border-foreground hover:shadow-sm active:scale-[0.98] focus:outline-2 focus:outline-primary focus:outline-offset-2"
+            className="flex items-center justify-center gap-1.5 px-3 md:px-3.5 py-1.5 md:py-2 border border-border/80 rounded-full cursor-pointer transition-all duration-200 bg-background/80 hover:bg-muted/40 hover:border-foreground/40 shadow-2xs hover:shadow-xs active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
             onClick={onSearch}
           >
             <SearchIcon className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
@@ -152,7 +152,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
           <button
             type="button"
             aria-label="Open filters"
-            className="flex items-center justify-center gap-1.5 px-2.5 md:px-3 py-1.5 md:py-2 border border-border rounded-[20px] cursor-pointer transition-all duration-200 bg-background min-w-[65px] md:min-w-[75px] hover:border-foreground hover:shadow-sm active:scale-[0.98] focus:outline-2 focus:outline-primary focus:outline-offset-2"
+            className="flex items-center justify-center gap-1.5 px-3 md:px-3.5 py-1.5 md:py-2 border border-border/80 rounded-full cursor-pointer transition-all duration-200 bg-background/80 hover:bg-muted/40 hover:border-foreground/40 shadow-2xs hover:shadow-xs active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
             onClick={onFilter}
           >
             {/* Filter Icon */}

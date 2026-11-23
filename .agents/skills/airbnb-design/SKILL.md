@@ -46,7 +46,8 @@ description: Airbnb Design Language System (DLS) best practices, components, and
   - 56px rounded-2xl search input with start search icon and end `size-10` brand action button.
   - Tactile category exploration chips (`rounded-full`) with active state (`border-brand bg-brand/10 text-brand`).
 - **Category Navigation (`CategoryNav.tsx`)**:
-  - Icon over label, active `h-0.5 bg-foreground` underline, keyboard accessible navigation.
+  - Icon over label with `text-brand` active accent, logical `inset-x-2 bottom-0 h-0.5 bg-foreground rounded-full` underline indicator.
+  - Capsule search and filter pill buttons (`rounded-full border border-border/80 bg-background/80 hover:bg-muted/40 shadow-2xs`).
 
 ## 5. Community & Volunteer Architecture (`VolunteerPostcard.tsx`, `VolunteerGrid.tsx`)
 

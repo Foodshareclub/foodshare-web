@@ -108,7 +108,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
 
   return (
     <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && handleClose()}>
-      <DialogContent variant="glass" className="max-w-[500px]">
+      <DialogContent
+        variant="glass"
+        className="max-w-[500px] rounded-3xl border border-border/80 bg-background/95 backdrop-blur-2xl shadow-2xl p-6 sm:p-8"
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key="feedback-form"
@@ -195,7 +198,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                         id="feedback-modal-type"
                         value={feedbackType}
                         onChange={(e) => setFeedbackType(e.target.value as FeedbackType)}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        className="flex h-11 w-full rounded-xl border border-border/80 bg-background/80 px-3.5 py-2 text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
                       >
                         <option value="general">General Feedback</option>
                         <option value="bug">Bug Report</option>
@@ -217,7 +220,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder={"John Doe"}
-                        className="rounded-xl"
+                        className="h-11 rounded-xl border border-border/80 bg-background/80 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
                         required
                       />
                     </div>
@@ -236,7 +239,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder={"your@email.com"}
-                        className="rounded-xl"
+                        className="h-11 rounded-xl border border-border/80 bg-background/80 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
                         required
                       />
                     </div>
@@ -254,7 +257,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                         value={subject}
                         onChange={(e) => setSubject(e.target.value)}
                         placeholder={"Brief description of your feedback"}
-                        className="rounded-xl"
+                        className="h-11 rounded-xl border border-border/80 bg-background/80 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
                         required
                       />
                     </div>
@@ -272,7 +275,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder={"Tell us more about your feedback..."}
-                        className="flex min-h-[120px] w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        className="flex min-h-[120px] w-full rounded-xl border border-border/80 bg-background/80 px-4 py-3 text-sm placeholder:text-muted-foreground focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
                         required
                       />
                     </div>
@@ -283,14 +286,14 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                         type="button"
                         onClick={handleClose}
                         variant="outline"
-                        className="flex-1 rounded-xl"
+                        className="flex-1 h-11 rounded-xl border border-border/80 hover:bg-muted/60 text-sm font-semibold transition-all cursor-pointer"
                         disabled={isPending}
                       >
                         &quot;Cancel&quot;
                       </Button>
                       <Button
                         type="submit"
-                        className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white"
+                        className="flex-1 h-11 rounded-xl bg-brand hover:bg-brand-hover active:scale-95 text-white font-semibold text-sm shadow-xs hover:shadow-sm transition-all cursor-pointer"
                         disabled={isPending}
                       >
                         {isPending ? "Sending..." : "Send Feedback"}

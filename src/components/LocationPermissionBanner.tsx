@@ -26,8 +26,8 @@ export const LocationPermissionBanner: FC<LocationPermissionBannerProps> = ({
   // Show loading state
   if (isLoading) {
     return (
-      <div className="flex items-center gap-3 p-4 rounded-md border border-blue-500/20 bg-blue-500/10 dark:bg-blue-500/5">
-        <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+      <div className="flex items-center gap-3 p-4 rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl shadow-xs">
+        <Info className="w-5 h-5 text-brand flex-shrink-0" />
         <p className="text-sm text-foreground">Detecting your location...</p>
       </div>
     );
@@ -36,8 +36,8 @@ export const LocationPermissionBanner: FC<LocationPermissionBannerProps> = ({
   // Show error state
   if (error) {
     return (
-      <div className="flex items-start gap-3 p-4 rounded-md border border-orange-500/20 bg-orange-500/10 dark:bg-orange-500/5">
-        <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+      <div className="flex items-start gap-3 p-4 rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl shadow-xs">
+        <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
         <div className="flex-1">
           <h4 className="font-semibold text-foreground mb-1">Location Access</h4>
           <p className="text-sm text-muted-foreground mb-2">{error.userFriendlyMessage}</p>
@@ -46,7 +46,7 @@ export const LocationPermissionBanner: FC<LocationPermissionBannerProps> = ({
               size="sm"
               variant="outline"
               onClick={onRetry}
-              className="border-orange-500/30 text-orange-700 dark:text-orange-400 hover:bg-orange-500/10"
+              className="rounded-full text-xs font-semibold px-4 border border-border/80 hover:bg-muted/60 transition-all cursor-pointer"
             >
               Try Again
             </Button>
@@ -82,8 +82,8 @@ export const LocationPermissionBanner: FC<LocationPermissionBannerProps> = ({
     const info = accuracyInfo[accuracyLevel];
 
     return (
-      <div className="flex items-start gap-3 p-4 rounded-md border border-blue-500/20 bg-blue-500/10 dark:bg-blue-500/5">
-        <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+      <div className="flex items-start gap-3 p-4 rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl shadow-xs">
+        <Info className="w-5 h-5 text-brand flex-shrink-0 mt-0.5" />
         <div className="flex-1 space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-foreground">
@@ -91,9 +91,9 @@ export const LocationPermissionBanner: FC<LocationPermissionBannerProps> = ({
             </p>
             <Button
               size="sm"
-              variant="ghost"
+              variant="outline"
               onClick={() => setOpen(!open)}
-              className="text-xs text-blue-700 dark:text-blue-400 hover:bg-blue-500/10"
+              className="rounded-full text-xs font-semibold px-3 py-1 border border-border/80 hover:bg-muted/60 transition-all cursor-pointer"
             >
               {open ? "Hide" : "Why?"}
             </Button>
@@ -101,7 +101,7 @@ export const LocationPermissionBanner: FC<LocationPermissionBannerProps> = ({
           {open && (
             <div className="space-y-2 text-sm">
               <p className="text-muted-foreground">{info.description}</p>
-              <div className="p-3 bg-muted rounded-md">
+              <div className="p-3 bg-muted/60 rounded-xl border border-border/60">
                 <p className="font-medium mb-1 text-foreground">Privacy Notice</p>
                 <p className="text-xs text-muted-foreground">
                   We use your location to show nearby food listings. Your location is only used for this purpose and is
