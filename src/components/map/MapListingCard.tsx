@@ -63,7 +63,7 @@ export function MapListingCard({ item, productType, selected, highlighted, onHov
             onError={onError}
           />
         ) : (
-          <FindingPhotoState label={findingLabel(item)} />
+          <FindingPhotoState label={findingLabel(item)} postName={item.post_name} postType={item.post_type} />
         )}
       </div>
       <div className="mt-2 flex items-center justify-between gap-2">
@@ -100,7 +100,7 @@ export function MapPreviewCard({
           {image ? (
             <Image src={image} alt="" fill sizes="80px" className="object-cover" onError={onError} />
           ) : (
-            <FindingPhotoState label={findingLabel(item)} className="p-1 [&>div]:p-1 [&_span]:hidden" />
+            <FindingPhotoState label={findingLabel(item)} postName={item.post_name} postType={item.post_type} className="p-1 [&>div]:p-1 [&_span]:hidden" />
           )}
         </div>
         <div className="min-w-0 space-y-1 pe-8">

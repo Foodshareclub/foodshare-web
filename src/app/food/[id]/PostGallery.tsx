@@ -69,7 +69,7 @@ export function PostGallery({ postId, title, images, coverCredit, emptyLabel, ba
   if (!cover) {
     return (
       <div className={cn("relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted sm:aspect-[16/9]", className)}>
-        <FindingPhotoState label={emptyLabel} />
+        <FindingPhotoState label={emptyLabel} postName={title} />
         {overlays}
       </div>
     );

@@ -1,5 +1,9 @@
-import { describe, expect, it, mock } from "bun:test";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, mock } from "bun:test";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+
+afterEach(() => {
+  cleanup();
+});
 
 mock.module("next-intl", () => ({
   useTranslations: () => (key: string) => {
@@ -11,7 +15,6 @@ mock.module("next-intl", () => ({
       contact_sharer: "Contact Sharer",
       login_to_contact: "Login to Contact",
       location_approximate_disclaimer: "Location shown is approximate for privacy",
-      cover_source_wikimedia: "Source: Wikimedia Commons",
     };
     return translations[key] || key;
   },

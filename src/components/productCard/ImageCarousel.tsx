@@ -34,7 +34,13 @@ export function ImageCarousel({ images, productUrl, productId, postName, postTyp
         : postType === "foodbank"
           ? "Food Bank"
           : "Community Item";
-  const placeholder = <FindingPhotoState label={placeholderLabel} />;
+  const placeholder = (
+    <FindingPhotoState
+      label={placeholderLabel}
+      postName={postName}
+      postType={postType}
+    />
+  );
   const allDead = validImages.length > 0 && validImages.every((image) => imageErrors[image]);
   const showCredit = !!cover && !allDead && activeIndex === 0 && isReferenceImageUrl(validImages[0]);
   const handleScroll = () => {
