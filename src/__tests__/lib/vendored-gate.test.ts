@@ -1,19 +1,9 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import {
-  mkdtempSync,
-  rmSync,
-  mkdirSync,
-  writeFileSync,
-  readFileSync,
-  realpathSync,
-} from "bun:fs";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readFileSync, realpathSync } from "bun:fs";
 import { join } from "bun:path";
 import { tmpdir } from "bun:os";
 import { compareVendored } from "../../../scripts/check-vendored";
-import {
-  syncFromSource,
-  verifySyncSource,
-} from "../../../scripts/vendored-sync";
+import { syncFromSource, verifySyncSource } from "../../../scripts/vendored-sync";
 
 /**
  * The dangling-42c2b998 scenario, end to end:
@@ -41,8 +31,7 @@ let guardSha = "";
 
 function git(cwd: string, ...args: string[]): string {
   const proc = Bun.spawnSync(["git", "-C", cwd, ...args]);
-  const decode = (out: Uint8Array | null): string =>
-    out == null ? "" : new TextDecoder().decode(out);
+  const decode = (out: Uint8Array | null): string => (out == null ? "" : new TextDecoder().decode(out));
   if (!proc.success) {
     throw new Error(`git ${args.join(" ")}: ${decode(proc.stderr).trim()}`);
   }
@@ -56,14 +45,8 @@ function seedTree(dir: string, guardVersion: string): void {
   mkdirSync(join(dir, "supabase/migrations"), { recursive: true });
   mkdirSync(join(dir, "scripts"), { recursive: true });
   writeFileSync(join(dir, "supabase/functions/enrich/index.ts"), guardVersion);
-  writeFileSync(
-    join(dir, "supabase/migrations/0001_init.sql"),
-    "create table t (id int);\n",
-  );
-  writeFileSync(
-    join(dir, "scripts/external-monitor.sh"),
-    "#!/usr/bin/env bash\necho ok\n",
-  );
+  writeFileSync(join(dir, "supabase/migrations/0001_init.sql"), "create table t (id int);\n");
+  writeFileSync(join(dir, "scripts/external-monitor.sh"), "#!/usr/bin/env bash\necho ok\n");
 }
 
 beforeAll(() => {
@@ -100,6 +83,14 @@ beforeAll(() => {
   git(backend, "worktree", "remove", "--force", wt);
 });
 
+beforeEach(() => {
+  git(origin, "update-ref", "refs/heads/main", baseSha);
+  git(backend, "checkout", "-q", "main");
+  git(backend, "reset", "--hard", "-q", baseSha);
+  git(backend, "clean", "-fdx");
+  seedTree(web, GUARD_V2);
+});
+
 afterAll(() => {
   rmSync(root, { recursive: true, force: true });
 });
@@ -119,10 +110,7 @@ describe("gate C — the F1 mirror (zero divergence, both directions)", () => {
     seedTree(staleWeb, GUARD_V1); // in sync with origin/main at base
     // Backend advances: a new edge function lands on main.
     mkdirSync(join(backend, "supabase/functions/new-fn"), { recursive: true });
-    writeFileSync(
-      join(backend, "supabase/functions/new-fn/index.ts"),
-      "export {};\n",
-    );
+    writeFileSync(join(backend, "supabase/functions/new-fn/index.ts"), "export {};\n");
     git(backend, "add", "-A");
     git(backend, "commit", "-q", "-m", "advance backend");
     git(backend, "push", "-q", "origin", "main");
@@ -133,14 +121,6 @@ describe("gate C — the F1 mirror (zero divergence, both directions)", () => {
       kind: "only-in-backend",
     });
 
-    // Restore the fixture for the remaining tests.
-    git(origin, "update-ref", "refs/heads/main", baseSha);
-    git(backend, "reset", "--hard", "-q", baseSha);
-    git(backend, "fetch", "-q", "origin", "main");
-    rmSync(join(backend, "supabase/functions/new-fn"), {
-      recursive: true,
-      force: true,
-    });
     rmSync(staleWeb, { recursive: true, force: true });
   });
 
@@ -156,15 +136,11 @@ describe("gate C — the F1 mirror (zero divergence, both directions)", () => {
 
 describe("gate B — vendor-sync provenance (origin/main reachability)", () => {
   test("refuses the dangling worktree commit as a sync source", () => {
-    expect(() => verifySyncSource(backend, guardSha)).toThrow(
-      /provenance REFUSED/,
-    );
+    expect(() => verifySyncSource(backend, guardSha)).toThrow(/provenance REFUSED/);
   });
 
   test("refuses a sha the object store cannot resolve", () => {
-    expect(() => verifySyncSource(backend, "deadbeef")).toThrow(
-      /provenance REFUSED/,
-    );
+    expect(() => verifySyncSource(backend, "deadbeef")).toThrow(/provenance REFUSED/);
   });
 
   test("accepts the live origin/main tip by default", () => {
@@ -175,9 +151,7 @@ describe("gate B — vendor-sync provenance (origin/main reachability)", () => {
 
   test("refuses a sync from the dangling sha end-to-end (the t_71873bcd failure)", () => {
     const target = join(root, "target-web");
-    expect(() => syncFromSource(backend, target, guardSha)).toThrow(
-      /provenance REFUSED/,
-    );
+    expect(() => syncFromSource(backend, target, guardSha)).toThrow(/provenance REFUSED/);
     expect(readFileSync).toBeDefined(); // the target must be untouched (no partial sync)
     rmSync(target, { recursive: true, force: true });
   });
@@ -186,7 +160,7 @@ describe("gate B — vendor-sync provenance (origin/main reachability)", () => {
 describe("acceptance — the scenario can no longer complete silently", () => {
   test("after the guard is pushed, sync from the tip passes both gates", () => {
     // The cure: the guard actually lands on origin/main.
-    git(backend, "push", "-q", "origin", `${guardSha}:main`);
+    git(backend, "push", "-q", "-f", "origin", `${guardSha}:main`);
     git(backend, "checkout", "-q", guardSha);
 
     const target = join(root, "cured-web");
@@ -196,15 +170,16 @@ describe("acceptance — the scenario can no longer complete silently", () => {
     // The mirror now sees zero divergence against the live origin/main.
     const report = compareVendored(target, backend);
     expect(report.divergences).toEqual([]);
-    expect(
-      readFileSync(join(target, "supabase/functions/enrich/index.ts"), "utf8"),
-    ).toBe(GUARD_V2);
+    expect(readFileSync(join(target, "supabase/functions/enrich/index.ts"), "utf8")).toBe(GUARD_V2);
 
     rmSync(target, { recursive: true, force: true });
   });
 
   test("syncing from a pushed ANCESTOR is allowed by B but the mirror flags the gap", () => {
     // baseSha is an ancestor of the tip (guardSha) — provenance allows it…
+    git(backend, "push", "-q", "-f", "origin", `${guardSha}:main`);
+    git(backend, "checkout", "-q", guardSha);
+
     const target = join(root, "behind-web");
     const result = syncFromSource(backend, target, baseSha);
     expect(result.sha).toBe(baseSha);

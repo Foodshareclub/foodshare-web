@@ -4,10 +4,7 @@ import { PostTypeBadge } from "@/components/post/PostTypeBadge";
 import { FindingPhotoState } from "@/components/productCard/CoverStatus";
 import { Button } from "@/components/ui/button";
 import { normalizeImageUrl } from "@/lib/image";
-import {
-  isGenericReusedReferenceCover,
-  resolveRealisticCover,
-} from "@/lib/realistic-covers";
+import { isGenericReusedReferenceCover, resolveRealisticCover } from "@/lib/realistic-covers";
 import { cn } from "@/lib/utils";
 import type { LocationType } from "@/types/product.types";
 import { getProductDetailUrl } from "@/utils/categoryMapping";
@@ -31,31 +28,18 @@ function useCover(item: LocationType) {
   const image = item.images
     ?.map(normalizeImageUrl)
     .find((url): url is string => !!url && !isGenericReusedReferenceCover(url));
-  const fallback = resolveRealisticCover({
-    title: item.post_name,
-    postType: item.post_type,
-    postId: item.id,
-  });
   return {
-    image: failed || !image ? fallback : image,
+    image: failed ? undefined : image,
     onError: () => setFailed(true),
   };
 }
 
 function findingLabel(item: LocationType) {
-  return item.post_type === "food" || item.post_type === "vegan"
-    ? "Community Food"
-    : "Community Listing";
+  return item.post_type === "food" || item.post_type === "vegan" ? "Community Food" : "Community Listing";
 }
 
 /** Frameless list card for the map browse view: photo first, two lines. */
-export function MapListingCard({
-  item,
-  productType,
-  selected,
-  highlighted,
-  onHover,
-}: MapListingCardProps) {
+export function MapListingCard({ item, productType, selected, highlighted, onHover }: MapListingCardProps) {
   const { image, onError } = useCover(item);
   return (
     <Link
@@ -71,8 +55,7 @@ export function MapListingCard({
       <div
         className={cn(
           "relative aspect-[20/19] w-full overflow-hidden rounded-2xl bg-muted transition-shadow duration-300 group-hover/card:shadow-md sm:aspect-[4/3]",
-          (selected || highlighted) &&
-            "ring-2 ring-foreground ring-offset-2 ring-offset-background",
+          (selected || highlighted) && "ring-2 ring-foreground ring-offset-2 ring-offset-background",
         )}
       >
         {image ? (
@@ -90,16 +73,13 @@ export function MapListingCard({
             label={findingLabel(item)}
             postName={item.post_name}
             postType={item.post_type}
+            postId={item.id}
           />
         )}
       </div>
       <div className="mt-2 flex items-center justify-between gap-2">
-        <p className="truncate text-[15px] font-semibold leading-snug text-foreground">
-          {item.post_name}
-        </p>
-        {item.post_type && (
-          <PostTypeBadge postType={item.post_type} variant="subtle" size="sm" />
-        )}
+        <p className="truncate text-[15px] font-semibold leading-snug text-foreground">{item.post_name}</p>
+        {item.post_type && <PostTypeBadge postType={item.post_type} variant="subtle" size="sm" />}
       </div>
     </Link>
   );
@@ -129,34 +109,20 @@ export function MapPreviewCard({
       >
         <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
           {image ? (
-            <Image
-              src={image}
-              alt=""
-              fill
-              sizes="80px"
-              className="object-cover"
-              onError={onError}
-            />
+            <Image src={image} alt="" fill sizes="80px" className="object-cover" onError={onError} />
           ) : (
             <FindingPhotoState
               label={findingLabel(item)}
               postName={item.post_name}
               postType={item.post_type}
+              postId={item.id}
               className="p-1 [&>div]:p-1 [&_span]:hidden"
             />
           )}
         </div>
         <div className="min-w-0 space-y-1 pe-8">
-          <p className="truncate text-[15px] font-semibold text-foreground">
-            {item.post_name}
-          </p>
-          {item.post_type && (
-            <PostTypeBadge
-              postType={item.post_type}
-              variant="subtle"
-              size="sm"
-            />
-          )}
+          <p className="truncate text-[15px] font-semibold text-foreground">{item.post_name}</p>
+          {item.post_type && <PostTypeBadge postType={item.post_type} variant="subtle" size="sm" />}
         </div>
       </Link>
       <Button

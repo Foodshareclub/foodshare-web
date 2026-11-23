@@ -1,6 +1,8 @@
-import { describe, expect, it, mock } from "bun:test";
-import { render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, mock } from "bun:test";
+import { cleanup, render, screen } from "@testing-library/react";
 import React from "react";
+
+afterEach(cleanup);
 
 mock.module("next/navigation", () => ({
   useRouter: () => ({ push: mock(), refresh: mock() }),
@@ -13,15 +15,9 @@ mock.module("@/hooks/useAuth", () => ({
 }));
 
 mock.module("next/image", () => ({
-  default: ({
-    src,
-    alt,
-    className,
-  }: {
-    src: string;
-    alt: string;
-    className?: string;
-  }) => <img src={src} alt={alt} className={className} />,
+  default: ({ src, alt, className }: { src: string; alt: string; className?: string }) => (
+    <img src={src} alt={alt} className={className} />
+  ),
 }));
 
 mock.module("next-intl", () => ({
@@ -67,9 +63,7 @@ const mockProducts = [
 
 describe("ProductGrid - Airbnb Listing Feed", () => {
   it("renders product cards when loaded", () => {
-    render(
-      <ProductGrid products={mockProducts} isLoading={false} hasMore={false} />,
-    );
+    render(<ProductGrid products={mockProducts} isLoading={false} hasMore={false} />);
 
     expect(screen.getByText("Fresh Sourdough Bread")).toBeDefined();
     expect(screen.getByText("Organic Apples")).toBeDefined();

@@ -12,31 +12,13 @@ import { ProductCard } from "@/components/productCard/ProductCard";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { isValidImageUrl } from "@/lib/image";
-import { isPublishableListing } from "@/lib/listing-search";
-import {
-  isGenericReusedReferenceCover,
-  resolveRealisticCover,
-} from "@/lib/realistic-covers";
-import type {
-  InitialProductStateType,
-  ProductWithCoordinates,
-} from "@/types/product.types";
+import { isGenericReusedReferenceCover, resolveRealisticCover } from "@/lib/realistic-covers";
+import type { InitialProductStateType, ProductWithCoordinates } from "@/types/product.types";
 import { getCoordinates } from "@/types/product.types";
 import { useMemo, useRef, useState } from "react";
 import { MapView } from "./MapView";
 
-const MAIN_GRID_SKELETON_KEYS = [
-  "a",
-  "b",
-  "c",
-  "d",
-  "e",
-  "f",
-  "g",
-  "h",
-  "i",
-  "j",
-] as const;
+const MAIN_GRID_SKELETON_KEYS = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"] as const;
 
 type MainWithMapProps = {
   /** Products to display (passed from Server Component) */
@@ -48,14 +30,10 @@ type MainWithMapProps = {
 // React Compiler handles memoization automatically
 export function MainWithMap({ products, isLoading = false }: MainWithMapProps) {
   const [hoveredProductId, setHoveredProductId] = useState<number | null>(null);
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(
-    null,
-  );
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
   const loaded = !isLoading;
-  const messagesAnchorRef = useRef<HTMLDivElement>(
-    null,
-  ) as React.RefObject<HTMLDivElement>;
+  const messagesAnchorRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
 
   // Show map on desktop only (>= 1024px breakpoint)
   const showMap = useMediaQuery("(min-width: 1024px)");
@@ -88,10 +66,7 @@ export function MainWithMap({ products, isLoading = false }: MainWithMapProps) {
     const map = new Map<number, string>();
     for (const product of products) {
       const hasRealPhoto =
-        product.images &&
-        product.images.some(
-          (url) => isValidImageUrl(url) && !isGenericReusedReferenceCover(url),
-        );
+        product.images && product.images.some((url) => isValidImageUrl(url) && !isGenericReusedReferenceCover(url));
       if (!hasRealPhoto) {
         const cover = resolveRealisticCover({
           title: product.post_name,
@@ -109,10 +84,7 @@ export function MainWithMap({ products, isLoading = false }: MainWithMapProps) {
   return (
     <>
       {/* Fixed buttons */}
-      <NavigateButtons
-        messagesAnchorRef={messagesAnchorRef}
-        title={"Show map"}
-      />
+      <NavigateButtons messagesAnchorRef={messagesAnchorRef} title={"Show map"} />
 
       {/* Split-view layout */}
       <div className="block lg:grid lg:grid-cols-[65%_35%] gap-0 min-h-[calc(100vh-80px)]">
@@ -135,21 +107,17 @@ export function MainWithMap({ products, isLoading = false }: MainWithMapProps) {
             }}
           >
             {!loaded
-              ? MAIN_GRID_SKELETON_KEYS.map((k) => (
-                  <SkeletonCard key={k} isLoaded={false} />
-                ))
-              : products
-                  .filter(isPublishableListing)
-                  .map((product: InitialProductStateType) => (
-                    <ProductCard
-                      product={product}
-                      coverUrl={coverMap.get(product.id)}
-                      key={product.id}
-                      onMouseEnter={() => handleProductHover(product.id)}
-                      onMouseLeave={() => handleProductHover(null)}
-                      onClick={() => handleProductClick(product.id)}
-                    />
-                  ))}
+              ? MAIN_GRID_SKELETON_KEYS.map((k) => <SkeletonCard key={k} isLoaded={false} />)
+              : products.map((product: InitialProductStateType) => (
+                  <ProductCard
+                    product={product}
+                    coverUrl={coverMap.get(product.id)}
+                    key={product.id}
+                    onMouseEnter={() => handleProductHover(product.id)}
+                    onMouseLeave={() => handleProductHover(null)}
+                    onClick={() => handleProductClick(product.id)}
+                  />
+                ))}
           </div>
         </div>
 
