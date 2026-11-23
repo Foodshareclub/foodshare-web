@@ -67,12 +67,10 @@ describe("NewProductForm - Airbnb Host Creation Form", () => {
     expect(screen.getByText("Create New Listing")).toBeDefined();
     expect(screen.getByText("Share food items or services with your community")).toBeDefined();
 
-    // Primary action submit button with Airbnb brand gradient
+    // Primary action submit button with Airbnb brand styling
     const submitBtn = screen.getByRole("button", { name: "Create Listing" });
     expect(submitBtn).toBeDefined();
-    expect(submitBtn.className).toContain("bg-gradient-to-r");
-    expect(submitBtn.className).toContain("from-[#FF2D55]");
-    expect(submitBtn.className).toContain("to-[#FF385C]");
+    expect(submitBtn.className).toContain("bg-brand");
   });
 
   it("calls router.back when clicking back button", () => {
@@ -92,7 +90,6 @@ describe("NewProductForm - Airbnb Host Creation Form", () => {
 
     const volunteerSubmit = screen.getByRole("button", { name: "Submit My Volunteer Application" });
     expect(volunteerSubmit).toBeDefined();
-    expect(volunteerSubmit.className).toContain("bg-gradient-to-r");
-    expect(volunteerSubmit.className).toContain("from-[#FF2D55]");
+    expect(volunteerSubmit.className).toContain("bg-brand");
   });
 });

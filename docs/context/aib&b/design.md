@@ -1,11 +1,5 @@
 # Airbnb Website Design Guide
 
-> ⚠️ **Historical / reference only — not the source of truth.** This is a generic Airbnb design reference (Rausch palette, Cereal font, etc.) captured during Phase 19, with a FoodShare implementation log appended near the end. The single source of design rules and tokens is `.kiro/steering/design.md` (and the `foodshare-design` skill). Where this document disagrees with the canonical source or the code, **the canonical source and the code win.** In particular, the prescriptions below are **retired** and must not be reproduced in new work:
-> - Gradient buttons / gradient headings → use solid `Button variant="brand"`, `bg-primary` text
-> - Cereal font / `#FF5A5F`–`#FF385C` palette / 4px grid → real stack is Geist, an 8px rhythm, `--primary` `#EB003B`, `--brand-primary` `#FF2D55`
-> - Multi-line (4–5 line) cards → the grid targets a two-line meta block
-> Keep this file for research and history only.
-
 A comprehensive reference for recreating Airbnb's beautiful web design on your local laptop.
 
 ---
@@ -597,6 +591,17 @@ FoodShare incorporates core Airbnb design patterns adapted for surplus food and 
     - AI Draft assistant pill button with `Sparkles` icon and animated state.
     - 48px rounded-xl input fields and selects with brand coral focus rings.
     - Full-width / flex brand coral gradient submit buttons (`bg-gradient-to-r from-[#FF2D55] to-[#FF385C]`) for both standard listings and volunteer applications.
+
+18. **Volunteer Community Card & Empty State Architecture (`VolunteerPostcard.tsx`, `VolunteerGrid.tsx`)**:
+    - Floating `rounded-3xl` glass cards with ambient emerald glow and verified avatar shield badge.
+    - Tactile skill indicator chips with dedicated Lucide category icons (`Car`, `ChefHat`, `ClipboardList`, `Smartphone`, `Camera`, `Globe`, `Code`, `HeartHandshake`).
+    - Standardized location and availability metadata footer.
+    - Welcoming zero-state dialog container with `HeartHandshake` badge and brand coral volunteer application CTA.
+
+19. **High-Elevation Search Modal & Category Exploration (`SearchModal.tsx`)**:
+    - Modernized `rounded-3xl` modal dialog with 56px rounded-2xl input field.
+    - Integrated brand coral gradient search action button.
+    - Tactile category exploration chips (`rounded-full`) with active selection state and smooth transitions.
 
 ---
 

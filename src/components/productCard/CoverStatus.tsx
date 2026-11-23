@@ -39,7 +39,7 @@ export function CoverCreditLine({ credit, className }: { credit: CoverCredit; cl
       <p>{credit.disclosure}</p>
       <p>
         <a href={credit.sourcePageUrl} target="_blank" rel="noopener noreferrer" className={link}>
-          Source: Wikimedia Commons
+          {"Source: Wikimedia Commons"}
           {credit.artist ? ` · ${credit.artist}` : ""}
         </a>
         {" · "}

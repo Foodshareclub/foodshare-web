@@ -1,6 +1,9 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import type { InitialProductStateType } from "@/types/product.types";
+import { HeartHandshake } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { VolunteerPostcard } from "./VolunteerPostcard";
 
@@ -96,10 +99,30 @@ export function VolunteerGrid({
 
       {/* Empty state */}
       {!isLoading && volunteers.length === 0 && (
-        <div className="text-center py-16 page-px">
-          <div className="text-6xl mb-4">🙌</div>
-          <h3 className="text-xl font-semibold text-foreground mb-2">No volunteers yet</h3>
-          <p className="text-muted-foreground">Be the first to join our volunteer community!</p>
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+          <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl p-8 sm:p-12 text-center max-w-md w-full shadow-xl">
+            <div className="absolute -top-20 -end-20 size-40 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+            <div className="flex justify-center mb-6">
+              <div className="size-16 rounded-2xl bg-muted/80 border border-border/80 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-inner">
+                <HeartHandshake className="size-8" />
+              </div>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground mb-2 font-display">
+              {"No volunteers yet"}
+            </h3>
+            <p className="text-sm sm:text-base text-muted-foreground mb-6 leading-relaxed">
+              {"Be the first to join our community of food heroes and sharers!"}
+            </p>
+            <Link href="/food/new?type=volunteer">
+              <Button
+                variant="brand"
+                size="lg"
+                className="h-12 px-7 rounded-xl font-semibold text-sm shadow-xs hover:shadow-sm transition-all"
+              >
+                {"Become a Volunteer"}
+              </Button>
+            </Link>
+          </div>
         </div>
       )}
     </div>
@@ -111,35 +134,39 @@ export function VolunteerGrid({
  */
 function VolunteerCardSkeleton() {
   return (
-    <div className="glass rounded-2xl p-5 animate-pulse">
-      {/* Avatar skeleton */}
-      <div className="flex justify-center mb-4">
-        <div className="w-24 h-24 rounded-full bg-muted" />
+    <div className="rounded-3xl border border-border/80 bg-card/60 p-6 animate-pulse flex flex-col justify-between h-[280px]">
+      <div>
+        {/* Avatar skeleton */}
+        <div className="flex justify-center mb-4">
+          <div className="size-20 rounded-full bg-muted" />
+        </div>
+
+        {/* Name skeleton */}
+        <div className="flex justify-center mb-2">
+          <div className="h-5 w-32 bg-muted rounded-md" />
+        </div>
+
+        {/* Headline skeleton */}
+        <div className="flex justify-center mb-4">
+          <div className="h-4 w-40 bg-muted rounded-md" />
+        </div>
+
+        {/* Skills skeleton */}
+        <div className="flex justify-center gap-1.5 mb-4">
+          <div className="h-6 w-16 bg-muted rounded-full" />
+          <div className="h-6 w-20 bg-muted rounded-full" />
+        </div>
       </div>
 
-      {/* Name skeleton */}
-      <div className="flex justify-center mb-2">
-        <div className="h-5 w-32 bg-muted rounded" />
-      </div>
+      <div>
+        {/* Divider */}
+        <div className="border-t border-border/50 my-3" />
 
-      {/* Headline skeleton */}
-      <div className="flex justify-center mb-4">
-        <div className="h-4 w-40 bg-muted rounded" />
-      </div>
-
-      {/* Skills skeleton */}
-      <div className="flex justify-center gap-2 mb-4">
-        <div className="h-6 w-16 bg-muted rounded-full" />
-        <div className="h-6 w-20 bg-muted rounded-full" />
-      </div>
-
-      {/* Divider */}
-      <div className="border-t border-border/50 my-3" />
-
-      {/* Location & Availability skeleton */}
-      <div className="flex justify-between">
-        <div className="h-4 w-24 bg-muted rounded" />
-        <div className="h-4 w-20 bg-muted rounded" />
+        {/* Location & Availability skeleton */}
+        <div className="flex justify-between items-center">
+          <div className="h-4 w-20 bg-muted rounded" />
+          <div className="h-4 w-16 bg-muted rounded" />
+        </div>
       </div>
     </div>
   );

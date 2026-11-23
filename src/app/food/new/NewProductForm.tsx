@@ -646,7 +646,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full h-12 rounded-xl font-semibold text-sm bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E02447] hover:to-[#E0284D] active:scale-95 text-white shadow-md hover:shadow-lg shadow-[#FF2D55]/20 hover:shadow-[#FF2D55]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+                    className="w-full h-12 rounded-xl font-semibold text-sm bg-brand hover:bg-brand-hover active:scale-95 text-white shadow-xs hover:shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">
@@ -779,7 +779,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                     value={formData.post_name}
                     onChange={(e) => handleInputChange("post_name", e.target.value)}
                     placeholder="e.g., Fresh Homemade Pasta"
-                    className="w-full h-12 rounded-xl border-border/80 bg-background/60 hover:border-foreground/30 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20 text-sm"
+                    className="w-full h-12 rounded-xl border-border/80 bg-background/60 hover:border-foreground/30 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm"
                     maxLength={LISTING.title.maxLength}
                   />
                   <p className="text-sm text-muted-foreground mt-1">
@@ -797,7 +797,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                     value={formData.post_description}
                     onChange={(e) => handleInputChange("post_description", e.target.value)}
                     placeholder="Describe your item in detail..."
-                    className="w-full min-h-[120px] rounded-xl border-border/80 bg-background/60 hover:border-foreground/30 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20 text-sm p-3.5"
+                    className="w-full min-h-[120px] rounded-xl border-border/80 bg-background/60 hover:border-foreground/30 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm p-3.5"
                     maxLength={LISTING.description.maxLength}
                   />
                   <p className="text-sm text-muted-foreground mt-1">
@@ -816,7 +816,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                     value={formData.available_hours}
                     onChange={(e) => handleInputChange("available_hours", e.target.value)}
                     placeholder="e.g., Weekdays 6-8 PM"
-                    className="w-full h-12 rounded-xl border-border/80 bg-background/60 hover:border-foreground/30 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20 text-sm"
+                    className="w-full h-12 rounded-xl border-border/80 bg-background/60 hover:border-foreground/30 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm"
                   />
                 </div>
 
@@ -851,7 +851,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                     value={formData.post_address}
                     onChange={(e) => handleInputChange("post_address", e.target.value)}
                     placeholder="Enter your address"
-                    className="w-full h-12 rounded-xl border-border/80 bg-background/60 hover:border-foreground/30 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20 text-sm"
+                    className="w-full h-12 rounded-xl border-border/80 bg-background/60 hover:border-foreground/30 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm"
                   />
                   <p className="text-sm text-muted-foreground mt-1">
                     {t("your_exact_address_wont_be_shared_publicly")}
@@ -872,7 +872,7 @@ export function NewProductForm({ userId, initialType = "food" }: NewProductFormP
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 h-12 rounded-xl font-semibold text-sm bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E02447] hover:to-[#E0284D] active:scale-95 text-white shadow-md hover:shadow-lg shadow-[#FF2D55]/20 hover:shadow-[#FF2D55]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+                    className="flex-1 h-12 rounded-xl font-semibold text-sm bg-brand hover:bg-brand-hover active:scale-95 text-white shadow-xs hover:shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">

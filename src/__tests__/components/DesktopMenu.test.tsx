@@ -45,7 +45,7 @@ describe("Airbnb Navigation Elements", () => {
     const button = screen.getByRole("button", { name: /Add listing/i });
     expect(button).toBeDefined();
     expect(button.className).toContain("rounded-full");
-    expect(button.className).toContain("bg-emerald-600");
+    expect(button.className).toContain("bg-brand");
   });
 
   it("renders MobileMenu trigger as an accessible capsule button", () => {

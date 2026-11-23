@@ -9,7 +9,7 @@ export function AddListingButton({ className, children = "Add listing", ...props
     <Button
       type="button"
       className={cn(
-        "h-10 rounded-full bg-emerald-600 hover:bg-emerald-700 px-4 text-sm font-semibold text-white shadow-xs hover:shadow-sm transition-all duration-200 motion-reduce:transition-none cursor-pointer flex items-center gap-1.5",
+        "h-10 rounded-full bg-brand hover:bg-brand-hover px-4 text-sm font-semibold text-white shadow-xs hover:shadow-sm transition-all duration-200 motion-reduce:transition-none cursor-pointer flex items-center gap-1.5",
         className,
       )}
       {...props}
