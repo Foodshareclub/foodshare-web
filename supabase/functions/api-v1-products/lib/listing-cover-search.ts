@@ -268,6 +268,416 @@ async function aiJson(
     );
   }
 }
+const STOP_WORDS = new Set([
+  "a",
+  "about",
+  "above",
+  "after",
+  "again",
+  "against",
+  "all",
+  "am",
+  "an",
+  "and",
+  "any",
+  "are",
+  "aren't",
+  "as",
+  "at",
+  "be",
+  "because",
+  "been",
+  "before",
+  "being",
+  "below",
+  "between",
+  "both",
+  "but",
+  "by",
+  "can",
+  "can't",
+  "cannot",
+  "could",
+  "couldn't",
+  "did",
+  "didn't",
+  "do",
+  "does",
+  "doesn't",
+  "doing",
+  "don't",
+  "down",
+  "during",
+  "each",
+  "few",
+  "for",
+  "from",
+  "further",
+  "had",
+  "hadn't",
+  "has",
+  "hasn't",
+  "have",
+  "haven't",
+  "having",
+  "he",
+  "he'd",
+  "he'll",
+  "he's",
+  "her",
+  "here",
+  "here's",
+  "hers",
+  "herself",
+  "him",
+  "himself",
+  "his",
+  "how",
+  "how's",
+  "i",
+  "i'd",
+  "i'll",
+  "i'm",
+  "i've",
+  "if",
+  "in",
+  "into",
+  "is",
+  "isn't",
+  "it",
+  "it's",
+  "its",
+  "itself",
+  "let's",
+  "me",
+  "more",
+  "most",
+  "mustn't",
+  "my",
+  "myself",
+  "no",
+  "nor",
+  "not",
+  "of",
+  "off",
+  "on",
+  "once",
+  "only",
+  "or",
+  "other",
+  "ought",
+  "our",
+  "ours",
+  "ourselves",
+  "out",
+  "over",
+  "own",
+  "same",
+  "shan't",
+  "she",
+  "she'd",
+  "she'll",
+  "she's",
+  "should",
+  "shouldn't",
+  "so",
+  "some",
+  "such",
+  "than",
+  "that",
+  "that's",
+  "the",
+  "their",
+  "theirs",
+  "them",
+  "themselves",
+  "then",
+  "there",
+  "there's",
+  "these",
+  "they",
+  "they'd",
+  "they'll",
+  "they're",
+  "they've",
+  "this",
+  "those",
+  "through",
+  "to",
+  "too",
+  "under",
+  "until",
+  "up",
+  "very",
+  "was",
+  "wasn't",
+  "we",
+  "we'd",
+  "we'll",
+  "we're",
+  "we've",
+  "were",
+  "weren't",
+  "what",
+  "what's",
+  "when",
+  "when's",
+  "where",
+  "where's",
+  "which",
+  "while",
+  "who",
+  "who's",
+  "whom",
+  "why",
+  "why's",
+  "with",
+  "won't",
+  "would",
+  "wouldn't",
+  "you",
+  "you'd",
+  "you'll",
+  "you're",
+  "you've",
+  "your",
+  "yours",
+  "yourself",
+  "yourselves",
+  "fresh",
+  "freshly",
+  "organic",
+  "delicious",
+  "homemade",
+  "free",
+  "pickup",
+  "donation",
+  "donations",
+  "leftover",
+  "leftovers",
+  "surplus",
+  "extra",
+  "packaged",
+  "unopened",
+  "sealed",
+  "today",
+  "tomorrow",
+  "available",
+  "box",
+  "boxes",
+  "bag",
+  "bags",
+  "bunch",
+  "bunches",
+  "lot",
+  "lots",
+  "please",
+  "take",
+  "giveaway",
+  "sharing",
+  "item",
+  "items",
+  "good",
+  "great",
+  "nice",
+  "new",
+  "local",
+  "garden",
+  "tree",
+  "backyard",
+  "bake",
+  "baked",
+  "baking",
+  "cook",
+  "cooked",
+  "cooking",
+  "filled",
+  "filling",
+  "expire",
+  "expires",
+  "best",
+  "before",
+  "use",
+  "contact",
+  "pm",
+  "dm",
+  "message",
+  "call",
+  "text",
+  "someone",
+  "anyone",
+  "need",
+  "needs",
+  "wanted",
+  "want",
+  "offering",
+  "offer",
+  "foodshare",
+]);
+
+export function cleanTokens(text: string): string[] {
+  if (!text) return [];
+  return text
+    .toLowerCase()
+    .replace(/https?:\/\/\S+|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi, " ")
+    .replace(/(?:\+?\d[\d ()-]{6,}\d)/g, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/[^a-z0-9äöüßéèêáàâñç\s-]/gi, " ")
+    .split(/\s+/)
+    .map((w) => w.trim())
+    .filter((w) => w.length >= 3 && !STOP_WORDS.has(w));
+}
+
+export function buildDeterministicQueries(
+  input: CoverInput,
+): { queries: string[]; categoryOnly: boolean } {
+  const titleTokens = cleanTokens(input.title);
+  const descTokens = cleanTokens(input.description ?? "");
+  const foodCategory = [
+    "food",
+    "wanted",
+    "foodbank",
+    "vegan",
+    "zerowaste",
+    "volunteer",
+    "organisation",
+  ].includes(input.postType);
+
+  if (titleTokens.length === 0 && descTokens.length === 0) {
+    const queries = input.postType === "fridge"
+      ? ["community refrigerator", "food pantry"]
+      : foodCategory
+      ? ["fresh produce", "food basket"]
+      : ["household items", "community sharing"];
+    return { queries, categoryOnly: true };
+  }
+
+  const queries: string[] = [];
+  const cleanTitle = input.title
+    .replace(/https?:\/\/\S+/gi, "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/[^\w\s-]/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (cleanTitle.length >= 2) {
+    queries.push(cleanTitle);
+  }
+
+  const categorySuffix = foodCategory ? "food" : input.postType;
+  if (cleanTitle.length >= 2 && titleTokens.length <= 2) {
+    queries.push(`${cleanTitle} ${categorySuffix}`);
+  }
+
+  const distinctDescTokens = descTokens.filter((dt) => !titleTokens.includes(dt));
+  if (titleTokens.length > 0 && distinctDescTokens.length > 0) {
+    queries.push(`${titleTokens.slice(0, 2).join(" ")} ${distinctDescTokens[0]}`);
+  } else if (distinctDescTokens.length >= 2) {
+    queries.push(distinctDescTokens.slice(0, 3).join(" "));
+  }
+
+  const seen = new Set<string>();
+  const deduplicated: string[] = [];
+  for (const q of queries) {
+    const key = q.toLowerCase();
+    if (q.length >= 2 && !seen.has(key)) {
+      seen.add(key);
+      deduplicated.push(q);
+    }
+  }
+
+  return { queries: deduplicated.slice(0, 3), categoryOnly: false };
+}
+
+export function scoreCandidate(candidate: ReferenceCandidate, input: CoverInput): number {
+  const forbidden =
+    /\b(?:sign|logo|truck|vehicle|township|advertisement|branded|banner|museum|sculptur\w*|paintings?|illustrations?|miniatures?|dioramas?|replicas?|toys?|portrait|monument|building)\b/i;
+  const candidateText = `${candidate.title} ${candidate.caption}`.toLowerCase();
+  if (forbidden.test(candidateText)) {
+    return -50;
+  }
+
+  let score = 0;
+  const titleTokens = cleanTokens(input.title);
+  const descTokens = cleanTokens(input.description ?? "");
+
+  const cleanCandTitle = candidate.title.replace(/^file:/i, "").toLowerCase();
+  const cleanCandCaption = candidate.caption.toLowerCase();
+
+  for (const token of titleTokens) {
+    if (cleanCandTitle.includes(token)) score += 6;
+    if (cleanCandCaption.includes(token)) score += 3;
+  }
+
+  for (const token of descTokens) {
+    if (cleanCandTitle.includes(token)) score += 4;
+    if (cleanCandCaption.includes(token)) score += 2;
+  }
+
+  const foodCategory = [
+    "food",
+    "wanted",
+    "foodbank",
+    "vegan",
+    "zerowaste",
+    "volunteer",
+    "organisation",
+  ].includes(input.postType);
+  if (
+    foodCategory && /\b(food|fruit|vegetable|produce|meal|bread|dish|edible)\b/i.test(candidateText)
+  ) {
+    score += 2;
+  }
+
+  return score;
+}
+
+export async function searchListingReferenceDeterministic(
+  input: CoverInput,
+  send: typeof fetch,
+  signal?: AbortSignal,
+): Promise<ReferenceMatch> {
+  const { queries, categoryOnly } = buildDeterministicQueries(input);
+  const attempts = [false, true].flatMap((includePublicDomain) =>
+    queries.slice(0, 3).map((query) => ({ query, includePublicDomain }))
+  );
+
+  for (const { query, includePublicDomain } of attempts) {
+    const found = await searchCommons(query, send, signal, includePublicDomain);
+    const candidates = categoryOnly ? neutralCategoryCandidates(found, input.postType) : found;
+    if (!candidates.length) continue;
+
+    let topCandidate: ReferenceCandidate | null = null;
+    let topScore = -1;
+    for (const candidate of candidates) {
+      const score = scoreCandidate(candidate, input);
+      if (score > topScore) {
+        topScore = score;
+        topCandidate = candidate;
+      }
+    }
+
+    if (topCandidate && (topScore >= 2 || categoryOnly)) {
+      const confidence = Math.min(
+        0.99,
+        Math.max(0.85, 0.82 + (topScore > 0 ? topScore * 0.015 : 0.05)),
+      );
+      return {
+        candidate: topCandidate,
+        query,
+        confidence,
+        scope: categoryOnly ? "category" : "subject",
+        model: "commons-search-v1",
+      };
+    }
+  }
+
+  throw new ServiceUnavailableError(
+    "No sufficiently relevant licensed cover found; please upload a photo or retry",
+    30_000,
+  );
+}
+
 export function matchedCandidate(
   candidates: ReferenceCandidate[],
   value: unknown,
@@ -287,15 +697,12 @@ export async function searchListingReference(
   options: { apiKey?: string; fetch?: typeof fetch; timeoutMs?: number } = {},
 ): Promise<ReferenceMatch> {
   try {
-    const apiKey = options.apiKey ?? Deno.env.get("GROQ_API_KEY");
-    if (!apiKey) {
-      throw new ServiceUnavailableError(
-        "Cover relevance service is not configured",
-        60_000,
-      );
-    }
     const send = options.fetch ?? fetch;
     const signal = AbortSignal.timeout(options.timeoutMs ?? 35_000);
+    const apiKey = options.apiKey ?? Deno.env.get("GROQ_API_KEY");
+    if (!apiKey) {
+      return await searchListingReferenceDeterministic(input, send, signal);
+    }
     const context = JSON.parse(coverSearchContext(input));
     const proposed = await aiJson(
       "Make a concise English Wikimedia image search query describing the objects or public place in the listing. Use both title and description, in any language. Never infer an item from a person's name. If no specific object is supported, set categoryOnly=true and search for a neutral reference for the listing category (for vague food/wanted listings use food basket). Otherwise categoryOnly=false. Also provide fallbackQuery: a broader one- or two-word search for the same supported subject, without changing to an unrelated subject. Do not add artistic style, brands, people or unsupported attributes.",

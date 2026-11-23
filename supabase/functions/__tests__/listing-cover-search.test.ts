@@ -443,3 +443,71 @@ Deno.test("a public-domain label cannot bypass copyright or attribution checks",
   valid.query.pages["42"].imageinfo[0].extmetadata.AttributionRequired.value = "True";
   assertEquals(commonsCandidates(valid), []);
 });
+
+Deno.test("deterministic search uses title plus description when AI key is not configured", async () => {
+  const searchedUrls: string[] = [];
+  const send = ((input: string | URL | Request) => {
+    const url = String(input);
+    searchedUrls.push(url);
+    const document = {
+      query: {
+        pages: {
+          "101": {
+            pageid: 101,
+            title: "File:Apples in a crate.jpg",
+            imageinfo: [
+              {
+                url: "https://upload.wikimedia.org/crate.jpg",
+                mime: "image/jpeg",
+                width: 1024,
+                height: 768,
+                extmetadata: {
+                  LicenseShortName: { value: "CC0" },
+                  AttributionRequired: { value: "false" },
+                  Artist: { value: "Photographer" },
+                  ImageDescription: { value: "Organic gala apples in wooden box" },
+                },
+              },
+            ],
+          },
+          "102": {
+            pageid: 102,
+            title: "File:Honeycrisp apples fresh.jpg",
+            imageinfo: [
+              {
+                url: "https://upload.wikimedia.org/honeycrisp.jpg",
+                mime: "image/jpeg",
+                width: 1200,
+                height: 900,
+                extmetadata: {
+                  LicenseShortName: { value: "CC0" },
+                  AttributionRequired: { value: "false" },
+                  Artist: { value: "Gardener" },
+                  ImageDescription: { value: "Freshly harvested honeycrisp apples from orchard" },
+                },
+              },
+            ],
+          },
+        },
+      },
+    };
+    return Promise.resolve(Response.json(document));
+  }) as typeof fetch;
+
+  const result = await searchListingReference(
+    {
+      title: "Apples",
+      description: "Crisp honeycrisp apples from our orchard",
+      postType: "food",
+      images: [],
+    },
+    { fetch: send },
+  );
+
+  assertEquals(result.candidate.pageId, 102);
+  assertEquals(result.candidate.title, "File:Honeycrisp apples fresh.jpg");
+  assertEquals(result.model, "commons-search-v1");
+  assertEquals(result.scope, "subject");
+  assertEquals(result.confidence >= 0.85, true);
+  assertEquals(searchedUrls.length >= 1, true);
+});
