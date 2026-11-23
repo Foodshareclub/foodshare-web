@@ -23,49 +23,58 @@ interface CategoryTheme {
 const CATEGORY_THEMES: Record<string, CategoryTheme> = {
   food: {
     icon: Utensils,
-    gradient: "from-amber-500/15 via-orange-500/10 to-emerald-500/15 dark:from-amber-950/30 dark:via-neutral-900 dark:to-emerald-950/25",
+    gradient:
+      "from-amber-500/15 via-orange-500/10 to-emerald-500/15 dark:from-amber-950/30 dark:via-neutral-900 dark:to-emerald-950/25",
     label: "Community Food",
   },
   vegan: {
     icon: Leaf,
-    gradient: "from-emerald-500/15 via-green-500/10 to-teal-500/15 dark:from-emerald-950/30 dark:via-neutral-900 dark:to-teal-950/25",
+    gradient:
+      "from-emerald-500/15 via-green-500/10 to-teal-500/15 dark:from-emerald-950/30 dark:via-neutral-900 dark:to-teal-950/25",
     label: "Community Food",
   },
   fridge: {
     icon: Snowflake,
-    gradient: "from-cyan-500/15 via-sky-500/10 to-blue-500/15 dark:from-cyan-950/30 dark:via-neutral-900 dark:to-blue-950/25",
+    gradient:
+      "from-cyan-500/15 via-sky-500/10 to-blue-500/15 dark:from-cyan-950/30 dark:via-neutral-900 dark:to-blue-950/25",
     label: "Community Fridge",
   },
   foodbank: {
     icon: HeartHandshake,
-    gradient: "from-rose-500/15 via-amber-500/10 to-orange-500/15 dark:from-rose-950/30 dark:via-neutral-900 dark:to-amber-950/25",
+    gradient:
+      "from-rose-500/15 via-amber-500/10 to-orange-500/15 dark:from-rose-950/30 dark:via-neutral-900 dark:to-amber-950/25",
     label: "Food Bank",
   },
   borrow: {
     icon: Repeat,
-    gradient: "from-indigo-500/15 via-purple-500/10 to-blue-500/15 dark:from-indigo-950/30 dark:via-neutral-900 dark:to-purple-950/25",
+    gradient:
+      "from-indigo-500/15 via-purple-500/10 to-blue-500/15 dark:from-indigo-950/30 dark:via-neutral-900 dark:to-purple-950/25",
     label: "Borrow",
   },
   wanted: {
     icon: Sparkles,
-    gradient: "from-pink-500/15 via-rose-500/10 to-amber-500/15 dark:from-pink-950/30 dark:via-neutral-900 dark:to-rose-950/25",
+    gradient:
+      "from-pink-500/15 via-rose-500/10 to-amber-500/15 dark:from-pink-950/30 dark:via-neutral-900 dark:to-rose-950/25",
     label: "Wanted",
   },
   volunteer: {
     icon: Users,
-    gradient: "from-teal-500/15 via-emerald-500/10 to-cyan-500/15 dark:from-teal-950/30 dark:via-neutral-900 dark:to-cyan-950/25",
+    gradient:
+      "from-teal-500/15 via-emerald-500/10 to-cyan-500/15 dark:from-teal-950/30 dark:via-neutral-900 dark:to-cyan-950/25",
     label: "Volunteer",
   },
   zerowaste: {
     icon: Leaf,
-    gradient: "from-green-500/15 via-emerald-500/10 to-lime-500/15 dark:from-green-950/30 dark:via-neutral-900 dark:to-emerald-950/25",
+    gradient:
+      "from-green-500/15 via-emerald-500/10 to-lime-500/15 dark:from-green-950/30 dark:via-neutral-900 dark:to-emerald-950/25",
     label: "Zero Waste",
   },
 };
 
 const DEFAULT_THEME: CategoryTheme = {
   icon: Package,
-  gradient: "from-neutral-500/10 via-neutral-400/5 to-neutral-600/10 dark:from-neutral-800/30 dark:via-neutral-900 dark:to-neutral-950/25",
+  gradient:
+    "from-neutral-500/10 via-neutral-400/5 to-neutral-600/10 dark:from-neutral-800/30 dark:via-neutral-900 dark:to-neutral-950/25",
   label: "Community Item",
 };
 
@@ -119,7 +128,10 @@ export function FindingPhotoState({
         )}
 
         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/75 dark:bg-neutral-900/75 border border-white/50 dark:border-white/10 text-muted-foreground shadow-2xs backdrop-blur-sm">
-          <Loader2 className="size-3 animate-spin motion-reduce:animate-none text-primary shrink-0" aria-hidden="true" />
+          <Loader2
+            className="size-3 animate-spin motion-reduce:animate-none text-primary shrink-0"
+            aria-hidden="true"
+          />
           <span className="text-[10px] font-medium tracking-tight text-foreground/80">{message}</span>
         </div>
       </div>
