@@ -176,7 +176,7 @@ export function LoginForm() {
       <div
         className="absolute top-0 inset-x-0 bottom-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none"
         style={{
-          backgroundImage: "radial-gradient(circle, #FF2D55 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(circle, hsl(var(--brand-primary)) 1px, transparent 1px)",
           backgroundSize: "40px 40px",
         }}
       />
@@ -186,7 +186,7 @@ export function LoginForm() {
         <div className="container mx-auto max-w-7xl py-4 px-4">
           <div className="flex justify-between items-center">
             <Link href="/">
-              <p className="text-2xl font-bold text-[#FF2D55] cursor-pointer hover:opacity-80 transition-opacity duration-200">
+              <p className="text-2xl font-bold text-brand cursor-pointer hover:opacity-80 transition-opacity duration-200">
                 FoodShare
               </p>
             </Link>
@@ -194,7 +194,7 @@ export function LoginForm() {
               {mode === "login" ? t("noAccountPrompt") : t("haveAccountPrompt")}{" "}
               <button
                 type="button"
-                className="font-semibold text-foreground cursor-pointer underline hover:text-[#FF2D55] inline"
+                className="font-semibold text-foreground cursor-pointer underline hover:text-brand inline"
                 onClick={toggleMode}
               >
                 {mode === "login" ? t("signUp") : t("logIn")}
@@ -295,7 +295,7 @@ export function LoginForm() {
                           setSignupSuccessEmail(null);
                         }}
                         required
-                        className="h-12 rounded-xl border border-border bg-background hover:border-muted-foreground focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
+                        className="h-12 rounded-xl border border-border bg-background hover:border-muted-foreground focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
                       />
                     </div>
                     <div className="flex-1">
@@ -315,7 +315,7 @@ export function LoginForm() {
                           setSignupSuccessEmail(null);
                         }}
                         required
-                        className="h-12 rounded-xl border border-border bg-background hover:border-muted-foreground focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
+                        className="h-12 rounded-xl border border-border bg-background hover:border-muted-foreground focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
                       />
                     </div>
                   </div>
@@ -341,7 +341,7 @@ export function LoginForm() {
                       setSignupSuccessEmail(null);
                     }}
                     required
-                    className="h-12 rounded-xl border border-border bg-background hover:border-muted-foreground focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
+                    className="h-12 rounded-xl border border-border bg-background hover:border-muted-foreground focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
                   />
                 </div>
 
@@ -352,10 +352,7 @@ export function LoginForm() {
                       {t("password")}
                     </label>
                     {mode === "login" && (
-                      <Link
-                        href="/auth/forgot-password"
-                        className="text-sm text-[#FF2D55] font-semibold hover:underline"
-                      >
+                      <Link href="/auth/forgot-password" className="text-sm text-brand font-semibold hover:underline">
                         {t("forgotPassword")}
                       </Link>
                     )}
@@ -375,7 +372,7 @@ export function LoginForm() {
                       minLength={mode === "signup" ? 8 : undefined}
                       enterKeyHint="done"
                       autoComplete={mode === "login" ? "current-password" : "new-password"}
-                      className="h-12 rounded-xl border border-border bg-background pe-12 hover:border-muted-foreground focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
+                      className="h-12 rounded-xl border border-border bg-background pe-12 hover:border-muted-foreground focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
                     />
                     <button
                       type="button"
@@ -392,7 +389,7 @@ export function LoginForm() {
                 <Button
                   type="submit"
                   disabled={isPending}
-                  className="w-full h-14 bg-gradient-to-r from-[#FF2D55] via-[#E6284D] to-[#CC2345] text-white font-semibold text-base rounded-xl hover:from-[#E6284D] hover:via-[#CC2345] hover:to-[#B31F3D] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255,45,85,0.35)] active:translate-y-0 transition-all"
+                  className="w-full h-12 rounded-xl bg-brand hover:bg-brand-hover active:scale-95 text-white font-semibold text-base shadow-xs hover:shadow-sm transition-all cursor-pointer"
                 >
                   {isPending
                     ? mode === "login"

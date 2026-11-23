@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PhoneIcon } from "@/utils/icons";
+import { Phone } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
 
@@ -54,43 +54,48 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockProps> = ({
   };
 
   return (
-    <div className="glass rounded-xl p-4 mb-4">
-      <div className="flex">
-        <div className="w-full max-w-screen-lg">
-          <h2 className="text-2xl font-medium pb-2 text-start text-foreground">Phone number</h2>
-          {edit ? (
-            <>
-              <div className="flex justify-between">
-                <div className="relative w-full">
-                  <div className="absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <PhoneIcon className="text-muted-foreground" />
-                  </div>
-                  <Input
-                    variant="glass"
-                    type="tel"
-                    placeholder="Phone number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.currentTarget.value)}
-                    className="ps-10"
-                  />
+    <div className="flex justify-between items-start gap-4 rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl p-6 shadow-xs hover:shadow-md transition-all mb-4">
+      <div className="w-full max-w-screen-lg">
+        <h2 className="text-base font-semibold text-foreground">Phone number</h2>
+        {edit ? (
+          <>
+            <div className="flex justify-between mt-3">
+              <div className="relative w-full max-w-md">
+                <div className="absolute start-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Phone className="size-4 text-muted-foreground" aria-hidden="true" />
                 </div>
+                <Input
+                  type="tel"
+                  placeholder="Phone number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.currentTarget.value)}
+                  className="ps-10 h-11 rounded-xl border border-border/80 bg-background/80 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm transition-all"
+                />
               </div>
-              <Button variant="glass-accent" onClick={handleSave} className="my-3">
-                Save
-              </Button>
-            </>
-          ) : (
-            <p className="text-foreground">Add a number so confirmed users can get your products.</p>
-          )}
-        </div>
-        <Button
-          variant="glass"
-          className={`self-start ${disablePhoneEdit ? "opacity-50 pointer-events-none" : "opacity-100"}`}
-          onClick={toggleEditMode}
-        >
-          {edit ? "Cancel" : "Edit"}
-        </Button>
+            </div>
+            <Button
+              onClick={handleSave}
+              className="mt-4 h-10 px-5 rounded-xl bg-brand hover:bg-brand-hover active:scale-95 text-white font-semibold text-xs shadow-xs hover:shadow-sm transition-all cursor-pointer"
+            >
+              Save
+            </Button>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground mt-1">
+            {phone ? phone : "Add a number so confirmed users can get your products."}
+          </p>
+        )}
       </div>
+      <Button
+        variant="outline"
+        size="sm"
+        className={`rounded-full text-xs font-semibold px-4 border border-border/80 hover:bg-muted/60 transition-all cursor-pointer shrink-0 ${
+          disablePhoneEdit ? "opacity-50 pointer-events-none" : "opacity-100"
+        }`}
+        onClick={toggleEditMode}
+      >
+        {edit ? "Cancel" : "Edit"}
+      </Button>
     </div>
   );
 };

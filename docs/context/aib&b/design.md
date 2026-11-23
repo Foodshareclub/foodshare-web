@@ -603,6 +603,11 @@ FoodShare incorporates core Airbnb design patterns adapted for surplus food and 
     - Integrated brand coral gradient search action button.
     - Tactile category exploration chips (`rounded-full`) with active selection state and smooth transitions.
 
+20. **Authentication, Password Recovery & Account Personal Information (`AuthenticationUserModal.tsx`, `LoginForm.tsx`, `ResetPasswordForm.tsx`, `ProfileBlocks.tsx`)**:
+    - Complete deprecation of hardcoded `#FF2D55`/`#FF385C` hex and legacy gradient buttons in favor of canonical `--brand-primary` tokens (`bg-brand`, `bg-brand-hover`, `text-brand`, `focus:border-brand`, `focus:ring-brand/20`).
+    - Standardized 48px rounded-xl input controls with active brand elevation across login, signup, reset password, and profile editing.
+    - Personal info blocks (`NameBlock.tsx`, `EmailBlock.tsx`, `PhoneNumberBlock.tsx`, `AddressBlock.tsx`) elevated to `rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl p-6 shadow-xs hover:shadow-md` cards with clean typography and rounded-full edit/cancel pill triggers.
+
 ---
 
 _This is a living document. Update as you build and discover new patterns!_

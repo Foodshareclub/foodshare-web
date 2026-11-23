@@ -57,26 +57,43 @@ export const NameBlock: React.FC<NameBlockProps> = ({
   };
 
   return (
-    <div className="glass-subtle flex border-b border-white/20 rounded-xl p-4 mb-3 animate-fade-in">
+    <div className="flex justify-between items-start gap-4 rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl p-6 shadow-xs hover:shadow-md transition-all mb-4">
       <div className="w-full max-w-screen-lg">
-        <h2 className="text-2xl font-medium pb-2 text-foreground">Name</h2>
+        <h2 className="text-base font-semibold text-foreground">Name</h2>
         {edit ? (
           <>
-            <div className="flex justify-between gap-4">
-              <Input variant="glass" value={firstName} onChange={(e) => setFirstName(e.currentTarget.value)} />
-              <Input variant="glass" value={secondName} onChange={(e) => setSecondName(e.currentTarget.value)} />
+            <div className="flex flex-col sm:flex-row gap-3 mt-3">
+              <Input
+                value={firstName}
+                onChange={(e) => setFirstName(e.currentTarget.value)}
+                className="h-11 rounded-xl border border-border/80 bg-background/80 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
+              />
+              <Input
+                value={secondName}
+                onChange={(e) => setSecondName(e.currentTarget.value)}
+                className="h-11 rounded-xl border border-border/80 bg-background/80 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
+              />
             </div>
-            <Button variant="ghost" onClick={handleSave} className="my-3">
+            <Button
+              onClick={handleSave}
+              className="mt-4 h-10 px-5 rounded-xl bg-brand hover:bg-brand-hover active:scale-95 text-white font-semibold text-xs shadow-xs hover:shadow-sm transition-all cursor-pointer"
+            >
               Save
             </Button>
           </>
         ) : (
-          <p className="text-foreground">
+          <p className="text-sm text-muted-foreground mt-1">
             {firstName} {secondName}
           </p>
         )}
       </div>
-      <Button variant="ghost" className="self-start cursor-pointer" disabled={disableNameEdit} onClick={toggleEditMode}>
+      <Button
+        variant="outline"
+        size="sm"
+        className="rounded-full text-xs font-semibold px-4 border border-border/80 hover:bg-muted/60 transition-all cursor-pointer shrink-0"
+        disabled={disableNameEdit}
+        onClick={toggleEditMode}
+      >
         {edit ? "Cancel" : "Edit"}
       </Button>
     </div>

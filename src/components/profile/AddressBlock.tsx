@@ -97,126 +97,154 @@ export const AddressBlock: React.FC<AddressBlockProps> = ({
   };
 
   return (
-    <div className="glass rounded-xl p-4 mb-4">
-      <div className="flex">
-        <div className="w-full max-w-screen-lg">
-          <h2 className="text-2xl font-medium pb-2 text-start text-foreground">Address</h2>
-          {edit ? (
-            <>
-              <div className="mt-2">
-                <label htmlFor="address-line-one" className="block text-sm font-medium mb-1">
-                  Address Line 1 *
+    <div className="flex justify-between items-start gap-4 rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl p-6 shadow-xs hover:shadow-md transition-all mb-4">
+      <div className="w-full max-w-screen-lg">
+        <h2 className="text-base font-semibold text-foreground">Address</h2>
+        {edit ? (
+          <>
+            <div className="mt-3">
+              <label
+                htmlFor="address-line-one"
+                className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5"
+              >
+                Address Line 1 *
+              </label>
+              <Input
+                id="address-line-one"
+                placeholder="Address Line 1"
+                value={lineOne}
+                onChange={(e) => setLineOne(e.currentTarget.value)}
+                className="h-11 rounded-xl border border-border/80 bg-background/80 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
+              />
+            </div>
+
+            <div className="mt-3">
+              <label
+                htmlFor="address-line-two"
+                className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5"
+              >
+                Address Line 2
+              </label>
+              <Input
+                id="address-line-two"
+                placeholder="Address Line 2"
+                value={lineTwo}
+                onChange={(e) => setLineTwo(e.currentTarget.value)}
+                className="h-11 rounded-xl border border-border/80 bg-background/80 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
+              />
+            </div>
+
+            <div className="mt-3">
+              <label
+                htmlFor="address-city"
+                className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5"
+              >
+                City *
+              </label>
+              <Input
+                id="address-city"
+                placeholder="City"
+                value={city}
+                onChange={(e) => setCity(e.currentTarget.value)}
+                className="h-11 rounded-xl border border-border/80 bg-background/80 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-between gap-4 mt-3">
+              <div className="w-full sm:w-[48%]">
+                <label
+                  htmlFor="address-province"
+                  className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5"
+                >
+                  State/Province *
                 </label>
                 <Input
-                  id="address-line-one"
-                  variant="glass"
-                  placeholder="Address Line 1"
-                  value={lineOne}
-                  onChange={(e) => setLineOne(e.currentTarget.value)}
+                  id="address-province"
+                  placeholder="State/Province"
+                  value={province}
+                  onChange={(e) => setProvince(e.currentTarget.value)}
+                  className="h-11 rounded-xl border border-border/80 bg-background/80 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
                 />
               </div>
-
-              <div className="mt-2">
-                <label htmlFor="address-line-two" className="block text-sm font-medium mb-1">
-                  Address Line 2
+              <div className="w-full sm:w-[48%]">
+                <label
+                  htmlFor="address-county"
+                  className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5"
+                >
+                  County *
                 </label>
                 <Input
-                  id="address-line-two"
-                  variant="glass"
-                  placeholder="Address Line 2"
-                  value={lineTwo}
-                  onChange={(e) => setLineTwo(e.currentTarget.value)}
+                  id="address-county"
+                  placeholder="County"
+                  value={county}
+                  onChange={(e) => setCounty(e.currentTarget.value)}
+                  className="h-11 rounded-xl border border-border/80 bg-background/80 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
                 />
               </div>
+            </div>
 
-              <div className="mt-2">
-                <label htmlFor="address-city" className="block text-sm font-medium mb-1">
-                  City *
+            <div className="flex flex-col sm:flex-row justify-between gap-4 mt-3">
+              <div className="w-full sm:w-[48%]">
+                <label
+                  htmlFor="address-postal-code"
+                  className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5"
+                >
+                  Zip/Postal Code *
                 </label>
                 <Input
-                  id="address-city"
-                  variant="glass"
-                  placeholder="City"
-                  value={city}
-                  onChange={(e) => setCity(e.currentTarget.value)}
+                  id="address-postal-code"
+                  placeholder="Zip/Postal Code"
+                  value={postalCode}
+                  onChange={(e) => setPostalCode(e.currentTarget.value)}
+                  className="h-11 rounded-xl border border-border/80 bg-background/80 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
                 />
               </div>
-
-              <div className="flex justify-between gap-4 mt-2">
-                <div className="w-[45%]">
-                  <label htmlFor="address-province" className="block text-sm font-medium mb-1">
-                    State/Province *
-                  </label>
-                  <Input
-                    id="address-province"
-                    variant="glass"
-                    placeholder="State/Province"
-                    value={province}
-                    onChange={(e) => setProvince(e.currentTarget.value)}
-                  />
-                </div>
-                <div className="w-[45%]">
-                  <label htmlFor="address-county" className="block text-sm font-medium mb-1">
-                    County *
-                  </label>
-                  <Input
-                    id="address-county"
-                    variant="glass"
-                    placeholder="County"
-                    value={county}
-                    onChange={(e) => setCounty(e.currentTarget.value)}
-                  />
-                </div>
+              <div className="w-full sm:w-[48%]">
+                <label
+                  htmlFor="address-country"
+                  className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5"
+                >
+                  Country
+                </label>
+                <Select value={country} onValueChange={setCountry}>
+                  <SelectTrigger
+                    id="address-country"
+                    className="h-11 rounded-xl border border-border/80 bg-background/80 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
+                  >
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border border-border/80 bg-background/95 backdrop-blur-2xl shadow-xl">
+                    {allCountries.map((item: CountryType) => (
+                      <SelectItem key={item.id.toString()} value={item.id.toString()}>
+                        {item.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
 
-              <div className="flex justify-between gap-4 mt-2">
-                <div className="w-[45%]">
-                  <label htmlFor="address-postal-code" className="block text-sm font-medium mb-1">
-                    Zip/Postal Code *
-                  </label>
-                  <Input
-                    id="address-postal-code"
-                    variant="glass"
-                    placeholder="Zip/Postal Code"
-                    value={postalCode}
-                    onChange={(e) => setPostalCode(e.currentTarget.value)}
-                  />
-                </div>
-                <div className="w-[45%]">
-                  <label htmlFor="address-country" className="block text-sm font-medium mb-1">
-                    Country
-                  </label>
-                  <Select value={country} onValueChange={setCountry}>
-                    <SelectTrigger id="address-country" variant="glass">
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent variant="glass">
-                      {allCountries.map((item: CountryType) => (
-                        <SelectItem key={item.id.toString()} value={item.id.toString()}>
-                          {item.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <Button variant="glass-accent" onClick={onSaveHandler} className="my-3">
-                Save
-              </Button>
-            </>
-          ) : (
-            <p className="text-foreground">Use a permanent address where you can receive mail.</p>
-          )}
-        </div>
-        <Button
-          variant="glass"
-          className={`self-start ${disableAddressEdit ? "opacity-50 pointer-events-none" : "opacity-100"}`}
-          onClick={toggleEditMode}
-        >
-          {edit ? "Cancel" : "Edit"}
-        </Button>
+            <Button
+              onClick={onSaveHandler}
+              className="mt-4 h-10 px-5 rounded-xl bg-brand hover:bg-brand-hover active:scale-95 text-white font-semibold text-xs shadow-xs hover:shadow-sm transition-all cursor-pointer"
+            >
+              Save
+            </Button>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground mt-1">Use a permanent address where you can receive mail.</p>
+        )}
       </div>
+      <Button
+        variant="outline"
+        size="sm"
+        className={`rounded-full text-xs font-semibold px-4 border border-border/80 hover:bg-muted/60 transition-all cursor-pointer shrink-0 ${
+          disableAddressEdit ? "opacity-50 pointer-events-none" : "opacity-100"
+        }`}
+        onClick={toggleEditMode}
+      >
+        {edit ? "Cancel" : "Edit"}
+      </Button>
     </div>
   );
 };

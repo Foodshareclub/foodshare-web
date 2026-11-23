@@ -69,7 +69,7 @@ function StarRating({ value, onChange }: StarRatingProps) {
           aria-label={t("rate_count_of_total_stars", { count: i + 1, total: STAR_COUNT })}
           aria-pressed={i < value}
           onClick={() => onChange(i + 1)}
-          className="p-1.5 focus:outline-none focus:ring-2 focus:ring-primary rounded-full transition-transform hover:scale-125 duration-200"
+          className="p-1.5 focus:outline-none focus:ring-2 focus:ring-brand/30 rounded-full transition-transform hover:scale-125 duration-200"
         >
           <Star
             className={cn(
@@ -210,7 +210,7 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
               <Textarea
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
-                className="mt-5 rounded-xl border-border/80 bg-background/80 focus:ring-2 focus:ring-primary/20 text-sm p-3.5"
+                className="mt-5 rounded-xl border border-border/80 bg-background/80 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm p-3.5 transition-all"
                 placeholder={t("please_write_your_feedback")}
                 aria-label={t("feedback_text")}
               />
@@ -223,7 +223,7 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
           {/* Action button for steps 2 & 3 */}
           {(step === "second" || step === "third") && (
             <Button
-              className="w-full sm:w-auto min-w-[160px] h-12 px-7 rounded-xl bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E02447] hover:to-[#E0284D] active:scale-95 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all block mx-auto mt-6"
+              className="w-full sm:w-auto min-w-[160px] h-12 px-7 rounded-xl bg-brand hover:bg-brand-hover active:scale-95 text-white font-semibold text-sm shadow-xs hover:shadow-sm transition-all block mx-auto mt-6"
               onClick={handleSubmit}
               disabled={isPending}
             >

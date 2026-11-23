@@ -53,27 +53,39 @@ export const EmailBlock: React.FC<EmailBlockProps> = ({
   };
 
   return (
-    <div className="glass rounded-xl p-4 mb-4">
-      <div className="flex">
-        <div className="w-full max-w-screen-lg">
-          <h2 className="text-2xl font-medium pb-2 text-start text-foreground">Email address</h2>
-          {edit ? (
-            <>
-              <div className="flex justify-between">
-                <Input variant="glass" value={email} onChange={(e) => setEmail(e.currentTarget.value)} />
-              </div>
-              <Button variant="glass-accent" onClick={handleSave} className="my-3">
-                Save
-              </Button>
-            </>
-          ) : (
-            <p className="text-foreground">{email}</p>
-          )}
-        </div>
-        <Button variant="glass" className="self-start" disabled={disableEmailEdit} onClick={toggleEditMode}>
-          {edit ? "Cancel" : "Edit"}
-        </Button>
+    <div className="flex justify-between items-start gap-4 rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl p-6 shadow-xs hover:shadow-md transition-all mb-4">
+      <div className="w-full max-w-screen-lg">
+        <h2 className="text-base font-semibold text-foreground">Email address</h2>
+        {edit ? (
+          <>
+            <div className="flex justify-between mt-3">
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.currentTarget.value)}
+                className="h-11 rounded-xl border border-border/80 bg-background/80 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
+              />
+            </div>
+            <Button
+              onClick={handleSave}
+              className="mt-4 h-10 px-5 rounded-xl bg-brand hover:bg-brand-hover active:scale-95 text-white font-semibold text-xs shadow-xs hover:shadow-sm transition-all cursor-pointer"
+            >
+              Save
+            </Button>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground mt-1">{email}</p>
+        )}
       </div>
+      <Button
+        variant="outline"
+        size="sm"
+        className="rounded-full text-xs font-semibold px-4 border border-border/80 hover:bg-muted/60 transition-all cursor-pointer shrink-0"
+        disabled={disableEmailEdit}
+        onClick={toggleEditMode}
+      >
+        {edit ? "Cancel" : "Edit"}
+      </Button>
     </div>
   );
 };

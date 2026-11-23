@@ -51,12 +51,15 @@ export const PasswordRecoveryModal = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent
-        className="glass glass-transition rounded-2xl glass-scale-in gpu"
+        variant="glass"
+        className="rounded-3xl border border-border/80 bg-background/95 backdrop-blur-2xl shadow-2xl p-6 sm:p-8 max-w-md"
         onInteractOutside={(e: Event) => e.preventDefault()}
         onEscapeKeyDown={(e: KeyboardEvent) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>{t("Auth.createNewPassword")}</DialogTitle>
+          <DialogTitle className="text-lg font-semibold text-foreground text-center">
+            {t("Auth.createNewPassword")}
+          </DialogTitle>
         </DialogHeader>
         <div className="py-6">
           <div className="relative">
@@ -66,13 +69,13 @@ export const PasswordRecoveryModal = () => {
               value={password}
               placeholder="Password"
               type={show ? "text" : "password"}
-              className="pe-16"
+              className="h-12 rounded-xl border border-border/80 pe-16 bg-background/80 hover:border-foreground/50 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
             />
             <div className="absolute end-0 top-0 h-full flex items-center pe-3">
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-7"
+                className="h-7 hover:bg-muted/60 rounded-lg text-muted-foreground hover:text-foreground"
                 onMouseDown={showPass}
                 onMouseUp={hidePass}
                 disabled={!password}
@@ -87,7 +90,7 @@ export const PasswordRecoveryModal = () => {
           <Button
             onClick={createPasswordHandler}
             disabled={!password || isPending}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
+            className="w-full h-11 rounded-xl bg-brand hover:bg-brand-hover active:scale-95 text-white font-semibold text-sm shadow-xs hover:shadow-sm transition-all"
           >
             {isPending ? "Saving..." : "Save"}
           </Button>

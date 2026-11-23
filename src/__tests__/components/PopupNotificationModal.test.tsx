@@ -46,7 +46,8 @@ describe("PopupNotificationModal - Airbnb Review & Feedback Dialog", () => {
     expect(screen.getByText("Would you like to leave feedback?")).toBeDefined();
     const yesButton = screen.getByRole("button", { name: "Yes" });
     expect(yesButton).toBeDefined();
-    expect(yesButton.className).toContain("bg-gradient-to-r");
+    expect(yesButton.className).toContain("bg-brand");
+    expect(yesButton.className).toContain("rounded-xl");
   });
 
   it("transitions to rating step and renders tactile star buttons on Yes click", () => {

@@ -66,7 +66,20 @@ description: Airbnb Design Language System (DLS) best practices, components, and
 - **Input Controls**: 48px rounded-xl input fields and selects with brand focus rings (`focus:border-brand focus:ring-2 focus:ring-brand/20`).
 - **Submission CTA**: `w-full h-12 rounded-xl font-semibold text-sm bg-brand hover:bg-brand-hover active:scale-95 text-white shadow-xs hover:shadow-sm`.
 
-## 7. Verification Standards
+## 7. Auth & Account Settings Experience (`AuthenticationUserModal.tsx`, `LoginForm.tsx`, `ResetPasswordForm.tsx`, `ProfileBlocks.tsx`)
+
+- **Modal & Page Dialogs**:
+  - `rounded-3xl border border-border/80 bg-background/95 backdrop-blur-2xl shadow-2xl p-6 sm:p-8 max-w-lg`.
+  - 48px rounded-xl input fields with `focus:border-brand focus:ring-2 focus:ring-brand/20`.
+  - Full-width brand primary action CTA (`h-12 rounded-xl bg-brand hover:bg-brand-hover active:scale-95 text-white font-semibold text-sm shadow-xs hover:shadow-sm`).
+  - Tactile social auth buttons with rounded-xl border and subtle active scales.
+- **Personal Information Cards (`NameBlock.tsx`, `EmailBlock.tsx`, `PhoneNumberBlock.tsx`, `AddressBlock.tsx`)**:
+  - `rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl p-6 shadow-xs hover:shadow-md transition-all mb-4`.
+  - Section title: `text-base font-semibold text-foreground` with clear, legible value text.
+  - Action trigger: `rounded-full text-xs font-semibold px-4 border border-border/80 hover:bg-muted/60 transition-all` pill button.
+  - Save button: `h-10 px-5 rounded-xl bg-brand hover:bg-brand-hover active:scale-95 text-white font-semibold text-xs shadow-xs hover:shadow-sm`.
+
+## 8. Verification Standards
 
 Always ensure:
 - `bun run check:contrast` passes all WCAG AA pairs.

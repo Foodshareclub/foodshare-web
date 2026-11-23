@@ -282,7 +282,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
       ) : !isControlled && oneProductComponent ? (
         <Button
           onClick={onOpen}
-          className="uppercase brand-gradient text-white w-full font-semibold hover:brand-gradient-hover hover:-translate-y-px hover:shadow-lg hover:shadow-primary/40 transition-all"
+          className="uppercase bg-brand hover:bg-brand-hover text-white w-full font-semibold shadow-xs hover:shadow-sm active:scale-95 transition-all"
         >
           {t("modal.requestLabel")}
         </Button>
@@ -308,7 +308,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
       <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && handleClose()}>
         <DialogContent
           variant="glass"
-          className="max-w-[560px] rounded-3xl p-0 border border-border/80 bg-background/98 backdrop-blur-2xl shadow-2xl overflow-hidden"
+          className="max-w-[560px] rounded-3xl p-0 border border-border/80 bg-background/95 backdrop-blur-2xl shadow-2xl overflow-hidden"
           aria-describedby={undefined}
         >
           {/* Header with proper accessibility */}
@@ -426,7 +426,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                             onChange={(e) => setFirstName(e.target.value)}
                             autoComplete="given-name"
                             required
-                            className="h-12 rounded-xl border border-border/80 bg-background/50 hover:border-foreground/50 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20 text-sm px-4 transition-all"
+                            className="h-12 rounded-xl border border-border/80 bg-background/50 hover:border-foreground/50 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
                           />
                         </div>
                         <div className="flex-1">
@@ -440,7 +440,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                             onChange={(e) => setLastName(e.target.value)}
                             autoComplete="family-name"
                             required
-                            className="h-12 rounded-xl border border-border/80 bg-background/50 hover:border-foreground/50 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20 text-sm px-4 transition-all"
+                            className="h-12 rounded-xl border border-border/80 bg-background/50 hover:border-foreground/50 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
                           />
                         </div>
                       </div>
@@ -462,8 +462,8 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                         required
                         className={`h-12 rounded-xl border ${
                           emailError ? "border-red-500 dark:border-red-400" : "border-border/80"
-                        } bg-background/50 hover:border-foreground/50 focus:border-[#FF2D55] focus:ring-2 ${
-                          emailError ? "focus:ring-red-500/20" : "focus:ring-[#FF2D55]/20"
+                        } bg-background/50 hover:border-foreground/50 focus:border-brand focus:ring-2 ${
+                          emailError ? "focus:ring-red-500/20" : "focus:ring-brand/20"
                         } text-sm px-4 transition-all`}
                         aria-invalid={!!emailError}
                         aria-describedby={emailError ? "auth-email-error" : undefined}
@@ -488,7 +488,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                         onChange={(e) => setPassword(e.target.value)}
                         autoComplete={activeMode === "login" ? "current-password" : "new-password"}
                         required
-                        className="h-12 rounded-xl border border-border/80 pe-12 bg-background/50 hover:border-foreground/50 focus:border-[#FF2D55] focus:ring-2 focus:ring-[#FF2D55]/20 text-sm px-4 transition-all"
+                        className="h-12 rounded-xl border border-border/80 pe-12 bg-background/50 hover:border-foreground/50 focus:border-brand focus:ring-2 focus:ring-brand/20 text-sm px-4 transition-all"
                       />
                       <button
                         type="button"
@@ -507,7 +507,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     {/* Submit Button */}
                     <Button
                       type="submit"
-                      className="h-12 w-full rounded-xl bg-gradient-to-r from-[#FF2D55] to-[#FF385C] hover:from-[#E6284D] hover:to-[#E03150] text-white font-semibold text-sm shadow-md hover:shadow-lg shadow-[#FF2D55]/20 hover:shadow-[#FF2D55]/30 active:scale-[0.99] transition-all cursor-pointer"
+                      className="h-12 w-full rounded-xl bg-brand hover:bg-brand-hover active:scale-95 text-white font-semibold text-sm shadow-xs hover:shadow-sm transition-all cursor-pointer"
                       disabled={isPending}
                     >
                       {isPending
@@ -539,7 +539,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     {activeMode === "login" ? t("noAccountPrompt") : t("haveAccountPrompt")}{" "}
                     <button
                       type="button"
-                      className="font-semibold text-foreground underline hover:text-primary cursor-pointer"
+                      className="font-semibold text-foreground underline hover:text-brand cursor-pointer"
                       onClick={toggleMode}
                     >
                       {activeMode === "login" ? t("signUp") : t("logIn")}

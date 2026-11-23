@@ -88,7 +88,7 @@ export function ResetPasswordForm() {
       <div
         className="absolute top-0 inset-x-0 bottom-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none"
         style={{
-          backgroundImage: "radial-gradient(circle, #FF2D55 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(circle, hsl(var(--brand-primary)) 1px, transparent 1px)",
           backgroundSize: "40px 40px",
         }}
       />
@@ -97,7 +97,7 @@ export function ResetPasswordForm() {
         <div className="container mx-auto max-w-7xl py-4 px-4">
           <div className="flex justify-between items-center">
             <Link href="/">
-              <p className="text-2xl font-bold text-[#FF2D55] cursor-pointer hover:opacity-80 transition-opacity duration-200">
+              <p className="text-2xl font-bold text-brand cursor-pointer hover:opacity-80 transition-opacity duration-200">
                 FoodShare
               </p>
             </Link>
@@ -110,7 +110,7 @@ export function ResetPasswordForm() {
           <div className="bg-card rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] p-6 md:p-8 border border-border">
             {session === "checking" && (
               <div className="text-center py-8" role="status" aria-live="polite">
-                <Loader2 className="w-12 h-12 animate-spin text-[#FF2D55] mx-auto mb-4" />
+                <Loader2 className="w-12 h-12 animate-spin text-brand mx-auto mb-4" />
                 <p className="text-muted-foreground">{t("reset.verifyingLink")}</p>
               </div>
             )}
@@ -123,7 +123,7 @@ export function ResetPasswordForm() {
                 <h1 className="text-[28px] font-bold mb-3 text-foreground">{t("reset.expiredTitle")}</h1>
                 <p className="text-base text-muted-foreground leading-relaxed mb-6">{t("reset.expiredBody")}</p>
                 <Link href="/auth/forgot-password" className="block">
-                  <Button className="w-full h-14 bg-gradient-to-r from-[#FF2D55] via-[#E6284D] to-[#CC2345] text-white font-semibold text-base rounded-xl hover:from-[#E6284D] hover:via-[#CC2345] hover:to-[#B31F3D]">
+                  <Button className="w-full h-12 rounded-xl bg-brand hover:bg-brand-hover active:scale-95 text-white font-semibold text-base shadow-xs hover:shadow-sm transition-all cursor-pointer">
                     {t("reset.requestNewLink")}
                   </Button>
                 </Link>
@@ -132,8 +132,8 @@ export function ResetPasswordForm() {
 
             {isSuccess && (
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FF2D55]/10 rounded-full mb-6">
-                  <CheckCircle className="w-8 h-8 text-[#FF2D55]" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-brand/10 rounded-full mb-6">
+                  <CheckCircle className="w-8 h-8 text-brand" />
                 </div>
                 <h1 className="text-[28px] font-bold mb-3 text-foreground">{t("reset.updatedTitle")}</h1>
                 <p className="text-base text-muted-foreground leading-relaxed mb-6">{t("reset.updatedBody")}</p>
@@ -142,7 +142,7 @@ export function ResetPasswordForm() {
                   {t("reset.redirectingHome")}
                 </p>
                 <Link href="/" className="block">
-                  <Button className="w-full h-14 bg-gradient-to-r from-[#FF2D55] via-[#E6284D] to-[#CC2345] text-white font-semibold text-base rounded-xl hover:from-[#E6284D] hover:via-[#CC2345] hover:to-[#B31F3D]">
+                  <Button className="w-full h-12 rounded-xl bg-brand hover:bg-brand-hover active:scale-95 text-white font-semibold text-base shadow-xs hover:shadow-sm transition-all cursor-pointer">
                     {t("reset.goToHome")}
                   </Button>
                 </Link>
@@ -152,8 +152,8 @@ export function ResetPasswordForm() {
             {session === "valid" && !isSuccess && (
               <>
                 <div className="mb-8 text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FF2D55]/10 rounded-full mb-6">
-                    <Lock className="w-7 h-7 text-[#FF2D55]" />
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-brand/10 rounded-full mb-6">
+                    <Lock className="w-7 h-7 text-brand" />
                   </div>
                   <h1 className="text-[28px] font-bold mb-3 text-foreground">{t("reset.formTitle")}</h1>
                   <p className="text-base text-muted-foreground leading-relaxed">{t("reset.formBody")}</p>
@@ -195,7 +195,7 @@ export function ResetPasswordForm() {
                           autoComplete="new-password"
                           aria-invalid={mismatch || undefined}
                           aria-describedby="reset-password-help"
-                          className="h-12 rounded-xl border border-border bg-background pe-12 hover:border-muted-foreground focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
+                          className="h-12 rounded-xl border border-border bg-background pe-12 hover:border-muted-foreground focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
                         />
                         <button
                           type="button"
@@ -243,7 +243,7 @@ export function ResetPasswordForm() {
                           autoComplete="new-password"
                           aria-invalid={mismatch || undefined}
                           aria-describedby="reset-password-help"
-                          className="h-12 rounded-xl border border-border bg-background pe-12 hover:border-muted-foreground focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
+                          className="h-12 rounded-xl border border-border bg-background pe-12 hover:border-muted-foreground focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
                         />
                         <button
                           type="button"
@@ -262,14 +262,14 @@ export function ResetPasswordForm() {
                         {mismatch && (
                           <span className="text-red-600 dark:text-red-400">{t("reset.passwordsDoNotMatch")}</span>
                         )}
-                        {matches && <span className="text-[#FF2D55]">{t("reset.passwordsMatch")}</span>}
+                        {matches && <span className="text-brand">{t("reset.passwordsMatch")}</span>}
                       </p>
                     </div>
 
                     <Button
                       type="submit"
                       disabled={isPending || !strength.acceptable || !confirmPassword}
-                      className="w-full h-14 bg-gradient-to-r from-[#FF2D55] via-[#E6284D] to-[#CC2345] text-white font-semibold text-base rounded-xl hover:from-[#E6284D] hover:via-[#CC2345] hover:to-[#B31F3D] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255,45,85,0.35)] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                      className="w-full h-12 rounded-xl bg-brand hover:bg-brand-hover active:scale-95 text-white font-semibold text-base shadow-xs hover:shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       {isPending ? (
                         <span className="flex items-center gap-2">
@@ -297,7 +297,7 @@ export function ResetPasswordForm() {
                     {PASSWORD_RULES.map((rule) => {
                       const met = strength.met[rule.id];
                       return (
-                        <li key={rule.id} className={`flex items-center gap-2 ${met ? "text-[#FF2D55]" : ""}`}>
+                        <li key={rule.id} className={`flex items-center gap-2 ${met ? "text-brand" : ""}`}>
                           <span aria-hidden="true">{met ? "✓" : "•"}</span>
                           <span>
                             {t(rule.labelKey)}
