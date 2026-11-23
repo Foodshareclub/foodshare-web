@@ -80,3 +80,45 @@ Deno.test("realistic catalog: unmatched titles fall back cleanly by postType wit
   assertEquals(fridge.subject, "fridge");
   assertEquals(fridge.url.startsWith(SUPABASE_STORAGE_BASE), true);
 });
+
+Deno.test("realistic catalog: multi-item and haul listings classify as assorted", () => {
+  const multi1 = resolveRealisticCover({
+    title: "Brot brötchen Aufschnitt Jogurt käse Obst gemüse alles eigentlich",
+    postId: 2662,
+  });
+  assertEquals(multi1.subject, "assorted");
+  assertEquals(multi1.url.includes("assets/covers/food/assorted"), true);
+
+  const multi2 = resolveRealisticCover({
+    title: "Brot,Gemüse.,Obst Abgelaufen alles",
+    postId: 2659,
+  });
+  assertEquals(multi2.subject, "assorted");
+  assertEquals(multi2.url.includes("assets/covers/food/assorted"), true);
+
+  const haul = resolveRealisticCover({
+    title: "Verschiedenes",
+    postId: 2626,
+  });
+  assertEquals(haul.subject, "assorted");
+  assertEquals(haul.url.includes("assets/covers/food/assorted"), true);
+});
+
+Deno.test("realistic catalog: target listings 2662, 2659, and 2626 resolve to mutually distinct covers", () => {
+  const c2662 = resolveRealisticCover({
+    title: "Brot brötchen Aufschnitt Jogurt käse Obst gemüse alles eigentlich",
+    postId: 2662,
+  });
+  const c2659 = resolveRealisticCover({
+    title: "Brot,Gemüse.,Obst Abgelaufen alles",
+    postId: 2659,
+  });
+  const c2626 = resolveRealisticCover({
+    title: "Verschiedenes",
+    postId: 2626,
+  });
+
+  assertNotEquals(c2662.url, c2659.url);
+  assertNotEquals(c2659.url, c2626.url);
+  assertNotEquals(c2662.url, c2626.url);
+});

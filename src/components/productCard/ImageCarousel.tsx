@@ -2,7 +2,7 @@
 
 import { type CoverCredit } from "@/lib/cover-provenance";
 import { isValidImageUrl, normalizeImageUrl } from "@/lib/image";
-import { resolveRealisticCover } from "@/lib/realistic-covers";
+import { isGenericReusedReferenceCover } from "@/lib/realistic-covers";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -33,13 +33,18 @@ export function ImageCarousel({
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-  const validImages = [
+  const rawImages = [
     ...new Set(
       images
         .filter(isValidImageUrl)
         .map((url) => normalizeImageUrl(url) as string),
     ),
   ];
+  const containsOnlyReusedReference =
+    rawImages.length > 0 && rawImages.every(isGenericReusedReferenceCover);
+  const validImages = containsOnlyReusedReference
+    ? []
+    : rawImages.filter((url) => !isGenericReusedReferenceCover(url));
   const placeholderLabel =
     postType === "food" || postType === "vegan"
       ? "Community Food"
@@ -53,6 +58,7 @@ export function ImageCarousel({
       label={placeholderLabel}
       postName={postName}
       postType={postType}
+      postId={productId}
     />
   );
   const allDead =

@@ -36,7 +36,11 @@
 import { cpSync, mkdirSync, mkdtempSync, rmSync } from "bun:fs";
 import { join } from "bun:path";
 import { tmpdir } from "bun:os";
-import { compareVendored, VENDORED_DIRS, VENDORED_FILES } from "./check-vendored";
+import {
+  compareVendored,
+  VENDORED_DIRS,
+  VENDORED_FILES,
+} from "./check-vendored";
 
 export interface SyncResult {
   /** The commit the trees were sourced from. */
@@ -46,9 +50,13 @@ export interface SyncResult {
   filesCompared: number;
 }
 
-function git(backendDir: string, args: string[]): { ok: boolean; out: string; err: string } {
+function git(
+  backendDir: string,
+  args: string[],
+): { ok: boolean; out: string; err: string } {
   const proc = Bun.spawnSync(["git", "-C", backendDir, ...args]);
-  const decode = (out: Uint8Array | null): string => (out == null ? "" : new TextDecoder().decode(out));
+  const decode = (out: Uint8Array | null): string =>
+    out == null ? "" : new TextDecoder().decode(out);
   return {
     ok: proc.success,
     out: decode(proc.stdout).trim(),
@@ -61,21 +69,39 @@ function git(backendDir: string, args: string[]): { ok: boolean; out: string; er
  * resolved {sha, tip}; throws on refusal (fail-closed: anything unverifiable
  * is a refusal).
  */
-export function verifySyncSource(backendDir: string, requestedSha?: string): { sha: string; tip: string } {
-  const fetch = git(backendDir, ["fetch", "--quiet", "--no-tags", "origin", "main"]);
+export function verifySyncSource(
+  backendDir: string,
+  requestedSha?: string,
+): { sha: string; tip: string } {
+  const fetch = git(backendDir, [
+    "fetch",
+    "--quiet",
+    "--no-tags",
+    "origin",
+    "main",
+  ]);
   if (!fetch.ok) {
-    throw new Error(`provenance: cannot fetch origin/main from ${backendDir}: ${fetch.err || fetch.out}`);
+    throw new Error(
+      `provenance: cannot fetch origin/main from ${backendDir}: ${fetch.err || fetch.out}`,
+    );
   }
   const tipRes = git(backendDir, ["rev-parse", "origin/main"]);
   if (!tipRes.ok) {
-    throw new Error(`provenance: origin/main not resolvable after fetch: ${tipRes.err || tipRes.out}`);
+    throw new Error(
+      `provenance: origin/main not resolvable after fetch: ${tipRes.err || tipRes.out}`,
+    );
   }
   const tip = tipRes.out;
   if (!requestedSha) {
     return { sha: tip, tip };
   }
   const sha = requestedSha.trim().toLowerCase();
-  const ancestor = git(backendDir, ["merge-base", "--is-ancestor", sha, "origin/main"]);
+  const ancestor = git(backendDir, [
+    "merge-base",
+    "--is-ancestor",
+    sha,
+    "origin/main",
+  ]);
   if (!ancestor.ok) {
     throw new Error(
       `provenance REFUSED: sync source ${sha} is not reachable from origin/main ` +
@@ -90,20 +116,30 @@ export function verifySyncSource(backendDir: string, requestedSha?: string): { s
 function materialize(backendDir: string, sha: string): string {
   const paths = [...VENDORED_DIRS, ...VENDORED_FILES];
   const staging = mkdtempSync(join(tmpdir(), "vendored-sync-"));
-  const archive = Bun.spawnSync(["git", "-C", backendDir, "archive", sha, ...paths]);
+  const archive = Bun.spawnSync(
+    ["git", "-C", backendDir, "archive", sha, ...paths],
+    {
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
   if (!archive.success) {
     rmSync(staging, { recursive: true, force: true });
-    const stderr = archive.stderr == null ? "" : new TextDecoder().decode(archive.stderr);
+    const stderr =
+      archive.stderr == null ? "" : new TextDecoder().decode(archive.stderr);
     throw new Error(`materialize: git archive ${sha} failed: ${stderr.trim()}`);
   }
   const tarFile = join(staging, ".vendored.tar");
   Bun.write(tarFile, archive.stdout);
-  const tar = Bun.spawnSync(["tar", "-x", "-f", tarFile, "-C", staging]);
+  const tar = Bun.spawnSync(["tar", "-x", "-f", tarFile, "-C", staging], {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
   if (!tar.success) {
     rmSync(staging, { recursive: true, force: true });
-    const err = tar.stderr == null ? "" : new TextDecoder().decode(tar.stderr);
-    throw new Error(`materialize: tar extract failed: ${err.trim()}`);
+    throw new Error("materialize: tar extract failed");
   }
+  rmSync(tarFile, { force: true });
   return staging;
 }
 
@@ -111,7 +147,11 @@ function materialize(backendDir: string, sha: string): string {
  * The full sync: provenance check (B), byte copy of the three vendored
  * trees, then the byte-identity proof (the CI gate's own comparison).
  */
-export function syncFromSource(backendDir: string, webRoot: string, requestedSha?: string): SyncResult {
+export function syncFromSource(
+  backendDir: string,
+  webRoot: string,
+  requestedSha?: string,
+): SyncResult {
   const { sha, tip } = verifySyncSource(backendDir, requestedSha);
   const staging = materialize(backendDir, sha);
   try {
@@ -144,7 +184,9 @@ function main(): void {
   const dirIdx = args.indexOf("--backend-dir");
   const shaIdx = args.indexOf("--sha");
   if (dirIdx === -1 || !args[dirIdx + 1]) {
-    console.error("usage: bun scripts/vendored-sync.ts --backend-dir <path> [--sha <sha>]");
+    console.error(
+      "usage: bun scripts/vendored-sync.ts --backend-dir <path> [--sha <sha>]",
+    );
     process.exit(2);
   }
   const backendDir = args[dirIdx + 1];
@@ -164,7 +206,9 @@ function main(): void {
       );
     }
   } catch (err) {
-    console.error(`vendored-sync REFUSED: ${err instanceof Error ? err.message : String(err)}`);
+    console.error(
+      `vendored-sync REFUSED: ${err instanceof Error ? err.message : String(err)}`,
+    );
     process.exit(1);
   }
 }
