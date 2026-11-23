@@ -113,15 +113,15 @@ test.describe("Static Pages", () => {
     await page.goto("/feedback");
     await page.waitForLoadState("domcontentloaded");
 
-    // Either shows feedback form or redirects to auth
-    const hasFeedbackForm = await page
-      .locator("form, textarea")
-      .first()
-      .isVisible()
-      .catch(() => false);
-    const redirectedToAuth = page.url().includes("auth") || page.url().includes("login");
-
-    expect(hasFeedbackForm || redirectedToAuth).toBeTruthy();
+    // Either shows feedback form or redirects to auth. The form is dynamic (it
+    // reads the session) and streams in after the loading.tsx shell, so poll
+    // instead of taking a one-shot isVisible() at domcontentloaded.
+    const feedbackForm = page.locator("form, textarea").first();
+    await expect
+      .poll(async () => /auth|login/.test(page.url()) || (await feedbackForm.isVisible().catch(() => false)), {
+        timeout: 15_000,
+      })
+      .toBe(true);
   });
 });
 
