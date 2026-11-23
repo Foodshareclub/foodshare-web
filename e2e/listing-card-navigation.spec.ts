@@ -1,19 +1,37 @@
 import { expect, test, type Page } from "@playwright/test";
 
+// Listing cards on /food are <article aria-label=title>. Skeleton cards are <div>s, so this never matches one.
+const LISTING_CARD = "article[aria-label]";
+// /food is server-rendered against the live estate (~9 s measured from a developer machine); the test timeout is 60 s.
+const FEED_TIMEOUT = 45_000;
+
+test.beforeEach(async ({ context }) => {
+  // Deterministic guest path: geolocation is explicitly denied, so the feed never swaps to a runner-location query.
+  await context.addInitScript(() => {
+    const denied = { code: 1, message: "User denied Geolocation", PERMISSION_DENIED: 1 };
+    const deny = (_ok: unknown, fail?: (e: unknown) => void) => {
+      fail?.(denied);
+    };
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: { getCurrentPosition: deny, watchPosition: () => (deny(null, undefined), 0), clearWatch: () => {} },
+    });
+  });
+});
+
 async function firstListing(page: Page) {
   await page.goto("/food");
-  const card = page.locator('[data-slot="card"][data-variant="listing"]').first();
-  await expect(card).toBeVisible();
+  const card = page.locator(LISTING_CARD).first();
+  await expect(card).toBeVisible({ timeout: FEED_TIMEOUT });
   await expect(
-    page.locator('[data-variant="listing"]').getByText("Reference photo — not the actual item", { exact: true }),
+    page.locator(LISTING_CARD).getByText("Reference photo — not the actual item", { exact: true }),
   ).toHaveCount(0);
-  const titleLink = card.locator('[data-slot="card-title"] a');
+  const titleLink = card.locator("h3 a");
   const href = await titleLink.getAttribute("href");
   const title = (await titleLink.innerText()).trim();
   expect(href).toMatch(/^\/product\/\d+$/);
   return { card, titleLink, href: href!, title };
 }
-
 async function expectDetails(page: Page, href: string, title: string) {
   const id = href.split("/").at(-1)!;
   await expect(page).toHaveURL(new RegExp("/product/" + id + "(?:-|$|[?#])"));
@@ -38,7 +56,8 @@ for (const viewport of [
       const { card, href, title } = await firstListing(page);
       const bounds = await card.boundingBox();
       expect(bounds).not.toBeNull();
-      await card.click({ position: { x: bounds!.width - 4, y: bounds!.height - 4 } });
+      // Inset past the card's 16px rounded corner so the click lands on the card, not the page behind it.
+      await card.click({ position: { x: bounds!.width - 20, y: bounds!.height - 20 } });
       await expectDetails(page, href, title);
     });
 
@@ -49,7 +68,7 @@ for (const viewport of [
       await expectDetails(page, href, title);
       await page.goBack();
       await expect(page).toHaveURL(/\/food(?:[?#]|$)/);
-      await expect(page.locator('[data-slot="card"][data-variant="listing"]').first()).toBeVisible();
+      await expect(page.locator(LISTING_CARD).first()).toBeVisible({ timeout: FEED_TIMEOUT });
     });
 
     test("save remains an independent action for guests", async ({ page }) => {
