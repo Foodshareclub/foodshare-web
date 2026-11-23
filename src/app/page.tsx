@@ -317,6 +317,11 @@ export default async function Home({ searchParams }: PageProps) {
   const mobileNav = (
     <MobileNav
       label={t("main_navigation")}
+      // Phone-only: from `sm` up the header carries the same navigation, and a
+      // full-width bar at z-50 sat on top of the floating "Show map" pill
+      // (bottom-8 from `md`), so desktop visitors could not click it. The
+      // spacer below is `sm:hidden` for the same reason.
+      className="sm:hidden"
       // The icons are named, not passed: the navigation is a client
       // component and a component reference cannot cross that boundary.
       items={[

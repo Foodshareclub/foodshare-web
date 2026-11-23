@@ -44,11 +44,10 @@ test.describe("Home Page", () => {
 
   test('should display "Show map" navigation button', async ({ page }) => {
     // NavigateButtons shows a "Show map" button on listing pages
+    // The feed (and the pill inside it) streams in after the static shell, so
+    // wait for it with a web-first assertion instead of a one-shot isVisible().
     const mapButton = page.getByRole("button", { name: /show map/i });
-    const hasMapButton = await mapButton.isVisible();
-
-    // Map button should be visible on home page
-    expect(hasMapButton).toBeTruthy();
+    await expect(mapButton).toBeVisible({ timeout: 30_000 });
   });
 
   test("should have working navbar with user menu", async ({ page }) => {
@@ -107,16 +106,14 @@ test.describe("Home Page - Navigation", () => {
     await page.waitForLoadState("domcontentloaded");
 
     // Click the "Show map" button
+    // Wait for the streamed pill, then click it without `force`: a click that
+    // something else intercepts (the old desktop bottom bar did) must fail.
     const mapButton = page.locator("button").filter({ hasText: /show map/i });
-    const isVisible = await mapButton.isVisible().catch(() => false);
+    await expect(mapButton).toBeVisible({ timeout: 30_000 });
+    await mapButton.click();
 
-    if (isVisible) {
-      await mapButton.click();
-      await page.waitForLoadState("domcontentloaded");
-
-      // Should navigate to map page
-      await expect(page).toHaveURL(/\/map/);
-    }
+    // Should navigate to map page
+    await expect(page).toHaveURL(/\/map/);
   });
 
   test("should navigate to category pages via navbar", async ({ page }) => {
