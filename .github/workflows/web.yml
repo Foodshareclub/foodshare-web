@@ -375,7 +375,7 @@ jobs:
         with:
           name: blob-report-${{ matrix.shardIndex }}
           path: blob-report/
-          retention-days: 3
+          retention-days: 1
 
   merge-e2e-reports:
     name: Merge E2E Reports
