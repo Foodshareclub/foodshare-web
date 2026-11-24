@@ -1,7 +1,6 @@
 "use client";
 
 import { EmptyListingState } from "@/components/emptyState/EmptyListingState";
-import { LocationStatusBanner } from "@/components/location/LocationStatusBanner";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 import { ProductGrid } from "@/components/productCard/ProductGrid";
 import { Button } from "@/components/ui/button";
@@ -176,16 +175,10 @@ export function HomeClient({
   const [isFetchingNearby, setIsFetchingNearby] = useState(false);
 
   // Auto-resolve user location with permissions query and IP approximation fallback
-  const {
-    location: resolvedLocation,
-    isApproximate,
-    permissionState,
-    requestPreciseLocation,
-  } = useLocationResolver({
+  const { location: resolvedLocation } = useLocationResolver({
     initialLocation: initialLocation || userLocation,
     autoResolve: !searchTerm && searchParams.get("distance") !== "any",
   });
-  const [isUpgradingLocation, setIsUpgradingLocation] = useState(false);
 
   // Pagination state. Two disjoint cursor schemes coexist because the two fetch
   // paths are mutually exclusive per session:
@@ -416,18 +409,6 @@ export function HomeClient({
     }
   }, [searchParams]);
 
-  const handleUpgradeLocation = useCallback(async () => {
-    setIsUpgradingLocation(true);
-    try {
-      const precise = await requestPreciseLocation();
-      if (precise) {
-        const radius = geoDistance || radiusMeters;
-        fetchNearby(precise.latitude, precise.longitude, radius, productType);
-      }
-    } finally {
-      setIsUpgradingLocation(false);
-    }
-  }, [fetchNearby, geoDistance, productType, radiusMeters, requestPreciseLocation]);
 
   // Synchronize resolved location changes to the feed
   useEffect(() => {
@@ -483,15 +464,6 @@ export function HomeClient({
   return (
     <>
       <NavigateButtons title="Show map" />
-      {effectiveIsLocationFiltered && isApproximate && (
-        <LocationStatusBanner
-          isApproximate={isApproximate}
-          city={resolvedLocation?.city}
-          onUpgradeLocation={handleUpgradeLocation}
-          isUpgrading={isUpgradingLocation}
-          permissionState={permissionState}
-        />
-      )}
       <ProductGrid
         products={products}
         isLoading={isFetchingNearby}
