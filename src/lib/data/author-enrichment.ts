@@ -15,20 +15,21 @@ interface PostWithAuthorFields {
  * Strips surnames / full names for individual user privacy via `formatProfileDisplayName`
  * (e.g. "Tarlan Isaev" -> "Tarlan").
  */
-export async function enrichPostsWithAuthors<T extends PostWithAuthorFields>(
-  posts: T[],
-): Promise<T[]> {
+export async function enrichPostsWithAuthors<P extends readonly unknown[]>(
+  input: P,
+): Promise<Array<P[number] & PostWithAuthorFields>> {
+  // The author fields are added to the same row objects in place. The
+  // array type is inferred whole, so untyped query rows (`select("*")` on a
+  // view returns `any`) stay `any` for the caller rather than collapsing to
+  // this helper's field list, and typed rows gain the author fields.
+  const posts = input as unknown as Array<P[number] & PostWithAuthorFields>;
   if (!posts || posts.length === 0) return posts;
 
   // Collect distinct profile IDs that don't already have an authoritative author_name
   const missingProfileIds = [
     ...new Set(
       posts
-        .filter(
-          (p) =>
-            (!p.author_name || p.author_name === "Community Member") &&
-            Boolean(p.profile_id),
-        )
+        .filter((p) => (!p.author_name || p.author_name === "Community Member") && Boolean(p.profile_id))
         .map((p) => p.profile_id as string),
     ),
   ];
@@ -62,10 +63,7 @@ export async function enrichPostsWithAuthors<T extends PostWithAuthorFields>(
     }
 
     for (const post of posts) {
-      if (
-        (!post.author_name || post.author_name === "Community Member") &&
-        post.profile_id
-      ) {
+      if ((!post.author_name || post.author_name === "Community Member") && post.profile_id) {
         const prof = profileMap.get(post.profile_id);
         if (prof) {
           post.author_name = formatProfileDisplayName(prof);
@@ -85,9 +83,7 @@ export async function enrichPostsWithAuthors<T extends PostWithAuthorFields>(
 /**
  * Enriches a single post with author display name and avatar.
  */
-export async function enrichSinglePostWithAuthor<T extends PostWithAuthorFields>(
-  post: T | null,
-): Promise<T | null> {
+export async function enrichSinglePostWithAuthor<T>(post: T | null): Promise<(T & PostWithAuthorFields) | null> {
   if (!post) return null;
   const [enriched] = await enrichPostsWithAuthors([post]);
   return enriched;

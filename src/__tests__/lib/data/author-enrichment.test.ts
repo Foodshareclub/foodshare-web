@@ -15,9 +15,7 @@ mock.module("@/lib/supabase/server", () => ({
             if (mockError) {
               return { data: null, error: mockError };
             }
-            const data = ids
-              .map((id) => mockProfiles.get(id))
-              .filter(Boolean);
+            const data = ids.map((id) => mockProfiles.get(id)).filter(Boolean);
             return { data, error: null };
           },
         }),
@@ -26,10 +24,7 @@ mock.module("@/lib/supabase/server", () => ({
   }),
 }));
 
-import {
-  enrichPostsWithAuthors,
-  enrichSinglePostWithAuthor,
-} from "@/lib/data/author-enrichment";
+import { enrichPostsWithAuthors, enrichSinglePostWithAuthor } from "@/lib/data/author-enrichment";
 
 describe("author-enrichment (Author Attribution Architecture)", () => {
   beforeEach(() => {

@@ -43,7 +43,9 @@ export function isLegacyHardcodedCoordinates(lat?: number | null, lng?: number |
  * Checks if a cached or cookie location is a stale legacy fallback (e.g. Berlin default)
  * that should be evicted unconditionally.
  */
-export function isStaleFallbackLocation(loc?: ApproximateLocation | null): boolean {
+export function isStaleFallbackLocation(
+  loc?: Pick<ApproximateLocation, "latitude" | "longitude" | "city"> | null,
+): boolean {
   if (!loc) return false;
   return isLegacyHardcodedCoordinates(loc.latitude, loc.longitude) || loc.city === "Berlin";
 }
@@ -52,9 +54,9 @@ export function isStaleFallbackLocation(loc?: ApproximateLocation | null): boole
  * Extracts approximate location from request headers (Cloudflare or Vercel Edge Geolocation).
  * Returns null if no real edge geolocation headers are present.
  */
-export function resolveApproximateLocationFromHeaders(
-  headers: { get(name: string): string | null },
-): ApproximateLocation | null {
+export function resolveApproximateLocationFromHeaders(headers: {
+  get(name: string): string | null;
+}): ApproximateLocation | null {
   // 1. Cloudflare Edge Geolocation
   const cfLat = headers.get("cf-iplatitude");
   const cfLng = headers.get("cf-iplongitude");

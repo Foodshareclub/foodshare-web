@@ -78,10 +78,11 @@ describe("GET /api/listings/nearby", () => {
     const response = await nearbyGET(url("/api/listings/nearby", "lat=51.5&lng=-0.1&radius=500000"));
     const body = await response.json();
 
-    // 500km asked for, 50km ceiling applied. The client needs the clamped
-    // value to keep its own radius state honest.
-    expect(body.radius).toBe(50000);
-    expect(nearbyArgs()?.radiusMeters).toBe(50000);
+    // 500km asked for, 160km ceiling applied (beedca4d lifted it from 50km to
+    // match HomeClient's MAX_RADIUS). The client needs the clamped value to
+    // keep its own radius state honest.
+    expect(body.radius).toBe(160000);
+    expect(nearbyArgs()?.radiusMeters).toBe(160000);
   });
 
   it("clamps a radius below the floor", async () => {
