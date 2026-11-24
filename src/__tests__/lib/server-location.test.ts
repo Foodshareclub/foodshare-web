@@ -52,10 +52,10 @@ describe("resolveServerLocation", () => {
     mockHeaders.clear();
 
     const cookieData = serializeLocationCookie({
-      latitude: 52.52,
-      longitude: 13.405,
-      city: "Berlin",
-      country: "DE",
+      latitude: 38.5816,
+      longitude: -121.4944,
+      city: "Sacramento",
+      country: "US",
       source: "ip",
       approximate: true,
     });
@@ -67,12 +67,50 @@ describe("resolveServerLocation", () => {
     });
 
     expect(result).not.toBeNull();
-    expect(result?.lat).toBeCloseTo(52.52, 2);
-    expect(result?.lng).toBeCloseTo(13.405, 2);
-    expect(result?.city).toBe("Berlin");
-    expect(result?.country).toBe("DE");
+    expect(result?.lat).toBeCloseTo(38.5816, 2);
+    expect(result?.lng).toBeCloseTo(-121.4944, 2);
+    expect(result?.city).toBe("Sacramento");
+    expect(result?.country).toBe("US");
     expect(result?.source).toBe("ip");
     expect(result?.approximate).toBe(true);
+  });
+
+  it("discards stale Berlin fallback cookie when edge timezone contradicts it", async () => {
+    mockCookies.clear();
+    mockHeaders.clear();
+    mockHeaders.set("cf-timezone", "America/Los_Angeles");
+
+    const staleCookie = serializeLocationCookie({
+      latitude: 52.52,
+      longitude: 13.405,
+      city: "Berlin",
+      country: "DE",
+      source: "ip",
+      approximate: true,
+    });
+    mockCookies.set(LOCATION_COOKIE_NAME, staleCookie);
+
+    const result = await resolveServerLocation({
+      searchParams: {},
+      defaultRadius: 5000,
+    });
+
+    // Stale Berlin fallback is ignored; resolved from edge timezone instead
+    expect(result).not.toBeNull();
+    expect(result?.city).not.toBe("Berlin");
+    expect(result?.city).toBe("Los Angeles");
+  });
+
+  it("returns null when cookie and edge headers are absent (no fake Berlin default)", async () => {
+    mockCookies.clear();
+    mockHeaders.clear();
+
+    const result = await resolveServerLocation({
+      searchParams: {},
+      defaultRadius: 5000,
+    });
+
+    expect(result).toBeNull();
   });
 
   it("falls back to Cloudflare edge headers if cookie is absent", async () => {
@@ -95,5 +133,25 @@ describe("resolveServerLocation", () => {
     expect(result?.country).toBe("JP");
     expect(result?.source).toBe("ip");
     expect(result?.approximate).toBe(true);
+  });
+
+  it("falls back to Vercel edge headers if cookie is absent", async () => {
+    mockCookies.clear();
+    mockHeaders.clear();
+    mockHeaders.set("x-vercel-ip-latitude", "38.5816");
+    mockHeaders.set("x-vercel-ip-longitude", "-121.4944");
+    mockHeaders.set("x-vercel-ip-city", "Sacramento");
+    mockHeaders.set("x-vercel-ip-country", "US");
+
+    const result = await resolveServerLocation({
+      searchParams: {},
+      defaultRadius: 5000,
+    });
+
+    expect(result).not.toBeNull();
+    expect(result?.lat).toBeCloseTo(38.5816, 4);
+    expect(result?.lng).toBeCloseTo(-121.4944, 4);
+    expect(result?.city).toBe("Sacramento");
+    expect(result?.country).toBe("US");
   });
 });

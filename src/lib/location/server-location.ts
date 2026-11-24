@@ -3,6 +3,7 @@ import "server-only";
 import {
   LOCATION_COOKIE_NAME,
   type LocationSource,
+  isStaleFallbackLocation,
   parseLocationCookie,
   resolveApproximateLocationFromHeaders,
 } from "@/lib/location/approximate-location";
@@ -86,43 +87,54 @@ export async function resolveServerLocation({
     };
   }
 
+  let reqHeaders: { get(name: string): string | null } | null = null;
+  try {
+    reqHeaders = await headers();
+  } catch {
+    // Headers read failed or unavailable
+  }
+
   // 3. Persistent location cookie
   try {
     const cookieStore = await cookies();
     const cookieVal = cookieStore.get(LOCATION_COOKIE_NAME)?.value;
     const cookieLocation = parseLocationCookie(cookieVal);
     if (cookieLocation) {
-      return {
-        lat: cookieLocation.latitude,
-        lng: cookieLocation.longitude,
-        radius: defaultRadius,
-        city: cookieLocation.city,
-        country: cookieLocation.country,
-        source: cookieLocation.source,
-        approximate: cookieLocation.approximate,
-      };
+      const edgeTz = reqHeaders?.get("cf-timezone") || reqHeaders?.get("x-vercel-ip-timezone");
+      if (!isStaleFallbackLocation(cookieLocation, edgeTz)) {
+        return {
+          lat: cookieLocation.latitude,
+          lng: cookieLocation.longitude,
+          radius: defaultRadius,
+          city: cookieLocation.city,
+          country: cookieLocation.country,
+          source: cookieLocation.source,
+          approximate: cookieLocation.approximate,
+        };
+      }
     }
   } catch {
     // Cookie read failed or unavailable
   }
 
-  // 4. Cloudflare edge headers / timezone fallback
-  try {
-    const reqHeaders = await headers();
-    const edgeLoc = resolveApproximateLocationFromHeaders(reqHeaders);
-    if (edgeLoc) {
-      return {
-        lat: edgeLoc.latitude,
-        lng: edgeLoc.longitude,
-        radius: defaultRadius,
-        city: edgeLoc.city,
-        country: edgeLoc.country,
-        source: edgeLoc.source,
-        approximate: edgeLoc.approximate,
-      };
+  // 4. Cloudflare / Vercel edge headers
+  if (reqHeaders) {
+    try {
+      const edgeLoc = resolveApproximateLocationFromHeaders(reqHeaders);
+      if (edgeLoc) {
+        return {
+          lat: edgeLoc.latitude,
+          lng: edgeLoc.longitude,
+          radius: defaultRadius,
+          city: edgeLoc.city,
+          country: edgeLoc.country,
+          source: edgeLoc.source,
+          approximate: edgeLoc.approximate,
+        };
+      }
+    } catch {
+      // Headers processing failed
     }
-  } catch {
-    // Headers read failed or unavailable
   }
 
   return null;

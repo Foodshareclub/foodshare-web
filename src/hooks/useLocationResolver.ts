@@ -4,6 +4,7 @@ import {
   type ApproximateLocation,
   LOCATION_COOKIE_MAX_AGE,
   LOCATION_COOKIE_NAME,
+  isStaleFallbackLocation,
   serializeLocationCookie,
 } from "@/lib/location/approximate-location";
 import { type Coordinates, useUIStore } from "@/store/zustand/useUIStore";
@@ -56,8 +57,13 @@ export function useLocationResolver(options: UseLocationResolverOptions = {}): U
   const userLocation = useUIStore((state) => state.userLocation);
   const setUserLocation = useUIStore((state) => state.setUserLocation);
 
-  const [location, setLocation] = useState<Coordinates | null>(initialLocation || userLocation);
-  const [status, setStatus] = useState<LocationResolutionStatus>(location ? "ready" : "idle");
+  const clientTz = typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : null;
+  const initialIsStale =
+    isStaleFallbackLocation(initialLocation, clientTz) || isStaleFallbackLocation(userLocation, clientTz);
+
+  const effectiveInitial = initialIsStale ? null : initialLocation || userLocation;
+  const [location, setLocation] = useState<Coordinates | null>(effectiveInitial);
+  const [status, setStatus] = useState<LocationResolutionStatus>(effectiveInitial ? "ready" : "idle");
   const [permissionState, setPermissionState] = useState<PermissionState | "unknown">("unknown");
   const isResolvingRef = useRef(false);
 
@@ -170,8 +176,19 @@ export function useLocationResolver(options: UseLocationResolverOptions = {}): U
         }
       }
 
-      // If user already has a recent location in memory/cookie, prioritize it
-      if (userLocation) {
+      const clientTz = typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : null;
+      const isStale =
+        isStaleFallbackLocation(userLocation, clientTz) ||
+        isStaleFallbackLocation(initialLocation, clientTz);
+
+      // If user has a valid, non-stale precise location, keep it
+      if (userLocation && !isStale && userLocation.source === "gps") {
+        setStatus("ready");
+        return;
+      }
+
+      // If user already has a recent non-stale approximate location and permission is denied, keep it
+      if (userLocation && !isStale && state === "denied") {
         setStatus("ready");
         return;
       }
@@ -180,10 +197,13 @@ export function useLocationResolver(options: UseLocationResolverOptions = {}): U
         // Silently obtain GPS coordinates
         await requestPreciseLocation();
       } else if (state === "prompt" || state === "unknown") {
-        // Access is not given yet: ask for access
+        // Access is not given yet: ask for access via browser prompt
         await requestPreciseLocation();
       } else if (state === "denied") {
         // Refused: do not spam getCurrentPosition, fall back immediately to IP approximation
+        await resolveIpApproximation();
+      } else if (isStale) {
+        // Stale Berlin fallback detected: force fresh resolution
         await resolveIpApproximation();
       }
     }

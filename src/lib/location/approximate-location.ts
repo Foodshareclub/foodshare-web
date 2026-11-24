@@ -102,11 +102,11 @@ const REGION_DEFAULTS: Record<string, LocationMetadata> = {
   Pacific: { coords: [-36.8485, 174.7633], city: "Auckland", country: "NZ" },
 };
 
-// Default fallback when nothing else can be determined
+// Default fallback when timezone is unknown
 const DEFAULT_FALLBACK: LocationMetadata = {
-  coords: [52.52, 13.405], // Berlin
-  city: "Berlin",
-  country: "DE",
+  coords: [39.8283, -98.5795],
+  city: "United States",
+  country: "US",
 };
 
 /**
@@ -117,9 +117,29 @@ export function isValidCoordinates(lat: number, lng: number): boolean {
 }
 
 /**
+ * Checks if a cached or cookie location is a stale legacy fallback (e.g. Berlin default)
+ * that should be evicted when the client's actual timezone or IP does not match.
+ */
+export function isStaleFallbackLocation(
+  loc?: ApproximateLocation | null,
+  clientTimezone?: string | null,
+): boolean {
+  if (!loc || !loc.approximate) return false;
+  // Legacy Berlin default was coords 52.52, 13.405 with city Berlin
+  const isLegacyBerlin =
+    Math.abs(loc.latitude - 52.52) < 0.01 &&
+    Math.abs(loc.longitude - 13.405) < 0.01 &&
+    loc.city === "Berlin";
+  if (isLegacyBerlin && clientTimezone && !clientTimezone.startsWith("Europe/Berlin")) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Resolves approximate coordinates and city based on timezone
  */
-export function resolveLocationFromTimezone(timezone?: string | null): LocationMetadata {
+export function resolveLocationFromTimezone(timezone?: string | null): LocationMetadata | null {
   if (timezone) {
     if (TIMEZONE_LOCATION_MAP[timezone]) {
       return TIMEZONE_LOCATION_MAP[timezone];
@@ -128,18 +148,21 @@ export function resolveLocationFromTimezone(timezone?: string | null): LocationM
     if (region && REGION_DEFAULTS[region]) {
       return REGION_DEFAULTS[region];
     }
+    return DEFAULT_FALLBACK;
   }
-  return DEFAULT_FALLBACK;
+  return null;
 }
 
 /**
- * Extracts approximate location from request headers (Cloudflare Edge Geolocation)
+ * Extracts approximate location from request headers (Cloudflare or Vercel Edge Geolocation)
  * or falls back to timezone hints.
+ * Returns null if neither edge headers nor a timezone hint are present.
  */
 export function resolveApproximateLocationFromHeaders(
   headers: { get(name: string): string | null },
   timezoneHint?: string | null,
-): ApproximateLocation {
+): ApproximateLocation | null {
+  // 1. Cloudflare Edge Geolocation
   const cfLat = headers.get("cf-iplatitude");
   const cfLng = headers.get("cf-iplongitude");
   const cfCity = headers.get("cf-ipcity");
@@ -161,18 +184,45 @@ export function resolveApproximateLocationFromHeaders(
     }
   }
 
-  // Fallback to timezone hint or cf-timezone header
-  const effectiveTimezone = timezoneHint || headers.get("cf-timezone");
+  // 2. Vercel Edge Geolocation
+  const vercelLat = headers.get("x-vercel-ip-latitude");
+  const vercelLng = headers.get("x-vercel-ip-longitude");
+  const vercelCity = headers.get("x-vercel-ip-city");
+  const vercelCountry = headers.get("x-vercel-ip-country");
+
+  if (vercelLat && vercelLng) {
+    const lat = Number.parseFloat(vercelLat);
+    const lng = Number.parseFloat(vercelLng);
+
+    if (isValidCoordinates(lat, lng)) {
+      return {
+        latitude: lat,
+        longitude: lng,
+        city: vercelCity ? decodeURIComponent(vercelCity) : undefined,
+        country: vercelCountry || undefined,
+        source: "ip",
+        approximate: true,
+      };
+    }
+  }
+
+  // 3. Fallback to timezone hint or edge timezone header
+  const effectiveTimezone =
+    timezoneHint || headers.get("cf-timezone") || headers.get("x-vercel-ip-timezone");
   const resolved = resolveLocationFromTimezone(effectiveTimezone);
 
-  return {
-    latitude: resolved.coords[0],
-    longitude: resolved.coords[1],
-    city: resolved.city,
-    country: resolved.country,
-    source: "ip",
-    approximate: true,
-  };
+  if (resolved) {
+    return {
+      latitude: resolved.coords[0],
+      longitude: resolved.coords[1],
+      city: resolved.city,
+      country: resolved.country,
+      source: "ip",
+      approximate: true,
+    };
+  }
+
+  return null;
 }
 
 /**

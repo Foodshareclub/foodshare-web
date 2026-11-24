@@ -104,6 +104,9 @@ function evictOldestIP(): void {
 }
 
 function isIPBlocked(ip: string): boolean {
+  if (process.env.NODE_ENV !== "production" && (ip === "127.0.0.1" || ip === "::1" || ip === "localhost")) {
+    return false;
+  }
   const rep = ipReputations.get(ip);
   if (!rep || !rep.blocked) return false;
 
@@ -450,7 +453,7 @@ const SUSPICIOUS_PATTERNS = [
   /\.\.\//,
   /<script/i,
   /javascript:/i,
-  /on\w+=/i,
+  /\bon[a-z]{3,}\s*=/i,
   /eval\(/i,
   /union.*select/i,
   /drop.*table/i,

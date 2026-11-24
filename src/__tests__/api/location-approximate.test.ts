@@ -7,10 +7,10 @@ describe("GET /api/location/approximate", () => {
   it("resolves location from Cloudflare edge headers and sets cookie", async () => {
     const request = new NextRequest("http://localhost:3000/api/location/approximate", {
       headers: {
-        "cf-iplatitude": "52.5200",
-        "cf-iplongitude": "13.4050",
-        "cf-ipcity": "Berlin",
-        "cf-ipcountry": "DE",
+        "cf-iplatitude": "38.5816",
+        "cf-iplongitude": "-121.4944",
+        "cf-ipcity": "Sacramento",
+        "cf-ipcountry": "US",
       },
     });
 
@@ -19,10 +19,10 @@ describe("GET /api/location/approximate", () => {
 
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(data.location.latitude).toBeCloseTo(52.52, 2);
-    expect(data.location.longitude).toBeCloseTo(13.405, 2);
-    expect(data.location.city).toBe("Berlin");
-    expect(data.location.country).toBe("DE");
+    expect(data.location.latitude).toBeCloseTo(38.5816, 2);
+    expect(data.location.longitude).toBeCloseTo(-121.4944, 2);
+    expect(data.location.city).toBe("Sacramento");
+    expect(data.location.country).toBe("US");
     expect(data.location.source).toBe("ip");
     expect(data.location.approximate).toBe(true);
 
@@ -34,35 +34,44 @@ describe("GET /api/location/approximate", () => {
     // Parse the cookie to ensure round-trip integrity
     const parsedCookie = parseLocationCookie(cookie?.value);
     expect(parsedCookie).not.toBeNull();
-    expect(parsedCookie?.latitude).toBeCloseTo(52.52, 2);
-    expect(parsedCookie?.longitude).toBeCloseTo(13.405, 2);
-    expect(parsedCookie?.city).toBe("Berlin");
+    expect(parsedCookie?.latitude).toBeCloseTo(38.5816, 2);
+    expect(parsedCookie?.longitude).toBeCloseTo(-121.4944, 2);
+    expect(parsedCookie?.city).toBe("Sacramento");
   });
 
-  it("falls back to timezone parameter when Cloudflare headers are absent", async () => {
-    const request = new NextRequest("http://localhost:3000/api/location/approximate?timezone=America%2FLos_Angeles");
+  it("resolves location from Vercel edge headers", async () => {
+    const request = new NextRequest("http://localhost:3000/api/location/approximate", {
+      headers: {
+        "x-vercel-ip-latitude": "37.7749",
+        "x-vercel-ip-longitude": "-122.4194",
+        "x-vercel-ip-city": "San%20Francisco",
+        "x-vercel-ip-country": "US",
+      },
+    });
 
     const response = await GET(request);
     expect(response.status).toBe(200);
 
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(data.location.latitude).toBeCloseTo(34.0522, 2);
-    expect(data.location.longitude).toBeCloseTo(-118.2437, 2);
-    expect(data.location.city).toBe("Los Angeles");
-    expect(data.location.country).toBe("US");
-    expect(data.location.approximate).toBe(true);
+    expect(data.location.city).toBe("San Francisco");
+    expect(data.location.latitude).toBeCloseTo(37.7749, 2);
+    expect(data.location.longitude).toBeCloseTo(-122.4194, 2);
   });
 
-  it("handles regional timezone fallback gracefully", async () => {
-    const request = new NextRequest("http://localhost:3000/api/location/approximate?timezone=Europe%2FBratislava");
+  it("resolves location via public IP geolocation when edge headers are absent", async () => {
+    // Calling without edge headers triggers real IP geolocation
+    const request = new NextRequest("http://localhost:3000/api/location/approximate");
 
     const response = await GET(request);
     expect(response.status).toBe(200);
 
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(data.location.country).toBe("EU");
+    expect(data.location.source).toBe("ip");
     expect(data.location.approximate).toBe(true);
+    expect(typeof data.location.latitude).toBe("number");
+    expect(typeof data.location.longitude).toBe("number");
+    expect(typeof data.location.city).toBe("string");
   });
 });

@@ -178,6 +178,7 @@ export function HomeClient({
   const {
     location: resolvedLocation,
     isApproximate,
+    permissionState,
     requestPreciseLocation,
   } = useLocationResolver({
     initialLocation: initialLocation || userLocation,
@@ -482,6 +483,7 @@ export function HomeClient({
           city={resolvedLocation?.city}
           onUpgradeLocation={handleUpgradeLocation}
           isUpgrading={isUpgradingLocation}
+          permissionState={permissionState}
         />
       )}
       <ProductGrid
