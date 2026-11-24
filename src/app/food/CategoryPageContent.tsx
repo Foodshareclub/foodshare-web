@@ -7,6 +7,7 @@ import { getNearbyPosts } from "@/lib/data/nearby-posts";
 import { getProductsPaginated } from "@/lib/data/products";
 import { generateItemListJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import { parseSearchLocation, parseSearchRadius } from "@/lib/listing-search";
+import { getDefaultSearchDistance } from "@/lib/location/default-distance";
 import { resolveServerLocation } from "@/lib/location/server-location";
 import { categoryMetadata, generatePageMetadata, siteConfig } from "@/lib/metadata";
 import { createRequestLogger } from "@/lib/structured-logger";
@@ -101,18 +102,24 @@ export default async function CategoryPageContent({ type, searchParams }: { type
   const productType = type;
   const searchTerm = typeof params.key_word === "string" ? params.key_word.trim() : "";
 
-  // Fetch session to get user settings (like search radius)
+  // Fetch session to check for explicit user profile search radius preference
   const session = await getAuthSession();
-  const userRadiusMeters = (session.user?.profile?.search_radius_km || 5) * 1000;
+  const customProfileRadiusKm = session.user?.profile?.search_radius_km;
+  const customProfileRadiusMeters =
+    customProfileRadiusKm && customProfileRadiusKm > 0 ? customProfileRadiusKm * 1000 : undefined;
 
   const canUseNearby = productType !== "challenge" && productType !== "forum";
   const locationParams = canUseNearby
     ? await resolveServerLocation({
         searchParams: params,
-        defaultRadius: userRadiusMeters,
+        defaultRadius: customProfileRadiusMeters,
       })
     : null;
   const isLocationFiltered = locationParams !== null;
+
+  // Resolve DB default distance from backend (40 miles for US/imperial, 40 km for metric)
+  const dbDistance = await getDefaultSearchDistance(locationParams?.country);
+  const effectiveRadiusMeters = customProfileRadiusMeters ?? locationParams?.radius ?? dbDistance.radiusMeters;
 
   // If location params provided, fetch nearby posts using PostGIS
   if (isLocationFiltered) {
@@ -211,7 +218,7 @@ export default async function CategoryPageContent({ type, searchParams }: { type
           initialLoadFailed={initialLoadFailed}
           searchTerm={searchTerm}
           productType={productType}
-          radiusMeters={userRadiusMeters}
+          radiusMeters={effectiveRadiusMeters}
           initialHasMore={paginatedResult.hasMore}
           initialNextCursor={paginatedResult.nextCursor}
         />

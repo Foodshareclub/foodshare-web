@@ -15,7 +15,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /** Hard cap on radius expansion. Beyond this the feed is considered exhausted. */
-const MAX_RADIUS_METERS = 50000; // 50km
+const MAX_RADIUS_METERS = 160000; // 160km (100 miles) hard cap
 
 /** Format distance for display - miles for US (en), km for others */
 function formatDistance(meters: number, locale: string): string {
@@ -150,7 +150,7 @@ export function HomeClient({
   productType = "food",
   nearbyPosts,
   isLocationFiltered = false,
-  radiusMeters = 5000,
+  radiusMeters = 40000,
   initialHasMore = false,
   initialNextCursor = null,
   initialLocation = null,

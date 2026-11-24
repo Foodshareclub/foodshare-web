@@ -8,6 +8,7 @@ import {
   parseLocationCookie,
   resolveApproximateLocationFromHeaders,
 } from "@/lib/location/approximate-location";
+import { getDefaultSearchDistance } from "@/lib/location/default-distance";
 import { cookies, headers } from "next/headers";
 
 export interface ResolvedServerLocation {
@@ -50,7 +51,8 @@ function parseUrlCoordinates(
     return null;
   }
 
-  return { lat, lng, radius: Math.max(100, Math.min(50000, radius)) };
+  // Lifted ceiling to 160,000m (100 miles) so 40-mile queries are never truncated
+  return { lat, lng, radius: Math.max(100, Math.min(160000, radius)) };
 }
 
 /**
@@ -63,7 +65,7 @@ function parseUrlCoordinates(
  */
 export async function resolveServerLocation({
   searchParams,
-  defaultRadius = 5000,
+  defaultRadius,
 }: {
   searchParams: {
     lat?: string;
@@ -79,7 +81,8 @@ export async function resolveServerLocation({
   }
 
   // 2. Direct URL coordinates (rejects legacy hardcoded fallbacks)
-  const urlCoords = parseUrlCoordinates(searchParams, defaultRadius);
+  const effectiveDefaultRadius = defaultRadius ?? 40000;
+  const urlCoords = parseUrlCoordinates(searchParams, effectiveDefaultRadius);
   if (urlCoords) {
     return {
       lat: urlCoords.lat,
@@ -103,10 +106,15 @@ export async function resolveServerLocation({
     const cookieVal = cookieStore.get(LOCATION_COOKIE_NAME)?.value;
     const cookieLocation = parseLocationCookie(cookieVal);
     if (cookieLocation && !isStaleFallbackLocation(cookieLocation)) {
+      const dbDistance = defaultRadius
+        ? null
+        : await getDefaultSearchDistance(cookieLocation.country);
+      const radius = defaultRadius ?? dbDistance?.radiusMeters ?? 40000;
+
       return {
         lat: cookieLocation.latitude,
         lng: cookieLocation.longitude,
-        radius: defaultRadius,
+        radius,
         city: cookieLocation.city,
         country: cookieLocation.country,
         source: cookieLocation.source,
@@ -122,10 +130,15 @@ export async function resolveServerLocation({
     try {
       const edgeLoc = resolveApproximateLocationFromHeaders(reqHeaders);
       if (edgeLoc) {
+        const dbDistance = defaultRadius
+          ? null
+          : await getDefaultSearchDistance(edgeLoc.country);
+        const radius = defaultRadius ?? dbDistance?.radiusMeters ?? 40000;
+
         return {
           lat: edgeLoc.latitude,
           lng: edgeLoc.longitude,
-          radius: defaultRadius,
+          radius,
           city: edgeLoc.city,
           country: edgeLoc.country,
           source: edgeLoc.source,

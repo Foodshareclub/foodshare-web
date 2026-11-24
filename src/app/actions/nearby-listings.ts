@@ -18,12 +18,12 @@ import type { InitialProductStateType } from "@/types/product.types";
 
 /** Clamp bounds for the radius the client is allowed to request. */
 const MIN_RADIUS_METERS = 100; // 100m
-const MAX_RADIUS_METERS = 50000; // 50km hard cap (matches HomeClient MAX_RADIUS)
+const MAX_RADIUS_METERS = 160000; // 160km (100 miles) hard cap (matches HomeClient MAX_RADIUS)
 
 export interface FetchNearbyListingsParams {
   lat: number;
   lng: number;
-  /** Search radius in meters. Honored (clamped to [100, 50000]); no longer ignored. */
+  /** Search radius in meters. Honored (clamped to [100, 160000]); no longer ignored. */
   radius?: number;
   postType?: string;
   limit?: number;
@@ -50,7 +50,7 @@ export interface NearbyListingsResult {
 export async function fetchNearbyListings({
   lat,
   lng,
-  radius = 5000,
+  radius = 40000,
   postType = "food",
   limit = 20,
   cursor = null,

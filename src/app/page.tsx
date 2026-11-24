@@ -8,6 +8,7 @@ import { MobileNav } from "@/components/ui/mobile-nav";
 import { getAuthSession } from "@/lib/data/auth";
 import { getNearbyPosts } from "@/lib/data/nearby-posts";
 import { getProductsPaginated } from "@/lib/data/products";
+import { getDefaultSearchDistance } from "@/lib/location/default-distance";
 import { resolveServerLocation, type ResolvedServerLocation } from "@/lib/location/server-location";
 import { generateBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import { generatePageMetadata, siteConfig } from "@/lib/metadata";
@@ -98,14 +99,20 @@ export default async function Home({ searchParams }: PageProps) {
   const params = await searchParams;
   const t = await getTranslations("Home");
 
-  // Fetch session to get user settings (like search radius)
+  // Fetch session to check for explicit user profile search radius preference
   const session = await getAuthSession();
-  const userRadiusMeters = (session.user?.profile?.search_radius_km || 5) * 1000;
+  const customProfileRadiusKm = session.user?.profile?.search_radius_km;
+  const customProfileRadiusMeters =
+    customProfileRadiusKm && customProfileRadiusKm > 0 ? customProfileRadiusKm * 1000 : undefined;
 
   const locationParams = await resolveServerLocation({
     searchParams: params,
-    defaultRadius: userRadiusMeters,
+    defaultRadius: customProfileRadiusMeters,
   });
+
+  // Resolve DB default distance from backend (40 miles for US/imperial, 40 km for metric)
+  const dbDistance = await getDefaultSearchDistance(locationParams?.country);
+  const effectiveRadiusMeters = customProfileRadiusMeters ?? locationParams?.radius ?? dbDistance.radiusMeters;
 
   // Fetch data outside of JSX rendering
   const homeData = await fetchHomeData(locationParams);
@@ -163,7 +170,7 @@ export default async function Home({ searchParams }: PageProps) {
           <HomeClient
             initialProducts={homeData.data}
             productType="food"
-            radiusMeters={userRadiusMeters}
+            radiusMeters={effectiveRadiusMeters}
             initialHasMore={homeData.hasMore}
             initialNextCursor={homeData.nextCursor}
           />

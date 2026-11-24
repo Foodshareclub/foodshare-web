@@ -23,7 +23,7 @@ import { NextResponse } from "next/server";
 
 /** Clamp bounds for the radius the client is allowed to request. */
 const MIN_RADIUS_METERS = 100; // 100m
-const MAX_RADIUS_METERS = 50000; // 50km hard cap (matches HomeClient MAX_RADIUS)
+const MAX_RADIUS_METERS = 160000; // 160km (100 miles) hard cap (matches HomeClient MAX_RADIUS)
 
 const LIMIT = 20;
 
@@ -52,7 +52,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const requestedRadius = Number(searchParams.get("radius"));
   const radius = Number.isFinite(requestedRadius)
     ? Math.max(MIN_RADIUS_METERS, Math.min(MAX_RADIUS_METERS, requestedRadius))
-    : 5000;
+    : 40000;
 
   const postType = searchParams.get("type") ?? "food";
   const searchTerm = searchParams.get("q") ?? undefined;

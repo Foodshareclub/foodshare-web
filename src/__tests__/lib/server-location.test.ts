@@ -163,4 +163,48 @@ describe("resolveServerLocation (Zero-Hardcoding Architecture)", () => {
     expect(result?.city).toBe("Sacramento");
     expect(result?.country).toBe("US");
   });
+
+  it("allows search radius up to 160,000m (100 miles) in URL parameters", async () => {
+    mockCookies.clear();
+    mockHeaders.clear();
+
+    const result = await resolveServerLocation({
+      searchParams: { lat: "38.5816", lng: "-121.4944", radius: "64374" },
+    });
+
+    expect(result).not.toBeNull();
+    expect(result?.radius).toBe(64374);
+  });
+
+  it("resolves default radius to 40 miles (64,374m) for US location when defaultRadius is omitted", async () => {
+    mockCookies.clear();
+    mockHeaders.clear();
+    mockHeaders.set("cf-iplatitude", "38.5816");
+    mockHeaders.set("cf-iplongitude", "-121.4944");
+    mockHeaders.set("cf-ipcity", "Sacramento");
+    mockHeaders.set("cf-ipcountry", "US");
+
+    const result = await resolveServerLocation({
+      searchParams: {},
+    });
+
+    expect(result).not.toBeNull();
+    expect(result?.radius).toBe(64374);
+  });
+
+  it("resolves default radius to 40 km (40,000m) for Germany location when defaultRadius is omitted", async () => {
+    mockCookies.clear();
+    mockHeaders.clear();
+    mockHeaders.set("cf-iplatitude", "48.1351");
+    mockHeaders.set("cf-iplongitude", "11.5820");
+    mockHeaders.set("cf-ipcity", "Munich");
+    mockHeaders.set("cf-ipcountry", "DE");
+
+    const result = await resolveServerLocation({
+      searchParams: {},
+    });
+
+    expect(result).not.toBeNull();
+    expect(result?.radius).toBe(40000);
+  });
 });

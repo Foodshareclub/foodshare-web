@@ -248,7 +248,7 @@ export function EmptyListingState({
   productType = "food",
   searchTerm = "",
   isLocationFiltered = false,
-  radiusMeters = 5000,
+  radiusMeters = 40000,
   locale = "en",
   onClearSearch,
 }: EmptyListingStateProps) {

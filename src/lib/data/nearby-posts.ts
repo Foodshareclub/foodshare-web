@@ -112,7 +112,7 @@ export interface MapPost {
 // Default Values
 // ============================================================================
 
-const DEFAULT_RADIUS_METERS = 5000; // 5km — genuinely local first page
+const DEFAULT_RADIUS_METERS = 40000; // 40km standard default
 const DEFAULT_LIMIT = 20;
 
 /**
