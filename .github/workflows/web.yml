@@ -547,13 +547,21 @@ jobs:
       # pushed by this point, and withholding it from production because
       # the monitoring project is misconfigured would trade a metadata
       # problem for an outage.
+      #
+      # The step is gated on the mapping being configured, not on a guessed
+      # fallback: with the token present but the org/project secrets absent,
+      # the fallbacks below would run against an unverified project and
+      # fail every time — masked by continue-on-error, which is exactly how
+      # a broken release hides. When the mapping is not configured the step
+      # is skipped instead of run, so the production image publish is never
+      # blocked or silently misreported.
       - name: Create Sentry release (suspect-commits → issues/PRs)
-        if: env.SENTRY_AUTH_TOKEN != ''
+        if: env.SENTRY_AUTH_TOKEN != '' && env.SENTRY_ORG != '' && env.SENTRY_PROJECT != ''
         continue-on-error: true
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG || 'organicnz-7v' }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT || 'foodshare-web' }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         uses: getsentry/action-release@v1
         with:
           environment: production
