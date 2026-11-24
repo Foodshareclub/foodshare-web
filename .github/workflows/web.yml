@@ -15,7 +15,11 @@ permissions:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Cancel superseded runs only for pull requests (same rule as the backend). On main a newer push
+  # must not cancel a run that is already deploying: parallel sessions pushed often enough that
+  # deploys were cancelled mid-flight (runs 45307294179, 45306581595). GitHub keeps at most one
+  # pending run per group, so the newest main commit still deploys next.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   # Keep the stable Bun version aligned with package.json and mise.toml.
@@ -614,6 +618,11 @@ jobs:
         host: [VPS_BACKEND_HOST]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     timeout-minutes: 15
+    # One production deploy at a time, never cancelled half-way (a cancelled SSH deploy can leave the
+    # host between releases). Independent of the workflow-level group, so a manual dispatch queues too.
+    concurrency:
+      group: deploy-production-web
+      cancel-in-progress: false
     environment:
       name: production
     steps:
