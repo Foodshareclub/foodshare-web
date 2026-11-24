@@ -17,8 +17,8 @@ mock.module("next/headers", () => ({
 
 const { resolveServerLocation } = await import("@/lib/location/server-location");
 
-describe("resolveServerLocation", () => {
-  it("prioritizes direct URL search parameters", async () => {
+describe("resolveServerLocation (Zero-Hardcoding Architecture)", () => {
+  it("prioritizes legitimate direct URL search parameters", async () => {
     mockCookies.clear();
     mockHeaders.clear();
 
@@ -33,6 +33,19 @@ describe("resolveServerLocation", () => {
     expect(result?.radius).toBe(3000);
     expect(result?.source).toBe("manual");
     expect(result?.approximate).toBe(false);
+  });
+
+  it("rejects legacy hardcoded Berlin coordinates in URL search parameters", async () => {
+    mockCookies.clear();
+    mockHeaders.clear();
+
+    const result = await resolveServerLocation({
+      searchParams: { lat: "52.520000", lng: "13.405000", radius: "5000" },
+      defaultRadius: 5000,
+    });
+
+    // Stale auto-injected URL is rejected; returns null
+    expect(result).toBeNull();
   });
 
   it("returns null if distance=any is explicitly specified", async () => {
@@ -75,10 +88,9 @@ describe("resolveServerLocation", () => {
     expect(result?.approximate).toBe(true);
   });
 
-  it("discards stale Berlin fallback cookie when edge timezone contradicts it", async () => {
+  it("unconditionally rejects legacy Berlin fallback cookie", async () => {
     mockCookies.clear();
     mockHeaders.clear();
-    mockHeaders.set("cf-timezone", "America/Los_Angeles");
 
     const staleCookie = serializeLocationCookie({
       latitude: 52.52,
@@ -95,10 +107,7 @@ describe("resolveServerLocation", () => {
       defaultRadius: 5000,
     });
 
-    // Stale Berlin fallback is ignored; resolved from edge timezone instead
-    expect(result).not.toBeNull();
-    expect(result?.city).not.toBe("Berlin");
-    expect(result?.city).toBe("Los Angeles");
+    expect(result).toBeNull();
   });
 
   it("returns null when cookie and edge headers are absent (no fake Berlin default)", async () => {
@@ -116,10 +125,10 @@ describe("resolveServerLocation", () => {
   it("falls back to Cloudflare edge headers if cookie is absent", async () => {
     mockCookies.clear();
     mockHeaders.clear();
-    mockHeaders.set("cf-iplatitude", "35.6762");
-    mockHeaders.set("cf-iplongitude", "139.6503");
-    mockHeaders.set("cf-ipcity", "Tokyo");
-    mockHeaders.set("cf-ipcountry", "JP");
+    mockHeaders.set("cf-iplatitude", "38.5816");
+    mockHeaders.set("cf-iplongitude", "-121.4944");
+    mockHeaders.set("cf-ipcity", "Sacramento");
+    mockHeaders.set("cf-ipcountry", "US");
 
     const result = await resolveServerLocation({
       searchParams: {},
@@ -127,10 +136,10 @@ describe("resolveServerLocation", () => {
     });
 
     expect(result).not.toBeNull();
-    expect(result?.lat).toBeCloseTo(35.6762, 4);
-    expect(result?.lng).toBeCloseTo(139.6503, 4);
-    expect(result?.city).toBe("Tokyo");
-    expect(result?.country).toBe("JP");
+    expect(result?.lat).toBeCloseTo(38.5816, 4);
+    expect(result?.lng).toBeCloseTo(-121.4944, 4);
+    expect(result?.city).toBe("Sacramento");
+    expect(result?.country).toBe("US");
     expect(result?.source).toBe("ip");
     expect(result?.approximate).toBe(true);
   });

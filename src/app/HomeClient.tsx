@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useLocationResolver } from "@/hooks/useLocationResolver";
 import { encodeNearbyCursor } from "@/lib/api/listing-cursor";
 import type { NearbyCursor, NearbyPost } from "@/lib/data/nearby-posts";
+import { isLegacyHardcodedCoordinates } from "@/lib/location/approximate-location";
 import { type Coordinates, useUIStore } from "@/store/zustand/useUIStore";
 import type { InitialProductStateType } from "@/types/product.types";
 import { useLocale, useTranslations } from "next-intl";
@@ -396,25 +397,39 @@ export function HomeClient({
     appendDeduped,
   ]);
 
+  // Automatically sanitize legacy hardcoded Berlin coordinates from URL on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const urlLat = searchParams.get("lat");
+    const urlLng = searchParams.get("lng");
+    if (urlLat && urlLng) {
+      const latNum = Number.parseFloat(urlLat);
+      const lngNum = Number.parseFloat(urlLng);
+      if (isLegacyHardcodedCoordinates(latNum, lngNum)) {
+        const newParams = new URLSearchParams(searchParams.toString());
+        newParams.delete("lat");
+        newParams.delete("lng");
+        newParams.delete("radius");
+        const query = newParams.toString();
+        window.history.replaceState({}, "", query ? `?${query}` : window.location.pathname);
+      }
+    }
+  }, [searchParams]);
+
   const handleUpgradeLocation = useCallback(async () => {
     setIsUpgradingLocation(true);
     try {
       const precise = await requestPreciseLocation();
       if (precise) {
         const radius = geoDistance || radiusMeters;
-        const newParams = new URLSearchParams(searchParams.toString());
-        newParams.set("lat", precise.latitude.toFixed(6));
-        newParams.set("lng", precise.longitude.toFixed(6));
-        newParams.set("radius", radius.toString());
-        window.history.replaceState({}, "", `?${newParams.toString()}`);
         fetchNearby(precise.latitude, precise.longitude, radius, productType);
       }
     } finally {
       setIsUpgradingLocation(false);
     }
-  }, [fetchNearby, geoDistance, productType, radiusMeters, requestPreciseLocation, searchParams]);
+  }, [fetchNearby, geoDistance, productType, radiusMeters, requestPreciseLocation]);
 
-  // Synchronize resolved location changes to the feed and URL
+  // Synchronize resolved location changes to the feed
   useEffect(() => {
     if (searchTerm || searchParams.get("distance") === "any") return;
     if (!resolvedLocation) return;
@@ -428,15 +443,6 @@ export function HomeClient({
       currentLng !== undefined &&
       Math.abs(currentLat - resolvedLocation.latitude) < 0.0001 &&
       Math.abs(currentLng - resolvedLocation.longitude) < 0.0001;
-
-    // Update URL if searchParams is missing lat/lng
-    if (!searchParams.has("lat") || !searchParams.has("lng")) {
-      const newParams = new URLSearchParams(searchParams.toString());
-      newParams.set("lat", resolvedLocation.latitude.toFixed(6));
-      newParams.set("lng", resolvedLocation.longitude.toFixed(6));
-      newParams.set("radius", radius.toString());
-      window.history.replaceState({}, "", `?${newParams.toString()}`);
-    }
 
     // Skip refetching if already showing nearby posts for this location
     if (isSameLocation && effectiveIsLocationFiltered) {

@@ -57,9 +57,8 @@ export function useLocationResolver(options: UseLocationResolverOptions = {}): U
   const userLocation = useUIStore((state) => state.userLocation);
   const setUserLocation = useUIStore((state) => state.setUserLocation);
 
-  const clientTz = typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : null;
   const initialIsStale =
-    isStaleFallbackLocation(initialLocation, clientTz) || isStaleFallbackLocation(userLocation, clientTz);
+    isStaleFallbackLocation(initialLocation) || isStaleFallbackLocation(userLocation);
 
   const effectiveInitial = initialIsStale ? null : initialLocation || userLocation;
   const [location, setLocation] = useState<Coordinates | null>(effectiveInitial);
@@ -176,10 +175,9 @@ export function useLocationResolver(options: UseLocationResolverOptions = {}): U
         }
       }
 
-      const clientTz = typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : null;
       const isStale =
-        isStaleFallbackLocation(userLocation, clientTz) ||
-        isStaleFallbackLocation(initialLocation, clientTz);
+        isStaleFallbackLocation(userLocation) ||
+        isStaleFallbackLocation(initialLocation);
 
       // If user has a valid, non-stale precise location, keep it
       if (userLocation && !isStale && userLocation.source === "gps") {

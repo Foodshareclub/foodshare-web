@@ -3,6 +3,7 @@ import "server-only";
 import {
   LOCATION_COOKIE_NAME,
   type LocationSource,
+  isLegacyHardcodedCoordinates,
   isStaleFallbackLocation,
   parseLocationCookie,
   resolveApproximateLocationFromHeaders,
@@ -20,7 +21,8 @@ export interface ResolvedServerLocation {
 }
 
 /**
- * Parses location params from search query (lat, lng, radius)
+ * Parses location params from search query (lat, lng, radius).
+ * Automatically discards legacy hardcoded Berlin fallbacks (52.52, 13.405).
  */
 function parseUrlCoordinates(
   params: {
@@ -42,7 +44,8 @@ function parseUrlCoordinates(
     lat < -90 ||
     lat > 90 ||
     lng < -180 ||
-    lng > 180
+    lng > 180 ||
+    isLegacyHardcodedCoordinates(lat, lng)
   ) {
     return null;
   }
@@ -53,10 +56,10 @@ function parseUrlCoordinates(
 /**
  * Resolves user location for Server-Side Rendering (SSR):
  * 1. Honors explicit `distance=any` to show unrestricted global listings.
- * 2. Reads URL query params (`lat`, `lng`).
+ * 2. Reads direct user-selected URL query params (`lat`, `lng`).
  * 3. Reads persistent `user-location` cookie.
- * 4. Resolves from Cloudflare Edge Headers (`cf-iplatitude`, `cf-iplongitude`).
- * 5. Returns null if unresolvable.
+ * 4. Resolves from dynamic Edge Headers (`cf-iplatitude`, `x-vercel-ip-latitude`).
+ * 5. Returns null if unresolvable (zero hardcoded fallback guesses).
  */
 export async function resolveServerLocation({
   searchParams,
@@ -75,7 +78,7 @@ export async function resolveServerLocation({
     return null;
   }
 
-  // 2. Direct URL coordinates
+  // 2. Direct URL coordinates (rejects legacy hardcoded fallbacks)
   const urlCoords = parseUrlCoordinates(searchParams, defaultRadius);
   if (urlCoords) {
     return {
@@ -94,30 +97,27 @@ export async function resolveServerLocation({
     // Headers read failed or unavailable
   }
 
-  // 3. Persistent location cookie
+  // 3. Persistent location cookie (rejects legacy stale fallbacks)
   try {
     const cookieStore = await cookies();
     const cookieVal = cookieStore.get(LOCATION_COOKIE_NAME)?.value;
     const cookieLocation = parseLocationCookie(cookieVal);
-    if (cookieLocation) {
-      const edgeTz = reqHeaders?.get("cf-timezone") || reqHeaders?.get("x-vercel-ip-timezone");
-      if (!isStaleFallbackLocation(cookieLocation, edgeTz)) {
-        return {
-          lat: cookieLocation.latitude,
-          lng: cookieLocation.longitude,
-          radius: defaultRadius,
-          city: cookieLocation.city,
-          country: cookieLocation.country,
-          source: cookieLocation.source,
-          approximate: cookieLocation.approximate,
-        };
-      }
+    if (cookieLocation && !isStaleFallbackLocation(cookieLocation)) {
+      return {
+        lat: cookieLocation.latitude,
+        lng: cookieLocation.longitude,
+        radius: defaultRadius,
+        city: cookieLocation.city,
+        country: cookieLocation.country,
+        source: cookieLocation.source,
+        approximate: cookieLocation.approximate,
+      };
     }
   } catch {
     // Cookie read failed or unavailable
   }
 
-  // 4. Cloudflare / Vercel edge headers
+  // 4. Cloudflare / Vercel edge headers (real dynamic edge coordinates only)
   if (reqHeaders) {
     try {
       const edgeLoc = resolveApproximateLocationFromHeaders(reqHeaders);
@@ -137,5 +137,6 @@ export async function resolveServerLocation({
     }
   }
 
+  // Zero hardcoded guessing: if unknown, return null for clean client resolution
   return null;
 }

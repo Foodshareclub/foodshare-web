@@ -3,26 +3,22 @@ import {
   LOCATION_COOKIE_MAX_AGE,
   LOCATION_COOKIE_NAME,
   resolveApproximateLocationFromHeaders,
-  resolveLocationFromTimezone,
   serializeLocationCookie,
 } from "@/lib/location/approximate-location";
 import { resolvePublicIpLocation } from "@/lib/location/ip-geolocator";
 import { type NextRequest, NextResponse } from "next/server";
 
 /**
- * Approximate Location API Endpoint
+ * Approximate Location API Endpoint (Zero-Hardcoding Architecture)
  *
- * Resolves approximate user location using multi-tiered fallback:
+ * Resolves approximate user location using pure dynamic signals:
  * 1. Edge Geolocation Headers (Cloudflare cf-* or Vercel x-vercel-ip-*)
- * 2. Public IP Geolocation lookup (ipwho.is with 24h cache and 2.5s timeout)
- * 3. Client timezone / locale mapping (offline fallback)
+ * 2. Dynamic Public IP Geolocation lookup (ipwho.is with 24h cache and 2.5s timeout)
  *
+ * Zero static city dictionaries or hardcoded coordinates.
  * Automatically persists the resolved location to the `user-location` cookie.
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  const { searchParams } = new URL(request.url);
-  const timezone = searchParams.get("timezone") || searchParams.get("tz");
-
   let location: ApproximateLocation | null = null;
 
   // 1. Direct Edge Headers (Cloudflare or Vercel)
@@ -31,10 +27,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     Boolean(request.headers.get("x-vercel-ip-latitude") && request.headers.get("x-vercel-ip-longitude"));
 
   if (hasEdgeHeaders) {
-    location = resolveApproximateLocationFromHeaders(request.headers, timezone);
+    location = resolveApproximateLocationFromHeaders(request.headers);
   }
 
-  // 2. Public IP Geolocation lookup (for local dev, staging, or non-edge hosting)
+  // 2. Dynamic Public IP Geolocation lookup (for local dev, staging, or non-edge hosting)
   if (!location) {
     const clientIp =
       request.headers.get("cf-connecting-ip") ||
@@ -42,23 +38,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       request.headers.get("x-real-ip");
 
     location = await resolvePublicIpLocation(clientIp);
-  }
-
-  // 3. Client timezone fallback (offline or network failure)
-  if (!location) {
-    const effectiveTimezone =
-      timezone || request.headers.get("cf-timezone") || request.headers.get("x-vercel-ip-timezone");
-    const tzResolved = resolveLocationFromTimezone(effectiveTimezone);
-    if (tzResolved) {
-      location = {
-        latitude: tzResolved.coords[0],
-        longitude: tzResolved.coords[1],
-        city: tzResolved.city,
-        country: tzResolved.country,
-        source: "ip",
-        approximate: true,
-      };
-    }
   }
 
   if (!location) {
