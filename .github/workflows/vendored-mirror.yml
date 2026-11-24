@@ -1,0 +1,45 @@
+# The F1 mirror gate, run when the backend changes a vendored path (foodshare-backend's
+# mirror-trigger.yml sends repository_dispatch backend-vendored-change), or by hand.
+#
+# Separate from web.yml on purpose: a repository_dispatch starts every workflow that listens
+# for it, so keeping the receiver here means a backend change can never start the web
+# build, E2E or deploy matrix. The comparison is the same one web.yml's `vendored` job and
+# the local pre-push gate run (scripts/check-vendored.ts); a red run lists every divergence,
+# and the fix is `bun scripts/vendored-sync.ts --backend-dir <backend checkout>`.
+# Card: t_8822a05f.
+name: Vendored mirror (backend change)
+
+on:
+  repository_dispatch:
+    types: [backend-vendored-change]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vendored-mirror
+  cancel-in-progress: true
+
+jobs:
+  vendored:
+    name: The vendored copies match backend main
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Foodshareclub/foodshare-backend
+          path: .compat/backend
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: Record what triggered this check
+        env:
+          BACKEND_SHA: ${{ github.event.client_payload.backend_sha }}
+        run: |
+          echo "Trigger: ${GITHUB_EVENT_NAME} (backend change ${BACKEND_SHA:-n/a}); compared against backend main $(git -C .compat/backend rev-parse --short HEAD)" >> "$GITHUB_STEP_SUMMARY"
+      - name: The vendored copies are the backend's, byte-exact (hard gate)
+        run: bun scripts/check-vendored.ts --backend-dir .compat/backend
