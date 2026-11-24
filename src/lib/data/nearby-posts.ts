@@ -14,6 +14,7 @@
 import { createCachedClient, createClient } from "@/lib/supabase/server";
 import { approximateGeoJSON } from "@/utils/postgis";
 import { cacheLife, cacheTag } from "next/cache";
+import { enrichPostsWithAuthors } from "./author-enrichment";
 import { CACHE_TAGS } from "./cache-keys";
 
 // ============================================================================
@@ -78,6 +79,8 @@ export interface NearbyPost {
   updated_at: string;
   /** Distance from user in meters */
   distance_meters: number;
+  author_name?: string | null;
+  author_avatar_url?: string | null;
 }
 
 export interface NearbyPostsResult {
@@ -259,12 +262,17 @@ export async function getNearbyPosts(options: NearbyPostsOptions): Promise<Nearb
         if (row.post_name?.toLocaleLowerCase().includes(needle)) matches.push(row);
         if (matches.length === limit) {
           const hasMore = index < rows.length - 1;
-          return { data: matches, hasMore, nextCursor: hasMore ? scanCursor : null };
+          const enriched = await enrichPostsWithAuthors(matches);
+          return { data: enriched, hasMore, nextCursor: hasMore ? scanCursor : null };
         }
       }
-      if (rows.length <= batchSize) return { data: matches, hasMore: false, nextCursor: null };
+      if (rows.length <= batchSize) {
+        const enriched = await enrichPostsWithAuthors(matches);
+        return { data: enriched, hasMore: false, nextCursor: null };
+      }
     }
-    return { data: matches, hasMore: true, nextCursor: scanCursor };
+    const enriched = await enrichPostsWithAuthors(matches);
+    return { data: enriched, hasMore: true, nextCursor: scanCursor };
   }
 
   // page_limit is limit+1 so we can detect hasMore without a second round-trip;
@@ -293,8 +301,10 @@ export async function getNearbyPosts(options: NearbyPostsOptions): Promise<Nearb
   const last = resultItems[resultItems.length - 1];
   const nextCursor: NearbyCursor | null = hasMore && last ? { distance: last.distance_meters, id: last.id } : null;
 
+  const enrichedItems = await enrichPostsWithAuthors(resultItems);
+
   return {
-    data: applyLocationPrivacy(resultItems),
+    data: applyLocationPrivacy(enrichedItems),
     nextCursor,
     hasMore,
   };

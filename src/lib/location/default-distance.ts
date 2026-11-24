@@ -38,13 +38,8 @@ export const DB_DEFAULT_KM = 40;
 export const DB_DEFAULT_MILES_METERS = Math.round(DB_DEFAULT_MILES * METERS_PER_MILE); // 64374
 export const DB_DEFAULT_KM_METERS = DB_DEFAULT_KM * 1000; // 40000
 
-// In-memory cache for fast SSR lookups (TTL 1 hour)
-interface CacheEntry {
-  result: DefaultDistanceResult;
-  timestamp: number;
-}
-const cache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+// In-memory cache for fast SSR lookups
+const distanceCache = new Map<string, DefaultDistanceResult>();
 
 /**
  * Detects whether a country or unit preference indicates miles
@@ -103,10 +98,9 @@ export async function getDefaultSearchDistance(
   const cacheKey = `${isMiles ? "miles" : "km"}:${countryCode ?? ""}`;
 
   // Check cache
-  const cached = cache.get(cacheKey);
-  const now = Date.now();
-  if (cached && now - cached.timestamp < CACHE_TTL_MS) {
-    return cached.result;
+  const cached = distanceCache.get(cacheKey);
+  if (cached) {
+    return cached;
   }
 
   // Attempt database RPC call
@@ -132,11 +126,11 @@ export async function getDefaultSearchDistance(
           unit: rpcResult.unit === "miles" ? "miles" : "km",
           distance: Number(rpcResult.distance),
           radiusMeters: Number(rpcResult.radius_meters),
-          radiusKm: Number(rpcResult.radius_km ?? (rpcResult.radius_meters / 1000)),
+          radiusKm: Number(rpcResult.radius_km ?? rpcResult.radius_meters / 1000),
           source: "db_rpc",
         };
 
-        cache.set(cacheKey, { result: resolved, timestamp: now });
+        distanceCache.set(cacheKey, resolved);
         return resolved;
       }
     }
@@ -146,6 +140,6 @@ export async function getDefaultSearchDistance(
 
   // Fallback to authoritative database standard
   const fallback = getAuthoritativeFallback(isMiles);
-  cache.set(cacheKey, { result: fallback, timestamp: now });
+  distanceCache.set(cacheKey, fallback);
   return fallback;
 }

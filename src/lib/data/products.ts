@@ -37,6 +37,7 @@ import { createCachedClient, createClient } from "@/lib/supabase/server";
 import type { InitialProductStateType, LocationType } from "@/types/product.types";
 import { approximateGeoJSON, parsePostGISPoint } from "@/utils/postgis";
 import { cacheLife, cacheTag } from "next/cache";
+import { enrichPostsWithAuthors, enrichSinglePostWithAuthor } from "./author-enrichment";
 import { CACHE_TAGS } from "./cache-keys";
 
 // Re-export types for consumers
@@ -117,8 +118,9 @@ async function getProductsFirstPageCached(normalizedType: string, limit: number)
     .limit(limit);
 
   if (error) throw new Error(error.message);
+  const enriched = await enrichPostsWithAuthors(data ?? []);
   // Apply location privacy (~200m approximation) for user safety
-  return applyLocationPrivacy(data ?? []);
+  return applyLocationPrivacy(enriched);
 }
 
 /**
@@ -162,8 +164,9 @@ export async function getProducts(
     .limit(limit);
 
   if (error) throw new Error(error.message);
+  const enriched = await enrichPostsWithAuthors(data ?? []);
   // Apply location privacy (~200m approximation) for user safety
-  return applyLocationPrivacy(data ?? []);
+  return applyLocationPrivacy(enriched);
 }
 
 /**
@@ -212,9 +215,11 @@ export async function getProductsPaginated(
   const resultItems = hasMore ? items.slice(0, limit) : items;
   const nextCursor = hasMore && resultItems.length > 0 ? resultItems[resultItems.length - 1].id : null;
 
+  const enrichedItems = await enrichPostsWithAuthors(resultItems);
+
   return {
     // Apply location privacy (~200m approximation) for user safety
-    data: applyLocationPrivacy(resultItems),
+    data: applyLocationPrivacy(enrichedItems),
     nextCursor,
     hasMore,
   };
@@ -233,8 +238,9 @@ export async function getAllProducts(): Promise<InitialProductStateType[]> {
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
+  const enriched = await enrichPostsWithAuthors(data ?? []);
   // Apply location privacy (~200m approximation) for user safety
-  return applyLocationPrivacy(data ?? []);
+  return applyLocationPrivacy(enriched);
 }
 
 /**
@@ -265,9 +271,10 @@ export async function getProductById(productId: number): Promise<InitialProductS
     if (error.code === "PGRST116") return null;
     throw new Error(error.message);
   }
+  const enriched = await enrichSinglePostWithAuthor(data);
   // Apply location privacy (~200m approximation) for user safety
   // Note: Owner-specific exact location is handled at API route level
-  return applyLocationPrivacySingle(data);
+  return applyLocationPrivacySingle(enriched);
 }
 
 export interface PostRatingCounts {
@@ -329,8 +336,9 @@ export async function getProductLocations(productType: string): Promise<Location
     .eq("is_active", true);
 
   if (error) throw new Error(error.message);
+  const enriched = await enrichPostsWithAuthors(data ?? []);
   // Apply location privacy (~200m approximation) for user safety
-  return applyLocationPrivacy(data ?? []);
+  return applyLocationPrivacy(enriched);
 }
 
 /**
@@ -345,8 +353,9 @@ export async function getAllProductLocations(): Promise<LocationType[]> {
     .eq("is_active", true);
 
   if (error) throw new Error(error.message);
+  const enriched = await enrichPostsWithAuthors(data ?? []);
   // Apply location privacy (~200m approximation) for user safety
-  return applyLocationPrivacy(data ?? []);
+  return applyLocationPrivacy(enriched);
 }
 
 /**
@@ -426,8 +435,9 @@ export async function searchProducts(
   const { data, error } = await query;
 
   if (error) throw new Error(error.message);
+  const enriched = await enrichPostsWithAuthors(data ?? []);
   // Apply location privacy (~200m approximation) for user safety
-  return applyLocationPrivacy(data ?? []);
+  return applyLocationPrivacy(enriched);
 }
 
 /**
