@@ -5,7 +5,13 @@
  */
 
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
+
+const dummyStorage: StateStorage = {
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {},
+};
 
 // ============================================================================
 // Types
@@ -14,6 +20,11 @@ import { createJSONStorage, persist } from "zustand/middleware";
 export interface Coordinates {
   latitude: number;
   longitude: number;
+  accuracy?: number;
+  source?: "gps" | "ip" | "cookie" | "manual";
+  approximate?: boolean;
+  city?: string;
+  country?: string;
 }
 
 export type Theme = "light" | "dark" | "system";
@@ -218,7 +229,7 @@ export const useUIStore = create<UIState>()(
     {
       name: "foodshare-ui",
       version: 3, // v3: Add distance unit preference
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => (typeof window !== "undefined" ? window.localStorage : dummyStorage)),
       partialize: (state) => ({
         // Only persist these fields
         language: state.language,

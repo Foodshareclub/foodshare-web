@@ -1,13 +1,11 @@
 import { cn } from "@/lib/utils";
 import type * as React from "react";
 
-function Card({
-  className,
-  variant = "default",
-  ...props
-}: React.ComponentProps<"div"> & {
+interface CardProps extends React.ComponentProps<"div"> {
   variant?: "default" | "listing";
-}) {
+}
+
+function Card({ className, variant = "default", ...props }: CardProps) {
   return (
     <div
       data-slot="card"
@@ -23,16 +21,7 @@ function Card({
 }
 
 function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="card-header"
-      className={cn(
-        "flex flex-col gap-1.5 p-5 group-data-[variant=listing]/card:px-0 group-data-[variant=listing]/card:pt-3 group-data-[variant=listing]/card:pb-2",
-        className,
-      )}
-      {...props}
-    />
-  );
+  return <div data-slot="card-header" className={cn("flex flex-col gap-1.5 p-5", className)} {...props} />;
 }
 
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
@@ -46,13 +35,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function CardContent({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="card-content"
-      className={cn("p-5 pt-0 group-data-[variant=listing]/card:p-0", className)}
-      {...props}
-    />
-  );
+  return <div data-slot="card-content" className={cn("p-5 pt-0", className)} {...props} />;
 }
 
 function CardFooter({ className, ...props }: React.ComponentProps<"div">) {

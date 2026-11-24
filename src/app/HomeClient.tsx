@@ -1,12 +1,14 @@
 "use client";
 
 import { EmptyListingState } from "@/components/emptyState/EmptyListingState";
+import { LocationStatusBanner } from "@/components/location/LocationStatusBanner";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 import { ProductGrid } from "@/components/productCard/ProductGrid";
 import { Button } from "@/components/ui/button";
+import { useLocationResolver } from "@/hooks/useLocationResolver";
 import { encodeNearbyCursor } from "@/lib/api/listing-cursor";
 import type { NearbyCursor, NearbyPost } from "@/lib/data/nearby-posts";
-import { useUIStore } from "@/store/zustand/useUIStore";
+import { type Coordinates, useUIStore } from "@/store/zustand/useUIStore";
 import type { InitialProductStateType } from "@/types/product.types";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -124,6 +126,8 @@ interface HomeClientProps {
   initialHasMore?: boolean;
   /** Keyset cursor for next page (from server) */
   initialNextCursor?: NearbyCursor | number | null;
+  /** Initial user location resolved on server (from cookie or edge headers) */
+  initialLocation?: Coordinates | null;
 }
 
 // Default search radius in meters (passed as prop, falls back to 5km if not provided)
@@ -149,6 +153,7 @@ export function HomeClient({
   radiusMeters = 5000,
   initialHasMore = false,
   initialNextCursor = null,
+  initialLocation = null,
 }: HomeClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -156,9 +161,8 @@ export function HomeClient({
   const hasExplicitDistance = searchParams.get("distance") === "nearby";
   const locale = useLocale();
 
-  // Get stored location from Zustand (persisted across sessions)
+  // Get stored location from Zustand
   const userLocation = useUIStore((state) => state.userLocation);
-  const setUserLocation = useUIStore((state) => state.setUserLocation);
   const geoDistance = useUIStore((state) => state.geoDistance);
 
   // Client-side nearby posts state (populated after geolocation detection)
@@ -169,6 +173,17 @@ export function HomeClient({
   // the genuine local radius, not the grown expansion radius.
   const [displayRadius, setDisplayRadius] = useState(radiusMeters);
   const [isFetchingNearby, setIsFetchingNearby] = useState(false);
+
+  // Auto-resolve user location with permissions query and IP approximation fallback
+  const {
+    location: resolvedLocation,
+    isApproximate,
+    requestPreciseLocation,
+  } = useLocationResolver({
+    initialLocation: initialLocation || userLocation,
+    autoResolve: !searchTerm && searchParams.get("distance") !== "any",
+  });
+  const [isUpgradingLocation, setIsUpgradingLocation] = useState(false);
 
   // Pagination state. Two disjoint cursor schemes coexist because the two fetch
   // paths are mutually exclusive per session:
@@ -205,7 +220,13 @@ export function HomeClient({
           lng: Number.parseFloat(searchParams.get("lng") as string),
           queryRadius: radiusMeters,
         }
-      : null,
+      : initialLocation
+        ? {
+            lat: initialLocation.latitude,
+            lng: initialLocation.longitude,
+            queryRadius: radiusMeters,
+          }
+        : null,
   );
 
   // Use server-rendered nearby posts if available, otherwise use client-fetched ones
@@ -374,68 +395,67 @@ export function HomeClient({
     appendDeduped,
   ]);
 
-  // Auto-detect location on mount
+  const handleUpgradeLocation = useCallback(async () => {
+    setIsUpgradingLocation(true);
+    try {
+      const precise = await requestPreciseLocation();
+      if (precise) {
+        const radius = geoDistance || radiusMeters;
+        const newParams = new URLSearchParams(searchParams.toString());
+        newParams.set("lat", precise.latitude.toFixed(6));
+        newParams.set("lng", precise.longitude.toFixed(6));
+        newParams.set("radius", radius.toString());
+        window.history.replaceState({}, "", `?${newParams.toString()}`);
+        fetchNearby(precise.latitude, precise.longitude, radius, productType);
+      }
+    } finally {
+      setIsUpgradingLocation(false);
+    }
+  }, [fetchNearby, geoDistance, productType, radiusMeters, requestPreciseLocation, searchParams]);
+
+  // Synchronize resolved location changes to the feed and URL
   useEffect(() => {
-    // An explicit text search must not be replaced by the nearby feed.
     if (searchTerm || searchParams.get("distance") === "any") return;
-    // Skip if URL already has location params (server already rendered nearby data)
-    if (searchParams.has("lat") && searchParams.has("lng")) {
+    if (!resolvedLocation) return;
+
+    const radius = geoDistance || radiusMeters;
+    const currentLat = locationRef.current?.lat;
+    const currentLng = locationRef.current?.lng;
+
+    const isSameLocation =
+      currentLat !== undefined &&
+      currentLng !== undefined &&
+      Math.abs(currentLat - resolvedLocation.latitude) < 0.0001 &&
+      Math.abs(currentLng - resolvedLocation.longitude) < 0.0001;
+
+    // Update URL if searchParams is missing lat/lng
+    if (!searchParams.has("lat") || !searchParams.has("lng")) {
+      const newParams = new URLSearchParams(searchParams.toString());
+      newParams.set("lat", resolvedLocation.latitude.toFixed(6));
+      newParams.set("lng", resolvedLocation.longitude.toFixed(6));
+      newParams.set("radius", radius.toString());
+      window.history.replaceState({}, "", `?${newParams.toString()}`);
+    }
+
+    // Skip refetching if already showing nearby posts for this location
+    if (isSameLocation && effectiveIsLocationFiltered) {
       return;
     }
 
-    // If we have stored location, use it immediately via Server Action
-    if (userLocation) {
-      const radius = geoDistance || radiusMeters;
-
-      // Update URL for shareability without triggering navigation
-      const newParams = new URLSearchParams(searchParams.toString());
-      newParams.set("lat", userLocation.latitude.toFixed(6));
-      newParams.set("lng", userLocation.longitude.toFixed(6));
-      newParams.set("radius", radius.toString());
-      window.history.replaceState({}, "", `?${newParams.toString()}`);
-
-      const timer = setTimeout(() => {
-        fetchNearby(userLocation.latitude, userLocation.longitude, radius, productType);
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-
-    // Request browser geolocation
-    let cancelled = false;
-    if (navigator?.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          if (cancelled) return;
-          const { latitude, longitude } = position.coords;
-          const radius = geoDistance || radiusMeters;
-
-          // Store in Zustand for future visits
-          setUserLocation({ latitude, longitude });
-
-          // Update URL for shareability without triggering navigation
-          const newParams = new URLSearchParams(searchParams.toString());
-          newParams.set("lat", latitude.toFixed(6));
-          newParams.set("lng", longitude.toFixed(6));
-          newParams.set("radius", radius.toString());
-          window.history.replaceState({}, "", `?${newParams.toString()}`);
-
-          // Fetch nearby posts via Server Action
-          fetchNearby(latitude, longitude, radius, productType);
-        },
-        (_error) => {
-          // Silently fail - user will see all posts instead of nearby
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 10000,
-          maximumAge: 300000, // 5 minutes cache
-        },
-      );
-    }
-    return () => {
-      cancelled = true;
-    };
-  }, [searchParams, searchTerm, userLocation, setUserLocation, geoDistance, fetchNearby, productType, radiusMeters]);
+    const timer = setTimeout(() => {
+      fetchNearby(resolvedLocation.latitude, resolvedLocation.longitude, radius, productType);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [
+    resolvedLocation,
+    searchTerm,
+    searchParams,
+    geoDistance,
+    radiusMeters,
+    fetchNearby,
+    productType,
+    effectiveIsLocationFiltered,
+  ]);
 
   const handleClearSearch = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString());
@@ -456,6 +476,14 @@ export function HomeClient({
   return (
     <>
       <NavigateButtons title="Show map" />
+      {effectiveIsLocationFiltered && isApproximate && (
+        <LocationStatusBanner
+          isApproximate={isApproximate}
+          city={resolvedLocation?.city}
+          onUpgradeLocation={handleUpgradeLocation}
+          isUpgrading={isUpgradingLocation}
+        />
+      )}
       <ProductGrid
         products={products}
         isLoading={isFetchingNearby}

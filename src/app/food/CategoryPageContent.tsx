@@ -7,6 +7,7 @@ import { getNearbyPosts } from "@/lib/data/nearby-posts";
 import { getProductsPaginated } from "@/lib/data/products";
 import { generateItemListJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import { parseSearchLocation, parseSearchRadius } from "@/lib/listing-search";
+import { resolveServerLocation } from "@/lib/location/server-location";
 import { categoryMetadata, generatePageMetadata, siteConfig } from "@/lib/metadata";
 import { createRequestLogger } from "@/lib/structured-logger";
 import { cn } from "@/lib/utils";
@@ -104,8 +105,13 @@ export default async function CategoryPageContent({ type, searchParams }: { type
   const session = await getAuthSession();
   const userRadiusMeters = (session.user?.profile?.search_radius_km || 5) * 1000;
 
-  // Parse location params for nearby filtering
-  const locationParams = params.distance === "any" ? null : parseLocationParams(params, userRadiusMeters);
+  const canUseNearby = productType !== "challenge" && productType !== "forum";
+  const locationParams = canUseNearby
+    ? await resolveServerLocation({
+        searchParams: params,
+        defaultRadius: userRadiusMeters,
+      })
+    : null;
   const isLocationFiltered = locationParams !== null;
 
   // If location params provided, fetch nearby posts using PostGIS
@@ -145,6 +151,14 @@ export default async function CategoryPageContent({ type, searchParams }: { type
           radiusMeters={locationParams.radius}
           initialHasMore={nearbyResult.hasMore}
           initialNextCursor={nearbyResult.nextCursor}
+          initialLocation={{
+            latitude: locationParams.lat,
+            longitude: locationParams.lng,
+            city: locationParams.city,
+            country: locationParams.country,
+            source: locationParams.source,
+            approximate: locationParams.approximate,
+          }}
         />
       </Suspense>
     );
