@@ -296,3 +296,98 @@ Deno.test("email: circuit breaker opens after threshold failures", () => {
   assertEquals(isAvailable(), false);
   assertEquals(state, "open");
 });
+
+// =============================================================================
+// EmailService.sendEmail — real service, injected providers (2026-11-24 regression)
+// =============================================================================
+
+import { DEFAULT_EMAIL_CONFIG } from "../_shared/email/types.ts";
+import { EmailService } from "../_shared/email/email-service.ts";
+
+const PARAMS: SendEmailParams = { to: "user@example.com", subject: "Confirm", html: "<p>x</p>" };
+
+function service(
+  providers: MockEmailProvider[],
+  config: Record<string, unknown> = {},
+): EmailService {
+  const set: Partial<Record<EmailProviderName, MockEmailProvider>> = {};
+  for (const p of providers) set[p.name] = p;
+  return new EmailService(config, set);
+}
+
+Deno.test("EmailService: a dead first provider fails over to the next configured one", async () => {
+  const resend = new MockEmailProvider("resend", { shouldFail: true, failMessage: "HTTP 401" });
+  const ses = new MockEmailProvider("aws_ses");
+  const svc = service([resend, ses], {
+    providerPriority: { ...DEFAULT_EMAIL_CONFIG.providerPriority, auth: ["resend", "aws_ses"] },
+  });
+  const result = await svc.sendEmail(PARAMS, "auth");
+  assertEquals(result.success, true);
+  assertEquals(result.provider, "aws_ses");
+  assertEquals(resend.sendCount, 1);
+  assertEquals(ses.sendCount, 1);
+});
+
+Deno.test("EmailService: stops at the first success", async () => {
+  const ses = new MockEmailProvider("aws_ses");
+  const resend = new MockEmailProvider("resend");
+  const svc = service([ses, resend]);
+  const result = await svc.sendEmail(PARAMS, "auth");
+  assertEquals(result.provider, "aws_ses");
+  assertEquals(resend.sendCount, 0);
+});
+
+Deno.test("EmailService: skips unconfigured providers", async () => {
+  const ses = new MockEmailProvider("aws_ses", { configured: false });
+  const resend = new MockEmailProvider("resend");
+  const svc = service([ses, resend]);
+  const result = await svc.sendEmail(PARAMS, "auth");
+  assertEquals(result.provider, "resend");
+  assertEquals(ses.sendCount, 0);
+});
+
+Deno.test("EmailService: all providers fail -> failure listing every attempt", async () => {
+  const svc = service([
+    new MockEmailProvider("aws_ses", { shouldFail: true, failMessage: "throttled" }),
+    new MockEmailProvider("resend", { shouldFail: true, failMessage: "HTTP 401" }),
+  ]);
+  const result = await svc.sendEmail(PARAMS, "auth");
+  assertEquals(result.success, false);
+  assertEquals(result.error, "All providers failed (aws_ses: throttled; resend: HTTP 401)");
+});
+
+Deno.test("EmailService: nothing configured -> 'No email provider configured'", async () => {
+  const svc = service([new MockEmailProvider("aws_ses", { configured: false })]);
+  const result = await svc.sendEmail(PARAMS, "auth");
+  assertEquals(result.success, false);
+  assertEquals(result.error, "No email provider configured");
+});
+
+Deno.test("EmailService: an open circuit is skipped while another provider is available", async () => {
+  const resend = new MockEmailProvider("resend", { shouldFail: true });
+  const ses = new MockEmailProvider("aws_ses");
+  const svc = service([resend, ses], {
+    circuitBreakerThreshold: 2,
+    providerPriority: { ...DEFAULT_EMAIL_CONFIG.providerPriority, auth: ["resend", "aws_ses"] },
+  });
+  await svc.sendEmail(PARAMS, "auth");
+  await svc.sendEmail(PARAMS, "auth"); // resend circuit now open
+  await svc.sendEmail(PARAMS, "auth");
+  assertEquals(resend.sendCount, 2, "open circuit must not be retried");
+  assertEquals(ses.sendCount, 3);
+});
+
+Deno.test("EmailService: every circuit open -> still tries rather than refusing", async () => {
+  const ses = new MockEmailProvider("aws_ses", { shouldFail: true });
+  const svc = service([ses], { circuitBreakerThreshold: 1 });
+  await svc.sendEmail(PARAMS, "auth");
+  await svc.sendEmail(PARAMS, "auth");
+  assertEquals(ses.sendCount, 2);
+});
+
+Deno.test("EmailService: SES is first for every email type by default", () => {
+  for (const [type, order] of Object.entries(DEFAULT_EMAIL_CONFIG.providerPriority)) {
+    assertEquals(order[0], "aws_ses", `${type} must try SES first`);
+    assertEquals(new Set(order).size, 4, `${type} keeps all four providers as failover`);
+  }
+});

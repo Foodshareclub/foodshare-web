@@ -48,12 +48,12 @@ export const SLIDER_CONFIG = {
     min: 1,
     max: 800,
     step: 5,
-    defaultValue: 10,
+    defaultValue: 40,
   },
   miles: {
     min: 0.5,
     max: 500,
     step: 5,
-    defaultValue: 6, // ~10 km
+    defaultValue: 40,
   },
 } as const;

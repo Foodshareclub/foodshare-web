@@ -2,7 +2,7 @@
  * Email Service - Unified Email Provider Orchestration
  *
  * Features:
- * - Multi-provider support (no automatic fallback)
+ * - Multi-provider support with ordered failover (sendEmail)
  * - Uses first configured provider per email type
  * - Health monitoring and metrics tracking
  * - Configurable priority by email type
@@ -226,15 +226,27 @@ export class EmailService {
   private healthCacheExpiry: number = 0;
   private readonly HEALTH_CACHE_TTL = 60000; // 1 minute
 
-  constructor(config: Partial<EmailServiceConfig> = {}) {
+  /**
+   * @param providers Optional provider set (tests inject fakes); defaults to the four real
+   *   providers built from the environment.
+   */
+  constructor(
+    config: Partial<EmailServiceConfig> = {},
+    providers?: Partial<Record<EmailProviderName, EmailProvider>>,
+  ) {
     this.config = { ...DEFAULT_EMAIL_CONFIG, ...config };
     this.circuitBreaker = new CircuitBreaker(
       this.config.circuitBreakerThreshold,
       this.config.circuitBreakerResetMs,
     );
 
-    // Initialize providers
-    this.initializeProviders();
+    if (providers) {
+      for (const [name, provider] of Object.entries(providers)) {
+        if (provider) this.providers.set(name as EmailProviderName, provider);
+      }
+    } else {
+      this.initializeProviders();
+    }
   }
 
   /**
@@ -267,14 +279,20 @@ export class EmailService {
   }
 
   /**
-   * Send email with the preferred provider for the email type (no fallback)
+   * Send email through the priority list for the email type, with ordered failover.
+   *
+   * Providers that are not configured, or whose circuit is open, are skipped. A provider that
+   * returns a failure (bad credentials, 4xx/5xx, timeout) is recorded on its circuit and the next
+   * one is tried, so one dead key cannot take down auth mail (2026-11-24: Resend 400 "API key
+   * is invalid" turned every signup into a GoTrue 500 while SES was healthy). If every candidate
+   * fails, the last failure is returned with all attempts in `error`.
    */
   async sendEmail(
     params: SendEmailParams,
     emailType: EmailType = "notification",
   ): Promise<SendEmailResult> {
     const priority = this.config.providerPriority[emailType] ||
-      ["resend", "brevo", "mailersend", "aws_ses"];
+      DEFAULT_EMAIL_CONFIG.providerPriority.notification;
 
     // Apply defaults
     const emailParams: SendEmailParams = {
@@ -283,13 +301,8 @@ export class EmailService {
       fromName: params.fromName || this.config.defaultFromName,
     };
 
-    // Find first configured provider
-    const providerName = priority.find((name) => {
-      const provider = this.providers.get(name);
-      return provider?.isConfigured();
-    });
-
-    if (!providerName) {
+    const configured = priority.filter((name) => this.providers.get(name)?.isConfigured());
+    if (configured.length === 0) {
       return {
         success: false,
         provider: priority[0],
@@ -299,17 +312,42 @@ export class EmailService {
       };
     }
 
-    const provider = this.providers.get(providerName)!;
-    const result = await provider.sendEmail(emailParams);
+    // Open circuits are skipped while a closed/half-open provider remains; if every configured
+    // provider is open, try them anyway rather than refuse to send.
+    const available = this.config.circuitBreakerEnabled
+      ? configured.filter((name) => this.circuitBreaker.isAvailable(name))
+      : configured;
+    const candidates = available.length > 0 ? available : configured;
 
-    // Track metrics
-    if (result.success) {
-      this.circuitBreaker.recordSuccess(providerName);
-    } else {
+    const attempts: string[] = [];
+    let last: SendEmailResult | null = null;
+    for (const providerName of candidates) {
+      const result = await this.providers.get(providerName)!.sendEmail(emailParams);
+      if (result.success) {
+        this.circuitBreaker.recordSuccess(providerName);
+        if (attempts.length > 0) {
+          logger.warn("[email-service] delivered after failover", {
+            emailType,
+            provider: providerName,
+            failedAttempts: attempts,
+          });
+        }
+        return result;
+      }
       this.circuitBreaker.recordFailure(providerName);
+      attempts.push(`${providerName}: ${result.error || "unknown error"}`);
+      logger.warn("[email-service] provider failed, trying next", {
+        emailType,
+        provider: providerName,
+        error: result.error,
+      });
+      last = result;
     }
 
-    return result;
+    return {
+      ...last!,
+      error: attempts.length > 1 ? `All providers failed (${attempts.join("; ")})` : last!.error,
+    };
   }
 
   /**

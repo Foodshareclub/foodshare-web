@@ -445,11 +445,11 @@ Deno.test("SLIDER_CONFIG has sensible defaults", () => {
   assertEquals(SLIDER_CONFIG.kilometers.min, 1);
   assertEquals(SLIDER_CONFIG.kilometers.max, 800);
   assertEquals(SLIDER_CONFIG.kilometers.step, 5);
-  assertEquals(SLIDER_CONFIG.kilometers.defaultValue, 10);
+  assertEquals(SLIDER_CONFIG.kilometers.defaultValue, 40);
 
   // Miles
   assertEquals(SLIDER_CONFIG.miles.min, 0.5);
   assertEquals(SLIDER_CONFIG.miles.max, 500);
   assertEquals(SLIDER_CONFIG.miles.step, 5);
-  assertEquals(SLIDER_CONFIG.miles.defaultValue, 6);
+  assertEquals(SLIDER_CONFIG.miles.defaultValue, 40);
 });
