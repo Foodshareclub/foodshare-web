@@ -1,5 +1,6 @@
 import { getCoverCredit } from "@/lib/cover-provenance";
 import { standardizeDisplayAddress } from "@/lib/address-standardizer";
+import { formatFirstAuthorName } from "@/lib/data/author-display";
 import type { InitialProductStateType } from "@/types/product.types";
 import { getProductDetailUrl } from "@/utils/categoryMapping";
 import { cn } from "@/lib/utils";
@@ -24,28 +25,18 @@ type ProductCardProps = {
  * Interactive actions are handled by the thin ProductCardActions client wrapper.
  * Optional hover/click handlers are handled by ProductCardWrapper for map integration.
  */
-export function ProductCard({
-  product,
-  coverUrl,
-  onMouseEnter,
-  onMouseLeave,
-  onClick,
-}: ProductCardProps) {
+export function ProductCard({ product, coverUrl, onMouseEnter, onMouseLeave, onClick }: ProductCardProps) {
   // Product detail URL - use category-specific path based on post_type
   const productUrl = getProductDetailUrl(product.post_type, product.id);
   // Legacy imports use punctuation for missing metadata; keep it out of the layout.
-  const hasContent = (value: string | null | undefined) =>
-    Boolean(value?.trim().replace(/[\s,.-]/g, ""));
+  const hasContent = (value: string | null | undefined) => Boolean(value?.trim().replace(/[\s,.-]/g, ""));
   const hasPickup = hasContent(product.available_hours);
 
-  const displayAddress = standardizeDisplayAddress(
-    product.post_stripped_address || product.post_address,
-  );
+  const displayAddress = standardizeDisplayAddress(product.post_stripped_address || product.post_address);
 
   // Airbnb rating and recency computation
   const hasRating =
-    (product.five_star != null && product.five_star > 0) ||
-    (product.four_star != null && product.four_star > 0);
+    (product.five_star != null && product.five_star > 0) || (product.four_star != null && product.four_star > 0);
   const totalReviews = (product.five_star ?? 0) + (product.four_star ?? 0);
   const ratingScore = hasRating
     ? (
@@ -54,13 +45,34 @@ export function ProductCard({
       ).toFixed(1)
     : null;
 
-  const isFreeType =
-    product.post_type === "food" || product.post_type === "vegan";
+  const isOrgOrFridge = product.post_type === "fridge" || product.post_type === "foodbank";
+  const hostEntity =
+    product.host_entity ||
+    ((product.metadata as Record<string, unknown> | undefined)?.host_company as string | undefined);
+  const authorName = product.author_name
+    ? formatFirstAuthorName(product.author_name)
+    : !isOrgOrFridge
+      ? "Community Member"
+      : null;
+
+  let authorityText: string | null = null;
+  if (isOrgOrFridge) {
+    if (product.post_type === "foodbank") {
+      authorityText = hostEntity && hostEntity !== product.post_name ? hostEntity : null;
+    } else {
+      authorityText = hostEntity
+        ? hostEntity.startsWith("Host:")
+          ? hostEntity
+          : `Hosted by ${hostEntity}`
+        : "Community Fridge";
+    }
+  } else if (authorName) {
+    authorityText = `by ${authorName}`;
+  }
+
+  const isFreeType = product.post_type === "food" || product.post_type === "vegan";
   // One muted line: where and when. Host, transit and other facts live on the detail page.
-  const detailLine = [
-    hasContent(displayAddress) ? displayAddress : null,
-    hasPickup ? product.available_hours : null,
-  ]
+  const detailLine = [hasContent(displayAddress) ? displayAddress : null, hasPickup ? product.available_hours : null]
     .filter(Boolean)
     .join(" · ");
   const cardContent = (
@@ -99,10 +111,7 @@ export function ProductCard({
             </Link>
           </h3>
           <span className="flex shrink-0 items-center gap-1 text-[13px] font-medium text-foreground">
-            <Star
-              className="size-3.5 fill-amber-400 text-amber-400"
-              aria-hidden="true"
-            />
+            <Star className="size-3.5 fill-amber-400 text-amber-400" aria-hidden="true" />
             {hasRating && ratingScore ? (
               <>
                 <span className="font-semibold">{ratingScore}</span>
@@ -115,29 +124,21 @@ export function ProductCard({
             )}
           </span>
         </div>
-        {/* Line 2: area and pickup window, status on the end */}
+        {/* Line 2: listing authority */}
+        {authorityText && <p className="truncate text-[13px] leading-snug text-muted-foreground">{authorityText}</p>}
+        {/* Line 3: area and pickup window, status on the end */}
         <div className="flex items-center justify-between gap-2 text-[13px] leading-snug">
-          <p className="min-w-0 flex-1 truncate text-muted-foreground">
-            {detailLine}
-          </p>
+          <p className="min-w-0 flex-1 truncate text-muted-foreground">{detailLine}</p>
           {product.is_arranged ? (
             <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
-              <span
-                className="size-1.5 rounded-full bg-amber-500"
-                aria-hidden="true"
-              />
+              <span className="size-1.5 rounded-full bg-amber-500" aria-hidden="true" />
               {"Reserved"}
             </span>
           ) : isFreeType ? (
-            <span className="shrink-0 font-semibold text-foreground">
-              {"Free"}
-            </span>
+            <span className="shrink-0 font-semibold text-foreground">{"Free"}</span>
           ) : (
             <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
-              <span
-                className="size-1.5 rounded-full bg-emerald-500"
-                aria-hidden="true"
-              />
+              <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
               {"Available"}
             </span>
           )}
@@ -148,11 +149,7 @@ export function ProductCard({
   // If event handlers are provided, wrap in client component for interactivity
   if (onMouseEnter || onMouseLeave || onClick) {
     return (
-      <ProductCardWrapper
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-        onClick={onClick}
-      >
+      <ProductCardWrapper onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onClick={onClick}>
         {cardContent}
       </ProductCardWrapper>
     );

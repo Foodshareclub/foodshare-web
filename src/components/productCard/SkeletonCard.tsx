@@ -10,6 +10,7 @@ function SkeletonCard({ isLoaded }: { isLoaded: boolean }) {
       <Skeleton className={cn(LISTING_PHOTO, "rounded-2xl", motion)} />
       <div className="flex flex-col gap-1.5 pt-3">
         <Skeleton className={cn("h-4 w-4/5", motion)} />
+        <Skeleton className={cn("h-3 w-2/5", motion)} />
         <Skeleton className={cn("h-3.5 w-3/5", motion)} />
       </div>
     </Card>

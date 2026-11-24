@@ -62,13 +62,13 @@ describe("ProductCard Airbnb Design", () => {
 
     expect(screen.getByText("Fresh Organic Avocados")).toBeTruthy();
     expect(screen.getByText("New")).toBeTruthy();
+    expect(screen.getByText("by Maria")).toBeTruthy();
     expect(screen.getByText("Free")).toBeTruthy();
   });
-  test("shows two meta lines: title row and one muted area and pickup line", () => {
+  test("shows metadata lines including listing authority and pickup line", () => {
     const { container } = render(<ProductCard product={baseProduct} />);
     expect(screen.getByText("Green St, Portland · 10:00 AM - 4:00 PM")).toBeTruthy();
-    // Host, transit and extra facts moved to the detail page.
-    expect(screen.queryByText(/By Maria/)).toBeNull();
+    expect(screen.getByText("by Maria")).toBeTruthy();
     expect(screen.queryByText("Walk or bike")).toBeNull();
     // Media shares the listing photo ratio with the skeleton.
     expect(container.querySelector(".aspect-\\[20\\/19\\]")).toBeTruthy();
@@ -77,6 +77,14 @@ describe("ProductCard Airbnb Design", () => {
     render(<ProductCard product={{ ...baseProduct, post_type: "fridge" }} />);
     expect(screen.getByText("Available")).toBeTruthy();
     expect(screen.queryByText("Free")).toBeNull();
+  });
+  test("renders host entity for community fridge listings", () => {
+    render(<ProductCard product={{ ...baseProduct, post_type: "fridge", host_entity: "Downtown Church" }} />);
+    expect(screen.getByText("Hosted by Downtown Church")).toBeTruthy();
+  });
+  test("renders fallback host for community fridge listings without host entity", () => {
+    render(<ProductCard product={{ ...baseProduct, post_type: "fridge", host_entity: null }} />);
+    expect(screen.getByText("Community Fridge")).toBeTruthy();
   });
   test("exposes a labelled, pressable save button", () => {
     render(<ProductCard product={baseProduct} />);
