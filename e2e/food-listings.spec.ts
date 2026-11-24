@@ -40,8 +40,9 @@ test.describe("Food Listings Page", () => {
       .filter({ hasText: /food|things|borrow|wanted|fridge/i })
       .first();
 
-    const isVisible = await categoryButton.isVisible().catch(() => false);
-    expect(isVisible).toBeTruthy();
+    // Web-first assertion: the navbar streams in after the shell, so a one-shot isVisible()
+    // raced it (failed in 581 ms on run 45300435497). Same proof, with Playwright's retrying wait.
+    await expect(categoryButton).toBeVisible({ timeout: 15000 });
   });
 
   test("should filter by category type via singular routes", async ({ page }) => {

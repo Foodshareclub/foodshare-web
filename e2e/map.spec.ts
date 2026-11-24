@@ -62,10 +62,15 @@ test.describe("Map Page", () => {
     const zoomIn = page.locator(".leaflet-control-zoom-in");
     const zoomOut = page.locator(".leaflet-control-zoom-out");
 
-    const hasZoomIn = await zoomIn.isVisible().catch(() => false);
-    const hasZoomOut = await zoomOut.isVisible().catch(() => false);
-
-    expect(hasZoomIn || hasZoomOut).toBeTruthy();
+    // Retrying wait: the map's controls mount after the tiles load, so a one-shot isVisible() raced them.
+    await expect
+      .poll(
+        async () => (await zoomIn.isVisible().catch(() => false)) || (await zoomOut.isVisible().catch(() => false)),
+        {
+          timeout: 20000,
+        },
+      )
+      .toBe(true);
   });
 
   test("should allow zooming with controls", async ({ page }) => {
