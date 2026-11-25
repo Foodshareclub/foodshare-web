@@ -58,4 +58,8 @@ export const FOODLYTICS_COPY = {
   footerPrimary:
     "Foodlytics Ecological Analytics Platform — Cultivating ecological mindfulness one home kitchen at a time.",
   footerSecondary: "Calculations based on standard USDA agricultural flow models and FAO food wastage coefficients.",
+  usTrackerEmpty: "No US food waste sector records found in PostgreSQL.",
+  usTrackerTableNote:
+    "All values above are queried directly from canonical Supabase table us_foodwaste_categories without client-side mocks.",
+  closeBriefPanel: "Close brief panel",
 } as const;

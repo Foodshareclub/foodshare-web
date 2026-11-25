@@ -1,27 +1,23 @@
 "use client";
 
 import { Card, CardContent } from "@/components/foodlytics/ui/card";
-import { supabase } from "@/lib/supabase/client";
+import { FOODLYTICS_COPY } from "@/lib/foodlytics/constants";
+import { type UsCategoryRow, fetchUsFoodCategories } from "@/lib/foodlytics/queries";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, BarChart2, DollarSign, Droplet, Flame, RefreshCw, Scale, Terminal } from "lucide-react";
-import React, { useCallback, useState, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
-interface FoodWasteCategory {
-  id: string;
-  category: string;
-  waste_tonnes: number;
-  waste_pct: number;
-  cost_usd_billions: number;
-  co2_impact_million_tonnes: number;
-  source: string;
-  last_updated_at: string;
+interface UsWasteTrackerProps {
+  initialCategories?: UsCategoryRow[];
 }
 
-export function UsWasteTracker() {
-  const [categories, setCategories] = useState<FoodWasteCategory[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function UsWasteTracker({ initialCategories }: UsWasteTrackerProps) {
+  const [categories, setCategories] = useState<UsCategoryRow[]>(initialCategories ?? []);
+  const [isLoading, setIsLoading] = useState(initialCategories === undefined);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [consoleLogs, setConsoleLogs] = useState<string[]>([]);
+  const [consoleLogs, setConsoleLogs] = useState<string[]>(() =>
+    initialCategories ? [`Loaded ${initialCategories.length} US waste sector records from PostgreSQL.`] : [],
+  );
   const [activeHoverCategory, setActiveHoverCategory] = useState<string | null>(null);
 
   const terminalEndRef = useRef<HTMLDivElement | null>(null);
@@ -29,90 +25,45 @@ export function UsWasteTracker() {
   const fetchUSWasteData = useCallback(async (refresh = false) => {
     if (refresh) {
       setIsRefreshing(true);
-      setConsoleLogs([`🚀 [${new Date().toLocaleTimeString()}] Dispatching agentic crawler request...`]);
-    } else {
-      setIsLoading(true);
+      setConsoleLogs([`[${new Date().toLocaleTimeString()}] Syncing US sector baselines from PostgreSQL...`]);
     }
 
     try {
-      // Invoke cloud edge function
-      const { data: resData, error } = await supabase.functions.invoke("api-v1-us-foodwaste", {
-        body: { refresh },
-      });
-
-      if (error) throw error;
-
-      if (resData?.success) {
-        setCategories(resData.data || []);
-
-        if (refresh && resData.logs) {
-          // Playback logs sequentially for maximum wow factor terminal effect
-          let currentLogIdx = 0;
-          const interval = setInterval(() => {
-            if (currentLogIdx < resData.logs.length) {
-              setConsoleLogs((prev) => [...prev, resData.logs[currentLogIdx]]);
-              currentLogIdx++;
-            } else {
-              clearInterval(interval);
-              setIsRefreshing(false);
-            }
-          }, 350);
-        } else {
-          setConsoleLogs([
-            `📊 [${new Date().toLocaleTimeString()}] Telemetry parsed successfully from database cache.`,
-            "🔒 Enforcing RLS policy check: Public read access enabled.",
-            `📦 Total categories loaded: ${resData.data?.length || 0}`,
-          ]);
-          setIsLoading(false);
-        }
-      } else {
-        throw new Error(resData?.error || "Failed to load telemetry.");
-      }
+      const rows = await fetchUsFoodCategories();
+      setCategories(rows);
+      const latestSource = rows[0]?.source || "us_foodwaste_categories";
+      setConsoleLogs([
+        `[${new Date().toLocaleTimeString()}] Loaded ${rows.length} US waste sector records from PostgreSQL.`,
+        `Source: ${latestSource} (RLS public read).`,
+      ]);
     } catch (err) {
-      console.error("Error loading US waste stats:", err);
+      console.warn("Unable to load US waste stats:", err);
       setConsoleLogs((prev) => [
         ...prev,
-        `❌ [ERROR] ${err instanceof Error ? err.message : "Unknown error during refresh."}`,
+        `[ERROR] ${err instanceof Error ? err.message : "Unknown error while loading US sector telemetry."}`,
       ]);
+    } finally {
       setIsRefreshing(false);
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    if (initialCategories !== undefined) return;
     fetchUSWasteData();
-  }, [fetchUSWasteData]);
+  }, [fetchUSWasteData, initialCategories]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: `consoleLogs` is the trigger — the body only touches the ref, and each appended terminal line must keep the log pinned to the bottom
   useEffect(() => {
-    // Auto-scroll terminal log to bottom
     if (terminalEndRef.current) {
       terminalEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [consoleLogs]);
 
-  // Aggregate stats
   const totalWasteTons = categories.reduce((sum, c) => sum + Number(c.waste_tonnes), 0);
   const totalCostBillions = categories.reduce((sum, c) => sum + Number(c.cost_usd_billions || 0), 0);
   const totalCO2Millions = categories.reduce((sum, c) => sum + Number(c.co2_impact_million_tonnes || 0), 0);
   const maxTonnage = Math.max(...categories.map((c) => Number(c.waste_tonnes)), 1);
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05 },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { type: "spring" as const, stiffness: 100, damping: 15 },
-    },
-  };
 
   if (isLoading && !isRefreshing) {
     return (
@@ -125,7 +76,6 @@ export function UsWasteTracker() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Top Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h2 className="text-lg font-black text-white flex items-center gap-2">
@@ -133,7 +83,7 @@ export function UsWasteTracker() {
             US Nationwide Food Waste Analytics
           </h2>
           <p className="text-xs text-stone-400">
-            Comprehensive sector analysis showing overall supply-chain breakdown from top to bottom (decreasing tonnage)
+            Sector breakdown ordered by annual waste tonnage from canonical database records
           </p>
         </div>
 
@@ -144,160 +94,128 @@ export function UsWasteTracker() {
           className="shrink-0 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-extrabold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 border border-emerald-500/20 hover:border-emerald-400 shadow-md shadow-emerald-950/20 transition-all cursor-pointer h-10"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-          {isRefreshing ? "Crawling Telemetry..." : "Trigger Live Crawl / Refresh"}
+          {isRefreshing ? "Refreshing Data..." : "Refresh Telemetry"}
         </button>
       </div>
 
-      {/* Bento Grid Stats (immediate full contrast across all cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div>
-          <Card className="h-full glass-panel hover:glass-panel-glow-amber hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border border-white/10 cursor-default">
-            <CardContent className="p-6 flex items-start gap-4">
-              <div className="p-3 bg-amber-500/15 text-amber-400 rounded-xl border border-amber-500/25 shrink-0">
-                <Scale className="h-6 w-6" />
-              </div>
-              <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-300 block">US Annual Waste</span>
-                <h3 className="text-2xl font-extrabold text-white tracking-tight tabular-nums">
-                  {(totalWasteTons / 1000000).toFixed(1)}M{" "}
-                  <span className="text-xs font-medium text-stone-400">tons</span>
-                </h3>
-                <p className="text-[11px] text-stone-400 font-bold uppercase tracking-wider">
-                  ≈ 268 lbs / citizen / year
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="h-full glass-panel hover:glass-panel-glow-amber hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border border-white/10 cursor-default">
+          <CardContent className="p-6 flex items-start gap-4">
+            <div className="p-3 bg-amber-500/15 text-amber-400 rounded-xl border border-amber-500/25 shrink-0">
+              <Scale className="h-6 w-6" />
+            </div>
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-300 block">US Annual Waste</span>
+              <h3 className="text-2xl font-extrabold text-white tracking-tight tabular-nums">
+                {(totalWasteTons / 1000000).toFixed(1)}M{" "}
+                <span className="text-xs font-medium text-stone-400">tons</span>
+              </h3>
+              <p className="text-[11px] text-stone-400 font-bold uppercase tracking-wider">
+                {categories.length} tracked sectors
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
-        <div>
-          <Card className="h-full glass-panel hover:glass-panel-glow-rose hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border border-white/10 cursor-default">
-            <CardContent className="p-6 flex items-start gap-4">
-              <div className="p-3 bg-rose-500/15 text-rose-400 rounded-xl border border-rose-500/25 shrink-0">
-                <DollarSign className="h-6 w-6" />
-              </div>
-              <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-rose-300 block">Economic Burden</span>
-                <h3 className="text-2xl font-extrabold text-white tracking-tight tabular-nums">
-                  ${totalCostBillions.toFixed(1)}B <span className="text-xs font-medium text-stone-400">USD</span>
-                </h3>
-                <p className="text-[11px] text-stone-400 font-bold uppercase tracking-wider">
-                  Lost commercial retail value
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="h-full glass-panel hover:glass-panel-glow-rose hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border border-white/10 cursor-default">
+          <CardContent className="p-6 flex items-start gap-4">
+            <div className="p-3 bg-rose-500/15 text-rose-400 rounded-xl border border-rose-500/25 shrink-0">
+              <DollarSign className="h-6 w-6" />
+            </div>
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-rose-300 block">Economic Burden</span>
+              <h3 className="text-2xl font-extrabold text-white tracking-tight tabular-nums">
+                ${totalCostBillions.toFixed(1)}B <span className="text-xs font-medium text-stone-400">USD</span>
+              </h3>
+              <p className="text-[11px] text-stone-400 font-bold uppercase tracking-wider">Aggregate annual loss</p>
+            </div>
+          </CardContent>
+        </Card>
 
-        <div>
-          <Card className="h-full glass-panel hover:glass-panel-glow-emerald hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border border-white/10 cursor-default">
-            <CardContent className="p-6 flex items-start gap-4">
-              <div className="p-3 bg-emerald-500/15 text-emerald-400 rounded-xl border border-emerald-500/25 shrink-0">
-                <Flame className="h-6 w-6" />
-              </div>
-              <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-300 block">
-                  Ecological Damage
-                </span>
-                <h3 className="text-2xl font-extrabold text-white tracking-tight tabular-nums">
-                  {totalCO2Millions.toFixed(1)}M <span className="text-xs font-medium text-stone-400">tons CO2e</span>
-                </h3>
-                <p className="text-[11px] text-stone-400 font-bold uppercase tracking-wider">
-                  ≈ 23 million cars driven / yr
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="h-full glass-panel hover:glass-panel-glow-emerald hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border border-white/10 cursor-default">
+          <CardContent className="p-6 flex items-start gap-4">
+            <div className="p-3 bg-emerald-500/15 text-emerald-400 rounded-xl border border-emerald-500/25 shrink-0">
+              <Flame className="h-6 w-6" />
+            </div>
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-300 block">CO2 Footprint</span>
+              <h3 className="text-2xl font-extrabold text-white tracking-tight tabular-nums">
+                {totalCO2Millions.toFixed(1)}M <span className="text-xs font-medium text-stone-400">tons CO2e</span>
+              </h3>
+              <p className="text-[11px] text-stone-400 font-bold uppercase tracking-wider">Supply chain emissions</p>
+            </div>
+          </CardContent>
+        </Card>
 
-        <div>
-          <Card className="h-full glass-panel hover:glass-panel-glow-sky hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border border-white/10 cursor-default">
-            <CardContent className="p-6 flex items-start gap-4">
-              <div className="p-3 bg-sky-500/15 text-sky-400 rounded-xl border border-sky-500/25 shrink-0">
-                <Droplet className="h-6 w-6" />
-              </div>
-              <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-sky-300 block">Water Footprint</span>
-                <h3 className="text-2xl font-extrabold text-white tracking-tight tabular-nums">
-                  21.4T <span className="text-xs font-medium text-stone-400">gallons</span>
-                </h3>
-                <p className="text-[11px] text-stone-400 font-bold uppercase tracking-wider">
-                  Embedded water lost to landfills
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="h-full glass-panel hover:glass-panel-glow-blue hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border border-white/10 cursor-default">
+          <CardContent className="p-6 flex items-start gap-4">
+            <div className="p-3 bg-sky-500/15 text-sky-400 rounded-xl border border-sky-500/25 shrink-0">
+              <Droplet className="h-6 w-6" />
+            </div>
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-sky-300 block">
+                Primary Sector Share
+              </span>
+              <h3 className="text-2xl font-extrabold text-white tracking-tight tabular-nums">
+                {categories[0] ? `${categories[0].waste_pct}%` : "0%"}
+              </h3>
+              <p className="text-[11px] text-stone-400 font-bold uppercase tracking-wider truncate max-w-[150px]">
+                {categories[0]?.category || "No data"}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Main Grid: Category List & Console log */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Horizontal Category Bar Chart (2/3 width) */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="glass-panel border-none rounded-2xl shadow-xl p-6 bg-black/10">
-            <div className="space-y-5">
-              <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                <h3 className="text-sm font-black text-white uppercase tracking-wider">
-                  Waste Breakdown by Food Category
-                </h3>
-                <span className="text-[10px] text-stone-500 font-bold uppercase">Ordered descending</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <Card className="glass-panel border-none rounded-2xl shadow-xl bg-black/10 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-sm font-black text-white">Sector Breakdown (By Tonnage)</h3>
+                <p className="text-[11px] text-stone-400">
+                  Select any sector bar to inspect financial and emissions metrics
+                </p>
               </div>
+              <span className="text-[10px] font-mono text-stone-500">us_foodwaste_categories</span>
+            </div>
 
+            {categories.length === 0 ? (
+              <div className="py-12 text-center text-xs font-semibold text-stone-400">
+                {FOODLYTICS_COPY.usTrackerEmpty}
+              </div>
+            ) : (
               <div className="space-y-4">
                 {categories.map((c) => {
-                  const widthPct = (c.waste_tonnes / maxTonnage) * 100;
-
+                  const pctOfMax = Math.max(4, Math.round((Number(c.waste_tonnes) / maxTonnage) * 100));
+                  const isActive = activeHoverCategory === c.id;
                   return (
                     <div
                       key={c.id}
                       onMouseEnter={() => setActiveHoverCategory(c.id)}
                       onMouseLeave={() => setActiveHoverCategory(null)}
-                      className={
-                        "p-3 rounded-xl transition-all duration-200 border border-transparent hover:border-white/5 hover:bg-white/[0.02] flex flex-col gap-2 relative group cursor-default"
-                      }
+                      className="p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 transition-colors"
                     >
-                      {/* Name & Tonnage */}
-                      <div className="flex items-center justify-between text-xs font-bold">
-                        <span className="text-white font-extrabold group-hover:text-emerald-400 transition-colors">
-                          {c.category}
+                      <div className="flex items-center justify-between text-xs font-bold mb-2">
+                        <span className="text-white">{c.category}</span>
+                        <span className="font-mono text-emerald-400 tabular-nums">
+                          {(Number(c.waste_tonnes) / 1000000).toFixed(2)}M tons ({c.waste_pct}%)
                         </span>
-                        <div className="flex items-center gap-2 font-mono text-[11px]">
-                          <span className="text-stone-300">{(c.waste_tonnes / 1000000).toFixed(2)}M tons</span>
-                          <span className="text-emerald-400/90">({c.waste_pct}%)</span>
-                        </div>
                       </div>
-
-                      {/* Bar Visualizer */}
-                      <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden relative shadow-inner">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${widthPct}%` }}
-                          transition={{ duration: 0.6, ease: "easeOut" }}
-                          className={`h-full rounded-full bg-gradient-to-r ${
-                            c.category.includes("Produce")
-                              ? "from-emerald-650/40 to-emerald-500/70 shadow-emerald-500/20"
-                              : c.category.includes("Dairy")
-                                ? "from-amber-650/40 to-amber-500/70 shadow-amber-500/20"
-                                : c.category.includes("Meat")
-                                  ? "from-rose-650/40 to-rose-500/70 shadow-rose-500/20"
-                                  : c.category.includes("Beverages")
-                                    ? "from-sky-650/40 to-sky-500/70 shadow-sky-500/20"
-                                    : c.category.includes("Prepared")
-                                      ? "from-purple-650/40 to-purple-500/70 shadow-purple-500/20"
-                                      : "from-stone-600/40 to-stone-400/70 shadow-stone-500/20"
-                          }`}
+                      <div className="h-2.5 w-full bg-stone-900 rounded-full overflow-hidden">
+                        <div
+                          style={{ width: `${pctOfMax}%` }}
+                          className="h-full bg-gradient-to-r from-emerald-600 to-teal-400 rounded-full transition-all duration-300"
                         />
                       </div>
-
-                      {/* Interactive Detailed Hover Panel */}
                       <AnimatePresence>
-                        {activeHoverCategory === c.id && (
+                        {isActive && (
                           <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: "auto" }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.15 }}
-                            className="grid grid-cols-3 gap-4 pt-2 mt-1 border-t border-white/5 text-[10px] font-bold text-stone-400 overflow-hidden"
+                            className="grid grid-cols-3 gap-4 pt-2 mt-2 border-t border-white/5 text-[10px] font-bold text-stone-400 overflow-hidden"
                           >
                             <div>
                               <span className="block text-[8px] uppercase tracking-wider text-stone-500">
@@ -326,60 +244,41 @@ export function UsWasteTracker() {
                   );
                 })}
               </div>
-            </div>
+            )}
           </Card>
         </div>
 
-        {/* Live Scraper Terminal Log (1/3 width) */}
         <div className="space-y-6">
           <Card className="glass-panel border-none rounded-2xl shadow-xl overflow-hidden bg-black/10 flex flex-col">
             <div className="p-4 border-b border-white/5 bg-white/[0.01] flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Terminal className="h-4 w-4 text-emerald-400 animate-pulse" />
-                <span className="text-xs font-black uppercase text-white tracking-wider">Agent Telemetry Logs</span>
+                <Terminal className="h-4 w-4 text-emerald-400" />
+                <span className="text-xs font-black uppercase text-white tracking-wider">Telemetry Sync Log</span>
               </div>
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
             </div>
 
             <div className="p-4 bg-stone-950 font-mono text-[10px] text-emerald-400 h-64 overflow-y-auto space-y-2 select-text scrollbar-thin flex flex-col">
-              {consoleLogs.map((log, index) => {
-                let colorClass = "text-emerald-400";
-                if (log.includes("❌")) colorClass = "text-rose-400 font-extrabold";
-                if (log.includes("⚠️")) colorClass = "text-amber-400 font-extrabold";
-                if (log.includes("🔍")) colorClass = "text-sky-400 font-bold";
-                if (log.includes("✅")) colorClass = "text-emerald-300 font-bold";
-
-                return (
-                  <div
-                    // biome-ignore lint/suspicious/noArrayIndexKey: append-only read-only agent console where repeated log lines are expected, so entry order is the identity
-                    key={index}
-                    className={`leading-relaxed border-b border-white/[0.02] pb-1 break-words ${colorClass}`}
-                  >
-                    {log}
-                  </div>
-                );
-              })}
-              {isRefreshing && (
-                <div className="flex items-center gap-1.5 text-stone-500 animate-pulse mt-1 select-none">
-                  <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-ping" />
-                  <span>Agent running background collection turns...</span>
+              {consoleLogs.map((log, index) => (
+                <div
+                  // biome-ignore lint/suspicious/noArrayIndexKey: append-only log lines
+                  key={index}
+                  className={`leading-relaxed border-b border-white/[0.02] pb-1 break-words ${
+                    log.includes("[ERROR]") ? "text-rose-400 font-extrabold" : "text-emerald-400"
+                  }`}
+                >
+                  {log}
                 </div>
-              )}
+              ))}
               <div ref={terminalEndRef} />
             </div>
           </Card>
 
-          {/* Educational Sector Overview */}
           <Card className="glass-panel border-none rounded-2xl p-5 bg-gradient-to-br from-emerald-950/20 to-emerald-900/10 space-y-3">
             <h4 className="text-xs font-black text-white flex items-center gap-1.5">
               <AlertTriangle className="h-4 w-4 text-amber-400" />
               US Waste Allocation Insights
             </h4>
-            <p className="text-[11px] text-stone-400 leading-relaxed font-bold">
-              National data highlights that households represent the single largest waste node (47% by weight), followed
-              by restaurants & foodservice (25%). Combating retail and farm-gate supply volatility remains critical to
-              close the 50% target reduction pathway by 2030.
-            </p>
+            <p className="text-[11px] text-stone-400 leading-relaxed font-bold">{FOODLYTICS_COPY.usTrackerTableNote}</p>
           </Card>
         </div>
       </div>

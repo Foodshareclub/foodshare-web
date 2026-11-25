@@ -59,111 +59,44 @@ export function CRMDashboard({
     return matchesSearch && matchesLifecycle;
   });
 
-  const segments: NormalizedSegmentItem[] =
-    segmentsData.length > 0
-      ? segmentsData.map((seg) => ({
-          name: seg.name,
-          count: seg.cached_count,
-          icon:
-            seg.icon_name === "heart" ? (
-              <Heart className="h-4 w-4" aria-hidden="true" />
-            ) : seg.icon_name === "user-plus" ? (
-              <UserPlus className="h-4 w-4" aria-hidden="true" />
-            ) : seg.icon_name === "alert-triangle" ? (
-              <AlertTriangle className="h-4 w-4" aria-hidden="true" />
-            ) : seg.icon_name === "star" ? (
-              <Star className="h-4 w-4" aria-hidden="true" />
-            ) : (
-              <Users className="h-4 w-4" aria-hidden="true" />
-            ),
-          accentHex: seg.color,
-        }))
-      : [
-          {
-            name: "Active Sharers",
-            count: Math.round(stats.activeCustomers * 0.6),
-            icon: <Heart className="h-4 w-4" aria-hidden="true" />,
-            colorClass: "bg-emerald-100 text-emerald-600",
-            growth: 12,
-          },
-          {
-            name: "New Users (7d)",
-            count: stats.newThisWeek,
-            icon: <UserPlus className="h-4 w-4" aria-hidden="true" />,
-            colorClass: "bg-blue-100 text-blue-600",
-            growth: 23,
-          },
-          {
-            name: CRM_COPY.atRiskLabel,
-            count: stats.atRiskCustomers,
-            icon: <AlertTriangle className="h-4 w-4" aria-hidden="true" />,
-            colorClass: "bg-amber-100 text-amber-600",
-            growth: -5,
-          },
-          {
-            name: "Champions",
-            count: Math.round(stats.activeCustomers * 0.15),
-            icon: <Star className="h-4 w-4" aria-hidden="true" />,
-            colorClass: "bg-violet-100 text-violet-600",
-            growth: 8,
-          },
-        ];
+  const segments: NormalizedSegmentItem[] = segmentsData.map((seg) => ({
+    name: seg.name,
+    count: seg.cached_count,
+    icon:
+      seg.icon_name === "heart" ? (
+        <Heart className="h-4 w-4" aria-hidden="true" />
+      ) : seg.icon_name === "user-plus" ? (
+        <UserPlus className="h-4 w-4" aria-hidden="true" />
+      ) : seg.icon_name === "alert-triangle" ? (
+        <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+      ) : seg.icon_name === "star" ? (
+        <Star className="h-4 w-4" aria-hidden="true" />
+      ) : (
+        <Users className="h-4 w-4" aria-hidden="true" />
+      ),
+    accentHex: seg.color,
+  }));
 
-  const campaigns: NormalizedCampaignItem[] =
-    campaignsData.length > 0
-      ? campaignsData.map((c) => ({
-          name: c.name,
-          status: (c.status === "sending"
-            ? "active"
-            : c.status === "cancelled" || c.status === "paused"
-              ? "draft"
-              : c.status) as "draft" | "scheduled" | "sent" | "active",
-          sent: c.total_sent,
-          opened: c.total_opened,
-          clicked: c.total_clicked,
-        }))
-      : [
-          { name: "Weekly Food Tips", status: "sent", sent: 2450, opened: 1823, clicked: 456 },
-          { name: "Community Fridge Launch", status: "scheduled", sent: 0, opened: 0, clicked: 0 },
-          { name: "Holiday Food Drive", status: "draft", sent: 0, opened: 0, clicked: 0 },
-        ];
+  const campaigns: NormalizedCampaignItem[] = campaignsData.map((c) => ({
+    name: c.name,
+    status: (c.status === "sending"
+      ? "active"
+      : c.status === "cancelled" || c.status === "paused"
+        ? "draft"
+        : c.status) as "draft" | "scheduled" | "sent" | "active",
+    sent: c.total_sent,
+    opened: c.total_opened,
+    clicked: c.total_clicked,
+  }));
 
-  const automations: NormalizedAutomationItem[] =
-    automationsData.length > 0
-      ? automationsData.map((a) => ({
-          name: a.name,
-          trigger: TRIGGER_TYPE_LABELS[a.trigger_type] || a.trigger_type,
-          status: a.status as "active" | "paused" | "draft",
-          enrolled: a.total_enrolled,
-          completed: a.total_completed,
-          rate: a.total_enrolled > 0 ? Math.round((a.total_converted / a.total_enrolled) * 1000) / 10 : 0,
-        }))
-      : [
-          {
-            name: "Welcome Series",
-            trigger: "User signs up",
-            status: "active",
-            enrolled: 1234,
-            completed: 987,
-            rate: 34.5,
-          },
-          {
-            name: "First Listing Nudge",
-            trigger: "No listing after 3 days",
-            status: "active",
-            enrolled: 567,
-            completed: 456,
-            rate: 67.2,
-          },
-          {
-            name: "Re-engagement",
-            trigger: "30 days inactive",
-            status: "paused",
-            enrolled: 234,
-            completed: 89,
-            rate: 12.3,
-          },
-        ];
+  const automations: NormalizedAutomationItem[] = automationsData.map((a) => ({
+    name: a.name,
+    trigger: TRIGGER_TYPE_LABELS[a.trigger_type] || a.trigger_type,
+    status: a.status as "active" | "paused" | "draft",
+    enrolled: a.total_enrolled,
+    completed: a.total_completed,
+    rate: a.total_enrolled > 0 ? Math.round((a.total_converted / a.total_enrolled) * 1000) / 10 : 0,
+  }));
 
   const navItems = [
     { id: "overview" as ViewType, label: "Overview", icon: <BarChart3 className="h-4 w-4" aria-hidden="true" /> },

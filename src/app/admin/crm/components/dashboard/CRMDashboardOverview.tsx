@@ -40,28 +40,24 @@ export function CRMDashboardOverview({
         <CRMMetricCard
           label={CRM_COPY.totalCustomers}
           value={stats.totalCustomers.toLocaleString()}
-          change={8}
           icon={<Users className="h-4 w-4" aria-hidden="true" />}
           color="blue"
         />
         <CRMMetricCard
           label={CRM_COPY.activeLabel}
           value={stats.activeCustomers.toLocaleString()}
-          change={12}
           icon={<UserCheck className="h-4 w-4" aria-hidden="true" />}
           color="emerald"
         />
         <CRMMetricCard
           label={CRM_COPY.atRiskLabel}
           value={stats.atRiskCustomers.toLocaleString()}
-          change={-3}
           icon={<AlertTriangle className="h-4 w-4" aria-hidden="true" />}
           color="amber"
         />
         <CRMMetricCard
           label={CRM_COPY.newThisWeekLabel}
           value={stats.newThisWeek.toLocaleString()}
-          change={23}
           icon={<TrendingUp className="h-4 w-4" aria-hidden="true" />}
           color="violet"
         />
@@ -74,11 +70,17 @@ export function CRMDashboardOverview({
             {CRM_COPY.viewAll} <ChevronRight className="h-4 w-4 ms-1" aria-hidden="true" />
           </Button>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {segments.map((seg) => (
-            <QuickSegmentCard key={seg.name} {...seg} />
-          ))}
-        </div>
+        {segments.length === 0 ? (
+          <p className="rounded-xl border border-border/50 bg-card p-6 text-sm text-muted-foreground">
+            {CRM_COPY.noSegmentsYet}
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {segments.map((seg) => (
+              <QuickSegmentCard key={seg.name} {...seg} />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -89,11 +91,17 @@ export function CRMDashboardOverview({
               {CRM_COPY.viewAll} <ChevronRight className="h-4 w-4 ms-1" aria-hidden="true" />
             </Button>
           </div>
-          <div className="space-y-3">
-            {campaigns.map((c) => (
-              <CampaignSummaryCard key={c.name} {...c} />
-            ))}
-          </div>
+          {campaigns.length === 0 ? (
+            <p className="rounded-xl border border-border/50 bg-card p-6 text-sm text-muted-foreground">
+              {CRM_COPY.noCampaignsYet}
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {campaigns.map((c) => (
+                <CampaignSummaryCard key={c.name} {...c} />
+              ))}
+            </div>
+          )}
         </div>
 
         <div>
@@ -103,11 +111,17 @@ export function CRMDashboardOverview({
               {CRM_COPY.viewAll} <ChevronRight className="h-4 w-4 ms-1" aria-hidden="true" />
             </Button>
           </div>
-          <div className="space-y-3">
-            {automations.map((a) => (
-              <AutomationSummaryCard key={a.name} {...a} />
-            ))}
-          </div>
+          {automations.length === 0 ? (
+            <p className="rounded-xl border border-border/50 bg-card p-6 text-sm text-muted-foreground">
+              {CRM_COPY.noAutomationsYet}
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {automations.map((a) => (
+                <AutomationSummaryCard key={a.name} {...a} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

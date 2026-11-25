@@ -25,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { AdminListing, AdminListingsFilter, ListingStats } from "@/lib/data/admin-listings";
+import { LISTING_CATEGORY_OPTIONS } from "@/constants/categories";
 import { cn } from "@/lib/utils";
 import { Check, Eye, MoreVertical, Pencil, RefreshCw, Search, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -56,15 +57,7 @@ interface Props {
 
 const CATEGORIES = [
   { value: "all", label: "All Categories" },
-  { value: "food", label: "Food" },
-  { value: "thing", label: "Things" },
-  { value: "borrow", label: "Borrow" },
-  { value: "wanted", label: "Wanted" },
-  { value: "fridge", label: "Community Fridge" },
-  { value: "foodbank", label: "Food Bank" },
-  { value: "volunteer", label: "Volunteer" },
-  { value: "zerowaste", label: "Zero Waste" },
-  { value: "vegan", label: "Vegan" },
+  ...LISTING_CATEGORY_OPTIONS.filter((c) => c.value !== "organisation"),
 ];
 
 export function AdminListingsClient({

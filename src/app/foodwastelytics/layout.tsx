@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: {
-    default: "Foodwastelytics — Global Food Waste Intelligence & International Impact Analytics",
-    template: "%s | Foodwastelytics | FoodShare",
+    default: "Foodwastelytics — Global Food Waste Intelligence & International Impact Analytics | FoodShare",
+    template: "%s | FoodShare",
   },
   description:
     "Explore global food waste analytics and planetary benchmarks, track international carbon and water footprints, model UN SDG 12.3 50% waste reduction targets, and access international supply chain intelligence.",

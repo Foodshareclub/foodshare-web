@@ -2,7 +2,14 @@
 
 import { FloatingOrbs } from "@/components/gpu/FloatingOrbs";
 import { FOODLYTICS_COPY, type FoodlyticsTabId } from "@/lib/foodlytics/constants";
-import { type UsCategoryRow, fetchUsFoodCategories, fetchWasteLogs } from "@/lib/foodlytics/queries";
+import {
+  type UsCategoryRow,
+  createWasteLogEntry,
+  deleteWasteLogEntry,
+  fetchUsFoodCategories,
+  fetchWasteLogs,
+  invokeAiAdvisory,
+} from "@/lib/foodlytics/queries";
 import {
   CATEGORY_METRIC_MAP,
   type ChatMessage,
@@ -10,7 +17,6 @@ import {
   type WasteEntry,
   type WasteReason,
 } from "@/lib/foodlytics/types";
-import { supabase } from "@/lib/supabase/client";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { FoodlyticsHeader } from "./FoodlyticsHeader";
@@ -102,24 +108,11 @@ export function FoodlyticsClient() {
       const co2Val = Number((logData.weight * metrics.co2PerLb).toFixed(1));
       const waterVal = Math.round(logData.weight * metrics.waterPerLb);
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const householdId = session?.user?.user_metadata?.household_id;
-
-      const { error } = await supabase.from("waste_logs").insert({
-        food_name: String(logData.foodName),
-        category: String(logData.category),
-        weight_lbs: logData.weight,
-        cost_usd: logData.cost,
-        discard_date: String(logData.date),
-        reason: String(logData.reason),
-        co2_impact_lbs: co2Val,
-        water_impact_gal: waterVal,
-        household_id: householdId,
+      await createWasteLogEntry({
+        ...logData,
+        co2Impact: co2Val,
+        waterImpact: waterVal,
       });
-
-      if (error) throw new Error(error.message);
       await fetchLogs();
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : FOODLYTICS_COPY.saveLogError);
@@ -128,8 +121,7 @@ export function FoodlyticsClient() {
 
   const handleDeleteLog = async (id: string) => {
     try {
-      const { error } = await supabase.from("waste_logs").delete().eq("id", id);
-      if (error) throw new Error(error.message);
+      await deleteWasteLogEntry(id);
       await fetchLogs();
     } catch (err) {
       setLogsError(
@@ -154,12 +146,13 @@ export function FoodlyticsClient() {
     setApiWarning(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke("api-v1-advisory", {
-        body: { query: textToSend },
-      });
-      if (error) throw new Error(error.message);
+      const { reply, error } = await invokeAiAdvisory(
+        textToSend,
+        "You are Foodlytics Household Preservation Advisor. Give practical food storage, shelf-life extension, and scrap-cooking advice.",
+      );
+      if (error) throw error;
 
-      const replyText = typeof data === "string" ? data : data?.reply || data || FOODLYTICS_COPY.emptyReplyFallback;
+      const replyText = reply || FOODLYTICS_COPY.emptyReplyFallback;
       const modelMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: "model",
@@ -257,9 +250,19 @@ export function FoodlyticsClient() {
             />
           )}
 
-          {activeTab === "campaign" && <DynamicCampaignTracker />}
-          {activeTab === "interventions" && <DynamicPriorityQueue />}
-          {activeTab === "us-waste" && <DynamicUsWasteTracker />}
+          {activeTab === "campaign" && (
+            <DynamicCampaignTracker
+              initialCategories={isLoadingUsCategories ? undefined : usCategories}
+              initialLogs={logs}
+              onReviewCandidates={() => setActiveTab("interventions")}
+            />
+          )}
+          {activeTab === "interventions" && (
+            <DynamicPriorityQueue initialCategories={isLoadingUsCategories ? undefined : usCategories} />
+          )}
+          {activeTab === "us-waste" && (
+            <DynamicUsWasteTracker initialCategories={isLoadingUsCategories ? undefined : usCategories} />
+          )}
           {activeTab === "advisor" && (
             <DynamicAdvisorChat
               chatMessages={chatMessages}

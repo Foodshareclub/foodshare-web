@@ -54,3 +54,20 @@ export function getCategoryById(id: string): Category | undefined {
 
 /** Default category */
 export const DEFAULT_CATEGORY: CategoryId = "food";
+
+/**
+ * Canonical post_type options with display labels and semantic badge classes
+ * for admin tables, edit modals, and chat room filters.
+ */
+export const LISTING_CATEGORY_OPTIONS = [
+  { value: "food", label: "Food", badgeClass: "bg-emerald-100 text-emerald-700" },
+  { value: "thing", label: "Things", badgeClass: "bg-blue-100 text-blue-700" },
+  { value: "borrow", label: "Borrow", badgeClass: "bg-violet-100 text-violet-700" },
+  { value: "wanted", label: "Wanted", badgeClass: "bg-amber-100 text-amber-700" },
+  { value: "fridge", label: "Community Fridge", badgeClass: "bg-cyan-100 text-cyan-700" },
+  { value: "foodbank", label: "Food Bank", badgeClass: "bg-rose-100 text-rose-700" },
+  { value: "volunteer", label: "Volunteer", badgeClass: "bg-pink-100 text-pink-700" },
+  { value: "zerowaste", label: "Zero Waste", badgeClass: "bg-lime-100 text-lime-700" },
+  { value: "vegan", label: "Vegan", badgeClass: "bg-green-100 text-green-700" },
+  { value: "organisation", label: "Organisation", badgeClass: "bg-indigo-100 text-indigo-700" },
+] as const;

@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { AdminListing } from "@/lib/data/admin-listings";
+import { LISTING_CATEGORY_OPTIONS } from "@/constants/categories";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -48,19 +49,6 @@ interface Props {
   open: boolean;
   onClose: () => void;
 }
-
-const CATEGORIES = [
-  { value: "food", label: "Food", color: "bg-emerald-100 text-emerald-700" },
-  { value: "thing", label: "Things", color: "bg-blue-100 text-blue-700" },
-  { value: "borrow", label: "Borrow", color: "bg-violet-100 text-violet-700" },
-  { value: "wanted", label: "Wanted", color: "bg-amber-100 text-amber-700" },
-  { value: "fridge", label: "Community Fridge", color: "bg-cyan-100 text-cyan-700" },
-  { value: "foodbank", label: "Food Bank", color: "bg-rose-100 text-rose-700" },
-  { value: "volunteer", label: "Volunteer", color: "bg-pink-100 text-pink-700" },
-  { value: "zerowaste", label: "Zero Waste", color: "bg-lime-100 text-lime-700" },
-  { value: "vegan", label: "Vegan", color: "bg-green-100 text-green-700" },
-  { value: "organisation", label: "Organisation", color: "bg-indigo-100 text-indigo-700" },
-];
 
 export function ListingEditModal({ listing, open, onClose }: Props) {
   const router = useRouter();
@@ -135,7 +123,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
   };
 
   const images = listing.images?.filter(Boolean) || [];
-  const categoryInfo = CATEGORIES.find((c) => c.value === listing.post_type);
+  const categoryInfo = LISTING_CATEGORY_OPTIONS.find((c) => c.value === listing.post_type);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -156,7 +144,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
               <div>
                 <DialogTitle className="text-lg font-semibold">Edit Listing</DialogTitle>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="outline" className={cn("text-xs", categoryInfo?.color)}>
+                  <Badge variant="outline" className={cn("text-xs", categoryInfo?.badgeClass)}>
                     {categoryInfo?.label || listing.post_type}
                   </Badge>
                   <Badge
@@ -275,10 +263,10 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {CATEGORIES.map((cat) => (
+                          {LISTING_CATEGORY_OPTIONS.map((cat) => (
                             <SelectItem key={cat.value} value={cat.value}>
                               <div className="flex items-center gap-2">
-                                <span className={cn("w-2 h-2 rounded-full", cat.color.split(" ")[0])} />
+                                <span className={cn("w-2 h-2 rounded-full", cat.badgeClass.split(" ")[0])} />
                                 {cat.label}
                               </div>
                             </SelectItem>

@@ -9,9 +9,9 @@ import {
   getSmartGlobalAdvisoryResponse,
   simulateSdgReduction,
 } from "@/lib/foodwastelytics/data";
+import { invokeAiAdvisory } from "@/lib/foodlytics/queries";
 import type { ChatMessage } from "@/lib/foodlytics/types";
 import type { EconomicScope, FoodwastelyticsSectionId, LayoutVariant } from "@/lib/foodwastelytics/types";
-import { supabase } from "@/lib/supabase/client";
 import { BarChart2, Compass, DollarSign, Globe, Layout, Leaf, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { FoodwastelyticsDashboard } from "./DashboardSuite";
@@ -73,21 +73,17 @@ export function FoodwastelyticsClient() {
     setIsChatLoading(true);
 
     try {
-      const invokePromise = supabase.functions.invoke("api-v1-advisory", {
-        body: { query: textToSend },
-      });
-      const timeoutPromise = new Promise<{ data: null; error: Error }>((resolve) =>
-        setTimeout(() => resolve({ data: null, error: new Error("Advisory timeout") }), 2500),
+      const invokePromise = invokeAiAdvisory(
+        textToSend,
+        "You are Foodwastelytics Global Intelligence, an international food waste reduction and UN SDG 12.3 policy advisor. Give concise, data-backed recommendations.",
+      );
+      const timeoutPromise = new Promise<{ reply: null; error: Error }>((resolve) =>
+        setTimeout(() => resolve({ reply: null, error: new Error("Advisory timeout") }), 2500),
       );
 
-      const { data, error } = await Promise.race([invokePromise, timeoutPromise]);
+      const { reply, error } = await Promise.race([invokePromise, timeoutPromise]);
 
-      const replyText =
-        error || !data
-          ? getSmartGlobalAdvisoryResponse(textToSend)
-          : typeof data === "string"
-            ? data
-            : data?.reply || data || "No response received.";
+      const replyText = error || !reply ? getSmartGlobalAdvisoryResponse(textToSend) : reply;
 
       setChatMessages((prev) => [
         ...prev,

@@ -21,50 +21,25 @@ import { useActionToast } from "@/hooks/useActionToast";
 import { useUnifiedChat } from "@/hooks/useUnifiedChat";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  AlertCircle,
-  ArrowLeft,
-  BadgeCheck,
-  Check,
-  CheckCircle2,
-  ImageIcon,
-  Mail,
-  MapPin,
-  MoreVertical,
-  PartyPopper,
-  RotateCcw,
-  Send,
-  Smile,
-  Sparkles,
-} from "lucide-react";
+import { AlertCircle, ArrowLeft, ImageIcon, MoreVertical, RotateCcw, Send, Smile } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { ChatExchangeBanners } from "./ChatExchangeBanners";
+import { ChatMessageBubble, type ChatMessageItem } from "./ChatMessageBubble";
 
 // Icon aliases for consistency
 const FiSend = Send;
 const FiImage = ImageIcon;
 const FiMoreVertical = MoreVertical;
 const FiArrowLeft = ArrowLeft;
-const FiCheck = Check;
 const FiSmile = Smile;
-const HiCheckBadge = BadgeCheck;
 import type { UnifiedChatRoom } from "@/lib/data/chat";
 
 const CHAT_MESSAGE_SKELETON_KEYS = ["a", "b", "c", "d", "e"] as const;
 
-type Message = {
-  id: string;
-  text: string;
-  senderId: string;
-  timestamp: string;
-  image?: string;
-  isOwn: boolean;
-  senderName?: string;
-  senderAvatar?: string;
-  readBy?: string[];
-};
+type Message = ChatMessageItem;
 
 type UnifiedChatContainerProps = {
   userId: string;
@@ -380,129 +355,16 @@ export function UnifiedChatContainer({
         </TooltipProvider>
       </header>
 
-      {/* Share Address Action Bar - Only for sharer when not yet accepted */}
-      <AnimatePresence>
-        {chatRoom.isSharer && !localIsAccepted && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="border-b border-border overflow-hidden"
-          >
-            <div className="px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30">
-              <div className="flex items-center gap-3">
-                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                  <MapPin className="h-5 w-5 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">Ready to share your food?</p>
-                  <p className="text-xs text-muted-foreground">Accept this request to share your pickup address</p>
-                </div>
-                <Button
-                  onClick={handleAcceptAndShareAddress}
-                  disabled={isAccepting}
-                  className="flex-shrink-0 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25 border-0 gap-2"
-                >
-                  {isAccepting ? (
-                    <>
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{
-                          duration: 1,
-                          repeat: Number.POSITIVE_INFINITY,
-                          ease: "linear",
-                        }}
-                      >
-                        <Sparkles className="h-4 w-4" />
-                      </motion.div>
-                      Accepting...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="h-4 w-4" />
-                      Accept & Share Address
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Mark as Complete Action Bar - Shows after request accepted, before completion */}
-      <AnimatePresence>
-        {localIsAccepted && !isCompleted && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="border-b border-border overflow-hidden"
-          >
-            <div className="px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30">
-              <div className="flex items-center gap-3">
-                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/25">
-                  <PartyPopper className="h-5 w-5 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">Did the pickup happen?</p>
-                  <p className="text-xs text-muted-foreground">Mark complete to notify both parties via email</p>
-                </div>
-                <Button
-                  onClick={handleCompleteExchange}
-                  disabled={isCompleting}
-                  className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg shadow-amber-500/25 border-0 gap-2"
-                >
-                  {isCompleting ? (
-                    <>
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{
-                          duration: 1,
-                          repeat: Number.POSITIVE_INFINITY,
-                          ease: "linear",
-                        }}
-                      >
-                        <Sparkles className="h-4 w-4" />
-                      </motion.div>
-                      Completing...
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="h-4 w-4" />
-                      Mark Complete
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Exchange Completed Banner */}
-      <AnimatePresence>
-        {isCompleted && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="border-b border-border overflow-hidden"
-          >
-            <div className="px-4 py-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 flex items-center gap-3">
-              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/25">
-                <CheckCircle2 className="h-5 w-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-green-700 dark:text-green-300">Exchange complete!</p>
-                <p className="text-xs text-green-600 dark:text-green-400">
-                  Completion emails sent to both you and {otherParticipant?.firstName || "the other party"}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ChatExchangeBanners
+        isSharer={Boolean(chatRoom.isSharer)}
+        isAccepted={localIsAccepted}
+        isAccepting={isAccepting}
+        isCompleting={isCompleting}
+        isCompleted={isCompleted}
+        otherParticipantFirstName={otherParticipant?.firstName}
+        onAcceptAndShareAddress={handleAcceptAndShareAddress}
+        onCompleteExchange={handleCompleteExchange}
+      />
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto px-4 py-4 scroll-smooth relative bg-muted/30">
@@ -535,12 +397,7 @@ export function UnifiedChatContainer({
                 </div>
                 <AnimatePresence>
                   {dateMessages.map((message) => (
-                    <MessageBubble
-                      key={message.id}
-                      message={message}
-                      otherParticipant={otherParticipant}
-                      getText={getText}
-                    />
+                    <ChatMessageBubble key={message.id} message={message} otherParticipant={otherParticipant} />
                   ))}
                 </AnimatePresence>
               </div>
@@ -718,72 +575,5 @@ export function UnifiedChatContainer({
         </div>
       </div>
     </div>
-  );
-}
-
-// MessageBubble Component
-type MessageBubbleProps = {
-  message: Message;
-  otherParticipant: { id: string; firstName: string; secondName: string; avatarUrl: string | null } | undefined;
-  getText: (key: string) => string;
-};
-
-function MessageBubble({ message, otherParticipant, getText: _getText }: MessageBubbleProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -10, scale: 0.98 }}
-      className={cn("flex gap-2 group py-1", message.isOwn ? "justify-end" : "justify-start")}
-    >
-      {!message.isOwn && (
-        <Avatar className="h-8 w-8 flex-shrink-0 mt-1 ring-2 ring-background shadow-sm">
-          <AvatarImage src={message.senderAvatar || otherParticipant?.avatarUrl || ""} />
-          <AvatarFallback className="text-xs font-medium bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-            {message.senderName?.[0] || otherParticipant?.firstName?.[0] || "?"}
-          </AvatarFallback>
-        </Avatar>
-      )}
-
-      <div className="relative max-w-[75%] sm:max-w-[65%]">
-        <div
-          className={cn(
-            "rounded-2xl px-4 py-2.5 relative transition-all duration-200",
-            message.isOwn
-              ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-br-md shadow-md shadow-primary/20"
-              : "bg-card text-card-foreground rounded-bl-md shadow-sm border border-border",
-          )}
-        >
-          {message.image && (
-            <div className="relative w-52 h-52 mb-2 rounded-xl overflow-hidden shadow-inner">
-              <Image src={message.image} alt="Message image" fill className="object-cover" />
-            </div>
-          )}
-          <p className="break-words text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
-          <div className={cn("flex items-center gap-1.5 mt-1.5", message.isOwn ? "justify-end" : "justify-start")}>
-            <span
-              className={cn(
-                "text-[10px] font-medium",
-                message.isOwn ? "text-primary-foreground/70" : "text-muted-foreground",
-              )}
-            >
-              {new Date(message.timestamp).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-            {message.isOwn && (
-              <span className="ms-0.5 flex items-center">
-                {message.readBy && message.readBy.length > 0 ? (
-                  <HiCheckBadge className="h-3.5 w-3.5 text-blue-300" />
-                ) : (
-                  <FiCheck className="h-3 w-3 text-primary-foreground/60" />
-                )}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-    </motion.div>
   );
 }

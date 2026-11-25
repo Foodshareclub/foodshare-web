@@ -57,6 +57,11 @@ export function CRMSegmentsView({ segments }: { segments: NormalizedSegmentItem[
         </Button>
       </div>
 
+      {segments.length === 0 && (
+        <p className="rounded-xl border border-border/50 bg-card p-6 text-sm text-muted-foreground">
+          {CRM_COPY.noSegmentsYet}
+        </p>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {segments.map((seg) => (
           <QuickSegmentCard key={seg.name} {...seg} />
@@ -140,6 +145,11 @@ export function CRMCampaignsView({
         />
       </div>
 
+      {campaigns.length === 0 && (
+        <p className="rounded-xl border border-border/50 bg-card p-6 text-sm text-muted-foreground">
+          {CRM_COPY.noCampaignsYet}
+        </p>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {campaigns.map((c) => (
           <CampaignSummaryCard key={c.name} {...c} />
@@ -223,9 +233,13 @@ export function CRMAutomationView({
       </div>
 
       <div className="space-y-3">
-        {automations.map((a) => (
-          <AutomationSummaryCard key={a.name} {...a} />
-        ))}
+        {automations.length === 0 ? (
+          <p className="rounded-xl border border-border/50 bg-card p-6 text-sm text-muted-foreground">
+            {CRM_COPY.noAutomationsYet}
+          </p>
+        ) : (
+          automations.map((a) => <AutomationSummaryCard key={a.name} {...a} />)
+        )}
       </div>
 
       <div className="rounded-xl border border-violet-200 dark:border-violet-800/50 bg-violet-50/50 dark:bg-violet-950/20 p-5">

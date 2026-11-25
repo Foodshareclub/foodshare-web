@@ -31,6 +31,7 @@ import { useTranslations } from "next-intl";
 import Image from "next/image";
 import React, { useState, useMemo, useCallback, memo } from "react";
 
+import { LISTING_CATEGORY_OPTIONS } from "@/constants/categories";
 import { cn } from "@/lib/utils";
 
 // Icon aliases for consistency
@@ -49,17 +50,29 @@ const LuLeaf = Leaf;
 const LuWarehouse = Warehouse;
 import type { UnifiedChatRoom } from "@/lib/data/chat";
 
-// Category configuration with icons and labels
+const CHAT_CATEGORY_ICONS: Record<string, typeof FiGrid> = {
+  food: FiPackage,
+  thing: FiShoppingBag,
+  borrow: FiRefreshCw,
+  wanted: FiHeart,
+  fridge: FiHome,
+  foodbank: LuWarehouse,
+  volunteer: FiUsers,
+  vegan: LuLeaf,
+};
+
+const CHAT_CATEGORY_LABELS: Record<string, string> = {
+  fridge: "Fridges",
+  foodbank: "Food Banks",
+};
+
 const CATEGORIES = [
   { id: "all", label: "All", icon: FiGrid },
-  { id: "food", label: "Food", icon: FiPackage },
-  { id: "thing", label: "Things", icon: FiShoppingBag },
-  { id: "borrow", label: "Borrow", icon: FiRefreshCw },
-  { id: "wanted", label: "Wanted", icon: FiHeart },
-  { id: "fridge", label: "Fridges", icon: FiHome },
-  { id: "foodbank", label: "Food Banks", icon: LuWarehouse },
-  { id: "volunteer", label: "Volunteer", icon: FiUsers },
-  { id: "vegan", label: "Vegan", icon: LuLeaf },
+  ...LISTING_CATEGORY_OPTIONS.filter((c) => c.value in CHAT_CATEGORY_ICONS).map((c) => ({
+    id: c.value,
+    label: CHAT_CATEGORY_LABELS[c.value] ?? c.label,
+    icon: CHAT_CATEGORY_ICONS[c.value] ?? FiPackage,
+  })),
 ] as const;
 
 type UnifiedChatListProps = {
