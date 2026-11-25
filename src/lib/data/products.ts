@@ -118,7 +118,7 @@ async function getProductsFirstPageCached(normalizedType: string, limit: number)
     .limit(limit);
 
   if (error) throw new Error(error.message);
-  const enriched = await enrichPostsWithAuthors(data ?? []);
+  const enriched = await enrichPostsWithAuthors((data ?? []) as InitialProductStateType[]);
   // Apply location privacy (~200m approximation) for user safety
   return applyLocationPrivacy(enriched);
 }
@@ -164,7 +164,7 @@ export async function getProducts(
     .limit(limit);
 
   if (error) throw new Error(error.message);
-  const enriched = await enrichPostsWithAuthors(data ?? []);
+  const enriched = await enrichPostsWithAuthors((data ?? []) as InitialProductStateType[]);
   // Apply location privacy (~200m approximation) for user safety
   return applyLocationPrivacy(enriched);
 }
@@ -210,7 +210,7 @@ export async function getProductsPaginated(
 
   if (error) throw new Error(error.message);
 
-  const items = data ?? [];
+  const items = (data ?? []) as InitialProductStateType[];
   const hasMore = items.length > limit;
   const resultItems = hasMore ? items.slice(0, limit) : items;
   const nextCursor = hasMore && resultItems.length > 0 ? resultItems[resultItems.length - 1].id : null;
@@ -238,7 +238,7 @@ export async function getAllProducts(): Promise<InitialProductStateType[]> {
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
-  const enriched = await enrichPostsWithAuthors(data ?? []);
+  const enriched = await enrichPostsWithAuthors((data ?? []) as InitialProductStateType[]);
   // Apply location privacy (~200m approximation) for user safety
   return applyLocationPrivacy(enriched);
 }
@@ -336,9 +336,8 @@ export async function getProductLocations(productType: string): Promise<Location
     .eq("is_active", true);
 
   if (error) throw new Error(error.message);
-  const enriched = await enrichPostsWithAuthors(data ?? []);
   // Apply location privacy (~200m approximation) for user safety
-  return applyLocationPrivacy(enriched);
+  return applyLocationPrivacy((data ?? []) as LocationType[]);
 }
 
 /**
@@ -353,9 +352,8 @@ export async function getAllProductLocations(): Promise<LocationType[]> {
     .eq("is_active", true);
 
   if (error) throw new Error(error.message);
-  const enriched = await enrichPostsWithAuthors(data ?? []);
   // Apply location privacy (~200m approximation) for user safety
-  return applyLocationPrivacy(enriched);
+  return applyLocationPrivacy((data ?? []) as LocationType[]);
 }
 
 /**
@@ -435,7 +433,7 @@ export async function searchProducts(
   const { data, error } = await query;
 
   if (error) throw new Error(error.message);
-  const enriched = await enrichPostsWithAuthors(data ?? []);
+  const enriched = await enrichPostsWithAuthors((data ?? []) as InitialProductStateType[]);
   // Apply location privacy (~200m approximation) for user safety
   return applyLocationPrivacy(enriched);
 }

@@ -177,7 +177,7 @@ export function HomeClient({
   // Auto-resolve user location with permissions query and IP approximation fallback
   const { location: resolvedLocation } = useLocationResolver({
     initialLocation: initialLocation || userLocation,
-    autoResolve: !searchTerm && searchParams.get("distance") !== "any",
+    autoResolve: !searchTerm && searchParams.get("distance") !== "any" && initialLocation?.source !== "manual",
   });
 
   // Pagination state. Two disjoint cursor schemes coexist because the two fetch
@@ -224,8 +224,8 @@ export function HomeClient({
         : null,
   );
 
-  // Use server-rendered nearby posts if available, otherwise use client-fetched ones
-  const effectiveNearbyPosts = isLocationFiltered ? nearbyPosts : clientNearbyPosts;
+  // Prefer client-fetched nearby posts when GPS or IP resolution upgrades the location
+  const effectiveNearbyPosts = isClientLocationFiltered ? clientNearbyPosts : nearbyPosts;
   const effectiveIsLocationFiltered = isLocationFiltered || isClientLocationFiltered;
   const initialFetchFailed = initialLoadFailed && !isClientLocationFiltered;
 
@@ -409,10 +409,9 @@ export function HomeClient({
     }
   }, [searchParams]);
 
-
   // Synchronize resolved location changes to the feed
   useEffect(() => {
-    if (searchTerm || searchParams.get("distance") === "any") return;
+    if (searchTerm || searchParams.get("distance") === "any" || initialLocation?.source === "manual") return;
     if (!resolvedLocation) return;
 
     const radius = geoDistance || radiusMeters;
@@ -443,6 +442,7 @@ export function HomeClient({
     fetchNearby,
     productType,
     effectiveIsLocationFiltered,
+    initialLocation?.source,
   ]);
 
   const handleClearSearch = useCallback(() => {
