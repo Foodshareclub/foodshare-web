@@ -62,4 +62,16 @@ bun = true
 
 [fmt]
 printWidth = 120
-ignorePatterns = ["**/*.yml", "**/*.yaml", "**/*.md", "**/*.toml", "**/*.lock", "node_modules/**", "supabase/**", "tools/**", "artifacts/**", "public/**", "src/wasm/**", ".build/**", ".next/**", "coverage/**"]
+# Formatting is enforced on the WHOLE tree (`bun run format:check`), so anything
+# this list leaves out must be canonical under the pinned bun. Ignored on purpose:
+#  - supabase/**   byte mirror of foodshare-backend (`scripts/check-vendored.ts`
+#                  requires zero divergence, so it must never be reformatted)
+#  - tools/**      vendored; .agents/** upstream agent-skill copies; src/wasm/**
+#                  generated wasm-bindgen glue
+#  - **/*.html     email templates are read verbatim (admin preview route, CRM
+#                  paste); the formatter rewrites tags (`<br>` -> `<br />`),
+#                  doctype case and MSO conditional comment indentation
+#  - tsconfig.json Turbopack cannot parse `include`/`exclude` collapsed onto one
+#                  line; the formatter collapses them (`check:tsconfig-shape`)
+#  - .snapshots/** state of the Snapshots editor extension, rewritten by the tool
+ignorePatterns = ["**/*.yml", "**/*.yaml", "**/*.md", "**/*.toml", "**/*.lock", "**/*.html", "node_modules/**", "supabase/**", "tools/**", ".agents/**", ".snapshots/**", "tsconfig.json", "artifacts/**", "public/**", "src/wasm/**", ".build/**", ".next/**", "coverage/**"]

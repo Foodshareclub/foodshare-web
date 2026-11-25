@@ -1,0 +1,4 @@
+# Commits that only reformat code. `git blame` skips them when configured:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub's blame view reads this file automatically. One full SHA per line,
+# with a comment saying what the commit did.

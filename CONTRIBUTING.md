@@ -31,6 +31,19 @@ until its CI is green.
 
 Bun is the only runtime — package manager, test runner and type checker (`tsrs`). Format with `bun run format`; lint with `bun run lint`.
 
+CI checks formatting on the whole tree (`bun run format:check`, which is `bun fmt --check` with the
+pinned Bun version and the `[fmt]` section of `bunfig.toml`). After pulling or rebasing, run
+`bun run format` on files you changed before committing. `bun run format:changed` is a faster
+local check of only the files you changed.
+
+The one-time baseline format commit is listed in `.git-blame-ignore-revs`. Make `git blame` skip it:
+
+```sh
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
+GitHub applies this file automatically.
+
 ## Conduct
 
 By participating in this project you agree to abide by the

@@ -129,8 +129,6 @@ jobs:
 
       - name: Run ${{ matrix.job }}
         run: bun run ${{ matrix.job == 'test' && 'test:ci' || matrix.job }}
-        env:
-          FORMAT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
 
       - name: Upload coverage
         if: matrix.job == 'test'
