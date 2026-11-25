@@ -34,6 +34,13 @@ export default function NavigateButtons({ navigateTo, messagesAnchorRef, title, 
       if (!footer) return;
 
       const rect = footer.getBoundingClientRect();
+      if (rect.height === 0 || window.getComputedStyle(footer).display === "none") {
+        if (buttonWrapperRef.current) {
+          buttonWrapperRef.current.style.transform = "translate3d(0, 0, 0)";
+        }
+        setFooterOffset(0);
+        return;
+      }
       const windowHeight = window.innerHeight;
       const isMobile = window.innerWidth < 768;
       const baseBottom = isMobile ? 80 : 32;

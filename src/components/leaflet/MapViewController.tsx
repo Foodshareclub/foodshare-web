@@ -108,6 +108,19 @@ const MapViewController: React.FC<MapViewControllerProps> = ({ center, zoom, isU
     }
   }, [center, isUserLocation, map, refreshRate, zoom]);
 
+  // Keep Leaflet tiles synced with dynamic container resizes
+  useEffect(() => {
+    if (!map) return;
+    const container = map.getContainer();
+    if (!container || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize({ animate: false });
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [map]);
+
   return null;
 };
 
