@@ -26,7 +26,7 @@ import type { AuthUser } from "@/lib/data/auth";
 import type { Coordinates as StoreCoordinates } from "@/store/zustand/useUIStore";
 import { type LocationType, getCoordinates } from "@/types/product.types";
 import type L from "leaflet";
-import { Loader2, RefreshCw, ZoomOut } from "lucide-react";
+import { Loader2, MapPin, Maximize2, RefreshCw, ZoomOut } from "lucide-react";
 
 // Dynamic imports for Leaflet components (SSR: false is critical!)
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), {
@@ -73,11 +73,21 @@ const ViewportLoader = dynamic(() => import("@/components/leaflet/ViewportLoader
 const MapRefBinder = dynamic(
   () =>
     import("react-leaflet").then(({ useMap }) => ({
-      default: function MapRefBinder({ onReady }: { onReady: (map: L.Map) => void }) {
+      default: function MapRefBinder({
+        onReady,
+        onBackgroundClick,
+      }: {
+        onReady: (map: L.Map) => void;
+        onBackgroundClick: () => void;
+      }) {
         const map = useMap();
         useEffect(() => {
           onReady(map);
-        }, [map, onReady]);
+          map.on("click", onBackgroundClick);
+          return () => {
+            map.off("click", onBackgroundClick);
+          };
+        }, [map, onReady, onBackgroundClick]);
         return null;
       },
     })),
@@ -152,6 +162,21 @@ export function MapClient({ type, initialLocations, initialLocation = null, user
     map.setZoom(Math.max(2, currentZoom - 3));
   }, []);
 
+  const handleFitMarkers = useCallback(() => {
+    const map = mapInstanceRef.current;
+    if (!map || locations.length === 0) return;
+    const points = locations
+      .map((item) => getCoordinates(item))
+      .filter((coords): coords is { lat: number; lng: number } => coords !== null)
+      .map((c) => [c.lat, c.lng] as [number, number]);
+    if (points.length === 0) return;
+    if (points.length === 1) {
+      map.flyTo(points[0], Math.max(map.getZoom(), 14), { duration: 0.6 });
+      return;
+    }
+    map.fitBounds(points, { padding: [56, 56], maxZoom: 15, animate: true });
+  }, [locations]);
+
   const handleRetryLoad = useCallback(() => {
     setLoadError(false);
     setRetryKey((k) => k + 1);
@@ -185,6 +210,22 @@ export function MapClient({ type, initialLocations, initialLocation = null, user
   const handleSelect = useCallback((id: number) => {
     setSelectedId(id);
   }, []);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedId(null);
+  }, []);
+
+  // Dismiss preview card cleanly with Escape key
+  useEffect(() => {
+    if (selectedId === null) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedId(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedId]);
 
   // Custom marker icons
   const userMarker = useUserLocationIcon();
@@ -317,7 +358,7 @@ export function MapClient({ type, initialLocations, initialLocation = null, user
               markerZoomAnimation={true}
               renderer={webglRenderer} // WebGL-accelerated rendering
             >
-              <MapRefBinder onReady={handleMapReady} />
+              <MapRefBinder onReady={handleMapReady} onBackgroundClick={handleClearSelection} />
 
               {/* Dynamic view controller - updates center/zoom ONCE on initial load */}
               <MapViewController
@@ -363,8 +404,9 @@ export function MapClient({ type, initialLocations, initialLocation = null, user
               {hasLocations ? (
                 <MarkerClusterGroup
                   chunkedLoading
-                  maxClusterRadius={100}
+                  maxClusterRadius={55}
                   spiderfyOnMaxZoom={true}
+                  spiderfyDistanceMultiplier={1.6}
                   showCoverageOnHover={false}
                   animate={true}
                   animateAddingMarkers={true}
@@ -399,32 +441,47 @@ export function MapClient({ type, initialLocations, initialLocation = null, user
           )}
         </div>
 
-        {/* Non-blocking status pill while fetching markers on initial load or zoom */}
-        {isFetchingLocations && !hasLocations && !isCenterLoading && (
+        {/* Top-center HUD: live area count, loading status, fit-to-markers, or retry */}
+        {!isCenterLoading && (isFetchingLocations || loadError || (hasLoadedOnce && hasLocations)) && (
           <div className="pointer-events-none absolute top-4 left-1/2 z-[1000] -translate-x-1/2">
-            <div className="flex items-center gap-2 rounded-full border border-border bg-background/95 px-4 py-1.5 text-xs font-medium text-foreground shadow-md backdrop-blur-sm">
-              <Loader2 className="size-3.5 animate-spin text-primary" aria-hidden="true" />
-              <span>Searching this area...</span>
-            </div>
-          </div>
-        )}
-
-        {/* Non-blocking retry pill when transient API error occurred */}
-        {loadError && !isFetchingLocations && (
-          <div className="absolute top-4 left-1/2 z-[1000] -translate-x-1/2">
-            <div className="flex items-center gap-3 rounded-full border border-border bg-background/95 px-4 py-1.5 text-xs font-medium text-foreground shadow-md backdrop-blur-sm">
-              <span>Couldn&apos;t load listings in this area</span>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={handleRetryLoad}
-                className="h-6 rounded-full px-2.5 text-xs"
-              >
-                <RefreshCw className="size-3" aria-hidden="true" />
-                Retry
-              </Button>
-            </div>
+            {loadError && !isFetchingLocations ? (
+              <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-border bg-background/95 px-4 py-1.5 text-xs font-medium text-foreground shadow-md backdrop-blur-sm">
+                <span>Couldn&apos;t load listings in this area</span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleRetryLoad}
+                  className="h-6 rounded-full px-2.5 text-xs"
+                >
+                  <RefreshCw className="size-3" aria-hidden="true" />
+                  Retry
+                </Button>
+              </div>
+            ) : isFetchingLocations && !hasLocations ? (
+              <div className="flex items-center gap-2 rounded-full border border-border bg-background/95 px-4 py-1.5 text-xs font-medium text-foreground shadow-md backdrop-blur-sm">
+                <Loader2 className="size-3.5 animate-spin text-primary" aria-hidden="true" />
+                <span>Searching this area...</span>
+              </div>
+            ) : hasLoadedOnce && hasLocations ? (
+              <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-background/95 px-3.5 py-1.5 text-xs font-medium text-foreground shadow-md backdrop-blur-sm">
+                {isFetchingLocations && (
+                  <Loader2 className="size-3 animate-spin text-primary shrink-0" aria-hidden="true" />
+                )}
+                <span>
+                  {locations.length} {locations.length === 1 ? "listing" : "listings"} in this area
+                </span>
+                <button
+                  type="button"
+                  onClick={handleFitMarkers}
+                  className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                  aria-label="Fit all visible listings in view"
+                >
+                  <Maximize2 className="size-3" aria-hidden="true" />
+                  Fit
+                </button>
+              </div>
+            ) : null}
           </div>
         )}
 
@@ -439,16 +496,30 @@ export function MapClient({ type, initialLocations, initialLocation = null, user
               <p className="max-w-[280px] text-center text-sm text-muted-foreground">
                 There are currently no {type === "all" ? "" : `${type} `}items with location data in this area
               </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleZoomOutWider}
-                className="mt-1 rounded-full gap-1.5"
-              >
-                <ZoomOut className="size-3.5" aria-hidden="true" />
-                Zoom out to search wider
-              </Button>
+              <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleZoomOutWider}
+                  className="rounded-full gap-1.5"
+                >
+                  <ZoomOut className="size-3.5" aria-hidden="true" />
+                  Zoom out to search wider
+                </Button>
+                {(dynamicCenter[0] !== 20.0 || dynamicCenter[1] !== 0.0) && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => mapInstanceRef.current?.flyTo(dynamicCenter, 12, { duration: 0.7 })}
+                    className="rounded-full gap-1.5"
+                  >
+                    <MapPin className="size-3.5" aria-hidden="true" />
+                    My area
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         )}

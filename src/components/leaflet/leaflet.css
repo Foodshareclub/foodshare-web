@@ -632,3 +632,56 @@
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   border-color: rgba(255, 255, 255, 0.1);
 }
+
+/* Theme-matched Leaflet zoom & search controls */
+.leaflet-touch .leaflet-bar,
+.leaflet-bar {
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12) !important;
+}
+
+.leaflet-bar a,
+.leaflet-control-geosearch a.leaflet-bar-part {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-bottom-color: hsl(var(--border)) !important;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.leaflet-bar a:hover,
+.leaflet-control-geosearch a.leaflet-bar-part:hover {
+  background-color: hsl(var(--muted)) !important;
+}
+
+.leaflet-control-geosearch form {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16) !important;
+}
+
+.leaflet-control-geosearch form input {
+  background-color: transparent !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.leaflet-control-geosearch .results {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-top: 1px solid hsl(var(--border)) !important;
+}
+
+.leaflet-control-geosearch .results > *:hover,
+.leaflet-control-geosearch .results > .active {
+  background-color: hsl(var(--muted)) !important;
+}
+
+/* Soften map tile glare in dark theme without distorting map colors */
+.dark .leaflet-tile-pane {
+  filter: brightness(0.84) contrast(1.08) saturate(0.88);
+}

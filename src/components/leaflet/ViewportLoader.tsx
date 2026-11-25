@@ -36,8 +36,39 @@ export interface BoundsBox {
 
 const DEBOUNCE_MS = 250;
 const RETRY_DELAY_MS = 900;
+const CLIENT_CACHE_TTL_MS = 30_000;
+const MAX_CLIENT_CACHE_ENTRIES = 16;
 /** Bounds below this precision change represent the same tile; skip redundant fetches. */
 const BOUNDS_PRECISION = 3;
+
+interface CachedViewportEntry {
+  locations: LocationType[];
+  timestamp: number;
+}
+const viewportCache = new Map<string, CachedViewportEntry>();
+
+function readViewportCache(key: string): LocationType[] | null {
+  const entry = viewportCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CLIENT_CACHE_TTL_MS) {
+    viewportCache.delete(key);
+    return null;
+  }
+  // Refresh LRU order
+  viewportCache.delete(key);
+  viewportCache.set(key, entry);
+  return entry.locations;
+}
+
+function writeViewportCache(key: string, locations: LocationType[]) {
+  if (viewportCache.has(key)) {
+    viewportCache.delete(key);
+  } else if (viewportCache.size >= MAX_CLIENT_CACHE_ENTRIES) {
+    const oldestKey = viewportCache.keys().next().value;
+    if (oldestKey !== undefined) viewportCache.delete(oldestKey);
+  }
+  viewportCache.set(key, { locations, timestamp: Date.now() });
+}
 
 function wrapLongitude(lng: number): number {
   if (lng >= -180 && lng <= 180) return lng;
@@ -122,9 +153,21 @@ const ViewportLoader: React.FC<ViewportLoaderProps> = ({
   const loadLocations = useCallback(
     async (boxes: BoundsBox[], attempt = 0, force = false) => {
       const boundsKey = computeBoundsKey(boxes);
+      const cacheKey = `${productType}:${boundsKey}`;
 
       if (!force && (boundsKey === lastBoundsRef.current || boundsKey === inFlightBoundsRef.current)) {
         return;
+      }
+
+      if (!force) {
+        const cached = readViewportCache(cacheKey);
+        if (cached) {
+          lastBoundsRef.current = boundsKey;
+          onErrorChange?.(false);
+          onLoadingChange?.(false);
+          onLocationsLoaded(cached);
+          return;
+        }
       }
 
       if (retryTimerRef.current) {
@@ -170,6 +213,7 @@ const ViewportLoader: React.FC<ViewportLoaderProps> = ({
             ? responses[0]
             : Array.from(new Map(responses.flat().map((item) => [item.id, item])).values());
 
+        writeViewportCache(cacheKey, merged);
         lastBoundsRef.current = boundsKey;
         inFlightBoundsRef.current = "";
         onErrorChange?.(false);
