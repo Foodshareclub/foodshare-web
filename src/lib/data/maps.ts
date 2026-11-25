@@ -109,13 +109,15 @@ export async function getNearbyLocations(
   productType?: string,
   limit = 500,
 ): Promise<LocationType[]> {
-  // Round bounds to reduce cache fragmentation (precision: ~10m)
+  // Round bounds to reduce cache fragmentation (precision: ~10m) and pad by ~550m
+  // so ~200m fuzzed markers near viewport edges or zoomed closely do not vanish.
   const precision = 4;
-  const roundedBounds = {
-    north: Number(bounds.north.toFixed(precision)),
-    south: Number(bounds.south.toFixed(precision)),
-    east: Number(bounds.east.toFixed(precision)),
-    west: Number(bounds.west.toFixed(precision)),
+  const PRIVACY_MARGIN_DEG = 0.005;
+  const paddedBounds = {
+    north: Math.min(90, Number((bounds.north + PRIVACY_MARGIN_DEG).toFixed(precision))),
+    south: Math.max(-90, Number((bounds.south - PRIVACY_MARGIN_DEG).toFixed(precision))),
+    east: Math.min(180, Number((bounds.east + PRIVACY_MARGIN_DEG).toFixed(precision))),
+    west: Math.max(-180, Number((bounds.west - PRIVACY_MARGIN_DEG).toFixed(precision))),
   };
 
   const supabase = createCachedClient();
@@ -126,10 +128,10 @@ export async function getNearbyLocations(
   // Signature: get_posts_in_bounds(min_lat, min_lng, max_lat, max_lng,
   //                                post_type_filter, page_limit)
   const { data, error } = await supabase.rpc("get_posts_in_bounds", {
-    min_lng: roundedBounds.west,
-    min_lat: roundedBounds.south,
-    max_lng: roundedBounds.east,
-    max_lat: roundedBounds.north,
+    min_lng: paddedBounds.west,
+    min_lat: paddedBounds.south,
+    max_lng: paddedBounds.east,
+    max_lat: paddedBounds.north,
     post_type_filter: productType?.toLowerCase() ?? null,
     page_limit: clampViewportLimit(limit),
   });
@@ -137,7 +139,7 @@ export async function getNearbyLocations(
   if (error) {
     // Fallback to JS filtering if RPC not available (migration/schema issue)
     console.warn("[getNearbyLocations] RPC failed, falling back to JS filter:", error.message);
-    return getNearbyLocationsFallback(bounds, productType);
+    return getNearbyLocationsFallback(paddedBounds, productType);
   }
 
   // Transform RPC result to LocationType format

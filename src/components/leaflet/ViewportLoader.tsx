@@ -1,22 +1,18 @@
 "use client";
 
 /**
- * ViewportLoader - Fetches map markers based on current viewport bounds.
+ * ViewportLoader - Robust viewport-based marker loader for Leaflet maps.
  *
- * Requests a GET route handler rather than a Server Action. A Server Action is a
- * POST, and `src/proxy.ts` classifies every POST as a mutation with a
- * 30/minute budget and no path filter — so panning the map for ~10s returned
- * 429 and marker loading silently stopped. Reads must not spend the write
- * budget.
- *
- * Also handles the three failure modes the previous version did not:
- *   - out-of-order responses: an in-flight request is aborted and its result
- *     discarded when newer bounds arrive, so a slow response cannot overwrite a
- *     newer one;
- *   - network/HTTP errors: the previous version had no try/catch, so a rejection
- *     became an unhandled promise rejection, and the action's `return []` on
- *     error blanked every marker;
- *   - errors are surfaced as "keep current markers" rather than "no results".
+ * Resilience guarantees:
+ * - Requests GET `/api/map/locations` (never spends POST mutation rate limits).
+ * - Deduplicates identical in-flight and completed bounds so zoom transitions
+ *   never self-abort or issue redundant network requests.
+ * - Commits `lastBoundsRef` only after a `200` response succeeds, so aborted or
+ *   transiently failing requests never permanently lock out a zoom level.
+ * - Automatically retries once on transient 5xx / network failure before surfacing
+ *   an error state, while always preserving visible markers on failure.
+ * - Normalizes zoomed-out longitudes and splits antimeridian-crossing viewports
+ *   into compliant `west <= east` boxes so markers never disappear across +/-180 deg.
  */
 
 import type { LocationType } from "@/types/product.types";
@@ -26,95 +22,183 @@ import { useMapEvents } from "react-leaflet";
 interface ViewportLoaderProps {
   productType: string;
   onLocationsLoaded: (locations: LocationType[]) => void;
+  onLoadingChange?: (loading: boolean) => void;
+  onErrorChange?: (hasError: boolean) => void;
+  retryKey?: number;
 }
 
-interface Bounds {
+export interface BoundsBox {
   north: number;
   south: number;
   east: number;
   west: number;
 }
 
-const DEBOUNCE_MS = 300;
-/** Bounds below this precision change are the same tile; skip the request. */
+const DEBOUNCE_MS = 250;
+const RETRY_DELAY_MS = 900;
+/** Bounds below this precision change represent the same tile; skip redundant fetches. */
 const BOUNDS_PRECISION = 3;
 
-const ViewportLoader: React.FC<ViewportLoaderProps> = ({ productType, onLocationsLoaded }) => {
+function wrapLongitude(lng: number): number {
+  if (lng >= -180 && lng <= 180) return lng;
+  const wrapped = ((((lng + 180) % 360) + 360) % 360) - 180;
+  return wrapped === -180 && lng > 0 ? 180 : wrapped;
+}
+
+/**
+ * Normalizes Leaflet longitudes into 1 or 2 compliant [west, east] ranges within [-180, 180].
+ * Handles world min-zoom spans (>= 360 deg), negative/positive wraps, and +/-180 antimeridian crossings.
+ */
+export function normalizeLongitudeBoxes(west: number, east: number): Array<{ west: number; east: number }> {
+  if (!Number.isFinite(west) || !Number.isFinite(east)) {
+    return [{ west: -180, east: 180 }];
+  }
+
+  if (east - west >= 360) {
+    return [{ west: -180, east: 180 }];
+  }
+
+  const normWest = wrapLongitude(west);
+  const normEast = wrapLongitude(east);
+
+  if (normWest <= normEast) {
+    return [{ west: normWest, east: normEast }];
+  }
+
+  // Viewport straddles the +/-180 deg antimeridian: split into two valid boxes
+  return [
+    { west: normWest, east: 180 },
+    { west: -180, east: normEast },
+  ];
+}
+
+export function sanitizeMapBounds(mapBounds: L.LatLngBounds): BoundsBox[] {
+  const north = Math.max(-90, Math.min(90, mapBounds.getNorth()));
+  const south = Math.max(-90, Math.min(90, mapBounds.getSouth()));
+  const boxes = normalizeLongitudeBoxes(mapBounds.getWest(), mapBounds.getEast());
+
+  return boxes.map((box) => ({
+    north,
+    south,
+    west: box.west,
+    east: box.east,
+  }));
+}
+
+function computeBoundsKey(boxes: BoundsBox[]): string {
+  return boxes
+    .map((b) =>
+      [
+        b.north.toFixed(BOUNDS_PRECISION),
+        b.south.toFixed(BOUNDS_PRECISION),
+        b.east.toFixed(BOUNDS_PRECISION),
+        b.west.toFixed(BOUNDS_PRECISION),
+      ].join(","),
+    )
+    .join("|");
+}
+
+const ViewportLoader: React.FC<ViewportLoaderProps> = ({
+  productType,
+  onLocationsLoaded,
+  onLoadingChange,
+  onErrorChange,
+  retryKey = 0,
+}) => {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastBoundsRef = useRef<string>("");
+  const inFlightBoundsRef = useRef<string>("");
   const abortRef = useRef<AbortController | null>(null);
+  const prevTypeRef = useRef<string>(productType);
+
+  // Reset cached bounds key when category changes so the new category always loads
+  if (prevTypeRef.current !== productType) {
+    prevTypeRef.current = productType;
+    lastBoundsRef.current = "";
+    inFlightBoundsRef.current = "";
+  }
 
   const loadLocations = useCallback(
-    async (bounds: Bounds) => {
-      // Deduplicate: skip if bounds haven't meaningfully changed
-      const boundsKey = [
-        bounds.north.toFixed(BOUNDS_PRECISION),
-        bounds.south.toFixed(BOUNDS_PRECISION),
-        bounds.east.toFixed(BOUNDS_PRECISION),
-        bounds.west.toFixed(BOUNDS_PRECISION),
-      ].join(",");
+    async (boxes: BoundsBox[], attempt = 0, force = false) => {
+      const boundsKey = computeBoundsKey(boxes);
 
-      if (boundsKey === lastBoundsRef.current) return;
-      lastBoundsRef.current = boundsKey;
+      if (!force && (boundsKey === lastBoundsRef.current || boundsKey === inFlightBoundsRef.current)) {
+        return;
+      }
 
-      // Cancel any request still in flight — its bounds are now stale.
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
+
+      // Cancel superseded in-flight request for older bounds
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
+      inFlightBoundsRef.current = boundsKey;
 
-      const params = new URLSearchParams({
-        north: String(bounds.north),
-        south: String(bounds.south),
-        east: String(bounds.east),
-        west: String(bounds.west),
-      });
-      if (productType) params.set("type", productType);
+      onLoadingChange?.(true);
 
       try {
-        const response = await fetch(`/api/map/locations?${params.toString()}`, {
-          signal: controller.signal,
-        });
+        const responses = await Promise.all(
+          boxes.map(async (bounds) => {
+            const params = new URLSearchParams({
+              north: String(bounds.north),
+              south: String(bounds.south),
+              east: String(bounds.east),
+              west: String(bounds.west),
+            });
+            if (productType) params.set("type", productType);
 
-        if (!response.ok) {
-          // Keep the markers already on the map; a transient failure is not
-          // evidence that the viewport is empty.
-          console.error(`[ViewportLoader] ${response.status} from /api/map/locations — keeping current markers`);
+            const response = await fetch(`/api/map/locations?${params.toString()}`, {
+              signal: controller.signal,
+            });
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+            const data: unknown = await response.json();
+            return (data as { locations?: LocationType[] })?.locations ?? [];
+          }),
+        );
+
+        if (controller.signal.aborted) return;
+
+        // Deduplicate markers if antimeridian split executed two queries
+        const merged =
+          responses.length === 1
+            ? responses[0]
+            : Array.from(new Map(responses.flat().map((item) => [item.id, item])).values());
+
+        lastBoundsRef.current = boundsKey;
+        inFlightBoundsRef.current = "";
+        onErrorChange?.(false);
+        onLoadingChange?.(false);
+        onLocationsLoaded(merged);
+      } catch (error) {
+        if (controller.signal.aborted) {
+          if (inFlightBoundsRef.current === boundsKey) {
+            inFlightBoundsRef.current = "";
+          }
           return;
         }
 
-        const data: unknown = await response.json();
-        if (controller.signal.aborted) return;
+        inFlightBoundsRef.current = "";
+        console.warn("[ViewportLoader] Transient failure loading bounds:", error);
 
-        const locations = (data as { locations?: LocationType[] })?.locations;
-        if (Array.isArray(locations)) {
-          onLocationsLoaded(locations);
+        if (attempt < 1) {
+          retryTimerRef.current = setTimeout(() => {
+            void loadLocations(boxes, attempt + 1, true);
+          }, RETRY_DELAY_MS);
+          return;
         }
-      } catch (error) {
-        // An abort is the expected outcome of a superseded request.
-        if (controller.signal.aborted) return;
-        console.error("[ViewportLoader] Failed to load locations:", error);
+
+        onLoadingChange?.(false);
+        onErrorChange?.(true);
       }
     },
-    [productType, onLocationsLoaded],
+    [productType, onLocationsLoaded, onLoadingChange, onErrorChange],
   );
-
-  const sanitizeBounds = (mapBounds: L.LatLngBounds): Bounds => {
-    const north = Math.max(-90, Math.min(90, mapBounds.getNorth()));
-    const south = Math.max(-90, Math.min(90, mapBounds.getSouth()));
-    let east = mapBounds.getEast();
-    let west = mapBounds.getWest();
-
-    // When zoomed out, longitude bounds can exceed [-180, 180] or wrap around
-    if (east - west >= 360) {
-      east = 180;
-      west = -180;
-    } else {
-      east = Math.max(-180, Math.min(180, east));
-      west = Math.max(-180, Math.min(180, west));
-    }
-
-    return { north, south, east, west };
-  };
 
   const map = useMapEvents({
     moveend() {
@@ -123,26 +207,32 @@ const ViewportLoader: React.FC<ViewportLoaderProps> = ({ productType, onLocation
       }
 
       debounceRef.current = setTimeout(() => {
-        void loadLocations(sanitizeBounds(map.getBounds()));
+        void loadLocations(sanitizeMapBounds(map.getBounds()));
       }, DEBOUNCE_MS);
     },
   });
 
-  // Load locations on initial mount using current map bounds
+  // Load locations on initial mount and whenever explicit retry is triggered
   useEffect(() => {
-    // Small delay to ensure map is fully initialized
-    const timer = setTimeout(() => {
-      void loadLocations(sanitizeBounds(map.getBounds()));
-    }, 100);
+    const force = retryKey > 0;
+    const timer = setTimeout(
+      () => {
+        void loadLocations(sanitizeMapBounds(map.getBounds()), 0, force);
+      },
+      force ? 0 : 80,
+    );
 
     return () => {
       clearTimeout(timer);
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+      }
       abortRef.current?.abort();
     };
-  }, [map, loadLocations]);
+  }, [map, loadLocations, retryKey]);
 
   return null;
 };

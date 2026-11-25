@@ -2,18 +2,20 @@
 
 /**
  * Map Client Component - Handles full-viewport interactive Leaflet map rendering.
- * Receives pre-fetched locations and user data from Server Component.
+ * Receives pre-fetched locations and user location from Server Component,
+ * then dynamically loads markers on pan/zoom via ViewportLoader.
  */
 
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import "@/components/leaflet/leaflet.css";
 
 import Navbar from "@/components/header/navbar/Navbar";
 import { MapPreviewCard } from "@/components/map/MapListingCard";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
+import { Button } from "@/components/ui/button";
 import { useDefaultMapCenter } from "@/hooks/useDefaultMapCenter";
 import { useMapPosition } from "@/hooks/useMapPosition";
 import { useMapZoom } from "@/hooks/useMapZoom";
@@ -21,7 +23,10 @@ import { createClusterIcon, createPillMarkerIcon, useUserLocationIcon } from "@/
 import { useWebGLRenderer } from "@/hooks/useWebGLRenderer";
 import { MAP_CONFIG } from "@/lib/config";
 import type { AuthUser } from "@/lib/data/auth";
+import type { Coordinates as StoreCoordinates } from "@/store/zustand/useUIStore";
 import { type LocationType, getCoordinates } from "@/types/product.types";
+import type L from "leaflet";
+import { Loader2, RefreshCw, ZoomOut } from "lucide-react";
 
 // Dynamic imports for Leaflet components (SSR: false is critical!)
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), {
@@ -65,19 +70,35 @@ const UserLocationMarker = dynamic(() => import("@/components/leaflet/UserLocati
 
 const ViewportLoader = dynamic(() => import("@/components/leaflet/ViewportLoader"), { ssr: false });
 
+const MapRefBinder = dynamic(
+  () =>
+    import("react-leaflet").then(({ useMap }) => ({
+      default: function MapRefBinder({ onReady }: { onReady: (map: L.Map) => void }) {
+        const map = useMap();
+        useEffect(() => {
+          onReady(map);
+        }, [map, onReady]);
+        return null;
+      },
+    })),
+  { ssr: false },
+);
+
 interface MapClientProps {
   type: string;
   initialLocations: LocationType[];
+  initialLocation?: StoreCoordinates | null;
   user: AuthUser | null;
 }
 
-export function MapClient({ type, initialLocations, user }: MapClientProps) {
+export function MapClient({ type, initialLocations, initialLocation = null, user }: MapClientProps) {
   const router = useRouter();
 
   // State to track if component is mounted (for SSR safety)
   const [mounted, setMounted] = useState(false);
   // Generate unique map container key per mount and category to prevent React DOM node reuse
   const [mapKey, setMapKey] = useState(() => `map-${type}-${Date.now()}`);
+  const mapInstanceRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
     setMapKey(`map-${type}-${Date.now()}`);
@@ -85,10 +106,55 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
 
   // Locations state - initialized with server data, updated by ViewportLoader
   const [locations, setLocations] = useState<LocationType[]>(initialLocations);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(initialLocations.length > 0);
+  const [isFetchingLocations, setIsFetchingLocations] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
+  const prevTypeRef = useRef(type);
 
-  // Viewport-based loading callback
+  // Sync locations ONLY when category changes or non-empty SSR locations arrive
+  useEffect(() => {
+    if (prevTypeRef.current !== type) {
+      prevTypeRef.current = type;
+      setLocations(initialLocations);
+      setHasLoadedOnce(initialLocations.length > 0);
+      setLoadError(false);
+      return;
+    }
+    if (initialLocations.length > 0) {
+      setLocations(initialLocations);
+      setHasLoadedOnce(true);
+    }
+  }, [type, initialLocations]);
+
+  // Viewport-based loading callbacks
   const handleLocationsLoaded = useCallback((newLocations: LocationType[]) => {
     setLocations(newLocations);
+    setHasLoadedOnce(true);
+  }, []);
+
+  const handleLoadingChange = useCallback((loading: boolean) => {
+    setIsFetchingLocations(loading);
+  }, []);
+
+  const handleErrorChange = useCallback((hasError: boolean) => {
+    setLoadError(hasError);
+  }, []);
+
+  const handleMapReady = useCallback((map: L.Map) => {
+    mapInstanceRef.current = map;
+  }, []);
+
+  const handleZoomOutWider = useCallback(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const currentZoom = map.getZoom();
+    map.setZoom(Math.max(2, currentZoom - 3));
+  }, []);
+
+  const handleRetryLoad = useCallback(() => {
+    setLoadError(false);
+    setRetryKey((k) => k + 1);
   }, []);
 
   // Auth state from user prop
@@ -126,8 +192,8 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
   // WebGL-accelerated renderer for ultra-fast marker rendering
   const webglRenderer = useWebGLRenderer({ padding: 0.5, tolerance: 0 });
 
-  // Dynamic map center based on user's location/timezone/locale
-  const { center: dynamicCenter, isLoading: isCenterLoading, isUserLocation } = useDefaultMapCenter();
+  // Dynamic map center based on server location / user store / permissions / IP
+  const { center: dynamicCenter, isLoading: isCenterLoading, isUserLocation } = useDefaultMapCenter(initialLocation);
 
   // Map position persistence - remembers where user was on each category
   const { savedPosition, savePosition, hasSavedPosition } = useMapPosition({
@@ -135,13 +201,6 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
     defaultCenter: dynamicCenter,
     defaultZoom: 13,
   });
-
-  // Update locations when initialLocations changes (route change)
-  useEffect(() => {
-    setTimeout(() => {
-      setLocations(initialLocations);
-    }, 0);
-  }, [initialLocations]);
 
   // Set mounted state for SSR safety and ensure container clean slate
   useEffect(() => {
@@ -155,7 +214,7 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
     };
   }, []);
 
-  // Map center priority: Saved position > User's ACTUAL location > Nearby products > Timezone/Locale fallback
+  // Map center priority: Saved position > User's ACTUAL location > Nearby products > Dynamic IP location
   const hasLocations = locations.length > 0;
 
   // Helper to get coordinates from first location
@@ -167,10 +226,12 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
 
   const mapCenter: [number, number] =
     hasSavedPosition && savedPosition
-      ? savedPosition.center // User's last position for this category
+      ? savedPosition.center // User's last valid position for this category
       : isUserLocation
-        ? dynamicCenter // User's real location if we have it
-        : getFirstLocationCoords() || dynamicCenter; // Fallback to timezone/locale-based location
+        ? dynamicCenter // User's real GPS location
+        : dynamicCenter[0] !== 20.0 || dynamicCenter[1] !== 0.0
+          ? dynamicCenter // Resolved dynamic IP / cookie location (e.g. Sacramento)
+          : getFirstLocationCoords() || dynamicCenter;
 
   // Smart zoom management with caching and best practices
   const { zoom: mapZoom, updateZoom } = useMapZoom({
@@ -256,6 +317,8 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
               markerZoomAnimation={true}
               renderer={webglRenderer} // WebGL-accelerated rendering
             >
+              <MapRefBinder onReady={handleMapReady} />
+
               {/* Dynamic view controller - updates center/zoom ONCE on initial load */}
               <MapViewController
                 center={mapCenter}
@@ -272,7 +335,13 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
               <SearchMenu />
 
               {/* Viewport-based location loading - fetches markers as user pans/zooms */}
-              <ViewportLoader productType={type} onLocationsLoaded={handleLocationsLoaded} />
+              <ViewportLoader
+                productType={type}
+                onLocationsLoaded={handleLocationsLoaded}
+                onLoadingChange={handleLoadingChange}
+                onErrorChange={handleErrorChange}
+                retryKey={retryKey}
+              />
 
               {/* Map Tiles (OSM by default, CARTO Voyager when API key is provided) */}
               <TileLayer
@@ -330,17 +399,56 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
           )}
         </div>
 
-        {/* Empty state overlay */}
-        {!hasLocations && !isCenterLoading && (
+        {/* Non-blocking status pill while fetching markers on initial load or zoom */}
+        {isFetchingLocations && !hasLocations && !isCenterLoading && (
+          <div className="pointer-events-none absolute top-4 left-1/2 z-[1000] -translate-x-1/2">
+            <div className="flex items-center gap-2 rounded-full border border-border bg-background/95 px-4 py-1.5 text-xs font-medium text-foreground shadow-md backdrop-blur-sm">
+              <Loader2 className="size-3.5 animate-spin text-primary" aria-hidden="true" />
+              <span>Searching this area...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Non-blocking retry pill when transient API error occurred */}
+        {loadError && !isFetchingLocations && (
+          <div className="absolute top-4 left-1/2 z-[1000] -translate-x-1/2">
+            <div className="flex items-center gap-3 rounded-full border border-border bg-background/95 px-4 py-1.5 text-xs font-medium text-foreground shadow-md backdrop-blur-sm">
+              <span>Couldn&apos;t load listings in this area</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleRetryLoad}
+                className="h-6 rounded-full px-2.5 text-xs"
+              >
+                <RefreshCw className="size-3" aria-hidden="true" />
+                Retry
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Empty state overlay — shown ONLY after authoritative 200 response returned 0 items */}
+        {hasLoadedOnce && !isFetchingLocations && !loadError && !hasLocations && !isCenterLoading && (
           <div className="pointer-events-none absolute left-1/2 top-1/2 z-[1000] -translate-x-1/2 -translate-y-1/2">
-            <div className="flex flex-col gap-3 rounded-2xl border border-border bg-background p-8 shadow-lg">
-              <span className="text-center text-5xl" aria-hidden="true">
+            <div className="pointer-events-auto flex flex-col items-center gap-3 rounded-2xl border border-border bg-background/95 p-6 shadow-lg backdrop-blur-sm">
+              <span className="text-center text-4xl" aria-hidden="true">
                 🗺
               </span>
-              <p className="text-xl font-semibold text-foreground">No items found</p>
-              <p className="max-w-[300px] text-center text-sm text-muted-foreground">
-                There are currently no {type} items with location data in this area
+              <p className="text-lg font-semibold text-foreground">No items found</p>
+              <p className="max-w-[280px] text-center text-sm text-muted-foreground">
+                There are currently no {type === "all" ? "" : `${type} `}items with location data in this area
               </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleZoomOutWider}
+                className="mt-1 rounded-full gap-1.5"
+              >
+                <ZoomOut className="size-3.5" aria-hidden="true" />
+                Zoom out to search wider
+              </Button>
             </div>
           </div>
         )}
@@ -354,7 +462,7 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
       )}
 
       {/* Floating pill back to listings grid */}
-      <NavigateButtons navigateTo={type} title="Show listings" />
+      <NavigateButtons navigateTo={type === "all" ? "food" : type} title="Show listings" />
     </div>
   );
 }

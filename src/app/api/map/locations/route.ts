@@ -70,8 +70,9 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 
   // URL slugs are pluralised ("/map/things"), the column is singular.
+  // "all" means show every category on the map (no post_type filter).
   const urlType = searchParams.get("type");
-  const productType = urlType ? urlToDbType(urlType) : undefined;
+  const productType = urlType && urlType.toLowerCase() !== "all" ? urlToDbType(urlType) : undefined;
 
   const requested = Number(searchParams.get("limit"));
   const limit =

@@ -1,13 +1,21 @@
 /**
  * Dynamic Map Center Hook (Zero-Hardcoding Architecture)
  *
- * Resolves map center dynamically from the unified user location store,
- * device geolocation, or dynamic IP approximation without static city tables.
+ * Resolves map center dynamically from server-provided location, the unified
+ * user location store, browser cookie, device geolocation, or dynamic IP
+ * approximation — without static city tables or blocking GPS timeouts.
  */
 
-import { parseLocationCookie } from "@/lib/location/approximate-location";
-import { useUIStore } from "@/store/zustand/useUIStore";
-import { useEffect, useState } from "react";
+import {
+  type ApproximateLocation,
+  LOCATION_COOKIE_MAX_AGE,
+  LOCATION_COOKIE_NAME,
+  isStaleFallbackLocation,
+  parseLocationCookie,
+  serializeLocationCookie,
+} from "@/lib/location/approximate-location";
+import { type Coordinates as StoreCoordinates, useUIStore } from "@/store/zustand/useUIStore";
+import { useEffect, useRef, useState } from "react";
 
 type Coordinates = [number, number];
 
@@ -17,25 +25,58 @@ interface MapCenterResult {
   isUserLocation: boolean;
 }
 
-const GLOBAL_NEUTRAL_CENTER: Coordinates = [20.0, 0.0];
+export const GLOBAL_NEUTRAL_CENTER: Coordinates = [20.0, 0.0];
 
-export const useDefaultMapCenter = (): MapCenterResult => {
+function persistMapLocationCookie(coords: StoreCoordinates) {
+  if (typeof document === "undefined") return;
+  const approxLoc: ApproximateLocation = {
+    latitude: coords.latitude,
+    longitude: coords.longitude,
+    city: coords.city,
+    country: coords.country,
+    source: coords.source || "ip",
+    approximate: Boolean(coords.approximate),
+  };
+  const serialized = serializeLocationCookie(approxLoc);
+  const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${LOCATION_COOKIE_NAME}=${serialized}; path=/; max-age=${LOCATION_COOKIE_MAX_AGE}; SameSite=Lax${secure}`;
+}
+
+export const useDefaultMapCenter = (initialLocation?: StoreCoordinates | null): MapCenterResult => {
   const userLocation = useUIStore((state) => state.userLocation);
   const setUserLocation = useUIStore((state) => state.setUserLocation);
 
-  const initialCenter: Coordinates = userLocation
-    ? [userLocation.latitude, userLocation.longitude]
-    : GLOBAL_NEUTRAL_CENTER;
+  const validStoreLocation = userLocation && !isStaleFallbackLocation(userLocation) ? userLocation : null;
+  const validInitialLocation = initialLocation && !isStaleFallbackLocation(initialLocation) ? initialLocation : null;
+  const seedLocation = validStoreLocation || validInitialLocation;
 
-  const [center, setCenter] = useState<Coordinates>(initialCenter);
-  const [isLoading, setIsLoading] = useState(!userLocation);
-  const [isUserLocation, setIsUserLocation] = useState(Boolean(userLocation && userLocation.source === "gps"));
+  const [center, setCenter] = useState<Coordinates>(
+    seedLocation ? [seedLocation.latitude, seedLocation.longitude] : GLOBAL_NEUTRAL_CENTER,
+  );
+  const [isLoading, setIsLoading] = useState(!seedLocation);
+  const [isUserLocation, setIsUserLocation] = useState(Boolean(seedLocation && seedLocation.source === "gps"));
+
+  const gpsAcquiredRef = useRef(Boolean(seedLocation && seedLocation.source === "gps"));
+  const resolvedOnceRef = useRef(false);
 
   useEffect(() => {
-    // 1. If Zustand already has a location, prioritize it
-    if (userLocation) {
-      setCenter([userLocation.latitude, userLocation.longitude]);
-      setIsUserLocation(userLocation.source === "gps");
+    if (validStoreLocation) {
+      setCenter([validStoreLocation.latitude, validStoreLocation.longitude]);
+      setIsUserLocation(validStoreLocation.source === "gps");
+      if (validStoreLocation.source === "gps") {
+        gpsAcquiredRef.current = true;
+      }
+      setIsLoading(false);
+      return;
+    }
+
+    if (resolvedOnceRef.current) return;
+    resolvedOnceRef.current = true;
+
+    if (validInitialLocation) {
+      setUserLocation(validInitialLocation);
+      setCenter([validInitialLocation.latitude, validInitialLocation.longitude]);
+      setIsUserLocation(validInitialLocation.source === "gps");
       setIsLoading(false);
       return;
     }
@@ -45,7 +86,16 @@ export const useDefaultMapCenter = (): MapCenterResult => {
       const match = document.cookie.match(/(?:^|; )user-location=([^;]*)/);
       if (match) {
         const cookieLoc = parseLocationCookie(match[1]);
-        if (cookieLoc) {
+        if (cookieLoc && !isStaleFallbackLocation(cookieLoc)) {
+          const parsedCoords: StoreCoordinates = {
+            latitude: cookieLoc.latitude,
+            longitude: cookieLoc.longitude,
+            city: cookieLoc.city,
+            country: cookieLoc.country,
+            source: cookieLoc.source,
+            approximate: cookieLoc.approximate,
+          };
+          setUserLocation(parsedCoords);
           setCenter([cookieLoc.latitude, cookieLoc.longitude]);
           setIsUserLocation(cookieLoc.source === "gps");
           setIsLoading(false);
@@ -54,57 +104,86 @@ export const useDefaultMapCenter = (): MapCenterResult => {
       }
     }
 
-    // 3. Query device geolocation if available
-    if (typeof navigator !== "undefined" && "geolocation" in navigator) {
+    const resolveIpCenter = async () => {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const res = await fetch(`/api/location/approximate?timezone=${encodeURIComponent(tz)}`, {
+          cache: "no-store",
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data?.success && data.location && !gpsAcquiredRef.current) {
+          const ipCoords: StoreCoordinates = {
+            latitude: data.location.latitude,
+            longitude: data.location.longitude,
+            city: data.location.city,
+            country: data.location.country,
+            source: "ip",
+            approximate: true,
+          };
+          setCenter([ipCoords.latitude, ipCoords.longitude]);
+          setIsUserLocation(false);
+          setUserLocation(ipCoords);
+          persistMapLocationCookie(ipCoords);
+        }
+      } catch {
+        // Keep current center
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const resolveWithPermissions = async () => {
+      let state: PermissionState | "unknown" = "unknown";
+      if (typeof navigator !== "undefined" && "permissions" in navigator && navigator.permissions?.query) {
+        try {
+          const perm = await navigator.permissions.query({ name: "geolocation" as PermissionName });
+          state = perm.state;
+        } catch {
+          state = "unknown";
+        }
+      }
+
+      if (state === "denied" || typeof navigator === "undefined" || !("geolocation" in navigator)) {
+        await resolveIpCenter();
+        return;
+      }
+
+      // Optimistic parallel IP fetch so the map never stalls for 4-10s waiting on GPS prompt/timeout
+      const ipTask = resolveIpCenter();
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          setCenter([lat, lng]);
-          setIsUserLocation(true);
-          setIsLoading(false);
-          setUserLocation({
-            latitude: lat,
-            longitude: lng,
+          gpsAcquiredRef.current = true;
+          const gpsCoords: StoreCoordinates = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
             source: "gps",
             approximate: false,
-          });
+          };
+          setCenter([gpsCoords.latitude, gpsCoords.longitude]);
+          setIsUserLocation(true);
+          setUserLocation(gpsCoords);
+          persistMapLocationCookie(gpsCoords);
+          setIsLoading(false);
         },
-        async () => {
-          // 4. Geolocation refused or failed -> Dynamic IP approximation
-          try {
-            const res = await fetch("/api/location/approximate", { cache: "no-store" });
-            if (res.ok) {
-              const data = await res.json();
-              if (data?.success && data.location) {
-                setCenter([data.location.latitude, data.location.longitude]);
-                setIsUserLocation(false);
-                setUserLocation({
-                  latitude: data.location.latitude,
-                  longitude: data.location.longitude,
-                  city: data.location.city,
-                  country: data.location.country,
-                  source: "ip",
-                  approximate: true,
-                });
-              }
-            }
-          } catch {
-            // Keep neutral center
-          } finally {
-            setIsLoading(false);
-          }
+        () => {
+          // IP fallback already ran in parallel
+          void ipTask;
         },
         {
           enableHighAccuracy: false,
-          timeout: 4000,
+          timeout: 5000,
           maximumAge: 300000,
         },
       );
-    } else {
-      setIsLoading(false);
-    }
-  }, [userLocation, setUserLocation]);
+
+      await ipTask;
+    };
+
+    void resolveWithPermissions();
+  }, [validStoreLocation, validInitialLocation, setUserLocation]);
 
   return { center, isLoading, isUserLocation };
 };

@@ -4,6 +4,7 @@
  * Best practice: Cache with TTL to prevent stale positions
  */
 
+import { isLegacyHardcodedCoordinates } from "@/lib/location/approximate-location";
 import { useCallback, useEffect, useState } from "react";
 
 type Coordinates = [number, number];
@@ -31,6 +32,13 @@ interface UseMapPositionResult {
 const STORAGE_KEY = "foodshare_map_position";
 const POSITION_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
+function isNeutralOrLegacyCenter(lat: number, lng: number): boolean {
+  if (isLegacyHardcodedCoordinates(lat, lng)) return true;
+  // Reject GLOBAL_NEUTRAL_CENTER ([20, 0]) if previously saved before real location settled
+  if (Math.abs(lat - 20.0) < 0.01 && Math.abs(lng - 0.0) < 0.01) return true;
+  return false;
+}
+
 /**
  * Get cached map position for a specific category
  */
@@ -48,13 +56,15 @@ const getCachedPosition = (category: string): MapPosition | null => {
       return null;
     }
 
-    // Validate position data
+    // Validate position data and evict neutral/stale fallback coordinates
     if (
       !position.center ||
       !Array.isArray(position.center) ||
       position.center.length !== 2 ||
-      typeof position.zoom !== "number"
+      typeof position.zoom !== "number" ||
+      isNeutralOrLegacyCenter(position.center[0], position.center[1])
     ) {
+      localStorage.removeItem(`${STORAGE_KEY}_${category}`);
       return null;
     }
 
@@ -84,6 +94,7 @@ export const useMapPosition = (options: UseMapPositionOptions): UseMapPositionRe
   // Save position to localStorage
   const savePosition = useCallback(
     (center: Coordinates, zoom: number) => {
+      if (isNeutralOrLegacyCenter(center[0], center[1])) return;
       try {
         const position: MapPosition = {
           center,

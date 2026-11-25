@@ -1,11 +1,21 @@
 import { getUser } from "@/app/actions/auth";
+import { getNearbyLocations } from "@/lib/data/maps";
+import { resolveServerLocation } from "@/lib/location/server-location";
 import { categoryMetadata, siteConfig } from "@/lib/metadata";
+import type { LocationType } from "@/types/product.types";
+import { urlToDbType } from "@/utils/categoryMapping";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { MapClient } from "./MapLoader";
 
 interface PageProps {
   params: Promise<{ type: string }>;
+  searchParams?: Promise<{
+    lat?: string;
+    lng?: string;
+    radius?: string;
+    distance?: string;
+  }>;
 }
 
 // Map URL slugs to category keys
@@ -53,18 +63,59 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 /**
  * Map Page - Server Component
- * Fetches product locations on the server and passes to MapClient
+ * Preloads user location (cookie / edge headers) and initial nearby markers
+ * for immediate full-sized map paint without a "No items found" flash.
  */
-export default async function MapPage({ params }: PageProps) {
-  const { type = "food" } = await params;
+export default async function MapPage({ params, searchParams }: PageProps) {
+  const [{ type = "food" }, resolvedSearch] = await Promise.all([
+    params,
+    searchParams ? searchParams.catch(() => ({})) : Promise.resolve({}),
+  ]);
 
-  // Only fetch user data on server - locations are loaded client-side
-  // via ViewportLoader based on the visible map area (viewport-based loading)
-  const user = await getUser();
+  const [user, serverLocation] = await Promise.all([
+    getUser().catch(() => null),
+    resolveServerLocation({ searchParams: resolvedSearch ?? {} }).catch(() => null),
+  ]);
+
+  let initialLocations: LocationType[] = [];
+  if (serverLocation) {
+    try {
+      const dbType = type.toLowerCase() === "all" ? undefined : urlToDbType(type);
+      const pad = 0.6;
+      initialLocations = await getNearbyLocations(
+        {
+          north: Math.min(90, serverLocation.lat + pad),
+          south: Math.max(-90, serverLocation.lat - pad),
+          east: Math.min(180, serverLocation.lng + pad),
+          west: Math.max(-180, serverLocation.lng - pad),
+        },
+        dbType,
+        500,
+      );
+    } catch {
+      initialLocations = [];
+    }
+  }
 
   return (
     <Suspense fallback={<MapPageSkeleton type={type} />}>
-      <MapClient type={type} initialLocations={[]} user={user} />
+      <MapClient
+        type={type}
+        initialLocations={initialLocations}
+        initialLocation={
+          serverLocation
+            ? {
+                latitude: serverLocation.lat,
+                longitude: serverLocation.lng,
+                city: serverLocation.city,
+                country: serverLocation.country,
+                source: serverLocation.source,
+                approximate: serverLocation.approximate,
+              }
+            : null
+        }
+        user={user}
+      />
     </Suspense>
   );
 }

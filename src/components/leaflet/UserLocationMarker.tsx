@@ -1,9 +1,10 @@
 "use client";
 
-import type { Icon, IconOptions, LatLng } from "leaflet";
+import { useUIStore } from "@/store/zustand/useUIStore";
+import { type Icon, type IconOptions, type LatLng, latLng } from "leaflet";
 import { Loader2, MapPin, X } from "lucide-react";
 import type { FC } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Circle, FeatureGroup, Marker, Popup, useMapEvents } from "react-leaflet";
 
 type LocationMarkerType = {
@@ -12,45 +13,90 @@ type LocationMarkerType = {
 
 const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
   const fillRedOptions = { fillColor: "#E53E3E", color: "#E53E3E" };
-  const [position, setPosition] = useState<LatLng | null>(null);
+  const userLocation = useUIStore((state) => state.userLocation);
+  const setUserLocation = useUIStore((state) => state.setUserLocation);
+
+  const [position, setPosition] = useState<LatLng | null>(() =>
+    userLocation && userLocation.source === "gps" ? latLng(userLocation.latitude, userLocation.longitude) : null,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasAsked, setHasAsked] = useState(false);
+  const manualRequestRef = useRef(false);
+
+  useEffect(() => {
+    if (userLocation && userLocation.source === "gps") {
+      setPosition(latLng(userLocation.latitude, userLocation.longitude));
+      setError(null);
+    }
+  }, [userLocation]);
 
   const map = useMapEvents({
     locationfound(e) {
       setPosition(e.latlng);
       setIsLoading(false);
       setError(null);
-      map.flyTo(e.latlng, 14); // Zoom to street level when location found
+      setUserLocation({
+        latitude: e.latlng.lat,
+        longitude: e.latlng.lng,
+        source: "gps",
+        approximate: false,
+      });
+      if (manualRequestRef.current) {
+        map.flyTo(e.latlng, Math.max(map.getZoom(), 13));
+      }
+      manualRequestRef.current = false;
     },
     locationerror(e) {
       setIsLoading(false);
-      setError(e.message || "Unable to get your location");
-      console.error("Location error:", e.message);
+      // Only show error toast if the user explicitly clicked "Locate Me"
+      if (manualRequestRef.current) {
+        setError(e.message || "Unable to get your location");
+      }
+      manualRequestRef.current = false;
+      console.info("[UserLocationMarker] Geolocation unavailable:", e.message);
     },
   });
 
-  const requestLocation = useCallback(() => {
-    setIsLoading(true);
-    setError(null);
-    setHasAsked(true);
-    map.locate({
-      setView: false,
-      maxZoom: 14,
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 30000,
-    });
-  }, [map]);
+  const triggerLocate = useCallback(
+    (manual: boolean) => {
+      manualRequestRef.current = manual;
+      setIsLoading(true);
+      setError(null);
+      if (manual) setHasAsked(true);
+      map.locate({
+        setView: false,
+        maxZoom: 14,
+        enableHighAccuracy: manual,
+        timeout: manual ? 8000 : 5000,
+        maximumAge: 300000,
+      });
+    },
+    [map],
+  );
 
-  // Request location on mount
+  // Silently sync GPS marker on mount ONLY if geolocation permission is already granted
   useEffect(() => {
-    const timer = setTimeout(() => {
-      requestLocation();
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [requestLocation]);
+    if (userLocation?.source === "gps") return;
+
+    let cancelled = false;
+    const syncIfGranted = async () => {
+      if (typeof navigator === "undefined" || !navigator.permissions?.query) return;
+      try {
+        const perm = await navigator.permissions.query({ name: "geolocation" as PermissionName });
+        if (!cancelled && perm.state === "granted") {
+          triggerLocate(false);
+        }
+      } catch {
+        // Ignore Permissions API errors
+      }
+    };
+
+    void syncIfGranted();
+    return () => {
+      cancelled = true;
+    };
+  }, [triggerLocate, userLocation?.source]);
 
   return (
     <>
@@ -74,15 +120,15 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
         </FeatureGroup>
       )}
 
-      {/* Locate Me Button - Fixed position above footer */}
-      <div className="fixed bottom-24 md:bottom-20 end-4 z-[1000]">
+      {/* Locate Me Button */}
+      <div className="fixed bottom-20 md:bottom-8 end-4 z-40">
         <button
           type="button"
-          onClick={requestLocation}
+          onClick={() => triggerLocate(true)}
           disabled={isLoading}
           className={`
             flex items-center gap-1.5 px-3 py-2 text-sm rounded-full shadow-md
-            transition-all duration-200
+            transition-all duration-200 cursor-pointer
             ${
               error
                 ? "bg-red-500 hover:bg-red-600"
@@ -120,7 +166,7 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
 
         {/* Error message */}
         {error && hasAsked && (
-          <div className="mt-2 bg-popover p-3 rounded-lg shadow-sm max-w-[250px]">
+          <div className="mt-2 bg-popover p-3 rounded-lg shadow-sm max-w-[250px] border border-border">
             <p className="text-xs text-red-600 dark:text-red-400 font-medium">{error}</p>
             <p className="text-xs text-muted-foreground mt-1">Please enable location access in your browser settings</p>
           </div>

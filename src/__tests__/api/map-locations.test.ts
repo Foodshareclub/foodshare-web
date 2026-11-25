@@ -99,8 +99,12 @@ describe("GET /api/map/locations", () => {
     expect(lastArgs()?.[1]).toBe("fridge");
   });
 
-  it("passes no type filter when none is given", async () => {
+  it("passes no type filter when none is given or when type is 'all'", async () => {
     await GET(req(VALID));
+    expect(lastArgs()?.[1]).toBeUndefined();
+
+    mockState.lastArgs = null;
+    await GET(req(`${VALID}&type=all`));
     expect(lastArgs()?.[1]).toBeUndefined();
   });
 
