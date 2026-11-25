@@ -148,102 +148,87 @@ export function UsWasteTracker() {
         </button>
       </div>
 
-      {/* Bento Grid Stats */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
-      >
-        {/* Stat 1: Total Tons */}
-        <motion.div variants={itemVariants}>
-          <Card className="glass-panel hover:glass-panel-glow-amber hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border-none cursor-default">
+      {/* Bento Grid Stats (immediate full contrast across all cards) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div>
+          <Card className="h-full glass-panel hover:glass-panel-glow-amber hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border border-white/10 cursor-default">
             <CardContent className="p-6 flex items-start gap-4">
-              <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20 shadow-inner">
+              <div className="p-3 bg-amber-500/15 text-amber-400 rounded-xl border border-amber-500/25 shrink-0">
                 <Scale className="h-6 w-6" />
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-300/80 block">
-                  US Annual Waste
-                </span>
-                <h3 className="text-2xl font-extrabold text-white tracking-tight">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-300 block">US Annual Waste</span>
+                <h3 className="text-2xl font-extrabold text-white tracking-tight tabular-nums">
                   {(totalWasteTons / 1000000).toFixed(1)}M{" "}
                   <span className="text-xs font-medium text-stone-400">tons</span>
                 </h3>
-                <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">
+                <p className="text-[11px] text-stone-400 font-bold uppercase tracking-wider">
                   ≈ 268 lbs / citizen / year
                 </p>
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        {/* Stat 2: Total Cost */}
-        <motion.div variants={itemVariants}>
-          <Card className="glass-panel hover:glass-panel-glow-rose hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border-none cursor-default">
+        <div>
+          <Card className="h-full glass-panel hover:glass-panel-glow-rose hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border border-white/10 cursor-default">
             <CardContent className="p-6 flex items-start gap-4">
-              <div className="p-3 bg-rose-500/10 text-rose-400 rounded-xl border border-rose-500/20 shadow-inner">
+              <div className="p-3 bg-rose-500/15 text-rose-400 rounded-xl border border-rose-500/25 shrink-0">
                 <DollarSign className="h-6 w-6" />
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-rose-300/80 block">
-                  Economic Burden
-                </span>
-                <h3 className="text-2xl font-extrabold text-white tracking-tight">
+                <span className="text-xs font-bold uppercase tracking-wider text-rose-300 block">Economic Burden</span>
+                <h3 className="text-2xl font-extrabold text-white tracking-tight tabular-nums">
                   ${totalCostBillions.toFixed(1)}B <span className="text-xs font-medium text-stone-400">USD</span>
                 </h3>
-                <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">
+                <p className="text-[11px] text-stone-400 font-bold uppercase tracking-wider">
                   Lost commercial retail value
                 </p>
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        {/* Stat 3: Carbon Impact */}
-        <motion.div variants={itemVariants}>
-          <Card className="glass-panel hover:glass-panel-glow-emerald hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border-none cursor-default">
+        <div>
+          <Card className="h-full glass-panel hover:glass-panel-glow-emerald hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border border-white/10 cursor-default">
             <CardContent className="p-6 flex items-start gap-4">
-              <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20 shadow-inner">
+              <div className="p-3 bg-emerald-500/15 text-emerald-400 rounded-xl border border-emerald-500/25 shrink-0">
                 <Flame className="h-6 w-6" />
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-300/80 block">
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-300 block">
                   Ecological Damage
                 </span>
-                <h3 className="text-2xl font-extrabold text-white tracking-tight">
+                <h3 className="text-2xl font-extrabold text-white tracking-tight tabular-nums">
                   {totalCO2Millions.toFixed(1)}M <span className="text-xs font-medium text-stone-400">tons CO2e</span>
                 </h3>
-                <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">
+                <p className="text-[11px] text-stone-400 font-bold uppercase tracking-wider">
                   ≈ 23 million cars driven / yr
                 </p>
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        {/* Stat 4: Water Waste */}
-        <motion.div variants={itemVariants}>
-          <Card className="glass-panel hover:glass-panel-glow-sky hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border-none cursor-default">
+        <div>
+          <Card className="h-full glass-panel hover:glass-panel-glow-sky hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden border border-white/10 cursor-default">
             <CardContent className="p-6 flex items-start gap-4">
-              <div className="p-3 bg-sky-500/10 text-sky-400 rounded-xl border border-sky-500/20 shadow-inner">
+              <div className="p-3 bg-sky-500/15 text-sky-400 rounded-xl border border-sky-500/25 shrink-0">
                 <Droplet className="h-6 w-6" />
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-sky-300/80 block">
-                  Water Footprint
-                </span>
-                <h3 className="text-2xl font-extrabold text-white tracking-tight">
+                <span className="text-xs font-bold uppercase tracking-wider text-sky-300 block">Water Footprint</span>
+                <h3 className="text-2xl font-extrabold text-white tracking-tight tabular-nums">
                   21.4T <span className="text-xs font-medium text-stone-400">gallons</span>
                 </h3>
-                <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">
+                <p className="text-[11px] text-stone-400 font-bold uppercase tracking-wider">
                   Embedded water lost to landfills
                 </p>
               </div>
             </CardContent>
           </Card>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
 
       {/* Main Grid: Category List & Console log */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

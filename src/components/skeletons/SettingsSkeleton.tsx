@@ -61,7 +61,7 @@ export function SettingsSkeleton({ className }: SettingsSkeletonProps) {
           </aside>
 
           {/* Main content area */}
-          <main className="flex-1 min-w-0 space-y-6">
+          <div className="flex-1 min-w-0 space-y-6">
             {/* User Profile Header */}
             <div className="rounded-xl border border-border/50 bg-card/50 p-6 lg:p-8">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
@@ -115,7 +115,7 @@ export function SettingsSkeleton({ className }: SettingsSkeletonProps) {
                 </div>
               ))}
             </div>
-          </main>
+          </div>
         </div>
       </div>
     </div>

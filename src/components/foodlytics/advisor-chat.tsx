@@ -9,11 +9,14 @@ import { AlertCircle, Bot, ChevronRight, HelpCircle, Info, RotateCcw, Send } fro
 import type React from "react";
 import { useEffect, useRef } from "react";
 
+const SEND_MESSAGE_LABEL = "Send message";
+
 interface AdvisorChatProps {
   chatMessages: ChatMessage[];
   chatInput: string;
   isChatLoading: boolean;
   apiWarning: string | null;
+  hasConnectionIssue?: boolean;
   onSetChatInput: (val: string) => void;
   onSendChatMessage: (text: string) => Promise<void>;
   onClearChat: () => void;
@@ -24,6 +27,7 @@ export function AdvisorChat({
   chatInput,
   isChatLoading,
   apiWarning,
+  hasConnectionIssue = false,
   onSetChatInput,
   onSendChatMessage,
   onClearChat,
@@ -110,14 +114,14 @@ export function AdvisorChat({
                   key={key}
                   onClick={() => handleShortcutClick(val.label)}
                   disabled={isChatLoading}
-                  className="w-full p-2.5 rounded-xl bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 text-stone-300 hover:text-white flex items-center justify-between text-start font-bold transition duration-200 cursor-pointer disabled:opacity-50"
+                  className="w-full p-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/10 hover:border-emerald-500/30 text-stone-200 hover:text-white flex items-center justify-between gap-2 text-start font-bold transition duration-200 cursor-pointer disabled:opacity-50"
                 >
-                  <span className="flex items-center gap-2.5 truncate">
+                  <span className="flex items-center gap-2.5 min-w-0">
                     <span
                       className="h-2 w-2 rounded-full inline-block shrink-0 shadow-sm"
                       style={{ backgroundColor: val.color }}
                     />
-                    <span className="truncate">{val.label.split(" (")[0]}</span>
+                    <span className="leading-snug">{val.label.split(" (")[0]}</span>
                   </span>
                   <ChevronRight className="h-3.5 w-3.5 text-stone-500 shrink-0" />
                 </button>
@@ -154,9 +158,19 @@ export function AdvisorChat({
               <h3 className="text-sm font-extrabold text-white flex items-center gap-1.5">
                 Preservation Advisor Console
               </h3>
-              <div className="text-[10px] text-emerald-400 font-bold flex items-center gap-1.5 mt-0.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block animate-ping" />
-                Cloud sync active & online
+              <div
+                className={`text-[11px] font-bold flex items-center gap-1.5 mt-0.5 ${
+                  apiWarning || hasConnectionIssue ? "text-amber-400" : "text-emerald-400"
+                }`}
+              >
+                <span
+                  className={`h-2 w-2 rounded-full inline-block ${
+                    apiWarning || hasConnectionIssue ? "bg-amber-400" : "bg-emerald-500"
+                  }`}
+                />
+                {apiWarning || hasConnectionIssue
+                  ? "Offline / cloud connection unavailable"
+                  : "Cloud sync active & online"}
               </div>
             </div>
           </div>
@@ -311,7 +325,8 @@ export function AdvisorChat({
             id="chat-send-btn"
             type="submit"
             disabled={isChatLoading || !chatInput.trim()}
-            className="h-11 w-11 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex items-center justify-center shrink-0 border border-emerald-500/20 hover:border-emerald-500 transition shadow-md disabled:opacity-50 cursor-pointer p-0"
+            aria-label={SEND_MESSAGE_LABEL}
+            className="h-11 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex items-center justify-center shrink-0 border border-emerald-500/20 hover:border-emerald-500 transition shadow-md disabled:opacity-50 cursor-pointer"
           >
             <Send className="h-4.5 w-4.5" />
           </Button>

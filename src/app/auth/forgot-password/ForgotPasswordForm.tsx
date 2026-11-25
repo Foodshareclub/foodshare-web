@@ -109,7 +109,7 @@ export function ForgotPasswordForm() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto max-w-[480px] py-8 md:py-16 px-4">
+      <section className="container mx-auto max-w-[480px] py-8 md:py-16 px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           {/* Card */}
           <div className="bg-card rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] p-6 md:p-8 border border-border">
@@ -143,7 +143,7 @@ export function ForgotPasswordForm() {
             </Link>
           </p>
         </motion.div>
-      </main>
+      </section>
     </div>
   );
 }

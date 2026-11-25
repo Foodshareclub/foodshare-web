@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { ProfileSettingsProps } from "@/components/header/navbar/types";
-import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -16,6 +15,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DEFAULT_AVATAR_URL } from "@/constants/storage";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
+
+const DynamicAuthenticationUserModal = dynamic(
+  () => import("@/components/modals/AuthenticationUser/AuthenticationUserModal"),
+  { ssr: false },
+);
 
 export default function ProfileSettings({
   signalOfNewMessage,
@@ -122,9 +127,17 @@ export default function ProfileSettings({
         </DropdownMenu>
       </div>
 
-      {/* Auth Modals - Rendered outside menu */}
-      <AuthenticationUserModal mode="login" isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
-      <AuthenticationUserModal mode="signup" isOpen={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} />
+      {/* Auth Modals - Dynamically loaded only when opened */}
+      {isLoginOpen && (
+        <DynamicAuthenticationUserModal mode="login" isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+      )}
+      {isRegisterOpen && (
+        <DynamicAuthenticationUserModal
+          mode="signup"
+          isOpen={isRegisterOpen}
+          onClose={() => setIsRegisterOpen(false)}
+        />
+      )}
     </>
   );
 }

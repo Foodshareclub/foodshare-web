@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import type { CustomRoomType } from "@/api/chatAPI";
-import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
 import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
@@ -19,7 +18,13 @@ import {
   UserPlus,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
 import { DropdownMenuEntry, NavbarAvatar } from "../atoms";
+
+const DynamicAuthenticationUserModal = dynamic(
+  () => import("@/components/modals/AuthenticationUser/AuthenticationUserModal"),
+  { ssr: false },
+);
 
 // Lucide icons
 
@@ -231,19 +236,23 @@ export function DesktopMenu({
         </DropdownMenu>
       </div>
 
-      {/* Auth Modals - Rendered outside dropdown */}
-      <AuthenticationUserModal
-        mode="login"
-        buttonLabel={t("login")}
-        isOpen={isLoginOpen}
-        onClose={() => setIsLoginOpen(false)}
-      />
-      <AuthenticationUserModal
-        mode="signup"
-        buttonLabel={t("registration")}
-        isOpen={isRegisterOpen}
-        onClose={() => setIsRegisterOpen(false)}
-      />
+      {/* Auth Modals - Dynamically loaded only when opened */}
+      {isLoginOpen && (
+        <DynamicAuthenticationUserModal
+          mode="login"
+          buttonLabel={t("login")}
+          isOpen={isLoginOpen}
+          onClose={() => setIsLoginOpen(false)}
+        />
+      )}
+      {isRegisterOpen && (
+        <DynamicAuthenticationUserModal
+          mode="signup"
+          buttonLabel={t("registration")}
+          isOpen={isRegisterOpen}
+          onClose={() => setIsRegisterOpen(false)}
+        />
+      )}
     </>
   );
 }

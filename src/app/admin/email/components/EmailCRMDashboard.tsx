@@ -281,7 +281,7 @@ export function EmailCRMDashboard({ initialData }: EmailCRMDashboardProps) {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-gradient-to-b from-transparent to-muted/10">
+        <section className="flex-1 overflow-y-auto overflow-x-hidden bg-gradient-to-b from-transparent to-muted/10">
           <div className="p-6">
             <AnimatePresence mode="wait">
               <motion.div
@@ -309,7 +309,7 @@ export function EmailCRMDashboard({ initialData }: EmailCRMDashboardProps) {
               </motion.div>
             </AnimatePresence>
           </div>
-        </main>
+        </section>
       </div>
     </TooltipProvider>
   );

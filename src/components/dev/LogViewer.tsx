@@ -43,10 +43,10 @@ const LEVEL_CONFIG = {
 };
 
 const POSITION_CLASSES = {
-  "bottom-right": "bottom-4 right-4",
-  "bottom-left": "bottom-4 left-4",
-  "top-right": "top-4 right-4",
-  "top-left": "top-4 left-4",
+  "bottom-right": "bottom-4 end-4",
+  "bottom-left": "bottom-4 start-4",
+  "top-right": "top-4 end-4",
+  "top-left": "top-4 start-4",
 };
 
 /**
@@ -123,11 +123,11 @@ export function LogViewer({ className, position = "bottom-right" }: LogViewerPro
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "fixed z-[9999] p-3 rounded-full shadow-lg transition-all duration-200",
+          "fixed z-[9999] p-2.5 rounded-full shadow-lg transition-all duration-200 opacity-80 hover:opacity-100",
           "bg-gradient-to-br from-gray-900 to-gray-800 text-white",
           "hover:scale-105 hover:shadow-xl",
           "dark:from-gray-100 dark:to-gray-200 dark:text-gray-900",
-          errorCount > 0 && "from-red-600 to-red-700 animate-pulse",
+          errorCount > 0 && "from-red-600 to-red-700",
           isOpen && "opacity-0 pointer-events-none",
           positionClass,
           className,

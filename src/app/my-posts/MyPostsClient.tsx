@@ -267,7 +267,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 min-w-0">
+          <section className="flex-1 min-w-0">
             {/* Filters */}
             <div className="glass rounded-xl p-4 mb-6">
               <div className="flex flex-col sm:flex-row gap-4">
@@ -349,7 +349,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
                 ))}
               </div>
             )}
-          </main>
+          </section>
         </div>
 
         {/* Modals */}

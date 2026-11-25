@@ -31,12 +31,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       {/* Desktop sidebar */}
       <AdminSidebar />
 
-      <main className="flex-1 min-h-0 flex flex-col">
+      <div className="flex-1 min-h-0 flex flex-col">
         <div className="flex-shrink-0 px-4 md:px-6 pt-4">
           <AdminBreadcrumb />
         </div>
         <div className="flex-1 min-h-0 px-4 md:px-6 pb-6">{children}</div>
-      </main>
+      </div>
     </div>
   );
 }

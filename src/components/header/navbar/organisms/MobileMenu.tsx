@@ -4,12 +4,17 @@ import { useState } from "react";
 
 import type { CustomRoomType } from "@/api/chatAPI";
 import { MinifiedUserInfo } from "@/components/minifiedUserInfo/MinifiedUserInfo";
-import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
 import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import UniversalDrawer from "@/components/universalDrawer/UniversalDrawer";
 import { ClipboardList, HelpCircle, Info, LayoutGrid, LogOut, Menu, MessageCircle, Settings, User } from "lucide-react";
 import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
+
+const DynamicAuthenticationUserModal = dynamic(
+  () => import("@/components/modals/AuthenticationUser/AuthenticationUserModal"),
+  { ssr: false },
+);
 
 // Lucide icons
 
@@ -79,6 +84,7 @@ export function MobileMenu({
   const t = useTranslations("nav");
 
   const [isOpen, setIsOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<"login" | "signup" | null>(null);
 
   const handleOpen = () => setIsOpen(true);
   const handleClose = () => setIsOpen(false);
@@ -197,8 +203,22 @@ export function MobileMenu({
             ) : (
               /* Unauthenticated Menu */
               <div className="flex flex-col gap-3">
-                <AuthenticationUserModal mode="login" buttonLabel={t("login")} fullScreen={false} />
-                <AuthenticationUserModal mode="signup" buttonLabel={t("registration")} fullScreen={false} />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setAuthModalMode("login")}
+                  className="bg-background text-foreground border border-border font-semibold px-6 hover:border-foreground hover:shadow-md transition-all"
+                >
+                  {t("login")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setAuthModalMode("signup")}
+                  className="bg-background text-foreground border border-border font-semibold px-6 hover:border-foreground hover:shadow-md transition-all"
+                >
+                  {t("registration")}
+                </Button>
               </div>
             )}
 
@@ -237,6 +257,15 @@ export function MobileMenu({
           </div>
         </>
       </UniversalDrawer>
+      {authModalMode && (
+        <DynamicAuthenticationUserModal
+          mode={authModalMode}
+          buttonLabel={authModalMode === "signup" ? t("registration") : t("login")}
+          fullScreen={false}
+          isOpen
+          onClose={() => setAuthModalMode(null)}
+        />
+      )}
     </div>
   );
 }

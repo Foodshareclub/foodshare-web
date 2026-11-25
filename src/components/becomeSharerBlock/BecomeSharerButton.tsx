@@ -1,8 +1,13 @@
 "use client";
 
-import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { AddListingButton } from "./AddListingButton";
+
+const DynamicAuthenticationUserModal = dynamic(
+  () => import("@/components/modals/AuthenticationUser/AuthenticationUserModal"),
+  { ssr: false },
+);
 
 /**
  * BecomeSharerButton Component
@@ -16,7 +21,9 @@ export function BecomeSharerButton() {
     <>
       <AddListingButton onClick={() => setIsAuthOpen(true)} />
 
-      <AuthenticationUserModal mode="login" isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      {isAuthOpen && (
+        <DynamicAuthenticationUserModal mode="login" isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      )}
     </>
   );
 }

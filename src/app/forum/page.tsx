@@ -40,7 +40,7 @@ function ForumSkeleton() {
             <Skeleton className="h-64 rounded-2xl" />
             <Skeleton className="h-48 rounded-2xl" />
           </aside>
-          <main className="flex-1">
+          <div className="flex-1">
             <Skeleton className="h-16 rounded-2xl mb-6" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {FORUM_THREAD_SKELETON_KEYS.map((k) => (
@@ -54,7 +54,7 @@ function ForumSkeleton() {
                 </div>
               ))}
             </div>
-          </main>
+          </div>
         </div>
       </div>
     </div>

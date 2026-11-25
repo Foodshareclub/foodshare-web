@@ -126,9 +126,9 @@ export function MaintenanceBanner(): React.ReactElement | null {
       role="alert"
       aria-live="polite"
       className={cn(
-        "fixed top-0 inset-x-0 z-50",
-        "bg-gradient-to-r from-amber-400 via-orange-400 to-amber-400",
-        "shadow-lg",
+        "relative z-[101] w-full",
+        "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500",
+        "shadow-md",
       )}
     >
       <div className="max-w-4xl mx-auto px-4 py-3">
