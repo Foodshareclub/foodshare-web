@@ -1154,7 +1154,6 @@ Deno.test("contract: no unreferenced column in the catalog has no live code refe
     "public.challenges.challenge_published",
     "public.challenges.challenge_updated_at",
     "public.comments.reports_count",
-    "public.countries.continent",
     "public.countries.iso2",
     "public.countries.iso3",
     "public.countries.local_name",

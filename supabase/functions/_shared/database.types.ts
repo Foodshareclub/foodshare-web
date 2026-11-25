@@ -8463,6 +8463,8 @@ export type Database = {
       // shape is identical to a table's so the client treats it as one.,
       posts_with_location: {
         Row: {
+        author_avatar_url: string | null;
+        author_name: string | null;
         available_hours: string | null;
         canonical_slug: string | null;
         category_id: number | null;
@@ -8501,6 +8503,8 @@ export type Database = {
         version: number | null;
         };
         Insert: {
+        author_avatar_url?: string;
+        author_name?: string;
         available_hours?: string;
         canonical_slug?: string;
         category_id?: number;
@@ -8539,6 +8543,8 @@ export type Database = {
         version?: number;
         };
         Update: {
+        author_avatar_url?: string | null;
+        author_name?: string | null;
         available_hours?: string | null;
         canonical_slug?: string | null;
         category_id?: number | null;
@@ -9763,6 +9769,13 @@ export type Database = {
       },
       get_dashboard_stats: {
         Args: Record<never, never>;
+        Returns: Json;
+      },
+      get_default_search_radius: {
+        Args: {
+        p_country_code?: string | null;
+        p_unit?: string | null;
+      };
         Returns: Json;
       },
       get_delta_sync: {
@@ -12420,7 +12433,6 @@ export type Database = {
     };
     Enums: {
       continents: "Africa" | "Antarctica" | "Asia" | "Europe" | "Oceania" | "North America" | "South America";
-      location_status: "active" | "inactive";
       notification_category: "posts" | "forum" | "challenges" | "comments" | "chats" | "social" | "system" | "marketing";
       notification_channel: "push" | "email" | "sms" | "telegram" | "in_app";
       post_activity_type: "created" | "updated" | "deleted" | "restored" | "activated" | "deactivated" | "expired" | "viewed" | "contacted" | "arranged" | "arrangement_cancelled" | "collected" | "not_collected" | "reported" | "flagged" | "unflagged" | "approved" | "rejected" | "hidden" | "unhidden" | "liked" | "unliked" | "shared" | "bookmarked" | "unbookmarked" | "admin_edited" | "admin_note_added" | "admin_status_changed" | "auto_expired" | "auto_deactivated" | "location_updated" | "images_updated";
