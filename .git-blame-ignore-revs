@@ -2,3 +2,6 @@
 #   git config blame.ignoreRevsFile .git-blame-ignore-revs
 # GitHub's blame view reads this file automatically. One full SHA per line,
 # with a comment saying what the commit did.
+
+# style: format the whole tree with bun 1.4.4 (t_63884fdc)
+a02de034a60abd7199e87a87ec80aa5db1ec81da
