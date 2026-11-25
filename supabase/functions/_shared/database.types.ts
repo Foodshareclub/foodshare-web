@@ -18,19 +18,40 @@ export type Database = {
     Tables: {
       logged_actions: {
         Row: {
-        action: string | null;
-        table_name: string | null;
-        user_id: string | null;
+        action: string;
+        changed_at: string;
+        changed_by: string | null;
+        client_ip: string | null;
+        correlation_id: string | null;
+        id: number;
+        new_data: Json | null;
+        old_data: Json | null;
+        table_name: string;
+        user_agent: string | null;
         };
         Insert: {
-        action?: string;
-        table_name?: string;
-        user_id?: string;
+        action: string;
+        changed_at?: string;
+        changed_by?: string;
+        client_ip?: string;
+        correlation_id?: string;
+        id?: number;
+        new_data?: Json;
+        old_data?: Json;
+        table_name: string;
+        user_agent?: string;
         };
         Update: {
-        action?: string | null;
-        table_name?: string | null;
-        user_id?: string | null;
+        action?: string;
+        changed_at?: string;
+        changed_by?: string | null;
+        client_ip?: string | null;
+        correlation_id?: string | null;
+        id?: number;
+        new_data?: Json | null;
+        old_data?: Json | null;
+        table_name?: string;
+        user_agent?: string | null;
         };
         Relationships: [];
       },
