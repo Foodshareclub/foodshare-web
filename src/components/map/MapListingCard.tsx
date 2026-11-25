@@ -4,7 +4,7 @@ import { PostTypeBadge } from "@/components/post/PostTypeBadge";
 import { FindingPhotoState } from "@/components/productCard/CoverStatus";
 import { Button } from "@/components/ui/button";
 import { normalizeImageUrl } from "@/lib/image";
-import { isGenericReusedReferenceCover, resolveRealisticCover } from "@/lib/realistic-covers";
+import { resolveRealisticCover } from "@/lib/realistic-covers";
 import { cn } from "@/lib/utils";
 import type { LocationType } from "@/types/product.types";
 import { getProductDetailUrl } from "@/utils/categoryMapping";
@@ -25,9 +25,7 @@ interface MapListingCardProps {
 
 function useCover(item: LocationType) {
   const [failed, setFailed] = useState(false);
-  const image = item.images
-    ?.map(normalizeImageUrl)
-    .find((url): url is string => !!url && !isGenericReusedReferenceCover(url));
+  const image = item.images?.map(normalizeImageUrl).find((url): url is string => !!url);
   return {
     image: failed ? undefined : image,
     onError: () => setFailed(true),

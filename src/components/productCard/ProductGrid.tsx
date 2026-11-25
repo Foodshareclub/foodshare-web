@@ -2,10 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { isValidImageUrl } from "@/lib/image";
-import {
-  isGenericReusedReferenceCover,
-  resolveRealisticCover,
-} from "@/lib/realistic-covers";
+import { resolveRealisticCover } from "@/lib/realistic-covers";
 import type { InitialProductStateType } from "@/types/product.types";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef } from "react";
@@ -72,11 +69,7 @@ export function ProductGrid({
     const usedUrls = new Set<string>();
     const map = new Map<number, string>();
     for (const product of products) {
-      const hasRealPhoto =
-        product.images &&
-        product.images.some(
-          (url) => isValidImageUrl(url) && !isGenericReusedReferenceCover(url),
-        );
+      const hasRealPhoto = product.images && product.images.some((url) => isValidImageUrl(url));
       if (!hasRealPhoto) {
         const cover = resolveRealisticCover({
           title: product.post_name,
@@ -97,29 +90,19 @@ export function ProductGrid({
       <div className={cn(LISTING_CONTAINER, "py-6 pb-28 sm:py-8 sm:pb-32")}>
         <div className={LISTING_GRID}>
           {isLoading
-            ? SKELETON_ITEMS.map((i) => (
-                <SkeletonCard key={i} isLoaded={false} />
-              ))
+            ? SKELETON_ITEMS.map((i) => <SkeletonCard key={i} isLoaded={false} />)
             : products.map((product) => (
-                <ProductCard
-                  product={product}
-                  coverUrl={coverMap.get(product.id)}
-                  key={product.id}
-                />
+                <ProductCard product={product} coverUrl={coverMap.get(product.id)} key={product.id} />
               ))}
 
           {/* Loading more skeletons */}
           {isFetchingMore &&
-            LOADING_MORE_SKELETONS.map((i) => (
-              <SkeletonCard key={`loading-more-${i}`} isLoaded={false} />
-            ))}
+            LOADING_MORE_SKELETONS.map((i) => <SkeletonCard key={`loading-more-${i}`} isLoaded={false} />)}
         </div>
       </div>
 
       {/* Infinite scroll trigger */}
-      {hasMore && !isLoading && (
-        <div ref={loadMoreRef} className="h-10" aria-hidden="true" />
-      )}
+      {hasMore && !isLoading && <div ref={loadMoreRef} className="h-10" aria-hidden="true" />}
     </div>
   );
 }

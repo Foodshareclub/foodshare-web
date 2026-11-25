@@ -4,7 +4,6 @@ import { FindingPhotoState } from "@/components/productCard/CoverStatus";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { CoverCredit } from "@/lib/cover-provenance";
-import { isGenericReusedReferenceCover, resolveRealisticCover } from "@/lib/realistic-covers";
 import { cn } from "@/lib/utils";
 import { Grid2x2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -43,9 +42,8 @@ export function PostGallery({ postId, title, images, coverCredit, emptyLabel, ba
   const [current, setCurrent] = useState(0);
   const [showAll, setShowAll] = useState(false);
 
-  const rawShown = images.filter((url) => !failed[url]);
-  const containsOnlyReusedReference = rawShown.length > 0 && rawShown.every(isGenericReusedReferenceCover);
-  const shown = containsOnlyReusedReference ? [] : rawShown.filter((url) => !isGenericReusedReferenceCover(url));
+  // Stored images always win; only URLs that already failed to load are dropped.
+  const shown = images.filter((url) => !failed[url]);
   const cover = shown[0];
   const sideCount = Math.min(Math.max(shown.length - 1, 0), 4);
   const onError = (url: string) => setFailed((previous) => ({ ...previous, [url]: true }));

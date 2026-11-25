@@ -1,8 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import {
-  isGenericReusedReferenceCover,
-  resolveRealisticCover,
-} from "@/lib/realistic-covers";
+import { resolveRealisticCover } from "@/lib/realistic-covers";
 
 describe("resolveRealisticCover", () => {
   it("resolves realistic cover for bananas", () => {
@@ -68,22 +65,9 @@ describe("resolveRealisticCover", () => {
     expect(first).not.toBe(second);
   });
 
-  it("detects generic mass-reused reference covers", () => {
-    expect(
-      isGenericReusedReferenceCover(
-        "https://api.foodshare.club/storage/v1/object/public/assets/listing-reference/a433875991b9df54ea83c4f0d49418416c7c3188dd8cb889fa7597478d1529b0/fresh-produce.jpg",
-      ),
-    ).toBe(true);
-    expect(
-      isGenericReusedReferenceCover("/assets/covers/food/banana-1.jpg"),
-    ).toBe(false);
-    expect(isGenericReusedReferenceCover(null)).toBe(false);
-  });
-
   it("classifies multi-item and generic haul listings as assorted", () => {
     const c2662 = resolveRealisticCover({
-      title:
-        "Brot brötchen Aufschnitt Jogurt käse Obst gemüse alles eigentlich",
+      title: "Brot brötchen Aufschnitt Jogurt käse Obst gemüse alles eigentlich",
       postId: 2662,
     });
     expect(c2662).toMatch(/\/assets\/covers\/food\/assorted-[1-4]\.jpg/);
@@ -103,8 +87,7 @@ describe("resolveRealisticCover", () => {
 
   it("guarantees 3 mutually distinct covers for target listings 2662, 2659, and 2626", () => {
     const c2662 = resolveRealisticCover({
-      title:
-        "Brot brötchen Aufschnitt Jogurt käse Obst gemüse alles eigentlich",
+      title: "Brot brötchen Aufschnitt Jogurt käse Obst gemüse alles eigentlich",
       postId: 2662,
     });
     const c2659 = resolveRealisticCover({
@@ -122,8 +105,7 @@ describe("resolveRealisticCover", () => {
 
     // Also verify with raw database whitespace / newlines
     const raw2662 = resolveRealisticCover({
-      title:
-        "Brot brötchen Aufschnitt Jogurt käse Obst gemüse alles eigentlich ",
+      title: "Brot brötchen Aufschnitt Jogurt käse Obst gemüse alles eigentlich ",
       postId: 2662,
     });
     const raw2659 = resolveRealisticCover({

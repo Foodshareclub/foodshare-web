@@ -4,10 +4,7 @@ import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 import { ProductCard } from "@/components/productCard/ProductCard";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
 import { isValidImageUrl } from "@/lib/image";
-import {
-  isGenericReusedReferenceCover,
-  resolveRealisticCover,
-} from "@/lib/realistic-covers";
+import { resolveRealisticCover } from "@/lib/realistic-covers";
 import type { InitialProductStateType } from "@/types/product.types";
 import type React from "react";
 import { useEffect, useMemo, useRef } from "react";
@@ -42,9 +39,7 @@ export const Main: React.FC<MainProps> = ({
   isFetchingMore = false,
   hasMore = false,
 }) => {
-  const messagesAnchorRef = useRef<HTMLDivElement>(
-    null,
-  ) as React.RefObject<HTMLDivElement>;
+  const messagesAnchorRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const loaded = !isLoading;
 
@@ -77,11 +72,7 @@ export const Main: React.FC<MainProps> = ({
     const usedUrls = new Set<string>();
     const map = new Map<number, string>();
     for (const product of products) {
-      const hasRealPhoto =
-        product.images &&
-        product.images.some(
-          (url) => isValidImageUrl(url) && !isGenericReusedReferenceCover(url),
-        );
+      const hasRealPhoto = product.images && product.images.some((url) => isValidImageUrl(url));
       if (!hasRealPhoto) {
         const cover = resolveRealisticCover({
           title: product.post_name,
@@ -99,10 +90,7 @@ export const Main: React.FC<MainProps> = ({
   return (
     <>
       {/* Navigation buttons */}
-      <NavigateButtons
-        messagesAnchorRef={messagesAnchorRef}
-        title={"Show map"}
-      />
+      <NavigateButtons messagesAnchorRef={messagesAnchorRef} title={"Show map"} />
 
       {/* Product listings grid */}
       <div
@@ -122,28 +110,18 @@ export const Main: React.FC<MainProps> = ({
           }}
         >
           {!loaded
-            ? SKELETON_ITEMS.map((i) => (
-                <SkeletonCard key={i} isLoaded={false} />
-              ))
+            ? SKELETON_ITEMS.map((i) => <SkeletonCard key={i} isLoaded={false} />)
             : products.map((product: InitialProductStateType) => (
-                <ProductCard
-                  product={product}
-                  coverUrl={coverMap.get(product.id)}
-                  key={product.id}
-                />
+                <ProductCard product={product} coverUrl={coverMap.get(product.id)} key={product.id} />
               ))}
 
           {/* Loading more skeletons */}
           {isFetchingMore &&
-            LOADING_MORE_SKELETONS.map((i) => (
-              <SkeletonCard key={`loading-more-${i}`} isLoaded={false} />
-            ))}
+            LOADING_MORE_SKELETONS.map((i) => <SkeletonCard key={`loading-more-${i}`} isLoaded={false} />)}
         </div>
 
         {/* Infinite scroll trigger */}
-        {hasMore && !isLoading && (
-          <div ref={loadMoreRef} className="h-10" aria-hidden="true" />
-        )}
+        {hasMore && !isLoading && <div ref={loadMoreRef} className="h-10" aria-hidden="true" />}
       </div>
     </>
   );

@@ -12,7 +12,7 @@ import { ProductCard } from "@/components/productCard/ProductCard";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { isValidImageUrl } from "@/lib/image";
-import { isGenericReusedReferenceCover, resolveRealisticCover } from "@/lib/realistic-covers";
+import { resolveRealisticCover } from "@/lib/realistic-covers";
 import type { InitialProductStateType, ProductWithCoordinates } from "@/types/product.types";
 import { getCoordinates } from "@/types/product.types";
 import { useMemo, useRef, useState } from "react";
@@ -65,8 +65,7 @@ export function MainWithMap({ products, isLoading = false }: MainWithMapProps) {
     const usedUrls = new Set<string>();
     const map = new Map<number, string>();
     for (const product of products) {
-      const hasRealPhoto =
-        product.images && product.images.some((url) => isValidImageUrl(url) && !isGenericReusedReferenceCover(url));
+      const hasRealPhoto = product.images && product.images.some((url) => isValidImageUrl(url));
       if (!hasRealPhoto) {
         const cover = resolveRealisticCover({
           title: product.post_name,

@@ -1,7 +1,8 @@
 /**
  * Realistic covers catalog and deterministic resolver for FoodShare web.
- * Provides authentic, high-resolution photography for listings without customer camera photos
- * or with overused generic reference covers, ensuring listings never look artificial or repeated.
+ * Provides authentic, high-resolution photography ONLY for listings that have no usable stored
+ * image. A listing's own stored image (photo or backend reference cover) always wins and is
+ * never hidden by anything in this module.
  */
 
 export const REALISTIC_COVERS_CATALOG: Record<string, string[]> = {
@@ -11,27 +12,14 @@ export const REALISTIC_COVERS_CATALOG: Record<string, string[]> = {
     "/assets/covers/food/assorted-3.jpg",
     "/assets/covers/food/assorted-4.jpg",
   ],
-  pastry: [
-    "/assets/covers/food/pastry-1.jpg",
-    "/assets/covers/food/pastry-2.jpg",
-    "/assets/covers/food/pastry-3.jpg",
-  ],
+  pastry: ["/assets/covers/food/pastry-1.jpg", "/assets/covers/food/pastry-2.jpg", "/assets/covers/food/pastry-3.jpg"],
   meal: ["/assets/covers/food/meal-1.jpg", "/assets/covers/food/meal-2.jpg"],
-  banana: [
-    "/assets/covers/food/banana-1.jpg",
-    "/assets/covers/food/banana-2.jpg",
-  ],
+  banana: ["/assets/covers/food/banana-1.jpg", "/assets/covers/food/banana-2.jpg"],
   apple: ["/assets/covers/food/apple-1.jpg", "/assets/covers/food/apple-2.jpg"],
   bread: ["/assets/covers/food/bread-1.jpg"],
-  produce: [
-    "/assets/covers/food/produce-1.jpg",
-    "/assets/covers/food/produce-2.jpg",
-  ],
+  produce: ["/assets/covers/food/produce-1.jpg", "/assets/covers/food/produce-2.jpg"],
   pantry: ["/assets/covers/food/pantry-1.jpg"],
-  fridge: [
-    "/assets/covers/fridge/fridge-1.jpg",
-    "/assets/covers/fridge/fridge-2.jpg",
-  ],
+  fridge: ["/assets/covers/fridge/fridge-1.jpg", "/assets/covers/fridge/fridge-2.jpg"],
   food_fallback: [
     "/assets/covers/food/assorted-1.jpg",
     "/assets/covers/food/pastry-1.jpg",
@@ -296,20 +284,6 @@ function fmix32(h: number): number {
   return h >>> 0;
 }
 
-/**
- * Checks whether an image URL is a generic, mass-reused reference cover from historical
- * backfill sweeps (e.g. fresh-produce.jpg) that should be upgraded to a tailored realistic cover.
- */
-export function isGenericReusedReferenceCover(
-  url: string | null | undefined,
-): boolean {
-  if (!url) return false;
-  return (
-    url.includes("/assets/listing-reference/") ||
-    url.includes("fresh-produce.jpg")
-  );
-}
-
 export function resolveRealisticCover(input: {
   title: string;
   description?: string;
@@ -322,10 +296,7 @@ export function resolveRealisticCover(input: {
   // 1. Check for haul/assorted keywords
   let hasHaulKeyword = false;
   for (const kw of HAUL_KEYWORDS) {
-    const pattern = new RegExp(
-      `(^|[^a-z0-9äöüßéèêáàâñç])${kw}([^a-z0-9äöüßéèêáàâñç]|$)`,
-      "i",
-    );
+    const pattern = new RegExp(`(^|[^a-z0-9äöüßéèêáàâñç])${kw}([^a-z0-9äöüßéèêáàâñç]|$)`, "i");
     if (pattern.test(text)) {
       hasHaulKeyword = true;
       break;
@@ -335,10 +306,7 @@ export function resolveRealisticCover(input: {
   // 2. Count distinct matched food subjects
   const matchedSubjects = new Set<string>();
   for (const [kw, subject] of Object.entries(SUBJECT_KEYWORDS)) {
-    const pattern = new RegExp(
-      `(^|[^a-z0-9äöüßéèêáàâñç])${kw}([^a-z0-9äöüßéèêáàâñç]|$)`,
-      "i",
-    );
+    const pattern = new RegExp(`(^|[^a-z0-9äöüßéèêáàâñç])${kw}([^a-z0-9äöüßéèêáàâñç]|$)`, "i");
     if (pattern.test(text)) {
       matchedSubjects.add(subject);
     }
@@ -347,16 +315,9 @@ export function resolveRealisticCover(input: {
   let matchedSubject: string | null = null;
   if (matchedSubjects.size === 1) {
     matchedSubject = Array.from(matchedSubjects)[0];
-  } else if (
-    matchedSubjects.size > 0 &&
-    Array.from(matchedSubjects).every((s) => s === "pantry")
-  ) {
+  } else if (matchedSubjects.size > 0 && Array.from(matchedSubjects).every((s) => s === "pantry")) {
     matchedSubject = "pantry";
-  } else if (
-    hasHaulKeyword ||
-    matchedSubjects.size >= 2 ||
-    matchedSubjects.has("dairy")
-  ) {
+  } else if (hasHaulKeyword || matchedSubjects.size >= 2 || matchedSubjects.has("dairy")) {
     matchedSubject = "assorted";
   }
 
@@ -364,20 +325,14 @@ export function resolveRealisticCover(input: {
     const postType = (input.postType || "food").toLowerCase();
     if (postType === "fridge") {
       matchedSubject = "fridge";
-    } else if (
-      postType === "food" ||
-      postType === "vegan" ||
-      postType === "foodbank"
-    ) {
+    } else if (postType === "food" || postType === "vegan" || postType === "foodbank") {
       matchedSubject = "assorted";
     } else {
       matchedSubject = "community_fallback";
     }
   }
 
-  const primaryPool =
-    REALISTIC_COVERS_CATALOG[matchedSubject] ||
-    REALISTIC_COVERS_CATALOG.assorted;
+  const primaryPool = REALISTIC_COVERS_CATALOG[matchedSubject] || REALISTIC_COVERS_CATALOG.assorted;
   const excluded = new Set(input.excludeUrls || []);
 
   const normalizedTitle = (input.title || "food").trim().replace(/\s+/g, " ");
@@ -391,8 +346,7 @@ export function resolveRealisticCover(input: {
   // If primary category pool is exhausted, draw from the wider fallback pool
   const fallbackPool = REALISTIC_COVERS_CATALOG.food_fallback || primaryPool;
   const availableFallback = fallbackPool.filter((p) => !excluded.has(p));
-  const candidatePool =
-    availableFallback.length > 0 ? availableFallback : primaryPool;
+  const candidatePool = availableFallback.length > 0 ? availableFallback : primaryPool;
 
   return candidatePool[seed % candidatePool.length];
 }
