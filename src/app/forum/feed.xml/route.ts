@@ -1,3 +1,4 @@
+import { resolveForumCoverSources } from "@/lib/forum-covers";
 import { siteConfig } from "@/lib/metadata";
 import { createCachedClient } from "@/lib/supabase/server";
 
@@ -54,6 +55,14 @@ export async function GET(): Promise<Response> {
       const authorName = profile?.nickname || profile?.first_name || "Community Member";
       const postUrl = `${siteConfig.url}/forum/${post.slug || post.id}`;
       const description = post.forum_post_description ? stripHtml(post.forum_post_description).slice(0, 500) : "";
+      const cover = resolveForumCoverSources({
+        id: post.id,
+        slug: post.slug,
+        title: post.forum_post_name,
+        description: post.forum_post_description,
+        imageUrl: post.forum_post_image,
+      });
+      const enclosureUrl = cover.primaryUrl.startsWith("/") ? `${siteConfig.url}${cover.primaryUrl}` : cover.primaryUrl;
 
       return `
     <item>
@@ -64,7 +73,7 @@ export async function GET(): Promise<Response> {
       <author>${escapeXml(authorName)}</author>
       ${category?.name ? `<category>${escapeXml(category.name)}</category>` : ""}
       <description><![CDATA[${description}]]></description>
-      ${post.forum_post_image ? `<enclosure url="${post.forum_post_image}" type="image/jpeg" />` : ""}
+      <enclosure url="${escapeXml(enclosureUrl)}" type="image/jpeg" />
     </item>`;
     })
     .join("");

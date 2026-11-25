@@ -29,12 +29,15 @@ export function AdvisorChat({
   onClearChat,
 }: AdvisorChatProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const prevCountRef = useRef(chatMessages.length);
 
-  // Scroll to bottom on new messages
-  // biome-ignore lint/correctness/useExhaustiveDependencies: these are component props, not outer-scope bindings
+  // Scroll only after new messages arrive or loading starts (avoid hijacking viewport scroll on initial mount)
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages, isChatLoading]);
+    if (chatMessages.length > prevCountRef.current || isChatLoading) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+    prevCountRef.current = chatMessages.length;
+  }, [chatMessages.length, isChatLoading]);
 
   // Preset prompts
   const presetPrompts = [

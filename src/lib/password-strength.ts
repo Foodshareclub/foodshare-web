@@ -85,7 +85,7 @@ const BANDS: Array<[PasswordScore, StrengthLevel, string]> = [
 ];
 
 const band = (score: PasswordScore): { level: StrengthLevel; color: string } => {
-  const found = [...BANDS].reverse().find(([floor]) => score >= floor);
+  const found = BANDS.toReversed().find(([floor]) => score >= floor);
   // `BANDS` ends at 4 and `score` is 0–4, so this cannot be undefined; the cast
   // says so rather than inventing a fallback that would hide a future edit.
   const [, level, color] = found as [PasswordScore, StrengthLevel, string];

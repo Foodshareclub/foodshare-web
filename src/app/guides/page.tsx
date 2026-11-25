@@ -10,11 +10,7 @@ const categoryLabels: Record<string, string> = {
   Legal: "Legal",
 };
 
-const grouped = guides.reduce<Record<string, typeof guides>>((acc, g) => {
-  acc[g.category] ??= [];
-  acc[g.category].push(g);
-  return acc;
-}, {});
+const grouped = Object.groupBy(guides, (g) => g.category);
 
 export default function GuidesPage() {
   return (
@@ -29,7 +25,7 @@ export default function GuidesPage() {
           .
         </p>
         <div className="space-y-10">
-          {Object.entries(grouped).map(([cat, list]) => (
+          {Object.entries(grouped).map(([cat, list = []]) => (
             <section key={cat}>
               <h2 className="text-lg font-semibold mb-4">{categoryLabels[cat] ?? cat}</h2>
               <div className="grid gap-4 sm:grid-cols-2">

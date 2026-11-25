@@ -33,15 +33,10 @@ export function MaintenanceBanner(): React.ReactElement | null {
     const checkHealth = async (): Promise<void> => {
       setIsChecking(true);
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000);
-
         const res = await fetch("/api/health", {
           cache: "no-store",
-          signal: controller.signal,
+          signal: AbortSignal.timeout(60000),
         });
-
-        clearTimeout(timeoutId);
 
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));

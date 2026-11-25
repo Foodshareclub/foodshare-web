@@ -1,6 +1,7 @@
 import { ForumPageClient } from "@/components/forum";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getForumPageData } from "@/lib/data/forum";
+import { resolveForumCoverSources } from "@/lib/forum-covers";
 import { generateBreadcrumbJsonLd, generateItemListJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import { generatePageMetadata, siteConfig } from "@/lib/metadata";
 import { Suspense } from "react";
@@ -69,12 +70,27 @@ async function ForumContent() {
   const itemListJsonLd = generateItemListJsonLd({
     name: "FoodShare Community Forum",
     description: "Community discussions about food sharing, sustainability, and reducing waste.",
-    items: data.posts.slice(0, 10).map((post, index) => ({
-      name: post.forum_post_name || "Forum Post",
-      url: `${siteConfig.url}/forum/${post.slug || post.id}`,
-      image: post.forum_post_image || undefined,
-      position: index + 1,
-    })),
+    items: data.posts.slice(0, 10).map((post, index) => {
+      const cover = resolveForumCoverSources({
+        id: post.id,
+        slug: post.slug,
+        title: post.forum_post_name,
+        description: post.forum_post_description,
+        postType: post.post_type,
+        categorySlug: post.forum_categories?.slug,
+        imageUrl: post.forum_post_image,
+      });
+      const absoluteCoverUrl = cover.primaryUrl.startsWith("/")
+        ? `${siteConfig.url}${cover.primaryUrl}`
+        : cover.primaryUrl;
+
+      return {
+        name: post.forum_post_name || "Forum Post",
+        url: `${siteConfig.url}/forum/${post.slug || post.id}`,
+        image: absoluteCoverUrl,
+        position: index + 1,
+      };
+    }),
   });
   return (
     <>

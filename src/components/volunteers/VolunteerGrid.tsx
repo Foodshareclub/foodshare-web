@@ -69,7 +69,7 @@ export function VolunteerGrid({
   }, [onLoadMore, hasMore, isFetchingMore]);
 
   // Sort volunteers: featured (founder) first, then by creation date
-  const sortedVolunteers = [...volunteers].sort((a, b) => {
+  const sortedVolunteers = volunteers.toSorted((a, b) => {
     if (founderId) {
       if (a.profile_id === founderId) return -1;
       if (b.profile_id === founderId) return 1;

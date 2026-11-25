@@ -3,7 +3,10 @@
  * Export all forum-related components
  */
 
+export { ForumCoverImage } from "./ForumCoverImage";
 export { ForumPostCard } from "./ForumPostCard";
+export { ForumSearchBar } from "./ForumSearchBar";
+export { ForumFiltersSidebar, ForumInsightsSidebar } from "./ForumSidebar";
 export { ForumCategoryBadge } from "./ForumCategoryBadge";
 export { ForumTagBadge } from "./ForumTagBadge";
 export { ForumCommentCard } from "./ForumCommentCard";

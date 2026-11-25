@@ -1,8 +1,9 @@
 import type { ForumComment, ForumPost } from "@/api/forumAPI";
-import { ForumCategoryBadge, ForumTagBadge, RealtimeComments } from "@/components/forum";
+import { ForumCategoryBadge, ForumCoverImage, ForumTagBadge, RealtimeComments } from "@/components/forum";
 import { RichTextViewer } from "@/components/forum/RichTextViewer";
 import { BackButton } from "@/components/navigation/BackButton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { resolveForumCoverSources } from "@/lib/forum-covers";
 import { generateArticleJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import { siteConfig } from "@/lib/metadata";
 import { createClient } from "@/lib/supabase/server";
@@ -116,7 +117,16 @@ export async function generateMetadata({ params }: PageProps) {
     ? post.forum_post_description.replace(/<[^>]*>/g, "").slice(0, 160)
     : "Join the discussion on FoodShare Forum";
   const pageUrl = `${siteConfig.url}/forum/${post.slug || post.id}`;
-  const imageUrl = post.forum_post_image || siteConfig.ogImage;
+  const cover = resolveForumCoverSources({
+    id: post.id,
+    slug: post.slug,
+    title: post.forum_post_name,
+    description: post.forum_post_description,
+    postType: post.post_type,
+    categorySlug: post.forum_categories?.slug,
+    imageUrl: post.forum_post_image,
+  });
+  const imageUrl = cover.primaryUrl.startsWith("/") ? `${siteConfig.url}${cover.primaryUrl}` : cover.primaryUrl;
   const authorName = post.profiles?.nickname || post.profiles?.first_name || "FoodShare Member";
 
   return {
@@ -177,11 +187,22 @@ export default async function ForumPostPage({ params }: PageProps) {
     ? post.forum_post_description.replace(/<[^>]*>/g, "").slice(0, 160)
     : "Join the discussion on FoodShare Forum";
 
+  const cover = resolveForumCoverSources({
+    id: post.id,
+    slug: post.slug,
+    title: post.forum_post_name,
+    description: post.forum_post_description,
+    postType: post.post_type,
+    categorySlug: post.forum_categories?.slug,
+    imageUrl: post.forum_post_image,
+  });
+  const absoluteCoverUrl = cover.primaryUrl.startsWith("/") ? `${siteConfig.url}${cover.primaryUrl}` : cover.primaryUrl;
+
   const jsonLd = generateArticleJsonLd({
     title: post.forum_post_name || "Forum Post",
     description,
     url: `${siteConfig.url}/forum/${post.slug || post.id}`,
-    image: post.forum_post_image || undefined,
+    image: absoluteCoverUrl,
     datePublished: post.forum_post_created_at,
     dateModified: post.forum_post_updated_at || undefined,
     authorName: post.profiles?.nickname || post.profiles?.first_name || "FoodShare Member",
@@ -266,17 +287,14 @@ export default async function ForumPostPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Post Image */}
-          {post.forum_post_image && (
-            <div className="mb-6 rounded-xl overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={post.forum_post_image}
-                alt={post.forum_post_name || "Post image"}
-                className="w-full object-cover max-h-96"
-              />
-            </div>
-          )}
+          {/* Post Cover Image */}
+          <ForumCoverImage
+            primaryUrl={cover.primaryUrl}
+            fallbackUrl={cover.fallbackUrl}
+            alt={post.forum_post_name || "Post cover image"}
+            priority
+            containerClassName="mb-6 rounded-xl max-h-96"
+          />
 
           {/* Post Content */}
           <div className="prose prose-lg dark:prose-invert max-w-none mb-6">

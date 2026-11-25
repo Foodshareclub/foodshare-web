@@ -33,11 +33,7 @@ const DEFAULT_SERVICES = {
   storage: "unknown" as const,
 };
 
-function ServiceStatusIcon({
-  status,
-}: {
-  status: "up" | "down" | "degraded" | "unknown";
-}): React.ReactElement {
+function ServiceStatusIcon({ status }: { status: "up" | "down" | "degraded" | "unknown" }): React.ReactElement {
   switch (status) {
     case "up":
       return <Check className="h-4 w-4 text-green-500" />;
@@ -61,15 +57,10 @@ export function MaintenanceStatus(): React.ReactElement {
   const checkHealth = useCallback(async (): Promise<void> => {
     setIsChecking(true);
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s to allow for retries
-
       const res = await fetch("/api/health", {
         cache: "no-store",
-        signal: controller.signal,
+        signal: AbortSignal.timeout(60000), // 60s to allow for retries
       });
-
-      clearTimeout(timeoutId);
 
       if (!res.ok) {
         // Server returned 503 or similar - maintenance mode

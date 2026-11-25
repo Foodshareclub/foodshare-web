@@ -86,15 +86,7 @@ const item = {
 
 export function TemplatesTab({ templates }: TemplatesTabProps) {
   // Group templates by category
-  const groupedTemplates = templates.reduce(
-    (acc, template) => {
-      const cat = template.category || "transactional";
-      if (!acc[cat]) acc[cat] = [];
-      acc[cat].push(template);
-      return acc;
-    },
-    {} as Record<string, EmailTemplate[]>,
-  );
+  const groupedTemplates = Object.groupBy(templates, (template) => template.category || "transactional");
 
   const categories = Object.keys(CATEGORY_CONFIG) as Array<keyof typeof CATEGORY_CONFIG>;
 

@@ -69,8 +69,8 @@ let r2CircuitState: CircuitState = {
  * Classify an error to determine if it's retriable and what type it is
  */
 export function classifyError(error: unknown, response?: Response): UploadError {
-  // Handle AbortError (timeout or manual abort)
-  if (error instanceof DOMException && error.name === "AbortError") {
+  // Handle AbortError / TimeoutError (timeout or manual abort)
+  if (error instanceof DOMException && (error.name === "AbortError" || error.name === "TimeoutError")) {
     return {
       type: "aborted",
       message: "Upload was aborted or timed out",
@@ -254,17 +254,9 @@ export async function withRetry<T>(
   let lastError: UploadError | null = null;
 
   for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
-    // Create abort controller for timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), config.timeoutMs);
-
     try {
-      const result = await fn(controller.signal);
-      clearTimeout(timeoutId);
-      return result;
+      return await fn(AbortSignal.timeout(config.timeoutMs));
     } catch (error) {
-      clearTimeout(timeoutId);
-
       // Classify the error
       lastError = classifyError(error);
 
@@ -311,21 +303,13 @@ export async function fetchWithTimeout(
   options: RequestInit & { timeout?: number } = {},
 ): Promise<Response> {
   const { timeout = DEFAULT_RETRY_CONFIG.timeoutMs, ...fetchOptions } = options;
+  const timeoutSignal = AbortSignal.timeout(timeout);
+  const signal = fetchOptions.signal ? AbortSignal.any([fetchOptions.signal, timeoutSignal]) : timeoutSignal;
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const response = await fetch(url, {
-      ...fetchOptions,
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    throw error;
-  }
+  return fetch(url, {
+    ...fetchOptions,
+    signal,
+  });
 }
 
 // ============================================================================

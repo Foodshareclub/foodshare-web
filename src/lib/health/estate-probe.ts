@@ -36,22 +36,20 @@ export async function probe(
   init: RequestInit = {},
   timeoutMs = 3000,
 ): Promise<{ state: ServiceState; ms: number }> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
   const startedAt = Date.now();
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
+  const signal = init.signal ? AbortSignal.any([init.signal, timeoutSignal]) : timeoutSignal;
 
   try {
     const response = await fetch(url, {
       ...init,
       cache: "no-store",
-      signal: controller.signal,
+      signal,
     });
     const ms = Date.now() - startedAt;
     return { state: response.ok ? "up" : "down", ms };
   } catch {
     return { state: "down", ms: Date.now() - startedAt };
-  } finally {
-    clearTimeout(timer);
   }
 }
 

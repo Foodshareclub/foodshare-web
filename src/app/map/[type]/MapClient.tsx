@@ -14,8 +14,8 @@ import "@/components/leaflet/leaflet.css";
 
 import Navbar from "@/components/header/navbar/Navbar";
 import { MapPreviewCard } from "@/components/map/MapListingCard";
+import { MapStatusOverlay } from "@/components/map/MapStatusOverlay";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
-import { Button } from "@/components/ui/button";
 import { useDefaultMapCenter } from "@/hooks/useDefaultMapCenter";
 import { useMapPosition } from "@/hooks/useMapPosition";
 import { useMapZoom } from "@/hooks/useMapZoom";
@@ -26,7 +26,7 @@ import type { AuthUser } from "@/lib/data/auth";
 import type { Coordinates as StoreCoordinates } from "@/store/zustand/useUIStore";
 import { type LocationType, getCoordinates } from "@/types/product.types";
 import type L from "leaflet";
-import { Loader2, MapPin, Maximize2, RefreshCw, ZoomOut } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 // Dynamic imports for Leaflet components (SSR: false is critical!)
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), {
@@ -103,6 +103,7 @@ interface MapClientProps {
 
 export function MapClient({ type, initialLocations, initialLocation = null, user }: MapClientProps) {
   const router = useRouter();
+  const t = useTranslations();
 
   // State to track if component is mounted (for SSR safety)
   const [mounted, setMounted] = useState(false);
@@ -304,8 +305,10 @@ export function MapClient({ type, initialLocations, initialLocation = null, user
         <div className="relative flex-1 min-h-0 w-full isolate">
           <div className="absolute inset-0 animate-pulse bg-muted flex items-center justify-center">
             <div className="text-center">
-              <div className="text-4xl mb-4">🗺️</div>
-              <p className="text-muted-foreground">Loading map...</p>
+              <div className="text-4xl mb-4" aria-hidden="true">
+                {"🗺️"}
+              </div>
+              <p className="text-muted-foreground">{t("loading")}</p>
             </div>
           </div>
         </div>
@@ -334,8 +337,10 @@ export function MapClient({ type, initialLocations, initialLocation = null, user
           {isCenterLoading ? (
             <div className="h-full w-full animate-pulse bg-muted flex items-center justify-center">
               <div className="text-center">
-                <div className="text-4xl mb-4">🗺️</div>
-                <p className="text-muted-foreground">Loading map...</p>
+                <div className="text-4xl mb-4" aria-hidden="true">
+                  {"🗺️"}
+                </div>
+                <p className="text-muted-foreground">{t("loading")}</p>
               </div>
             </div>
           ) : (
@@ -441,87 +446,20 @@ export function MapClient({ type, initialLocations, initialLocation = null, user
           )}
         </div>
 
-        {/* Top-center HUD: live area count, loading status, fit-to-markers, or retry */}
-        {!isCenterLoading && (isFetchingLocations || loadError || (hasLoadedOnce && hasLocations)) && (
-          <div className="pointer-events-none absolute top-4 left-1/2 z-[1000] -translate-x-1/2">
-            {loadError && !isFetchingLocations ? (
-              <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-border bg-background/95 px-4 py-1.5 text-xs font-medium text-foreground shadow-md backdrop-blur-sm">
-                <span>Couldn&apos;t load listings in this area</span>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={handleRetryLoad}
-                  className="h-6 rounded-full px-2.5 text-xs"
-                >
-                  <RefreshCw className="size-3" aria-hidden="true" />
-                  Retry
-                </Button>
-              </div>
-            ) : isFetchingLocations && !hasLocations ? (
-              <div className="flex items-center gap-2 rounded-full border border-border bg-background/95 px-4 py-1.5 text-xs font-medium text-foreground shadow-md backdrop-blur-sm">
-                <Loader2 className="size-3.5 animate-spin text-primary" aria-hidden="true" />
-                <span>Searching this area...</span>
-              </div>
-            ) : hasLoadedOnce && hasLocations ? (
-              <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-background/95 px-3.5 py-1.5 text-xs font-medium text-foreground shadow-md backdrop-blur-sm">
-                {isFetchingLocations && (
-                  <Loader2 className="size-3 animate-spin text-primary shrink-0" aria-hidden="true" />
-                )}
-                <span>
-                  {locations.length} {locations.length === 1 ? "listing" : "listings"} in this area
-                </span>
-                <button
-                  type="button"
-                  onClick={handleFitMarkers}
-                  className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
-                  aria-label="Fit all visible listings in view"
-                >
-                  <Maximize2 className="size-3" aria-hidden="true" />
-                  Fit
-                </button>
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        {/* Empty state overlay — shown ONLY after authoritative 200 response returned 0 items */}
-        {hasLoadedOnce && !isFetchingLocations && !loadError && !hasLocations && !isCenterLoading && (
-          <div className="pointer-events-none absolute left-1/2 top-1/2 z-[1000] -translate-x-1/2 -translate-y-1/2">
-            <div className="pointer-events-auto flex flex-col items-center gap-3 rounded-2xl border border-border bg-background/95 p-6 shadow-lg backdrop-blur-sm">
-              <span className="text-center text-4xl" aria-hidden="true">
-                🗺
-              </span>
-              <p className="text-lg font-semibold text-foreground">No items found</p>
-              <p className="max-w-[280px] text-center text-sm text-muted-foreground">
-                There are currently no {type === "all" ? "" : `${type} `}items with location data in this area
-              </p>
-              <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleZoomOutWider}
-                  className="rounded-full gap-1.5"
-                >
-                  <ZoomOut className="size-3.5" aria-hidden="true" />
-                  Zoom out to search wider
-                </Button>
-                {(dynamicCenter[0] !== 20.0 || dynamicCenter[1] !== 0.0) && (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => mapInstanceRef.current?.flyTo(dynamicCenter, 12, { duration: 0.7 })}
-                    className="rounded-full gap-1.5"
-                  >
-                    <MapPin className="size-3.5" aria-hidden="true" />
-                    My area
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
+        {!isCenterLoading && (
+          <MapStatusOverlay
+            type={type}
+            locationsCount={locations.length}
+            hasLocations={hasLocations}
+            hasLoadedOnce={hasLoadedOnce}
+            isFetchingLocations={isFetchingLocations}
+            loadError={loadError}
+            canReturnToArea={dynamicCenter[0] !== 20.0 || dynamicCenter[1] !== 0.0}
+            onRetry={handleRetryLoad}
+            onFitMarkers={handleFitMarkers}
+            onZoomOutWider={handleZoomOutWider}
+            onReturnToArea={() => mapInstanceRef.current?.flyTo(dynamicCenter, 12, { duration: 0.7 })}
+          />
         )}
       </div>
 

@@ -12,8 +12,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
 import { Bus, Clock, Eye, Heart, MapPin, Package, Star } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+
+const ONE_PRODUCT_LABELS = {
+  likesSuffix: "likes",
+} as const;
 
 export type OneProductType = {
   product: InitialProductStateType;
@@ -32,6 +37,7 @@ export type OneProductType = {
  * Uses React Query instead of Redux for mutations
  */
 export function OneProduct({ chat, product, buttonValue, navigateHandler, size, requesterId, roomId }: OneProductType) {
+  const t = useTranslations();
   const router = useRouter();
   const [rating, setRating] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -144,11 +150,11 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
         <div className="flex justify-between mb-4 flex-wrap gap-3">
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <Heart className="size-4 text-rose-500/80" aria-hidden="true" />
-            <p className="text-sm">{product.post_like_counter || 0} likes</p>
+            <p className="text-sm">{`${product.post_like_counter || 0} ${ONE_PRODUCT_LABELS.likesSuffix}`}</p>
           </div>
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <Eye className="size-4 text-blue-500/80" aria-hidden="true" />
-            <p className="text-sm">{product.post_views || 0} views</p>
+            <p className="text-sm">{t("views_count", { count: product.post_views || 0 })}</p>
           </div>
         </div>
 
@@ -180,7 +186,7 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2 text-foreground/80">
               <Clock className="size-4 text-primary/70" aria-hidden="true" />
-              <p className="font-medium">Available</p>
+              <p className="font-medium">{t("available")}</p>
             </div>
             <p className="text-muted-foreground">{product.available_hours || "Anytime"}</p>
           </div>
@@ -190,7 +196,7 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2 text-foreground/80">
                 <Package className="size-4 text-primary/70" aria-hidden="true" />
-                <p className="font-medium">Details</p>
+                <p className="font-medium">{t("details")}</p>
               </div>
               <p className="text-muted-foreground text-end max-w-[60%]">{product.post_description}</p>
             </div>
@@ -201,7 +207,7 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2 text-foreground/80">
                 <Bus className="size-4 text-primary/70" aria-hidden="true" />
-                <p className="font-medium">Transport</p>
+                <p className="font-medium">{t("transport")}</p>
               </div>
               <p className="text-muted-foreground uppercase text-sm">{product.transportation}</p>
             </div>

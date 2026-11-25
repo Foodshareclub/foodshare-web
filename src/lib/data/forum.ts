@@ -13,7 +13,7 @@ import { connection } from "next/server";
 // ============================================================================
 
 export const FORUM_LIMITS = {
-  POSTS: 100,
+  POSTS: 300,
   TRENDING: 5,
   LEADERBOARD: 5,
   RECENT_ACTIVITY: 5,
@@ -114,8 +114,8 @@ export function computeLeaderboard(posts: ForumPost[], limit = FORUM_LIMITS.LEAD
  * Get trending posts by engagement score
  */
 export function getTrendingPosts(posts: ForumPost[], limit = FORUM_LIMITS.TRENDING): ForumPost[] {
-  return [...posts]
-    .sort((a, b) => {
+  return posts
+    .toSorted((a, b) => {
       const scoreA = (a.views_count || 0) + (a.forum_likes_counter || 0) * 3;
       const scoreB = (b.views_count || 0) + (b.forum_likes_counter || 0) * 3;
       return scoreB - scoreA;
@@ -127,8 +127,8 @@ export function getTrendingPosts(posts: ForumPost[], limit = FORUM_LIMITS.TRENDI
  * Get recent activity posts
  */
 export function getRecentActivityPosts(posts: ForumPost[], limit = FORUM_LIMITS.RECENT_ACTIVITY): ForumPost[] {
-  return [...posts]
-    .sort((a, b) => new Date(b.forum_post_created_at).getTime() - new Date(a.forum_post_created_at).getTime())
+  return posts
+    .toSorted((a, b) => new Date(b.forum_post_created_at).getTime() - new Date(a.forum_post_created_at).getTime())
     .slice(0, limit);
 }
 

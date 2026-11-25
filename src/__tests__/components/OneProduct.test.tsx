@@ -3,12 +3,10 @@ import type { ActionResult } from "@/lib/errors";
 import type { InitialProductStateType } from "@/types/product.types";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 
-const updateProduct = mock(
-  async (_id: number, _form: FormData): Promise<ActionResult<undefined>> => ({
-    success: true,
-    data: undefined,
-  }),
-);
+const updateProduct = mock(async (_id: number, _form: FormData): Promise<ActionResult<undefined>> => ({
+  success: true,
+  data: undefined,
+}));
 const updateRoom = mock(async (_id: string, _form: FormData) => ({
   success: true,
   data: undefined,
@@ -18,6 +16,9 @@ mock.module("@/app/actions/products", () => ({ updateProduct }));
 mock.module("@/app/actions/chat", () => ({ updateRoom }));
 mock.module("@/hooks/useAuth", () => ({ useAuth: () => ({ isAuthenticated: true }) }));
 mock.module("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
+mock.module("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
 mock.module("next/image", () => ({ default: () => null }));
 mock.module("@/components/modals/AuthenticationUser/AuthenticationUserModal", () => ({
   default: () => null,

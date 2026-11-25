@@ -253,20 +253,10 @@ export async function executeWithRateLimitHandling<T>(
     }
 
     try {
-      // Create abort controller for timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), RATE_LIMIT_CONFIG.requestTimeoutMs);
-
       lastApiCallTime = Date.now();
-
-      try {
-        const result = await fn();
-        clearTimeout(timeoutId);
-        recordSuccess();
-        return result;
-      } finally {
-        clearTimeout(timeoutId);
-      }
+      const result = await fn();
+      recordSuccess();
+      return result;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
       const classification = classifyError(lastError);

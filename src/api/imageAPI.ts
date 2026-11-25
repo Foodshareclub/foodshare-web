@@ -64,15 +64,14 @@ async function fetchWithRetry(url: string, init: RequestInit): Promise<Response>
       await sleep(delay);
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const timeoutSignal = AbortSignal.timeout(TIMEOUT_MS);
+    const signal = init.signal ? AbortSignal.any([init.signal, timeoutSignal]) : timeoutSignal;
 
     try {
       const response = await fetch(url, {
         ...init,
-        signal: controller.signal,
+        signal,
       });
-      clearTimeout(timeoutId);
 
       if (response.ok) {
         return response;
@@ -84,7 +83,6 @@ async function fetchWithRetry(url: string, init: RequestInit): Promise<Response>
 
       if (!lastError.retriable) break;
     } catch (error) {
-      clearTimeout(timeoutId);
       lastError = classifyError(error);
 
       if (!lastError.retriable) break;

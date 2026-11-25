@@ -41,20 +41,16 @@ export async function isDatabaseHealthy(timeoutMs = 8000, maxRetries = 1): Promi
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const controller = new AbortController();
       const attemptTimeout = attempt === 0 ? timeoutMs : timeoutMs * 1.5;
-      const timeoutId = setTimeout(() => controller.abort(), attemptTimeout);
 
       const response = await fetch(`${supabaseUrl}/rest/v1/profiles?select=id&limit=1`, {
         headers: {
           apikey: supabaseKey,
           Authorization: `Bearer ${supabaseKey}`,
         },
-        signal: controller.signal,
+        signal: AbortSignal.timeout(attemptTimeout),
         cache: "no-store",
       });
-
-      clearTimeout(timeoutId);
 
       if (response.ok) {
         // Only 2xx counts as healthy - a 401 means the anon key was rejected

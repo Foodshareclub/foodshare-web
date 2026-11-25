@@ -280,6 +280,7 @@ export function UnifiedChatContainer({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -288,16 +289,7 @@ export function UnifiedChatContainer({
 
   // Memoize grouped messages for performance
   const groupedMessages = useMemo(
-    () =>
-      messages.reduce(
-        (groups, message) => {
-          const date = new Date(message.timestamp).toDateString();
-          if (!groups[date]) groups[date] = [];
-          groups[date].push(message);
-          return groups;
-        },
-        {} as Record<string, Message[]>,
-      ),
+    () => Object.groupBy(messages, (message) => new Date(message.timestamp).toDateString()),
     [messages],
   );
 
@@ -534,7 +526,7 @@ export function UnifiedChatContainer({
           </div>
         ) : (
           <div className="space-y-1">
-            {Object.entries(groupedMessages).map(([date, dateMessages]) => (
+            {Object.entries(groupedMessages).map(([date, dateMessages = []]) => (
               <div key={date}>
                 <div className="flex items-center justify-center my-4 sticky top-0 z-10">
                   <span className="px-3 py-1.5 text-xs font-medium text-muted-foreground bg-background/90 backdrop-blur-sm rounded-full shadow-sm border border-border">
