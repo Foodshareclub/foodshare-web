@@ -8,6 +8,7 @@ import { getProductsPaginated } from "@/lib/data/products";
 import { generateItemListJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import { parseSearchLocation, parseSearchRadius } from "@/lib/listing-search";
 import { getDefaultSearchDistance } from "@/lib/location/default-distance";
+import { fetchNearbyWithExpansion } from "@/lib/location/nearby-expansion";
 import { resolveServerLocation } from "@/lib/location/server-location";
 import { categoryMetadata, generatePageMetadata, siteConfig } from "@/lib/metadata";
 import { createRequestLogger } from "@/lib/structured-logger";
@@ -115,60 +116,74 @@ export default async function CategoryPageContent({ type, searchParams }: { type
         defaultRadius: customProfileRadiusMeters,
       })
     : null;
-  const isLocationFiltered = locationParams !== null;
+  let isLocationFiltered = locationParams !== null;
 
   // Resolve DB default distance from backend (40 miles for US/imperial, 40 km for metric)
   const dbDistance = await getDefaultSearchDistance(locationParams?.country);
   const effectiveRadiusMeters = customProfileRadiusMeters ?? locationParams?.radius ?? dbDistance.radiusMeters;
 
   // If location params provided, fetch nearby posts using PostGIS
-  if (isLocationFiltered) {
+  if (locationParams) {
     let initialLoadFailed = false;
     let nearbyResult: Awaited<ReturnType<typeof getNearbyPosts>> = {
       data: [],
       hasMore: false,
       nextCursor: null,
     };
+    let nearbyRadius = locationParams.radius;
     try {
-      nearbyResult = await getNearbyPosts({
-        lat: locationParams.lat,
-        lng: locationParams.lng,
-        // Use the user's configured radius (NOT a hardcoded 50km) so the first
-        // page is genuinely local. Expansion on scroll is handled client-side.
-        radiusMeters: locationParams.radius,
-        postType: productType === "challenge" ? null : productType,
-        searchTerm,
-        limit: 20,
-      });
+      // Use the user's configured radius (NOT a hardcoded 50km) so the first
+      // page is genuinely local; widen only while it is empty. Expansion on
+      // scroll is handled client-side.
+      const expanded = await fetchNearbyWithExpansion(
+        (radiusMeters) =>
+          getNearbyPosts({
+            lat: locationParams.lat,
+            lng: locationParams.lng,
+            radiusMeters,
+            postType: productType === "challenge" ? null : productType,
+            searchTerm,
+            limit: 20,
+          }),
+        locationParams.radius,
+      );
+      nearbyResult = expanded.page;
+      nearbyRadius = expanded.radius;
     } catch (error) {
       initialLoadFailed = true;
       logger.error("Failed to fetch nearby posts", error);
     }
-
-    return (
-      <Suspense fallback={<ProductsPageSkeleton />}>
-        <HomeClient
-          key={`${productType}:${searchTerm}:${locationParams.lat}:${locationParams.lng}:${locationParams.radius}:${params.distance}`}
-          initialProducts={[]}
-          initialLoadFailed={initialLoadFailed}
-          searchTerm={searchTerm}
-          productType={productType}
-          nearbyPosts={nearbyResult.data}
-          isLocationFiltered={true}
-          radiusMeters={locationParams.radius}
-          initialHasMore={nearbyResult.hasMore}
-          initialNextCursor={nearbyResult.nextCursor}
-          initialLocation={{
-            latitude: locationParams.lat,
-            longitude: locationParams.lng,
-            city: locationParams.city,
-            country: locationParams.country,
-            source: locationParams.source,
-            approximate: locationParams.approximate,
-          }}
-        />
-      </Suspense>
-    );
+    // An approximate (edge/IP/cookie) location is a guess. If nothing is nearby at any radius,
+    // fall through to the unfiltered feed so the guest still sees listings.
+    if (locationParams.approximate && !initialLoadFailed && nearbyResult.data.length === 0) {
+      isLocationFiltered = false;
+    }
+    if (isLocationFiltered) {
+      return (
+        <Suspense fallback={<ProductsPageSkeleton />}>
+          <HomeClient
+            key={`${productType}:${searchTerm}:${locationParams.lat}:${locationParams.lng}:${locationParams.radius}:${params.distance}`}
+            initialProducts={[]}
+            initialLoadFailed={initialLoadFailed}
+            searchTerm={searchTerm}
+            productType={productType}
+            nearbyPosts={nearbyResult.data}
+            isLocationFiltered={true}
+            radiusMeters={nearbyRadius}
+            initialHasMore={nearbyResult.hasMore}
+            initialNextCursor={nearbyResult.nextCursor}
+            initialLocation={{
+              latitude: locationParams.lat,
+              longitude: locationParams.lng,
+              city: locationParams.city,
+              country: locationParams.country,
+              source: locationParams.source,
+              approximate: locationParams.approximate,
+            }}
+          />
+        </Suspense>
+      );
+    }
   }
 
   // No location filter - fetch paginated products of type

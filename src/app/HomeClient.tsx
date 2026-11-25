@@ -8,14 +8,14 @@ import { useLocationResolver } from "@/hooks/useLocationResolver";
 import { encodeNearbyCursor } from "@/lib/api/listing-cursor";
 import type { NearbyCursor, NearbyPost } from "@/lib/data/nearby-posts";
 import { isLegacyHardcodedCoordinates } from "@/lib/location/approximate-location";
+import { MAX_NEARBY_RADIUS_METERS, fetchNearbyWithExpansion, nextRadiusStep } from "@/lib/location/nearby-expansion";
 import { type Coordinates, useUIStore } from "@/store/zustand/useUIStore";
 import type { InitialProductStateType } from "@/types/product.types";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-/** Hard cap on radius expansion. Beyond this the feed is considered exhausted. */
-const MAX_RADIUS_METERS = 160000; // 160km (100 miles) hard cap
+const MAX_RADIUS_METERS = MAX_NEARBY_RADIUS_METERS;
 
 /** Format distance for display - miles for US (en), km for others */
 function formatDistance(meters: number, locale: string): string {
@@ -25,14 +25,6 @@ function formatDistance(meters: number, locale: string): string {
   }
   const km = meters / 1000;
   return `${Math.round(km)} km`;
-}
-
-/**
- * Next radius step during expansion. Doubles each time, capped at MAX_RADIUS.
- * 5km → 10km → 20km → 40km → 50km → done.
- */
-function nextRadiusStep(currentRadius: number): number {
-  return Math.min(currentRadius * 2, MAX_RADIUS_METERS);
 }
 
 // ============================================================================
@@ -245,27 +237,37 @@ export function HomeClient({
   // exhausted it within a few pages and the feed showed "Something went
   // wrong" instead of the next page. The same bucket is what real writes
   // share, so scrolling also rate-limited the user's next actual mutation.
-  const fetchNearby = useCallback(async (lat: number, lng: number, radius: number, postType: string) => {
-    setIsFetchingNearby(true);
-    try {
-      const result = await requestNearbyListings({ lat, lng, radius, postType, cursor: null });
-      if (result.success) {
-        setClientNearbyPosts(result.data);
-        setIsClientLocationFiltered(true);
-        // displayRadius captures the user's configured radius at first load.
-        setDisplayRadius(radius);
-        setHasMore(result.hasMore);
-        setNearbyCursor(result.nextCursor);
-        setProductsCursor(null);
-        setExtraProducts([]);
-        setHasAttemptedLoadMore(false);
-        locationRef.current = { lat, lng, queryRadius: radius };
+  const fetchNearby = useCallback(
+    async (lat: number, lng: number, radius: number, postType: string, approximate: boolean) => {
+      setIsFetchingNearby(true);
+      try {
+        // Widen the first page until it has rows: an approximate (IP) location
+        // can sit in an empty area while listings exist a little further out.
+        const { page: result, radius: usedRadius } = await fetchNearbyWithExpansion(
+          (r) => requestNearbyListings({ lat, lng, radius: r, postType, cursor: null }),
+          radius,
+        );
+        // An approximate location is a guess. If nothing is found even at the
+        // widest radius, keep the unfiltered feed rather than replacing it with
+        // an empty state, so guests without a usable location still get a feed.
+        if (result.success && (result.data.length > 0 || !approximate)) {
+          setClientNearbyPosts(result.data);
+          setIsClientLocationFiltered(true);
+          // displayRadius captures the user's configured radius at first load.
+          setDisplayRadius(radius);
+          setHasMore(result.hasMore);
+          setNearbyCursor(result.nextCursor);
+          setProductsCursor(null);
+          setExtraProducts([]);
+          setHasAttemptedLoadMore(false);
+          locationRef.current = { lat, lng, queryRadius: usedRadius };
+        }
+      } finally {
+        setIsFetchingNearby(false);
       }
-    } finally {
-      setIsFetchingNearby(false);
-    }
-  }, []);
-
+    },
+    [],
+  );
   const effectiveHasMore = hasMore && !paginationFailed && !initialFetchFailed;
 
   /**
@@ -409,6 +411,7 @@ export function HomeClient({
     }
   }, [searchParams]);
 
+  const lastAttemptRef = useRef<string | null>(null);
   // Synchronize resolved location changes to the feed
   useEffect(() => {
     if (searchTerm || searchParams.get("distance") === "any" || initialLocation?.source === "manual") return;
@@ -429,8 +432,18 @@ export function HomeClient({
       return;
     }
 
+    // One attempt per location: a kept unfiltered feed must not trigger a refetch loop.
+    const attemptKey = `${productType}:${resolvedLocation.latitude}:${resolvedLocation.longitude}:${radius}`;
+    if (lastAttemptRef.current === attemptKey) return;
     const timer = setTimeout(() => {
-      fetchNearby(resolvedLocation.latitude, resolvedLocation.longitude, radius, productType);
+      lastAttemptRef.current = attemptKey;
+      fetchNearby(
+        resolvedLocation.latitude,
+        resolvedLocation.longitude,
+        radius,
+        productType,
+        Boolean(resolvedLocation.approximate) || resolvedLocation.source === "ip",
+      );
     }, 0);
     return () => clearTimeout(timer);
   }, [
