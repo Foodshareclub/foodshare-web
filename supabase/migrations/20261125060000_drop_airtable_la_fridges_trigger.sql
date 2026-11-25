@@ -1,0 +1,26 @@
+-- Migration: Drop the dead AirtableLAFridges trigger from public.posts
+--
+-- Why
+--   The trigger (AFTER INSERT OR UPDATE on public.posts) calls
+--   supabase_functions.http_request against an Airtable base, with a legacy
+--   Airtable API key written inline in its definition (created in
+--   20260128195318_baseline.sql). Airtable rejects that key with HTTP 401, so on
+--   every post write the trigger fires a failing HTTP request and syncs nothing.
+--
+--   The key sits in git history of this repository and of the public
+--   foodshare-web repository, so it must be treated as compromised. Dropping the
+--   trigger removes the live use; it does not remove the key from history. The
+--   key itself has to be revoked in Airtable (card t_d3c026dd). The value is
+--   deliberately not repeated here.
+--
+-- How to restore the sync properly (only if the LA fridges sync is still wanted)
+--   Do not put a credential in a trigger definition again. Instead:
+--     1. Create a scoped Airtable personal access token (PAT) limited to the one
+--        base and the one scope the sync needs.
+--     2. Store it in the Vault (or as an edge function secret), never in SQL.
+--     3. Write an edge function that reads the PAT from the Vault and calls
+--        Airtable, and have a trigger or queue enqueue the post id for it.
+--
+-- Idempotent: a no-op where the trigger does not exist.
+
+DROP TRIGGER IF EXISTS "AirtableLAFridges" ON public.posts;

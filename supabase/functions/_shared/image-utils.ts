@@ -47,6 +47,8 @@ export async function downloadImage(url: string): Promise<Uint8Array> {
     response = await fetchPinned(url, validation.resolvedIps[0], {
       timeout: 10_000,
       maxBytes: MAX_DOWNLOAD_BYTES,
+      // Wikimedia rejects anonymous HTTP clients even when search succeeded.
+      headers: { "User-Agent": "FoodShare-CoverSearch/1.0 (+https://foodshare.club)" },
     });
   } catch (err) {
     throw new Error(`Failed to fetch image: ${String(err).slice(0, 120)}`);
