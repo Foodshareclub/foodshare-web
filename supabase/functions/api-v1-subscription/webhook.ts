@@ -615,7 +615,12 @@ async function processWebhookAtomically(
 // Webhook Handler (exported)
 // =============================================================================
 
-export async function handleWebhook(req: Request): Promise<Response> {
+/**
+ * @param rawBody The exact request bytes. Pass it whenever the request body
+ *   has already been read (the API handler factory parses POST bodies before
+ *   the route runs); signatures are verified over these bytes.
+ */
+export async function handleWebhook(req: Request, rawBody?: string): Promise<Response> {
   const corsHeaders = getCorsHeaders(req);
   const timer = new PerformanceTimer("webhook_request");
   const requestId = crypto.randomUUID();
@@ -637,7 +642,7 @@ export async function handleWebhook(req: Request): Promise<Response> {
     });
   }
 
-  const body = await req.text();
+  const body = rawBody ?? (req.bodyUsed ? "" : await req.text());
 
   if (!body) {
     metrics.requestsError++;

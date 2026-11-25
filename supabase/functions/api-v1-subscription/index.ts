@@ -502,7 +502,7 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
 
   // POST /webhook — platform webhook handler (Apple/Google/Stripe)
   if (path.includes("/webhook")) {
-    return handleWebhook(ctx.request);
+    return handleWebhook(ctx.request, ctx.rawBody);
   }
 
   // POST /cron — run cron tasks (cron auth)
@@ -556,6 +556,10 @@ Deno.serve(createAPIHandler({
   version: VERSION,
   requireAuth: false, // Auth handled per-route (JWT for sync/status, cron auth for cron)
   csrf: false, // Mobile clients + cron
+  // The factory parses (and so consumes) the POST body before the route
+  // runs. Platform webhooks verify signatures over the exact bytes, so keep
+  // a raw copy for handleWebhook.
+  captureRawBody: true,
   rateLimit: {
     limit: 30,
     windowMs: 60000,
