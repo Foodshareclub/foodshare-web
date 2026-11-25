@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 
 /**
  * The health route.
@@ -47,6 +47,12 @@ function url(path: string): string {
 }
 
 describe("GET /api/health", () => {
+  const originalFetch = globalThis.fetch;
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
   beforeEach(() => {
     mockState.responses.clear();
     mockState.asked = [];

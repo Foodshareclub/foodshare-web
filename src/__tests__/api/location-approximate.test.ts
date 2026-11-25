@@ -60,18 +60,43 @@ describe("GET /api/location/approximate", () => {
   });
 
   it("resolves location via public IP geolocation when edge headers are absent", async () => {
-    // Calling without edge headers triggers real IP geolocation
-    const request = new NextRequest("http://localhost:3000/api/location/approximate");
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      if (url.startsWith("https://ipwho.is/")) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            latitude: 38.5816,
+            longitude: -121.4944,
+            city: "Sacramento",
+            country_code: "US",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+      return originalFetch(input);
+    }) as typeof fetch;
 
-    const response = await GET(request);
-    expect(response.status).toBe(200);
+    try {
+      const request = new NextRequest("http://localhost:3000/api/location/approximate", {
+        headers: {
+          "x-forwarded-for": "198.51.100.77",
+        },
+      });
 
-    const data = await response.json();
-    expect(data.success).toBe(true);
-    expect(data.location.source).toBe("ip");
-    expect(data.location.approximate).toBe(true);
-    expect(typeof data.location.latitude).toBe("number");
-    expect(typeof data.location.longitude).toBe("number");
-    expect(typeof data.location.city).toBe("string");
+      const response = await GET(request);
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.success).toBe(true);
+      expect(data.location.source).toBe("ip");
+      expect(data.location.approximate).toBe(true);
+      expect(data.location.latitude).toBeCloseTo(38.5816, 2);
+      expect(data.location.longitude).toBeCloseTo(-121.4944, 2);
+      expect(data.location.city).toBe("Sacramento");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });

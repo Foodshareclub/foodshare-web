@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { encodeNearbyCursor } from "@/lib/api/listing-cursor";
 import type { NearbyPost } from "@/lib/data/nearby-posts";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -21,15 +21,6 @@ let nearbyResponder: (url: string) => unknown = () => ({
 });
 
 const originalFetch = globalThis.fetch;
-globalThis.fetch = (async (input: RequestInfo | URL) => {
-  const url = typeof input === "string" ? input : input.toString();
-  if (url.startsWith("/api/listings")) {
-    nearbyUrls.push(url);
-    const body = nearbyResponder(url);
-    return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
-  }
-  return originalFetch(input as RequestInfo);
-}) as typeof fetch;
 mock.module("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams("lat=1&lng=2&radius=1000&distance=nearby&key_word=Banana"),
   useRouter: () => ({ refresh: mock(), push: mock(), replace: mock() }),
@@ -67,8 +58,21 @@ mock.module("@/components/productCard/ProductGrid", () => ({
 }));
 const { HomeClient } = await import("@/app/HomeClient");
 
+beforeEach(() => {
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = typeof input === "string" ? input : input.toString();
+    if (url.startsWith("/api/listings")) {
+      nearbyUrls.push(url);
+      const body = nearbyResponder(url);
+      return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    return originalFetch(input as RequestInfo);
+  }) as typeof fetch;
+});
+
 afterEach(() => {
   cleanup();
+  globalThis.fetch = originalFetch;
   nearbyUrls.length = 0;
   nearbyResponder = () => ({ success: true, data: [{ id: 2 }], hasMore: false, nextCursor: null, radius: 1000 });
 });
