@@ -105,6 +105,17 @@ describe("PostDetailContent - Airbnb Detail Layout", () => {
     expect(screen.getByText("Community Sharer")).toBeDefined();
   });
 
+  it("renders the full author name and role title on volunteer listings", () => {
+    const volunteerPost: InitialProductStateType = {
+      ...basePost,
+      post_type: "volunteer",
+      post_name: "IT Teammate",
+      author_name: "Denis Yarmoshko",
+    };
+    render(<PostDetailContent post={volunteerPost} user={null} isModal />);
+    expect(screen.getByRole("heading", { level: 1, name: "IT Teammate" })).toBeDefined();
+    expect(screen.getByText("Denis Yarmoshko")).toBeDefined();
+  });
   it("renders organization attribution for foodbank listings", () => {
     const foodBankPost: InitialProductStateType = {
       ...basePost,

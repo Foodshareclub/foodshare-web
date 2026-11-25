@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { standardizeDisplayAddress } from "@/lib/address-standardizer";
 import type { AuthUser } from "@/lib/data/auth";
-import { formatFirstAuthorName } from "@/lib/data/author-display";
+import { formatListingAuthorLabel } from "@/lib/data/author-display";
 import { getCoverCredit } from "@/lib/cover-provenance";
 import { normalizeImageUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
@@ -246,7 +246,7 @@ export function PostDetailContent({
                     ? post.host_entity ||
                       (metadata?.host_company as string | undefined) ||
                       (post.post_type === "foodbank" ? post.post_name : "Community Host")
-                    : formatFirstAuthorName(post.author_name)}
+                    : formatListingAuthorLabel(post.post_type, post.author_name)}
                 </p>
                 {Boolean(pointPerson) && (
                   <p className="truncate text-sm text-muted-foreground">{`Contact: ${String(pointPerson)}`}</p>

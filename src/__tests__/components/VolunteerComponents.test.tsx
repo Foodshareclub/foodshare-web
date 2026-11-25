@@ -50,6 +50,18 @@ describe("VolunteerPostcard - Airbnb Host Volunteer Card", () => {
   });
 });
 
+describe("VolunteerPostcard - name from the profile", () => {
+  it("shows the author's full name with the role title from post_name", () => {
+    const volunteer = {
+      ...mockVolunteer,
+      post_name: "IT Teammate",
+      author_name: "Denis Yarmoshko",
+    } as InitialProductStateType;
+    render(<VolunteerPostcard volunteer={volunteer} />);
+    expect(screen.getByText("Denis Yarmoshko")).toBeDefined();
+    expect(screen.getByText("“IT Teammate”")).toBeDefined();
+  });
+});
 describe("VolunteerGrid - Airbnb Community Grid", () => {
   it("renders volunteer cards in grid", () => {
     render(<VolunteerGrid volunteers={[mockVolunteer]} isLoading={false} />);

@@ -1,3 +1,4 @@
+import { splitVolunteerTitle } from "@/lib/data/author-display";
 import { isValidImageUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
@@ -48,8 +49,8 @@ export function VolunteerPostcard({ volunteer, isFeatured = false }: VolunteerPo
   // Get location (stripped address or full address)
   const location = volunteer.post_stripped_address || volunteer.post_address || "";
 
-  // Parse name and headline from post_name (format: "Name - Headline")
-  const [name, headline] = parseNameAndHeadline(volunteer.post_name);
+  // The name is the author's full name from their profile; post_name is the role.
+  const { name, headline } = splitVolunteerTitle(volunteer.post_name, volunteer.author_name);
 
   return (
     <Link href={volunteerUrl} className="block group h-full" prefetch={true}>
@@ -154,20 +155,6 @@ export function VolunteerPostcard({ volunteer, isFeatured = false }: VolunteerPo
       </div>
     </Link>
   );
-}
-
-/**
- * Parse "Name - Headline" format into separate parts
- */
-function parseNameAndHeadline(postName: string | null): [string, string | null] {
-  if (!postName) return ["Volunteer", null];
-
-  const parts = postName.split(" - ");
-  if (parts.length >= 2) {
-    return [parts[0].trim(), parts.slice(1).join(" - ").trim()];
-  }
-
-  return [postName, null];
 }
 
 /**

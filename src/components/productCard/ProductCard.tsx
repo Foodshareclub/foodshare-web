@@ -1,6 +1,6 @@
 import { getCoverCredit } from "@/lib/cover-provenance";
 import { standardizeDisplayAddress } from "@/lib/address-standardizer";
-import { formatFirstAuthorName } from "@/lib/data/author-display";
+import { formatListingAuthorLabel } from "@/lib/data/author-display";
 import type { InitialProductStateType } from "@/types/product.types";
 import { getProductDetailUrl } from "@/utils/categoryMapping";
 import { cn } from "@/lib/utils";
@@ -50,7 +50,7 @@ export function ProductCard({ product, coverUrl, onMouseEnter, onMouseLeave, onC
     product.host_entity ||
     ((product.metadata as Record<string, unknown> | undefined)?.host_company as string | undefined);
   const authorName = product.author_name
-    ? formatFirstAuthorName(product.author_name)
+    ? formatListingAuthorLabel(product.post_type, product.author_name)
     : !isOrgOrFridge
       ? "Community Member"
       : null;

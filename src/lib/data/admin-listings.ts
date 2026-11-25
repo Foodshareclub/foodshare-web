@@ -19,6 +19,7 @@ export interface AdminListing {
   pickup_time: string | null;
   available_hours: string | null;
   post_address: string | null;
+  condition: string | null;
   images: string[] | null;
   is_active: boolean;
   is_arranged: boolean;
@@ -75,6 +76,7 @@ interface AdminListingRow {
   pickup_time: string | null;
   available_hours: string | null;
   post_address: string | null;
+  condition: string | null;
   images: string[] | null;
   is_active: boolean;
   is_arranged: boolean;
@@ -104,10 +106,7 @@ function extractFirst<T>(data: T[] | T | null | undefined): T | null {
 /**
  * Derive status from listing fields
  */
-function deriveStatus(listing: {
-  is_active: boolean;
-  is_arranged: boolean;
-}): AdminListing["status"] {
+function deriveStatus(listing: { is_active: boolean; is_arranged: boolean }): AdminListing["status"] {
   if (!listing.is_active) return "pending";
   if (listing.is_arranged) return "approved";
   return "approved";
@@ -138,6 +137,7 @@ export async function getAdminListings(filters: AdminListingsFilter = {}): Promi
       pickup_time,
       available_hours,
       post_address,
+      condition,
       images,
       is_active,
       is_arranged,
@@ -222,6 +222,7 @@ export async function getAdminListingById(id: number): Promise<AdminListing | nu
       pickup_time,
       available_hours,
       post_address,
+      condition,
       images,
       is_active,
       is_arranged,

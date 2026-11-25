@@ -1,8 +1,9 @@
-import { formatProfileDisplayName } from "@/lib/data/author-display";
+import { formatListingAuthorName } from "@/lib/data/author-display";
 import { createCachedClient } from "@/lib/supabase/server";
 
 interface PostWithAuthorFields {
   profile_id?: string | null;
+  post_type?: string | null;
   author_name?: string | null;
   author_avatar_url?: string | null;
 }
@@ -12,8 +13,8 @@ interface PostWithAuthorFields {
  *
  * Uses the anon-safe `profiles_public` view via `createCachedClient()`.
  * Runs a single batched `.in("id", ...)` query for all unique missing profile IDs.
- * Strips surnames / full names for individual user privacy via `formatProfileDisplayName`
- * (e.g. "Tarlan Isaev" -> "Tarlan").
+ * Strips surnames for individual user privacy (e.g. "Tarlan Isaev" -> "Tarlan"), except on
+ * volunteer listings, which show the full name (see `formatListingAuthorName`).
  */
 export async function enrichPostsWithAuthors<P extends readonly unknown[]>(
   input: P,
@@ -66,7 +67,7 @@ export async function enrichPostsWithAuthors<P extends readonly unknown[]>(
       if ((!post.author_name || post.author_name === "Community Member") && post.profile_id) {
         const prof = profileMap.get(post.profile_id);
         if (prof) {
-          post.author_name = formatProfileDisplayName(prof);
+          post.author_name = formatListingAuthorName(post.post_type, prof);
           if (!post.author_avatar_url && prof.avatar_url) {
             post.author_avatar_url = prof.avatar_url;
           }

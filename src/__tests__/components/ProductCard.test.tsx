@@ -73,6 +73,15 @@ describe("ProductCard Airbnb Design", () => {
     // Media shares the listing photo ratio with the skeleton.
     expect(container.querySelector(".aspect-\\[20\\/19\\]")).toBeTruthy();
   });
+  test("volunteer listing shows the role as title and the author's full name", () => {
+    render(
+      <ProductCard
+        product={{ ...baseProduct, post_type: "volunteer", post_name: "IT Teammate", author_name: "Denis Yarmoshko" }}
+      />,
+    );
+    expect(screen.getByText("IT Teammate")).toBeTruthy();
+    expect(screen.getByText("by Denis Yarmoshko")).toBeTruthy();
+  });
   test("shows an Available badge for non-food listings", () => {
     render(<ProductCard product={{ ...baseProduct, post_type: "fridge" }} />);
     expect(screen.getByText("Available")).toBeTruthy();

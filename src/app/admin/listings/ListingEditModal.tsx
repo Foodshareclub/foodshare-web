@@ -41,6 +41,7 @@ import {
   User,
 } from "lucide-react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -52,6 +53,7 @@ interface Props {
 
 export function ListingEditModal({ listing, open, onClose }: Props) {
   const router = useRouter();
+  const t = useTranslations();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -65,6 +67,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
     pickup_time: listing.pickup_time || "",
     available_hours: listing.available_hours || "",
     post_address: listing.post_address || "",
+    condition: listing.condition || "",
     is_active: listing.is_active,
     admin_notes: listing.admin_notes || "",
   });
@@ -88,6 +91,8 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
       pickup_time: formData.pickup_time || undefined,
       available_hours: formData.available_hours || undefined,
       post_address: formData.post_address || undefined,
+      // Skills only exist on volunteer listings; other types keep their stored value.
+      condition: formData.post_type === "volunteer" ? formData.condition.trim() || undefined : undefined,
       is_active: formData.is_active,
       admin_notes: formData.admin_notes || undefined,
     };
@@ -115,6 +120,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
       pickup_time: listing.pickup_time || "",
       available_hours: listing.available_hours || "",
       post_address: listing.post_address || "",
+      condition: listing.condition || "",
       is_active: listing.is_active,
       admin_notes: listing.admin_notes || "",
     });
@@ -245,7 +251,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
                   </div>
 
                   <div>
-                    <Label htmlFor="post_description">Description</Label>
+                    <Label htmlFor="post_description">{t("description")}</Label>
                     <Textarea
                       id="post_description"
                       value={formData.post_description}
@@ -257,7 +263,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="post_type">Category</Label>
+                      <Label htmlFor="post_type">{t("category")}</Label>
                       <Select value={formData.post_type} onValueChange={(value) => handleChange("post_type", value)}>
                         <SelectTrigger className="mt-1.5">
                           <SelectValue />
@@ -282,6 +288,23 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
                   </div>
                 </div>
 
+                {/* Volunteer skills (stored in posts.condition) */}
+                {formData.post_type === "volunteer" && (
+                  <div>
+                    <Label htmlFor="condition">Skills</Label>
+                    <Input
+                      id="condition"
+                      value={formData.condition}
+                      onChange={(e) => handleChange("condition", e.target.value)}
+                      maxLength={20}
+                      className="mt-1.5"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Comma-separated, e.g. Driving,Cooking. Shown as skill tags on the volunteer card (20 characters
+                      max).
+                    </p>
+                  </div>
+                )}
                 {/* Pickup Details */}
                 <div className="space-y-4">
                   <h3 className="font-medium flex items-center gap-2">
@@ -486,7 +509,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
               </Button>
               <div className="flex gap-3">
                 <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-                  Cancel
+                  {t("cancel")}
                 </Button>
                 <Button onClick={handleSubmit} disabled={saving}>
                   <Save className="h-4 w-4 me-2" />

@@ -75,6 +75,20 @@ describe("author-enrichment (Author Attribution Architecture)", () => {
     expect(result[0].author_name).toBe("Tarlan");
   });
 
+  it("keeps the full name on volunteer listings and strips it on every other type", async () => {
+    mockProfiles.set("user-denis", {
+      id: "user-denis",
+      first_name: "Denis",
+      second_name: "Yarmoshko",
+      nickname: "den",
+    });
+    const result = await enrichPostsWithAuthors([
+      { id: 11590, profile_id: "user-denis", post_type: "volunteer", post_name: "IT Teammate" },
+      { id: 11591, profile_id: "user-denis", post_type: "food", post_name: "Bread" },
+    ]);
+    expect(result[0].author_name).toBe("Denis Yarmoshko");
+    expect(result[1].author_name).toBe("Denis");
+  });
   it("falls back to nickname if first_name is empty", async () => {
     mockProfiles.set("user-nick", {
       id: "user-nick",
