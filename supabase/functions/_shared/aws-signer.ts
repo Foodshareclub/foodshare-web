@@ -32,13 +32,14 @@ export class AWSV4Signer {
     // Compute payload hash for S3-compatible services (R2 requires x-amz-content-sha256)
     const payloadHash = await this.sha256Hex(payload);
 
-    // Add required headers
-    const signedHeaders = {
+    // Add required headers. Names are lowercased (and case-variants merged) so the
+    // canonical request and the Authorization SignedHeaders list agree exactly.
+    const signedHeaders = this.normalizeHeaders({
       ...headers,
       "x-amz-content-sha256": payloadHash,
       "x-amz-date": amzDate,
       host: new URL(url).host,
-    };
+    });
 
     // Create canonical request
     const canonicalRequest = await this.createCanonicalRequest(
@@ -71,6 +72,38 @@ export class AWSV4Signer {
     };
   }
 
+  /** Lowercase header names; values of names differing only by case are comma-joined. */
+  private normalizeHeaders(headers: Record<string, string>): Record<string, string> {
+    const out: Record<string, string> = {};
+    for (const [name, value] of Object.entries(headers)) {
+      const key = name.toLowerCase();
+      const v = String(value).trim().replace(/\s+/g, " ");
+      out[key] = key in out ? `${out[key]},${v}` : v;
+    }
+    return out;
+  }
+
+  /**
+   * RFC 3986 URI-encode each path segment (only unreserved characters stay literal).
+   * S3 and S3-compatible services (R2) encode once; every other service encodes twice.
+   */
+  private canonicalUri(pathname: string): string {
+    const encodeOnce = (segment: string) =>
+      encodeURIComponent(segment).replace(
+        /[!'()*]/g,
+        (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase(),
+      );
+    const path = (pathname || "/").split("/").map((segment) => {
+      let decoded = segment;
+      try {
+        decoded = decodeURIComponent(segment);
+      } catch { /* keep as is */ }
+      const once = encodeOnce(decoded);
+      return this.service === "s3" ? once : encodeOnce(once);
+    }).join("/");
+    return path || "/";
+  }
+
   private async createCanonicalRequest(
     method: string,
     url: string,
@@ -78,18 +111,17 @@ export class AWSV4Signer {
     payload: string | Uint8Array,
   ): Promise<string> {
     const urlObj = new URL(url);
-    const canonicalUri = urlObj.pathname || "/";
+    const canonicalUri = this.canonicalUri(urlObj.pathname);
     const canonicalQueryString = urlObj.search.slice(1) || "";
 
     // Canonical headers (sorted, lowercase keys)
     const canonicalHeaders = Object.keys(headers)
       .sort()
-      .map((key) => `${key.toLowerCase()}:${headers[key].trim()}`)
+      .map((key) => `${key}:${headers[key]}`)
       .join("\n") + "\n";
 
     const signedHeaders = Object.keys(headers)
       .sort()
-      .map((key) => key.toLowerCase())
       .join(";");
 
     // Hash payload — supports both string and binary

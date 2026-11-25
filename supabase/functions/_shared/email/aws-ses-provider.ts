@@ -145,8 +145,9 @@ export class AWSSESProvider implements EmailProvider {
 
       const headers = {
         "Content-Type": "application/json",
-        "Content-Length": payload.length.toString(),
       };
+      // Content-Length is deliberately not set or signed: fetch derives it from the
+      // UTF-8 encoded body, and String.length counts UTF-16 units, not bytes.
 
       const signedHeaders = await this.signer.signRequest(
         "POST",
