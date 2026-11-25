@@ -6,13 +6,7 @@
 export type EmailProvider = "resend" | "brevo" | "aws_ses" | "mailersend";
 
 export type EmailType =
-  | "auth"
-  | "chat"
-  | "food_listing"
-  | "feedback"
-  | "review_reminder"
-  | "newsletter"
-  | "announcement";
+  "auth" | "chat" | "food_listing" | "feedback" | "review_reminder" | "newsletter" | "announcement";
 
 export type EmailStatus = "pending" | "sent" | "delivered" | "failed" | "bounced" | "complained";
 

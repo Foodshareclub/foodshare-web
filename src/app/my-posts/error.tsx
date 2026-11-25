@@ -5,13 +5,7 @@ import { ErrorDisplay } from "@/components/error";
 /**
  * Error boundary for My Posts page
  */
-export default function MyPostsError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function MyPostsError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <ErrorDisplay
       error={error}

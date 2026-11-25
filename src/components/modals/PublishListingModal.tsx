@@ -173,11 +173,7 @@ function PublishListingModal({ product, isOpen, onClose, setOpenEdit, value }: P
     form.setDescription(newDesc.slice(0, MAX_DESCRIPTION_LENGTH));
   };
 
-  const handleTemplateSelect = (template: {
-    title: string;
-    description: string;
-    tags: string[];
-  }) => {
+  const handleTemplateSelect = (template: { title: string; description: string; tags: string[] }) => {
     const currentTitle = form.formData.title;
     form.setTitle(template.title + (currentTitle || ""));
     form.setDescription(template.description);

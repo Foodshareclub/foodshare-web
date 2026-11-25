@@ -6,13 +6,7 @@ import { ErrorDisplay } from "@/components/error";
  * Challenge Error Boundary
  * Handles errors when loading challenges page
  */
-export default function ChallengeError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function ChallengeError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <ErrorDisplay
       error={error}

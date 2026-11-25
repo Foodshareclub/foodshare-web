@@ -50,7 +50,7 @@ function boundsToViewport(bounds: LatLngBounds): ViewportBounds {
  */
 export function useDebouncedViewport(
   map: LeafletMap | null,
-  options: UseDebouncedViewportOptions = {}
+  options: UseDebouncedViewportOptions = {},
 ): UseDebouncedViewportResult {
   const { delay = 200, minZoom = 3 } = options;
 

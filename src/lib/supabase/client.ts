@@ -9,8 +9,8 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
 // NOTE: Cookie corruption detection was removed as it was causing false positives
 // and deleting valid auth cookies, leading to unexpected logouts.
@@ -27,28 +27,24 @@ let _supabase: SupabaseClient | null = null;
  */
 function getSupabaseClient(): SupabaseClient {
   if (!_supabase) {
-    _supabase = createBrowserClient(
-      supabaseUrl,
-      supabaseAnonKey,
-      {
-        cookieOptions: {
-          domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
+    _supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+      cookieOptions: {
+        domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+      },
+      auth: {
+        flowType: "pkce",
+        debug: process.env.NODE_ENV === "development",
+        // Note: Using default storageKey to match server-side cookie handling
+      },
+      global: {
+        headers: {
+          "x-application-name": "foodshare-web",
+          "x-client-version": "2.0.0",
         },
-        auth: {
-          flowType: "pkce",
-          debug: process.env.NODE_ENV === "development",
-          // Note: Using default storageKey to match server-side cookie handling
-        },
-        global: {
-          headers: {
-            "x-application-name": "foodshare-web",
-            "x-client-version": "2.0.0",
-          },
-        },
-      }
-    );
+      },
+    });
   }
   return _supabase;
 }
@@ -57,7 +53,7 @@ function getSupabaseClient(): SupabaseClient {
 export const supabase = new Proxy({} as SupabaseClient, {
   get(target, prop) {
     return getSupabaseClient()[prop as keyof SupabaseClient];
-  }
+  },
 });
 
 // For backwards compatibility

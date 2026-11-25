@@ -63,11 +63,7 @@ export function reportGPUError(error: Error, context: GPUErrorContext) {
 /**
  * Report a GPU performance degradation event.
  */
-export function reportGPUPerformanceIssue(metrics: {
-  fps: number;
-  frameTime: number;
-  component: string;
-}) {
+export function reportGPUPerformanceIssue(metrics: { fps: number; frameTime: number; component: string }) {
   Sentry.withScope((scope) => {
     scope.setTag("error.source", "gpu-performance");
     scope.setTag("gpu.component", metrics.component);

@@ -13,10 +13,6 @@ export const metadata: Metadata = generatePageMetadata({
   keywords: ["user profile", "foodshare member", "community", "food sharing", "connect"],
 });
 
-export default function ProfileDetailLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ProfileDetailLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }

@@ -29,7 +29,11 @@ function SubmitButton({
   pendingText,
   defaultText,
   disabled,
-}: { pendingText: string; defaultText: React.ReactNode; disabled?: boolean }) {
+}: {
+  pendingText: string;
+  defaultText: React.ReactNode;
+  disabled?: boolean;
+}) {
   const { pending } = useFormStatus();
   return (
     <button

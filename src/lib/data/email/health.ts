@@ -77,9 +77,7 @@ export async function getBounceStats(): Promise<BounceStats> {
       .select("event_type,bounce_type")
       .gte("created_at", thirtyDaysAgo.toISOString()),
     // Suppression list by reason
-    supabase
-      .from("email_suppression_list")
-      .select("reason"),
+    supabase.from("email_suppression_list").select("reason"),
     // Daily bounces (last 7 days)
     supabase
       .from("email_bounce_events")
@@ -87,10 +85,7 @@ export async function getBounceStats(): Promise<BounceStats> {
       .gte("created_at", sevenDaysAgo.toISOString())
       .order("created_at", { ascending: true }),
     // Total emails sent (for bounce rate calculation)
-    supabase
-      .from("email_provider_quota")
-      .select("emails_sent")
-      .gte("date", thirtyDaysAgo.toISOString().split("T")[0]),
+    supabase.from("email_provider_quota").select("emails_sent").gte("date", thirtyDaysAgo.toISOString().split("T")[0]),
   ]);
 
   const bounceEvents = bounceEventsRes.data || [];

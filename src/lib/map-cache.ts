@@ -62,10 +62,7 @@ function openDB(): Promise<IDBDatabase> {
  * Generate a cache key for viewport bounds
  * Rounds to ~1km precision to reduce cache fragmentation
  */
-export function generateViewportCacheKey(
-  bounds: ViewportBounds,
-  postType?: string
-): string {
+export function generateViewportCacheKey(bounds: ViewportBounds, postType?: string): string {
   // Round to 2 decimal places (~1km precision)
   const north = Math.round(bounds.north * 100) / 100;
   const south = Math.round(bounds.south * 100) / 100;
@@ -79,9 +76,7 @@ export function generateViewportCacheKey(
 /**
  * Get cached locations from IndexedDB
  */
-export async function getCachedLocations(
-  cacheKey: string
-): Promise<LocationType[] | null> {
+export async function getCachedLocations(cacheKey: string): Promise<LocationType[] | null> {
   try {
     const db = await openDB();
 
@@ -124,10 +119,7 @@ export async function getCachedLocations(
 /**
  * Store locations in IndexedDB cache
  */
-export async function setCachedLocations(
-  cacheKey: string,
-  data: LocationType[]
-): Promise<void> {
+export async function setCachedLocations(cacheKey: string, data: LocationType[]): Promise<void> {
   try {
     const db = await openDB();
 

@@ -6,13 +6,7 @@ import { ErrorDisplay } from "@/components/error";
  * Chat Error Boundary
  * Catches and displays errors in the chat route segment
  */
-export default function ChatError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function ChatError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <ErrorDisplay
       error={error}

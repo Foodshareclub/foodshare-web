@@ -43,9 +43,7 @@ export async function updateSession(request: NextRequest) {
         supabaseResponse = NextResponse.next({
           request,
         });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options)
-        );
+        cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options));
       },
     },
   });
@@ -58,9 +56,7 @@ export async function updateSession(request: NextRequest) {
 
   // Optional: Redirect unauthenticated users from protected routes
   const protectedRoutes = ["/profile", "/settings", "/my-posts", "/admin"];
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
-  );
+  const isProtectedRoute = protectedRoutes.some((route) => request.nextUrl.pathname.startsWith(route));
 
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone();

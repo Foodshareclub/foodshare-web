@@ -31,14 +31,7 @@ export type CampaignSendFrequency = "once" | "daily" | "weekly" | "monthly";
  * Campaign send status
  */
 export type CampaignSendStatus =
-  | "queued"
-  | "sent"
-  | "delivered"
-  | "opened"
-  | "clicked"
-  | "converted"
-  | "bounced"
-  | "failed";
+  "queued" | "sent" | "delivered" | "opened" | "clicked" | "converted" | "bounced" | "failed";
 
 /**
  * Campaign goal type
@@ -59,13 +52,7 @@ export type WorkflowExecutionStatus = "running" | "paused" | "completed" | "fail
  * Email template category
  */
 export type EmailTemplateCategory =
-  | "welcome"
-  | "engagement"
-  | "reengagement"
-  | "milestone"
-  | "transactional"
-  | "educational"
-  | "seasonal";
+  "welcome" | "engagement" | "reengagement" | "milestone" | "transactional" | "educational" | "seasonal";
 
 // =============================================================================
 // CAMPAIGN TYPES

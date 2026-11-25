@@ -220,7 +220,9 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({ in
 
               {health.status === "degraded" && (
                 <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded">
-                  <p className="text-xs text-orange-800 font-medium">⚠️ Provider is experiencing degraded performance</p>
+                  <p className="text-xs text-orange-800 font-medium">
+                    ⚠️ Provider is experiencing degraded performance
+                  </p>
                 </div>
               )}
             </div>

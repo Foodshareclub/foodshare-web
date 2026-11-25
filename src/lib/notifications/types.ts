@@ -29,11 +29,4 @@ export type NotificationChannel = "push" | "email" | "sms" | "in_app";
 export type PriorityLevel = "critical" | "high" | "normal" | "low";
 
 export type NotificationCategory =
-  | "posts"
-  | "forum"
-  | "challenges"
-  | "comments"
-  | "chats"
-  | "social"
-  | "system"
-  | "marketing";
+  "posts" | "forum" | "challenges" | "comments" | "chats" | "social" | "system" | "marketing";

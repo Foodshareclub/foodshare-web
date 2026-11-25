@@ -15,10 +15,7 @@ import { getCachedLocations, setCachedLocations, generateViewportCacheKey } from
 /**
  * Fetch locations from Supabase RPC (client-side)
  */
-async function fetchViewportLocations(
-  bounds: ViewportBounds,
-  postType?: string
-): Promise<LocationType[]> {
+async function fetchViewportLocations(bounds: ViewportBounds, postType?: string): Promise<LocationType[]> {
   const supabase = createClient();
 
   const { data, error } = await supabase.rpc("get_locations_in_viewport", {
@@ -68,7 +65,7 @@ interface UseViewportLocationsResult {
  */
 export function useViewportLocations(
   bounds: ViewportBounds | null,
-  options: UseViewportLocationsOptions = {}
+  options: UseViewportLocationsOptions = {},
 ): UseViewportLocationsResult {
   const { postType, enabled = true, staleTime = 30 * 1000 } = options; // 30s for real-time updates
 

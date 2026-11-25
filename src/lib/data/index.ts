@@ -17,10 +17,7 @@ export {
   getAdminTags,
 } from "./cache-keys";
 
-export {
-  invalidateTag,
-  invalidateAdminCaches,
-} from "./cache-invalidation";
+export { invalidateTag, invalidateAdminCaches } from "./cache-invalidation";
 
 // Product data functions
 export {
@@ -101,12 +98,7 @@ export {
 } from "./admin-users";
 
 // Map data functions
-export {
-  getMapLocations,
-  getAllMapLocations,
-  getNearbyLocations,
-  getLocationCountsByType,
-} from "./maps";
+export { getMapLocations, getAllMapLocations, getNearbyLocations, getLocationCountsByType } from "./maps";
 
 // Challenge data functions
 export {

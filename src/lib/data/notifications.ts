@@ -6,11 +6,7 @@
 import { createClient } from "@/lib/supabase/server";
 
 // Re-export types from shared types file for backward compatibility
-export type {
-  NotificationType,
-  UserNotification,
-  NotificationPreferences,
-} from "@/types/notifications.types";
+export type { NotificationType, UserNotification, NotificationPreferences } from "@/types/notifications.types";
 import type { UserNotification } from "@/types/notifications.types";
 
 // ============================================================================

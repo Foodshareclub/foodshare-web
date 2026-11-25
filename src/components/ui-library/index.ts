@@ -16,14 +16,7 @@ export { ProductGrid } from "./ProductGrid";
    ============================================================================ */
 
 export { Button } from "@/components/ui/button";
-export {
-  Card,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 export { EmptyState } from "@/components/ui/empty-state";
 export { SuccessAnimation, InlineSuccessIndicator } from "@/components/ui/success-animation";
 export { Drawer } from "@/components/ui/drawer";
@@ -49,11 +42,7 @@ export { Progress } from "@/components/ui/progress";
 
 export { Breadcrumb } from "@/components/ui/breadcrumb";
 export { Kbd, KbdCombo, ModifierKey } from "@/components/ui/kbd";
-export {
-  ScrollProgress,
-  CircularScrollProgress,
-  useScrollProgress,
-} from "@/components/ui/scroll-progress";
+export { ScrollProgress, CircularScrollProgress, useScrollProgress } from "@/components/ui/scroll-progress";
 
 /* ============================================================================
    Rich Text Editor

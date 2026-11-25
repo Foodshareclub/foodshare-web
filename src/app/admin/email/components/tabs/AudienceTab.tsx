@@ -9,13 +9,7 @@ import { GlassCard } from "../shared/GlassCard";
 import { MetricCard } from "../shared/MetricCard";
 import type { AudienceSegment, EmailDashboardStats } from "../types";
 
-export function AudienceTab({
-  segments,
-  stats,
-}: {
-  segments: AudienceSegment[];
-  stats: EmailDashboardStats;
-}) {
+export function AudienceTab({ segments, stats }: { segments: AudienceSegment[]; stats: EmailDashboardStats }) {
   return (
     <div className="space-y-6">
       {/* Audience Overview */}

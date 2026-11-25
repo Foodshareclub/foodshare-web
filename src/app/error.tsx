@@ -9,13 +9,7 @@ import { useEffect } from "react";
  * Catches and displays errors that occur in the application.
  * Forwards to Sentry with the route digest for issue/PR correlation.
  */
-export default function ErrorBoundary({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function ErrorBoundary({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     Sentry.captureException(error, {
       tags: { module: "RootError" },

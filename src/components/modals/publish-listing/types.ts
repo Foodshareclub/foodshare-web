@@ -34,10 +34,7 @@ export type HistoryState = {
 };
 
 export type HistoryAction =
-  | { type: "SET"; payload: HistoryState }
-  | { type: "UNDO" }
-  | { type: "REDO" }
-  | { type: "CLEAR" };
+  { type: "SET"; payload: HistoryState } | { type: "UNDO" } | { type: "REDO" } | { type: "CLEAR" };
 
 export type HistoryReducerState = {
   past: HistoryState[];

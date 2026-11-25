@@ -125,15 +125,7 @@ function ImpactBanner({
   );
 }
 
-function ImpactStat({
-  icon: Icon,
-  value,
-  label,
-}: {
-  icon: typeof Package;
-  value: string;
-  label: string;
-}) {
+function ImpactStat({ icon: Icon, value, label }: { icon: typeof Package; value: string; label: string }) {
   return (
     <div className="text-center">
       <div className="flex items-center justify-center gap-1.5 mb-1">

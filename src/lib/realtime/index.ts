@@ -7,12 +7,7 @@
  */
 
 // Manager
-export {
-  RealtimeManager,
-  getRealtimeManager,
-  subscribeToChanges,
-  getRealtimeMetrics,
-} from "./manager";
+export { RealtimeManager, getRealtimeManager, subscribeToChanges, getRealtimeMetrics } from "./manager";
 export type {
   RealtimeEvent,
   ConnectionStatus,
@@ -24,10 +19,7 @@ export type {
 } from "./manager";
 
 // Presence
-export {
-  trackPresence,
-  createTypingIndicator,
-} from "./presence";
+export { trackPresence, createTypingIndicator } from "./presence";
 export type {
   PresenceUser,
   PresenceConfig,

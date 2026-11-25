@@ -183,11 +183,7 @@ export class AuditLogService {
    * Calculate risk score for an action
    * Returns 0-100 where higher is more risky
    */
-  private static calculateRiskScore(params: {
-    action: string;
-    aal_level: "aal1" | "aal2";
-    success: boolean;
-  }): number {
+  private static calculateRiskScore(params: { action: string; aal_level: "aal1" | "aal2"; success: boolean }): number {
     let score = 0;
 
     // Base score by action type

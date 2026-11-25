@@ -213,12 +213,4 @@ export type AriaRole = "navigation" | "menu" | "menuitem" | "tab" | "tablist" | 
  * Keyboard navigation keys
  */
 export type NavigationKey =
-  | "ArrowUp"
-  | "ArrowDown"
-  | "ArrowLeft"
-  | "ArrowRight"
-  | "Enter"
-  | "Escape"
-  | "Home"
-  | "End"
-  | "Tab";
+  "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight" | "Enter" | "Escape" | "Home" | "End" | "Tab";

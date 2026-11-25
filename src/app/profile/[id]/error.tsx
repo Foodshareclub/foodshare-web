@@ -6,13 +6,7 @@ import { ErrorDisplay } from "@/components/error";
  * Profile Detail Error Boundary Component
  * Handles errors when loading user profile
  */
-export default function ProfileError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function ProfileError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <ErrorDisplay
       error={error}

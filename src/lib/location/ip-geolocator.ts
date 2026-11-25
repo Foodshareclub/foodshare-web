@@ -72,7 +72,7 @@ function pruneCacheIfNeeded() {
  */
 export async function resolvePublicIpLocation(ip?: string | null): Promise<ApproximateLocation | null> {
   const isPrivate = isPrivateOrLoopbackIp(ip);
-  const cacheKey = isPrivate ? "__outbound_self__" : (ip?.trim() || "__outbound_self__");
+  const cacheKey = isPrivate ? "__outbound_self__" : ip?.trim() || "__outbound_self__";
 
   // Check in-memory cache
   const cached = geoCache.get(cacheKey);

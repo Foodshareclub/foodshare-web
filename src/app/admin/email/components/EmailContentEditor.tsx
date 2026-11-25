@@ -734,15 +734,7 @@ function VisualSettingsPanel({
 }
 
 // Color Picker Component
-function ColorPicker({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
+function ColorPicker({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">

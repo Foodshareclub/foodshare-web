@@ -106,9 +106,7 @@ export async function resolveServerLocation({
     const cookieVal = cookieStore.get(LOCATION_COOKIE_NAME)?.value;
     const cookieLocation = parseLocationCookie(cookieVal);
     if (cookieLocation && !isStaleFallbackLocation(cookieLocation)) {
-      const dbDistance = defaultRadius
-        ? null
-        : await getDefaultSearchDistance(cookieLocation.country);
+      const dbDistance = defaultRadius ? null : await getDefaultSearchDistance(cookieLocation.country);
       const radius = defaultRadius ?? dbDistance?.radiusMeters ?? 40000;
 
       return {
@@ -130,9 +128,7 @@ export async function resolveServerLocation({
     try {
       const edgeLoc = resolveApproximateLocationFromHeaders(reqHeaders);
       if (edgeLoc) {
-        const dbDistance = defaultRadius
-          ? null
-          : await getDefaultSearchDistance(edgeLoc.country);
+        const dbDistance = defaultRadius ? null : await getDefaultSearchDistance(edgeLoc.country);
         const radius = defaultRadius ?? dbDistance?.radiusMeters ?? 40000;
 
         return {

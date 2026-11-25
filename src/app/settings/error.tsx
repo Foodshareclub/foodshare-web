@@ -6,13 +6,7 @@ import { ErrorDisplay } from "@/components/error";
  * Settings Error Boundary Component
  * Handles errors when loading settings page
  */
-export default function SettingsError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function SettingsError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <ErrorDisplay
       error={error}

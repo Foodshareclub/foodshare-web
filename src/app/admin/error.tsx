@@ -6,13 +6,7 @@ import { AdminLinksFooter, AdminTroubleshootingSteps, ErrorDisplay } from "@/com
  * Admin Error Boundary Component
  * Handles errors specific to the admin panel
  */
-export default function AdminError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function AdminError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <ErrorDisplay
       error={error}

@@ -32,15 +32,7 @@ export type {
  * Tab type for the main dashboard navigation
  */
 export type TabType =
-  | "dashboard"
-  | "overview"
-  | "campaigns"
-  | "automation"
-  | "audience"
-  | "compose"
-  | "providers"
-  | "templates"
-  | "queue";
+  "dashboard" | "overview" | "campaigns" | "automation" | "audience" | "compose" | "providers" | "templates" | "queue";
 
 /**
  * Form data for composing emails

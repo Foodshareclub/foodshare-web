@@ -21,9 +21,4 @@ export type {
   ChannelDeliveryResult,
 } from "./api-client";
 
-export type {
-  NotificationType,
-  NotificationChannel,
-  PriorityLevel,
-  NotificationCategory,
-} from "./types";
+export type { NotificationType, NotificationChannel, PriorityLevel, NotificationCategory } from "./types";

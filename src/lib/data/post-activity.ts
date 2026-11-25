@@ -327,10 +327,7 @@ export async function getActivityDashboardStats(): Promise<ActivityDashboardStat
     // Single RPC replaces 3 COUNT queries
     supabase.rpc("get_activity_dashboard_stats"),
     // Still need separate query for top activity types
-    supabase
-      .from("post_activity_logs")
-      .select("activity_type")
-      .gte("created_at", monthStart),
+    supabase.from("post_activity_logs").select("activity_type").gte("created_at", monthStart),
   ]);
 
   // Aggregate activity types

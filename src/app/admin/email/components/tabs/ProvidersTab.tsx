@@ -463,11 +463,7 @@ function RoutingRuleCard({ rule }: { rule: (typeof ROUTING_RULES)[0] }) {
   );
 }
 
-function ConfigCard({
-  config,
-}: {
-  config: (typeof PROVIDER_CONFIG)[keyof typeof PROVIDER_CONFIG];
-}) {
+function ConfigCard({ config }: { config: (typeof PROVIDER_CONFIG)[keyof typeof PROVIDER_CONFIG] }) {
   return (
     <div className={cn("rounded-xl border p-4 transition-colors hover:bg-muted/20", config.borderColor)}>
       <div className="flex items-center justify-between mb-3">

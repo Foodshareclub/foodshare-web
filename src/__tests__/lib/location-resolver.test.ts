@@ -29,7 +29,7 @@ describe("approximate-location library (Zero-Hardcoding)", () => {
   describe("isLegacyHardcodedCoordinates", () => {
     it("detects legacy 52.52, 13.405 coordinates", () => {
       expect(isLegacyHardcodedCoordinates(52.52, 13.405)).toBe(true);
-      expect(isLegacyHardcodedCoordinates(52.520000, 13.405000)).toBe(true);
+      expect(isLegacyHardcodedCoordinates(52.52, 13.405)).toBe(true);
       expect(isLegacyHardcodedCoordinates(38.5816, -121.4944)).toBe(false);
       expect(isLegacyHardcodedCoordinates(null, null)).toBe(false);
       expect(isLegacyHardcodedCoordinates(undefined, undefined)).toBe(false);

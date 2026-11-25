@@ -205,15 +205,7 @@ function HeroSection({
   );
 }
 
-function StatCard({
-  icon: Icon,
-  value,
-  label,
-}: {
-  icon: React.ElementType;
-  value: number | string;
-  label: string;
-}) {
+function StatCard({ icon: Icon, value, label }: { icon: React.ElementType; value: number | string; label: string }) {
   return (
     <motion.div
       whileHover={{ scale: 1.05 }}

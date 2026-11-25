@@ -157,9 +157,7 @@ export async function getReportsData(): Promise<ReportsData> {
     supabase.rpc("get_admin_reports_stats", { p_days_window: 30 }),
 
     // Category breakdown
-    supabase
-      .from("posts")
-      .select("post_type"),
+    supabase.from("posts").select("post_type"),
 
     // Recent listings for daily chart
     supabase

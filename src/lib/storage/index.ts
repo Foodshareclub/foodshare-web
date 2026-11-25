@@ -20,13 +20,7 @@ export {
   getIndexStats,
   VECTOR_NAMESPACES,
 } from "./vector";
-export type {
-  VectorMetadata,
-  VectorContentType,
-  VectorUpsertItem,
-  VectorQueryResult,
-  VectorNamespace,
-} from "./vector";
+export type { VectorMetadata, VectorContentType, VectorUpsertItem, VectorQueryResult, VectorNamespace } from "./vector";
 
 // Upstash QStash (Message Queue)
 export {
@@ -68,12 +62,7 @@ export {
   removeProductsFromSearch,
   SEARCH_INDEXES,
 } from "./search";
-export type {
-  SearchDocument,
-  SearchResult,
-  SearchIndexName,
-  ProductSearchDocument,
-} from "./search";
+export type { SearchDocument, SearchResult, SearchIndexName, ProductSearchDocument } from "./search";
 
 // MotherDuck (Analytics)
 export { getMotherDuckConfig, ANALYTICS_QUERIES, MOTHERDUCK_ENV } from "./motherduck";

@@ -41,12 +41,7 @@ export type { NavbarAvatarProps, IconButtonProps, MenuItemProps, CategoryItemPro
 // ============================================================================
 
 export { CategoryNavigation, MobileMenu, DesktopMenu, NavbarActions } from "./organisms";
-export type {
-  CategoryNavigationProps,
-  MobileMenuProps,
-  DesktopMenuProps,
-  NavbarActionsProps,
-} from "./organisms";
+export type { CategoryNavigationProps, MobileMenuProps, DesktopMenuProps, NavbarActionsProps } from "./organisms";
 
 // ============================================================================
 // Hooks
@@ -79,13 +74,4 @@ export type {
 // Constants
 // ============================================================================
 
-export {
-  COLORS,
-  TYPOGRAPHY,
-  SPACING,
-  SHADOWS,
-  TRANSITIONS,
-  BREAKPOINTS,
-  Z_INDEX,
-  ANIMATION,
-} from "./constants";
+export { COLORS, TYPOGRAPHY, SPACING, SHADOWS, TRANSITIONS, BREAKPOINTS, Z_INDEX, ANIMATION } from "./constants";

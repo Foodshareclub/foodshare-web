@@ -9,15 +9,7 @@ import Link from "next/link";
 import type { NavItem } from "./navigation-config";
 import { accountItems, preferenceItems, supportItems } from "./navigation-config";
 
-function NavSection({
-  title,
-  items,
-  currentPath,
-}: {
-  title: string;
-  items: NavItem[];
-  currentPath: string;
-}) {
+function NavSection({ title, items, currentPath }: { title: string; items: NavItem[]; currentPath: string }) {
   return (
     <div className="space-y-1">
       <p className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</p>

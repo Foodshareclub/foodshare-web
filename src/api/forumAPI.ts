@@ -514,11 +514,7 @@ export const forumAPI = {
   },
 
   // Comment reactions
-  addCommentReaction(reaction: {
-    comment_id: number;
-    profile_id: string;
-    reaction_type_id: number;
-  }) {
+  addCommentReaction(reaction: { comment_id: number; profile_id: string; reaction_type_id: number }) {
     return supabase.from("forum_comment_reactions").upsert(reaction);
   },
 
@@ -542,12 +538,7 @@ export const forumAPI = {
       .order("created_at", { ascending: false });
   },
 
-  addBookmark(bookmark: {
-    profile_id: string;
-    forum_id: number;
-    notes?: string;
-    collection_id?: string;
-  }) {
+  addBookmark(bookmark: { profile_id: string; forum_id: number; notes?: string; collection_id?: string }) {
     return supabase.from("forum_bookmarks").insert(bookmark);
   },
 

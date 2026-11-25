@@ -19,11 +19,7 @@ export {
   cacheClear,
   cacheStats,
 } from "./multi-layer";
-export type {
-  CacheEntry,
-  CacheOptions,
-  CacheStats,
-} from "./multi-layer";
+export type { CacheEntry, CacheOptions, CacheStats } from "./multi-layer";
 
 // Invalidation
 export {
@@ -36,7 +32,4 @@ export {
   createCommonInvalidationRules,
   initializeCommonInvalidation,
 } from "./invalidation";
-export type {
-  InvalidationRule,
-  InvalidationManagerConfig,
-} from "./invalidation";
+export type { InvalidationRule, InvalidationManagerConfig } from "./invalidation";

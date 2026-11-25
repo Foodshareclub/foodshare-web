@@ -19,22 +19,22 @@ const SESSION_CHECK_INTERVAL = 60 * 1000; // Check every minute
  * Only internal app paths are allowed to prevent phishing attacks
  */
 const ALLOWED_RETURN_PATH_PREFIXES = [
-  '/food',
-  '/profile',
-  '/settings',
-  '/chat',
-  '/forum',
-  '/my-posts',
-  '/challenge',
-  '/admin',
-  '/messages',
-  '/notifications',
-  '/map',
-  '/thing',
-  '/fridge',
-  '/foodbank',
-  '/donation',
-  '/help',
+  "/food",
+  "/profile",
+  "/settings",
+  "/chat",
+  "/forum",
+  "/my-posts",
+  "/challenge",
+  "/admin",
+  "/messages",
+  "/notifications",
+  "/map",
+  "/thing",
+  "/fridge",
+  "/foodbank",
+  "/donation",
+  "/help",
 ] as const;
 
 /**
@@ -43,22 +43,22 @@ const ALLOWED_RETURN_PATH_PREFIXES = [
  */
 function getSafeReturnUrl(pathname: string): string {
   // Must start with / (relative path only)
-  if (!pathname.startsWith('/')) {
-    return '/';
+  if (!pathname.startsWith("/")) {
+    return "/";
   }
 
   // Check against allowed prefixes
   const isAllowed = ALLOWED_RETURN_PATH_PREFIXES.some(
-    prefix => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 
   // Also allow exact match for home
-  if (pathname === '/' || isAllowed) {
+  if (pathname === "/" || isAllowed) {
     return encodeURIComponent(pathname);
   }
 
   // Default to home for any unrecognized paths
-  return '/';
+  return "/";
 }
 
 let refreshTimer: TimerHandle | null = null;
@@ -88,7 +88,7 @@ export const sessionManager = {
     const expiresInMs = expiresAt * 1000 - Date.now();
     const refreshInMs = Math.max(0, expiresInMs - SESSION_REFRESH_THRESHOLD);
 
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       logger.debug(`Session refresh scheduled`, { minutes: Math.round(refreshInMs / 1000 / 60) });
     }
 
@@ -102,7 +102,7 @@ export const sessionManager = {
         }
 
         if (data.session) {
-          if (process.env.NODE_ENV !== 'production') {
+          if (process.env.NODE_ENV !== "production") {
             logger.debug("Session refreshed successfully");
           }
           // Setup next refresh
@@ -132,7 +132,7 @@ export const sessionManager = {
 
         if (!data.session) {
           // Session lost - could be expired or logged out in another tab
-          if (process.env.NODE_ENV !== 'production') {
+          if (process.env.NODE_ENV !== "production") {
             logger.debug("Session lost - user may need to re-authenticate");
           }
           sessionManager.stopHealthCheck();
@@ -171,7 +171,7 @@ export const sessionManager = {
 
       switch (type) {
         case "SIGNED_IN":
-          if (process.env.NODE_ENV !== 'production') {
+          if (process.env.NODE_ENV !== "production") {
             logger.debug("User signed in from another tab");
           }
           // Refresh current tab's session
@@ -179,7 +179,7 @@ export const sessionManager = {
           break;
 
         case "SIGNED_OUT":
-          if (process.env.NODE_ENV !== 'production') {
+          if (process.env.NODE_ENV !== "production") {
             logger.debug("User signed out from another tab");
           }
           // Clear session and redirect
@@ -225,7 +225,7 @@ export const sessionManager = {
     if (checkTimer) clearInterval(checkTimer);
 
     // Show timeout message
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       logger.debug("Session timed out");
     }
 
@@ -233,7 +233,7 @@ export const sessionManager = {
     const safeReturnUrl = getSafeReturnUrl(window.location.pathname);
     window.location.href = new URL(
       `/auth/login?returnUrl=${encodeURIComponent(safeReturnUrl)}&reason=timeout`,
-      window.location.origin
+      window.location.origin,
     ).href;
   },
 
@@ -275,7 +275,7 @@ export async function initializeSessionManagement() {
       // Sync across tabs
       sessionManager.syncAcrossTabs();
 
-      if (process.env.NODE_ENV !== 'production') {
+      if (process.env.NODE_ENV !== "production") {
         logger.debug("Session management initialized");
       }
     }

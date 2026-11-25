@@ -26,7 +26,7 @@ mock.module("next/headers", () => ({
   headers: mock(() =>
     Promise.resolve({
       get: (name: string) => mockState.headersMap.get(name) || null,
-    })
+    }),
   ),
 }));
 
@@ -41,7 +41,7 @@ mock.module("@upstash/ratelimit", () => ({
     mock(() => mockLimiter),
     {
       slidingWindow: mock(() => "sliding-window-config"),
-    }
+    },
   ),
 }));
 
@@ -352,7 +352,7 @@ describe("Rate Limiting", () => {
         Promise.resolve({
           id: "test",
           data: [1, 2, 3],
-        })
+        }),
       );
 
       const wrappedAction = withRateLimit(mockAction, "standard");

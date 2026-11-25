@@ -172,13 +172,7 @@ function ToastItem({ toast, onDismiss }: { toast: ThemeToastData; onDismiss: () 
 // Toast Container
 // ============================================================================
 
-function ToastContainer({
-  toasts,
-  onDismiss,
-}: {
-  toasts: ThemeToastData[];
-  onDismiss: (id: string) => void;
-}) {
+function ToastContainer({ toasts, onDismiss }: { toasts: ThemeToastData[]; onDismiss: (id: string) => void }) {
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none">
       <AnimatePresence mode="popLayout">

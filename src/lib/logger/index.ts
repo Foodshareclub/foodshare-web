@@ -71,18 +71,7 @@ export { table } from "./table";
 export type { TableColumn } from "./table";
 
 // Debug Utilities (trace, assert, measure, inspect)
-export {
-  debug,
-  trace,
-  assert,
-  measure,
-  checkpoint,
-  inspect,
-  devLog,
-  deprecated,
-  todo,
-  createDebugger,
-} from "./debug";
+export { debug, trace, assert, measure, checkpoint, inspect, devLog, deprecated, todo, createDebugger } from "./debug";
 
 // Console Interceptor (global console beautification with buffer)
 export { interceptor } from "./interceptor";

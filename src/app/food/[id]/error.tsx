@@ -6,13 +6,7 @@ import { ErrorDisplay } from "@/components/error";
  * Food Detail Error Boundary Component
  * Handles errors when loading product details
  */
-export default function FoodDetailError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function FoodDetailError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <ErrorDisplay
       error={error}

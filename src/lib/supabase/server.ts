@@ -25,9 +25,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
     process.env.SKIP_ENV_VALIDATION !== "true" &&
     process.env.NEXT_PHASE !== "phase-production-build"
   ) {
-    console.warn(
-      "⚠️ Missing Supabase environment variables. This is expected during build if they are not provided."
-    );
+    console.warn("⚠️ Missing Supabase environment variables. This is expected during build if they are not provided.");
   }
 }
 
@@ -96,20 +94,12 @@ export async function createClient() {
       setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
         try {
           cookiesToSet.forEach(
-            ({
-              name,
-              value,
-              options,
-            }: {
-              name: string;
-              value: string;
-              options?: Record<string, unknown>;
-            }) => {
+            ({ name, value, options }: { name: string; value: string; options?: Record<string, unknown> }) => {
               cookieStore.set(name, value, {
                 ...options,
                 domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || options?.domain,
               });
-            }
+            },
           );
         } catch {
           // The `setAll` method was called from a Server Component.

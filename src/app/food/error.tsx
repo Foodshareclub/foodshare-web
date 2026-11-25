@@ -6,13 +6,7 @@ import { ErrorDisplay, ProductCategoryLinks, ProductErrorSuggestions } from "@/c
  * Products Error Boundary Component
  * Handles errors specific to the products section
  */
-export default function ProductsError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function ProductsError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <>
       {/* Header */}

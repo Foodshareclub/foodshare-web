@@ -25,7 +25,7 @@ export interface MapBounds {
 export async function fetchMapLocationsByBounds(
   bounds: MapBounds,
   productType?: string,
-  limit: number = 500
+  limit: number = 500,
 ): Promise<LocationType[]> {
   // Validate bounds
   if (

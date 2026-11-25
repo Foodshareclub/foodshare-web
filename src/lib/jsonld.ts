@@ -299,10 +299,7 @@ export function generateFAQJsonLd(faqs: { question: string; answer: string }[]) 
  * SoftwareApplication structured data for PWA/App discovery
  * @param rating - Optional dynamic rating data (defaults to 4.8/100 if not provided)
  */
-export function generateSoftwareApplicationJsonLd(rating?: {
-  ratingValue: string;
-  ratingCount: string;
-}) {
+export function generateSoftwareApplicationJsonLd(rating?: { ratingValue: string; ratingCount: string }) {
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",

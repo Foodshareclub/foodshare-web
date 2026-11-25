@@ -120,7 +120,7 @@ export async function fetchNearbyListings({
 export async function fetchProductsPaginated(
   productType: string = "food",
   cursor?: number | null,
-  searchTerm?: string
+  searchTerm?: string,
 ): Promise<{
   success: boolean;
   data: InitialProductStateType[];

@@ -35,8 +35,7 @@ const ExchangeCompletionSchema = z.object({
 export type ExchangeCompletionEmailData = z.infer<typeof ExchangeCompletionSchema>;
 
 export type ExchangeCompletionResult =
-  | { success: true }
-  | { success: false; reason: "VALIDATION_ERROR" | "NOT_FOUND" | "INTERNAL_ERROR"; error: string };
+  { success: true } | { success: false; reason: "VALIDATION_ERROR" | "NOT_FOUND" | "INTERNAL_ERROR"; error: string };
 
 /**
  * Send the "exchange complete" email for one party.

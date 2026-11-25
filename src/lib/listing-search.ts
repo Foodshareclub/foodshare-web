@@ -8,9 +8,7 @@ export function supportsNearbySearch(category: string): boolean {
   return !["challenge", "forum", "foodlytics"].includes(category);
 }
 
-export function parseSearchLocation(params: {
-  get(name: string): string | null;
-}): SearchLocation | null {
+export function parseSearchLocation(params: { get(name: string): string | null }): SearchLocation | null {
   const latitude = params.get("lat");
   const longitude = params.get("lng");
   if (!latitude?.trim() || !longitude?.trim()) return null;

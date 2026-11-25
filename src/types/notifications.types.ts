@@ -7,14 +7,7 @@
 export type NotificationChannel = "push" | "email" | "telegram" | "sms" | "in_app";
 
 export type NotificationCategory =
-  | "posts"
-  | "forum"
-  | "challenges"
-  | "comments"
-  | "chats"
-  | "social"
-  | "system"
-  | "marketing";
+  "posts" | "forum" | "challenges" | "comments" | "chats" | "social" | "system" | "marketing";
 
 export type NotificationFrequency = "instant" | "hourly" | "daily" | "weekly" | "never";
 

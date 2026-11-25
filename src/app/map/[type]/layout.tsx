@@ -17,10 +17,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default function MapLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function MapLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }

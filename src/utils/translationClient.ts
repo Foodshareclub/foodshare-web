@@ -24,23 +24,7 @@ const logger = createLogger("TranslationClient");
 // ============================================================================
 
 export type Locale =
-  | "en"
-  | "cs"
-  | "de"
-  | "es"
-  | "fr"
-  | "pt"
-  | "ru"
-  | "uk"
-  | "zh"
-  | "hi"
-  | "ar"
-  | "it"
-  | "pl"
-  | "nl"
-  | "ja"
-  | "ko"
-  | "tr";
+  "en" | "cs" | "de" | "es" | "fr" | "pt" | "ru" | "uk" | "zh" | "hi" | "ar" | "it" | "pl" | "nl" | "ja" | "ko" | "tr";
 export type Platform = "web" | "ios" | "android" | "desktop" | "browser_extension" | "api" | "react_native" | "flutter";
 
 export interface TranslationData {

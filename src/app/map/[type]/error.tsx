@@ -3,13 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 
-export default function MapError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function MapError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error("[Map Error]", error);
   }, [error]);

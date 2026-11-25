@@ -203,15 +203,7 @@ function OverviewTab({
   );
 }
 
-function CustomersTab({
-  customers,
-  tags,
-  stats,
-}: {
-  customers: Customer[];
-  tags: Tag[];
-  stats: CRMStats;
-}) {
+function CustomersTab({ customers, tags, stats }: { customers: Customer[]; tags: Tag[]; stats: CRMStats }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [lifecycleFilter, setLifecycleFilter] = useState<string>("all");

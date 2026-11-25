@@ -87,13 +87,7 @@ const NAV_GROUPS: NavGroup[] = [
 /**
  * Shared navigation content used by both desktop sidebar and mobile drawer
  */
-function AdminNavContent({
-  collapsed = false,
-  onNavigate,
-}: {
-  collapsed?: boolean;
-  onNavigate?: () => void;
-}) {
+function AdminNavContent({ collapsed = false, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();
   const t = useTranslations();
 

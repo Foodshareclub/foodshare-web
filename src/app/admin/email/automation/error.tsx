@@ -3,13 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 
-function ErrorBoundary({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+function ErrorBoundary({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center p-6 space-y-4" role="alert">
       <AlertTriangle className="h-12 w-12 text-destructive" aria-hidden="true" />

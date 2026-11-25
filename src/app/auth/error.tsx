@@ -8,13 +8,7 @@ import { ErrorDisplay } from "@/components/error";
  * Auth Error Boundary Component
  * Handles errors during authentication flows
  */
-export default function AuthError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function AuthError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   const t = useTranslations("AuthFlow");
   const tAuth = useTranslations("Auth");
 

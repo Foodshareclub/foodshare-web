@@ -15,11 +15,7 @@ export {
 } from "./email-queue";
 
 // Campaign tasks
-export {
-  processCampaignTask,
-  checkScheduledCampaignsTask,
-  triggerCampaignNow,
-} from "./campaign-processor";
+export { processCampaignTask, checkScheduledCampaignsTask, triggerCampaignNow } from "./campaign-processor";
 
 // Push notification tasks
 export {
@@ -33,8 +29,4 @@ export {
 } from "./push-notifications";
 
 // Automation tasks
-export {
-  processAutomationEmailTask,
-  checkAutomationQueueTask,
-  triggerAutomationTask,
-} from "./automation-processor";
+export { processAutomationEmailTask, checkAutomationQueueTask, triggerAutomationTask } from "./automation-processor";

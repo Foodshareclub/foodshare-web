@@ -1,9 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import {
-  clearGeoCacheForTesting,
-  isPrivateOrLoopbackIp,
-  resolvePublicIpLocation,
-} from "@/lib/location/ip-geolocator";
+import { clearGeoCacheForTesting, isPrivateOrLoopbackIp, resolvePublicIpLocation } from "@/lib/location/ip-geolocator";
 
 describe("ip-geolocator", () => {
   beforeEach(() => {

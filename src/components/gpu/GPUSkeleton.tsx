@@ -107,13 +107,7 @@ export function GPUSkeletonCard({ className = "" }: { className?: string }) {
   );
 }
 
-export function GPUSkeletonList({
-  count = 5,
-  className = "",
-}: {
-  count?: number;
-  className?: string;
-}) {
+export function GPUSkeletonList({ count = 5, className = "" }: { count?: number; className?: string }) {
   return (
     <div className={`space-y-4 ${className}`}>
       {Array.from({ length: count }).map((_, i) => (

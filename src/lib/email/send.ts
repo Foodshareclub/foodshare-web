@@ -290,8 +290,7 @@ export async function sendDatabaseTemplateEmail({
 
   // Fall back to React Email template if available
   const reactTemplateName = Object.entries(TEMPLATE_SLUG_MAP).find(([, dbSlug]) => dbSlug === slug)?.[0] as
-    | EmailTemplateName
-    | undefined;
+    EmailTemplateName | undefined;
 
   if (reactTemplateName) {
     console.warn(`[Email] Database template '${slug}' not found, falling back to React Email '${reactTemplateName}'`);

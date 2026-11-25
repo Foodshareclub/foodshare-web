@@ -65,7 +65,7 @@ export function ViewportLocationLoader({
       // Combine: viewport locations + locations outside viewport from initial data
       return [...viewportLocations, ...outsideViewport];
     },
-    [initialLocations]
+    [initialLocations],
   );
 
   // Update parent with merged locations

@@ -11,13 +11,7 @@ import { cn } from "@/lib/utils";
 import { Copy, Edit, Eye, MoreVertical, Trash2 } from "lucide-react";
 import type { RecentCampaign } from "../types";
 
-export function CampaignRow({
-  campaign,
-  compact,
-}: {
-  campaign: RecentCampaign;
-  compact?: boolean;
-}) {
+export function CampaignRow({ campaign, compact }: { campaign: RecentCampaign; compact?: boolean }) {
   const statusColors = {
     draft: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
     scheduled: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",

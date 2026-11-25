@@ -21,13 +21,7 @@ function readLocaleCookie(): Locale | null {
   return value && isValidLocale(value) ? value : null;
 }
 
-export default function GlobalError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   // The cookie, read defensively: this component replaces the whole document,
   // so it cannot inherit anything the failed tree resolved, and `document` may
   // not exist during a server render of the boundary.

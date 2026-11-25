@@ -160,15 +160,7 @@ function TrendCard({
 }
 
 // Category Bar Component
-function CategoryBar({
-  category,
-  count,
-  total,
-}: {
-  category: string;
-  count: number;
-  total: number;
-}) {
+function CategoryBar({ category, count, total }: { category: string; count: number; total: number }) {
   const percentage = total > 0 ? (count / total) * 100 : 0;
 
   const categoryColors: Record<string, string> = {

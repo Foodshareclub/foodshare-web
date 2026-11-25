@@ -39,10 +39,7 @@ import { readFileSync, readdirSync, statSync } from "bun:fs";
 import { join } from "bun:path";
 
 /** The three vendored trees, relative to their repo root. */
-export const VENDORED_DIRS = [
-  "supabase/functions",
-  "supabase/migrations",
-] as const;
+export const VENDORED_DIRS = ["supabase/functions", "supabase/migrations"] as const;
 export const VENDORED_FILES = ["scripts/external-monitor.sh"] as const;
 
 /** Directories never part of a vendored tree. */
@@ -106,10 +103,7 @@ function relativeFiles(root: string): Set<string> {
  * three vendored paths; anything missing, extra, or differing is a
  * divergence. Pure read-only: never writes.
  */
-export function compareVendored(
-  webRoot: string,
-  backendRoot: string,
-): VendoredReport {
+export function compareVendored(webRoot: string, backendRoot: string): VendoredReport {
   const web = relativeFiles(webRoot);
   const backend = relativeFiles(backendRoot);
   const divergences: Divergence[] = [];
@@ -135,9 +129,7 @@ function main(): void {
   const args = process.argv.slice(2);
   const idx = args.indexOf("--backend-dir");
   if (idx === -1 || !args[idx + 1]) {
-    console.error(
-      "usage: bun scripts/check-vendored.ts --backend-dir <path-to-backend-checkout>",
-    );
+    console.error("usage: bun scripts/check-vendored.ts --backend-dir <path-to-backend-checkout>");
     process.exit(2);
   }
   const backendDir = args[idx + 1];
@@ -151,14 +143,10 @@ function main(): void {
     for (const d of report.divergences) {
       console.error(`  [${d.kind}] ${d.path}`);
     }
-    console.error(
-      "\nFix by syncing from the backend's origin/main: bun scripts/vendored-sync.ts --backend-dir <path>",
-    );
+    console.error("\nFix by syncing from the backend's origin/main: bun scripts/vendored-sync.ts --backend-dir <path>");
     process.exit(1);
   }
-  console.log(
-    `F1 mirror gate pass: zero divergence across ${report.filesCompared} files.`,
-  );
+  console.log(`F1 mirror gate pass: zero divergence across ${report.filesCompared} files.`);
 }
 
 if (import.meta.main) {

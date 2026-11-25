@@ -227,11 +227,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Challenge routes
   const challengeRoutes: MetadataRoute.Sitemap = challenges.map(
-    (challenge: {
-      id: number;
-      challenge_created_at: string;
-      challenge_updated_at: string | null;
-    }) => ({
+    (challenge: { id: number; challenge_created_at: string; challenge_updated_at: string | null }) => ({
       url: `${baseUrl}/challenge/${challenge.id}`,
       lastModified: new Date(challenge.challenge_updated_at || challenge.challenge_created_at),
       changeFrequency: "weekly" as const,

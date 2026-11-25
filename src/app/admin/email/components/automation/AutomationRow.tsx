@@ -11,13 +11,7 @@ import { cn } from "@/lib/utils";
 import { Copy, Edit, MoreVertical, Pause, Play, Trash2, Zap } from "lucide-react";
 import type { ActiveAutomation } from "../types";
 
-export function AutomationRow({
-  automation,
-  compact,
-}: {
-  automation: ActiveAutomation;
-  compact?: boolean;
-}) {
+export function AutomationRow({ automation, compact }: { automation: ActiveAutomation; compact?: boolean }) {
   const statusColors = {
     draft: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
     active: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",

@@ -47,13 +47,7 @@ export function GlassBlur({ children, className = "", blur = 15, saturation = 1.
  * GPU-accelerated blur effect that renders behind children.
  * Uses a fullscreen shader pass.
  */
-export function GPUGlassOverlay({
-  children,
-  className = "",
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function GPUGlassOverlay({ children, className = "" }: { children: ReactNode; className?: string }) {
   const { supported } = useGPUContext();
 
   if (!supported) {

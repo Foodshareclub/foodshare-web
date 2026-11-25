@@ -26,11 +26,7 @@ export {
 export { sendTemplateEmail, sendBatchTemplateEmail, previewEmail } from "./send";
 
 // Database-driven templates (enterprise)
-export {
-  sendDatabaseTemplateEmail,
-  sendBatchDatabaseTemplateEmail,
-  previewDatabaseTemplate,
-} from "./send";
+export { sendDatabaseTemplateEmail, sendBatchDatabaseTemplateEmail, previewDatabaseTemplate } from "./send";
 
 export {
   fetchDatabaseTemplate,

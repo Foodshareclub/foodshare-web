@@ -115,11 +115,7 @@ function RichTextEditorLazy({
 }
 
 // Email Templates Panel - Fetches templates from database
-function EmailTemplatesPanel({
-  onSelectTemplate,
-}: {
-  onSelectTemplate: (template: EmailTemplate) => void;
-}) {
+function EmailTemplatesPanel({ onSelectTemplate }: { onSelectTemplate: (template: EmailTemplate) => void }) {
   const { data: templates, isLoading } = useEmailTemplates();
   const [previewTemplate, setPreviewTemplate] = useState<EmailTemplate | null>(null);
 
