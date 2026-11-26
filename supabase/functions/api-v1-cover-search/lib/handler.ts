@@ -72,7 +72,7 @@ export async function handleCoverSearch(
       image_provenance: {
         source_url: result.cover?.sourceImageUrl || result.images[0],
         source: result.cover?.provider || "wikimedia-commons",
-        verify_score: result.cover?.confidence ?? 1.0,
+        verify_score: result.cover?.confidence ?? (result.cover?.kind === "generated" ? 0 : 1.0),
         verify_model: result.cover?.model || "commons-search-v1",
         crawled_at: now,
         placed_at: now,

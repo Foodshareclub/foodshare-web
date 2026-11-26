@@ -8,6 +8,7 @@ import {
   searchListingReference,
 } from "./listing-cover-search.ts";
 import { resolveRealisticCover } from "./realistic-covers-catalog.ts";
+import { type GeneratedCover, generateListingCover } from "./listing-cover-generation.ts";
 export { coverSearchContext } from "./listing-cover-search.ts";
 export { resolveRealisticCover } from "./realistic-covers-catalog.ts";
 
@@ -20,21 +21,21 @@ export interface CoverInput {
   excludeUrls?: string[];
 }
 export interface CoverProvenance {
-  kind: "reference";
-  provider: "wikimedia-commons";
+  kind: "reference" | "generated";
+  provider: "wikimedia-commons" | "zai";
   model: string;
   contextHash: string;
   matchedAt: string;
   query: string;
   matchScope: "subject" | "category";
-  confidence: number;
-  sourcePageUrl: string;
-  sourceImageUrl: string;
-  pageId: number;
-  license: string;
-  licenseUrl: string;
-  artist: string;
-  disclosure: "Reference image; not a photograph of the listed item";
+  confidence?: number;
+  sourcePageUrl?: string;
+  sourceImageUrl?: string;
+  pageId?: number;
+  license?: string;
+  licenseUrl?: string;
+  artist?: string;
+  disclosure: string;
 }
 export function rasterType(bytes: Uint8Array): "png" | "jpeg" | "webp" {
   if (bytes.length < 12 || bytes.length > 5 * 1024 * 1024) {
@@ -49,6 +50,7 @@ export function rasterType(bytes: Uint8Array): "png" | "jpeg" | "webp" {
 export interface CoverDependencies {
   quota(): Promise<boolean>;
   search(input: CoverInput): Promise<ReferenceMatch>;
+  generate?(input: CoverInput): Promise<GeneratedCover>;
   download(url: string): Promise<Uint8Array>;
   store(path: string, bytes: Uint8Array, contentType: string): Promise<string>;
   verify(url: string): Promise<Uint8Array>;
@@ -60,8 +62,17 @@ export async function ensureListingCover(
 ): Promise<{ images: string[]; cover?: CoverProvenance }> {
   if (input.images.length) return { images: input.images };
   if (!await dependencies.quota()) throw new RateLimitError("Cover search quota exceeded");
-  const match = await dependencies.search(input);
-  const bytes = await dependencies.download(match.candidate.imageUrl);
+  let match: ReferenceMatch | undefined;
+  let generated: GeneratedCover | undefined;
+  try {
+    match = await dependencies.search(input);
+  } catch (error) {
+    if (!dependencies.generate) throw error;
+    generated = await dependencies.generate(input);
+  }
+  const imageUrl = generated?.imageUrl ?? match?.candidate.imageUrl;
+  if (!imageUrl) throw new ServerError("Cover provider returned no image");
+  const bytes = await dependencies.download(imageUrl);
   const format = rasterType(bytes);
   const hex = (buffer: ArrayBuffer) =>
     [...new Uint8Array(buffer)].map((v) => v.toString(16).padStart(2, "0")).join("");
@@ -69,7 +80,9 @@ export async function ensureListingCover(
   const contextHash = hex(
     await crypto.subtle.digest("SHA-256", new TextEncoder().encode(coverSearchContext(input))),
   );
-  const path = `${userId}/reference-covers/${digest}.${format}`;
+  const path = `${userId}/${
+    generated ? "generated-covers" : "reference-covers"
+  }/${digest}.${format}`;
   const url = await dependencies.store(path, bytes, `image/${format}`);
   const readback = await dependencies.verify(url);
   if (hex(await crypto.subtle.digest("SHA-256", new Uint8Array(readback))) !== digest) {
@@ -77,23 +90,37 @@ export async function ensureListingCover(
   }
   return {
     images: [url],
-    cover: {
-      kind: "reference",
-      provider: "wikimedia-commons",
-      model: match.model,
-      contextHash,
-      matchedAt: new Date().toISOString(),
-      query: match.query,
-      matchScope: match.scope,
-      confidence: match.confidence,
-      sourcePageUrl: match.candidate.sourcePageUrl,
-      sourceImageUrl: match.candidate.imageUrl,
-      pageId: match.candidate.pageId,
-      license: match.candidate.license,
-      licenseUrl: match.candidate.licenseUrl,
-      artist: match.candidate.artist,
-      disclosure: "Reference image; not a photograph of the listed item",
-    },
+    cover: generated
+      ? {
+        kind: "generated",
+        provider: "zai",
+        model: generated.model,
+        contextHash,
+        matchedAt: new Date().toISOString(),
+        query: coverSearchContext(input),
+        matchScope: "subject",
+        disclosure: "AI-generated illustration; not a photograph of the listed item",
+        // Do not publish temporary signed provider URLs or invent a license/confidence.
+      }
+      : match
+      ? {
+        kind: "reference",
+        provider: "wikimedia-commons",
+        model: match.model,
+        contextHash,
+        matchedAt: new Date().toISOString(),
+        query: match.query,
+        matchScope: match.scope,
+        confidence: match.confidence,
+        sourcePageUrl: match.candidate.sourcePageUrl,
+        sourceImageUrl: match.candidate.imageUrl,
+        pageId: match.candidate.pageId,
+        license: match.candidate.license,
+        licenseUrl: match.candidate.licenseUrl,
+        artist: match.candidate.artist,
+        disclosure: "Reference image; not a photograph of the listed item",
+      }
+      : undefined,
   };
 }
 export async function createListingCover(
@@ -156,6 +183,7 @@ export async function createListingCover(
     return await ensureListingCover(distinctInput, userId, {
       quota: overrides?.quota ?? (() => checkRateLimit(userId, supabase)),
       search: overrides?.search ?? ((context) => searchListingReference(context)),
+      generate: overrides?.generate ?? generateListingCover,
       download: overrides?.download ?? downloadImage,
       store: overrides?.store ??
         (async (path, bytes, contentType) =>
@@ -163,7 +191,7 @@ export async function createListingCover(
       verify: overrides?.verify ?? downloadImage,
     });
   } catch (err) {
-    if (overrides) {
+    if (overrides || err instanceof RateLimitError) {
       throw err;
     }
     // Guarantee an authentic, photorealistic photographic cover so no listing is left broken or placeholder

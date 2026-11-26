@@ -66,6 +66,9 @@ Deno.test("image search consumes quota before provider access", async () => {
 });
 Deno.test("searched cover retains source and license after owner-scoped upload and public readback", async () => {
   const deps = dependencies();
+  deps.generate = () => {
+    throw Error("A matching reference must avoid paid generation");
+  };
   const calls: string[] = [];
   deps.store = (path, bytes, type) => {
     calls.push("store");

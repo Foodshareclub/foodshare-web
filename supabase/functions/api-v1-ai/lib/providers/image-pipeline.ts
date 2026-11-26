@@ -1442,7 +1442,8 @@ export async function enrichListing(
         image_provenance: {
           source_url: coverResult.cover?.sourceImageUrl || imageUrl,
           source: coverResult.cover?.provider || "commons-search-v1",
-          verify_score: coverResult.cover?.confidence ?? 1.0,
+          verify_score: coverResult.cover?.confidence ??
+            (coverResult.cover?.kind === "generated" ? 0 : 1.0),
           verify_model: coverResult.cover?.model || "commons-search-v1",
           crawled_at: now,
           placed_at: now,
