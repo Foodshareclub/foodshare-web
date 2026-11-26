@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { updateRoom } from "@/app/actions/chat";
 import { updateProduct } from "@/app/actions/products";
+import { OpenStatus } from "@/components/OpenStatus";
 import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
 import PopupNotificationModal from "@/components/modals/PopupNotificationModal";
 import TopTips from "@/components/topTips/TopTips";
@@ -192,7 +193,14 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
               <Clock className="size-4 text-primary/70" aria-hidden="true" />
               <p className="font-medium">{t("available")}</p>
             </div>
-            <p className="text-muted-foreground">{product.available_hours || "Anytime"}</p>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {product.partner_status || product.opening_hours ? (
+                <OpenStatus hours={product.opening_hours} timezone={product.timezone} />
+              ) : null}
+              <p className="text-muted-foreground">
+                {product.available_hours || (product.partner_status ? "Hours unavailable" : "Anytime")}
+              </p>
+            </div>
           </div>
 
           {/* Description/Quantity */}

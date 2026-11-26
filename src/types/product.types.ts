@@ -3,6 +3,7 @@
  * Centralized types for product/post data structures
  */
 
+import type { WeeklyHours } from "@/lib/opening-hours";
 import { parsePostGISPoint } from "@/utils/postgis";
 import type { GeoJSONPoint, PostGISGeography } from "./postgis.types";
 
@@ -44,6 +45,10 @@ export type InitialProductStateType = {
   post_type: string;
   /** Partner network status, verbatim. Only set on network-managed listings. */
   partner_status?: string | null;
+  /** Machine-readable weekly hours; null means unknown, never closed. */
+  opening_hours?: WeeklyHours | null;
+  /** IANA zone the hours are evaluated in. */
+  timezone?: string | null;
   is_active: boolean;
   post_views: number;
   profile_id: string;

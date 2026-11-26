@@ -6,6 +6,7 @@ import { getProductDetailUrl } from "@/utils/categoryMapping";
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
 import Link from "next/link";
+import { OpenStatus } from "@/components/OpenStatus";
 import { ImageCarousel } from "./ImageCarousel";
 import { ProductCardActions } from "./ProductCardActions";
 import { ProductCardWrapper } from "./ProductCardWrapper";
@@ -25,13 +26,6 @@ type ProductCardProps = {
  * Interactive actions are handled by the thin ProductCardActions client wrapper.
  * Optional hover/click handlers are handled by ProductCardWrapper for map integration.
  */
-const PARTNER_STATUS_STYLES: Record<string, string> = {
-  active: "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300",
-  "on hold": "bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300",
-  inactive: "bg-muted text-muted-foreground",
-  "setting up": "bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300",
-};
-
 export function ProductCard({ product, coverUrl, onMouseEnter, onMouseLeave, onClick }: ProductCardProps) {
   // Product detail URL - use category-specific path based on post_type
   const productUrl = getProductDetailUrl(product.post_type, product.id);
@@ -138,15 +132,8 @@ export function ProductCard({ product, coverUrl, onMouseEnter, onMouseLeave, onC
         {/* Line 3: area and pickup window, status on the end */}
         <div className="flex items-center justify-between gap-2 text-[13px] leading-snug">
           <p className="min-w-0 flex-1 truncate text-muted-foreground">{detailLine}</p>
-          {partnerStatus ? (
-            <span
-              className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                PARTNER_STATUS_STYLES[partnerStatus.toLowerCase()] ?? "bg-muted text-muted-foreground"
-              }`}
-            >
-              <span className="size-1.5 rounded-full bg-current opacity-70" aria-hidden="true" />
-              {partnerStatus}
-            </span>
+          {partnerStatus || product.opening_hours ? (
+            <OpenStatus hours={product.opening_hours} timezone={product.timezone} />
           ) : product.is_arranged ? (
             <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
               <span className="size-1.5 rounded-full bg-amber-500" aria-hidden="true" />
