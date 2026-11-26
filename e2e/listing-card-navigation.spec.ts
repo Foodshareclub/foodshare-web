@@ -6,7 +6,9 @@ const LISTING_CARD = "article[aria-label]";
 const FEED_TIMEOUT = 45_000;
 
 test.beforeEach(async ({ context }) => {
-  // Deterministic guest path: geolocation is explicitly denied, so the feed never swaps to a runner-location query.
+  // Guest path: geolocation is denied. The deny only mocks navigator.geolocation —
+  // permissions.query and the /api/location/approximate fetch are NOT mocked, so the
+  // app still resolves the runner IP and swaps the feed (see firstListing below).
   await context.addInitScript(() => {
     const denied = {
       code: 1,
@@ -29,17 +31,29 @@ test.beforeEach(async ({ context }) => {
 
 async function firstListing(page: Page) {
   await page.goto("/food");
-  // The feed is server-rendered against the live estate, then swaps to the
-  // IP-approx feed when /api/location/approximate resolves (geolocation is
-  // denied in beforeEach). Capture the first card + href AFTER the swap
-  // stabilizes, not at SSR time — the SSR first card's href is stale.
-  await page
-    .waitForResponse((response) => response.url().includes("/api/location/approximate"), { timeout: FEED_TIMEOUT })
-    .catch(() => {});
   const card = page.locator(LISTING_CARD).first();
   await expect(card).toBeVisible({ timeout: FEED_TIMEOUT });
   const titleLink = card.locator("h3 a");
-  const href = await titleLink.getAttribute("href");
+  // The feed is server-rendered, then swaps to the IP-approx feed when the app
+  // resolves the runner IP (permissions.query is NOT mocked — the geolocation
+  // deny only mocks navigator.geolocation). The swap lands after the approximate
+  // response (React re-render → setTimeout(0) → nearby fetch → setClientNearbyPosts),
+  // so poll the first card's href until it is stable for ~400ms before capturing —
+  // the SSR first card's href is stale by the click.
+  let previous = "";
+  let stableSince = 0;
+  await expect(async () => {
+    const current = await titleLink.getAttribute("href").catch(() => null);
+    if (!current) throw new Error("no href yet");
+    if (current !== previous) {
+      previous = current;
+      stableSince = 0;
+      throw new Error("href not stable yet");
+    }
+    if (!stableSince) stableSince = Date.now();
+    if (Date.now() - stableSince < 400) throw new Error("href not stable yet");
+  }).toPass({ timeout: FEED_TIMEOUT });
+  const href = await titleLink.getAttribute("href").catch(() => null);
   const title = (await titleLink.innerText()).trim();
   expect(href).toMatch(/^\/product\/\d+$/);
   return { card, titleLink, href: href!, title };
