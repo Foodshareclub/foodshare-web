@@ -187,18 +187,9 @@ function enrichRouteCtx(
               eq: () => ({
                 single: () =>
                   Promise.resolve({
-                    data: {
-                      id: 7,
-                      post_name: "Parnell Community Fridge",
-                      post_address: "1 Main St, Auckland",
-                      post_type: "fridge",
-                      fridge_id: null,
-                      website: null,
-                      metadata: { image_provenance: { status: "placed" } },
-                      images: [
-                        "https://api.foodshare.club/storage/v1/object/public/posts/owner/photo.jpg",
-                      ],
-                    },
+                    // Stop at the database boundary: limiter tests must not
+                    // depend on a pretend stored image being publicly readable.
+                    data: null,
                     error: null,
                   }),
               }),
@@ -247,7 +238,7 @@ Deno.test("enrichListing route: within budget it succeeds on the string-key limi
     assertEquals(resp.status, 200);
     const json = (await resp.json()) as { success: boolean; data: { status: string } };
     assertEquals(json.success, true);
-    assertEquals(json.data.status, "skipped"); // existing placed cover; no provider request
+    assertEquals(json.data.status, "failed"); // controlled missing post; no provider request
     assertEquals(flags.postsTouched, true, "the pipeline ran after the allow");
     // Round-1 defect regression: the route rides the string-key distributed
     // limiter — never the uuid-typed user-quota RPC, where a string key is a

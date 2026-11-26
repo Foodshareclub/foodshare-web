@@ -19,8 +19,10 @@ import ExifReader from "exifreader";
 import JPEG from "jpeg-js";
 import { Buffer } from "node:buffer";
 import { generateCacheKey, getCachedResult, setCachedResult } from "../cache.ts";
-import { createListingCover } from "../../../api-v1-products/lib/listing-cover.ts";
+import { createListingCover, rasterType } from "../../../api-v1-products/lib/listing-cover.ts";
 import { generateListingCover } from "../../../api-v1-products/lib/listing-cover-generation.ts";
+import { isOwnStorageUrl } from "../../../_shared/storage-urls.ts";
+import { downloadImage } from "../../../_shared/image-utils.ts";
 
 // =============================================================================
 // Types
@@ -1053,6 +1055,8 @@ export interface EnrichListingInput {
 /** Test/ops seams, mirroring ImageSearchDeps / ImageVerifyDeps: production
  *  calls use the SSRF-gated fetches; tests inject fixtures. */
 export interface EnrichListingDeps {
+  /** Bounded public readback of an already placed primary storage cover. */
+  readPlacedCover?: typeof downloadImage;
   /** Existing cover provider seam; persistence always uses the versioned listing snapshot. */
   createCover?: typeof createListingCover;
   fetchImage?: (
@@ -1158,22 +1162,26 @@ export async function enrichListing(
     listingLng = fridge?.longitude ?? undefined;
   }
 
-  // 2. Idempotency: skip if already placed with usable image URLs
-  const hasUsableImages = Array.isArray(post.images) &&
-    post.images.length > 0 &&
-    post.images.some((img: unknown) =>
-      typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://"))
-    );
-
+  // 2. Idempotency requires a readable primary backend cover. Historical
+  // provenance and a live secondary URL cannot prove the displayed cover works.
+  const primary = Array.isArray(post.images) ? post.images[0] : undefined;
   const provenance = post.metadata?.image_provenance;
-  if (hasUsableImages && provenance?.status === "placed") {
-    return {
-      status: "skipped",
-      post_id: postId,
-      image_url: post.images?.[0],
-      provenance,
-      attempts: 0,
-    };
+  if (typeof primary === "string" && provenance?.status === "placed") {
+    try {
+      if (await isOwnStorageUrl(primary)) {
+        rasterType(await (deps.readPlacedCover ?? downloadImage)(primary));
+        return {
+          status: "skipped",
+          post_id: postId,
+          image_url: primary,
+          provenance,
+          attempts: 0,
+        };
+      }
+    } catch {
+      // Continue through the authentic-photo and relevant-cover repair tiers.
+      // Keep old images behind the replacement; never delete customer photos.
+    }
   }
 
   // 2.5 Ingest user-uploaded photo from Telegram if present (preserves authentic user photos)

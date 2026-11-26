@@ -163,7 +163,12 @@ function stubSupabase(
       const upsert = () => thenable({});
       const update = (payload: Record<string, unknown>) => {
         captured.postUpdates.push(payload);
-        return { eq: () => Promise.resolve({ data: post, error: null }) };
+        const builder = {
+          eq: () => builder,
+          select: () => builder,
+          single: () => Promise.resolve({ data: post, error: null }),
+        };
+        return builder;
       };
       const select = (cols: string) => {
         (captured.selects[table] ??= []).push(cols);
@@ -604,6 +609,7 @@ const A1_HTML = `
 function enrichPost(over: Record<string, unknown> = {}) {
   return {
     id: 7,
+    version: 1,
     post_name: LISTING.name,
     post_address: LISTING.address,
     post_type: "fridge",
@@ -635,6 +641,7 @@ async function runEnrich(
     OPENAI_API_KEY: "test-openai",
     ALLOW_SERP_FALLBACK: undefined,
   },
+  readPlacedCover?: (url: string) => Promise<Uint8Array>,
 ) {
   const restoreDns = stubDns(PUBLIC_IP);
   const harness = installFetch((url) => {
@@ -649,16 +656,20 @@ async function runEnrich(
   const bytes = await sampleBytes();
   let result!: Awaited<ReturnType<typeof enrichListing>>;
   try {
-    await withEnv(env, () =>
-      enrichListing(
-        { post_id: 7 },
-        supabase,
-        {
-          fetchImage: async () => ({ bytes, format: "jpeg" }),
-          fetchHtml: async () => html,
-          fetchBytes: async () => ({ bytes, contentType: "image/jpeg" }),
-        },
-      ).then((r) => (result = r)));
+    await withEnv(
+      { SUPABASE_PUBLIC_URL: "https://api.foodshare.club", ...env },
+      () =>
+        enrichListing(
+          { post_id: 7 },
+          supabase,
+          {
+            readPlacedCover: readPlacedCover ?? (async () => bytes),
+            fetchImage: async () => ({ bytes, format: "jpeg" }),
+            fetchHtml: async () => html,
+            fetchBytes: async () => ({ bytes, contentType: "image/jpeg" }),
+          },
+        ).then((r) => (result = r)),
+    );
   } finally {
     restoreDns();
     harness.restore();
@@ -749,11 +760,60 @@ Deno.test("enrichListing: an already-placed listing is skipped (idempotency)", a
       metadata: {
         image_provenance: { status: "placed", source_url: "https://old.example/x.jpg" },
       },
-      images: ["https://foodshare.club/storage/posts/already.jpg"],
+      images: ["https://api.foodshare.club/storage/v1/object/public/posts/already.jpg"],
     }),
     FRIDGE_ROW,
   );
   assertEquals(result.status, "skipped");
   assertEquals(captured.uploads.length, 0);
   assertEquals(captured.postUpdates.length, 0);
+});
+
+for (const failure of ["unavailable", "not-raster"] as const) {
+  Deno.test(`enrichListing: placed ${failure} primary is repaired despite a live secondary`, async () => {
+    const primary = "https://api.foodshare.club/storage/v1/object/public/posts/broken.jpg";
+    const secondary = "https://api.foodshare.club/storage/v1/object/public/posts/secondary.jpg";
+    const reads: string[] = [];
+    const { result, captured } = await runEnrich(
+      enrichPost({
+        metadata: { image_provenance: { status: "placed" } },
+        images: [primary, secondary],
+      }),
+      FRIDGE_ROW,
+      {},
+      A1_HTML,
+      { OPENAI_API_KEY: "test-openai", ALLOW_SERP_FALLBACK: undefined },
+      async (url) => {
+        reads.push(url);
+        if (failure === "unavailable") throw new Error("HTTP 402");
+        return new TextEncoder().encode("<html>not an image</html>");
+      },
+    );
+    assertEquals(reads, [primary]);
+    assertEquals(result.status, "placed");
+    assertEquals(captured.uploads.length, 1);
+    assertEquals(captured.postUpdates.length, 1);
+    assertEquals((captured.postUpdates[0].images as string[]).slice(1), [primary, secondary]);
+  });
+}
+
+Deno.test("enrichListing: placed legacy storage is repaired without fetching the legacy URL", async () => {
+  const reads: string[] = [];
+  const { result, captured } = await runEnrich(
+    enrichPost({
+      metadata: { image_provenance: { status: "placed" } },
+      images: ["https://iazmjdjwnkilycbjwpzp.supabase.co/storage/v1/object/public/posts/old.jpg"],
+    }),
+    FRIDGE_ROW,
+    {},
+    A1_HTML,
+    { OPENAI_API_KEY: "test-openai", ALLOW_SERP_FALLBACK: undefined },
+    (url) => {
+      reads.push(url);
+      throw new Error("Legacy URLs must not reach the primary storage readback");
+    },
+  );
+  assertEquals(result.status, "placed");
+  assertEquals(captured.uploads.length, 1);
+  assertEquals(reads, []);
 });
