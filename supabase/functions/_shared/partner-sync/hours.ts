@@ -25,26 +25,33 @@ export const DAYS: Day[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 const DAY_INDEX: Record<string, number> = {
   mon: 0,
   monday: 0,
+  mondays: 0,
   tue: 1,
   tues: 1,
+  tuesdays: 1,
   tuesday: 1,
   wed: 2,
   weds: 2,
   wednesday: 2,
+  wednesdays: 2,
   thu: 3,
   thur: 3,
   thurs: 3,
   thursday: 3,
+  thursdays: 3,
   fri: 4,
+  fridays: 4,
   friday: 4,
   sat: 5,
   saturday: 5,
+  saturdays: 5,
   sun: 6,
   sunday: 6,
+  sundays: 6,
 };
 
 const DAY_TOKEN =
-  "(mon(?:day)?|tue(?:sday|s)?|wed(?:nesday|s)?|thu(?:rsday|rs|r)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)";
+  "(mon(?:day)?s?|tue(?:sday)?s?|tues|wed(?:nesday)?s?|thu(?:rsday|rs|r)?s?|fri(?:day)?s?|sat(?:urday)?s?|sun(?:day)?s?)";
 const RANGE_RE = new RegExp(`^${DAY_TOKEN}\\s*-\\s*${DAY_TOKEN}\\b`);
 const LIST_RE = new RegExp(`^${DAY_TOKEN}(?:\\s*(?:,|&|and|\\/)\\s*${DAY_TOKEN})+\\b`);
 const SINGLE_RE = new RegExp(`^${DAY_TOKEN}\\b`);
@@ -54,7 +61,7 @@ const text = (value: unknown): string => (typeof value === "string" ? value.trim
 function normalize(value: string): string {
   return value
     .replace(/[–—−]/g, "-")
-    .replace(/\bto\b/g, "-")
+    .replace(/\b(to|through)\b/g, "-")
     .replace(/\ba\.?m\.?\b/g, "am")
     .replace(/\bp\.?m\.?\b/g, "pm")
     .replace(/\bnoon\b/g, "12pm")
@@ -132,7 +139,9 @@ function parseInterval(part: string): { start: number; end: number } | null {
     if (h1 > 12 || h2 > 12) {
       // Already 24-hour; the clock values stand.
     } else if (h1 === 12 && h2 !== 12) {
+      // 12-2 is noon to 2pm; a midnight start would be written 12am.
       start = clock(h1, m1, "pm");
+      end = clock(h2, m2, "pm");
     } else if (h2 === 12 && h1 !== 12) {
       end = clock(h2, m2, "pm");
     } else if (h1 >= h2) {
@@ -167,6 +176,11 @@ function stripLead(value: string): string {
 
 function parseClause(clause: string): Partial<Record<Day, HoursInterval[]>> | null {
   let rest = stripLead(clause);
+  if (!rest) return null;
+  if (/^(always open|open always)\b/.test(rest)) {
+    return Object.fromEntries(DAYS.map((day) => [day, [{ start: "00:00", end: "24:00" }]]));
+  }
+  rest = stripLead(rest.replace(/^(open|hours)\b/, ""));
   if (!rest) return null;
 
   let days: Day[] = DAYS;
@@ -210,11 +224,30 @@ export function parseOpeningHours(value: unknown): WeeklyHours | null {
   if (clauses.length === 0) return null;
 
   const result: WeeklyHours = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
-  for (const clause of clauses) {
-    const parsed = parseClause(clause);
-    if (!parsed) return null;
+  const merge = (parsed: Partial<Record<Day, HoursInterval[]>>) => {
     for (const day of DAYS) {
       if (parsed[day]) result[day] = parsed[day] as HoursInterval[];
+    }
+  };
+  for (const clause of clauses) {
+    const parsed = parseClause(clause);
+    if (parsed) {
+      merge(parsed);
+      continue;
+    }
+    // A comma may separate day clauses ("Mon-Fri 9-5, Sat 10-2") or a day list
+    // ("Mon, Wed, Fri 9-5"). Only split when every part starts with a day spec;
+    // otherwise the comma is ambiguous and the value stays unknown.
+    const parts = clause.split(",").map((part) => part.trim()).filter(Boolean);
+    const everyPartHasDays = parts.length > 1 &&
+      parts.every((part) =>
+        /^(daily|every|weekdays?|weekends?|mon|tue|wed|thu|fri|sat|sun)/.test(part)
+      );
+    if (!everyPartHasDays) return null;
+    for (const part of parts) {
+      const sub = parseClause(part);
+      if (!sub) return null;
+      merge(sub);
     }
   }
   for (const day of DAYS) {

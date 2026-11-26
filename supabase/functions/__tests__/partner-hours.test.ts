@@ -49,6 +49,21 @@ Deno.test("two clauses combine", () => {
   assertEquals(hours?.sun, []);
 });
 
+Deno.test("common free-text lead-ins and plurals parse", () => {
+  assertEquals(parseOpeningHours("Open Mon-Fri 9am-5pm")?.mon, span("09:00", "17:00"));
+  assertEquals(parseOpeningHours("Mondays 10am-2pm")?.mon, span("10:00", "14:00"));
+  assertEquals(parseOpeningHours("Monday through Friday 9-5")?.fri, span("09:00", "17:00"));
+  assertEquals(parseOpeningHours("Always open")?.sun, span("00:00", "24:00"));
+  assertEquals(parseOpeningHours("12-2")?.mon, span("12:00", "14:00"));
+});
+
+Deno.test("comma-separated day clauses combine; ambiguous commas stay unknown", () => {
+  const hours = parseOpeningHours("Mon-Fri 9am-5pm, Sat 10am-2pm");
+  assertEquals(hours?.mon, span("09:00", "17:00"));
+  assertEquals(hours?.sat, span("10:00", "14:00"));
+  assertEquals(parseOpeningHours("9am-5pm, 1pm-9pm"), null);
+});
+
 Deno.test("closed is a known empty schedule", () => {
   assertEquals(parseOpeningHours("Closed")?.mon, []);
 });
