@@ -359,6 +359,72 @@ export type Database = {
     Views: { [_ in never]: never; };
     CompositeTypes: { [_ in never]: never; };
   },
+  private: {
+    Tables: {
+      airtable_fridge_records: {
+        Row: {
+        content_hash: string;
+        fetched_at: string;
+        fields: Json;
+        first_seen_at: string;
+        last_seen_at: string;
+        network_key: string;
+        record_id: string;
+        };
+        Insert: {
+        content_hash: string;
+        fetched_at?: string;
+        fields: Json;
+        first_seen_at?: string;
+        last_seen_at?: string;
+        network_key: string;
+        record_id: string;
+        };
+        Update: {
+        content_hash?: string;
+        fetched_at?: string;
+        fields?: Json;
+        first_seen_at?: string;
+        last_seen_at?: string;
+        network_key?: string;
+        record_id?: string;
+        };
+        Relationships: [];
+      },
+      airtable_sync_runs: {
+        Row: {
+        counts: Json;
+        finished_at: string;
+        id: number;
+        mode: string;
+        network_key: string;
+        outcome: string;
+        started_at: string;
+        };
+        Insert: {
+        counts?: Json;
+        finished_at?: string;
+        id: number;
+        mode: string;
+        network_key: string;
+        outcome: string;
+        started_at?: string;
+        };
+        Update: {
+        counts?: Json;
+        finished_at?: string;
+        id?: number;
+        mode?: string;
+        network_key?: string;
+        outcome?: string;
+        started_at?: string;
+        };
+        Relationships: [];
+      }
+    };
+    Views: { [_ in never]: never; };
+    CompositeTypes: { [_ in never]: never; };
+  },
   public: {
     Tables: {
       address: {
@@ -6623,7 +6689,9 @@ export type Database = {
         location_type: string;
         metadata: Json | null;
         network: string | null;
+        network_key: string | null;
         news_articles: string;
+        partner_status: string | null;
         pickup_time: string;
         post_address: string;
         post_arranged_at: string | null;
@@ -6674,7 +6742,9 @@ export type Database = {
         location_type?: string;
         metadata?: Json;
         network?: string;
+        network_key?: string;
         news_articles?: string;
+        partner_status?: string;
         pickup_time?: string;
         post_address?: string;
         post_arranged_at?: string;
@@ -6725,7 +6795,9 @@ export type Database = {
         location_type?: string;
         metadata?: Json | null;
         network?: string | null;
+        network_key?: string | null;
         news_articles?: string;
+        partner_status?: string | null;
         pickup_time?: string;
         post_address?: string;
         post_arranged_at?: string | null;
@@ -8505,6 +8577,8 @@ export type Database = {
         location_type: string | null;
         longitude: number | null;
         metadata: Json | null;
+        network_key: string | null;
+        partner_status: string | null;
         pickup_time: string | null;
         post_address: string | null;
         post_arranged_at: string | null;
@@ -8545,6 +8619,8 @@ export type Database = {
         location_type?: string;
         longitude?: number;
         metadata?: Json;
+        network_key?: string;
+        partner_status?: string;
         pickup_time?: string;
         post_address?: string;
         post_arranged_at?: string;
@@ -8585,6 +8661,8 @@ export type Database = {
         location_type?: string | null;
         longitude?: number | null;
         metadata?: Json | null;
+        network_key?: string | null;
+        partner_status?: string | null;
         pickup_time?: string | null;
         post_address?: string | null;
         post_arranged_at?: string | null;
@@ -8747,6 +8825,15 @@ export type Database = {
       aggregate_daily_author_analytics: {
         Args: Record<never, never>;
         Returns: undefined;
+      },
+      apply_partner_sync: {
+        Args: {
+        p_network_key: string | null;
+        p_records: Json | null;
+        p_rows: Json | null;
+        p_live: boolean | null;
+      };
+        Returns: Json;
       },
       apply_pending_operation: {
         Args: {
@@ -10816,6 +10903,12 @@ export type Database = {
       is_email_suppressed: {
         Args: {
         p_email: string | null;
+      };
+        Returns: boolean;
+      },
+      is_public_place_post_type: {
+        Args: {
+        p_post_type: string | null;
       };
         Returns: boolean;
       },
