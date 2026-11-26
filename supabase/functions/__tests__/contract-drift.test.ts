@@ -1198,7 +1198,6 @@ Deno.test("contract: no unreferenced column in the catalog has no live code refe
     "public.feature_flags.target_segments",
     "public.forum.reports_count",
     "public.forum.search_vector",
-    "public.forum_activity_types.is_public",
     "public.forum_announcement_analytics.page_url",
     "public.forum_announcements.background_color",
     "public.forum_announcements.target_segment",

@@ -1,4 +1,5 @@
 import type { AirtableRecord } from "./airtable.ts";
+import type { WeeklyHours } from "./hours.ts";
 
 /**
  * One partner record, mapped onto a `posts` row.
@@ -21,6 +22,10 @@ export interface PartnerRow {
   partner_status: string | null;
   /** Set by the sync: the record's photo, re-hosted (or empty). */
   images: string[];
+  /** Set by the sync from the Hours text; null means unknown. */
+  opening_hours: WeeklyHours | null;
+  /** IANA zone the hours are evaluated in. */
+  timezone: string;
   metadata: { lacf: Record<string, unknown> };
 }
 
@@ -100,6 +105,8 @@ export function mapRecord(record: AirtableRecord): PartnerRow | null {
     location_type: text(fields["Location type"]),
     partner_status: text(fields.Status) || null,
     images: [],
+    opening_hours: null,
+    timezone: "",
     metadata: {
       lacf: {
         record_id: record.id,

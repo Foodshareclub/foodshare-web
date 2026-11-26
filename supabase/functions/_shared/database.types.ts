@@ -6691,6 +6691,7 @@ export type Database = {
         network: string | null;
         network_key: string | null;
         news_articles: string;
+        opening_hours: Json | null;
         partner_status: string | null;
         pickup_time: string;
         post_address: string;
@@ -6710,6 +6711,7 @@ export type Database = {
         sync_version: number | null;
         synced_to_motherduck: boolean | null;
         tags: Array<string> | null;
+        timezone: string | null;
         transportation: string | null;
         updated_at: string;
         version: number;
@@ -6744,6 +6746,7 @@ export type Database = {
         network?: string;
         network_key?: string;
         news_articles?: string;
+        opening_hours?: Json;
         partner_status?: string;
         pickup_time?: string;
         post_address?: string;
@@ -6763,6 +6766,7 @@ export type Database = {
         sync_version?: number;
         synced_to_motherduck?: boolean;
         tags?: Array<string>;
+        timezone?: string;
         transportation?: string;
         updated_at?: string;
         version?: number;
@@ -6797,6 +6801,7 @@ export type Database = {
         network?: string | null;
         network_key?: string | null;
         news_articles?: string;
+        opening_hours?: Json | null;
         partner_status?: string | null;
         pickup_time?: string;
         post_address?: string;
@@ -6816,6 +6821,7 @@ export type Database = {
         sync_version?: number | null;
         synced_to_motherduck?: boolean | null;
         tags?: Array<string> | null;
+        timezone?: string | null;
         transportation?: string | null;
         updated_at?: string;
         version?: number;
@@ -8578,6 +8584,7 @@ export type Database = {
         longitude: number | null;
         metadata: Json | null;
         network_key: string | null;
+        opening_hours: Json | null;
         partner_status: string | null;
         pickup_time: string | null;
         post_address: string | null;
@@ -8594,6 +8601,7 @@ export type Database = {
         slug: string | null;
         sync_version: number | null;
         tags: Array<string> | null;
+        timezone: string | null;
         updated_at: string | null;
         version: number | null;
         };
@@ -8620,6 +8628,7 @@ export type Database = {
         longitude?: number;
         metadata?: Json;
         network_key?: string;
+        opening_hours?: Json;
         partner_status?: string;
         pickup_time?: string;
         post_address?: string;
@@ -8636,6 +8645,7 @@ export type Database = {
         slug?: string;
         sync_version?: number;
         tags?: Array<string>;
+        timezone?: string;
         updated_at?: string;
         version?: number;
         };
@@ -8662,6 +8672,7 @@ export type Database = {
         longitude?: number | null;
         metadata?: Json | null;
         network_key?: string | null;
+        opening_hours?: Json | null;
         partner_status?: string | null;
         pickup_time?: string | null;
         post_address?: string | null;
@@ -8678,6 +8689,7 @@ export type Database = {
         slug?: string | null;
         sync_version?: number | null;
         tags?: Array<string> | null;
+        timezone?: string | null;
         updated_at?: string | null;
         version?: number | null;
         };

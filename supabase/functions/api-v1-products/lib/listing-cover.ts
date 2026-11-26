@@ -22,7 +22,7 @@ export interface CoverInput {
 }
 export interface CoverProvenance {
   kind: "reference" | "generated";
-  provider: "wikimedia-commons" | "zai";
+  provider: "wikimedia-commons" | "zai" | "realistic-catalog";
   model: string;
   contextHash: string;
   matchedAt: string;
@@ -60,7 +60,7 @@ export async function verifiedCatalogCover(
   input: CoverInput,
   excludeUrls: string[],
   verify: CoverDependencies["verify"] = downloadImage,
-) {
+): Promise<{ images: string[]; cover: CoverProvenance }> {
   // This catalog contains food and fridges, not the other listing categories.
   if (input.postType !== "food" && input.postType !== "fridge") {
     throw new ServerError("No relevant catalog cover for this listing category");

@@ -11,6 +11,7 @@
  */
 
 import type { AirtableRecord } from "./airtable.ts";
+import { parseOpeningHours } from "./hours.ts";
 
 /** The status values the sync understands; anything else is reported. */
 export const KNOWN_STATUSES = ["active", "inactive", "on hold", "setting up"];
@@ -51,6 +52,19 @@ export function inspectRecords(records: AirtableRecord[]): RecordShape {
   }
   if (unknown.size === 0 && known === 0 && hasStatusKey) {
     warnings.push("Every record has a blank status");
+  }
+
+  // Hours are free text. A value we cannot read is reported, never a refusal:
+  // it is stored as unknown and renders "Hours unavailable".
+  const hasHoursKey = records.some((record) => "Hours" in record.fields);
+  if (!hasHoursKey) warnings.push("Hours column is missing");
+  const unparsable = records
+    .map((record) => text(record.fields.Hours))
+    .filter((value) => value.length > 0 && parseOpeningHours(value) === null).length;
+  if (unparsable > 0) {
+    warnings.push(
+      `${unparsable} hours value(s) could not be parsed and will show as Hours unavailable`,
+    );
   }
 
   return { refused, warnings };

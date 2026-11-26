@@ -5,8 +5,13 @@ const record = (fields: Record<string, unknown>) => ({ id: "rec", fields });
 
 Deno.test("a healthy base passes without warnings", () => {
   const shape = inspectRecords([
-    record({ Name: "A", Status: "Active", "Street address": "1 Main St" }),
-    record({ Name: "B", Status: "On hold", "Street address": "2 Main St" }),
+    record({
+      Name: "A",
+      Status: "Active",
+      "Street address": "1 Main St",
+      Hours: "Mon-Fri 9am-5pm",
+    }),
+    record({ Name: "B", Status: "On hold", "Street address": "2 Main St", Hours: "Closed" }),
   ]);
   assertEquals(shape.refused, []);
   assertEquals(shape.warnings, []);
@@ -24,8 +29,8 @@ Deno.test("a missing Name column refuses the run", () => {
 
 Deno.test("a changed status vocabulary refuses the run", () => {
   const shape = inspectRecords([
-    record({ Name: "A", Status: "Open", "Street address": "1 Main St" }),
-    record({ Name: "B", Status: "Closed", "Street address": "2 Main St" }),
+    record({ Name: "A", Status: "Open", "Street address": "1 Main St", Hours: "9am-5pm" }),
+    record({ Name: "B", Status: "Closed", "Street address": "2 Main St", Hours: "9am-5pm" }),
   ]);
   assertEquals(shape.refused.includes("Status vocabulary changed"), true);
   assertEquals(shape.warnings.length, 1);
@@ -38,6 +43,25 @@ Deno.test("one unknown status warns but does not block the known ones", () => {
   ]);
   assertEquals(shape.refused, []);
   assertEquals(shape.warnings[0], "Unknown status values: open");
+});
+
+Deno.test("unparsable hours warn but never refuse the run", () => {
+  const shape = inspectRecords([
+    record({ Name: "A", Status: "Active", "Street address": "1 Main St", Hours: "By appointment" }),
+    record({
+      Name: "B",
+      Status: "Active",
+      "Street address": "2 Main St",
+      Hours: "Mon-Fri 9am-5pm",
+    }),
+  ]);
+  assertEquals(shape.refused, []);
+  assertEquals(
+    shape.warnings.includes(
+      "1 hours value(s) could not be parsed and will show as Hours unavailable",
+    ),
+    true,
+  );
 });
 
 Deno.test("no street address anywhere warns", () => {

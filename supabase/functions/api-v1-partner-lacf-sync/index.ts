@@ -24,6 +24,7 @@ import { uploadImage } from "../api-v1-images/lib/storage.ts";
 import { fetchRecords, loadAirtableConfig } from "../_shared/partner-sync/airtable.ts";
 import { mapRecord, type PartnerRow } from "../_shared/partner-sync/mapper.ts";
 import { inspectRecords } from "../_shared/partner-sync/validate.ts";
+import { parseOpeningHours } from "../_shared/partner-sync/hours.ts";
 import {
   type PartnerPhotoDeps,
   type PartnerPhotoSource,
@@ -40,6 +41,9 @@ type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
 const NETWORK = "lacf";
 const VERSION = "1.1.0";
 const SYSTEM_OWNER = "00000000-0000-0000-0000-000000000001";
+// Every LACF record is in Los Angeles County; the zone is stored per listing so
+// the browser evaluates the schedule in the listing's zone, not the viewer's.
+const NETWORK_TIMEZONE = "America/Los_Angeles";
 
 interface ExistingPost {
   id: number;
@@ -77,8 +81,11 @@ async function handleSync(ctx: { request: Request }): Promise<Response> {
   let skipped = 0;
   for (const record of records) {
     const row = mapRecord(record);
-    if (row) rows.push(row);
-    else skipped += 1;
+    if (row) {
+      row.opening_hours = parseOpeningHours(row.available_hours);
+      row.timezone = NETWORK_TIMEZONE;
+      rows.push(row);
+    } else skipped += 1;
   }
   if (skipped > 0) {
     logger.warn("Partner records without a name were skipped", {
