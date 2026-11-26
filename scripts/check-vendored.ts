@@ -40,7 +40,7 @@ import { join } from "bun:path";
 
 /** The three vendored trees, relative to their repo root. */
 export const VENDORED_DIRS = ["supabase/functions", "supabase/migrations"] as const;
-export const VENDORED_FILES = ["scripts/external-monitor.sh"] as const;
+export const VENDORED_FILES = ["scripts/external-monitor.sh", "supabase/config.toml"] as const;
 
 /** Directories never part of a vendored tree. */
 const EXCLUDED_DIRS = new Set(["node_modules"]);

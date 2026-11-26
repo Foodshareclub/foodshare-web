@@ -5,6 +5,10 @@
 # Core Functions
 # =============================================================================
 
+# Partner fridge sync (LA Community Fridges). Service credentials only.
+[functions.api-v1-partner-lacf-sync]
+verify_jwt = false
+
 [functions.api-v1-cache]
 verify_jwt = false
 
@@ -14,6 +18,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.api-v1-images]
+verify_jwt = false
+
+# JWT authentication is enforced by createAPIHandler; health remains public.
+[functions.api-v1-cover-search]
 verify_jwt = false
 
 # Forum API (threads, comments, reports, moderation)

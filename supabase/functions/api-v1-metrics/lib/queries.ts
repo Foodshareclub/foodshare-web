@@ -66,8 +66,11 @@ export async function getRequestCount(
       .gte("created_at", since);
 
     if (error) {
+      // The metrics RPC lives in the `metrics` schema, which the generated
+      // public types do not enumerate. The cast is the typed-client
+      // boundary, not a suppression: the result is narrowed below.
       const { data, error: rpcError } = await supabase.rpc(
-        "get_request_count",
+        "get_request_count" as Parameters<Supabase["rpc"]>[0],
         {
           p_minutes: minutes,
         },
