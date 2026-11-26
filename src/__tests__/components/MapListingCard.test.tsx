@@ -1,12 +1,14 @@
-import { describe, expect, it, mock } from "bun:test";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, mock } from "bun:test";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 mock.module("next-intl", () => ({
   useTranslations: () => (key: string) => ({ close: "Close" })[key] ?? key,
 }));
 
 mock.module("next/image", () => ({
-  default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
+  default: ({ src, alt, onError }: { src: string; alt: string; onError?: () => void }) => (
+    <img src={src} alt={alt} onError={onError} />
+  ),
 }));
 
 import { MapListingCard, MapPreviewCard } from "@/components/map/MapListingCard";
@@ -37,3 +39,34 @@ describe("MapListingCard", () => {
     expect(closed).toBe(true);
   });
 });
+
+afterEach(cleanup);
+const base = "https://api.foodshare.club/storage/v1/object/public/food-images/u";
+const broken = `${base}/old.jpg`;
+const repaired = `${base}/reference-covers/${"b".repeat(64)}.jpeg`;
+const recoveryItem = { id: 1, post_name: "Apples", post_type: "food", images: [broken] };
+
+for (const variant of ["list", "preview"] as const) {
+  const card = (images: string[]) =>
+    variant === "list" ? (
+      <MapListingCard item={{ ...recoveryItem, images }} productType="food" />
+    ) : (
+      <MapPreviewCard item={{ ...recoveryItem, images }} productType="food" onClose={() => {}} />
+    );
+  describe(`${variant} map cover recovery`, () => {
+    it("tries the next stored image after a download fails", () => {
+      const view = render(card([broken, repaired]));
+      fireEvent.error(view.container.querySelector("img")!);
+      expect(view.container.querySelector("img")?.getAttribute("src")).toBe(repaired);
+      expect(screen.queryByTestId("finding-photo")).toBeNull();
+    });
+    it("renders a repaired backend cover after the previous URL failed", () => {
+      const view = render(card([broken]));
+      fireEvent.error(view.container.querySelector("img")!);
+      expect(screen.getByTestId("finding-photo")).toBeTruthy();
+      view.rerender(card([repaired]));
+      expect(view.container.querySelector("img")?.getAttribute("src")).toBe(repaired);
+      expect(screen.queryByTestId("finding-photo")).toBeNull();
+    });
+  });
+}
