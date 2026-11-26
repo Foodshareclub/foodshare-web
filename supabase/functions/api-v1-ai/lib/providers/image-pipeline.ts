@@ -20,6 +20,7 @@ import JPEG from "jpeg-js";
 import { Buffer } from "node:buffer";
 import { generateCacheKey, getCachedResult, setCachedResult } from "../cache.ts";
 import { createListingCover } from "../../../api-v1-products/lib/listing-cover.ts";
+import { generateListingCover } from "../../../api-v1-products/lib/listing-cover-generation.ts";
 
 // =============================================================================
 // Types
@@ -1430,7 +1431,11 @@ export async function enrichListing(
       post.profile_id || "system",
       supabase,
       `enrich-${postId}`,
-      { quota: () => Promise.resolve(true) },
+      {
+        quota: () => Promise.resolve(true),
+        // This existing queue tier has no interactive client waiting for creation.
+        generate: (input) => generateListingCover(input, { timeoutMs: 90_000 }),
+      },
     );
 
     if (coverResult.images && coverResult.images.length > 0) {

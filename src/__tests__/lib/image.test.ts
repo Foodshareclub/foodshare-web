@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { isReferenceImageUrl, isValidImageUrl, normalizeImageUrl } from "@/lib/image";
+import { isGeneratedImageUrl, isReferenceImageUrl, isValidImageUrl, normalizeImageUrl } from "@/lib/image";
 
 describe("listing image URLs", () => {
   test.each([
@@ -55,5 +55,16 @@ describe("reference photo provenance namespaces", () => {
     `https://user:password@api.foodshare.club/storage/v1/object/public/assets/listing-reference/${hash}/fridge.jpg`,
   ])("does not mislabel ordinary or foreign photos: %s", (url) => {
     expect(isReferenceImageUrl(url)).toBe(false);
+  });
+});
+
+describe("generated cover provenance", () => {
+  const valid = `https://api.foodshare.club/storage/v1/object/public/food-images/owner/generated-covers/${"a".repeat(64)}.jpeg`;
+  test("recognizes only owned generated images", () => {
+    expect(isGeneratedImageUrl(valid)).toBe(true);
+    expect(isGeneratedImageUrl(valid.replace("generated-covers", "reference-covers"))).toBe(false);
+    expect(isGeneratedImageUrl(valid.replace("api.foodshare.club", "untrusted.example"))).toBe(false);
+    expect(isGeneratedImageUrl(valid.replace("a".repeat(64), "invalid"))).toBe(false);
+    expect(isGeneratedImageUrl("https://api.foodshare.club/photo.jpg?hint=" + valid)).toBe(false);
   });
 });

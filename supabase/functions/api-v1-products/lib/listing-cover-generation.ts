@@ -12,7 +12,7 @@ export interface GeneratedCover {
 
 export async function generateListingCover(
   input: CoverInput,
-  options: { apiKey?: string; fetch?: typeof fetch } = {},
+  options: { apiKey?: string; fetch?: typeof fetch; timeoutMs?: number } = {},
 ): Promise<GeneratedCover> {
   const apiKey = options.apiKey ?? await getSecret("ZAI_API_KEY");
   if (!apiKey) throw new ServiceUnavailableError("Cover generation is not configured", 30_000);
@@ -39,7 +39,7 @@ export async function generateListingCover(
           size: "1280x1280",
           quality: "standard",
         }),
-        signal: AbortSignal.timeout(25_000),
+        signal: AbortSignal.timeout(options.timeoutMs ?? 25_000),
       },
     );
     // Never propagate provider bodies: they may echo prompts or signed URLs.
@@ -53,7 +53,13 @@ export async function generateListingCover(
     }
     // The caller uses the pinned-IP SSRF-safe downloader and verifies raster bytes.
     return { imageUrl: url.href, model: COVER_GENERATION_MODEL };
-  } catch {
+  } catch (error) {
+    if (
+      error instanceof DOMException &&
+      (error.name === "TimeoutError" || error.name === "AbortError")
+    ) {
+      throw new ServiceUnavailableError("Cover generation timed out", 30_000);
+    }
     throw new ServiceUnavailableError("Cover generation failed", 30_000);
   }
 }

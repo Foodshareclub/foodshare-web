@@ -1,6 +1,6 @@
 "use client";
 
-import { FindingPhotoState } from "@/components/productCard/CoverStatus";
+import { CoverCreditLine, FindingPhotoState } from "@/components/productCard/CoverStatus";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { CoverCredit } from "@/lib/cover-provenance";
@@ -90,6 +90,7 @@ export function PostGallery({ postId, title, images, coverCredit, emptyLabel, ba
                 priority={index === 0}
                 onError={() => onError(url)}
               />
+              <CoverCreditLine credit={coverCredit} imageUrl={url} />
             </li>
           ))}
         </ul>
@@ -124,6 +125,7 @@ export function PostGallery({ postId, title, images, coverCredit, emptyLabel, ba
             priority
             onError={() => onError(cover)}
           />
+          <CoverCreditLine credit={coverCredit} imageUrl={cover} />
         </button>
         {sideCount > 0 && (
           <div className={cn("grid gap-2", SIDE_GRID[sideCount])}>
@@ -143,6 +145,7 @@ export function PostGallery({ postId, title, images, coverCredit, emptyLabel, ba
                   className="object-cover transition-opacity duration-200 hover:opacity-90"
                   onError={() => onError(url)}
                 />
+                <CoverCreditLine credit={coverCredit} imageUrl={url} />
               </button>
             ))}
           </div>
@@ -178,6 +181,7 @@ export function PostGallery({ postId, title, images, coverCredit, emptyLabel, ba
                   className="object-cover"
                   loading="lazy"
                 />
+                <CoverCreditLine credit={coverCredit} imageUrl={url} />
               </li>
             ))}
           </ul>

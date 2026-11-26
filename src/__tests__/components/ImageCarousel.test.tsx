@@ -61,3 +61,12 @@ describe("ImageCarousel cover guarantee", () => {
     expect(screen.getByTestId("finding-photo")).toBeTruthy();
   });
 });
+
+test("generated illustration is disclosed and disappears when its image fails", () => {
+  const generated = `${BASE}/food-images/u/generated-covers/${"c".repeat(64)}.jpeg`;
+  render(<ImageCarousel {...props} images={[generated, PHOTO]} />);
+  expect(screen.getByTestId("generated-cover-disclosure").textContent).toBe("generated_cover_disclaimer");
+  fireEvent.error(screen.getAllByAltText("Apples")[0]);
+  expect(screen.queryByTestId("generated-cover-disclosure")).toBeNull();
+  expect(screen.getByAltText("Apples").getAttribute("src")).toBe(PHOTO);
+});

@@ -65,3 +65,16 @@ export function isReferenceImageUrl(value: string | undefined): boolean {
     url.pathname,
   );
 }
+
+/** Only durable backend-owned generated covers identify an AI illustration. */
+export function isGeneratedImageUrl(value: string | undefined): boolean {
+  const normalized = normalizeImageUrl(value);
+  if (!normalized || normalized.startsWith("/")) return false;
+  const url = new URL(normalized);
+  return (
+    url.origin === "https://api.foodshare.club" &&
+    /^\/storage\/v1\/object\/public\/food-images\/[^/]+\/generated-covers\/[a-f0-9]{64}\.(?:jpeg|jpg|png|webp)$/.test(
+      url.pathname,
+    )
+  );
+}

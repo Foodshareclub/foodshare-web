@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { FindingPhotoState } from "./CoverStatus";
+import { CoverCreditLine, FindingPhotoState } from "./CoverStatus";
 
 type ImageCarouselProps = {
   images: string[];
@@ -115,6 +115,7 @@ export function ImageCarousel({
               onError={() => setImageErrors((previous) => ({ ...previous, [image]: true }))}
               sizes="(min-width: 1880px) 290px, (min-width: 1640px) 330px, (min-width: 1200px) 25vw, (min-width: 950px) 33vw, (min-width: 550px) 50vw, 100vw"
             />
+            <CoverCreditLine credit={cover} imageUrl={image} />
           </Link>
         ))}
       </div>

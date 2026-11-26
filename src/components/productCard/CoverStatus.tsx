@@ -1,4 +1,6 @@
 "use client";
+import { isGeneratedImageUrl } from "@/lib/image";
+import { useTranslations } from "next-intl";
 import { type CoverCredit } from "@/lib/cover-provenance";
 import { resolveRealisticCover } from "@/lib/realistic-covers";
 import { cn } from "@/lib/utils";
@@ -62,7 +64,26 @@ export function FindingPhotoState({
   );
 }
 
-/** Reference disclosure overlay omitted to keep listing covers clean and authentic. */
-export function CoverCreditLine(_props: { credit?: CoverCredit; className?: string }) {
-  return null;
+/** A generated illustration must not be mistaken for a photograph of the item. */
+export function CoverCreditLine({
+  imageUrl,
+  className,
+}: {
+  credit?: CoverCredit | null;
+  imageUrl?: string;
+  className?: string;
+}) {
+  const t = useTranslations();
+  if (!isGeneratedImageUrl(imageUrl)) return null;
+  return (
+    <span
+      data-testid="generated-cover-disclosure"
+      className={cn(
+        "pointer-events-none absolute start-2.5 top-2.5 rounded-lg bg-background/95 px-2 py-1 text-xs text-foreground",
+        className,
+      )}
+    >
+      {t("generated_cover_disclaimer")}
+    </span>
+  );
 }
