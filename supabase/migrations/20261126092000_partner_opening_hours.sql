@@ -229,7 +229,7 @@ BEGIN
         nullif(v_row->>'partner_status', ''),
         v_metadata,
         coalesce(v_images, ARRAY[]::text[]),
-        v_row->'opening_hours',
+        nullif(v_row->'opening_hours', 'null'::jsonb),
         nullif(v_row->>'timezone', ''),
         CASE WHEN v_lat IS NOT NULL AND v_lng IS NOT NULL
           THEN extensions.ST_SetSRID(extensions.ST_MakePoint(v_lng, v_lat), 4326)::extensions.geography
@@ -254,7 +254,7 @@ BEGIN
                ELSE v_metadata
              END,
              images = coalesce(v_images, ARRAY[]::text[]),
-             opening_hours = v_row->'opening_hours',
+             opening_hours = nullif(v_row->'opening_hours', 'null'::jsonb),
              timezone = nullif(v_row->>'timezone', ''),
              location = CASE WHEN v_lat IS NOT NULL AND v_lng IS NOT NULL
                THEN extensions.ST_SetSRID(extensions.ST_MakePoint(v_lng, v_lat), 4326)::extensions.geography
