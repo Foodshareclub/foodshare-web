@@ -94,10 +94,10 @@ export async function sendFcm(
           ? generateDeepLink("android", payload.deepLink)
           : payload.url;
 
-        const visibilityMap: Record<string, number> = {
-          private: 0,
-          public: 1,
-          secret: -1,
+        const visibilityMap: Record<string, string> = {
+          private: "PRIVATE",
+          public: "PUBLIC",
+          secret: "SECRET",
         };
 
         const fcmPayload = {
@@ -167,6 +167,26 @@ export async function sendFcm(
             };
         }
 
+        // Capable clients render only after checking the currently signed-in
+        // owner. Notification payloads bypass that check when Android is asleep.
+        const { notification: _notification, ...androidDelivery } = fcmPayload.message.android;
+        const outgoingPayload = device.user_agent === "foodshare-skip-fcm-v1"
+          ? {
+            message: {
+              token: device.token,
+              android: androidDelivery,
+              data: {
+                ...fcmPayload.message.data,
+                recipient_profile_id: device.profile_id,
+                title: payload.title,
+                body: payload.body,
+                channel_id: channelId,
+                url: deepLinkUrl || "foodshare://notifications",
+              },
+            },
+          }
+          : fcmPayload;
+
         const env = getEnv();
         const response = await withOperationTimeout(
           fetch(
@@ -177,7 +197,7 @@ export async function sendFcm(
                 Authorization: `Bearer ${accessToken}`,
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify(fcmPayload),
+              body: JSON.stringify(outgoingPayload),
             },
           ),
           "push",
@@ -193,11 +213,16 @@ export async function sendFcm(
         }
 
         const errorBody = await response.json().catch(() => ({}));
-        const errorCode = errorBody.error?.details?.[0]?.errorCode ||
+        const fcmError = errorBody.error?.details?.find(
+          (detail: { "@type"?: string }) =>
+            detail["@type"] === "type.googleapis.com/google.firebase.fcm.v1.FcmError",
+        );
+        const errorCode = fcmError?.errorCode || errorBody.error?.status ||
           errorBody.error?.code;
 
-        const invalidTokenCodes = ["UNREGISTERED", "INVALID_ARGUMENT"];
-        const isInvalidToken = invalidTokenCodes.includes(errorCode);
+        // INVALID_ARGUMENT also covers payload, TTL and package-name errors.
+        // Only an explicit FCM UNREGISTERED response proves a token is obsolete.
+        const isInvalidToken = fcmError?.errorCode === "UNREGISTERED";
 
         if (isInvalidToken) {
           return {

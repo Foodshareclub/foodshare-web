@@ -1,11 +1,9 @@
-import { storagePublicUrl } from "../../_shared/storage-public-url.ts";
 /**
  * Image storage utilities — rate limiting and primary VPS-backed Supabase uploads.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "../../_shared/logger.ts";
-import { ServerError } from "../../_shared/errors.ts";
 
 export const ALLOWED_BUCKETS = [
   "food-images",
@@ -89,32 +87,4 @@ export async function checkRateLimit(
   return data === true;
 }
 
-export async function uploadImage(
-  // deno-lint-ignore no-explicit-any
-  supabase: SupabaseClient<any, any, any>,
-  bucket: string,
-  path: string,
-  buffer: Uint8Array,
-  contentType: string,
-): Promise<{ publicUrl: string; storage: "supabase" }> {
-  const { error: uploadError } = await supabase.storage
-    .from(bucket)
-    .upload(path, buffer, {
-      contentType,
-      cacheControl: "31536000",
-      upsert: true,
-    });
-
-  if (uploadError) {
-    throw new ServerError(`Upload failed: ${uploadError.message}`);
-  }
-
-  const generated = supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
-  const publicUrl = storagePublicUrl(
-    Deno.env.get("SUPABASE_PUBLIC_URL") || Deno.env.get("API_EXTERNAL_URL") ||
-      generated,
-    bucket,
-    path,
-  );
-  return { publicUrl, storage: "supabase" };
-}
+export { uploadImage } from "../../_shared/upload-image.ts";

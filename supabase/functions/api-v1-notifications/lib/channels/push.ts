@@ -176,9 +176,8 @@ export class PushChannelAdapter implements ChannelAdapter {
   ): Promise<DeviceToken[]> {
     const { data, error } = await context.supabase
       .from("device_tokens")
-      .select("profile_id,token,platform,endpoint,p256dh,auth")
-      .eq("profile_id", context.userId!)
-      .eq("is_active", true);
+      .select("profile_id,token,platform,endpoint,p256dh,auth,user_agent")
+      .eq("profile_id", context.userId!);
 
     if (error) {
       logger.error("Failed to get device tokens", new Error(error.message), {

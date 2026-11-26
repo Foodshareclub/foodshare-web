@@ -12,6 +12,7 @@
 import { validateImageUrl } from "./url-validation.ts";
 import { STORAGE_BUCKETS } from "./storage-constants.ts";
 import { getSecret } from "./vault.ts";
+import { downloadImage } from "./image-utils.ts";
 
 export interface ParsedStorageUrl {
   provider: "supabase" | "r2";
@@ -81,6 +82,7 @@ export async function isOwnStorageUrl(url: string): Promise<boolean> {
  */
 export async function validateProductImageUrls(
   urls: string[],
+  readback: (url: string) => Promise<Uint8Array> = downloadImage,
 ): Promise<{ valid: true } | { valid: false; invalidUrls: string[] }> {
   const invalidUrls: string[] = [];
 
@@ -102,5 +104,37 @@ export async function validateProductImageUrls(
     return { valid: false, invalidUrls };
   }
 
+  // An owned URL is not proof that its public object exists. Check the primary
+  // photo before publishing; never replace a user's upload with a generated one.
+  if (urls[0]) {
+    try {
+      if (!isListingPhoto(await readback(urls[0]))) {
+        return { valid: false, invalidUrls: [urls[0]] };
+      }
+    } catch {
+      return { valid: false, invalidUrls: [urls[0]] };
+    }
+  }
+
   return { valid: true };
+}
+
+/** Accept the raster families supported by the existing listing upload API. */
+function isListingPhoto(bytes: Uint8Array): boolean {
+  if (bytes.length < 12 || bytes.length > 10 * 1024 * 1024) return false;
+  const ascii = (start: number, end: number) => String.fromCharCode(...bytes.slice(start, end));
+  if ([137, 80, 78, 71, 13, 10, 26, 10].every((value, i) => bytes[i] === value)) return true;
+  if (bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255) return true;
+  if (["GIF87a", "GIF89a"].includes(ascii(0, 6))) return true;
+  if (ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") return true;
+  if (ascii(4, 8) === "ftyp") {
+    const boxSize = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(0);
+    if (boxSize < 16 || boxSize > bytes.length || boxSize > 4096) return false;
+    const brands = new Set(["avif", "avis", "heic", "heix", "hevc", "hevx", "mif1", "msf1"]);
+    if (brands.has(ascii(8, 12))) return true;
+    for (let offset = 16; offset + 4 <= boxSize; offset += 4) {
+      if (brands.has(ascii(offset, offset + 4))) return true;
+    }
+  }
+  return false;
 }

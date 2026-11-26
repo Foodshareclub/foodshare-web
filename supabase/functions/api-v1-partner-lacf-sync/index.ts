@@ -20,7 +20,7 @@ import { createAPIHandler } from "../_shared/api-handler.ts";
 import { logger } from "../_shared/logger.ts";
 import { downloadImage } from "../_shared/image-utils.ts";
 import { STORAGE_BUCKETS } from "../_shared/storage-constants.ts";
-import { uploadImage } from "../api-v1-images/lib/storage.ts";
+import { uploadImage } from "../_shared/upload-image.ts";
 import { fetchRecords, loadAirtableConfig } from "../_shared/partner-sync/airtable.ts";
 import { mapRecord, type PartnerRow } from "../_shared/partner-sync/mapper.ts";
 import { inspectRecords } from "../_shared/partner-sync/validate.ts";

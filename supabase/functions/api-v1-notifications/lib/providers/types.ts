@@ -74,6 +74,7 @@ export interface DeviceToken {
   profile_id: string;
   token: string;
   platform: Platform;
+  user_agent?: string | null;
   endpoint?: string;
   p256dh?: string;
   auth?: string;
