@@ -55,6 +55,44 @@ export interface CoverDependencies {
   store(path: string, bytes: Uint8Array, contentType: string): Promise<string>;
   verify(url: string): Promise<Uint8Array>;
 }
+/** The emergency catalog is usable only after a relevant, durable object readback. */
+export async function verifiedCatalogCover(
+  input: CoverInput,
+  excludeUrls: string[],
+  verify: CoverDependencies["verify"] = downloadImage,
+) {
+  // This catalog contains food and fridges, not the other listing categories.
+  if (input.postType !== "food" && input.postType !== "fridge") {
+    throw new ServerError("No relevant catalog cover for this listing category");
+  }
+  const realistic = resolveRealisticCover({ ...input, excludeUrls });
+  if (input.postType === "fridge" && realistic.subject !== "fridge") {
+    throw new ServerError("No matched catalog subject for this listing");
+  }
+  if (!realistic.subjectMatched && input.postType !== "fridge") {
+    throw new ServerError("No matched catalog subject for this listing");
+  }
+  rasterType(await verify(realistic.url));
+  const contextHash = [
+    ...new Uint8Array(
+      await crypto.subtle.digest("SHA-256", new TextEncoder().encode(coverSearchContext(input))),
+    ),
+  ].map((value) => value.toString(16).padStart(2, "0")).join("");
+  return {
+    images: [realistic.url],
+    cover: {
+      kind: "reference" as const,
+      provider: "realistic-catalog" as const,
+      model: "curated-s3-v1",
+      contextHash,
+      matchedAt: new Date().toISOString(),
+      query: coverSearchContext(input),
+      matchScope: "category" as const,
+      sourceImageUrl: realistic.url,
+      disclosure: "Reference image; not a photograph of the listed item",
+    },
+  };
+}
 export async function ensureListingCover(
   input: CoverInput,
   userId: string,
@@ -194,32 +232,6 @@ export async function createListingCover(
     if (overrides || err instanceof RateLimitError) {
       throw err;
     }
-    // Guarantee an authentic, photorealistic photographic cover so no listing is left broken or placeholder
-    const realistic = resolveRealisticCover({
-      title: input.title,
-      description: input.description,
-      postType: input.postType,
-      excludeUrls,
-    });
-    return {
-      images: [realistic.url],
-      cover: {
-        kind: "reference" as const,
-        provider: "realistic-catalog",
-        model: "curated-s3-v1",
-        contextHash: "",
-        matchedAt: new Date().toISOString(),
-        query: input.title,
-        matchScope: "subject" as const,
-        confidence: 1.0,
-        sourcePageUrl: realistic.url,
-        sourceImageUrl: realistic.url,
-        pageId: 0,
-        license: "CC0",
-        licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
-        artist: "FoodShare Community",
-        disclosure: "Reference image; not a photograph of the listed item" as const,
-      },
-    };
+    return await verifiedCatalogCover(input, excludeUrls);
   }
 }

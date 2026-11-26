@@ -5,6 +5,7 @@ import {
   coverSearchContext,
   ensureListingCover,
   rasterType,
+  verifiedCatalogCover,
 } from "../api-v1-products/lib/listing-cover.ts";
 import { RateLimitError, ServerError } from "../_shared/errors.ts";
 const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0]);
@@ -141,23 +142,64 @@ Deno.test("omitted images enter automatic cover search", () => {
   );
 });
 
-Deno.test("createListingCover falls back to photorealistic catalog cover when search fails", async () => {
-  const { createListingCover } = await import("../api-v1-products/lib/listing-cover.ts");
-  const fallbackResult = await createListingCover(
+Deno.test("catalog fallback verifies backend bytes and does not invent attribution", async () => {
+  let checked = "";
+  const fallbackResult = await verifiedCatalogCover(
     {
       title: "Fresh Bananas",
       description: "Organic bunch",
       postType: "food",
       images: [],
     },
-    "test-user",
-    // deno-lint-ignore no-explicit-any
-    null as any,
-    "req-123",
+    [],
+    (url) => {
+      checked = url;
+      return Promise.resolve(png);
+    },
   );
 
   assertEquals(fallbackResult.images.length, 1);
   assertEquals(fallbackResult.images[0].includes("assets/covers/food/banana"), true);
   assertEquals(fallbackResult.cover?.kind, "reference");
   assertEquals(fallbackResult.cover?.provider, "realistic-catalog");
+  assertEquals(checked, fallbackResult.images[0]);
+  assertEquals(fallbackResult.cover.matchScope, "category");
+  assertEquals(fallbackResult.cover.contextHash.length, 64);
+  for (const field of ["confidence", "license", "licenseUrl", "artist", "pageId"]) {
+    assertEquals(field in fallbackResult.cover, false);
+  }
+});
+
+Deno.test("catalog fallback rejects missing, non-image and unrelated covers", async () => {
+  await assertRejects(
+    () => verifiedCatalogCover(input, [], () => Promise.reject(new Error("HTTP 404"))),
+    Error,
+    "HTTP 404",
+  );
+  await assertRejects(
+    () =>
+      verifiedCatalogCover(
+        input,
+        [],
+        () => Promise.resolve(new TextEncoder().encode("<html>missing image</html>")),
+      ),
+    ServerError,
+  );
+  for (
+    const fixture of [
+      {
+        ...input,
+        title: "Wooden chair",
+        description: "Dining furniture",
+        postType: "thing",
+      },
+      { ...input, title: "Unidentified donation", description: "Details pending" },
+      { ...input, postType: "fridge" },
+    ]
+  ) {
+    await assertRejects(() =>
+      verifiedCatalogCover(fixture, [], () => {
+        throw new Error("Unrelated catalog must not be fetched");
+      }), ServerError);
+  }
 });

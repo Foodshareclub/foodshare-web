@@ -11,6 +11,7 @@ export interface RealisticCoverResult {
   url: string;
   path: string;
   subject: string;
+  subjectMatched: boolean;
   isRealisticCatalogCover: true;
 }
 
@@ -375,6 +376,7 @@ export function resolveRealisticCover(input: {
     matchedSubject = "assorted";
   }
 
+  const subjectMatched = matchedSubject !== null;
   // 2. Fall back to postType or default category
   if (!matchedSubject) {
     const postType = (input.postType || "food").toLowerCase();
@@ -403,6 +405,7 @@ export function resolveRealisticCover(input: {
       url: `${base}/${chosenPath}`,
       path: chosenPath,
       subject: matchedSubject,
+      subjectMatched,
       isRealisticCatalogCover: true,
     };
   }
@@ -416,6 +419,7 @@ export function resolveRealisticCover(input: {
     url,
     path: chosenPath,
     subject: matchedSubject,
+    subjectMatched,
     isRealisticCatalogCover: true,
   };
 }
