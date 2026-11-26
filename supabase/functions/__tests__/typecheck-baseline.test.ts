@@ -108,12 +108,35 @@ Deno.test("typecheck: the baseline is the schema this repository is written agai
       "test run.\n" + missing.map((f) => `  - ${f}`).join("\n"),
   );
 
-  assert(
-    totalErrors(current) > 0,
-    "the type checker reported no type errors at all. The generated Database type is " +
-      "passed to createClient, so that means the type is not reaching the " +
-      "client — check the two factories, not the error list.",
+  // The last baseline entry was paid off, so "some error exists" is no
+  // longer a usable canary for "the generated schema reaches the client".
+  // Check that premise directly instead: both factories must still
+  // parameterise createClient with Database, and the generated type must
+  // still describe the public tables the code queries. If either generic is
+  // dropped, every .from()/.rpc() silently becomes `any` and an empty budget
+  // would approve a checker that is no longer checking the schema.
+  const factories = [
+    "../_shared/handler/supabase-factory.ts",
+    "../_shared/supabase.ts",
+  ];
+  for (const rel of factories) {
+    const src = await Deno.readTextFileSync(new URL(rel, import.meta.url));
+    assert(
+      /createClient<Database>/.test(src),
+      `${rel} no longer parameterises createClient with Database, so every ` +
+        "query is unchecked and the empty baseline cannot notice.",
+    );
+  }
+  const generated = await Deno.readTextFileSync(
+    new URL("../_shared/database.types.ts", import.meta.url),
   );
+  for (const table of ["posts", "bookmarks"]) {
+    assert(
+      generated.includes(`\n      ${table}: {\n`),
+      `the generated Database no longer describes public.${table}; regenerate ` +
+        "it (or restore the type) rather than emptying the budget around it.",
+    );
+  }
 });
 
 Deno.test("typecheck: no error is outside the baseline", () => {
