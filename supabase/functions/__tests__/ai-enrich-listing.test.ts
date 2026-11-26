@@ -329,3 +329,67 @@ Deno.test("enrichListing route: a non-verdict (scalar) payload fails closed", as
     assertEquals(flags.postsTouched, false);
   });
 });
+
+for (const conflict of [false, true]) {
+  Deno.test(`enrichListing: reference cover ${conflict ? "cannot overwrite concurrent edits" : "preserves photos and metadata"}`, async () => {
+    const original = "https://api.foodshare.club/storage/v1/object/public/posts/owner/original.jpg";
+    const generated =
+      "https://api.foodshare.club/storage/v1/object/public/food-images/owner/cover.jpg";
+    const newer = "https://api.foodshare.club/storage/v1/object/public/posts/owner/newer.jpg";
+    const state = {
+      id: 7,
+      version: 12,
+      profile_id: "owner",
+      post_type: "food",
+      post_name: "Apples",
+      post_description: "Garden apples",
+      images: [original],
+      metadata: { owner_note: "keep" },
+    };
+    const filters: Record<string, unknown> = {};
+    let writes = 0;
+    const supabase = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            single: () => Promise.resolve({ data: structuredClone(state), error: null }),
+          }),
+        }),
+        update: (patch: { images: string[]; metadata: typeof state.metadata }) => {
+          const query = {
+            eq: (key: string, value: unknown) => {
+              filters[key] = value;
+              return query;
+            },
+            select: () => query,
+            single: () => {
+              if (filters.id !== state.id || filters.version !== state.version) {
+                return Promise.resolve({ data: null, error: { message: "version conflict" } });
+              }
+              writes++;
+              Object.assign(state, patch);
+              return Promise.resolve({ data: { id: state.id }, error: null });
+            },
+          };
+          return query;
+        },
+      }),
+    };
+    const result = await enrichListing({ post_id: 7 }, supabase, {
+      createCover: () => {
+        if (conflict) {
+          state.version++;
+          state.images = [newer];
+          state.metadata.owner_note = "updated during generation";
+        }
+        return Promise.resolve({ images: [generated] });
+      },
+    });
+    assertEquals(filters, { id: 7, version: 12 });
+    assertEquals(result.status, conflict ? "fell_through" : "placed");
+    if (conflict) assertEquals(result.error, "cover persistence: version conflict");
+    assertEquals(writes, conflict ? 0 : 1);
+    assertEquals(state.images, conflict ? [newer] : [generated, original]);
+    assertEquals(state.metadata.owner_note, conflict ? "updated during generation" : "keep");
+  });
+}

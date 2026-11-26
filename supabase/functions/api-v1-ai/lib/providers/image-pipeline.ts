@@ -1053,6 +1053,8 @@ export interface EnrichListingInput {
 /** Test/ops seams, mirroring ImageSearchDeps / ImageVerifyDeps: production
  *  calls use the SSRF-gated fetches; tests inject fixtures. */
 export interface EnrichListingDeps {
+  /** Existing cover provider seam; persistence always uses the versioned listing snapshot. */
+  createCover?: typeof createListingCover;
   fetchImage?: (
     url: string,
   ) => Promise<{ bytes: Uint8Array; format: "jpeg" | "png" | "webp" }>;
@@ -1119,7 +1121,7 @@ export async function enrichListing(
   const { data: post, error: postErr } = await supabase
     .from("posts")
     .select(
-      "id, profile_id, post_name, post_description, post_address, post_type, fridge_id, website, metadata, images",
+      "id, version, profile_id, post_name, post_description, post_address, post_type, fridge_id, website, metadata, images",
     )
     .eq("id", postId)
     .single();
@@ -1204,7 +1206,10 @@ export async function enrichListing(
         const { error: updateErr } = await supabase
           .from("posts")
           .update({ images: [uploadedUrl], metadata: newMetadata })
-          .eq("id", postId);
+          .eq("id", postId)
+          .eq("version", post.version)
+          .select("id")
+          .single();
 
         if (!updateErr) {
           logger.info("enrichListing: recovered authentic user photo from Telegram", {
@@ -1390,7 +1395,10 @@ export async function enrichListing(
       const { error: updateErr } = await supabase
         .from("posts")
         .update({ images: newImages, metadata: newMetadata })
-        .eq("id", postId);
+        .eq("id", postId)
+        .eq("version", post.version)
+        .select("id")
+        .single();
       if (updateErr) throw new Error(updateErr.message);
 
       attempts.place = `storage+db ok`;
@@ -1421,7 +1429,7 @@ export async function enrichListing(
 
   // 7. Universal AI reference cover tier: for community listings (food, borrow, things, etc.)
   try {
-    const coverResult = await createListingCover(
+    const coverResult = await (deps.createCover ?? createListingCover)(
       {
         title: post.post_name || "Community Food",
         description: post.post_description || undefined,
@@ -1459,10 +1467,28 @@ export async function enrichListing(
 
       const { error: updateErr } = await supabase
         .from("posts")
-        .update({ images: [imageUrl], metadata: newMetadata })
-        .eq("id", postId);
+        .update({
+          images: [
+            imageUrl,
+            ...rawImages.filter((url: unknown) =>
+              typeof url === "string" && /^https?:\/\//.test(url) && url !== imageUrl
+            ),
+          ].slice(0, 3),
+          metadata: newMetadata,
+        })
+        .eq("id", postId)
+        .eq("version", post.version)
+        .select("id")
+        .single();
 
-      if (updateErr) throw new Error(updateErr.message);
+      if (updateErr) {
+        return {
+          status: "fell_through",
+          post_id: postId,
+          error: `cover persistence: ${updateErr.message}`,
+          attempts: 1,
+        };
+      }
 
       return {
         status: "placed",
