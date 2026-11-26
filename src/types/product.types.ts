@@ -42,6 +42,8 @@ export type InitialProductStateType = {
   slug?: string | null;
   canonical_slug?: string | null;
   post_type: string;
+  /** Partner network status, verbatim. Only set on network-managed listings. */
+  partner_status?: string | null;
   is_active: boolean;
   post_views: number;
   profile_id: string;

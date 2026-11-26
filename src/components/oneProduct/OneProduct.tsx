@@ -144,6 +144,10 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
           <p className="text-base">{product.post_stripped_address}</p>
         </div>
 
+        {product.partner_status && (
+          <p className="mb-4 text-sm font-medium text-muted-foreground">{product.partner_status}</p>
+        )}
+
         <hr className="my-4 border-border" />
 
         {/* Stats Row */}
