@@ -14,6 +14,7 @@ import "./leaflet-glass.css";
 import "leaflet/dist/leaflet.css";
 import { type InitialProductStateType, getCoordinates } from "@/types/product.types";
 import { approximateLocation } from "@/utils/postgis";
+import { hasExactPublicLocation } from "@/utils/publicPlaces";
 import { DivIcon } from "leaflet";
 import L from "leaflet";
 import { useTranslations } from "next-intl";
@@ -75,9 +76,11 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
     );
   }
 
-  // Apply 200m approximation for privacy (deterministic based on post ID)
-  const approxCoords = approximateLocation(coords.lat, coords.lng, oneProduct.id);
-  const position: [number, number] = [approxCoords.lat, approxCoords.lng];
+  // Fridges and food banks are public places; every other type is moved
+  // 100-200m for privacy (deterministic on the post ID).
+  const exactLocation = hasExactPublicLocation(oneProduct.post_type);
+  const shownCoords = exactLocation ? coords : approximateLocation(coords.lat, coords.lng, oneProduct.id);
+  const position: [number, number] = [shownCoords.lat, shownCoords.lng];
 
   return (
     <div className="relative h-full" style={{ transform: "translateZ(0)", willChange: "transform" }}>
@@ -104,18 +107,20 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
           keepBuffer={2}
         />
 
-        {/* Subtle radius circle around location */}
-        <Circle
-          center={position}
-          radius={200}
-          pathOptions={{
-            color: "#FF2D55",
-            fillColor: "#FF2D55",
-            fillOpacity: 0.08,
-            weight: 1,
-            opacity: 0.3,
-          }}
-        />
+        {/* Uncertainty circle: only where the point is approximated */}
+        {!exactLocation && (
+          <Circle
+            center={position}
+            radius={200}
+            pathOptions={{
+              color: "#FF2D55",
+              fillColor: "#FF2D55",
+              fillOpacity: 0.08,
+              weight: 1,
+              opacity: 0.3,
+            }}
+          />
+        )}
 
         {/* Custom Marker with Popup */}
         <Marker icon={customMarker} position={position} title={oneProduct.post_name || t("address")}>

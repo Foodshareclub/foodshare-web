@@ -13,6 +13,7 @@
 
 import { createCachedClient, createClient } from "@/lib/supabase/server";
 import { approximateGeoJSON } from "@/utils/postgis";
+import { hasExactPublicLocation } from "@/utils/publicPlaces";
 import { cacheLife, cacheTag } from "next/cache";
 import { enrichPostsWithAuthors } from "./author-enrichment";
 import { CACHE_TAGS } from "./cache-keys";
@@ -167,12 +168,19 @@ export function normalizePostType(postType: string | null | undefined): string |
  * The offset is deterministic in `post.id` (see `approximateGeoJSON`) so a
  * marker doesn't jitter between renders. That is obfuscation of the last ~200m,
  * not a confidentiality boundary — see `src/utils/postgis.ts`.
+ *
+ * Fridges and food banks are public places and keep their exact point
+ * (`hasExactPublicLocation`); every other type is fuzzed.
  */
-function applyLocationPrivacy<T extends { id: number; location_json?: unknown }>(posts: T[]): T[] {
-  return posts.map((post) => ({
-    ...post,
-    location_json: approximateGeoJSON(post.location_json, post.id),
-  }));
+function applyLocationPrivacy<T extends { id: number; post_type?: string; location_json?: unknown }>(posts: T[]): T[] {
+  return posts.map((post) => {
+    // Fridges and food banks are public places and keep their exact point.
+    if (hasExactPublicLocation(post.post_type)) return post;
+    return {
+      ...post,
+      location_json: approximateGeoJSON(post.location_json, post.id),
+    };
+  });
 }
 
 // ============================================================================

@@ -36,6 +36,7 @@ import { PAGINATION } from "@/lib/constants";
 import { createCachedClient, createClient } from "@/lib/supabase/server";
 import type { InitialProductStateType, LocationType } from "@/types/product.types";
 import { approximateGeoJSON, parsePostGISPoint } from "@/utils/postgis";
+import { hasExactPublicLocation } from "@/utils/publicPlaces";
 import { cacheLife, cacheTag } from "next/cache";
 import { enrichPostsWithAuthors, enrichSinglePostWithAuthor } from "./author-enrichment";
 import { CACHE_TAGS } from "./cache-keys";
@@ -50,13 +51,19 @@ export type { InitialProductStateType, LocationType };
 /**
  * Apply location approximation to products for user privacy
  * Each location is offset by ~100-200m using a deterministic algorithm
- * based on the post ID (consistent across requests)
+ * based on the post ID (consistent across requests).
+ * Fridges and food banks are public places and keep their exact point.
  */
-function applyLocationPrivacy<T extends { id: number; location_json?: unknown }>(products: T[]): T[] {
+function applyLocationPrivacy<T extends { id: number; post_type?: string; location_json?: unknown }>(
+  products: T[],
+): T[] {
   return products.map(approximateProductLocation);
 }
 
-function approximateProductLocation<T extends { id: number; location_json?: unknown }>(product: T): T {
+function approximateProductLocation<T extends { id: number; post_type?: string; location_json?: unknown }>(
+  product: T,
+): T {
+  if (hasExactPublicLocation(product.post_type)) return product;
   const locationJson = approximateGeoJSON(product.location_json, product.id);
   const coordinates = parsePostGISPoint(locationJson);
   return {
@@ -71,7 +78,9 @@ function approximateProductLocation<T extends { id: number; location_json?: unkn
 /**
  * Apply location approximation to a single product
  */
-function applyLocationPrivacySingle<T extends { id: number; location_json?: unknown }>(product: T | null): T | null {
+function applyLocationPrivacySingle<T extends { id: number; post_type?: string; location_json?: unknown }>(
+  product: T | null,
+): T | null {
   if (!product) return null;
   return approximateProductLocation(product);
 }

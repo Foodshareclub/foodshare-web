@@ -12,6 +12,7 @@ import { createCachedClient } from "@/lib/supabase/server";
 import type { GeoJSONPoint } from "@/types/postgis.types";
 import type { LocationType } from "@/types/product.types";
 import { approximateGeoJSON } from "@/utils/postgis";
+import { hasExactPublicLocation } from "@/utils/publicPlaces";
 
 interface MapLocationRow {
   id: number;
@@ -34,10 +35,14 @@ export type { LocationType };
  * based on the post ID (consistent across requests)
  */
 function applyLocationPrivacy(locations: LocationType[]): LocationType[] {
-  return locations.map((item) => ({
-    ...item,
-    location_json: approximateGeoJSON(item.location_json, item.id) as LocationType["location_json"],
-  }));
+  return locations.map((item) => {
+    // Fridges and food banks are public places: their exact point is the point.
+    if (hasExactPublicLocation(item.post_type)) return item;
+    return {
+      ...item,
+      location_json: approximateGeoJSON(item.location_json, item.id) as LocationType["location_json"],
+    };
+  });
 }
 
 /** Hard ceiling on markers per viewport request. Map panning is unauthenticated

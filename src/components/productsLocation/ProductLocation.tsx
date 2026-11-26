@@ -18,6 +18,7 @@ import { ProductPopup } from "@/components/map/ProductPopup";
 import { useCustomMarkerIcon } from "@/hooks/useMarkerIcon";
 import { type InitialProductStateType, getCoordinates } from "@/types/product.types";
 import { LOCATION_PRIVACY, approximateLocation } from "@/utils/postgis";
+import { hasExactPublicLocation } from "@/utils/publicPlaces";
 
 type LocationType = {
   indicator?: string;
@@ -39,9 +40,11 @@ export const ProductsLocation: React.FC<LocationType> = ({ indicator, product })
   const coords = getCoordinates(oneProduct);
   if (!coords) return null;
 
-  // SECURITY: Apply 200m approximation for privacy (deterministic based on post ID)
-  const approxCoords = approximateLocation(coords.lat, coords.lng, oneProduct.id);
-  const position: [number, number] = [approxCoords.lat, approxCoords.lng];
+  // SECURITY: fridges and food banks are public places and keep their exact
+  // point; every other type is moved 100-200m (deterministic on the post ID).
+  const exactLocation = hasExactPublicLocation(oneProduct.post_type);
+  const shownCoords = exactLocation ? coords : approximateLocation(coords.lat, coords.lng, oneProduct.id);
+  const position: [number, number] = [shownCoords.lat, shownCoords.lng];
 
   return (
     <div
@@ -74,18 +77,20 @@ export const ProductsLocation: React.FC<LocationType> = ({ indicator, product })
           maxZoom={20}
         />
 
-        {/* Privacy approximation circle (200m radius to match approximation) */}
-        <Circle
-          center={position}
-          radius={LOCATION_PRIVACY.RADIUS_METERS}
-          pathOptions={{
-            fillColor: "#FF2D55",
-            fillOpacity: 0.08,
-            color: "#FF2D55",
-            weight: 1,
-            opacity: 0.3,
-          }}
-        />
+        {/* Privacy approximation circle: only where the point is approximated */}
+        {!exactLocation && (
+          <Circle
+            center={position}
+            radius={LOCATION_PRIVACY.RADIUS_METERS}
+            pathOptions={{
+              fillColor: "#FF2D55",
+              fillOpacity: 0.08,
+              color: "#FF2D55",
+              weight: 1,
+              opacity: 0.3,
+            }}
+          />
+        )}
 
         {/* Custom marker with interactive card popup */}
         <Marker icon={redMarker} position={position}>
