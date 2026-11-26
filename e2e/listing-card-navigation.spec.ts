@@ -8,36 +8,24 @@ const FEED_TIMEOUT = 45_000;
 test.beforeEach(async ({ context }) => {
   // Deterministic guest path: geolocation is explicitly denied, so the feed never swaps to a runner-location query.
   await context.addInitScript(() => {
-    const denied = {
-      code: 1,
-      message: "User denied Geolocation",
-      PERMISSION_DENIED: 1,
-    };
+    const denied = { code: 1, message: "User denied Geolocation", PERMISSION_DENIED: 1 };
     const deny = (_ok: unknown, fail?: (e: unknown) => void) => {
       fail?.(denied);
     };
     Object.defineProperty(navigator, "geolocation", {
       configurable: true,
-      value: {
-        getCurrentPosition: deny,
-        watchPosition: () => (deny(null, undefined), 0),
-        clearWatch: () => {},
-      },
+      value: { getCurrentPosition: deny, watchPosition: () => (deny(null, undefined), 0), clearWatch: () => {} },
     });
   });
 });
 
 async function firstListing(page: Page) {
   await page.goto("/food");
-  // The feed is server-rendered against the live estate, then swaps to the
-  // IP-approx feed when /api/location/approximate resolves (geolocation is
-  // denied in beforeEach). Capture the first card + href AFTER the swap
-  // stabilizes, not at SSR time — the SSR first card's href is stale.
-  await page
-    .waitForResponse((response) => response.url().includes("/api/location/approximate"), { timeout: FEED_TIMEOUT })
-    .catch(() => {});
   const card = page.locator(LISTING_CARD).first();
   await expect(card).toBeVisible({ timeout: FEED_TIMEOUT });
+  await expect(
+    page.locator(LISTING_CARD).getByText("Reference photo — not the actual item", { exact: true }),
+  ).toHaveCount(0);
   const titleLink = card.locator("h3 a");
   const href = await titleLink.getAttribute("href");
   const title = (await titleLink.innerText()).trim();
@@ -69,9 +57,7 @@ for (const viewport of [
       const bounds = await card.boundingBox();
       expect(bounds).not.toBeNull();
       // Inset past the card's 16px rounded corner so the click lands on the card, not the page behind it.
-      await card.click({
-        position: { x: bounds!.width - 20, y: bounds!.height - 20 },
-      });
+      await card.click({ position: { x: bounds!.width - 20, y: bounds!.height - 20 } });
       await expectDetails(page, href, title);
     });
 
@@ -82,9 +68,7 @@ for (const viewport of [
       await expectDetails(page, href, title);
       await page.goBack();
       await expect(page).toHaveURL(/\/food(?:[?#]|$)/);
-      await expect(page.locator(LISTING_CARD).first()).toBeVisible({
-        timeout: FEED_TIMEOUT,
-      });
+      await expect(page.locator(LISTING_CARD).first()).toBeVisible({ timeout: FEED_TIMEOUT });
     });
 
     test("save remains an independent action for guests", async ({ page }) => {
