@@ -56,7 +56,11 @@ export function assertAllowedUrl(url: URL, config: AirtableConfig): void {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function getWithRetry(url: URL, config: AirtableConfig, fetchImpl: FetchLike): Promise<Response> {
+async function getWithRetry(
+  url: URL,
+  config: AirtableConfig,
+  fetchImpl: FetchLike,
+): Promise<Response> {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const response = await fetchImpl(url, {
       method: "GET",

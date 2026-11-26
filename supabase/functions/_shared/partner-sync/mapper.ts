@@ -19,6 +19,8 @@ export interface PartnerRow {
   has_pantry: boolean;
   location_type: string;
   partner_status: string | null;
+  /** Set by the sync: the record's photo, re-hosted (or empty). */
+  images: string[];
   metadata: { lacf: Record<string, unknown> };
 }
 
@@ -33,12 +35,37 @@ const num = (value: unknown): number | null => {
 const list = (value: unknown): string[] =>
   Array.isArray(value) ? value.map((item) => text(item)).filter(Boolean) : [];
 
+/** The record's first photo attachment, fingerprinted for change detection. */
+function photoSource(value: unknown): {
+  attachment_id: string;
+  filename: string;
+  size: number | null;
+  url: string;
+} | null {
+  if (!Array.isArray(value)) return null;
+  const first = value.find((item) =>
+    item && typeof item === "object" &&
+    typeof (item as Record<string, unknown>).url === "string"
+  );
+  if (!first) return null;
+  const item = first as Record<string, unknown>;
+  return {
+    attachment_id: text(item.id),
+    filename: text(item.filename),
+    size: num(item.size),
+    url: text(item.url),
+  };
+}
+
 /** Latitude and longitude, with the "lat, lng" field as a fallback. */
 export function coordinates(fields: Record<string, unknown>): {
   latitude: number | null;
   longitude: number | null;
 } {
-  const direct = { latitude: num(fields.Latitude), longitude: num(fields.Longitude) };
+  const direct = {
+    latitude: num(fields.Latitude),
+    longitude: num(fields.Longitude),
+  };
   const valid = (lat: number | null, lng: number | null) =>
     lat !== null && lng !== null && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
   if (valid(direct.latitude, direct.longitude)) return direct;
@@ -72,6 +99,7 @@ export function mapRecord(record: AirtableRecord): PartnerRow | null {
     has_pantry: text(fields["Pantry?"]) === "Pantry available",
     location_type: text(fields["Location type"]),
     partner_status: text(fields.Status) || null,
+    images: [],
     metadata: {
       lacf: {
         record_id: record.id,
@@ -92,6 +120,7 @@ export function mapRecord(record: AirtableRecord): PartnerRow | null {
         status_last_updated: text(fields["Status last updated"]),
         zip_code: text(fields["Zip code (for Glide)"]),
         has_photo: photo.length > 0,
+        photo: photoSource(fields.Photo),
       },
     },
   };

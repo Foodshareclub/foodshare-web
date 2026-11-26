@@ -22,7 +22,10 @@ const config: AirtableConfig = {
 Deno.test("pages through records with GET on the configured base only", async () => {
   const calls: Array<{ url: string; method?: string; auth: string | null }> = [];
   const pages = [
-    { records: [{ id: "rec1", fields: { Name: "One" } }, { id: "rec2", fields: { Name: "Two" } }], offset: "next" },
+    {
+      records: [{ id: "rec1", fields: { Name: "One" } }, { id: "rec2", fields: { Name: "Two" } }],
+      offset: "next",
+    },
     { records: [{ id: "rec3", fields: { Name: "Three" } }] },
   ];
   const fake = (input: string | URL, init?: RequestInit) => {
@@ -62,8 +65,15 @@ Deno.test("refuses any other base or host", () => {
   assertThrows(() =>
     assertAllowedUrl(new URL("https://api.airtable.com/v0/appOTHERBASE00/tblTESTTABLE0001"), config)
   );
-  assertThrows(() => assertAllowedUrl(new URL("http://api.airtable.com/v0/appTESTBASE000001/tblTESTTABLE0001"), config));
-  assertThrows(() => assertAllowedUrl(new URL("https://example.org/v0/appTESTBASE000001/tblTESTTABLE0001"), config));
+  assertThrows(() =>
+    assertAllowedUrl(
+      new URL("http://api.airtable.com/v0/appTESTBASE000001/tblTESTTABLE0001"),
+      config,
+    )
+  );
+  assertThrows(() =>
+    assertAllowedUrl(new URL("https://example.org/v0/appTESTBASE000001/tblTESTTABLE0001"), config)
+  );
 });
 
 Deno.test("an error carries the status, never the token", async () => {
@@ -131,6 +141,9 @@ Deno.test("keeps a blank status, falls back for coordinates, skips a nameless re
   assertEquals(blank.longitude, -118.24);
   assertEquals(blank.post_address, "");
   assertEquals(mapRecord({ id: "recC", fields: { Status: "Active" } }), null);
-  assertEquals(coordinates({ Latitude: "999", Longitude: "0" }), { latitude: null, longitude: null });
+  assertEquals(coordinates({ Latitude: "999", Longitude: "0" }), {
+    latitude: null,
+    longitude: null,
+  });
   assertEquals(recordsUrl(config, "abc").searchParams.get("offset"), "abc");
 });
