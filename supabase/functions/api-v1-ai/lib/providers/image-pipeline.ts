@@ -1186,6 +1186,17 @@ export async function enrichListing(
 
   // 2.5 Ingest user-uploaded photo from Telegram if present (preserves authentic user photos)
   const rawImages = Array.isArray(post.images) ? post.images : [];
+  // Replacing a full gallery must not discard the displaced owner's photo.
+  // Persist the complete reference history in the same version-checked write
+  // as the new cover; retain the three-image client gallery contract.
+  const coverImageArchive = [
+    ...new Set([
+      ...(Array.isArray(post.metadata?.cover_image_archive)
+        ? post.metadata.cover_image_archive
+        : []),
+      ...rawImages,
+    ].filter((value: unknown): value is string => typeof value === "string")),
+  ];
   const telegramFileId = rawImages.find((img: unknown) =>
     typeof img === "string" && img.startsWith("AgAC") && img.length > 20
   );
@@ -1371,6 +1382,7 @@ export async function enrichListing(
       const newImages = [imageUrl, ...existingImages.slice(0, 2)]; // keep max 3
       const newMetadata = {
         ...(post.metadata || {}),
+        cover_image_archive: coverImageArchive,
         image_provenance: {
           source_url: verifiedUrl,
           source_domain: verifyResult.provenance.source_domain,
@@ -1449,6 +1461,7 @@ export async function enrichListing(
       const now = new Date().toISOString();
       const newMetadata = {
         ...(post.metadata || {}),
+        cover_image_archive: coverImageArchive,
         cover: coverResult.cover,
         image_provenance: {
           source_url: coverResult.cover?.sourceImageUrl || imageUrl,

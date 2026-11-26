@@ -700,6 +700,28 @@ Deno.test("enrichListing: a1 own-site photo places with an auditable provenance 
   assertEquals((update.images as string[])[0], result.image_url);
 });
 
+Deno.test("enrichListing: own-site replacement archives the displaced full-gallery photo", async () => {
+  const images = [
+    "https://old.example/one.jpg",
+    "https://old.example/two.jpg",
+    "https://old.example/three.jpg",
+  ];
+  const archived = "https://old.example/earlier.jpg";
+  const { result, captured } = await runEnrich(
+    enrichPost({
+      images,
+      metadata: { owner_note: "keep", cover_image_archive: [archived, images[0]] },
+    }),
+    FRIDGE_ROW,
+  );
+  assertEquals(result.status, "placed");
+  const update = captured.postUpdates[0];
+  assertEquals(update.images, [result.image_url, images[0], images[1]]);
+  const metadata = update.metadata as Record<string, unknown>;
+  assertEquals(metadata.cover_image_archive, [archived, ...images]);
+  assertEquals(metadata.owner_note, "keep");
+});
+
 Deno.test("enrichListing: a wrong-facility verdict never places (orchestrator-level crux)", async () => {
   // Unique candidate URL + listing name: the verify cache is keyed on the
   // full provenance envelope, so the placement test's verdict must not be

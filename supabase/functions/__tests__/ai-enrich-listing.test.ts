@@ -342,8 +342,8 @@ for (const postType of ["food", "fridge", "foodbank"]) {
         post_type: postType,
         post_name: "Apples",
         post_description: "Garden apples",
-        images: postType === "food" ? [original] : [],
-        metadata: { owner_note: "keep" },
+        images: postType === "food" ? [original, `${original}?second`, `${original}?third`] : [],
+        metadata: { owner_note: "keep", cover_image_archive: [`${original}?archived`, original] },
       };
       const filters: Record<string, unknown> = {};
       let writes = 0;
@@ -402,16 +402,28 @@ for (const postType of ["food", "fridge", "foodbank"]) {
       assertEquals(writes, conflict ? 0 : 1);
       assertEquals(
         state.images,
-        conflict ? [newer] : postType === "food" ? [generated, original] : [generated],
+        conflict
+          ? [newer]
+          : postType === "food"
+          ? [generated, original, `${original}?second`]
+          : [generated],
       );
       assertEquals(state.metadata.owner_note, conflict ? "updated during generation" : "keep");
       if (!conflict) {
         const metadata = state.metadata as Record<string, unknown>;
+        assertEquals(
+          metadata.cover_image_archive,
+          postType === "food"
+            ? [`${original}?archived`, original, `${original}?second`, `${original}?third`]
+            : [`${original}?archived`, original],
+        );
         assertEquals((metadata.cover as Record<string, unknown>).kind, "generated");
         assertEquals(
           (metadata.cover as Record<string, unknown>).disclosure,
           "AI-generated illustration; not a photograph of the listed item",
         );
+      } else {
+        assertEquals(state.metadata.cover_image_archive, [`${original}?archived`, original]);
       }
     });
   }
