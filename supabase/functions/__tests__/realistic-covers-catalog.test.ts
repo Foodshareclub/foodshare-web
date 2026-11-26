@@ -71,6 +71,24 @@ Deno.test("realistic catalog: excludeUrls deduplication avoids recently used pho
   assertEquals(second.url.includes("apple-1.jpg") || second.url.includes("apple-2.jpg"), true);
 });
 
+Deno.test("realistic catalog: exhausted subject variants never substitute unrelated photos", () => {
+  for (
+    const [title, postType, folder, subject, count] of [
+      ["Bananas", "food", "food", "banana", 2],
+      ["Community fridge", "fridge", "fridge", "fridge", 2],
+      ["Bread", "food", "food", "bread", 1],
+    ] as const
+  ) {
+    const excludeUrls = Array.from(
+      { length: count },
+      (_, index) => `${SUPABASE_STORAGE_BASE}/assets/covers/${folder}/${subject}-${index + 1}.jpg`,
+    );
+    const cover = resolveRealisticCover({ title, postType, excludeUrls });
+    assertEquals(cover.subject, subject);
+    assertEquals(excludeUrls.includes(cover.url), true);
+  }
+});
+
 Deno.test("realistic catalog: unmatched titles fall back cleanly by postType without placeholders", () => {
   const food = resolveRealisticCover({ title: "Miscellaneous items", postType: "food" });
   assertEquals(food.isRealisticCatalogCover, true);

@@ -407,12 +407,9 @@ export function resolveRealisticCover(input: {
     };
   }
 
-  // If primary pool exhausted, draw from wider fallback pool
-  const fallbackPool = REALISTIC_COVERS_CATALOG.food_fallback || primaryPool;
-  const availableFallback = fallbackPool.filter((p) => !excluded.has(`${base}/${p}`));
-  const candidatePool = availableFallback.length > 0 ? availableFallback : primaryPool;
-
-  const chosenPath = candidatePool[seed % candidatePool.length];
+  // Relevance outranks variety: exhausting banana or fridge variants must
+  // never substitute an unrelated meal, pastry, or other food photograph.
+  const chosenPath = primaryPool[seed % primaryPool.length];
   const url = `${base}/${chosenPath}`;
 
   return {
