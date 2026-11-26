@@ -23,6 +23,7 @@ import { STORAGE_BUCKETS } from "../_shared/storage-constants.ts";
 import { uploadImage } from "../api-v1-images/lib/storage.ts";
 import { fetchRecords, loadAirtableConfig } from "../_shared/partner-sync/airtable.ts";
 import { mapRecord, type PartnerRow } from "../_shared/partner-sync/mapper.ts";
+import { inspectRecords } from "../_shared/partner-sync/validate.ts";
 import {
   type PartnerPhotoDeps,
   type PartnerPhotoSource,
@@ -57,6 +58,16 @@ async function handleSync(ctx: { request: Request }): Promise<Response> {
   if (records.length === 0) {
     return Response.json(
       { network: NETWORK, outcome: "refused_empty_source" },
+      { status: 409 },
+    );
+  }
+
+  // A renamed column or a changed status vocabulary must not silently hide
+  // the network; refuse the run and keep the listings as they are.
+  const shape = inspectRecords(records);
+  if (shape.refused.length > 0) {
+    return Response.json(
+      { network: NETWORK, outcome: "refused_schema_drift", missing: shape.refused },
       { status: 409 },
     );
   }
@@ -201,6 +212,7 @@ async function handleSync(ctx: { request: Request }): Promise<Response> {
     mode: live ? "live" : "dry_run",
     skipped,
     photos_updated: live ? photosUpdated : 0,
+    warnings: shape.warnings,
     ...result,
   });
 }
