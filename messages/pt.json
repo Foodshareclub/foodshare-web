@@ -802,5 +802,11 @@
       "weak": "Fraca"
     }
   },
-  "generated_cover_disclaimer": "Ilustração de IA — não é o artigo real"
+  "generated_cover_disclaimer": "Ilustração de IA — não é o artigo real",
+  "open_now": "Aberto agora",
+  "closed_status": "Fechado",
+  "opens_at": "Abre às {time}",
+  "hours_unavailable": "Horário indisponível",
+  "hours_status": "Horário",
+  "checking_hours": "Verificando horário"
 }

@@ -901,5 +901,11 @@
       "weak": "Svagt"
     }
   },
-  "generated_cover_disclaimer": "AI-illustration — inte det faktiska föremålet"
+  "generated_cover_disclaimer": "AI-illustration — inte det faktiska föremålet",
+  "open_now": "Öppet nu",
+  "closed_status": "Stängt",
+  "opens_at": "Öppnar kl. {time}",
+  "hours_unavailable": "Öppettider saknas",
+  "hours_status": "Öppettider",
+  "checking_hours": "Kontrollerar öppettider"
 }

@@ -901,5 +901,11 @@
       "weak": "弱"
     }
   },
-  "generated_cover_disclaimer": "人工智能生成插图 — 并非实际物品"
+  "generated_cover_disclaimer": "人工智能生成插图 — 并非实际物品",
+  "open_now": "现在营业",
+  "closed_status": "已关闭",
+  "opens_at": "{time} 开门",
+  "hours_unavailable": "营业时间不可用",
+  "hours_status": "营业时间",
+  "checking_hours": "正在检查营业时间"
 }

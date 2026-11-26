@@ -827,5 +827,11 @@
       "weak": "Schwach"
     }
   },
-  "generated_cover_disclaimer": "KI-Illustration — nicht der tatsächliche Artikel"
+  "generated_cover_disclaimer": "KI-Illustration — nicht der tatsächliche Artikel",
+  "open_now": "Jetzt geöffnet",
+  "closed_status": "Geschlossen",
+  "opens_at": "Öffnet um {time}",
+  "hours_unavailable": "Öffnungszeiten nicht verfügbar",
+  "hours_status": "Öffnungszeiten",
+  "checking_hours": "Öffnungszeiten werden geprüft"
 }

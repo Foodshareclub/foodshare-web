@@ -803,5 +803,11 @@
       "weak": "약함"
     }
   },
-  "generated_cover_disclaimer": "인공지능 생성 이미지 — 실제 물품이 아닙니다"
+  "generated_cover_disclaimer": "인공지능 생성 이미지 — 실제 물품이 아닙니다",
+  "open_now": "지금 영업 중",
+  "closed_status": "영업 종료",
+  "opens_at": "{time}에 영업 시작",
+  "hours_unavailable": "운영 시간 없음",
+  "hours_status": "운영 시간",
+  "checking_hours": "운영 시간 확인 중"
 }

@@ -803,5 +803,11 @@
       "weak": "Debole"
     }
   },
-  "generated_cover_disclaimer": "Illustrazione IA — non è l’oggetto reale"
+  "generated_cover_disclaimer": "Illustrazione IA — non è l’oggetto reale",
+  "open_now": "Aperto ora",
+  "closed_status": "Chiuso",
+  "opens_at": "Apre alle {time}",
+  "hours_unavailable": "Orari non disponibili",
+  "hours_status": "Orari",
+  "checking_hours": "Verifica degli orari"
 }

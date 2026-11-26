@@ -901,5 +901,11 @@
       "weak": "Yếu"
     }
   },
-  "generated_cover_disclaimer": "Hình minh họa AI — không phải vật phẩm thực tế"
+  "generated_cover_disclaimer": "Hình minh họa AI — không phải vật phẩm thực tế",
+  "open_now": "Đang mở",
+  "closed_status": "Đã đóng",
+  "opens_at": "Mở lúc {time}",
+  "hours_unavailable": "Không có giờ mở cửa",
+  "hours_status": "Giờ mở cửa",
+  "checking_hours": "Đang kiểm tra giờ"
 }

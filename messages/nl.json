@@ -803,5 +803,11 @@
       "weak": "Zwak"
     }
   },
-  "generated_cover_disclaimer": "AI-illustratie — niet het werkelijke voorwerp"
+  "generated_cover_disclaimer": "AI-illustratie — niet het werkelijke voorwerp",
+  "open_now": "Nu open",
+  "closed_status": "Gesloten",
+  "opens_at": "Opent om {time}",
+  "hours_unavailable": "Openingstijden niet beschikbaar",
+  "hours_status": "Openingstijden",
+  "checking_hours": "Openingstijden controleren"
 }

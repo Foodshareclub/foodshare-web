@@ -1005,5 +1005,11 @@
       "weak": "Slabé"
     }
   },
-  "generated_cover_disclaimer": "Ilustrace vytvořená AI — nejde o skutečný předmět"
+  "generated_cover_disclaimer": "Ilustrace vytvořená AI — nejde o skutečný předmět",
+  "open_now": "Otevřeno",
+  "closed_status": "Zavřeno",
+  "opens_at": "Otevírá v {time}",
+  "hours_unavailable": "Otevírací doba není k dispozici",
+  "hours_status": "Otevírací doba",
+  "checking_hours": "Kontrola otevírací doby"
 }

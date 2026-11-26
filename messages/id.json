@@ -901,5 +901,11 @@
       "weak": "Lemah"
     }
   },
-  "generated_cover_disclaimer": "Ilustrasi AI — bukan barang sebenarnya"
+  "generated_cover_disclaimer": "Ilustrasi AI — bukan barang sebenarnya",
+  "open_now": "Buka sekarang",
+  "closed_status": "Tutup",
+  "opens_at": "Buka pukul {time}",
+  "hours_unavailable": "Jam tidak tersedia",
+  "hours_status": "Jam",
+  "checking_hours": "Memeriksa jam"
 }

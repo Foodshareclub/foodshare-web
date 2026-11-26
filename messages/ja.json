@@ -901,5 +901,11 @@
       "weak": "弱い"
     }
   },
-  "generated_cover_disclaimer": "人工知能が生成したイラスト — 実際の品物ではありません"
+  "generated_cover_disclaimer": "人工知能が生成したイラスト — 実際の品物ではありません",
+  "open_now": "営業中",
+  "closed_status": "閉店",
+  "opens_at": "{time}に開店",
+  "hours_unavailable": "営業時間不明",
+  "hours_status": "営業時間",
+  "checking_hours": "営業時間を確認中"
 }

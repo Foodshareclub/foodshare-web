@@ -901,5 +901,11 @@
       "weak": "อ่อน"
     }
   },
-  "generated_cover_disclaimer": "ภาพประกอบจากปัญญาประดิษฐ์ — ไม่ใช่ภาพสิ่งของจริง"
+  "generated_cover_disclaimer": "ภาพประกอบจากปัญญาประดิษฐ์ — ไม่ใช่ภาพสิ่งของจริง",
+  "open_now": "เปิดอยู่",
+  "closed_status": "ปิด",
+  "opens_at": "เปิดเวลา {time}",
+  "hours_unavailable": "ไม่มีข้อมูลเวลา",
+  "hours_status": "เวลา",
+  "checking_hours": "กำลังตรวจสอบเวลา"
 }

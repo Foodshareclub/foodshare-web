@@ -803,5 +803,11 @@
       "weak": "ضعيفة"
     }
   },
-  "generated_cover_disclaimer": "صورة مولّدة بالذكاء الاصطناعي — ليست للغرض الفعلي"
+  "generated_cover_disclaimer": "صورة مولّدة بالذكاء الاصطناعي — ليست للغرض الفعلي",
+  "open_now": "مفتوح الآن",
+  "closed_status": "مغلق",
+  "opens_at": "يفتح الساعة {time}",
+  "hours_unavailable": "ساعات العمل غير متاحة",
+  "hours_status": "ساعات العمل",
+  "checking_hours": "جارٍ التحقق من الساعات"
 }

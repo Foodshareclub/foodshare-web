@@ -1005,5 +1005,11 @@
       "weak": "Faible"
     }
   },
-  "generated_cover_disclaimer": "Illustration par IA — pas l’article réel"
+  "generated_cover_disclaimer": "Illustration par IA — pas l’article réel",
+  "open_now": "Ouvert maintenant",
+  "closed_status": "Fermé",
+  "opens_at": "Ouvre à {time}",
+  "hours_unavailable": "Horaires indisponibles",
+  "hours_status": "Horaires",
+  "checking_hours": "Vérification des horaires"
 }

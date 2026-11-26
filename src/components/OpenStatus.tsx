@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { evaluateOpenState, formatClock, type WeeklyHours } from "@/lib/opening-hours";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 const BASE = "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium";
@@ -28,6 +29,7 @@ type OpenStatusProps = {
  * every minute so a page left open crosses opening and closing times.
  */
 export function OpenStatus({ hours, timezone, className }: OpenStatusProps) {
+  const t = useTranslations();
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -37,22 +39,26 @@ export function OpenStatus({ hours, timezone, className }: OpenStatusProps) {
   }, []);
 
   if (!hours || !timezone) {
-    return <span className={cn(BASE, STYLES.unknown, className)}>Hours unavailable</span>;
+    return <span className={cn(BASE, STYLES.unknown, className)}>{t("hours_unavailable")}</span>;
   }
   if (!now) {
     return (
-      <span className={cn(BASE, STYLES.unknown, className)} aria-label="Checking hours">
-        Hours
+      <span className={cn(BASE, STYLES.unknown, className)} aria-label={t("checking_hours")}>
+        {t("hours_status")}
       </span>
     );
   }
 
   const state = evaluateOpenState(hours, timezone, now);
   if (state.kind === "unknown") {
-    return <span className={cn(BASE, STYLES.unknown, className)}>Hours unavailable</span>;
+    return <span className={cn(BASE, STYLES.unknown, className)}>{t("hours_unavailable")}</span>;
   }
   const label =
-    state.kind === "open" ? "Open now" : state.kind === "closed" ? "Closed" : `Opens at ${formatClock(state.at)}`;
+    state.kind === "open"
+      ? t("open_now")
+      : state.kind === "closed"
+        ? t("closed_status")
+        : t("opens_at", { time: formatClock(state.at) });
   return (
     <span className={cn(BASE, STYLES[state.kind], className)}>
       <span className="size-1.5 rounded-full bg-current opacity-70" aria-hidden="true" />

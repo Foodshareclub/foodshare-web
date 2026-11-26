@@ -803,5 +803,11 @@
       "weak": "Słabe"
     }
   },
-  "generated_cover_disclaimer": "Ilustracja AI — nie przedstawia rzeczywistego przedmiotu"
+  "generated_cover_disclaimer": "Ilustracja AI — nie przedstawia rzeczywistego przedmiotu",
+  "open_now": "Otwarte teraz",
+  "closed_status": "Zamknięte",
+  "opens_at": "Otwiera się o {time}",
+  "hours_unavailable": "Godziny niedostępne",
+  "hours_status": "Godziny",
+  "checking_hours": "Sprawdzanie godzin"
 }

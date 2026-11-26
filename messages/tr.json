@@ -803,5 +803,11 @@
       "weak": "Zayıf"
     }
   },
-  "generated_cover_disclaimer": "Yapay zekâ görseli — gerçek ürün değil"
+  "generated_cover_disclaimer": "Yapay zekâ görseli — gerçek ürün değil",
+  "open_now": "Şu anda açık",
+  "closed_status": "Kapalı",
+  "opens_at": "{time} itibarıyla açılıyor",
+  "hours_unavailable": "Saatler mevcut değil",
+  "hours_status": "Saatler",
+  "checking_hours": "Saatler kontrol ediliyor"
 }

@@ -1163,5 +1163,11 @@
   "email_campaigns": "Email campaigns",
   "manage_engage_and_grow_your_community": "Manage, engage and grow your community",
   "manage_subscriber_segments_and_targeting": "Manage subscriber segments and targeting",
-  "generated_cover_disclaimer": "AI illustration — not the actual item"
+  "generated_cover_disclaimer": "AI illustration — not the actual item",
+  "open_now": "Open now",
+  "closed_status": "Closed",
+  "opens_at": "Opens at {time}",
+  "hours_unavailable": "Hours unavailable",
+  "hours_status": "Hours",
+  "checking_hours": "Checking hours"
 }
