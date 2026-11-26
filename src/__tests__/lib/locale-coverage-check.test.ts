@@ -230,8 +230,14 @@ describe("locale coverage — the shipped catalogues", () => {
   it("finds the namespaces present, so the nested half is not silently zero", () => {
     // `de` carries 9 of the 18 namespaces. A guard that reported 0 nested
     // present everywhere would look identical in the totals and be useless.
-    const measured = measure(load("de"), reference, leaves);
-    expect(measured.flatPresent).toBe(470);
+    const german = load("de");
+    const measured = measure(german, reference, leaves);
+    // Root strings grow with the catalogue; derive their count independently
+    // from the objects so adding a translation cannot stale this assertion.
+    const flatKeys = Object.keys(german).filter(
+      (key) => typeof german[key] === "string" && typeof reference[key] === "string",
+    );
+    expect(measured.flatPresent).toBe(flatKeys.length);
     expect(measured.nestedPresent).toBeGreaterThan(200);
     expect(measured.flatPresent + measured.nestedPresent).toBeGreaterThan(700);
   });
