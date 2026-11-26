@@ -157,8 +157,8 @@ export async function probeImageUrl(url: string): Promise<boolean> {
 }
 
 /**
- * The tier ladder. Returns the existing images untouched when any URL is
- * live; otherwise guarantees one stored, readback-verified cover URL.
+ * The tier ladder. Promotes the first live image to cover, preserving all
+ * other photos; otherwise guarantees one stored, readback-verified cover URL.
  * Tier-2 failures fall through to the floor; floor failures propagate.
  */
 export async function ensureCoverLadder(
@@ -168,10 +168,16 @@ export async function ensureCoverLadder(
 ): Promise<CoverEnsureResult> {
   if (input.images.length > 0) {
     const alive = await Promise.all(input.images.map((url) => deps.isAlive(url)));
-    if (alive.some(Boolean)) {
+    const firstLive = alive.findIndex(Boolean);
+    if (firstLive !== -1) {
+      const images = firstLive === 0 ? input.images : [
+        input.images[firstLive],
+        ...input.images.slice(0, firstLive),
+        ...input.images.slice(firstLive + 1),
+      ];
       return {
-        url: input.images[0],
-        images: input.images,
+        url: images[0],
+        images,
         tier: 0,
         storedPath: null,
         provenance: null,
@@ -283,7 +289,7 @@ export async function handleCoverEnsure(
 
   const { data: listing, error } = await ctx.supabase
     .from("posts")
-    .select("id, profile_id, post_name, post_description, post_type, images")
+    .select("id, version, profile_id, post_name, post_description, post_type, images")
     .eq("id", body.listingId)
     .is("deleted_at", null)
     .maybeSingle();
@@ -306,16 +312,17 @@ export async function handleCoverEnsure(
     dependencies,
   );
 
-  if (result.tier === 0) {
+  if (result.tier === 0 && result.images.every((url, index) => url === listing.images?.[index])) {
     return ok({ url: result.url, images: result.images, tier: 0, changed: false }, ctx);
   }
 
-  // Single atomic write: images[0] becomes the stored cover. On failure the
+  // Single atomic write: images[0] becomes the live cover. On failure the
   // stored object is removed and the listing keeps its previous images.
   const { error: updateError } = await ctx.supabase
     .from("posts")
     .update({ images: result.images })
     .eq("id", body.listingId)
+    .eq("version", listing.version)
     .select("id")
     .single();
   if (updateError) {

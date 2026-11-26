@@ -146,7 +146,7 @@ Deno.test("ladder: all-dead payload is replaced by one stored cover", async () =
   assertEquals(result.images[0], result.url);
 });
 
-Deno.test("ladder: any live URL keeps the existing images untouched", async () => {
+Deno.test("ladder: a later live URL becomes cover without losing other photos", async () => {
   const unexpected = () => {
     throw new Error("Live covers must not trigger generation, render or storage");
   };
@@ -162,8 +162,9 @@ Deno.test("ladder: any live URL keeps the existing images untouched", async () =
   ];
   const result = await ensureCoverLadder({ ...input, images }, OWNER, deps);
   assertEquals(result.tier, 0);
-  assertEquals(result.images, images);
-  assertEquals(result.url, images[0]);
+  assertEquals(result.images, [images[1], images[0]]);
+  assertEquals(result.url, images[1]);
+  assertEquals(images[0].endsWith("dead.jpg"), true);
 });
 
 Deno.test("ladder: generation error pages are rejected and the floor carries", async () => {
@@ -230,6 +231,7 @@ function withEnv(vars: Record<string, string | undefined>, fn: () => Promise<voi
 
 interface ListingRow {
   id: number;
+  version: number;
   profile_id: string;
   post_name: string;
   post_description: string;
@@ -245,9 +247,11 @@ function mockContext(options: {
   updateError?: { message: string } | null;
 }) {
   const updates: unknown[] = [];
+  const updateFilters: [string, unknown][] = [];
   const listing = options.listing === undefined
     ? {
       id: 7,
+      version: 12,
       profile_id: OWNER,
       post_name: "Organic apples",
       post_description: "Fresh apples from the garden",
@@ -269,14 +273,17 @@ function mockContext(options: {
         }),
         update: (payload: unknown) => {
           updates.push(payload);
-          return {
-            eq: () => ({
-              select: () => ({
-                single: () =>
-                  Promise.resolve({ data: { id: 7 }, error: options.updateError ?? null }),
-              }),
+          const query = {
+            eq: (column: string, value: unknown) => {
+              updateFilters.push([column, value]);
+              return query;
+            },
+            select: () => ({
+              single: () =>
+                Promise.resolve({ data: { id: 7 }, error: options.updateError ?? null }),
             }),
           };
+          return query;
         },
       };
     },
@@ -292,7 +299,7 @@ function mockContext(options: {
     ctx: { requestId: "test-request" },
     corsHeaders: {},
   } as unknown as HandlerContext;
-  return { ctx, updates };
+  return { ctx, updates, updateFilters };
 }
 
 Deno.test("cover ensure: anon and user-JWT callers are rejected before any data access", async () => {
@@ -366,6 +373,7 @@ Deno.test("cover ensure: all-dead listing images are replaced", async () => {
       headers: { authorization: `Bearer ${SERVICE_KEY}` },
       listing: {
         id: 7,
+        version: 12,
         profile_id: OWNER,
         post_name: "Organic apples",
         post_description: "Fresh apples",
@@ -403,6 +411,7 @@ Deno.test("cover ensure: live listing images are a no-op without writes", async 
       headers: { authorization: `Bearer ${SERVICE_KEY}` },
       listing: {
         id: 7,
+        version: 12,
         profile_id: OWNER,
         post_name: "Organic apples",
         post_description: "Fresh apples",
@@ -416,5 +425,63 @@ Deno.test("cover ensure: live listing images are a no-op without writes", async 
     assertEquals(payload.data.changed, false);
     assertEquals(payload.data.url, live);
     assertEquals(updates.length, 0);
+  });
+});
+
+Deno.test("cover ensure: later live image is persisted first without generation or photo deletion", async () => {
+  await withEnv({ SUPABASE_SERVICE_ROLE_KEY: SERVICE_KEY, CRON_SECRET: undefined }, async () => {
+    const dead = "https://dead.example/expired.jpg";
+    const live = "https://api.foodshare.club/storage/v1/object/public/posts/u/live.jpg";
+    const extra = "https://api.foodshare.club/storage/v1/object/public/posts/u/extra.jpg";
+    const { deps, calls } = ladderDeps({ isAlive: (url) => Promise.resolve(url !== dead) });
+    const { ctx, updates, updateFilters } = mockContext({
+      headers: { authorization: `Bearer ${SERVICE_KEY}` },
+      listing: {
+        id: 7,
+        version: 12,
+        profile_id: OWNER,
+        post_name: "Organic apples",
+        post_description: "Fresh apples",
+        post_type: "food",
+        images: [dead, live, extra],
+      },
+    });
+    const payload = await (await handleCoverEnsure(ctx, deps)).json();
+    assertEquals(payload.data.tier, 0);
+    assertEquals(payload.data.changed, true);
+    assertEquals(payload.data.url, live);
+    assertEquals(payload.data.images, [live, dead, extra]);
+    assertEquals(updates, [{ images: [live, dead, extra] }]);
+    assertEquals(updateFilters, [["id", 7], ["version", 12]]);
+    assertEquals(calls.generate, 0);
+    assertEquals(calls.render, 0);
+    assertEquals(calls.store, []);
+    assertEquals(calls.remove, []);
+  });
+});
+
+Deno.test("cover ensure: concurrent listing edit rejects promotion without deleting existing photos", async () => {
+  await withEnv({ SUPABASE_SERVICE_ROLE_KEY: SERVICE_KEY, CRON_SECRET: undefined }, async () => {
+    const dead = "https://dead.example/expired.jpg";
+    const live = "https://api.foodshare.club/storage/v1/object/public/posts/u/live.jpg";
+    const { deps, calls } = ladderDeps({ isAlive: (url) => Promise.resolve(url === live) });
+    const { ctx, updateFilters } = mockContext({
+      headers: { authorization: `Bearer ${SERVICE_KEY}` },
+      listing: {
+        id: 7,
+        version: 12,
+        profile_id: OWNER,
+        post_name: "Organic apples",
+        post_description: "Fresh apples",
+        post_type: "food",
+        images: [dead, live],
+      },
+      updateError: { message: "No row at the read version" },
+    });
+    await assertRejects(() => handleCoverEnsure(ctx, deps), DatabaseError);
+    assertEquals(updateFilters, [["id", 7], ["version", 12]]);
+    assertEquals(calls.remove, []);
+    assertEquals(calls.generate, 0);
+    assertEquals(calls.store, []);
   });
 });
