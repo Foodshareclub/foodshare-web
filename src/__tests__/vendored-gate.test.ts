@@ -49,6 +49,7 @@ const REPO_ROOT = join(import.meta.dir, "..", "..");
 const MIGRATION = "supabase/migrations/0001_init.sql";
 const FUNCTION = "supabase/functions/api-v1-ai/index.ts";
 const MONITOR = "scripts/external-monitor.sh";
+const CONFIG = "supabase/config.toml";
 const GUARD = "supabase/functions/api-v1-ai/lib/service-auth.ts";
 
 const MIGRATION_V1 = "-- init\ncreate table listings (id bigint primary key);\n";
@@ -57,6 +58,7 @@ const FUNCTION_GUARDED =
   "import { requireServiceAuth } from './lib/service-auth';\n" +
   "export default { async POST(req) { requireServiceAuth(req); return new Response('ok'); } };\n";
 const MONITOR_V1 = "#!/usr/bin/env bash\n# external monitor\n";
+const CONFIG_V1 = "[functions.api-v1-ai]\nverify_jwt = false\n";
 const GUARD_SRC =
   "export function requireServiceAuth(req: Request): void {\n  // service-role JWT only — user JWTs must not reach this route\n  throw new Error('service auth required');\n}\n";
 
@@ -88,6 +90,9 @@ function treeSnapshot(root: string): Map<string, string> {
   };
   for (const dir of ["supabase/functions", "supabase/migrations", "scripts"]) {
     walk(join(root, dir), dir === "scripts" ? "scripts" : dir);
+  }
+  if (existsSync(join(root, CONFIG))) {
+    out.set(CONFIG, readFileSync(join(root, CONFIG), "utf8"));
   }
   return out;
 }
@@ -135,6 +140,7 @@ class DanglingFixture {
     this.commit(this.backend, MIGRATION, MIGRATION_V1);
     this.commit(this.backend, FUNCTION, FUNCTION_UNGUARDED);
     this.commit(this.backend, MONITOR, MONITOR_V1);
+    this.commit(this.backend, CONFIG, CONFIG_V1);
     this.pushBackend();
     for (const [rel, content] of this.pushedTree()) {
       writeRepoFile(this.web, rel, content);
@@ -309,6 +315,8 @@ describe("CLI contract — the command the CI vendored job runs", () => {
     }
     mkdirSync(join(identical, "scripts"), { recursive: true });
     cpSync(join(REPO_ROOT, "scripts", "external-monitor.sh"), join(identical, "scripts", "external-monitor.sh"));
+    mkdirSync(join(identical, "supabase"), { recursive: true });
+    cpSync(join(REPO_ROOT, CONFIG), join(identical, CONFIG));
     const out = execFileSync("bun", ["scripts/check-vendored.ts", "--backend-dir", identical], {
       cwd: REPO_ROOT,
       encoding: "utf8",

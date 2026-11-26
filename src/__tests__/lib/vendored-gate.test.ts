@@ -46,6 +46,7 @@ function seedTree(dir: string, guardVersion: string): void {
   mkdirSync(join(dir, "scripts"), { recursive: true });
   writeFileSync(join(dir, "supabase/functions/enrich/index.ts"), guardVersion);
   writeFileSync(join(dir, "supabase/migrations/0001_init.sql"), "create table t (id int);\n");
+  writeFileSync(join(dir, "supabase/config.toml"), "[functions.enrich]\nverify_jwt = false\n");
   writeFileSync(join(dir, "scripts/external-monitor.sh"), "#!/usr/bin/env bash\necho ok\n");
 }
 
@@ -129,7 +130,7 @@ describe("gate C — the F1 mirror (zero divergence, both directions)", () => {
     seedTree(syncedWeb, GUARD_V1);
     const report = compareVendored(syncedWeb, backend);
     expect(report.divergences).toEqual([]);
-    expect(report.filesCompared).toBe(3);
+    expect(report.filesCompared).toBe(4);
     rmSync(syncedWeb, { recursive: true, force: true });
   });
 });
