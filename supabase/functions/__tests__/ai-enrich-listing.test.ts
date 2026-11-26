@@ -77,7 +77,9 @@ Deno.test("enrichListing: city/state come from the host listing, not posts", asy
   const selects: SelectLog = {};
   const supabase = stubSupabase(basePost, { city: "Auckland", state: "Auckland" }, selects);
   await withEnv({ ALLOW_SERP_FALLBACK: undefined }, async () => {
-    const result = await enrichListing({ post_id: 7 }, supabase);
+    const result = await enrichListing({ post_id: 7 }, supabase, {
+      createCover: () => Promise.reject(new Error("reference provider unavailable")),
+    });
     assertEquals(result.status, "fell_through");
     assertEquals(selects.posts[0].includes("fridge_id"), true);
     assertEquals(selects.posts[0].includes("website"), true);
@@ -120,7 +122,9 @@ Deno.test("enrichListing: a1 scrape runs before the gated a2 tier", async () => 
   }) as typeof fetch;
   try {
     await withEnv({ ALLOW_SERP_FALLBACK: undefined }, async () => {
-      const result = await enrichListing({ post_id: 7 }, supabase);
+      const result = await enrichListing({ post_id: 7 }, supabase, {
+        createCover: () => Promise.reject(new Error("reference provider unavailable")),
+      });
       assertEquals(result.status, "fell_through");
       assertEquals(urls, []);
       assertEquals(result.error?.includes("a2 gated"), true);
@@ -190,8 +194,10 @@ function enrichRouteCtx(
                       post_type: "fridge",
                       fridge_id: null,
                       website: null,
-                      metadata: null,
-                      images: [],
+                      metadata: { image_provenance: { status: "placed" } },
+                      images: [
+                        "https://api.foodshare.club/storage/v1/object/public/posts/owner/photo.jpg",
+                      ],
                     },
                     error: null,
                   }),
@@ -241,7 +247,7 @@ Deno.test("enrichListing route: within budget it succeeds on the string-key limi
     assertEquals(resp.status, 200);
     const json = (await resp.json()) as { success: boolean; data: { status: string } };
     assertEquals(json.success, true);
-    assertEquals(json.data.status, "fell_through"); // no website, a2 gated
+    assertEquals(json.data.status, "skipped"); // existing placed cover; no provider request
     assertEquals(flags.postsTouched, true, "the pipeline ran after the allow");
     // Round-1 defect regression: the route rides the string-key distributed
     // limiter — never the uuid-typed user-quota RPC, where a string key is a
@@ -330,66 +336,92 @@ Deno.test("enrichListing route: a non-verdict (scalar) payload fails closed", as
   });
 });
 
-for (const conflict of [false, true]) {
-  Deno.test(`enrichListing: reference cover ${conflict ? "cannot overwrite concurrent edits" : "preserves photos and metadata"}`, async () => {
-    const original = "https://api.foodshare.club/storage/v1/object/public/posts/owner/original.jpg";
-    const generated =
-      "https://api.foodshare.club/storage/v1/object/public/food-images/owner/cover.jpg";
-    const newer = "https://api.foodshare.club/storage/v1/object/public/posts/owner/newer.jpg";
-    const state = {
-      id: 7,
-      version: 12,
-      profile_id: "owner",
-      post_type: "food",
-      post_name: "Apples",
-      post_description: "Garden apples",
-      images: [original],
-      metadata: { owner_note: "keep" },
-    };
-    const filters: Record<string, unknown> = {};
-    let writes = 0;
-    const supabase = {
-      from: () => ({
-        select: () => ({
-          eq: () => ({
-            single: () => Promise.resolve({ data: structuredClone(state), error: null }),
+for (const postType of ["food", "fridge", "foodbank"]) {
+  for (const conflict of [false, true]) {
+    Deno.test(`enrichListing: ${postType} reference cover ${conflict ? "cannot overwrite concurrent edits" : "preserves photos and metadata"}`, async () => {
+      const original =
+        "https://api.foodshare.club/storage/v1/object/public/posts/owner/original.jpg";
+      const generated =
+        "https://api.foodshare.club/storage/v1/object/public/food-images/owner/cover.jpg";
+      const newer = "https://api.foodshare.club/storage/v1/object/public/posts/owner/newer.jpg";
+      const state = {
+        id: 7,
+        version: 12,
+        profile_id: "owner",
+        post_type: postType,
+        post_name: "Apples",
+        post_description: "Garden apples",
+        images: postType === "food" ? [original] : [],
+        metadata: { owner_note: "keep" },
+      };
+      const filters: Record<string, unknown> = {};
+      let writes = 0;
+      const supabase = {
+        from: () => ({
+          select: () => ({
+            eq: () => ({
+              single: () => Promise.resolve({ data: structuredClone(state), error: null }),
+            }),
           }),
+          update: (patch: { images: string[]; metadata: typeof state.metadata }) => {
+            const query = {
+              eq: (key: string, value: unknown) => {
+                filters[key] = value;
+                return query;
+              },
+              select: () => query,
+              single: () => {
+                if (filters.id !== state.id || filters.version !== state.version) {
+                  return Promise.resolve({ data: null, error: { message: "version conflict" } });
+                }
+                writes++;
+                Object.assign(state, patch);
+                return Promise.resolve({ data: { id: state.id }, error: null });
+              },
+            };
+            return query;
+          },
         }),
-        update: (patch: { images: string[]; metadata: typeof state.metadata }) => {
-          const query = {
-            eq: (key: string, value: unknown) => {
-              filters[key] = value;
-              return query;
+      };
+      const result = await enrichListing({ post_id: 7 }, supabase, {
+        createCover: () => {
+          if (conflict) {
+            state.version++;
+            state.images = [newer];
+            state.metadata.owner_note = "updated during generation";
+          }
+          return Promise.resolve({
+            images: [generated],
+            cover: {
+              kind: "generated" as const,
+              provider: "zai" as const,
+              model: "glm-image",
+              contextHash: "test-context",
+              matchedAt: "2026-11-26T00:00:00Z",
+              query: "listing subject",
+              matchScope: "subject" as const,
+              disclosure: "AI-generated illustration; not a photograph of the listed item",
             },
-            select: () => query,
-            single: () => {
-              if (filters.id !== state.id || filters.version !== state.version) {
-                return Promise.resolve({ data: null, error: { message: "version conflict" } });
-              }
-              writes++;
-              Object.assign(state, patch);
-              return Promise.resolve({ data: { id: state.id }, error: null });
-            },
-          };
-          return query;
+          });
         },
-      }),
-    };
-    const result = await enrichListing({ post_id: 7 }, supabase, {
-      createCover: () => {
-        if (conflict) {
-          state.version++;
-          state.images = [newer];
-          state.metadata.owner_note = "updated during generation";
-        }
-        return Promise.resolve({ images: [generated] });
-      },
+      });
+      assertEquals(filters, { id: 7, version: 12 });
+      assertEquals(result.status, conflict ? "fell_through" : "placed");
+      if (conflict) assertEquals(result.error, "cover persistence: version conflict");
+      assertEquals(writes, conflict ? 0 : 1);
+      assertEquals(
+        state.images,
+        conflict ? [newer] : postType === "food" ? [generated, original] : [generated],
+      );
+      assertEquals(state.metadata.owner_note, conflict ? "updated during generation" : "keep");
+      if (!conflict) {
+        const metadata = state.metadata as Record<string, unknown>;
+        assertEquals((metadata.cover as Record<string, unknown>).kind, "generated");
+        assertEquals(
+          (metadata.cover as Record<string, unknown>).disclosure,
+          "AI-generated illustration; not a photograph of the listed item",
+        );
+      }
     });
-    assertEquals(filters, { id: 7, version: 12 });
-    assertEquals(result.status, conflict ? "fell_through" : "placed");
-    if (conflict) assertEquals(result.error, "cover persistence: version conflict");
-    assertEquals(writes, conflict ? 0 : 1);
-    assertEquals(state.images, conflict ? [newer] : [generated, original]);
-    assertEquals(state.metadata.owner_note, conflict ? "updated during generation" : "keep");
-  });
+  }
 }

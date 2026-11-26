@@ -1240,7 +1240,8 @@ export async function enrichListing(
     ? post.website.trim()
     : null;
 
-  if (postType === "fridge" || postType === "foodbank") {
+  let placeFallbackReason: string | undefined;
+  authenticPlace: if (postType === "fridge" || postType === "foodbank") {
     if (website) {
       try {
         candidates = await a1Scrape(website, { fetchHtml: deps.fetchHtml });
@@ -1278,14 +1279,10 @@ export async function enrichListing(
     }
 
     if (candidates.length === 0) {
-      return {
-        status: "fell_through",
-        post_id: postId,
-        error: website
-          ? "no usable own-domain image (a1 exhausted; a2 gated)"
-          : "no website + a2 gated — covers-wave floor handles",
-        attempts: 0,
-      };
+      placeFallbackReason = website
+        ? "no usable own-domain image (a1 exhausted; a2 gated)"
+        : "no website + a2 gated";
+      break authenticPlace;
     }
 
     // 4. Verify candidate images if any found
@@ -1326,23 +1323,15 @@ export async function enrichListing(
     }
 
     if (!verifiedUrl || !verifyResult) {
-      return {
-        status: "fell_through",
-        post_id: postId,
-        error: "no candidate passed verification",
-        attempts: verifyAttempts,
-      };
+      placeFallbackReason = "no candidate passed verification";
+      break authenticPlace;
     }
 
     // 5. Fetch — SSRF-safe: resolve + validate, then pinned fetch.
     const stage = await (deps.fetchBytes ?? fetchVerifiedImageBytes)(verifiedUrl);
     if ("error" in stage) {
-      return {
-        status: "fell_through",
-        post_id: postId,
-        error: `fetch: ${stage.error}`,
-        attempts: verifyAttempts,
-      };
+      placeFallbackReason = `fetch: ${stage.error}`;
+      break authenticPlace;
     }
 
     const imageData: Uint8Array = stage.bytes;
@@ -1427,7 +1416,8 @@ export async function enrichListing(
     }
   }
 
-  // 7. Universal AI reference cover tier: for community listings (food, borrow, things, etc.)
+  // 7. A missing place photo also needs a durable cover. Reference/generated
+  // provenance and disclosure distinguish this fallback from an authentic site photo.
   try {
     const coverResult = await (deps.createCover ?? createListingCover)(
       {
@@ -1508,7 +1498,9 @@ export async function enrichListing(
   return {
     status: "fell_through",
     post_id: postId,
-    error: "no usable cover found in Commons reference search",
+    error: `no usable reference/generated cover${
+      placeFallbackReason ? `: ${placeFallbackReason}` : ""
+    }`,
     attempts: 1,
   };
 }
