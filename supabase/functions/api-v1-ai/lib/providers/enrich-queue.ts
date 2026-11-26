@@ -21,10 +21,8 @@
  */
 
 import { enrichListing } from "./image-pipeline.ts";
+import { claimEnrichQueue } from "./claim-enrich-queue.ts";
 
-// A claimed row in `processing` longer than this is assumed to belong to a dead
-// worker. 10 min comfortably exceeds the pipeline's 2-min ceiling.
-const STALE_CLAIM_SECONDS = 600;
 // Give up after this many attempts (a row at MAX_ATTEMPTS is `failed`).
 const MAX_ATTEMPTS = 3;
 
@@ -56,9 +54,8 @@ export interface ProcessQueueResult {
 /**
  * Claim and process a batch of pending enrich-queue rows.
  *
- * Claim: atomically flip pending rows (and stale-claim rows) to `processing`,
- * stamping claimed_at. Uses a single update with a `status` filter so two
- * workers cannot claim the same row (the unique active index + status guard).
+ * Claim a bounded candidate set with an atomic eligibility recheck, so two
+ * workers cannot own the same pending or stale row.
  *
  * @param batchSize rows to process in this call.
  * @param dryRun claim + report without calling the pipeline.
@@ -77,20 +74,7 @@ export async function processEnrichQueue(
     failed: 0,
   };
 
-  // Claim: flip pending (or stale-claim) rows to processing. The where clause
-  // matches rows that are pending, or processing but stale (a dead worker).
-  const { data: claimed, error: claimErr } = await supabase
-    .from("listing_enrich_queue")
-    .update({ status: "processing", claimed_at: new Date().toISOString() })
-    .or(
-      `status.eq.pending,or(status.eq.processing,claimed_at.lt.${
-        new Date(Date.now() - STALE_CLAIM_SECONDS * 1000).toISOString()
-      })`,
-    )
-    .select("id, post_id")
-    .limit(batchSize);
-
-  if (claimErr) throw claimErr;
+  const claimed = await claimEnrichQueue(supabase, batchSize);
   if (!claimed || claimed.length === 0) return result;
 
   for (const row of claimed) {
