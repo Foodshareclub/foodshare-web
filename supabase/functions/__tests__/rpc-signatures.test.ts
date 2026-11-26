@@ -86,7 +86,12 @@ function extractRpcCalls(ts: string, source: string): RpcCall[] {
   // brace-balanced scan rather than a regex, because a regex cannot handle
   // nested braces in a metadata payload and stopping at the first `}` would
   // silently under-report arguments.
-  const re = /\.rpc\(\s*["'](\w+)["']\s*,\s*\{/g;
+  //
+  // The name may carry an `as ...` cast at the typed-client boundary (the
+  // metrics RPC is real but not in the generated public type), so allow one
+  // between the string and the argument object. Dropping the call from the
+  // audit would hide the very outage the pin exists to record.
+  const re = /\.rpc\(\s*["'](\w+)["']\s*(?:as\s+[^,]+)?,\s*\{/g;
 
   for (const match of ts.matchAll(re)) {
     const name = match[1];
