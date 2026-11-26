@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { now as readClock } from "@/lib/clock";
 import { evaluateOpenState, formatClock, type WeeklyHours } from "@/lib/opening-hours";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
@@ -33,17 +34,25 @@ export function OpenStatus({ hours, timezone, className }: OpenStatusProps) {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
-    setNow(new Date());
-    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    setNow(readClock());
+    const timer = window.setInterval(() => setNow(readClock()), 60_000);
     return () => window.clearInterval(timer);
   }, []);
 
   if (!hours || !timezone) {
-    return <span className={cn(BASE, STYLES.unknown, className)}>{t("hours_unavailable")}</span>;
+    return (
+      <span data-testid="listing-open-status" className={cn(BASE, STYLES.unknown, className)}>
+        {t("hours_unavailable")}
+      </span>
+    );
   }
   if (!now) {
     return (
-      <span className={cn(BASE, STYLES.unknown, className)} aria-label={t("checking_hours")}>
+      <span
+        data-testid="listing-open-status"
+        className={cn(BASE, STYLES.unknown, className)}
+        aria-label={t("checking_hours")}
+      >
         {t("hours_status")}
       </span>
     );
@@ -51,7 +60,11 @@ export function OpenStatus({ hours, timezone, className }: OpenStatusProps) {
 
   const state = evaluateOpenState(hours, timezone, now);
   if (state.kind === "unknown") {
-    return <span className={cn(BASE, STYLES.unknown, className)}>{t("hours_unavailable")}</span>;
+    return (
+      <span data-testid="listing-open-status" className={cn(BASE, STYLES.unknown, className)}>
+        {t("hours_unavailable")}
+      </span>
+    );
   }
   const label =
     state.kind === "open"
@@ -60,7 +73,7 @@ export function OpenStatus({ hours, timezone, className }: OpenStatusProps) {
         ? t("closed_status")
         : t("opens_at", { time: formatClock(state.at) });
   return (
-    <span className={cn(BASE, STYLES[state.kind], className)}>
+    <span data-testid="listing-open-status" className={cn(BASE, STYLES[state.kind], className)}>
       <span className="size-1.5 rounded-full bg-current opacity-70" aria-hidden="true" />
       {label}
     </span>
