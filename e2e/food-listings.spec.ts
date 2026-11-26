@@ -106,9 +106,7 @@ test.describe("Food Listings Page", () => {
   test("should display 'Show map' button", async ({ page }) => {
     // NavigateButtons shows "Show map" button on listing pages
     const mapButton = page.getByRole("button", { name: /show map/i });
-    const hasMapButton = await mapButton.isVisible();
-
-    expect(hasMapButton).toBeTruthy();
+    await expect(mapButton).toBeVisible();
   });
 });
 
