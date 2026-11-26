@@ -10875,6 +10875,10 @@ export type Database = {
         Args: Record<never, never>;
         Returns: undefined;
       },
+      invoke_partner_lacf_sync: {
+        Args: Record<never, never>;
+        Returns: undefined;
+      },
       invoke_update_post_coordinates: {
         Args: Record<never, never>;
         Returns: undefined;

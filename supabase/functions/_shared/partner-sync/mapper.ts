@@ -3,9 +3,10 @@ import type { AirtableRecord } from "./airtable.ts";
 /**
  * One partner record, mapped onto a `posts` row.
  *
- * Every record is posted, whatever its status: `partner_status` carries the
- * partner's own value and the listing stays visible. `metadata.lacf` holds the
- * public details; the complete field mirror lives in
+ * Their Airtable is the source of truth: every field here is written over our
+ * row on each run, so a local edit does not survive. Only Active records are
+ * listed; `partner_status` carries the partner's own value. `metadata.lacf`
+ * holds the public details; the complete field mirror lives in
  * private.airtable_fridge_records. Contact fields are never projected here.
  */
 export interface PartnerRow {
