@@ -389,7 +389,7 @@ Deno.test("cover ensure: all-dead listing images are replaced", async () => {
   });
 });
 
-Deno.test("cover ensure: failed persistence removes the stored object and keeps old images", async () => {
+Deno.test("cover ensure: failed persistence retains the shared object and keeps old images", async () => {
   await withEnv({ SUPABASE_SERVICE_ROLE_KEY: SERVICE_KEY, CRON_SECRET: undefined }, async () => {
     const { deps, calls } = ladderDeps();
     const { ctx, updates } = mockContext({
@@ -398,8 +398,29 @@ Deno.test("cover ensure: failed persistence removes the stored object and keeps 
     });
     await assertRejects(() => handleCoverEnsure(ctx, deps), DatabaseError);
     assertEquals(updates.length, 1); // the single atomic attempt failed
-    assertEquals(calls.remove.length, 1); // stored object cleaned up
-    assertEquals(calls.remove[0].startsWith(`${OWNER}/cover-ensure/`), true);
+    assertEquals(calls.remove, []); // another listing may reference this digest
+  });
+});
+
+Deno.test("cover ensure: a losing repair cannot delete the winning repair's shared cover", async () => {
+  await withEnv({ SUPABASE_SERVICE_ROLE_KEY: SERVICE_KEY, CRON_SECRET: undefined }, async () => {
+    const { deps, calls, stored } = ladderDeps();
+    deps.remove = (path) => {
+      calls.remove.push(path);
+      stored.delete(`https://api.foodshare.club/storage/v1/object/public/posts/${path}`);
+      return Promise.resolve();
+    };
+    const headers = { authorization: `Bearer ${SERVICE_KEY}` };
+    const winner = mockContext({ headers });
+    const response = await handleCoverEnsure(winner.ctx, deps);
+    const payload = await response.json();
+    const winnerBytes = await deps.verify(payload.data.url);
+    const loser = mockContext({ headers, updateError: { message: "version conflict" } });
+    await assertRejects(() => handleCoverEnsure(loser.ctx, deps), DatabaseError);
+    assertEquals(calls.store.length, 2);
+    assertEquals(calls.store[0].path, calls.store[1].path);
+    assertEquals(calls.remove, []);
+    assertEquals(await deps.verify(payload.data.url), winnerBytes);
   });
 });
 

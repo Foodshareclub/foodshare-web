@@ -19,8 +19,9 @@
  * The chosen image is validated (magic bytes + size bound), stored in the
  * listings bucket (`posts`, owner-scoped content-addressed path), read back
  * and hash-verified, then written to `posts.images[0]` in a single update.
- * A failed update removes the stored object and returns 5xx: no partial
- * commit, the listing's previous images stay untouched.
+ * A failed update returns 5xx and leaves previous listing images untouched.
+ * Content-addressed objects are retained: another listing or concurrent repair
+ * may already reference the same path. Cleanup must check references first.
  *
  * Authorization: service credential (CRON_SECRET or service-role key) PLUS
  * the operated owner context — the body's `userId` must equal the listing's
@@ -316,8 +317,8 @@ export async function handleCoverEnsure(
     return ok({ url: result.url, images: result.images, tier: 0, changed: false }, ctx);
   }
 
-  // Single atomic write: images[0] becomes the live cover. On failure the
-  // stored object is removed and the listing keeps its previous images.
+  // Single atomic write: images[0] becomes the live cover. Never delete the
+  // shared content-addressed object on failure: a concurrent winner may use it.
   const { error: updateError } = await ctx.supabase
     .from("posts")
     .update({ images: result.images })
@@ -326,16 +327,6 @@ export async function handleCoverEnsure(
     .select("id")
     .single();
   if (updateError) {
-    if (result.storedPath) {
-      try {
-        await dependencies.remove(result.storedPath);
-      } catch (cleanupError) {
-        logger.error("Cover object cleanup after failed update", {
-          error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
-          path: result.storedPath,
-        });
-      }
-    }
     throw new DatabaseError(`Failed to persist cover: ${updateError.message}`);
   }
 

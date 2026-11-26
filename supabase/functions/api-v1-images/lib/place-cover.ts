@@ -315,28 +315,15 @@ function provenanceStatus(metadata: Json | null): string | null {
   return null;
 }
 
-/** Persist images + provenance atomically; clean up the stored object on failure. */
+/** Persist atomically; shared content-addressed objects require reference-aware cleanup. */
 async function persistCover(
   listing: PlaceCoverListing,
   images: string[],
   provenance: ImageProvenance,
-  storedPath: string | null,
   deps: PlaceCoverDependencies,
 ): Promise<void> {
   const metadata: Json = { ...metadataObject(listing.metadata), image_provenance: provenance };
-  try {
-    await deps.updateCover(listing.id, images, metadata);
-  } catch (error) {
-    if (storedPath) {
-      await deps.remove(storedPath).catch((cleanupError) =>
-        logger.warn("place-cover orphan cleanup failed", {
-          path: storedPath,
-          error: String(cleanupError),
-        })
-      );
-    }
-    throw error;
-  }
+  await deps.updateCover(listing.id, images, metadata);
 }
 
 // ---------------------------------------------------------------------------
@@ -412,7 +399,6 @@ export async function placeCoverPipeline(
       continue;
     }
 
-    let storedPath: string | null = null;
     let url: string;
     try {
       const bytes = await deps.fetchBytes(candidate.url);
@@ -420,7 +406,6 @@ export async function placeCoverPipeline(
       const digest = await sha256Hex(bytes);
       const path = `${listing.profile_id}/place-cover/${digest}.${format}`;
       url = await deps.store(path, bytes, `image/${format}`);
-      storedPath = path;
       const readback = await deps.readback(url);
       if ((await sha256Hex(readback)) !== digest) {
         throw new ServerError("place-cover public readback verification failed");
@@ -430,14 +415,7 @@ export async function placeCoverPipeline(
         listingId: listing.id,
         error: String(error),
       });
-      if (storedPath) {
-        await deps.remove(storedPath).catch((cleanupError) =>
-          logger.warn("place-cover orphan cleanup failed", {
-            path: storedPath,
-            error: String(cleanupError),
-          })
-        );
-      }
+      // The same digest may already be referenced by another listing.
       reason = "fetch-failed";
       continue;
     }
@@ -456,7 +434,7 @@ export async function placeCoverPipeline(
       crawled_at: crawledAt,
       placed_at: new Date(deps.now()).toISOString(),
     };
-    await persistCover(listing, images, provenance, storedPath, deps);
+    await persistCover(listing, images, provenance, deps);
     return { status: "placed", url, images, provenance, candidatesTried };
   }
 
@@ -481,7 +459,7 @@ export async function placeCoverPipeline(
     reason,
     attempted_at: new Date(deps.now()).toISOString(),
   };
-  await persistCover(listing, images, provenance, ladder.storedPath, deps);
+  await persistCover(listing, images, provenance, deps);
   return {
     status: "fell-through",
     url: ladder.url,

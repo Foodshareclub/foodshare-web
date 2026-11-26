@@ -424,7 +424,7 @@ Deno.test("pipeline: a fetch failure moves to the next candidate", async () => {
   assertEquals(provenanceOf(calls.updates[0]).source_url, second.url);
 });
 
-Deno.test("pipeline: readback hash mismatch rejects the candidate and cleans up", async () => {
+Deno.test("pipeline: readback hash mismatch rejects the candidate without deleting a shared object", async () => {
   const { deps, calls } = pipelineDeps();
   const realReadback = deps.readback;
   // Tamper only the candidate readback; the floor's readback must stay valid.
@@ -435,8 +435,7 @@ Deno.test("pipeline: readback hash mismatch rejects the candidate and cleans up"
   const outcome = await placeCoverPipeline(baseListing(), deps);
   const ft = asFellThrough(outcome);
   assertEquals(ft.reason, "fetch-failed");
-  assertEquals(calls.remove.length, 1);
-  assertEquals(calls.remove[0].startsWith(`${OWNER}/place-cover/`), true);
+  assertEquals(calls.remove, []);
 });
 Deno.test("pipeline: non-image bytes are rejected by raster validation", async () => {
   const { deps, calls } = pipelineDeps({
@@ -537,23 +536,21 @@ Deno.test("pipeline: a broken floor fails loudly", async () => {
   await assertRejects(() => placeCoverPipeline(baseListing(), deps), ServerError);
 });
 
-Deno.test("pipeline: placed persistence failure cleans up and propagates", async () => {
+Deno.test("pipeline: placed persistence failure retains shared objects and propagates", async () => {
   const { deps, calls } = pipelineDeps({
     updateCover: () => Promise.reject(new DatabaseError("update failed")),
   });
   await assertRejects(() => placeCoverPipeline(baseListing(), deps), DatabaseError);
-  assertEquals(calls.remove.length, 1);
-  assertEquals(calls.remove[0].startsWith(`${OWNER}/place-cover/`), true);
+  assertEquals(calls.remove, []);
 });
 
-Deno.test("pipeline: fall-through persistence failure cleans up the floor object", async () => {
+Deno.test("pipeline: fall-through persistence failure retains the shared floor object", async () => {
   const { deps, calls } = pipelineDeps({
     crawl: () => Promise.resolve({ candidates: [] }),
     updateCover: () => Promise.reject(new DatabaseError("update failed")),
   });
   await assertRejects(() => placeCoverPipeline(baseListing(), deps), DatabaseError);
-  assertEquals(calls.remove.length, 1);
-  assertEquals(calls.remove[0].startsWith(`${OWNER}/cover-ensure/`), true);
+  assertEquals(calls.remove, []);
 });
 
 Deno.test("pipeline: existing non-placeholder images are preserved after the new cover, capped at 3", async () => {
