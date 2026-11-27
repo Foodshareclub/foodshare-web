@@ -16,12 +16,10 @@ const createProductAPI = mock(
     data: { id: 42, post_type: "thing", is_active: true },
   }),
 );
-const updateProductAPI = mock(
-  async (_id: number, _input: unknown): Promise<ActionResult<undefined>> => ({
-    success: true,
-    data: undefined,
-  }),
-);
+const updateProductAPI = mock(async (_id: number, _input: unknown): Promise<ActionResult<undefined>> => ({
+  success: true,
+  data: undefined,
+}));
 const supabase = {
   auth: { getUser: async () => ({ data: { user: { id: owner } } }) },
   from: () => {
@@ -225,9 +223,6 @@ describe("listing mutation actions", () => {
     expect(result.success).toBe(true);
     expect(state.writes).toHaveLength(0);
     expect(updateProductAPI).toHaveBeenCalledTimes(1);
-    expect(updateProductAPI.mock.calls[0]).toEqual([
-      42,
-      { post_name: "Fresh tomatoes", images: [], version: 25 },
-    ]);
+    expect(updateProductAPI.mock.calls[0]).toEqual([42, { post_name: "Fresh tomatoes", images: [], version: 25 }]);
   });
 });

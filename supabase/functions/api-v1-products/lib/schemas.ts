@@ -44,7 +44,7 @@ export const updateProductSchema = z.object({
   title: z.string().min(LISTING.title.minLength).max(LISTING.title.maxLength)
     .optional(),
   description: z.string().max(LISTING.description.maxLength).optional(),
-  images: z.array(z.string().url()).min(1).max(5).optional(),
+  images: z.array(z.string().url()).max(5).optional(),
   pickupAddress: z.string().max(500).optional(),
   pickupTime: z.string().max(200).optional(),
   categoryId: positiveIntSchema.optional(),

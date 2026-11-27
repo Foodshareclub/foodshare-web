@@ -60,6 +60,10 @@ export type ListQuery = {
   cursor?: string;
   limit?: string;
   messagesBefore?: string;
+  messagesAfter?: string;
+  messageCursor?: string;
+  messageDirection?: "before" | "after";
+  offset?: string;
 };
 
 // =============================================================================
@@ -158,16 +162,53 @@ export async function foodGetRoom(
     throw new AuthorizationError("You are not a participant in this chat");
   }
 
-  const messageLimit = Math.min(parseInt(query.limit || "50"), 100);
-  const { data: messages, error: messagesError } = await supabase
+  const requestedLimit = Number(query.limit ?? "50");
+  const offset = Number(query.offset ?? "0");
+  if (
+    !Number.isInteger(requestedLimit) || requestedLimit < 1 || !Number.isSafeInteger(offset) ||
+    offset < 0
+  ) {
+    throw new ValidationError("Invalid message pagination");
+  }
+  const messageLimit = Math.min(requestedLimit, 100);
+  const ascending = query.messageDirection === "after" || !!query.messagesAfter;
+  let messageQuery = supabase
     .from("room_participants")
     .select(`
       id, room_id, profile_id, text, image, timestamp,
       sender:profile_id (id, first_name, second_name, avatar_url)
     `)
-    .eq("room_id", roomId)
-    .order("timestamp", { ascending: true })
-    .limit(messageLimit);
+    .eq("room_id", roomId);
+
+  if (query.messageCursor) {
+    // Resolve the boundary inside this authorized room. Keep database timestamp
+    // precision and use the ID to disambiguate simultaneous messages.
+    const cursorId = uuidSchema.parse(query.messageCursor);
+    const { data: anchor, error: anchorError } = await supabase
+      .from("room_participants")
+      .select("id,timestamp")
+      .eq("room_id", roomId)
+      .eq("id", cursorId)
+      .single();
+    if (anchorError || !anchor) throw new ValidationError("Message cursor unavailable");
+    const timestamp = z.string().datetime({ offset: true }).parse(anchor.timestamp);
+    const comparison = ascending ? "gt" : "lt";
+    messageQuery = messageQuery.or(
+      `timestamp.${comparison}.${timestamp},and(timestamp.eq.${timestamp},id.${comparison}.${cursorId})`,
+    );
+  } else if (query.messagesBefore) {
+    const timestamp = z.string().datetime({ offset: true }).parse(query.messagesBefore);
+    messageQuery = messageQuery.lt("timestamp", timestamp);
+  } else if (query.messagesAfter) {
+    const timestamp = z.string().datetime({ offset: true }).parse(query.messagesAfter);
+    messageQuery = messageQuery.gt("timestamp", timestamp);
+  }
+  const { data: page, error: messagesError } = await messageQuery
+    .order("timestamp", { ascending })
+    .order("id", { ascending })
+    .range(offset, offset + messageLimit - 1);
+  // Fetch newest first for a bounded initial page; display oldest first.
+  const messages = ascending ? page : page?.slice().reverse();
 
   if (messagesError) {
     logger.error("Failed to fetch messages", new Error(messagesError.message));

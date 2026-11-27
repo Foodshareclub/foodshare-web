@@ -71,6 +71,10 @@ const listQuerySchema = z.object({
   cursor: z.string().optional(),
   limit: z.string().optional(),
   messagesBefore: z.string().optional(),
+  messagesAfter: z.string().optional(),
+  messageCursor: uuidSchema.optional(),
+  messageDirection: z.enum(["before", "after"]).optional(),
+  offset: z.string().regex(/^\d+$/).optional(),
 });
 
 type ListQuery = z.infer<typeof listQuerySchema>;

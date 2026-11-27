@@ -101,8 +101,7 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
     postType: product.post_type,
     postId: product.id,
   });
-  const activeImageSrc =
-    primaryImage && failedPrimaryUrl !== primaryImage ? primaryImage : fallbackCover;
+  const activeImageSrc = primaryImage && failedPrimaryUrl !== primaryImage ? primaryImage : fallbackCover;
 
   // React Compiler handles memoization automatically
   const isDisabled = buttonValue === "leave a feedBack" ? product.is_active : false;
