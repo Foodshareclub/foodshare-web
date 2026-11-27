@@ -506,8 +506,11 @@ for attempt in $(seq 1 24); do
     podman exec foodshare-web curl --fail --silent --max-time 10 'http://localhost:3000/food?distance=any' >/dev/null &&
     verify_listing_api; then
     echo "Production web health, Food page, and listing API passed for $DEPLOY_SHA"
-    reclaim_superseded_images
+    # The deployment is healthy and complete before any old image is removed:
+    # an interrupted reclamation must not trigger a rollback to the image it
+    # has just reclaimed.
     deployment_finished=1
+    reclaim_superseded_images
     exit 0
   fi
   sleep 5
