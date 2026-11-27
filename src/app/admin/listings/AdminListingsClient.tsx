@@ -26,6 +26,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { AdminListing, AdminListingsFilter, ListingStats } from "@/lib/data/admin-listings";
 import { LISTING_CATEGORY_OPTIONS } from "@/constants/categories";
+import { normalizeImageUrl } from "@/lib/image";
+import { resolveRealisticCover } from "@/lib/realistic-covers";
 import { cn } from "@/lib/utils";
 import { Check, Eye, MoreVertical, Pencil, RefreshCw, Search, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -298,15 +300,20 @@ export function AdminListingsClient({
                 </td>
                 <td className="p-3">
                   <div className="flex items-center gap-3">
-                    {listing.images?.[0] && (
-                      <Image
-                        src={listing.images[0]}
-                        alt={listing.post_name}
-                        width={48}
-                        height={48}
-                        className="rounded-lg object-cover"
-                      />
-                    )}
+                    <Image
+                      src={
+                        normalizeImageUrl(listing.images?.[0]) ||
+                        resolveRealisticCover({
+                          title: listing.post_name,
+                          postType: listing.post_type,
+                          postId: listing.id,
+                        })
+                      }
+                      alt={listing.post_name}
+                      width={48}
+                      height={48}
+                      className="rounded-lg object-cover"
+                    />
                     <div>
                       <p className="font-medium text-gray-900 dark:text-gray-100 line-clamp-1">{listing.post_name}</p>
                       <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">

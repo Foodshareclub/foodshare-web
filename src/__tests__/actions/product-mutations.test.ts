@@ -16,6 +16,12 @@ const createProductAPI = mock(
     data: { id: 42, post_type: "thing", is_active: true },
   }),
 );
+const updateProductAPI = mock(
+  async (_id: number, _input: unknown): Promise<ActionResult<undefined>> => ({
+    success: true,
+    data: undefined,
+  }),
+);
 const supabase = {
   auth: { getUser: async () => ({ data: { user: { id: owner } } }) },
   from: () => {
@@ -75,7 +81,11 @@ mock.module("@/lib/embeddings", () => ({ embedProduct }));
 mock.module("@/lib/structured-logger", () => ({
   createActionLogger: async () => ({ info: mock(), debug: mock(), warn: mock() }),
 }));
-mock.module("@/lib/api/products", () => ({ createProductAPI, deleteProductAPI: mock() }));
+mock.module("@/lib/api/products", () => ({
+  createProductAPI,
+  updateProductAPI,
+  deleteProductAPI: mock(),
+}));
 
 const { createProduct, updateProduct } = await import("@/app/actions/products");
 
@@ -87,6 +97,7 @@ beforeEach(() => {
   invalidateTag.mockClear();
   embedProduct.mockClear();
   createProductAPI.mockClear();
+  updateProductAPI.mockClear();
 });
 
 describe("listing mutation actions", () => {
@@ -203,5 +214,20 @@ describe("listing mutation actions", () => {
         classification: { source: "manual", postType: "thing", needsReview: false },
       },
     });
+  });
+
+  it("routes empty-images edits through the edge API so backend cover generation runs", async () => {
+    const form = new FormData();
+    form.set("version", "25");
+    form.set("post_name", "Fresh tomatoes");
+    form.set("images", "[]");
+    const result = await updateProduct(42, form);
+    expect(result.success).toBe(true);
+    expect(state.writes).toHaveLength(0);
+    expect(updateProductAPI).toHaveBeenCalledTimes(1);
+    expect(updateProductAPI.mock.calls[0]).toEqual([
+      42,
+      { post_name: "Fresh tomatoes", images: [], version: 25 },
+    ]);
   });
 });

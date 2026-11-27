@@ -10,6 +10,8 @@ import PopupNotificationModal from "@/components/modals/PopupNotificationModal";
 import TopTips from "@/components/topTips/TopTips";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { normalizeImageUrl } from "@/lib/image";
+import { resolveRealisticCover } from "@/lib/realistic-covers";
 import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
 import { Bus, Clock, Eye, Heart, MapPin, Package, Star } from "lucide-react";
@@ -90,6 +92,17 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
 
   const onStarClick = (index: number) => setRating(index + 1);
   const onClose = () => setIsOpen(false);
+  const [failedPrimaryUrl, setFailedPrimaryUrl] = useState<string | null>(null);
+
+  const primaryImage = normalizeImageUrl(product.images?.[0]);
+  const fallbackCover = resolveRealisticCover({
+    title: product.post_name,
+    description: product.post_description,
+    postType: product.post_type,
+    postId: product.id,
+  });
+  const activeImageSrc =
+    primaryImage && failedPrimaryUrl !== primaryImage ? primaryImage : fallbackCover;
 
   // React Compiler handles memoization automatically
   const isDisabled = buttonValue === "leave a feedBack" ? product.is_active : false;
@@ -103,7 +116,8 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
         <div className="flex flex-col gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={product.images?.[0] || ""}
+            src={activeImageSrc}
+            onError={() => primaryImage && setFailedPrimaryUrl(primaryImage)}
             className="rounded-full mx-auto"
             alt={product.post_name}
             width="100"
@@ -126,7 +140,8 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
       <div className="relative w-full" style={{ aspectRatio: "4/3" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={product.images?.[0] || ""}
+          src={activeImageSrc}
+          onError={() => primaryImage && setFailedPrimaryUrl(primaryImage)}
           alt={product.post_name}
           className="w-full h-full object-cover"
           loading="lazy"

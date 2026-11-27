@@ -2,7 +2,7 @@
 
 import { trackEvent } from "@/app/actions/analytics";
 import { logPostActivity as _logPostActivity } from "@/app/actions/post-activity";
-import { createProductAPI, deleteProductAPI } from "@/lib/api/products";
+import { createProductAPI, deleteProductAPI, updateProductAPI } from "@/lib/api/products";
 import { invalidatePostActivityCaches, invalidateTag } from "@/lib/data/cache-invalidation";
 import { CACHE_TAGS, getProductTags } from "@/lib/data/cache-keys";
 import { embedProduct } from "@/lib/embeddings";
@@ -303,46 +303,57 @@ export async function updateProduct(id: number, formData: FormData): Promise<Act
     }
 
     const { version, category_mode: _categoryMode, ...fields } = validation.data;
-    const updates: Record<string, unknown> = { ...fields };
-    if (fields.post_type && fields.post_type !== currentProduct.post_type) {
-      updates.category_id = null;
-      updates.metadata = {
-        ...(currentProduct.metadata && typeof currentProduct.metadata === "object" ? currentProduct.metadata : {}),
-        classification: {
-          version: "2026-09-19.1",
-          source: "manual",
-          status: "manual",
-          requestedPostType: currentProduct.post_type,
-          postType: fields.post_type,
-          suggestedPostType: null,
-          confidence: null,
-          needsReview: false,
-          reason: "explicit_category_choice",
-          decidedAt: new Date().toISOString(),
-        },
-      };
-      if (fields.post_type === "volunteer") updates.is_active = false;
-    }
-    const { data: updated, error } = await supabase
-      .from("posts")
-      .update(updates)
-      .eq("id", id)
-      .eq("profile_id", user.id)
-      .eq("version", version)
-      .select("id")
-      .maybeSingle();
+    if (Array.isArray(fields.images) && fields.images.length === 0) {
+      const apiResult = await updateProductAPI(id, {
+        ...fields,
+        images: [],
+        version,
+      });
+      if (!apiResult.success) {
+        return apiResult;
+      }
+    } else {
+      const updates: Record<string, unknown> = { ...fields };
+      if (fields.post_type && fields.post_type !== currentProduct.post_type) {
+        updates.category_id = null;
+        updates.metadata = {
+          ...(currentProduct.metadata && typeof currentProduct.metadata === "object" ? currentProduct.metadata : {}),
+          classification: {
+            version: "2026-09-19.1",
+            source: "manual",
+            status: "manual",
+            requestedPostType: currentProduct.post_type,
+            postType: fields.post_type,
+            suggestedPostType: null,
+            confidence: null,
+            needsReview: false,
+            reason: "explicit_category_choice",
+            decidedAt: new Date().toISOString(),
+          },
+        };
+        if (fields.post_type === "volunteer") updates.is_active = false;
+      }
+      const { data: updated, error } = await supabase
+        .from("posts")
+        .update(updates)
+        .eq("id", id)
+        .eq("profile_id", user.id)
+        .eq("version", version)
+        .select("id")
+        .maybeSingle();
 
-    if (error) {
-      throw new Error(error.message);
-    }
-    if (!updated) {
-      return {
-        success: false,
-        error: {
-          code: "CONFLICT",
-          message: "This listing changed while you were editing. Please refresh and try again.",
-        },
-      };
+      if (error) {
+        throw new Error(error.message);
+      }
+      if (!updated) {
+        return {
+          success: false,
+          error: {
+            code: "CONFLICT",
+            message: "This listing changed while you were editing. Please refresh and try again.",
+          },
+        };
+      }
     }
 
     // Batch invalidate caches - handles both old and new type

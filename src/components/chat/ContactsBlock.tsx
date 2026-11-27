@@ -4,6 +4,8 @@ import { markFoodChatAsRead } from "@/app/actions/chat";
 import AvatarWithRipple from "@/components/listingPersonCard/AvatarWithRipple";
 import { MinifiedUserInfo } from "@/components/minifiedUserInfo/MinifiedUserInfo";
 import { Input } from "@/components/ui/input";
+import { normalizeImageUrl } from "@/lib/image";
+import { resolveRealisticCover } from "@/lib/realistic-covers";
 import { SearchIcon } from "@/utils/icons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -85,7 +87,13 @@ export default function ContactsBlock({
                 onGetCurrentUserMessages={() =>
                   onGetCurrentUserMessages(data.posts.id, data.sharer, data.requester, data.id)
                 }
-                src={data.posts.images?.[0] || ""}
+                src={
+                  normalizeImageUrl(data.posts.images?.[0]) ||
+                  resolveRealisticCover({
+                    title: data.posts.post_name,
+                    postId: data.posts.id,
+                  })
+                }
                 description={data.posts.post_name}
                 firstName={data.profiles.first_name}
                 secondName={data.profiles.second_name}
