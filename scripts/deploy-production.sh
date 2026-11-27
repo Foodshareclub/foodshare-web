@@ -459,11 +459,54 @@ if ! restart_tunnel; then
   echo "The public tunnel failed to restart; restoring the previous deployment" >&2
   exit 1
 fi
+# Each release pulls an immutable digest, so the image it replaces is left
+# untagged but still carries a RepoDigest. Podman does not classify that as
+# dangling, so `podman image prune` never reclaims it. Once the new container
+# has passed the checks above, remove only untagged images of this application
+# that no container references and that are older than an hour. The running
+# image is read from the healthy container and skipped explicitly; tagged
+# images, other repositories, volumes and networks are not candidates.
+reclaim_superseded_images() {
+  local image_label="org.opencontainers.image.source=https://github.com/Foodshareclub/foodshare-web"
+  local running referenced id full created now
+  if ! podman healthcheck run foodshare-web >/dev/null; then
+    echo "Skipping superseded image reclamation: foodshare-web is not healthy" >&2
+    return 0
+  fi
+  running=$(podman container inspect --format '{{.Image}}' foodshare-web 2>/dev/null || true)
+  referenced=$(podman ps -a --format '{{.ImageID}}' 2>/dev/null) || {
+    echo "Skipping superseded image reclamation: container references are unreadable" >&2
+    return 0
+  }
+  if [ -z "$running" ]; then
+    echo "Skipping superseded image reclamation: the running image is unreadable" >&2
+    return 0
+  fi
+  now=$(date +%s)
+  while read -r id; do
+    [ -n "$id" ] || continue
+    full=$(podman image inspect --format '{{.Id}}' "$id" 2>/dev/null || true)
+    [ -n "$full" ] || continue
+    [ "$full" = "$running" ] && continue
+    if printf '%s\n' "$referenced" | grep -qx "$full"; then continue; fi
+    created=$(podman image inspect --format '{{.Created.Unix}}' "$id" 2>/dev/null || true)
+    case "$created" in ''|*[!0-9]*) continue ;; esac
+    if [ "$((now - created))" -lt 3600 ]; then continue; fi
+    if podman image rm "$full" >/dev/null; then
+      echo "Reclaimed superseded image $id"
+    else
+      echo "Could not reclaim superseded image $id; leaving it for the next deployment" >&2
+    fi
+  done < <(podman images --filter "label=$image_label" --format '{{.ID}} {{.Tag}}' | awk '$2 == "<none>" {print $1}')
+  return 0
+}
+
 for attempt in $(seq 1 24); do
   if podman exec foodshare-web curl --fail --silent --max-time 10 http://localhost:3000/api/health >/dev/null &&
     podman exec foodshare-web curl --fail --silent --max-time 10 'http://localhost:3000/food?distance=any' >/dev/null &&
     verify_listing_api; then
     echo "Production web health, Food page, and listing API passed for $DEPLOY_SHA"
+    reclaim_superseded_images
     deployment_finished=1
     exit 0
   fi
