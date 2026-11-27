@@ -92,6 +92,11 @@ function norm(value: unknown): string {
   return typeof value === "string" ? value.trim().toLowerCase().replace(/\s+/g, " ") : "";
 }
 
+/** A peer-to-peer listing, as opposed to a directory entry. */
+export function isPeerListingPost(post: AuditPostRow): boolean {
+  return PEER_LISTING_TYPES.has(norm(post.post_type));
+}
+
 export function isCanonicalUrl(url: string): boolean {
   return url.startsWith(CANONICAL_PUBLIC_PREFIX);
 }
