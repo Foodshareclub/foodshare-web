@@ -463,7 +463,7 @@ fi
 # untagged but still carries a RepoDigest. Podman does not classify that as
 # dangling, so `podman image prune` never reclaims it. Once the new container
 # has passed the checks above, remove only untagged images of this application
-# that no container references and that are older than an hour. The running
+# that no container references and that are older than five minutes. The running
 # image is read from the healthy container and skipped explicitly; tagged
 # images, other repositories, volumes and networks are not candidates.
 reclaim_superseded_images() {
@@ -491,7 +491,10 @@ reclaim_superseded_images() {
     if printf '%s\n' "$referenced" | grep -qx "$full"; then continue; fi
     created=$(podman image inspect --format '{{.Created.Unix}}' "$id" 2>/dev/null || true)
     case "$created" in ''|*[!0-9]*) continue ;; esac
-    if [ "$((now - created))" -lt 3600 ]; then continue; fi
+    # Longer than a pull-to-health window, shorter than a deployment cycle:
+    # the image this successful deployment replaced is reclaimed on the next
+    # release, while a concurrent pull is still left alone.
+    if [ "$((now - created))" -lt 300 ]; then continue; fi
     if podman image rm "$full" >/dev/null; then
       echo "Reclaimed superseded image $id"
     else
