@@ -71,9 +71,7 @@ export async function updateProduct(
     }
   }
 
-  const sanitizedTitle = body.title !== undefined
-    ? sanitizeHtml(body.title)
-    : undefined;
+  const sanitizedTitle = body.title !== undefined ? sanitizeHtml(body.title) : undefined;
   const sanitizedDescription = body.description !== undefined
     ? sanitizeHtml(body.description)
     : undefined;
@@ -98,9 +96,7 @@ export async function updateProduct(
         {
           title: sanitizedTitle ?? String(existing.post_name ?? ""),
           description: sanitizedDescription ??
-            (typeof existing.post_description === "string"
-              ? existing.post_description
-              : undefined),
+            (typeof existing.post_description === "string" ? existing.post_description : undefined),
           postType: body.postType ?? existing.post_type,
           images: [],
         },
@@ -110,9 +106,7 @@ export async function updateProduct(
       );
       updates.images = coverResult.images;
       const priorArchive = Array.isArray(existingMeta.cover_image_archive)
-        ? existingMeta.cover_image_archive.filter((v): v is string =>
-          typeof v === "string"
-        )
+        ? existingMeta.cover_image_archive.filter((v): v is string => typeof v === "string")
         : [];
       const priorImages = Array.isArray(existing.images)
         ? existing.images.filter((v): v is string => typeof v === "string")

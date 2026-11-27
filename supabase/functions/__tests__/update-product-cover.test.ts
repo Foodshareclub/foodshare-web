@@ -32,7 +32,9 @@ Deno.test("updateProduct generates a canonical cover and archives prior images w
     post_type: "food",
     post_name: "Homegrown Lemons",
     post_description: "Bag of Meyer lemons",
-    images: ["https://iazmjdjwnkilycbjwpzp.supabase.co/storage/v1/object/public/posts/old-lemon.jpg"],
+    images: [
+      "https://iazmjdjwnkilycbjwpzp.supabase.co/storage/v1/object/public/posts/old-lemon.jpg",
+    ],
     metadata: {
       owner_note: "keep-me",
       cover_image_archive: ["https://example.com/earlier.jpg"],
@@ -48,7 +50,9 @@ Deno.test("updateProduct generates a canonical cover and archives prior images w
     post_name: "Meyer Lemons",
     post_description: "Bag of Meyer lemons",
     post_type: "thing",
-    images: ["https://api.foodshare.club/storage/v1/object/public/food-images/generated/cover-42.png"],
+    images: [
+      "https://api.foodshare.club/storage/v1/object/public/food-images/generated/cover-42.png",
+    ],
     version: 4,
     is_active: true,
     created_at: "2026-11-26T00:00:00Z",
@@ -97,7 +101,9 @@ Deno.test("updateProduct generates a canonical cover and archives prior images w
     createCover: (input, userId) => {
       coverCalledWith = { input, userId };
       return Promise.resolve({
-        images: ["https://api.foodshare.club/storage/v1/object/public/food-images/generated/cover-42.png"],
+        images: [
+          "https://api.foodshare.club/storage/v1/object/public/food-images/generated/cover-42.png",
+        ],
         cover: {
           kind: "generated",
           provider: "zai",
