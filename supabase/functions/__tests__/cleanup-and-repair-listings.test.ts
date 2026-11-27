@@ -5,7 +5,7 @@ import {
   classifyCleanupCandidate,
   planPostGalleryRepair,
   type UrlHealth,
-} from "../../../scripts/cleanup-and-repair-listings.ts";
+} from "../api-v1-products/lib/listing-cleanup-policy.ts";
 
 function makePost(overrides: Partial<AuditPostRow> = {}): AuditPostRow {
   return {
