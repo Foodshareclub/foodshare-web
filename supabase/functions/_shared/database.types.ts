@@ -11410,6 +11410,13 @@ export type Database = {
         Args: Record<never, never>;
         Returns: number;
       },
+      public_post_address: {
+        Args: {
+        p_post_type: string | null;
+        p_address: string | null;
+      };
+        Returns: string;
+      },
       publish_draft: {
         Args: {
         p_draft_id: string | null;
@@ -11947,6 +11954,12 @@ export type Database = {
         full_address: string | null;
       };
         Returns: unknown | string;
+      },
+      strip_post_address_text: {
+        Args: {
+        p_address: string | null;
+      };
+        Returns: string;
       },
       submit_forum_report: {
         Args: {
