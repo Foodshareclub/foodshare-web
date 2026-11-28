@@ -44,7 +44,13 @@ import { rasterType } from "../api-v1-products/lib/listing-cover.ts";
 const OWNER = "11111111-1111-4111-8111-111111111111";
 const SERVICE_KEY = "test-service-role-key";
 const CRON_KEY = "test-cron-secret";
-const pngBytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0]);
+// A valid 1x1 PNG, so the production metadata stripper can parse every chunk.
+const pngBytes = Uint8Array.from(
+  atob(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+  ),
+  (char) => char.charCodeAt(0),
+);
 const PLACEHOLDER = "https://cdn.foodshare.club/images/placeholder-fridge.png";
 const STORED_BASE = "https://api.foodshare.club/storage/v1/object/public/posts";
 

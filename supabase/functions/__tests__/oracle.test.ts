@@ -255,23 +255,6 @@ const UNAPPLIED: Record<string, string> = {
     "row in `continents`, which the baseline does not seed. Valid against a " +
     "populated database.",
 
-  "20260209000002_fix_rls_policies.sql":
-    "names something that does not exist — all thirteen of its policies are " +
-    "already in the baseline, verbatim, so the first `CREATE POLICY` fails on " +
-    "`policy ... already exists` and the file is a no-op that cannot apply. " +
-    "Together with the baseline's `CREATE SCHEMA public`, this is the second " +
-    "hard stop in the chain: `deploy.sh` breaks on the first failure, so the " +
-    "corpus cannot be replayed from the beginning. Production is unaffected " +
-    "only because both files are already in `schema_migrations` and skipped.",
-
-  "20260215120000_optimize_aggregations.sql":
-    "names something that does not exist — the unread-counts aggregate it " +
-    "creates filters on `rooms.user_id` and `rooms.post_user_id`. `rooms` " +
-    "has `requester`, `sharer` and `post_id`, and no `user_id` at all. The " +
-    "function is created and fails on every call. A regex audit reading column " +
-    "names could not have found this: the column is inside a SQL string in a " +
-    "plpgsql body.",
-
   "20260215120001_add_composite_indexes.sql":
     "names something that does not exist — `CREATE INDEX ... ON messages(...)` " +
     "and there is no `messages` table in any migration. `api-v1-chat` queries " +

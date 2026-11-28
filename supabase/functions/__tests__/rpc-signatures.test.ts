@@ -322,45 +322,20 @@ function normalise(path: string): string {
  * Remove a row when the function is added to a migration.
  */
 const KNOWN_MISSING = [
-  // ── The two that were invisible, and why ──
-  //
-  // `get_user_unread_counts` and `get_batch_engagement` are *written* in the
-  // corpus: `20260215120000_optimize_aggregations.sql:4` and
-  // `20260215120002_batch_engagement.sql`. The previous version of this audit
-  // read those `CREATE FUNCTION` statements with a regular expression and
-  // reported both calls as resolving. Neither function exists, and the chain is:
-  //
-  //   1. Each function's body filters on relations or columns that do not
-  //      exist -- `rooms.user_id`, `room_participants.user_id`, `post_likes`,
-  //      `post_bookmarks`.
-  //   2. So the migration fails, the function is never created, and the `GRANT`
-  //      on the following line never runs either.
-  //   3. The catalog is the first thing in this repository that can see step 2,
-  //      because it applies the migration rather than reading it.
-  //
-  // `_shared/aggregation.ts` calls the first as its *primary* path, with a
-  // fallback that queried the bulk-campaign `notifications` table instead of
-  // `in_app_notifications` and so also failed. Both failures returned zero, so
-  // the dashboard reported every user as having no unread anything. The
-  // engagement API's batch read failed the same way.
-  //
-  // The engagement RPC is now repaired by 20261029070000_repair_post_engagement.sql.
-  // The unread-count RPC remains unresolved. Not one of those relations can be fixed by a
-  // rename -- the functions were written against a schema that never existed --
-  // and the intent has to be re-derived from what `rooms` and
-  // `room_participants` actually are. That is a decision, not a patch.
-  "get_user_unread_counts",
+  // `get_user_unread_counts` and `get_batch_engagement` were both repaired:
+  // the former by correcting `20260215120000` to use `rooms.requester`/`sharer`
+  // and `room_participants.profile_id`, the latter by
+  // `20261029070000_repair_post_engagement.sql`. Their original migrations still
+  // fail and remain pinned in `oracle.test.ts`; the functions exist now.
 
   // ── the rest: called, never defined ──
   "check_idempotency_key",
-  "check_lockout_status",
   "create_chat_room_safe",
   "find_orphan_images",
   "get_nearby_products",
   "get_request_count",
   "get_web_vitals_summary",
   "notify_nearby_users_bulk",
-  "record_login_attempt",
 ];
 
 // =============================================================================

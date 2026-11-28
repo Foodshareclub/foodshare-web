@@ -14,7 +14,7 @@ import { extractEXIF, getImageDimensions } from "../services/exif.ts";
 import { compressImage, generateThumbnail } from "../../_shared/compression/index.ts";
 import { analyzeImage } from "../services/ai.ts";
 import type { AIData } from "../types/index.ts";
-import { detectFormat, logUploadMetrics } from "../../_shared/image-utils.ts";
+import { detectFormat, logUploadMetrics, stripImageMetadata } from "../../_shared/image-utils.ts";
 import {
   checkRateLimit,
   isClientWritableBucket,
@@ -73,20 +73,23 @@ export async function handleUpload(ctx: HandlerContext): Promise<Response> {
   const exif = extractEXIFData ? await extractEXIF(imageData) : null;
   const dimensions = getImageDimensions(imageData);
   const compressed = await compressImage(imageData, 800);
+  // Compression may be a no-op for small files (<100 KiB), and a future
+  // provider may preserve metadata. Sanitize the bytes that are uploaded.
+  const sanitizedBuffer = stripImageMetadata(compressed.buffer);
 
   let thumbnailBuffer: Uint8Array | null = null;
   if (generateThumb) {
-    thumbnailBuffer = await generateThumbnail(imageData, 300);
+    thumbnailBuffer = stripImageMetadata(await generateThumbnail(imageData, 300));
   }
 
-  const format = detectFormat(compressed.buffer);
+  const format = detectFormat(sanitizedBuffer);
   const path = scopedUploadPath(userId, customPath, format);
 
   const { publicUrl, storage } = await uploadImage(
     supabase,
     bucket,
     path,
-    compressed.buffer,
+    sanitizedBuffer,
     `image/${format}`,
   );
 
@@ -137,10 +140,12 @@ export async function handleUpload(ctx: HandlerContext): Promise<Response> {
     },
     metadata: {
       originalSize,
-      finalSize: compressed.compressedSize,
-      savedBytes: compressed.savedPercent > 0 ? originalSize - compressed.compressedSize : 0,
-      savedPercent: compressed.savedPercent,
-      format: detectFormat(compressed.buffer),
+      finalSize: sanitizedBuffer.length,
+      savedBytes: originalSize > sanitizedBuffer.length ? originalSize - sanitizedBuffer.length : 0,
+      savedPercent: originalSize > 0
+        ? Math.round(((originalSize - sanitizedBuffer.length) / originalSize) * 100)
+        : 0,
+      format,
       dimensions: dimensions || undefined,
       exif: exif || undefined,
       ai: ai || undefined,
@@ -155,8 +160,8 @@ export async function handleUpload(ctx: HandlerContext): Promise<Response> {
     bucket,
     path,
     originalSize,
-    compressedSize: compressed.compressedSize,
-    savedBytes: originalSize - compressed.compressedSize,
+    compressedSize: sanitizedBuffer.length,
+    savedBytes: originalSize > sanitizedBuffer.length ? originalSize - sanitizedBuffer.length : 0,
     compressionMethod: compressed.method,
     processingTime,
     storage,

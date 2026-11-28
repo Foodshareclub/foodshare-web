@@ -73,6 +73,9 @@ BEGIN
   -- the name rather than a raw `relation does not exist`.
   EXECUTE 'GRANT SELECT ON public.forum TO job_worker';
   EXECUTE 'GRANT SELECT ON public.email_automation_queue TO job_worker';
+  EXECUTE 'GRANT SELECT ON public.email_delivery_log TO job_worker';
+  EXECUTE 'GRANT SELECT ON public.email_templates TO job_worker';
+  EXECUTE 'GRANT SELECT ON public.newsletter_campaigns TO job_worker';
 
   -- (table, policy name, command) for the whole worker surface. The queue
   -- tables take FOR ALL because the worker claims and writes them back; the

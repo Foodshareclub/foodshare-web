@@ -15,7 +15,7 @@ import {
   resolveAndValidateUrl,
   validateImageUrl,
 } from "../../_shared/url-validation.ts";
-import { detectFormat, logUploadMetrics } from "../../_shared/image-utils.ts";
+import { detectFormat, logUploadMetrics, stripImageMetadata } from "../../_shared/image-utils.ts";
 import {
   checkRateLimit,
   isClientWritableBucket,
@@ -107,14 +107,15 @@ export async function handleProxy(ctx: HandlerContext): Promise<Response> {
   }
 
   const compressed = await compressImage(imageData, 800);
-  const format = detectFormat(compressed.buffer);
+  const sanitizedBuffer = stripImageMetadata(compressed.buffer);
+  const format = detectFormat(sanitizedBuffer);
   const filename = `${crypto.randomUUID()}.${format}`;
 
   const { publicUrl, storage } = await uploadImage(
     ctx.supabase,
     bucket,
     filename,
-    compressed.buffer,
+    sanitizedBuffer,
     `image/${format}`,
   );
 
@@ -126,9 +127,13 @@ export async function handleProxy(ctx: HandlerContext): Promise<Response> {
     },
     metadata: {
       originalSize: imageData.length,
-      compressedSize: compressed.compressedSize,
-      savedBytes: imageData.length - compressed.compressedSize,
-      savedPercent: compressed.savedPercent,
+      compressedSize: sanitizedBuffer.length,
+      savedBytes: imageData.length > sanitizedBuffer.length
+        ? imageData.length - sanitizedBuffer.length
+        : 0,
+      savedPercent: imageData.length > 0
+        ? Math.round(((imageData.length - sanitizedBuffer.length) / imageData.length) * 100)
+        : 0,
       format,
       storage,
     },
@@ -183,14 +188,15 @@ export async function handleUploadFromUrl(
 
   const originalSize = imageData.length;
   const compressed = await compressImage(imageData, 800);
-  const format = detectFormat(compressed.buffer);
+  const sanitizedBuffer = stripImageMetadata(compressed.buffer);
+  const format = detectFormat(sanitizedBuffer);
   const filename = scopedUploadPath(userId, customPath, format);
 
   const { publicUrl, storage } = await uploadImage(
     supabase,
     bucket,
     filename,
-    compressed.buffer,
+    sanitizedBuffer,
     `image/${format}`,
   );
 
@@ -208,8 +214,8 @@ export async function handleUploadFromUrl(
     bucket,
     path: filename,
     originalSize,
-    compressedSize: compressed.compressedSize,
-    savedBytes: originalSize - compressed.compressedSize,
+    compressedSize: sanitizedBuffer.length,
+    savedBytes: originalSize > sanitizedBuffer.length ? originalSize - sanitizedBuffer.length : 0,
     compressionMethod: compressed.method,
     processingTime,
     storage,
@@ -221,8 +227,8 @@ export async function handleUploadFromUrl(
     filePath: filename,
     metadata: {
       originalSize,
-      compressedSize: compressed.compressedSize,
-      savedBytes: originalSize - compressed.compressedSize,
+      compressedSize: sanitizedBuffer.length,
+      savedBytes: originalSize > sanitizedBuffer.length ? originalSize - sanitizedBuffer.length : 0,
       storage,
     },
   }, ctx);

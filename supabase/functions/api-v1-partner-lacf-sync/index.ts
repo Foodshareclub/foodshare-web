@@ -21,7 +21,13 @@ import { logger } from "../_shared/logger.ts";
 import { downloadImage } from "../_shared/image-utils.ts";
 import { STORAGE_BUCKETS } from "../_shared/storage-constants.ts";
 import { uploadImage } from "../_shared/upload-image.ts";
-import { fetchRecords, loadAirtableConfig } from "../_shared/partner-sync/airtable.ts";
+import {
+  AirtableCallBudgetExceeded,
+  AirtableError,
+  type FetchRecordsResult,
+  fetchRecordsWithUsage,
+  loadAirtableConfig,
+} from "../_shared/partner-sync/airtable.ts";
 import { mapRecord, type PartnerRow } from "../_shared/partner-sync/mapper.ts";
 import { inspectRecords } from "../_shared/partner-sync/validate.ts";
 import { parseOpeningHours } from "../_shared/partner-sync/hours.ts";
@@ -39,7 +45,13 @@ import { getAdminClient } from "../_shared/supabase.ts";
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
 
 const NETWORK = "lacf";
-const VERSION = "1.1.0";
+const VERSION = "1.2.0";
+// Airtable Free includes 1,000 API calls per workspace per month, and the
+// base record cap is 1,000, so a full page-through is at most 10 calls. The
+// schedule is twice daily (60 runs/month): 60 x 10 = 600 calls worst case,
+// leaving 400 for retries and deliberate manual runs. The cap here includes
+// retries, so one run cannot borrow from the next run's allowance.
+const MAX_AIRTABLE_CALLS_PER_RUN = 10;
 const SYSTEM_OWNER = "00000000-0000-0000-0000-000000000001";
 // Every LACF record is in Los Angeles County; the zone is stored per listing so
 // the browser evaluates the schedule in the listing's zone, not the viewer's.
@@ -53,15 +65,82 @@ interface ExistingPost {
   metadata: { lacf?: { photo?: StoredPartnerPhoto } } | null;
 }
 
+/**
+ * A failed Airtable read is an upstream condition, not an internal crash.
+ * Return the reason the cron/cleanup log can act on: 403 is permission or
+ * plan/quota, 429 is rate limiting, and a run-budget stop is visible too.
+ */
+function airtableFailureResponse(error: unknown): Response | null {
+  if (error instanceof AirtableCallBudgetExceeded) {
+    logger.warn("Partner Airtable run budget exceeded", {
+      network: NETWORK,
+      api_calls: error.apiCalls ?? null,
+      max_calls: error.maxCalls,
+    });
+    return Response.json(
+      {
+        network: NETWORK,
+        outcome: "airtable_call_budget_exceeded",
+        message: error.message,
+        api_calls: error.apiCalls ?? null,
+        max_calls: error.maxCalls,
+      },
+      { status: 503 },
+    );
+  }
+
+  if (error instanceof AirtableError) {
+    const outcome = error.status === 429
+      ? "airtable_rate_limited"
+      : error.status === 403
+      ? "airtable_forbidden"
+      : "airtable_unavailable";
+    logger.warn("Partner Airtable read failed", {
+      network: NETWORK,
+      upstream_status: error.status,
+      upstream_error_type: error.upstreamType ?? null,
+      retry_after_seconds: error.retryAfterSeconds ?? null,
+      api_calls: error.apiCalls ?? null,
+    });
+    const headers = error.retryAfterSeconds === undefined
+      ? undefined
+      : { "retry-after": String(error.retryAfterSeconds) };
+    return Response.json(
+      {
+        network: NETWORK,
+        outcome,
+        upstream_status: error.status,
+        upstream_error_type: error.upstreamType ?? null,
+        retry_after_seconds: error.retryAfterSeconds ?? null,
+        api_calls: error.apiCalls ?? null,
+      },
+      { status: error.status === 429 ? 503 : 502, headers },
+    );
+  }
+
+  return null;
+}
+
 async function handleSync(ctx: { request: Request }): Promise<Response> {
   requireServiceAuth(ctx.request);
   const live = new URL(ctx.request.url).searchParams.get("mode") === "live";
 
   const config = await loadAirtableConfig();
-  const records = await fetchRecords(config);
+  let fetched: FetchRecordsResult;
+  try {
+    fetched = await fetchRecordsWithUsage(config, fetch, {
+      maxCalls: MAX_AIRTABLE_CALLS_PER_RUN,
+    });
+  } catch (error) {
+    const failure = airtableFailureResponse(error);
+    if (failure) return failure;
+    throw error;
+  }
+  const records = fetched.records;
+  const apiCalls = fetched.apiCalls;
   if (records.length === 0) {
     return Response.json(
-      { network: NETWORK, outcome: "refused_empty_source" },
+      { network: NETWORK, outcome: "refused_empty_source", api_calls: apiCalls },
       { status: 409 },
     );
   }
@@ -71,7 +150,12 @@ async function handleSync(ctx: { request: Request }): Promise<Response> {
   const shape = inspectRecords(records);
   if (shape.refused.length > 0) {
     return Response.json(
-      { network: NETWORK, outcome: "refused_schema_drift", missing: shape.refused },
+      {
+        network: NETWORK,
+        outcome: "refused_schema_drift",
+        missing: shape.refused,
+        api_calls: apiCalls,
+      },
       { status: 409 },
     );
   }
@@ -191,12 +275,12 @@ async function handleSync(ctx: { request: Request }): Promise<Response> {
 
   const result = (data ?? {}) as Record<string, unknown>;
   if (result.outcome === "locked") {
-    return Response.json({ network: NETWORK, outcome: "locked" }, {
+    return Response.json({ network: NETWORK, outcome: "locked", api_calls: apiCalls }, {
       status: 409,
     });
   }
   if (result.outcome === "refused_foreign_rows") {
-    return Response.json(result, { status: 409 });
+    return Response.json({ ...result, api_calls: apiCalls }, { status: 409 });
   }
 
   // Only after the listing no longer points at them; shared cover objects are
@@ -214,13 +298,22 @@ async function handleSync(ctx: { request: Request }): Promise<Response> {
     }
   }
 
+  logger.info("Partner Airtable sync applied", {
+    network: NETWORK,
+    mode: live ? "live" : "dry_run",
+    records: records.length,
+    api_calls: apiCalls,
+    outcome: result.outcome ?? null,
+  });
+
   return Response.json({
+    ...result,
     network: NETWORK,
     mode: live ? "live" : "dry_run",
     skipped,
     photos_updated: live ? photosUpdated : 0,
     warnings: shape.warnings,
-    ...result,
+    api_calls: apiCalls,
   });
 }
 

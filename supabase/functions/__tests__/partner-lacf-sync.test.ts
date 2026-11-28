@@ -6,9 +6,12 @@
  */
 import { assert, assertEquals, assertThrows } from "@std/assert";
 import {
+  AirtableCallBudgetExceeded,
   type AirtableConfig,
+  AirtableError,
   assertAllowedUrl,
   fetchRecords,
+  fetchRecordsWithUsage,
   recordsUrl,
 } from "../_shared/partner-sync/airtable.ts";
 import { coordinates, mapRecord } from "../_shared/partner-sync/mapper.ts";
@@ -45,7 +48,7 @@ Deno.test("pages through records with GET on the configured base only", async ()
   assertEquals(calls[0].auth, `Bearer ${config.token}`);
 });
 
-Deno.test("backs off on 429 and then succeeds", async () => {
+Deno.test("backs off on 429 and counts the retry against the run", async () => {
   let attempts = 0;
   const fake = () => {
     attempts += 1;
@@ -56,9 +59,82 @@ Deno.test("backs off on 429 and then succeeds", async () => {
     }
     return Promise.resolve(Response.json({ records: [{ id: "recA", fields: {} }] }));
   };
-  const records = await fetchRecords(config, fake);
+  const result = await fetchRecordsWithUsage(config, fake, { maxCalls: 3 });
   assertEquals(attempts, 2);
-  assertEquals(records.length, 1);
+  assertEquals(result.apiCalls, 2);
+  assertEquals(result.records.length, 1);
+});
+
+Deno.test("fails fast instead of sleeping through a long Retry-After", async () => {
+  let attempts = 0;
+  const fake = () => {
+    attempts += 1;
+    return Promise.resolve(
+      new Response("", { status: 429, headers: { "retry-after": "120" } }),
+    );
+  };
+  try {
+    await fetchRecordsWithUsage(config, fake, { maxCalls: 3 });
+    throw new Error("the client retried a long rate limit");
+  } catch (error) {
+    assert(error instanceof AirtableError);
+    assertEquals(error.status, 429);
+    assertEquals(error.retryAfterSeconds, 120);
+    assertEquals(error.apiCalls, 1);
+    assertEquals(attempts, 1);
+  }
+});
+
+Deno.test("does not retry a 403 and reports the upstream type", async () => {
+  let attempts = 0;
+  const fake = () => {
+    attempts += 1;
+    return Promise.resolve(
+      Response.json({ error: { type: "NOT_AUTHORIZED" } }, { status: 403 }),
+    );
+  };
+  try {
+    await fetchRecordsWithUsage(config, fake, { maxCalls: 3 });
+    throw new Error("the client retried a forbidden response");
+  } catch (error) {
+    assert(error instanceof AirtableError);
+    assertEquals(error.status, 403);
+    assertEquals(error.upstreamType, "NOT_AUTHORIZED");
+    assertEquals(error.apiCalls, 1);
+    assertEquals(attempts, 1);
+    assert(!String(error).includes(config.token));
+    assert(!String(error).includes(config.baseId));
+  }
+});
+
+Deno.test("retries a 5xx once and counts both attempts", async () => {
+  let attempts = 0;
+  const fake = () => {
+    attempts += 1;
+    if (attempts === 1) return Promise.resolve(new Response("", { status: 500 }));
+    return Promise.resolve(Response.json({ records: [{ id: "recA", fields: {} }] }));
+  };
+  const result = await fetchRecordsWithUsage(config, fake, { maxCalls: 3 });
+  assertEquals(attempts, 2);
+  assertEquals(result.apiCalls, 2);
+  assertEquals(result.records.length, 1);
+});
+
+Deno.test("stops at the run budget before requesting another page", async () => {
+  let attempts = 0;
+  const fake = () => {
+    attempts += 1;
+    return Promise.resolve(Response.json({ records: [], offset: "more" }));
+  };
+  try {
+    await fetchRecordsWithUsage(config, fake, { maxCalls: 2 });
+    throw new Error("the client exceeded the call budget");
+  } catch (error) {
+    assert(error instanceof AirtableCallBudgetExceeded);
+    assertEquals(error.maxCalls, 2);
+    assertEquals(error.apiCalls, 2);
+    assertEquals(attempts, 2);
+  }
 });
 
 Deno.test("refuses any other base or host", () => {

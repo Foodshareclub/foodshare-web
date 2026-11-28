@@ -253,6 +253,84 @@ Deno.test("handleVerifyResend: profile not found returns 404", async () => {
 // checkResendRateLimit Tests (tested indirectly through behavior)
 // =============================================================================
 
+// =============================================================================
+// Rate handler fail-closed tests
+// =============================================================================
+
+function rateContext(rpc: () => Promise<{ data: unknown; error: { message: string } | null }>) {
+  return {
+    supabase: { rpc },
+    corsHeaders: { "Access-Control-Allow-Origin": "*" },
+    clientIp: "203.0.113.9",
+    requestId: "rate-test",
+  };
+}
+
+Deno.test("handleRateCheck: RPC error fails closed", async () => {
+  const { handleRateCheck } = await import("../api-v1-auth/lib/rate.ts");
+  const response = await handleRateCheck(
+    { email: "member@example.com" },
+    rateContext(async () => ({ data: null, error: { message: "function missing" } })) as any,
+  );
+
+  assertEquals(response.status, 503);
+  const body = await response.json();
+  assertEquals(body.allowed, false);
+  assertExists(body.error);
+});
+
+Deno.test("handleRateCheck: an empty status row fails closed", async () => {
+  const { handleRateCheck } = await import("../api-v1-auth/lib/rate.ts");
+  const response = await handleRateCheck(
+    { email: "member@example.com" },
+    rateContext(async () => ({ data: [], error: null })) as any,
+  );
+
+  assertEquals(response.status, 503);
+  assertEquals((await response.json()).allowed, false);
+});
+
+Deno.test("handleRateCheck: a real status row stays allowed", async () => {
+  const { handleRateCheck } = await import("../api-v1-auth/lib/rate.ts");
+  const response = await handleRateCheck(
+    { email: "member@example.com" },
+    rateContext(async () => ({
+      data: [{
+        is_locked: false,
+        locked_until: null,
+        lockout_level: 0,
+        failed_attempts: 0,
+        ip_blocked: false,
+        ip_blocked_until: null,
+      }],
+      error: null,
+    })) as any,
+  );
+
+  assertEquals(response.status, 200);
+  const body = await response.json();
+  assertEquals(body.allowed, true);
+  assertEquals(body.failedAttempts, 0);
+});
+
+Deno.test("handleRateRecord: RPC error fails closed", async () => {
+  const { handleRateRecord } = await import("../api-v1-auth/lib/rate.ts");
+  const request = new Request("https://example.test/rate/record", {
+    method: "POST",
+    headers: { "user-agent": "rate-test" },
+  });
+  const response = await handleRateRecord(
+    { email: "member@example.com", success: false },
+    request,
+    rateContext(async () => ({ data: null, error: { message: "function missing" } })) as any,
+  );
+
+  assertEquals(response.status, 503);
+  const body = await response.json();
+  assertEquals(body.recorded, false);
+  assertExists(body.error);
+});
+
 Deno.test("checkResendRateLimit: allows first 3, blocks 4th", () => {
   // Test the rate limit logic inline since the function is not exported.
   // Replicating the same logic as in verify.ts:

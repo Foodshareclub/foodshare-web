@@ -9086,6 +9086,13 @@ export type Database = {
       };
         Returns: Json;
       },
+      check_lockout_status: {
+        Args: {
+        p_email: string | null;
+        p_ip_address?: string | null;
+      };
+        Returns: Array<Record<string, unknown>>;
+      },
       check_mfa_rate_limit: {
         Args: {
         p_profile_id: string | null;
@@ -9217,6 +9224,12 @@ export type Database = {
       cleanup_geocoding_cache: {
         Args: {
         p_max_age_days?: number | null;
+      };
+        Returns: number;
+      },
+      cleanup_login_attempts: {
+        Args: {
+        p_retain_days?: number | null;
       };
         Returns: number;
       },
@@ -10717,6 +10730,12 @@ export type Database = {
       };
         Returns: number;
       },
+      get_user_unread_counts: {
+        Args: {
+        p_user_id: string | null;
+      };
+        Returns: Array<Record<string, unknown>>;
+      },
       get_user_vault_access_summary: {
         Args: {
         user_uuid?: string | null;
@@ -11551,6 +11570,19 @@ export type Database = {
         p_results_count?: number | null;
       };
         Returns: Json;
+      },
+      record_login_attempt: {
+        Args: {
+        p_email: string | null;
+        p_ip_address: string | null;
+        p_user_agent: string | null;
+        p_app_platform: string | null;
+        p_app_version: string | null;
+        p_success: boolean | null;
+        p_failure_reason: string | null;
+        p_metadata?: Json | null;
+      };
+        Returns: Array<Record<string, unknown>>;
       },
       record_post_view_analytics: {
         Args: {
@@ -12567,6 +12599,51 @@ export type Database = {
       notification_channel: "push" | "email" | "sms" | "telegram" | "in_app";
       post_activity_type: "created" | "updated" | "deleted" | "restored" | "activated" | "deactivated" | "expired" | "viewed" | "contacted" | "arranged" | "arrangement_cancelled" | "collected" | "not_collected" | "reported" | "flagged" | "unflagged" | "approved" | "rejected" | "hidden" | "unhidden" | "liked" | "unliked" | "shared" | "bookmarked" | "unbookmarked" | "admin_edited" | "admin_note_added" | "admin_status_changed" | "auto_expired" | "auto_deactivated" | "location_updated" | "images_updated";
     };
+    CompositeTypes: { [_ in never]: never; };
+  },
+  security: {
+    Tables: {
+      login_attempts: {
+        Row: {
+        app_platform: string | null;
+        app_version: string | null;
+        created_at: string;
+        email: string;
+        failure_reason: string | null;
+        id: number;
+        ip_address: string | null;
+        metadata: Json;
+        success: boolean;
+        user_agent: string | null;
+        };
+        Insert: {
+        app_platform?: string;
+        app_version?: string;
+        created_at?: string;
+        email: string;
+        failure_reason?: string;
+        id: number;
+        ip_address?: string;
+        metadata?: Json;
+        success: boolean;
+        user_agent?: string;
+        };
+        Update: {
+        app_platform?: string | null;
+        app_version?: string | null;
+        created_at?: string;
+        email?: string;
+        failure_reason?: string | null;
+        id?: number;
+        ip_address?: string | null;
+        metadata?: Json;
+        success?: boolean;
+        user_agent?: string | null;
+        };
+        Relationships: [];
+      }
+    };
+    Views: { [_ in never]: never; };
     CompositeTypes: { [_ in never]: never; };
   },
   storage: {

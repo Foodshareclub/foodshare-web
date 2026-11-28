@@ -52,9 +52,14 @@ export async function extractEXIF(
   }
 }
 
-function parseGPSCoordinate(description: string | undefined): number | null {
-  if (!description) return null;
+function parseGPSCoordinate(description: string | number | undefined): number | null {
+  if (typeof description === "number" && Number.isFinite(description)) {
+    return description;
+  }
+  if (typeof description !== "string" || !description) return null;
 
+  // ExifReader 4.x exposes some GPS tags as a decimal number and others as a
+  // formatted string; accept both rather than dropping the coordinates.
   // Parse formats like "37° 46' 29.99\" N" or "122° 25' 9.99\" W"
   const match = description.match(/(\d+)°\s*(\d+)'\s*([\d.]+)"\s*([NSEW])/);
   if (!match) return null;

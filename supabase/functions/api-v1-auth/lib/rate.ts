@@ -121,13 +121,17 @@ export async function handleRateCheck(
 
   if (error) {
     logger.error("Error checking lockout status", new Error(error.message));
+    // A security decision must not fail open: if the ledger is unreachable,
+    // the login is not allowed to proceed.
     return new Response(
       JSON.stringify({
-        allowed: true,
-        warning: "Could not verify lockout status",
+        allowed: false,
+        isLocked: false,
+        ipBlocked: false,
+        error: "Lockout status is unavailable. Try again shortly.",
       }),
       {
-        status: 200,
+        status: 503,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );
@@ -136,10 +140,16 @@ export async function handleRateCheck(
   const status = (data as LockoutStatus[])?.[0];
 
   if (!status) {
+    logger.error("Lockout status RPC returned no row");
     return new Response(
-      JSON.stringify({ allowed: true, isLocked: false, ipBlocked: false }),
+      JSON.stringify({
+        allowed: false,
+        isLocked: false,
+        ipBlocked: false,
+        error: "Lockout status is unavailable. Try again shortly.",
+      }),
       {
-        status: 200,
+        status: 503,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );
@@ -194,16 +204,30 @@ export async function handleRateRecord(
     return new Response(
       JSON.stringify({
         recorded: false,
-        warning: "Could not record login attempt",
+        error: "Could not record the login attempt. Try again shortly.",
       }),
       {
-        status: 200,
+        status: 503,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );
   }
 
   const result = (data as RecordResult[])?.[0];
+
+  if (!result) {
+    logger.error("record_login_attempt RPC returned no row");
+    return new Response(
+      JSON.stringify({
+        recorded: false,
+        error: "Could not record the login attempt. Try again shortly.",
+      }),
+      {
+        status: 503,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
+  }
 
   // If this failure triggered a 24hr lockout, send alert
   if (!body.success && result?.is_locked && result.failed_count >= 20) {

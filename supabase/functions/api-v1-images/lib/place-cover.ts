@@ -59,6 +59,7 @@ import {
 import { logger } from "../../_shared/logger.ts";
 import { requireServiceAuth } from "../../_shared/service-auth.ts";
 import { STORAGE_BUCKETS } from "../../_shared/storage-constants.ts";
+import { stripImageMetadata } from "../../_shared/image-utils.ts";
 import { fetchPinned, resolveAndValidateUrl, validateUrl } from "../../_shared/url-validation.ts";
 import type { Json } from "../../_shared/database.types.ts";
 import { a1Scrape } from "../../api-v1-ai/lib/providers/image-pipeline.ts";
@@ -403,9 +404,13 @@ export async function placeCoverPipeline(
     try {
       const bytes = await deps.fetchBytes(candidate.url);
       const format = rasterType(bytes);
-      const digest = await sha256Hex(bytes);
+      // A crawled photo can carry GPS EXIF. Sanitize before hashing so the
+      // content-addressed path and the readback check describe the exact
+      // object stored in the public bucket, not the unredacted source.
+      const sanitized = stripImageMetadata(bytes);
+      const digest = await sha256Hex(sanitized);
       const path = `${listing.profile_id}/place-cover/${digest}.${format}`;
-      url = await deps.store(path, bytes, `image/${format}`);
+      url = await deps.store(path, sanitized, `image/${format}`);
       const readback = await deps.readback(url);
       if ((await sha256Hex(readback)) !== digest) {
         throw new ServerError("place-cover public readback verification failed");
